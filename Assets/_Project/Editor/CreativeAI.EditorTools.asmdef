@@ -1,0 +1,20 @@
+{
+    "name": "CreativeAI.EditorTools",
+    "rootNamespace": "CreativeAI.EditorTools",
+    "references": [
+        "CreativeAI.Core",
+        "CreativeAI.UI",
+        "Unity.InputSystem"
+    ],
+    "includePlatforms": [
+        "Editor"
+    ],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": false,
+    "defineConstraints": [],
+    "versionDefines": [],
+    "noEngineReferences": false
+}
