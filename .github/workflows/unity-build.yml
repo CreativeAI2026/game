@@ -1,0 +1,45 @@
+name: Unity Compile Check
+
+# StandaloneLinux64 (Mono) でビルドを通すことで「全 asmdef がコンパイルできるか」を検証する。
+# 要 Secrets: UNITY_LICENSE / UNITY_EMAIL / UNITY_PASSWORD（取得手順は documents/CICD.md 参照）
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    paths:
+      - 'Assets/**'
+      - 'Packages/**'
+      - 'ProjectSettings/**'
+      - '.github/workflows/unity-build.yml'
+
+concurrency:
+  group: unity-build-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build:
+    name: Compile (StandaloneLinux64)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Cache Library
+        uses: actions/cache@v4
+        with:
+          path: Library
+          key: Library-StandaloneLinux64-${{ hashFiles('Assets/**', 'Packages/**', 'ProjectSettings/**') }}
+          restore-keys: |
+            Library-StandaloneLinux64-
+            Library-
+
+      - name: Build (compile check)
+        uses: game-ci/unity-builder@v4
+        env:
+          UNITY_LICENSE: ${{ secrets.UNITY_LICENSE }}
+          UNITY_EMAIL: ${{ secrets.UNITY_EMAIL }}
+          UNITY_PASSWORD: ${{ secrets.UNITY_PASSWORD }}
+        with:
+          unityVersion: 6000.4.5f1
+          targetPlatform: StandaloneLinux64
+          allowDirtyBuild: true
