@@ -9,7 +9,8 @@ namespace CreativeAI.UI.Common
     /// </summary>
     public class UIPanelStub : MonoBehaviour
     {
-        [SerializeField] private Button _closeButton;
+        [SerializeField]
+        private Button _closeButton;
 
         protected virtual void Awake()
         {
