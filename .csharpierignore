@@ -1,0 +1,15 @@
+# Unity / build 生成物（CSharpier をかけない）
+Library/
+Temp/
+Obj/
+obj/
+Build/
+Builds/
+Logs/
+UserSettings/
+
+# パッケージキャッシュ
+Packages/
+
+# サードパーティ / vendored なコードは整形対象外
+Assets/Plugins/

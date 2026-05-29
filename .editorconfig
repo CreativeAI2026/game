@@ -1,0 +1,18 @@
+root = true
+
+[*]
+charset = utf-8
+indent_style = space
+insert_final_newline = true
+trim_trailing_whitespace = true
+
+[*.cs]
+indent_size = 4
+
+[*.{yml,yaml,json}]
+indent_size = 2
+
+# Unity が生成・管理する YAML 系アセットはエディタによる自動改変を避ける
+[*.{meta,unity,asset,prefab,mat,anim,controller,asmdef,inputactions}]
+trim_trailing_whitespace = false
+insert_final_newline = false
