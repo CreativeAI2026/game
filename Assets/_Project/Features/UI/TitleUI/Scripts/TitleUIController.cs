@@ -1,13 +1,16 @@
+using CreativeAI.Core.SceneManagement;
 using UnityEngine;
 using UnityEngine.UI;
-using CreativeAI.Core.SceneManagement;
 
 namespace CreativeAI.UI.TitleUI
 {
     public class TitleUIController : MonoBehaviour
     {
-        [SerializeField] private Button _tapToStartButton;
-        [SerializeField] private string _nextSceneName = SceneNames.FieldArea01;
+        [SerializeField]
+        private Button _tapToStartButton;
+
+        [SerializeField]
+        private string _nextSceneName = SceneNames.FieldArea01;
 
         private void Awake()
         {
@@ -31,7 +34,9 @@ namespace CreativeAI.UI.TitleUI
         {
             if (SceneController.Instance == null)
             {
-                Debug.LogError("[TitleUIController] SceneController.Instance is null. Did you launch from 00_Boot?");
+                Debug.LogError(
+                    "[TitleUIController] SceneController.Instance is null. Did you launch from 00_Boot?"
+                );
                 return;
             }
             _tapToStartButton.interactable = false;

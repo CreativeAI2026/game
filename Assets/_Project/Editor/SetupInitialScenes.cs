@@ -29,23 +29,30 @@ namespace CreativeAI.EditorTools
         private const string TitlePath = "Assets/_Project/Scenes/01_Title.unity";
         private const string FieldPath = "Assets/_Project/Scenes/Field/Field_Area01.unity";
         private const string TitleBgPath = "Assets/_Project/Art/UI/Backgrounds/bg_title_main.png";
-        private const string CharacterBgPath = "Assets/_Project/Art/UI/Backgrounds/bg_character_main.png";
-        private const string InventoryBgPath = "Assets/_Project/Art/UI/Backgrounds/bg_inventory_main.png";
-        private const string AppleIconPath = "Assets/_Project/Art/UI/Icons/Items/item_food_apple.png";
-        private const string ClockIconPath = "Assets/_Project/Art/UI/Icons/Items/item_equipment_clock.png";
+        private const string CharacterBgPath =
+            "Assets/_Project/Art/UI/Backgrounds/bg_character_main.png";
+        private const string InventoryBgPath =
+            "Assets/_Project/Art/UI/Backgrounds/bg_inventory_main.png";
+        private const string AppleIconPath =
+            "Assets/_Project/Art/UI/Icons/Items/item_food_apple.png";
+        private const string ClockIconPath =
+            "Assets/_Project/Art/UI/Icons/Items/item_equipment_clock.png";
 
         [MenuItem("Tools/CreativeAI/Setup Initial Scenes")]
         public static void Run()
         {
-            bool anyExists = File.Exists(BootPath) || File.Exists(TitlePath) || File.Exists(FieldPath);
+            bool anyExists =
+                File.Exists(BootPath) || File.Exists(TitlePath) || File.Exists(FieldPath);
             if (anyExists)
             {
                 bool overwrite = EditorUtility.DisplayDialog(
                     "Setup Initial Scenes",
                     $"シーンファイルが既に存在します。上書きしますか？\n\n対象:\n- {BootPath}\n- {TitlePath}\n- {FieldPath}",
                     "上書きする",
-                    "キャンセル");
-                if (!overwrite) return;
+                    "キャンセル"
+                );
+                if (!overwrite)
+                    return;
             }
 
             EditorSceneManager.SaveCurrentModifiedScenesIfUserWantsTo();
@@ -60,7 +67,8 @@ namespace CreativeAI.EditorTools
             EditorUtility.DisplayDialog(
                 "Setup Initial Scenes",
                 "完了しました。\n\n- 00_Boot / 01_Title / Field_Area01 を生成\n- Field に HUD(Character/Inventory/Save) を配置\n- Build Settings に登録\n- 00_Boot を開きました\n\nそのまま Play してください。",
-                "OK");
+                "OK"
+            );
         }
 
         // ---------------- 00_Boot ----------------
@@ -91,9 +99,16 @@ namespace CreativeAI.EditorTools
             overlayImage.color = Color.black;
             overlayImage.raycastTarget = true;
 
-            CreateText(overlayGo.transform, "LoadingText", "Loading...",
-                anchorMin: new Vector2(0.5f, 0.14f), anchorMax: new Vector2(0.5f, 0.14f),
-                size: new Vector2(600, 60), fontSize: 36, color: new Color(1f, 1f, 1f, 0.85f));
+            CreateText(
+                overlayGo.transform,
+                "LoadingText",
+                "Loading...",
+                anchorMin: new Vector2(0.5f, 0.14f),
+                anchorMax: new Vector2(0.5f, 0.14f),
+                size: new Vector2(600, 60),
+                fontSize: 36,
+                color: new Color(1f, 1f, 1f, 0.85f)
+            );
 
             var slider = CreateProgressBar(overlayGo.transform);
 
@@ -113,7 +128,10 @@ namespace CreativeAI.EditorTools
         // ---------------- 01_Title ----------------
         private static void CreateTitleScene()
         {
-            var scene = EditorSceneManager.NewScene(NewSceneSetup.DefaultGameObjects, NewSceneMode.Single);
+            var scene = EditorSceneManager.NewScene(
+                NewSceneSetup.DefaultGameObjects,
+                NewSceneMode.Single
+            );
 
             var canvasGo = new GameObject("Canvas");
             var canvas = canvasGo.AddComponent<Canvas>();
@@ -148,9 +166,16 @@ namespace CreativeAI.EditorTools
             var button = buttonGo.AddComponent<Button>();
             button.transition = Selectable.Transition.None;
 
-            CreateText(buttonGo.transform, "Label", "Tap to Start",
-                anchorMin: new Vector2(0.5f, 0.3f), anchorMax: new Vector2(0.5f, 0.3f),
-                size: new Vector2(800, 80), fontSize: 42, color: new Color(1f, 1f, 1f, 0.85f));
+            CreateText(
+                buttonGo.transform,
+                "Label",
+                "Tap to Start",
+                anchorMin: new Vector2(0.5f, 0.3f),
+                anchorMax: new Vector2(0.5f, 0.3f),
+                size: new Vector2(800, 80),
+                fontSize: 42,
+                color: new Color(1f, 1f, 1f, 0.85f)
+            );
 
             var titleController = canvasGo.AddComponent<TitleUIController>();
             SetRef(titleController, "_tapToStartButton", button);
@@ -163,7 +188,10 @@ namespace CreativeAI.EditorTools
         // ---------------- Field_Area01 ----------------
         private static void CreateFieldScene()
         {
-            var scene = EditorSceneManager.NewScene(NewSceneSetup.DefaultGameObjects, NewSceneMode.Single);
+            var scene = EditorSceneManager.NewScene(
+                NewSceneSetup.DefaultGameObjects,
+                NewSceneMode.Single
+            );
 
             // 3D 環境
             var ground = GameObject.CreatePrimitive(PrimitiveType.Plane);
@@ -189,18 +217,37 @@ namespace CreativeAI.EditorTools
             StretchFull(hudGo.AddComponent<RectTransform>());
 
             // シーンラベル（画面上中央）
-            CreateText(hudGo.transform, "SceneLabel", "ここは Field 画面です",
-                anchorMin: new Vector2(0.5f, 1f), anchorMax: new Vector2(0.5f, 1f),
-                size: new Vector2(800, 80), fontSize: 36, color: Color.white,
-                anchoredPosition: new Vector2(0, -60));
+            CreateText(
+                hudGo.transform,
+                "SceneLabel",
+                "ここは Field 画面です",
+                anchorMin: new Vector2(0.5f, 1f),
+                anchorMax: new Vector2(0.5f, 1f),
+                size: new Vector2(800, 80),
+                fontSize: 36,
+                color: Color.white,
+                anchoredPosition: new Vector2(0, -60)
+            );
 
             // 右上の円形メニューボタン（後でアイコンに差し替え予定。色で識別）
-            var charBtn = CreateMenuIconButton(hudGo.transform, "CharacterButton", -320,
-                new Color(0.55f, 0.4f, 0.75f, 1f));   // 紫: Character
-            var invBtn = CreateMenuIconButton(hudGo.transform, "InventoryButton", -210,
-                new Color(0.4f, 0.65f, 0.45f, 1f));   // 緑: Inventory
-            var saveBtn = CreateMenuIconButton(hudGo.transform, "SaveButton", -100,
-                new Color(0.85f, 0.55f, 0.3f, 1f));   // 橙: Save
+            var charBtn = CreateMenuIconButton(
+                hudGo.transform,
+                "CharacterButton",
+                -320,
+                new Color(0.55f, 0.4f, 0.75f, 1f)
+            ); // 紫: Character
+            var invBtn = CreateMenuIconButton(
+                hudGo.transform,
+                "InventoryButton",
+                -210,
+                new Color(0.4f, 0.65f, 0.45f, 1f)
+            ); // 緑: Inventory
+            var saveBtn = CreateMenuIconButton(
+                hudGo.transform,
+                "SaveButton",
+                -100,
+                new Color(0.85f, 0.55f, 0.3f, 1f)
+            ); // 橙: Save
 
             // パネル群
             var charStub = CreateCharacterPanel(canvasGo.transform);
@@ -248,9 +295,17 @@ namespace CreativeAI.EditorTools
             scaler.matchWidthOrHeight = 0.5f;
         }
 
-        private static Text CreateText(Transform parent, string name, string content,
-            Vector2 anchorMin, Vector2 anchorMax, Vector2 size, int fontSize, Color color,
-            Vector2 anchoredPosition = default)
+        private static Text CreateText(
+            Transform parent,
+            string name,
+            string content,
+            Vector2 anchorMin,
+            Vector2 anchorMax,
+            Vector2 size,
+            int fontSize,
+            Color color,
+            Vector2 anchoredPosition = default
+        )
         {
             var go = new GameObject(name);
             go.transform.SetParent(parent, false);
@@ -269,8 +324,15 @@ namespace CreativeAI.EditorTools
             return text;
         }
 
-        private static Button CreateButton(Transform parent, string name, string label,
-            Vector2 anchorMin, Vector2 anchorMax, Vector2 anchoredPosition, Vector2 sizeDelta)
+        private static Button CreateButton(
+            Transform parent,
+            string name,
+            string label,
+            Vector2 anchorMin,
+            Vector2 anchorMax,
+            Vector2 anchoredPosition,
+            Vector2 sizeDelta
+        )
         {
             var go = new GameObject(name);
             go.transform.SetParent(parent, false);
@@ -283,7 +345,8 @@ namespace CreativeAI.EditorTools
             var image = go.AddComponent<Image>();
             // 全ボタンを丸/ピル型にする（正方形→円、矩形→楕円ピル）
             var roundSprite = AssetDatabase.GetBuiltinExtraResource<Sprite>("UI/Skin/Knob.psd");
-            if (roundSprite != null) image.sprite = roundSprite;
+            if (roundSprite != null)
+                image.sprite = roundSprite;
             var baseColor = new Color(0.3f, 0.45f, 0.65f, 1f);
             image.color = baseColor;
             image.raycastTarget = true;
@@ -326,21 +389,42 @@ namespace CreativeAI.EditorTools
             bg.raycastTarget = true;
 
             // 確認メッセージ
-            CreateText(dialogGo.transform, "Message", "ここまでの変更をセーブしますか？",
-                anchorMin: new Vector2(0.5f, 0.5f), anchorMax: new Vector2(0.5f, 0.5f),
-                size: new Vector2(900, 80), fontSize: 36, color: Color.white,
-                anchoredPosition: new Vector2(0, 40));
+            CreateText(
+                dialogGo.transform,
+                "Message",
+                "ここまでの変更をセーブしますか？",
+                anchorMin: new Vector2(0.5f, 0.5f),
+                anchorMax: new Vector2(0.5f, 0.5f),
+                size: new Vector2(900, 80),
+                fontSize: 36,
+                color: Color.white,
+                anchoredPosition: new Vector2(0, 40)
+            );
 
             // はい / いいえ（テキストのみ）
-            var yesBtn = CreateTextOnlyButton(dialogGo.transform, "YesButton", "はい",
-                anchorMin: new Vector2(0.5f, 0.5f), anchorMax: new Vector2(0.5f, 0.5f),
-                anchoredPosition: new Vector2(-100, -60), sizeDelta: new Vector2(160, 60),
-                fontSize: 30, color: new Color(0.95f, 0.8f, 0.4f, 1f));
+            var yesBtn = CreateTextOnlyButton(
+                dialogGo.transform,
+                "YesButton",
+                "はい",
+                anchorMin: new Vector2(0.5f, 0.5f),
+                anchorMax: new Vector2(0.5f, 0.5f),
+                anchoredPosition: new Vector2(-100, -60),
+                sizeDelta: new Vector2(160, 60),
+                fontSize: 30,
+                color: new Color(0.95f, 0.8f, 0.4f, 1f)
+            );
 
-            var noBtn = CreateTextOnlyButton(dialogGo.transform, "NoButton", "いいえ",
-                anchorMin: new Vector2(0.5f, 0.5f), anchorMax: new Vector2(0.5f, 0.5f),
-                anchoredPosition: new Vector2(100, -60), sizeDelta: new Vector2(160, 60),
-                fontSize: 30, color: new Color(0.8f, 0.8f, 0.85f, 1f));
+            var noBtn = CreateTextOnlyButton(
+                dialogGo.transform,
+                "NoButton",
+                "いいえ",
+                anchorMin: new Vector2(0.5f, 0.5f),
+                anchorMax: new Vector2(0.5f, 0.5f),
+                anchoredPosition: new Vector2(100, -60),
+                sizeDelta: new Vector2(160, 60),
+                fontSize: 30,
+                color: new Color(0.8f, 0.8f, 0.85f, 1f)
+            );
 
             dialogGo.SetActive(false);
 
@@ -440,16 +524,30 @@ namespace CreativeAI.EditorTools
             iconImage.raycastTarget = false;
 
             // アイテム名（コントローラが上書き）
-            var itemNameText = CreateText(detailGo.transform, "ItemName", "",
-                anchorMin: new Vector2(0.5f, 1f), anchorMax: new Vector2(0.5f, 1f),
-                size: new Vector2(480, 60), fontSize: 40, color: Color.white,
-                anchoredPosition: new Vector2(0, -320));
+            var itemNameText = CreateText(
+                detailGo.transform,
+                "ItemName",
+                "",
+                anchorMin: new Vector2(0.5f, 1f),
+                anchorMax: new Vector2(0.5f, 1f),
+                size: new Vector2(480, 60),
+                fontSize: 40,
+                color: Color.white,
+                anchoredPosition: new Vector2(0, -320)
+            );
 
             // カテゴリ・レアリティ（コントローラが上書き）
-            var categoryText = CreateText(detailGo.transform, "Category", "",
-                anchorMin: new Vector2(0.5f, 1f), anchorMax: new Vector2(0.5f, 1f),
-                size: new Vector2(480, 36), fontSize: 22, color: new Color(0.95f, 0.8f, 0.4f, 1f),
-                anchoredPosition: new Vector2(0, -370));
+            var categoryText = CreateText(
+                detailGo.transform,
+                "Category",
+                "",
+                anchorMin: new Vector2(0.5f, 1f),
+                anchorMax: new Vector2(0.5f, 1f),
+                size: new Vector2(480, 36),
+                fontSize: 22,
+                color: new Color(0.95f, 0.8f, 0.4f, 1f),
+                anchoredPosition: new Vector2(0, -370)
+            );
 
             // 区切り線
             var dividerGo = new GameObject("Divider");
@@ -462,16 +560,30 @@ namespace CreativeAI.EditorTools
             dividerGo.AddComponent<Image>().color = new Color(1, 1, 1, 0.25f);
 
             // 説明文（コントローラが上書き）
-            var descriptionText = CreateText(detailGo.transform, "Description", "",
-                anchorMin: new Vector2(0.5f, 1f), anchorMax: new Vector2(0.5f, 1f),
-                size: new Vector2(440, 110), fontSize: 22, color: new Color(0.88f, 0.9f, 0.95f, 1f),
-                anchoredPosition: new Vector2(0, -480));
+            var descriptionText = CreateText(
+                detailGo.transform,
+                "Description",
+                "",
+                anchorMin: new Vector2(0.5f, 1f),
+                anchorMax: new Vector2(0.5f, 1f),
+                size: new Vector2(440, 110),
+                fontSize: 22,
+                color: new Color(0.88f, 0.9f, 0.95f, 1f),
+                anchoredPosition: new Vector2(0, -480)
+            );
 
             // 効果（コントローラが上書き）
-            var effectText = CreateText(detailGo.transform, "Effect", "",
-                anchorMin: new Vector2(0.5f, 1f), anchorMax: new Vector2(0.5f, 1f),
-                size: new Vector2(440, 40), fontSize: 24, color: new Color(0.7f, 0.95f, 0.75f, 1f),
-                anchoredPosition: new Vector2(0, -580));
+            var effectText = CreateText(
+                detailGo.transform,
+                "Effect",
+                "",
+                anchorMin: new Vector2(0.5f, 1f),
+                anchorMax: new Vector2(0.5f, 1f),
+                size: new Vector2(440, 40),
+                fontSize: 24,
+                color: new Color(0.7f, 0.95f, 0.75f, 1f),
+                anchoredPosition: new Vector2(0, -580)
+            );
 
             // ---- 閉じる(✕) ボタン: 右上 ----
             var closeBtn = CreateCloseButton(panelGo.transform);
@@ -500,11 +612,22 @@ namespace CreativeAI.EditorTools
         /// <summary>
         /// HUD 右上の円形メニューボタン。ラベル無し（アイコン差し替え前提）、色で識別。
         /// </summary>
-        private static Button CreateMenuIconButton(Transform parent, string name, float xFromRight, Color color)
+        private static Button CreateMenuIconButton(
+            Transform parent,
+            string name,
+            float xFromRight,
+            Color color
+        )
         {
-            var btn = CreateButton(parent, name, "",
-                anchorMin: new Vector2(1, 1), anchorMax: new Vector2(1, 1),
-                anchoredPosition: new Vector2(xFromRight, -70), sizeDelta: new Vector2(55, 55));
+            var btn = CreateButton(
+                parent,
+                name,
+                "",
+                anchorMin: new Vector2(1, 1),
+                anchorMax: new Vector2(1, 1),
+                anchoredPosition: new Vector2(xFromRight, -70),
+                sizeDelta: new Vector2(55, 55)
+            );
             var image = btn.GetComponent<Image>();
             image.color = color;
             var colors = btn.colors;
@@ -512,23 +635,34 @@ namespace CreativeAI.EditorTools
             colors.highlightedColor = new Color(
                 Mathf.Clamp01(color.r + 0.1f),
                 Mathf.Clamp01(color.g + 0.1f),
-                Mathf.Clamp01(color.b + 0.1f), color.a);
+                Mathf.Clamp01(color.b + 0.1f),
+                color.a
+            );
             colors.pressedColor = new Color(
                 Mathf.Clamp01(color.r - 0.1f),
                 Mathf.Clamp01(color.g - 0.1f),
-                Mathf.Clamp01(color.b - 0.1f), color.a);
+                Mathf.Clamp01(color.b - 0.1f),
+                color.a
+            );
             btn.colors = colors;
             return btn;
         }
 
         private static Button CreateCloseButton(Transform parent)
         {
-            var btn = CreateButton(parent, "CloseButton", "✕",
-                anchorMin: new Vector2(1, 1), anchorMax: new Vector2(1, 1),
-                anchoredPosition: new Vector2(-50, -50), sizeDelta: new Vector2(48, 48));
+            var btn = CreateButton(
+                parent,
+                "CloseButton",
+                "✕",
+                anchorMin: new Vector2(1, 1),
+                anchorMax: new Vector2(1, 1),
+                anchoredPosition: new Vector2(-50, -50),
+                sizeDelta: new Vector2(48, 48)
+            );
             var image = btn.GetComponent<Image>();
             var roundSprite = AssetDatabase.GetBuiltinExtraResource<Sprite>("UI/Skin/Knob.psd");
-            if (roundSprite != null) image.sprite = roundSprite;
+            if (roundSprite != null)
+                image.sprite = roundSprite;
             image.color = new Color(0.55f, 0.3f, 0.35f, 1f);
             var colors = btn.colors;
             colors.normalColor = image.color;
@@ -536,7 +670,8 @@ namespace CreativeAI.EditorTools
             colors.pressedColor = new Color(0.45f, 0.2f, 0.25f, 1f);
             btn.colors = colors;
             var label = btn.GetComponentInChildren<Text>();
-            if (label != null) label.fontSize = 24;
+            if (label != null)
+                label.fontSize = 24;
             return btn;
         }
 
@@ -575,9 +710,27 @@ namespace CreativeAI.EditorTools
             leftRt.sizeDelta = new Vector2(280, 920);
             leftRt.anchoredPosition = new Vector2(-790, -60);
 
-            var statsTab = CreateCategoryItem(leftGo.transform, "StatsCategory", "ステータス", -100, true);
-            var weaponTab = CreateCategoryItem(leftGo.transform, "WeaponCategory", "武器", -200, false);
-            var equipmentTab = CreateCategoryItem(leftGo.transform, "EquipmentCategory", "装備品", -300, false);
+            var statsTab = CreateCategoryItem(
+                leftGo.transform,
+                "StatsCategory",
+                "ステータス",
+                -100,
+                true
+            );
+            var weaponTab = CreateCategoryItem(
+                leftGo.transform,
+                "WeaponCategory",
+                "武器",
+                -200,
+                false
+            );
+            var equipmentTab = CreateCategoryItem(
+                leftGo.transform,
+                "EquipmentCategory",
+                "装備品",
+                -300,
+                false
+            );
             var statsLabel = statsTab.GetComponentInChildren<Text>();
             var weaponLabel = weaponTab.GetComponentInChildren<Text>();
             var equipmentLabel = equipmentTab.GetComponentInChildren<Text>();
@@ -635,12 +788,24 @@ namespace CreativeAI.EditorTools
         private struct EquipmentViewRefs
         {
             public GameObject view;
-            public Button slot1, slot2, slot3;
-            public Image slot1Icon, slot2Icon, slot3Icon;
-            public Text slot1Empty, slot2Empty, slot3Empty;
-            public Image slot1Frame, slot2Frame, slot3Frame;
+            public Button slot1,
+                slot2,
+                slot3;
+            public Image slot1Icon,
+                slot2Icon,
+                slot3Icon;
+            public Text slot1Empty,
+                slot2Empty,
+                slot3Empty;
+            public Image slot1Frame,
+                slot2Frame,
+                slot3Frame;
             public Image detailIcon;
-            public Text detailName, detailCategory, detailStats, detailPassiveTitle, detailPassiveDesc;
+            public Text detailName,
+                detailCategory,
+                detailStats,
+                detailPassiveTitle,
+                detailPassiveDesc;
         }
 
         private struct EquipmentSlotUI
@@ -658,31 +823,58 @@ namespace CreativeAI.EditorTools
             StretchFull(view.AddComponent<RectTransform>());
 
             var centerGo = CreateViewCenterArea(view.transform);
-            CreateText(centerGo.transform, "CharacterName", "プレイヤー（仮）",
-                anchorMin: new Vector2(0.5f, 1f), anchorMax: new Vector2(0.5f, 1f),
-                size: new Vector2(700, 60), fontSize: 36, color: Color.white,
-                anchoredPosition: new Vector2(0, -60));
-            CreateText(centerGo.transform, "ModelLabel", "Character Model\n（仮プレースホルダー）",
-                anchorMin: new Vector2(0.5f, 0.5f), anchorMax: new Vector2(0.5f, 0.5f),
-                size: new Vector2(400, 100), fontSize: 28, color: new Color(1, 1, 1, 0.5f));
+            CreateText(
+                centerGo.transform,
+                "CharacterName",
+                "プレイヤー（仮）",
+                anchorMin: new Vector2(0.5f, 1f),
+                anchorMax: new Vector2(0.5f, 1f),
+                size: new Vector2(700, 60),
+                fontSize: 36,
+                color: Color.white,
+                anchoredPosition: new Vector2(0, -60)
+            );
+            CreateText(
+                centerGo.transform,
+                "ModelLabel",
+                "Character Model\n（仮プレースホルダー）",
+                anchorMin: new Vector2(0.5f, 0.5f),
+                anchorMax: new Vector2(0.5f, 0.5f),
+                size: new Vector2(400, 100),
+                fontSize: 28,
+                color: new Color(1, 1, 1, 0.5f)
+            );
 
             var rightGo = CreateViewDetailPanel(view.transform);
-            CreateText(rightGo.transform, "SectionTitle", "ステータス",
-                anchorMin: new Vector2(0.5f, 1f), anchorMax: new Vector2(0.5f, 1f),
-                size: new Vector2(480, 60), fontSize: 36, color: Color.white,
-                anchoredPosition: new Vector2(0, -55));
+            CreateText(
+                rightGo.transform,
+                "SectionTitle",
+                "ステータス",
+                anchorMin: new Vector2(0.5f, 1f),
+                anchorMax: new Vector2(0.5f, 1f),
+                size: new Vector2(480, 60),
+                fontSize: 36,
+                color: Color.white,
+                anchoredPosition: new Vector2(0, -55)
+            );
             CreateDivider(rightGo.transform, -105);
-            CreateText(rightGo.transform, "StatsText",
-                "HP             100 / 100\n\n" +
-                "攻撃力             0\n\n" +
-                "防御力             0\n\n" +
-                "移動速度           0\n\n" +
-                "攻撃速度           0\n\n" +
-                "会心率             0 %\n\n" +
-                "会心ダメージ       0 %",
-                anchorMin: new Vector2(0.5f, 1f), anchorMax: new Vector2(0.5f, 1f),
-                size: new Vector2(440, 640), fontSize: 24, color: new Color(0.85f, 0.9f, 1f, 1f),
-                anchoredPosition: new Vector2(0, -440));
+            CreateText(
+                rightGo.transform,
+                "StatsText",
+                "HP             100 / 100\n\n"
+                    + "攻撃力             0\n\n"
+                    + "防御力             0\n\n"
+                    + "移動速度           0\n\n"
+                    + "攻撃速度           0\n\n"
+                    + "会心率             0 %\n\n"
+                    + "会心ダメージ       0 %",
+                anchorMin: new Vector2(0.5f, 1f),
+                anchorMax: new Vector2(0.5f, 1f),
+                size: new Vector2(440, 640),
+                fontSize: 24,
+                color: new Color(0.85f, 0.9f, 1f, 1f),
+                anchoredPosition: new Vector2(0, -440)
+            );
 
             return view;
         }
@@ -694,54 +886,123 @@ namespace CreativeAI.EditorTools
             StretchFull(view.AddComponent<RectTransform>());
 
             var centerGo = CreateViewCenterArea(view.transform);
-            CreateText(centerGo.transform, "WeaponName", "暁の剣（仮）",
-                anchorMin: new Vector2(0.5f, 1f), anchorMax: new Vector2(0.5f, 1f),
-                size: new Vector2(700, 60), fontSize: 36, color: Color.white,
-                anchoredPosition: new Vector2(0, -60));
-            CreateText(centerGo.transform, "WeaponModelLabel", "Weapon Model\n（仮プレースホルダー）",
-                anchorMin: new Vector2(0.5f, 0.5f), anchorMax: new Vector2(0.5f, 0.5f),
-                size: new Vector2(400, 100), fontSize: 28, color: new Color(1, 1, 1, 0.5f));
+            CreateText(
+                centerGo.transform,
+                "WeaponName",
+                "暁の剣（仮）",
+                anchorMin: new Vector2(0.5f, 1f),
+                anchorMax: new Vector2(0.5f, 1f),
+                size: new Vector2(700, 60),
+                fontSize: 36,
+                color: Color.white,
+                anchoredPosition: new Vector2(0, -60)
+            );
+            CreateText(
+                centerGo.transform,
+                "WeaponModelLabel",
+                "Weapon Model\n（仮プレースホルダー）",
+                anchorMin: new Vector2(0.5f, 0.5f),
+                anchorMax: new Vector2(0.5f, 0.5f),
+                size: new Vector2(400, 100),
+                fontSize: 28,
+                color: new Color(1, 1, 1, 0.5f)
+            );
 
             var rightGo = CreateViewDetailPanel(view.transform);
-            CreateText(rightGo.transform, "SectionTitle", "武器",
-                anchorMin: new Vector2(0.5f, 1f), anchorMax: new Vector2(0.5f, 1f),
-                size: new Vector2(480, 60), fontSize: 36, color: Color.white,
-                anchoredPosition: new Vector2(0, -55));
-            CreateText(rightGo.transform, "WeaponType", "片手剣  ★★★★★",
-                anchorMin: new Vector2(0.5f, 1f), anchorMax: new Vector2(0.5f, 1f),
-                size: new Vector2(480, 36), fontSize: 22, color: new Color(0.95f, 0.8f, 0.4f, 1f),
-                anchoredPosition: new Vector2(0, -110));
+            CreateText(
+                rightGo.transform,
+                "SectionTitle",
+                "武器",
+                anchorMin: new Vector2(0.5f, 1f),
+                anchorMax: new Vector2(0.5f, 1f),
+                size: new Vector2(480, 60),
+                fontSize: 36,
+                color: Color.white,
+                anchoredPosition: new Vector2(0, -55)
+            );
+            CreateText(
+                rightGo.transform,
+                "WeaponType",
+                "片手剣  ★★★★★",
+                anchorMin: new Vector2(0.5f, 1f),
+                anchorMax: new Vector2(0.5f, 1f),
+                size: new Vector2(480, 36),
+                fontSize: 22,
+                color: new Color(0.95f, 0.8f, 0.4f, 1f),
+                anchoredPosition: new Vector2(0, -110)
+            );
             CreateDivider(rightGo.transform, -155);
-            CreateText(rightGo.transform, "WeaponStats",
+            CreateText(
+                rightGo.transform,
+                "WeaponStats",
                 "基礎攻撃力        565\n\n会心率           +27.6%",
-                anchorMin: new Vector2(0.5f, 1f), anchorMax: new Vector2(0.5f, 1f),
-                size: new Vector2(440, 130), fontSize: 24, color: new Color(0.85f, 0.9f, 1f, 1f),
-                anchoredPosition: new Vector2(0, -250));
+                anchorMin: new Vector2(0.5f, 1f),
+                anchorMax: new Vector2(0.5f, 1f),
+                size: new Vector2(440, 130),
+                fontSize: 24,
+                color: new Color(0.85f, 0.9f, 1f, 1f),
+                anchoredPosition: new Vector2(0, -250)
+            );
             CreateDivider(rightGo.transform, -370);
-            CreateText(rightGo.transform, "Refinement", "精錬ランク Lv.1",
-                anchorMin: new Vector2(0.5f, 1f), anchorMax: new Vector2(0.5f, 1f),
-                size: new Vector2(440, 36), fontSize: 22, color: new Color(0.95f, 0.8f, 0.4f, 1f),
-                anchoredPosition: new Vector2(0, -410));
-            CreateText(rightGo.transform, "PassiveTitle", "パッシブ「黎明の誓い」",
-                anchorMin: new Vector2(0.5f, 1f), anchorMax: new Vector2(0.5f, 1f),
-                size: new Vector2(440, 36), fontSize: 24, color: Color.white,
-                anchoredPosition: new Vector2(0, -475));
-            CreateText(rightGo.transform, "PassiveDesc",
+            CreateText(
+                rightGo.transform,
+                "Refinement",
+                "精錬ランク Lv.1",
+                anchorMin: new Vector2(0.5f, 1f),
+                anchorMax: new Vector2(0.5f, 1f),
+                size: new Vector2(440, 36),
+                fontSize: 22,
+                color: new Color(0.95f, 0.8f, 0.4f, 1f),
+                anchoredPosition: new Vector2(0, -410)
+            );
+            CreateText(
+                rightGo.transform,
+                "PassiveTitle",
+                "パッシブ「黎明の誓い」",
+                anchorMin: new Vector2(0.5f, 1f),
+                anchorMax: new Vector2(0.5f, 1f),
+                size: new Vector2(440, 36),
+                fontSize: 24,
+                color: Color.white,
+                anchoredPosition: new Vector2(0, -475)
+            );
+            CreateText(
+                rightGo.transform,
+                "PassiveDesc",
                 "攻撃時、会心率が +10% 上昇する\n（最大3層、6秒持続）",
-                anchorMin: new Vector2(0.5f, 1f), anchorMax: new Vector2(0.5f, 1f),
-                size: new Vector2(440, 80), fontSize: 22, color: new Color(0.7f, 0.95f, 0.75f, 1f),
-                anchoredPosition: new Vector2(0, -555));
-            CreateTextOnlyButton(rightGo.transform, "ChangeWeaponButton", "▶ 武器を変更",
-                anchorMin: new Vector2(0.5f, 0f), anchorMax: new Vector2(0.5f, 0f),
-                anchoredPosition: new Vector2(0, 60), sizeDelta: new Vector2(280, 50),
-                fontSize: 26, color: new Color(0.95f, 0.8f, 0.4f, 1f));
+                anchorMin: new Vector2(0.5f, 1f),
+                anchorMax: new Vector2(0.5f, 1f),
+                size: new Vector2(440, 80),
+                fontSize: 22,
+                color: new Color(0.7f, 0.95f, 0.75f, 1f),
+                anchoredPosition: new Vector2(0, -555)
+            );
+            CreateTextOnlyButton(
+                rightGo.transform,
+                "ChangeWeaponButton",
+                "▶ 武器を変更",
+                anchorMin: new Vector2(0.5f, 0f),
+                anchorMax: new Vector2(0.5f, 0f),
+                anchoredPosition: new Vector2(0, 60),
+                sizeDelta: new Vector2(280, 50),
+                fontSize: 26,
+                color: new Color(0.95f, 0.8f, 0.4f, 1f)
+            );
 
             return view;
         }
 
-        private static Button CreateTextOnlyButton(Transform parent, string name, string label,
-            Vector2 anchorMin, Vector2 anchorMax, Vector2 anchoredPosition, Vector2 sizeDelta,
-            int fontSize, Color color)
+        private static Button CreateTextOnlyButton(
+            Transform parent,
+            string name,
+            string label,
+            Vector2 anchorMin,
+            Vector2 anchorMax,
+            Vector2 anchoredPosition,
+            Vector2 sizeDelta,
+            int fontSize,
+            Color color
+        )
         {
             var go = new GameObject(name);
             go.transform.SetParent(parent, false);
@@ -782,26 +1043,59 @@ namespace CreativeAI.EditorTools
 
             // 中央: キャラモデル placeholder + 3スロット横並び
             var centerGo = CreateViewCenterArea(view.transform);
-            CreateText(centerGo.transform, "CharacterName", "プレイヤー（仮）",
-                anchorMin: new Vector2(0.5f, 1f), anchorMax: new Vector2(0.5f, 1f),
-                size: new Vector2(700, 60), fontSize: 36, color: Color.white,
-                anchoredPosition: new Vector2(0, -60));
-            CreateText(centerGo.transform, "ModelLabel", "Character Model\n（仮プレースホルダー）",
-                anchorMin: new Vector2(0.5f, 0.5f), anchorMax: new Vector2(0.5f, 0.5f),
-                size: new Vector2(400, 100), fontSize: 28, color: new Color(1, 1, 1, 0.5f),
-                anchoredPosition: new Vector2(0, 80));
+            CreateText(
+                centerGo.transform,
+                "CharacterName",
+                "プレイヤー（仮）",
+                anchorMin: new Vector2(0.5f, 1f),
+                anchorMax: new Vector2(0.5f, 1f),
+                size: new Vector2(700, 60),
+                fontSize: 36,
+                color: Color.white,
+                anchoredPosition: new Vector2(0, -60)
+            );
+            CreateText(
+                centerGo.transform,
+                "ModelLabel",
+                "Character Model\n（仮プレースホルダー）",
+                anchorMin: new Vector2(0.5f, 0.5f),
+                anchorMax: new Vector2(0.5f, 0.5f),
+                size: new Vector2(400, 100),
+                fontSize: 28,
+                color: new Color(1, 1, 1, 0.5f),
+                anchoredPosition: new Vector2(0, 80)
+            );
 
             // 3スロット: x=-195/0/+195、y=-280
-            var slot1UI = CreateEquipmentSlot(centerGo.transform, "EquipmentSlot1", new Vector2(-195, -280));
-            var slot2UI = CreateEquipmentSlot(centerGo.transform, "EquipmentSlot2", new Vector2(0, -280));
-            var slot3UI = CreateEquipmentSlot(centerGo.transform, "EquipmentSlot3", new Vector2(195, -280));
+            var slot1UI = CreateEquipmentSlot(
+                centerGo.transform,
+                "EquipmentSlot1",
+                new Vector2(-195, -280)
+            );
+            var slot2UI = CreateEquipmentSlot(
+                centerGo.transform,
+                "EquipmentSlot2",
+                new Vector2(0, -280)
+            );
+            var slot3UI = CreateEquipmentSlot(
+                centerGo.transform,
+                "EquipmentSlot3",
+                new Vector2(195, -280)
+            );
 
             // 右: 詳細欄
             var rightGo = CreateViewDetailPanel(view.transform);
-            CreateText(rightGo.transform, "SectionTitle", "装備品",
-                anchorMin: new Vector2(0.5f, 1f), anchorMax: new Vector2(0.5f, 1f),
-                size: new Vector2(480, 60), fontSize: 36, color: Color.white,
-                anchoredPosition: new Vector2(0, -55));
+            CreateText(
+                rightGo.transform,
+                "SectionTitle",
+                "装備品",
+                anchorMin: new Vector2(0.5f, 1f),
+                anchorMax: new Vector2(0.5f, 1f),
+                size: new Vector2(480, 60),
+                fontSize: 36,
+                color: Color.white,
+                anchoredPosition: new Vector2(0, -55)
+            );
             CreateDivider(rightGo.transform, -105);
 
             // 詳細アイコン（大）
@@ -817,43 +1111,93 @@ namespace CreativeAI.EditorTools
             detailIcon.color = new Color(0, 0, 0, 0);
             detailIcon.raycastTarget = false;
 
-            var detailName = CreateText(rightGo.transform, "DetailName", "",
-                anchorMin: new Vector2(0.5f, 1f), anchorMax: new Vector2(0.5f, 1f),
-                size: new Vector2(480, 50), fontSize: 32, color: Color.white,
-                anchoredPosition: new Vector2(0, -360));
-            var detailCategory = CreateText(rightGo.transform, "DetailCategory", "",
-                anchorMin: new Vector2(0.5f, 1f), anchorMax: new Vector2(0.5f, 1f),
-                size: new Vector2(480, 36), fontSize: 22, color: new Color(0.95f, 0.8f, 0.4f, 1f),
-                anchoredPosition: new Vector2(0, -405));
+            var detailName = CreateText(
+                rightGo.transform,
+                "DetailName",
+                "",
+                anchorMin: new Vector2(0.5f, 1f),
+                anchorMax: new Vector2(0.5f, 1f),
+                size: new Vector2(480, 50),
+                fontSize: 32,
+                color: Color.white,
+                anchoredPosition: new Vector2(0, -360)
+            );
+            var detailCategory = CreateText(
+                rightGo.transform,
+                "DetailCategory",
+                "",
+                anchorMin: new Vector2(0.5f, 1f),
+                anchorMax: new Vector2(0.5f, 1f),
+                size: new Vector2(480, 36),
+                fontSize: 22,
+                color: new Color(0.95f, 0.8f, 0.4f, 1f),
+                anchoredPosition: new Vector2(0, -405)
+            );
             CreateDivider(rightGo.transform, -445);
-            var detailStats = CreateText(rightGo.transform, "DetailStats", "",
-                anchorMin: new Vector2(0.5f, 1f), anchorMax: new Vector2(0.5f, 1f),
-                size: new Vector2(440, 36), fontSize: 22, color: new Color(0.85f, 0.9f, 1f, 1f),
-                anchoredPosition: new Vector2(0, -485));
+            var detailStats = CreateText(
+                rightGo.transform,
+                "DetailStats",
+                "",
+                anchorMin: new Vector2(0.5f, 1f),
+                anchorMax: new Vector2(0.5f, 1f),
+                size: new Vector2(440, 36),
+                fontSize: 22,
+                color: new Color(0.85f, 0.9f, 1f, 1f),
+                anchoredPosition: new Vector2(0, -485)
+            );
             CreateDivider(rightGo.transform, -530);
-            var detailPassiveTitle = CreateText(rightGo.transform, "DetailPassiveTitle", "",
-                anchorMin: new Vector2(0.5f, 1f), anchorMax: new Vector2(0.5f, 1f),
-                size: new Vector2(440, 36), fontSize: 24, color: Color.white,
-                anchoredPosition: new Vector2(0, -575));
-            var detailPassiveDesc = CreateText(rightGo.transform, "DetailPassiveDesc", "",
-                anchorMin: new Vector2(0.5f, 1f), anchorMax: new Vector2(0.5f, 1f),
-                size: new Vector2(440, 80), fontSize: 22, color: new Color(0.7f, 0.95f, 0.75f, 1f),
-                anchoredPosition: new Vector2(0, -650));
+            var detailPassiveTitle = CreateText(
+                rightGo.transform,
+                "DetailPassiveTitle",
+                "",
+                anchorMin: new Vector2(0.5f, 1f),
+                anchorMax: new Vector2(0.5f, 1f),
+                size: new Vector2(440, 36),
+                fontSize: 24,
+                color: Color.white,
+                anchoredPosition: new Vector2(0, -575)
+            );
+            var detailPassiveDesc = CreateText(
+                rightGo.transform,
+                "DetailPassiveDesc",
+                "",
+                anchorMin: new Vector2(0.5f, 1f),
+                anchorMax: new Vector2(0.5f, 1f),
+                size: new Vector2(440, 80),
+                fontSize: 22,
+                color: new Color(0.7f, 0.95f, 0.75f, 1f),
+                anchoredPosition: new Vector2(0, -650)
+            );
 
             return new EquipmentViewRefs
             {
                 view = view,
-                slot1 = slot1UI.button, slot2 = slot2UI.button, slot3 = slot3UI.button,
-                slot1Icon = slot1UI.icon, slot2Icon = slot2UI.icon, slot3Icon = slot3UI.icon,
-                slot1Empty = slot1UI.emptyText, slot2Empty = slot2UI.emptyText, slot3Empty = slot3UI.emptyText,
-                slot1Frame = slot1UI.frame, slot2Frame = slot2UI.frame, slot3Frame = slot3UI.frame,
+                slot1 = slot1UI.button,
+                slot2 = slot2UI.button,
+                slot3 = slot3UI.button,
+                slot1Icon = slot1UI.icon,
+                slot2Icon = slot2UI.icon,
+                slot3Icon = slot3UI.icon,
+                slot1Empty = slot1UI.emptyText,
+                slot2Empty = slot2UI.emptyText,
+                slot3Empty = slot3UI.emptyText,
+                slot1Frame = slot1UI.frame,
+                slot2Frame = slot2UI.frame,
+                slot3Frame = slot3UI.frame,
                 detailIcon = detailIcon,
-                detailName = detailName, detailCategory = detailCategory, detailStats = detailStats,
-                detailPassiveTitle = detailPassiveTitle, detailPassiveDesc = detailPassiveDesc,
+                detailName = detailName,
+                detailCategory = detailCategory,
+                detailStats = detailStats,
+                detailPassiveTitle = detailPassiveTitle,
+                detailPassiveDesc = detailPassiveDesc,
             };
         }
 
-        private static EquipmentSlotUI CreateEquipmentSlot(Transform parent, string name, Vector2 position)
+        private static EquipmentSlotUI CreateEquipmentSlot(
+            Transform parent,
+            string name,
+            Vector2 position
+        )
         {
             var slotGo = new GameObject(name);
             slotGo.transform.SetParent(parent, false);
@@ -948,7 +1292,13 @@ namespace CreativeAI.EditorTools
         /// <summary>
         /// Character 画面の左サイドメニュー用テキストボタン。背景なし、テキスト色で active 状態を表現。
         /// </summary>
-        private static Button CreateCategoryItem(Transform parent, string name, string label, float yOffset, bool isActive)
+        private static Button CreateCategoryItem(
+            Transform parent,
+            string name,
+            string label,
+            float yOffset,
+            bool isActive
+        )
         {
             var go = new GameObject(name);
             go.transform.SetParent(parent, false);
@@ -983,20 +1333,34 @@ namespace CreativeAI.EditorTools
             return button;
         }
 
-        private static Button CreateTabButton(Transform parent, string name, string label, float xOffset, bool isActive)
+        private static Button CreateTabButton(
+            Transform parent,
+            string name,
+            string label,
+            float xOffset,
+            bool isActive
+        )
         {
-            var btn = CreateButton(parent, name, label,
-                anchorMin: new Vector2(0.5f, 1f), anchorMax: new Vector2(0.5f, 1f),
-                anchoredPosition: new Vector2(xOffset, -75), sizeDelta: new Vector2(65, 65));
+            var btn = CreateButton(
+                parent,
+                name,
+                label,
+                anchorMin: new Vector2(0.5f, 1f),
+                anchorMax: new Vector2(0.5f, 1f),
+                anchoredPosition: new Vector2(xOffset, -75),
+                sizeDelta: new Vector2(65, 65)
+            );
 
             // 丸い見た目にする(後でアイコンに差し替え予定)
             var image = btn.GetComponent<Image>();
             var roundSprite = AssetDatabase.GetBuiltinExtraResource<Sprite>("UI/Skin/Knob.psd");
-            if (roundSprite != null) image.sprite = roundSprite;
+            if (roundSprite != null)
+                image.sprite = roundSprite;
 
             // ラベルは仮表示。アイコンに差し替える時は削除。
             var labelText = btn.GetComponentInChildren<Text>();
-            if (labelText != null) labelText.fontSize = 20;
+            if (labelText != null)
+                labelText.fontSize = 20;
 
             if (isActive)
             {
@@ -1087,7 +1451,8 @@ namespace CreativeAI.EditorTools
                 return;
             }
             var legacy = existing.GetComponent<StandaloneInputModule>();
-            if (legacy != null) Object.DestroyImmediate(legacy);
+            if (legacy != null)
+                Object.DestroyImmediate(legacy);
             if (existing.GetComponent<InputSystemUIInputModule>() == null)
             {
                 existing.gameObject.AddComponent<InputSystemUIInputModule>();
@@ -1099,15 +1464,15 @@ namespace CreativeAI.EditorTools
             var noteGo = new GameObject("__EditorNote (Scene view only)");
             var textMesh = noteGo.AddComponent<TextMesh>();
             textMesh.text =
-                "=== 00_Boot シーン ===\n" +
-                "起動時の初期化シーン。\n" +
-                "PersistentSystems を生成し、\n" +
-                "BootstrapLoader が 01_Title へ自動遷移。\n" +
-                "\n" +
-                "このシーンは Play 時に一瞬で抜けるため\n" +
-                "通常編集する必要はありません。\n" +
-                "永続させたい新規マネージャーを追加する時のみ\n" +
-                "PersistentSystems 配下に置いてください。";
+                "=== 00_Boot シーン ===\n"
+                + "起動時の初期化シーン。\n"
+                + "PersistentSystems を生成し、\n"
+                + "BootstrapLoader が 01_Title へ自動遷移。\n"
+                + "\n"
+                + "このシーンは Play 時に一瞬で抜けるため\n"
+                + "通常編集する必要はありません。\n"
+                + "永続させたい新規マネージャーを追加する時のみ\n"
+                + "PersistentSystems 配下に置いてください。";
             textMesh.fontSize = 40;
             textMesh.characterSize = 0.15f;
             textMesh.color = new Color(1f, 0.9f, 0.3f, 1f);
@@ -1119,7 +1484,8 @@ namespace CreativeAI.EditorTools
 
         private static Sprite LoadSpriteWithImport(string path)
         {
-            if (!File.Exists(path)) return null;
+            if (!File.Exists(path))
+                return null;
             var importer = AssetImporter.GetAtPath(path) as TextureImporter;
             if (importer != null && importer.textureType != TextureImporterType.Sprite)
             {
@@ -1136,7 +1502,9 @@ namespace CreativeAI.EditorTools
             var prop = so.FindProperty(fieldName);
             if (prop == null)
             {
-                Debug.LogError($"[SetupInitialScenes] SerializedProperty '{fieldName}' not found on {target.GetType().Name}.");
+                Debug.LogError(
+                    $"[SetupInitialScenes] SerializedProperty '{fieldName}' not found on {target.GetType().Name}."
+                );
                 return;
             }
             prop.objectReferenceValue = value;
