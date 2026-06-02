@@ -15,8 +15,7 @@ namespace CreativeAI.EditorTools
     /// </summary>
     public static class CreateFieldScene
     {
-        private const string FloorModelPath =
-            "Assets/_Project/Art/Models/Environment/Floor.glb";
+        private const string FloorModelPath = "Assets/_Project/Art/Models/Environment/Floor.glb";
         private const string ScenePath = "Assets/_Project/Scenes/Field/Field_Area02.unity";
 
         // 床を1辺あたり何枚敷くか＝マップの広さ。大きくすればマップが広くなる。
