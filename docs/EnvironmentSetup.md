@@ -103,12 +103,6 @@ CI は整形漏れを **赤くするだけ**で自動修正はしない（[Devel
 1. 拡張機能 **CSharpier**（`csharpier.csharpier-vscode`）をインストール。
 2. `.vscode/` にワークスペース設定が入っているのでそのまま使う。format-on-save が有効になる。
 
-### Rider / JetBrains
-
-1. Settings → Plugins で **CSharpier** プラグインをインストール。
-2. Settings → Tools → CSharpier で **Run on Save** を有効化。
-3. リポジトリの `.config/dotnet-tools.json` のバージョンを使う設定にする。
-
 ---
 
 ## 5. 動作確認

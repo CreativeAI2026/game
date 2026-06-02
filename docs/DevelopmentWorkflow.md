@@ -50,7 +50,7 @@ CI（`csharpier check`）は **整形漏れを赤くするだけで自動修正�
 
 ### 推奨：IDE の保存時自動整形
 
-VS Code / Rider の CSharpier 拡張で format-on-save を有効にしておけば、保存のたびに整形される
+VS Code の CSharpier 拡張で format-on-save を有効にしておけば、保存のたびに整形される
 （設定は [EnvironmentSetup.md](./EnvironmentSetup.md#4-ide-の-csharpier-連携推奨保存時に自動整形) 参照）。
 これが一番ラクで、CI で落ちにくい。
 
