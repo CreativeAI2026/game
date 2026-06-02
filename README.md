@@ -2,13 +2,10 @@
 
 Unity Editor **6000.4.5f1**（Unity 6）で開いてください。バージョンは `ProjectSettings/ProjectVersion.txt` で管理されています。
 
-## クローン
+## はじめに（開発に参加する人へ）
 
-```bash
-git clone https://github.com/CreativeAI2026/game.git
-```
-
-Unity Hub の `Projects` → `Add` でクローンした `game/` フォルダを選択して開きます。
+- 環境構築の手順 → [`docs/EnvironmentSetup.md`](docs/EnvironmentSetup.md)
+- 開発フロー（ブランチ → コミット → PR → CI） → [`docs/DevelopmentWorkflow.md`](docs/DevelopmentWorkflow.md)
 
 ## ディレクトリ構成
 
@@ -29,9 +26,17 @@ game/                        ← リポジトリルート
 ├── Temp/                    ★ 一時ファイル（commit しない）
 ├── Logs/                    ★ ログ（commit しない）
 ├── UserSettings/            ★ ユーザー個人設定（commit しない）
+├── docs/                    開発ドキュメント（環境構築・開発フロー）
 ├── .vscode/                 VS Code 設定（共有）
 ├── .gitignore               Git 除外ルール
 └── README.md                ← このファイル
 ```
 
 ★ は `.gitignore` で除外されています。`Assets/_Project/` 配下の詳細なフォルダ設計は [`documents/DirectoryStructure.md`](../documents/DirectoryStructure.md) を参照してください。
+
+## ドキュメント
+
+| ファイル | 内容 |
+|----------|------|
+| [`docs/EnvironmentSetup.md`](docs/EnvironmentSetup.md) | 環境構築手順（Unity / mise / CSharpier） |
+| [`docs/DevelopmentWorkflow.md`](docs/DevelopmentWorkflow.md) | 開発フロー（ブランチ → コミット → PR → CI） |
