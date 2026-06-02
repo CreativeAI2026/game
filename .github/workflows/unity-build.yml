@@ -1,7 +1,7 @@
 name: Unity Compile Check
 
 # StandaloneLinux64 (Mono) でビルドを通すことで「全 asmdef がコンパイルできるか」を検証する。
-# 要 Secrets: UNITY_LICENSE / UNITY_EMAIL / UNITY_PASSWORD（取得手順は documents/CICD.md 参照）
+# 要 Secrets: UNITY_LICENSE / UNITY_EMAIL / UNITY_PASSWORD
 
 on:
   push:

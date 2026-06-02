@@ -115,7 +115,7 @@ GitHub の画面（ブラウザ）から作成する。
 
 ## 7. CI を緑にする
 
-PR を作ると以下が自動で走る（詳細は `documents/CICD.md`）:
+PR を作ると以下が自動で走る:
 
 | チェック | 内容 | 落ちたときの直し方 |
 |----------|------|--------------------|
@@ -144,4 +144,3 @@ git branch -d feature/<内容>   # ローカルの後始末
 ## 関連ドキュメント
 
 - [EnvironmentSetup.md](./EnvironmentSetup.md) — 環境構築手順
-- `documents/CICD.md` — CI/CD の構成・設計（Branch protection / Unity ライセンス登録など）

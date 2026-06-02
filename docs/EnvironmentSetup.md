@@ -121,6 +121,4 @@ mise exec -- dotnet csharpier check .
 ## 関連ドキュメント
 
 - [DevelopmentWorkflow.md](./DevelopmentWorkflow.md) — ブランチ → コミット → PR の開発フロー
-- `documents/CICD.md` — CI/CD の構成と設計方針（Unity ライセンス登録手順など）
-- `documents/DirectoryStructure.md` — `Assets/_Project/` のフォルダ設計
 - [../README.md](../README.md) — プロジェクト概要

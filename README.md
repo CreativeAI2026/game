@@ -12,7 +12,7 @@ Unity Editor **6000.4.5f1**（Unity 6）で開いてください。バージョ�
 ```
 game/                        ← リポジトリルート
 ├── Assets/                  ゲーム本体のアセット
-│   └── _Project/            本プロジェクトのアセット（詳細は documents/DirectoryStructure.md）
+│   └── _Project/            本プロジェクトのアセット
 │       ├── Features/        ゲーム機能（Player・Enemy・UI 等）
 │       ├── Art/             3D モデル・テクスチャ・アニメ・VFX 等
 │       ├── Audio/           BGM・SE
