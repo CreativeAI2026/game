@@ -32,7 +32,7 @@ game/                        ← リポジトリルート
 └── README.md                ← このファイル
 ```
 
-★ は `.gitignore` で除外されています。`Assets/_Project/` 配下の詳細なフォルダ設計は [`documents/DirectoryStructure.md`](../documents/DirectoryStructure.md) を参照してください。
+★ は `.gitignore` で除外されています。
 
 ## ドキュメント
 
