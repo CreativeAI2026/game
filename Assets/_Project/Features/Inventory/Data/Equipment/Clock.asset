@@ -13,8 +13,8 @@ MonoBehaviour:
   m_Name: Clock
   m_EditorClassIdentifier: CreativeAI.Gameplay::CreativeAI.Gameplay.EquipmentData
   icon: {fileID: 21300000, guid: 5fdccfaa7a48b4c718541844851a1cf1, type: 3}
+  id: 2001
   itemName: "\u61D0\u4E2D\u6642\u8A08"
-  id: 0
   category: "\u88C5\u5099\u54C1  \u2605"
   description: "\u91D1\u8272\u306E\u7E01\u306B\u53E4\u3073\u305F\u30ED\u30FC\u30DE\u6570\u5B57\u3002\\n\u6642\u306E\u6D41\u308C\u3092\u6B63\u78BA\u306B\u523B\u307F\u3001\u6301\u3064\u8005\u306B\u51B7\u9759\u3055\u3092\u4E0E\u3048\u308B\u3002"
   effect: "\u52B9\u679C   \u653B\u6483\u901F\u5EA6 +5%"

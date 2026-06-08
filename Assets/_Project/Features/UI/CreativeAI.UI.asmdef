@@ -4,7 +4,8 @@
     "references": [
         "CreativeAI.Core",
         "CreativeAI.Shared",
-        "CreativeAI.Gameplay"
+        "CreativeAI.Gameplay",
+        "Unity.TextMeshPro"
     ],
     "includePlatforms": [],
     "excludePlatforms": [],

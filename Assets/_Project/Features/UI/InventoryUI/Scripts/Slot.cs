@@ -1,28 +1,29 @@
-using System.Collections;
 using CreativeAI.Gameplay;
 using UnityEngine;
-using UnityEngine.EventSystems;
 using UnityEngine.UI;
 
-namespace CreativeAI.UI
+namespace CreativeAI.UI.InventoryUI
 {
-    public class Slot : MonoBehaviour, IPointerEnterHandler, IPointerExitHandler
+    public class Slot : MonoBehaviour
     {
-        [SerializeField]
-        private float _hoverScale = 1.2f; // ホバー時の拡大率
-
-        [SerializeField]
-        private float _animationDuration = 0.2f; // アニメーションの時間
-        private RectTransform _icon; // アイコンのRectTransform
         private Image _iconImage;
+        private HoverScaleOnPointer _hoverScale;
         private ItemData _itemData;
-        Coroutine _currentAnimation;
 
         private void Awake()
         {
             _iconImage = GetComponentInChildren<Image>(true);
-            if (_iconImage != null)
-                _icon = _iconImage.rectTransform;
+            _hoverScale = GetComponent<HoverScaleOnPointer>();
+            if (_hoverScale == null)
+                _hoverScale = GetComponentInChildren<HoverScaleOnPointer>(true);
+
+            if (_hoverScale != null && _iconImage != null)
+                _hoverScale.SetTarget(_iconImage.rectTransform);
+        }
+
+        private void OnEnable()
+        {
+            BindHoverTarget();
         }
 
         public void SetItem(ItemData item)
@@ -42,39 +43,20 @@ namespace CreativeAI.UI
                 _iconImage.sprite = null;
                 _iconImage.color = new Color(0, 0, 0, 0);
             }
+
+            BindHoverTarget();
         }
 
-        public void OnPointerEnter(PointerEventData eventData)
+        private void BindHoverTarget()
         {
-            StartScale(Vector3.one * _hoverScale);
-        }
+            if (_hoverScale == null)
+                return;
 
-        public void OnPointerExit(PointerEventData eventData)
-        {
-            StartScale(Vector3.one);
-        }
+            if (_iconImage == null)
+                _iconImage = GetComponentInChildren<Image>(true);
 
-        private void StartScale(Vector3 target)
-        {
-            if (_currentAnimation != null)
-                StopCoroutine(_currentAnimation);
-            _currentAnimation = StartCoroutine(ScaleTo(target));
-        }
-
-        private IEnumerator ScaleTo(Vector3 target)
-        {
-            if (_icon == null)
-                yield break;
-
-            Vector3 initialScale = _icon.localScale;
-            float elapsed = 0f;
-            while (elapsed < _animationDuration)
-            {
-                elapsed += Time.deltaTime;
-                _icon.localScale = Vector3.Lerp(initialScale, target, elapsed / _animationDuration);
-                yield return null;
-            }
-            _icon.localScale = target;
+            if (_iconImage != null)
+                _hoverScale.SetTarget(_iconImage.rectTransform);
         }
     }
 }

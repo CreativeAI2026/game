@@ -12,4 +12,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: e1bf1653fbb00d84bbe67daf4d1c5c8a, type: 3}
   m_Name: ItemDB
   m_EditorClassIdentifier: CreativeAI.Gameplay::CreativeAI.Gameplay.ItemDB
-  items: []
+  items:
+  - {fileID: 11400000, guid: 2ebb5bdd3d3e852419a745d1aed05ea4, type: 2}
+  - {fileID: 11400000, guid: e7fbd7ecfd83ba64284e68d09bba1571, type: 2}
+  - {fileID: 11400000, guid: 2ebb5bdd3d3e852419a745d1aed05ea4, type: 2}

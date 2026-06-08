@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using CreativeAI.Gameplay;
+using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
 
@@ -47,8 +48,8 @@ namespace CreativeAI.UI.InventoryUI
         [SerializeField]
         private ItemDB _itemDB;
 
-        private static readonly Color ActiveColor = new Color(0.55f, 0.7f, 0.95f, 1f);
-        private static readonly Color InactiveColor = new Color(0.3f, 0.45f, 0.65f, 1f);
+        private static readonly Color ActiveColor = new Color(1f, 1f, 1f, 1f);
+        private static readonly Color InactiveColor = new Color(0.5f, 0.5f, 0.5f, 1f);
 
         private List<ItemData> _weapons;
         private List<ItemData> _equipments;
@@ -144,11 +145,22 @@ namespace CreativeAI.UI.InventoryUI
         {
             if (tab == null)
                 return;
-            var image = tab.GetComponent<Image>();
-            if (image == null)
-                return;
             var color = isActive ? ActiveColor : InactiveColor;
-            image.color = color;
+
+            var images = tab.GetComponentsInChildren<Image>(true);
+            foreach (var image in images)
+            {
+                if (image != null)
+                    image.color = color;
+            }
+
+            var texts = tab.GetComponentsInChildren<TMP_Text>(true);
+            foreach (var text in texts)
+            {
+                if (text != null)
+                    text.color = color;
+            }
+
             var colors = tab.colors;
             colors.normalColor = color;
             colors.highlightedColor = new Color(

@@ -12,6 +12,8 @@ GameObject:
   - component: {fileID: 5053484984487737774}
   - component: {fileID: 6190101298754717925}
   - component: {fileID: 7039143086210805446}
+  - component: {fileID: -7344806846162860178}
+  - component: {fileID: -1138212406952457358}
   m_Layer: 0
   m_Name: Slot
   m_TagString: Untagged
@@ -120,3 +122,30 @@ MonoBehaviour:
   m_OnClick:
     m_PersistentCalls:
       m_Calls: []
+--- !u!114 &-7344806846162860178
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 3025497494565781539}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 2af7714d4be8b3444b857a4efad3a4fe, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: CreativeAI.UI::CreativeAI.UI.InventoryUI.Slot
+--- !u!114 &-1138212406952457358
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 3025497494565781539}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 0fed04f0ec157104f93a96edb9a0c946, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: CreativeAI.UI::CreativeAI.UI.InventoryUI.HoverScaleOnPointer
+  _hoverScale: 1.2
+  _animationDuration: 0.2
+  _targetImage: {fileID: 0}
