@@ -14,6 +14,9 @@ namespace CreativeAI.UI.InventoryUI
         private static HoverScaleOnPointer _lockedInstance;
 
         [SerializeField]
+        private bool _lockEnabled = true;
+
+        [SerializeField]
         private float _hoverScale = 1.2f;
 
         [SerializeField]
@@ -60,6 +63,9 @@ namespace CreativeAI.UI.InventoryUI
 
         public void OnPointerClick(PointerEventData eventData)
         {
+            if (!_lockEnabled)
+                return;
+
             LockSelection();
         }
 
@@ -87,7 +93,13 @@ namespace CreativeAI.UI.InventoryUI
 
         public bool IsLocked() => _isLocked;
 
-        public void AcquireLock() => LockSelection();
+        public void AcquireLock()
+        {
+            if (!_lockEnabled)
+                return;
+
+            LockSelection();
+        }
 
         public void ReleaseLock() => ReleaseLockedState();
 

@@ -11,13 +11,7 @@ namespace CreativeAI.UI.InventoryUI
     public class InventoryUIController : MonoBehaviour
     {
         [SerializeField]
-        private Button _weaponTab;
-
-        [SerializeField]
-        private Button _equipmentTab;
-
-        [SerializeField]
-        private Button _foodTab;
+        private Transform _tabsRoot;
 
         [SerializeField]
         private Transform _slotsRoot;
@@ -38,16 +32,18 @@ namespace CreativeAI.UI.InventoryUI
         private Text _detailEffect;
 
         [SerializeField]
-        private Sprite _appleIcon;
-
-        [SerializeField]
-        private Sprite _clockIcon;
-
-        [SerializeField]
         private Slot _slotPrefab;
 
         [SerializeField]
         private ItemDB _itemDB;
+
+        private enum ItemCategory
+        {
+            Weapon = 0,
+            Equipment = 1,
+            Food = 2,
+            Important = 3,
+        }
 
         private static readonly Color ActiveColor = new Color(1f, 1f, 1f, 1f);
         private static readonly Color InactiveColor = new Color(0.5f, 0.5f, 0.5f, 1f);
@@ -55,32 +51,49 @@ namespace CreativeAI.UI.InventoryUI
         private List<ItemData> _weapons;
         private List<ItemData> _equipments;
         private List<ItemData> _foods;
+        private List<ItemData> _importants;
+        private Dictionary<ItemCategory, Button> _tabs;
+        private Dictionary<ItemCategory, List<ItemData>> _categories;
         private bool _navigationDisabled = false;
 
         private void Awake()
         {
-            // InventoryScrollView removed - content layout will be rebuilt after slot creation
+            _tabs = new Dictionary<ItemCategory, Button>
+            {
+                { ItemCategory.Weapon, _tabsRoot.Find("WeaponTab").GetComponent<Button>() },
+                { ItemCategory.Equipment, _tabsRoot.Find("EquipmentTab").GetComponent<Button>() },
+                { ItemCategory.Food, _tabsRoot.Find("FoodTab").GetComponent<Button>() },
+                { ItemCategory.Important, _tabsRoot.Find("ImportantTab").GetComponent<Button>() },
+            };
 
             BuildCategoryLists();
 
-            if (_weaponTab != null)
-                _weaponTab.onClick.AddListener(() => ShowCategory(_weapons, _weaponTab));
-            if (_equipmentTab != null)
-                _equipmentTab.onClick.AddListener(() => ShowCategory(_equipments, _equipmentTab));
-            if (_foodTab != null)
-                _foodTab.onClick.AddListener(() => ShowCategory(_foods, _foodTab));
+            _categories = new Dictionary<ItemCategory, List<ItemData>>
+            {
+                { ItemCategory.Weapon, _weapons },
+                { ItemCategory.Equipment, _equipments },
+                { ItemCategory.Food, _foods },
+                { ItemCategory.Important, _importants },
+            };
 
-            ShowCategory(_foods, _foodTab);
+            foreach (var (index, category) in _categories)
+            {
+                if (_tabs[index] == null)
+                    continue;
+                _tabs[index].onClick.AddListener(() => ShowCategory(category, _tabs[index]));
+            }
+
+            ShowCategory(_categories[ItemCategory.Weapon], _tabs[ItemCategory.Weapon]);
+            _tabs[ItemCategory.Weapon].GetComponent<HoverScaleOnPointer>()?.AcquireLock();
         }
 
         private void OnDestroy()
         {
-            if (_weaponTab != null)
-                _weaponTab.onClick.RemoveAllListeners();
-            if (_equipmentTab != null)
-                _equipmentTab.onClick.RemoveAllListeners();
-            if (_foodTab != null)
-                _foodTab.onClick.RemoveAllListeners();
+            foreach (var (category, tab) in _tabs)
+            {
+                if (tab != null)
+                    tab.onClick.RemoveAllListeners();
+            }
         }
 
         private void BuildCategoryLists()
@@ -88,13 +101,14 @@ namespace CreativeAI.UI.InventoryUI
             _weapons = new List<ItemData>();
             _equipments = new List<ItemData>();
             _foods = new List<ItemData>();
+            _importants = new List<ItemData>();
 
             AddItemById(_equipments, 2001);
-            AddItemById(_foods, 3001);
-            AddItemById(_foods, 2001);
-            AddItemById(_foods, 3001);
-            AddItemById(_foods, 3001);
-            AddItemById(_foods, 2001);
+            for (int i = 0; i < 40; i++)
+            {
+                int id = UnityEngine.Random.Range(0, 2) == 0 ? 3001 : 2001;
+                AddItemById(_foods, id);
+            }
         }
 
         private void AddItemById(List<ItemData> target, int id)
@@ -109,16 +123,14 @@ namespace CreativeAI.UI.InventoryUI
 
         private void ShowCategory(List<ItemData> items, Button activeTab)
         {
-            UpdateTabColor(_weaponTab, activeTab == _weaponTab);
-            UpdateTabColor(_equipmentTab, activeTab == _equipmentTab);
-            UpdateTabColor(_foodTab, activeTab == _foodTab);
+            foreach (var (index, tab) in _tabs)
+            {
+                UpdateTabColor(tab, tab == activeTab);
+            }
 
             RefreshSlots(items);
 
-            if (items != null && items.Count > 0)
-                ShowDetail(items[0]);
-            else
-                ClearDetail();
+            ShowDetail(items != null && items.Count > 0 ? items[0] : null);
         }
 
         private void RefreshSlots(List<ItemData> items)
@@ -193,36 +205,21 @@ namespace CreativeAI.UI.InventoryUI
 
         private void ShowDetail(ItemData item)
         {
-            if (_detailIcon != null)
-            {
-                _detailIcon.sprite = item.icon;
-                _detailIcon.color = Color.white;
-            }
-            if (_detailName != null)
-                _detailName.text = item.itemName;
-            if (_detailCategory != null)
-                _detailCategory.text = item.category;
-            if (_detailDescription != null)
-                _detailDescription.text = item.description;
-            if (_detailEffect != null)
-                _detailEffect.text = item.effect;
-        }
+            bool hasItem = item != null;
 
-        private void ClearDetail()
-        {
             if (_detailIcon != null)
             {
-                _detailIcon.sprite = null;
-                _detailIcon.color = new Color(0, 0, 0, 0);
+                _detailIcon.sprite = hasItem ? item.icon : null;
+                _detailIcon.color = hasItem ? Color.white : new Color(0, 0, 0, 0);
             }
             if (_detailName != null)
-                _detailName.text = "";
+                _detailName.text = hasItem ? item.itemName : "";
             if (_detailCategory != null)
-                _detailCategory.text = "";
+                _detailCategory.text = hasItem ? item.category : "";
             if (_detailDescription != null)
-                _detailDescription.text = "";
+                _detailDescription.text = hasItem ? item.description : "";
             if (_detailEffect != null)
-                _detailEffect.text = "";
+                _detailEffect.text = hasItem ? item.effect : "";
         }
 
         // Called by Slot when clicked to select it explicitly
@@ -234,10 +231,7 @@ namespace CreativeAI.UI.InventoryUI
             // Acquire lock on the slot (will release other locked instance)
             slot.Select();
 
-            if (slot.Item != null)
-                ShowDetail(slot.Item);
-            else
-                ClearDetail();
+            ShowDetail(slot.Item);
 
             // Disable event system navigation while a slot is locked
             if (!_navigationDisabled && EventSystem.current != null)
