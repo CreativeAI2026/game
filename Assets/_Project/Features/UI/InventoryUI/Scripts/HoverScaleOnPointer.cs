@@ -82,6 +82,15 @@ namespace CreativeAI.UI.InventoryUI
             StartScale(Vector3.one);
         }
 
+        // Public API for external control
+        public static HoverScaleOnPointer GetLockedInstance() => _lockedInstance;
+
+        public bool IsLocked() => _isLocked;
+
+        public void AcquireLock() => LockSelection();
+
+        public void ReleaseLock() => ReleaseLockedState();
+
         private void StartScale(Vector3 target)
         {
             if (_targetRect == null)

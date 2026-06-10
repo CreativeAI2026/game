@@ -466,16 +466,46 @@ namespace CreativeAI.EditorTools
             var equipmentTab = CreateTabButton(panelGo.transform, "EquipmentTab", "", 0, false);
             var foodTab = CreateTabButton(panelGo.transform, "FoodTab", "", 150, true);
 
-            // ---- 左: アイテムグリッド枠（7割・縦最大）----
-            var gridGo = new GameObject("ItemGrid");
-            gridGo.transform.SetParent(panelGo.transform, false);
-            var gridRt = gridGo.AddComponent<RectTransform>();
-            gridRt.anchorMin = new Vector2(0.5f, 0.5f);
-            gridRt.anchorMax = new Vector2(0.5f, 0.5f);
-            gridRt.sizeDelta = new Vector2(1200, 920);
-            gridRt.anchoredPosition = new Vector2(-300, -60);
+            // ---- 左: アイテムグリッド枠（Scroll View + Content(Grid)）----
+            var scrollViewGo = new GameObject("ItemScrollView");
+            scrollViewGo.transform.SetParent(panelGo.transform, false);
+            var scrollViewRt = scrollViewGo.AddComponent<RectTransform>();
+            scrollViewRt.anchorMin = new Vector2(0.5f, 0.5f);
+            scrollViewRt.anchorMax = new Vector2(0.5f, 0.5f);
+            scrollViewRt.sizeDelta = new Vector2(1200, 920);
+            scrollViewRt.anchoredPosition = new Vector2(-300, -60);
 
-            var grid = gridGo.AddComponent<GridLayoutGroup>();
+            var scrollImage = scrollViewGo.AddComponent<Image>();
+            scrollImage.color = new Color(0, 0, 0, 0.001f);
+            var scrollMask = scrollViewGo.AddComponent<Mask>();
+            scrollMask.showMaskGraphic = false;
+            var scrollRect = scrollViewGo.AddComponent<ScrollRect>();
+
+            // Viewport
+            var viewportGo = new GameObject("Viewport");
+            viewportGo.transform.SetParent(scrollViewGo.transform, false);
+            var viewportRt = viewportGo.AddComponent<RectTransform>();
+            viewportRt.anchorMin = Vector2.zero;
+            viewportRt.anchorMax = Vector2.one;
+            viewportRt.offsetMin = Vector2.zero;
+            viewportRt.offsetMax = Vector2.zero;
+            var viewportImage = viewportGo.AddComponent<Image>();
+            viewportImage.color = new Color(0, 0, 0, 0.001f);
+            var viewportMask = viewportGo.AddComponent<Mask>();
+            viewportMask.showMaskGraphic = false;
+
+            // Content (GridLayoutGroup goes here)
+            var contentGo = new GameObject("Content");
+            contentGo.transform.SetParent(viewportGo.transform, false);
+            var contentRt = contentGo.AddComponent<RectTransform>();
+            // anchor to top stretch horizontally
+            contentRt.anchorMin = new Vector2(0f, 1f);
+            contentRt.anchorMax = new Vector2(1f, 1f);
+            contentRt.pivot = new Vector2(0.5f, 1f);
+            contentRt.anchoredPosition = Vector2.zero;
+            contentRt.sizeDelta = new Vector2(0f, 0f);
+
+            var grid = contentGo.AddComponent<GridLayoutGroup>();
             grid.cellSize = new Vector2(130, 130);
             grid.spacing = new Vector2(12, 12);
             grid.padding = new RectOffset(38, 38, 32, 32);
@@ -485,12 +515,20 @@ namespace CreativeAI.EditorTools
             grid.constraintCount = 8;
             grid.childAlignment = TextAnchor.UpperCenter;
 
+            // Wire scrollRect
+            scrollRect.viewport = viewportRt;
+            scrollRect.content = contentRt;
+            scrollRect.horizontal = false;
+            scrollRect.vertical = true;
+            scrollRect.movementType = ScrollRect.MovementType.Clamped;
+            scrollRect.inertia = true;
+
             var appleSprite = LoadSpriteWithImport(AppleIconPath);
             var clockSprite = LoadSpriteWithImport(ClockIconPath);
             // 全スロット空で作成。アイテム表示はコントローラがタブ切替に応じて埋める。
             for (int i = 1; i <= 48; i++)
             {
-                CreateItemSlot(gridGo.transform, i, null);
+                CreateItemSlot(contentGo.transform, i, null);
             }
 
             // ---- 右: 詳細パネル（3割・縦最大）----
@@ -593,7 +631,7 @@ namespace CreativeAI.EditorTools
             SetRef(inventoryCtrl, "_weaponTab", weaponTab);
             SetRef(inventoryCtrl, "_equipmentTab", equipmentTab);
             SetRef(inventoryCtrl, "_foodTab", foodTab);
-            SetRef(inventoryCtrl, "_slotsRoot", gridGo.transform);
+            SetRef(inventoryCtrl, "_slotsRoot", contentGo.transform);
             SetRef(inventoryCtrl, "_detailIcon", iconImage);
             SetRef(inventoryCtrl, "_detailName", itemNameText);
             SetRef(inventoryCtrl, "_detailCategory", categoryText);

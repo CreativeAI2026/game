@@ -1,14 +1,16 @@
 using CreativeAI.Gameplay;
 using UnityEngine;
+using UnityEngine.EventSystems;
 using UnityEngine.UI;
 
 namespace CreativeAI.UI.InventoryUI
 {
-    public class Slot : MonoBehaviour
+    public class Slot : MonoBehaviour, IPointerClickHandler
     {
         private Image _iconImage;
         private HoverScaleOnPointer _hoverScale;
         private ItemData _itemData;
+        private InventoryUIController _controller;
 
         private void Awake()
         {
@@ -19,6 +21,9 @@ namespace CreativeAI.UI.InventoryUI
 
             if (_hoverScale != null && _iconImage != null)
                 _hoverScale.SetTarget(_iconImage.rectTransform);
+
+            // cache controller reference if present in parents
+            _controller = GetComponentInParent<InventoryUIController>();
         }
 
         private void OnEnable()
@@ -57,6 +62,26 @@ namespace CreativeAI.UI.InventoryUI
 
             if (_iconImage != null)
                 _hoverScale.SetTarget(_iconImage.rectTransform);
+        }
+
+        public HoverScaleOnPointer Hover => _hoverScale;
+
+        public ItemData Item => _itemData;
+
+        public void Select()
+        {
+            _hoverScale?.AcquireLock();
+        }
+
+        public void OnPointerClick(PointerEventData eventData)
+        {
+            if (_controller != null)
+            {
+                _controller.SelectSlot(this);
+                return;
+            }
+
+            Select();
         }
     }
 }

@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using CreativeAI.Gameplay;
 using TMPro;
 using UnityEngine;
+using UnityEngine.EventSystems;
 using UnityEngine.UI;
 
 namespace CreativeAI.UI.InventoryUI
@@ -54,9 +55,12 @@ namespace CreativeAI.UI.InventoryUI
         private List<ItemData> _weapons;
         private List<ItemData> _equipments;
         private List<ItemData> _foods;
+        private bool _navigationDisabled = false;
 
         private void Awake()
         {
+            // InventoryScrollView removed - content layout will be rebuilt after slot creation
+
             BuildCategoryLists();
 
             if (_weaponTab != null)
@@ -87,6 +91,10 @@ namespace CreativeAI.UI.InventoryUI
 
             AddItemById(_equipments, 2001);
             AddItemById(_foods, 3001);
+            AddItemById(_foods, 2001);
+            AddItemById(_foods, 3001);
+            AddItemById(_foods, 3001);
+            AddItemById(_foods, 2001);
         }
 
         private void AddItemById(List<ItemData> target, int id)
@@ -127,6 +135,17 @@ namespace CreativeAI.UI.InventoryUI
 
                 var slot = Instantiate(_slotPrefab, _slotsRoot, false);
                 slot.SetItem(item);
+            }
+
+            // Force rebuild layout so Content size updates when using built-in layout components
+            if (_slotsRoot is RectTransform contentRect)
+            {
+                Canvas.ForceUpdateCanvases();
+                LayoutRebuilder.ForceRebuildLayoutImmediate(contentRect);
+
+                var scroll = contentRect.GetComponentInParent<ScrollRect>();
+                if (scroll != null)
+                    scroll.verticalNormalizedPosition = 1f;
             }
         }
 
@@ -204,6 +223,28 @@ namespace CreativeAI.UI.InventoryUI
                 _detailDescription.text = "";
             if (_detailEffect != null)
                 _detailEffect.text = "";
+        }
+
+        // Called by Slot when clicked to select it explicitly
+        public void SelectSlot(Slot slot)
+        {
+            if (slot == null)
+                return;
+
+            // Acquire lock on the slot (will release other locked instance)
+            slot.Select();
+
+            if (slot.Item != null)
+                ShowDetail(slot.Item);
+            else
+                ClearDetail();
+
+            // Disable event system navigation while a slot is locked
+            if (!_navigationDisabled && EventSystem.current != null)
+            {
+                EventSystem.current.sendNavigationEvents = false;
+                _navigationDisabled = true;
+            }
         }
     }
 }

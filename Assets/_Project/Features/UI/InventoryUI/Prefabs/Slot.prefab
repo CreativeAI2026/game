@@ -148,4 +148,3 @@ MonoBehaviour:
   m_EditorClassIdentifier: CreativeAI.UI::CreativeAI.UI.InventoryUI.HoverScaleOnPointer
   _hoverScale: 1.2
   _animationDuration: 0.2
-  _targetImage: {fileID: 0}
