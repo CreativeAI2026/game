@@ -1,0 +1,27 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 4c17053f8385ac14f9af901a292ffab6, type: 3}
+  m_Name: Apple
+  m_EditorClassIdentifier: CreativeAI.Gameplay::CreativeAI.Gameplay.FoodData
+  icon: {fileID: 21300000, guid: 444e96c3eb88f41788b965b228e9cc8e, type: 3}
+  id: 3001
+  itemName: "\u308A\u3093\u3054"
+  category: "\u98DF\u6750  \u2605"
+  description: "\u745E\u3005\u3057\u304F\u3066\u7518\u9178\u3063\u3071\u3044\u679C\u5B9F\u3002\\n\u3072\u3068\u53E3\u304B\u3058\u308C\u3070\u65C5\u306E\u75B2\u308C\u3082\u548C\u3089\u3050\u3002"
+  effect: "\u52B9\u679C\u3000HP \u3092 50 \u56DE\u5FA9"
+  attack: 0
+  defense: 0
+  moveSpeed: 0
+  attackSpeed: 0
+  criticalDamage: 0
+  criticalRate: 0
+  healAmount: 0

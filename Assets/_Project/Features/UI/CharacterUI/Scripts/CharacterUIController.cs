@@ -1,4 +1,5 @@
 using System;
+using CreativeAI.Gameplay;
 using UnityEngine;
 using UnityEngine.UI;
 
@@ -6,82 +7,31 @@ namespace CreativeAI.UI.CharacterUI
 {
     public class CharacterUIController : MonoBehaviour
     {
-        [Serializable]
-        public struct EquipmentData
+        public enum TabIndex
         {
-            public Sprite icon;
-            public string itemName;
-            public string category;
-            public string stats;
-            public string passiveTitle;
-            public string passiveDesc;
+            Stats = 0,
+            Weapon = 1,
+            Equipment = 2,
+        }
+
+        [Serializable]
+        public struct TabData
+        {
+            public Button button;
+            public Text label;
+            public GameObject view;
         }
 
         [Header("Tabs")]
         [SerializeField]
-        private Button _statsTab;
+        private Transform _categoryList;
 
         [SerializeField]
-        private Button _weaponTab;
+        private Transform _viewContainer;
 
+        [Header("Equipment Slots")]
         [SerializeField]
-        private Button _equipmentTab;
-
-        [SerializeField]
-        private Text _statsTabLabel;
-
-        [SerializeField]
-        private Text _weaponTabLabel;
-
-        [SerializeField]
-        private Text _equipmentTabLabel;
-
-        [Header("Views")]
-        [SerializeField]
-        private GameObject _statsView;
-
-        [SerializeField]
-        private GameObject _weaponView;
-
-        [SerializeField]
-        private GameObject _equipmentView;
-
-        [Header("Equipment Slots (3)")]
-        [SerializeField]
-        private Button _equipmentSlot1;
-
-        [SerializeField]
-        private Button _equipmentSlot2;
-
-        [SerializeField]
-        private Button _equipmentSlot3;
-
-        [SerializeField]
-        private Image _equipmentSlot1Icon;
-
-        [SerializeField]
-        private Image _equipmentSlot2Icon;
-
-        [SerializeField]
-        private Image _equipmentSlot3Icon;
-
-        [SerializeField]
-        private Text _equipmentSlot1Empty;
-
-        [SerializeField]
-        private Text _equipmentSlot2Empty;
-
-        [SerializeField]
-        private Text _equipmentSlot3Empty;
-
-        [SerializeField]
-        private Image _equipmentSlot1Frame;
-
-        [SerializeField]
-        private Image _equipmentSlot2Frame;
-
-        [SerializeField]
-        private Image _equipmentSlot3Frame;
+        private Transform _equipmentSlotsContainer;
 
         [Header("Equipment Detail")]
         [SerializeField]
@@ -102,110 +52,79 @@ namespace CreativeAI.UI.CharacterUI
         [SerializeField]
         private Text _equipmentDetailPassiveDesc;
 
-        [Header("Equipment Sources")]
-        [SerializeField]
-        private Sprite _clockIcon;
-
         private static readonly Color ActiveLabelColor = new Color(0.55f, 0.75f, 1f, 1f);
         private static readonly Color InactiveLabelColor = new Color(0.75f, 0.75f, 0.8f, 1f);
         private static readonly Color SlotFrameSelected = new Color(0.95f, 0.8f, 0.4f, 0.6f);
         private static readonly Color SlotFrameNormal = new Color(1f, 1f, 1f, 0.15f);
 
-        private EquipmentData[] _equipmentItems;
-        private Button[] _slotButtons;
-        private Image[] _slotIcons;
-        private Text[] _slotEmpties;
-        private Image[] _slotFrames;
+        private TabData[] _tabs;
+        private EquipmentSlot[] _slots;
 
-        private void Awake()
+        private void Start()
         {
-            BuildEquipmentData();
-
-            _slotButtons = new[] { _equipmentSlot1, _equipmentSlot2, _equipmentSlot3 };
-            _slotIcons = new[] { _equipmentSlot1Icon, _equipmentSlot2Icon, _equipmentSlot3Icon };
-            _slotEmpties = new[]
+            // タブ初期化
+            _tabs = new TabData[_categoryList.childCount];
+            for (int i = 0; i < _categoryList.childCount; i++)
             {
-                _equipmentSlot1Empty,
-                _equipmentSlot2Empty,
-                _equipmentSlot3Empty,
-            };
-            _slotFrames = new[]
+                var child = _categoryList.GetChild(i);
+                _tabs[i] = new TabData
+                {
+                    button = child.GetComponent<Button>(),
+                    label = child.GetComponentInChildren<Text>(),
+                    view = _viewContainer.GetChild(i).gameObject,
+                };
+            }
+
+            foreach (TabIndex tab in Enum.GetValues(typeof(TabIndex)))
             {
-                _equipmentSlot1Frame,
-                _equipmentSlot2Frame,
-                _equipmentSlot3Frame,
-            };
+                TabIndex captured = tab;
+                _tabs[(int)tab].button.onClick.AddListener(() => SelectTab(captured));
+            }
 
-            if (_statsTab != null)
-                _statsTab.onClick.AddListener(ShowStats);
-            if (_weaponTab != null)
-                _weaponTab.onClick.AddListener(ShowWeapon);
-            if (_equipmentTab != null)
-                _equipmentTab.onClick.AddListener(ShowEquipment);
+            // スロット初期化
+            _slots = new EquipmentSlot[_equipmentSlotsContainer.childCount];
+            for (int i = 0; i < _equipmentSlotsContainer.childCount; i++)
+                _slots[i] = _equipmentSlotsContainer.GetChild(i).GetComponent<EquipmentSlot>();
 
-            for (int i = 0; i < _slotButtons.Length; i++)
+            _slots[0].Item = ItemDB.Instance.GetItemById(2001);
+
+            for (int i = 0; i < _slots.Length; i++)
             {
                 int slotIndex = i;
-                if (_slotButtons[i] != null)
-                    _slotButtons[i].onClick.AddListener(() => SelectEquipmentSlot(slotIndex));
-                RenderSlot(i);
+                if (_slots[i].Button != null)
+                    _slots[i].Button.onClick.AddListener(() => SelectEquipmentSlot(slotIndex));
             }
 
             SelectEquipmentSlot(0);
-            ShowStats();
+            SelectTab(TabIndex.Stats);
+
+            for (int i = 0; i < _slots.Length; i++)
+            {
+                Debug.Log(
+                    $"Item: {_slots[i].Item?.name ?? "NULL"}, Icon: {_slots[i].Item?.icon ?? null}"
+                );
+            }
         }
 
         private void OnDestroy()
         {
-            if (_statsTab != null)
-                _statsTab.onClick.RemoveAllListeners();
-            if (_weaponTab != null)
-                _weaponTab.onClick.RemoveAllListeners();
-            if (_equipmentTab != null)
-                _equipmentTab.onClick.RemoveAllListeners();
-            if (_slotButtons != null)
+            foreach (var tab in _tabs)
+                if (tab.button != null)
+                    tab.button.onClick.RemoveAllListeners();
+
+            if (_slots != null)
+                foreach (var slot in _slots)
+                    if (slot.Button != null)
+                        slot.Button.onClick.RemoveAllListeners();
+        }
+
+        private void SelectTab(TabIndex tab)
+        {
+            for (int i = 0; i < _tabs.Length; i++)
             {
-                foreach (var b in _slotButtons)
-                {
-                    if (b != null)
-                        b.onClick.RemoveAllListeners();
-                }
+                _tabs[i].view.SetActive(i == (int)tab);
+                SetLabelColor(_tabs[i].label, i == (int)tab);
             }
-        }
-
-        private void BuildEquipmentData()
-        {
-            _equipmentItems = new EquipmentData[3];
-            _equipmentItems[0] = new EquipmentData
-            {
-                icon = _clockIcon,
-                itemName = "懐中時計",
-                category = "装備品  ★",
-                stats = "攻撃速度 +5%",
-                passiveTitle = "パッシブ「時の支配」",
-                passiveDesc = "攻撃時、確率で敵の動きを\nわずかに遅らせる。",
-            };
-            // _equipmentItems[1], [2] は空（default の icon == null で判定）
-        }
-
-        private void ShowStats() => Switch(_statsView, _statsTabLabel);
-
-        private void ShowWeapon() => Switch(_weaponView, _weaponTabLabel);
-
-        private void ShowEquipment() => Switch(_equipmentView, _equipmentTabLabel);
-
-        private void Switch(GameObject activeView, Text activeLabel)
-        {
-            if (_statsView != null)
-                _statsView.SetActive(activeView == _statsView);
-            if (_weaponView != null)
-                _weaponView.SetActive(activeView == _weaponView);
-            if (_equipmentView != null)
-                _equipmentView.SetActive(activeView == _equipmentView);
-
-            SetLabelColor(_statsTabLabel, activeLabel == _statsTabLabel);
-            SetLabelColor(_weaponTabLabel, activeLabel == _weaponTabLabel);
-            SetLabelColor(_equipmentTabLabel, activeLabel == _equipmentTabLabel);
         }
 
         private static void SetLabelColor(Text label, bool isActive)
@@ -215,29 +134,13 @@ namespace CreativeAI.UI.CharacterUI
             label.color = isActive ? ActiveLabelColor : InactiveLabelColor;
         }
 
-        private void RenderSlot(int i)
-        {
-            var item = _equipmentItems[i];
-            bool hasItem = item.icon != null;
-            if (_slotIcons[i] != null)
-            {
-                _slotIcons[i].sprite = hasItem ? item.icon : null;
-                _slotIcons[i].color = hasItem ? Color.white : new Color(0, 0, 0, 0);
-            }
-            if (_slotEmpties[i] != null)
-                _slotEmpties[i].gameObject.SetActive(!hasItem);
-        }
-
         private void SelectEquipmentSlot(int i)
         {
-            for (int j = 0; j < _slotFrames.Length; j++)
-            {
-                if (_slotFrames[j] != null)
-                    _slotFrames[j].color = (j == i) ? SlotFrameSelected : SlotFrameNormal;
-            }
+            for (int j = 0; j < _slots.Length; j++)
+                _slots[j].SetFrameColor(j == i ? SlotFrameSelected : SlotFrameNormal);
 
-            var item = _equipmentItems[i];
-            bool hasItem = item.icon != null;
+            var item = _slots[i].Item;
+            bool hasItem = item != null;
 
             if (_equipmentDetailIcon != null)
             {
@@ -249,11 +152,11 @@ namespace CreativeAI.UI.CharacterUI
             if (_equipmentDetailCategory != null)
                 _equipmentDetailCategory.text = hasItem ? item.category : "";
             if (_equipmentDetailStats != null)
-                _equipmentDetailStats.text = hasItem ? item.stats : "";
+                _equipmentDetailStats.text = hasItem ? item.effect : "";
             if (_equipmentDetailPassiveTitle != null)
-                _equipmentDetailPassiveTitle.text = hasItem ? item.passiveTitle : "";
+                _equipmentDetailPassiveTitle.text = hasItem ? item.effect : "";
             if (_equipmentDetailPassiveDesc != null)
-                _equipmentDetailPassiveDesc.text = hasItem ? item.passiveDesc : "";
+                _equipmentDetailPassiveDesc.text = hasItem ? item.description : "";
         }
     }
 }

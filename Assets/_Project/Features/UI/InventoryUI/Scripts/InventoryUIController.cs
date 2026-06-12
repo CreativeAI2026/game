@@ -1,30 +1,17 @@
 using System;
 using System.Collections.Generic;
+using CreativeAI.Gameplay;
+using TMPro;
 using UnityEngine;
+using UnityEngine.EventSystems;
 using UnityEngine.UI;
 
 namespace CreativeAI.UI.InventoryUI
 {
     public class InventoryUIController : MonoBehaviour
     {
-        [Serializable]
-        public struct ItemData
-        {
-            public Sprite icon;
-            public string itemName;
-            public string category;
-            public string description;
-            public string effect;
-        }
-
         [SerializeField]
-        private Button _weaponTab;
-
-        [SerializeField]
-        private Button _equipmentTab;
-
-        [SerializeField]
-        private Button _foodTab;
+        private Transform _tabsRoot;
 
         [SerializeField]
         private Transform _slotsRoot;
@@ -45,118 +32,163 @@ namespace CreativeAI.UI.InventoryUI
         private Text _detailEffect;
 
         [SerializeField]
-        private Sprite _appleIcon;
+        private ItemSlot _slotPrefab;
 
-        [SerializeField]
-        private Sprite _clockIcon;
+        private enum ItemCategory
+        {
+            Weapon = 0,
+            Equipment = 1,
+            Food = 2,
+            Important = 3,
+        }
 
-        private static readonly Color ActiveColor = new Color(0.55f, 0.7f, 0.95f, 1f);
-        private static readonly Color InactiveColor = new Color(0.3f, 0.45f, 0.65f, 1f);
+        private static readonly Color ActiveColor = new Color(1f, 1f, 1f, 1f);
+        private static readonly Color InactiveColor = new Color(0.5f, 0.5f, 0.5f, 1f);
 
-        private Image[] _slotImages;
-        private ItemData[] _weaponItems;
-        private ItemData[] _equipmentItems;
-        private ItemData[] _foodItems;
+        private List<ItemData> _weapons;
+        private List<ItemData> _equipments;
+        private List<ItemData> _foods;
+        private List<ItemData> _importants;
+        private Dictionary<ItemCategory, Button> _tabs;
+        private Dictionary<ItemCategory, List<ItemData>> _categories;
+        private bool _navigationDisabled = false;
 
         private void Awake()
         {
-            _slotImages = CollectSlotImages();
-            _weaponItems = Array.Empty<ItemData>();
-            _equipmentItems = new[]
+            _tabs = new Dictionary<ItemCategory, Button>
             {
-                new ItemData
-                {
-                    icon = _clockIcon,
-                    itemName = "懐中時計",
-                    category = "装備品  ★",
-                    description =
-                        "金色の縁に古びたローマ数字。\n時の流れを正確に刻み、持つ者に冷静さを与える。",
-                    effect = "効果   攻撃速度 +5%",
-                },
-            };
-            _foodItems = new[]
-            {
-                new ItemData
-                {
-                    icon = _appleIcon,
-                    itemName = "りんご",
-                    category = "食材  ★",
-                    description = "瑞々しくて甘酸っぱい果実。\nひと口かじれば旅の疲れも和らぐ。",
-                    effect = "効果   HP を 50 回復",
-                },
+                { ItemCategory.Weapon, _tabsRoot.Find("WeaponTab").GetComponent<Button>() },
+                { ItemCategory.Equipment, _tabsRoot.Find("EquipmentTab").GetComponent<Button>() },
+                { ItemCategory.Food, _tabsRoot.Find("FoodTab").GetComponent<Button>() },
+                { ItemCategory.Important, _tabsRoot.Find("ImportantTab").GetComponent<Button>() },
             };
 
-            if (_weaponTab != null)
-                _weaponTab.onClick.AddListener(() => ShowCategory(_weaponItems, _weaponTab));
-            if (_equipmentTab != null)
-                _equipmentTab.onClick.AddListener(() =>
-                    ShowCategory(_equipmentItems, _equipmentTab)
-                );
-            if (_foodTab != null)
-                _foodTab.onClick.AddListener(() => ShowCategory(_foodItems, _foodTab));
+            BuildCategoryLists();
 
-            ShowCategory(_foodItems, _foodTab);
+            _categories = new Dictionary<ItemCategory, List<ItemData>>
+            {
+                { ItemCategory.Weapon, _weapons },
+                { ItemCategory.Equipment, _equipments },
+                { ItemCategory.Food, _foods },
+                { ItemCategory.Important, _importants },
+            };
+
+            foreach (var (index, category) in _categories)
+            {
+                if (_tabs[index] == null)
+                    continue;
+                _tabs[index].onClick.AddListener(() => ShowCategory(category, _tabs[index]));
+            }
+
+            ShowCategory(_categories[ItemCategory.Weapon], _tabs[ItemCategory.Weapon]);
+            _tabs[ItemCategory.Weapon].GetComponent<HoverScaleOnPointer>()?.AcquireLock();
         }
 
         private void OnDestroy()
         {
-            if (_weaponTab != null)
-                _weaponTab.onClick.RemoveAllListeners();
-            if (_equipmentTab != null)
-                _equipmentTab.onClick.RemoveAllListeners();
-            if (_foodTab != null)
-                _foodTab.onClick.RemoveAllListeners();
+            foreach (var (category, tab) in _tabs)
+            {
+                if (tab != null)
+                    tab.onClick.RemoveAllListeners();
+            }
         }
 
-        private Image[] CollectSlotImages()
+        private void BuildCategoryLists()
+        {
+            _weapons = new List<ItemData>();
+            _equipments = new List<ItemData>();
+            _foods = new List<ItemData>();
+            _importants = new List<ItemData>();
+
+            AddItemById(_equipments, 2001);
+            for (int i = 0; i < 40; i++)
+            {
+                int id = UnityEngine.Random.Range(0, 2) == 0 ? 3001 : 2001;
+                AddItemById(_foods, id);
+            }
+        }
+
+        private void AddItemById(List<ItemData> target, int id)
+        {
+            if (ItemDB.Instance == null || target == null)
+                return;
+
+            var item = ItemDB.Instance.GetItemById(id);
+            if (item != null)
+                target.Add(item);
+        }
+
+        private void ShowCategory(List<ItemData> items, Button activeTab)
+        {
+            foreach (var (index, tab) in _tabs)
+            {
+                UpdateTabColor(tab, tab == activeTab);
+            }
+
+            RefreshSlots(items);
+
+            ShowDetail(items != null && items.Count > 0 ? items[0] : null);
+        }
+
+        private void RefreshSlots(List<ItemData> items)
+        {
+            ClearSlots();
+
+            if (_slotsRoot == null || _slotPrefab == null || items == null)
+                return;
+
+            foreach (var item in items)
+            {
+                if (item == null)
+                    continue;
+
+                var slot = Instantiate(_slotPrefab, _slotsRoot, false);
+                slot.SetItem(item);
+            }
+
+            // Force rebuild layout so Content size updates when using built-in layout components
+            if (_slotsRoot is RectTransform contentRect)
+            {
+                Canvas.ForceUpdateCanvases();
+                LayoutRebuilder.ForceRebuildLayoutImmediate(contentRect);
+
+                var scroll = contentRect.GetComponentInParent<ScrollRect>();
+                if (scroll != null)
+                    scroll.verticalNormalizedPosition = 1f;
+            }
+        }
+
+        private void ClearSlots()
         {
             if (_slotsRoot == null)
-                return Array.Empty<Image>();
-            var list = new List<Image>();
-            foreach (Transform child in _slotsRoot)
+                return;
+
+            for (int i = _slotsRoot.childCount - 1; i >= 0; i--)
             {
-                var img = child.GetComponent<Image>();
-                if (img != null)
-                    list.Add(img);
+                Destroy(_slotsRoot.GetChild(i).gameObject);
             }
-            return list.ToArray();
-        }
-
-        private void ShowCategory(ItemData[] items, Button activeTab)
-        {
-            UpdateTabColor(_weaponTab, activeTab == _weaponTab);
-            UpdateTabColor(_equipmentTab, activeTab == _equipmentTab);
-            UpdateTabColor(_foodTab, activeTab == _foodTab);
-
-            for (int i = 0; i < _slotImages.Length; i++)
-            {
-                if (i < items.Length && items[i].icon != null)
-                {
-                    _slotImages[i].sprite = items[i].icon;
-                    _slotImages[i].color = Color.white;
-                }
-                else
-                {
-                    _slotImages[i].sprite = null;
-                    _slotImages[i].color = new Color(0, 0, 0, 0);
-                }
-            }
-
-            if (items.Length > 0)
-                ShowDetail(items[0]);
-            else
-                ClearDetail();
         }
 
         private void UpdateTabColor(Button tab, bool isActive)
         {
             if (tab == null)
                 return;
-            var image = tab.GetComponent<Image>();
-            if (image == null)
-                return;
             var color = isActive ? ActiveColor : InactiveColor;
-            image.color = color;
+
+            var images = tab.GetComponentsInChildren<Image>(true);
+            foreach (var image in images)
+            {
+                if (image != null)
+                    image.color = color;
+            }
+
+            var texts = tab.GetComponentsInChildren<TMP_Text>(true);
+            foreach (var text in texts)
+            {
+                if (text != null)
+                    text.color = color;
+            }
+
             var colors = tab.colors;
             colors.normalColor = color;
             colors.highlightedColor = new Color(
@@ -170,36 +202,40 @@ namespace CreativeAI.UI.InventoryUI
 
         private void ShowDetail(ItemData item)
         {
+            bool hasItem = item != null;
+
             if (_detailIcon != null)
             {
-                _detailIcon.sprite = item.icon;
-                _detailIcon.color = Color.white;
+                _detailIcon.sprite = hasItem ? item.icon : null;
+                _detailIcon.color = hasItem ? Color.white : new Color(0, 0, 0, 0);
             }
             if (_detailName != null)
-                _detailName.text = item.itemName;
+                _detailName.text = hasItem ? item.itemName : "";
             if (_detailCategory != null)
-                _detailCategory.text = item.category;
+                _detailCategory.text = hasItem ? item.category : "";
             if (_detailDescription != null)
-                _detailDescription.text = item.description;
+                _detailDescription.text = hasItem ? item.description : "";
             if (_detailEffect != null)
-                _detailEffect.text = item.effect;
+                _detailEffect.text = hasItem ? item.effect : "";
         }
 
-        private void ClearDetail()
+        // Called by Slot when clicked to select it explicitly
+        public void SelectSlot(ItemSlot slot)
         {
-            if (_detailIcon != null)
+            if (slot == null)
+                return;
+
+            // Acquire lock on the slot (will release other locked instance)
+            slot.Select();
+
+            ShowDetail(slot.Item);
+
+            // Disable event system navigation while a slot is locked
+            if (!_navigationDisabled && EventSystem.current != null)
             {
-                _detailIcon.sprite = null;
-                _detailIcon.color = new Color(0, 0, 0, 0);
+                EventSystem.current.sendNavigationEvents = false;
+                _navigationDisabled = true;
             }
-            if (_detailName != null)
-                _detailName.text = "";
-            if (_detailCategory != null)
-                _detailCategory.text = "";
-            if (_detailDescription != null)
-                _detailDescription.text = "";
-            if (_detailEffect != null)
-                _detailEffect.text = "";
         }
     }
 }

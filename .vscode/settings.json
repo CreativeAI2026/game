@@ -69,4 +69,8 @@
     },
     "dotnet.defaultSolution": "game.slnx",
     "dotnet.enableWorkspaceBasedDevelopment": false
+    // "[csharp]":{
+    //     "editor.defaultFormatter": "csharpier.csharpier"
+    //     "breadcrumbs.showArrays": true
+    // }
 }
