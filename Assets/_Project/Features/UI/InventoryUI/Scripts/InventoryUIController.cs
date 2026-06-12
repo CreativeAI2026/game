@@ -32,10 +32,7 @@ namespace CreativeAI.UI.InventoryUI
         private Text _detailEffect;
 
         [SerializeField]
-        private Slot _slotPrefab;
-
-        [SerializeField]
-        private ItemDB _itemDB;
+        private ItemSlot _slotPrefab;
 
         private enum ItemCategory
         {
@@ -113,10 +110,10 @@ namespace CreativeAI.UI.InventoryUI
 
         private void AddItemById(List<ItemData> target, int id)
         {
-            if (_itemDB == null || target == null)
+            if (ItemDB.Instance == null || target == null)
                 return;
 
-            var item = _itemDB.GetItemById(id);
+            var item = ItemDB.Instance.GetItemById(id);
             if (item != null)
                 target.Add(item);
         }
@@ -223,7 +220,7 @@ namespace CreativeAI.UI.InventoryUI
         }
 
         // Called by Slot when clicked to select it explicitly
-        public void SelectSlot(Slot slot)
+        public void SelectSlot(ItemSlot slot)
         {
             if (slot == null)
                 return;

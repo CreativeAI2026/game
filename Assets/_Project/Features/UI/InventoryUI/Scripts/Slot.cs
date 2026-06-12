@@ -5,7 +5,7 @@ using UnityEngine.UI;
 
 namespace CreativeAI.UI.InventoryUI
 {
-    public class Slot : MonoBehaviour, IPointerClickHandler
+    public class ItemSlot : MonoBehaviour, IPointerClickHandler
     {
         private Image _iconImage;
         private HoverScaleOnPointer _hoverScale;

@@ -11,7 +11,10 @@ namespace CreativeAI.UI.InventoryUI
             IPointerExitHandler,
             IPointerClickHandler
     {
-        private static HoverScaleOnPointer _lockedInstance;
+        private static readonly Dictionary<string, HoverScaleOnPointer> _lockedInstances = new();
+
+        [SerializeField]
+        private string _group = "default";
 
         [SerializeField]
         private bool _lockEnabled = true;
@@ -45,6 +48,24 @@ namespace CreativeAI.UI.InventoryUI
             ReleaseLockedState();
         }
 
+        private void OnDisable()
+        {
+            //Debug.Log($"OnDisable: {gameObject.name}, group: {_group}, isLocked: {_isLocked}");
+
+            if (_lockedInstances.TryGetValue(_group, out var current) && current == this)
+            {
+                _lockedInstances.Remove(_group);
+                _isLocked = false;
+                if (_targetRect != null)
+                    _targetRect.localScale = Vector3.one;
+                if (_currentAnimation != null)
+                {
+                    StopCoroutine(_currentAnimation);
+                    _currentAnimation = null;
+                }
+            }
+        }
+
         public void OnPointerEnter(PointerEventData eventData)
         {
             if (_isLocked)
@@ -71,25 +92,25 @@ namespace CreativeAI.UI.InventoryUI
 
         private void LockSelection()
         {
-            if (_lockedInstance != null && _lockedInstance != this)
-                _lockedInstance.ReleaseLockedState();
+            if (_lockedInstances.TryGetValue(_group, out var current) && current != this)
+                current.ReleaseLockedState();
 
-            _lockedInstance = this;
+            _lockedInstances[_group] = this;
             _isLocked = true;
             StartScale(Vector3.one * _hoverScale);
         }
 
         private void ReleaseLockedState()
         {
-            if (_lockedInstance == this)
-                _lockedInstance = null;
+            if (_lockedInstances.TryGetValue(_group, out var current) && current == this)
+                _lockedInstances.Remove(_group);
 
             _isLocked = false;
             StartScale(Vector3.one);
         }
 
-        // Public API for external control
-        public static HoverScaleOnPointer GetLockedInstance() => _lockedInstance;
+        public static HoverScaleOnPointer GetLockedInstance(string group) =>
+            _lockedInstances.TryGetValue(group, out var instance) ? instance : null;
 
         public bool IsLocked() => _isLocked;
 
@@ -97,7 +118,6 @@ namespace CreativeAI.UI.InventoryUI
         {
             if (!_lockEnabled)
                 return;
-
             LockSelection();
         }
 

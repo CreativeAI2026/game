@@ -6,6 +6,16 @@ namespace CreativeAI.Gameplay
     [CreateAssetMenu(fileName = "ItemDB", menuName = "Scriptable Objects/ItemDB")]
     public class ItemDB : ScriptableObject
     {
+        private static ItemDB _instance;
+        public static ItemDB Instance
+        {
+            get
+            {
+                if (_instance == null)
+                    _instance = Resources.Load<ItemDB>("ItemDB");
+                return _instance;
+            }
+        }
         public List<ItemData> items;
 
         public ItemData GetItemById(int id)
