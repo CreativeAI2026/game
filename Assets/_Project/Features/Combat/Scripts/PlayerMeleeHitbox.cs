@@ -61,9 +61,10 @@ namespace CreativeAI.Gameplay
                 {
                     // SphereCastAll の hit.point は始点とコライダーが重なっている場合に
                     // Vector3.zero を返すことがある。その場合はコライダー上の最近傍点を使う。
-                    Vector3 resolvedPoint = (hit.point == Vector3.zero)
-                        ? hit.collider.ClosestPoint(currentPosition)
-                        : hit.point;
+                    Vector3 resolvedPoint =
+                        (hit.point == Vector3.zero)
+                            ? hit.collider.ClosestPoint(currentPosition)
+                            : hit.point;
                     ProcessHit(hit.collider, resolvedPoint, hit.normal);
                 }
             }
