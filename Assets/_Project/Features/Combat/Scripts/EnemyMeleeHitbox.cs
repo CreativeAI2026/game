@@ -64,9 +64,10 @@ namespace CreativeAI.Gameplay
                 {
                     // SphereCastAll の hit.point は始点とコライダーが重なっている場合に
                     // Vector3.zero を返すことがある。その場合はコライダー上の最近傍点を使う。
-                    Vector3 resolvedPoint = (hit.point == Vector3.zero)
-                        ? hit.collider.ClosestPoint(currentPosition)
-                        : hit.point;
+                    Vector3 resolvedPoint =
+                        (hit.point == Vector3.zero)
+                            ? hit.collider.ClosestPoint(currentPosition)
+                            : hit.point;
                     ProcessHit(hit.collider, resolvedPoint, hit.normal);
                 }
             }
@@ -109,7 +110,12 @@ namespace CreativeAI.Gameplay
                 if (sword != null && sword.gameObject.activeInHierarchy)
                 {
                     // SwordControllerに攻撃の情報を渡し、ガードできたか(isBlocked)を受け取る
-                    bool isBlocked = sword.ReceiveAttack(finalDamage, true, _enemyStatus.transform, hitPoint);
+                    bool isBlocked = sword.ReceiveAttack(
+                        finalDamage,
+                        true,
+                        _enemyStatus.transform,
+                        hitPoint
+                    );
 
                     if (isBlocked)
                     {
