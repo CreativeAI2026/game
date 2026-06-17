@@ -5,6 +5,7 @@ using UnityEngine.UI;
 
 namespace CreativeAI.UI.InventoryUI
 {
+    [RequireComponent(typeof(HoverScaleOnPointer))]
     public class ItemSlot : MonoBehaviour, IPointerClickHandler
     {
         private Image _iconImage;
@@ -46,7 +47,7 @@ namespace CreativeAI.UI.InventoryUI
             else
             {
                 _iconImage.sprite = null;
-                _iconImage.color = new Color(0, 0, 0, 0);
+                _iconImage.color = Color.clear;
             }
 
             BindHoverTarget();
@@ -64,7 +65,7 @@ namespace CreativeAI.UI.InventoryUI
                 _hoverScale.SetTarget(_iconImage.rectTransform);
         }
 
-        public HoverScaleOnPointer Hover => _hoverScale;
+        //public HoverScaleOnPointer Hover => _hoverScale;
 
         public ItemData Item => _itemData;
 

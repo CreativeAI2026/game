@@ -4,6 +4,7 @@ using UnityEngine.UI;
 
 namespace CreativeAI.UI
 {
+    [RequireComponent(typeof(Button)), RequireComponent(typeof(Image))]
     public class EquipmentSlot : MonoBehaviour
     {
         public Button Button { get; private set; }
@@ -21,13 +22,12 @@ namespace CreativeAI.UI
             }
         }
 
-        void Start()
+        public void Init()
         {
             Button = GetComponent<Button>();
             _icon = transform.Find("Icon").GetComponent<Image>();
             _emptyText = transform.Find("EmptyText").GetComponent<Text>();
             _frame = GetComponent<Image>();
-
             UpdateSlot();
         }
 

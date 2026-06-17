@@ -1,10 +1,11 @@
-using System.Collections;
 using System.Collections.Generic;
+using DG.Tweening;
 using UnityEngine;
 using UnityEngine.EventSystems;
 
 namespace CreativeAI.UI.InventoryUI
 {
+    [RequireComponent(typeof(RectTransform))]
     public class HoverScaleOnPointer
         : MonoBehaviour,
             IPointerEnterHandler,
@@ -26,13 +27,10 @@ namespace CreativeAI.UI.InventoryUI
         private float _animationDuration = 0.2f;
 
         private RectTransform _targetRect;
-        private Coroutine _currentAnimation;
+        private Tween _currentTween;
         private bool _isLocked;
 
-        public void SetTarget(RectTransform target)
-        {
-            _targetRect = target;
-        }
+        public void SetTarget(RectTransform target) => _targetRect = target;
 
         private void Awake()
         {
@@ -50,27 +48,27 @@ namespace CreativeAI.UI.InventoryUI
 
         private void OnDisable()
         {
-            //Debug.Log($"OnDisable: {gameObject.name}, group: {_group}, isLocked: {_isLocked}");
-
+            // 登録状況に関わらず、自分の状態は必ずリセット
             if (_lockedInstances.TryGetValue(_group, out var current) && current == this)
-            {
                 _lockedInstances.Remove(_group);
-                _isLocked = false;
-                if (_targetRect != null)
-                    _targetRect.localScale = Vector3.one;
-                if (_currentAnimation != null)
-                {
-                    StopCoroutine(_currentAnimation);
-                    _currentAnimation = null;
-                }
-            }
+
+            _isLocked = false;
+            _currentTween?.Kill();
+            _currentTween = null;
+
+            if (_targetRect != null)
+                _targetRect.localScale = Vector3.one;
+        }
+
+        private void OnDestroy()
+        {
+            _currentTween?.Kill();
         }
 
         public void OnPointerEnter(PointerEventData eventData)
         {
             if (_isLocked)
                 return;
-
             StartScale(Vector3.one * _hoverScale);
         }
 
@@ -78,7 +76,6 @@ namespace CreativeAI.UI.InventoryUI
         {
             if (_isLocked)
                 return;
-
             StartScale(Vector3.one);
         }
 
@@ -86,7 +83,6 @@ namespace CreativeAI.UI.InventoryUI
         {
             if (!_lockEnabled)
                 return;
-
             LockSelection();
         }
 
@@ -128,10 +124,12 @@ namespace CreativeAI.UI.InventoryUI
             if (_targetRect == null)
                 return;
 
-            if (_currentAnimation != null)
-                StopCoroutine(_currentAnimation);
-
-            _currentAnimation = StartCoroutine(ScaleTo(target));
+            _currentTween?.Kill();
+            _currentTween = _targetRect
+                .DOScale(target, _animationDuration)
+                .SetEase(Ease.OutQuad)
+                .SetUpdate(true)
+                .OnComplete(() => _currentTween = null);
         }
 
         private bool IsPointerOverSelf()
@@ -157,26 +155,6 @@ namespace CreativeAI.UI.InventoryUI
             }
 
             return false;
-        }
-
-        private IEnumerator ScaleTo(Vector3 target)
-        {
-            Vector3 initialScale = _targetRect.localScale;
-            float elapsed = 0f;
-
-            while (elapsed < _animationDuration)
-            {
-                elapsed += Time.deltaTime;
-                _targetRect.localScale = Vector3.Lerp(
-                    initialScale,
-                    target,
-                    elapsed / _animationDuration
-                );
-                yield return null;
-            }
-
-            _targetRect.localScale = target;
-            _currentAnimation = null;
         }
     }
 }

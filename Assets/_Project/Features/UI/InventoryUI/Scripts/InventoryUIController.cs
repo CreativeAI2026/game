@@ -36,14 +36,14 @@ namespace CreativeAI.UI.InventoryUI
 
         private enum ItemCategory
         {
-            Weapon = 0,
-            Equipment = 1,
-            Food = 2,
-            Important = 3,
+            Weapon,
+            Equipment,
+            Food,
+            Important,
         }
 
-        private static readonly Color ActiveColor = new Color(1f, 1f, 1f, 1f);
-        private static readonly Color InactiveColor = new Color(0.5f, 0.5f, 0.5f, 1f);
+        private static readonly Color ActiveColor = Color.white;
+        private static readonly Color InactiveColor = new(0.5f, 0.5f, 0.5f, 1f);
 
         private List<ItemData> _weapons;
         private List<ItemData> _equipments;
@@ -108,6 +108,8 @@ namespace CreativeAI.UI.InventoryUI
             }
         }
 
+        //private void AddItemById(int id, params List<ItemData> target)
+        //AddItemById(0, _weapons, _equipments);
         private void AddItemById(List<ItemData> target, int id)
         {
             if (ItemDB.Instance == null || target == null)
@@ -127,9 +129,10 @@ namespace CreativeAI.UI.InventoryUI
 
             RefreshSlots(items);
 
-            ShowDetail(items != null && items.Count > 0 ? items[0] : null);
+            ShowDetail(items?[0]);
         }
 
+        // a ?? b
         private void RefreshSlots(List<ItemData> items)
         {
             ClearSlots();
@@ -176,18 +179,20 @@ namespace CreativeAI.UI.InventoryUI
             var color = isActive ? ActiveColor : InactiveColor;
 
             var images = tab.GetComponentsInChildren<Image>(true);
-            foreach (var image in images)
-            {
-                if (image != null)
-                    image.color = color;
-            }
+            if (images.Length > 0)
+                foreach (var image in images)
+                {
+                    if (image != null)
+                        image.color = color;
+                }
 
             var texts = tab.GetComponentsInChildren<TMP_Text>(true);
-            foreach (var text in texts)
-            {
-                if (text != null)
-                    text.color = color;
-            }
+            if (texts.Length > 0)
+                foreach (var text in texts)
+                {
+                    if (text != null)
+                        text.color = color;
+                }
 
             var colors = tab.colors;
             colors.normalColor = color;
@@ -207,7 +212,7 @@ namespace CreativeAI.UI.InventoryUI
             if (_detailIcon != null)
             {
                 _detailIcon.sprite = hasItem ? item.icon : null;
-                _detailIcon.color = hasItem ? Color.white : new Color(0, 0, 0, 0);
+                _detailIcon.color = hasItem ? Color.white : Color.clear;
             }
             if (_detailName != null)
                 _detailName.text = hasItem ? item.itemName : "";
