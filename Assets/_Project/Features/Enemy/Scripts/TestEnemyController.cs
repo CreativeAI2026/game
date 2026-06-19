@@ -2,6 +2,10 @@ using UnityEngine;
 
 namespace CreativeAI.Gameplay
 {
+    /// <summary>
+    /// テスト用敵の個別コントローラー。
+    /// 視界判定・移動パラメータなど、この敵固有のロジックとインスペクター設定を持つ。
+    /// </summary>
     public class TestEnemyController : EnemyBaseController
     {
         [Header("移動設定")]
@@ -80,12 +84,26 @@ namespace CreativeAI.Gameplay
             ChangeState(new TestEnemyIdleState(this));
         }
 
+        protected override void OnEnable()
+        {
+            base.OnEnable();
+        }
+
+        protected override void OnDisable()
+        {
+            base.OnDisable();
+        }
+
         protected override void Update()
         {
             base.Update();
             UpdateAnimatorParameters();
         }
 
+        /// <summary>
+        /// NavMeshAgentのワールド速度をローカル座標に変換してAnimatorに渡す。
+        /// ブレンドツリーで前後左右の移動アニメーションを制御するために必要。
+        /// </summary>
         private void UpdateAnimatorParameters()
         {
             if (Animator == null || Agent == null)
@@ -93,13 +111,14 @@ namespace CreativeAI.Gameplay
                 return;
             }
 
-            // エージェントの速度をローカル座標に変換して Animator に渡す
             Vector3 localVelocity = transform.InverseTransformDirection(Agent.velocity);
             Animator.SetFloat("VelocityX", localVelocity.x);
             Animator.SetFloat("VelocityZ", localVelocity.z);
         }
 
-        // プレイヤーの発見ロジック。インスペクターで設定した視界内に入るとtrueを返す
+        /// <summary>
+        /// 距離・視野角・遮蔽物の3段階でプレイヤーの視認判定を行う。
+        /// </summary>
         public bool CheckInSight()
         {
             if (Player == null)
@@ -107,7 +126,6 @@ namespace CreativeAI.Gameplay
                 return false;
             }
 
-            // 距離のチェック
             float distanceToPlayer = Vector3.Distance(
                 transform.position,
                 Player.transform.position
@@ -117,21 +135,18 @@ namespace CreativeAI.Gameplay
                 return false;
             }
 
-            // 角度（視野角）のチェック
             Vector3 directionToPlayer = (Player.transform.position - transform.position).normalized;
             float angle = Vector3.Angle(transform.forward, directionToPlayer);
             if (angle > viewAngle)
             {
-                return false; // 視野角より外なら見えない
+                return false;
             }
 
-            // Raycastによる遮蔽物（壁）のチェック
-            // お互いの足元ではなく、カプセルの中心（高さ1m付近）からレイを飛ばす
+            // 地面付近から撃つと地形に遮られるため、キャラクターの胸の高さ（約1m）からレイを飛ばす
             Vector3 rayStart = transform.position + Vector3.up * 1f;
             Vector3 rayTarget = Player.transform.position + Vector3.up * 1f;
             Vector3 rayDirection = rayTarget - rayStart;
 
-            // プレイヤーまでの距離を上限にしてRaycastを飛ばす
             if (
                 Physics.Raycast(
                     rayStart,
@@ -142,11 +157,9 @@ namespace CreativeAI.Gameplay
                 )
             )
             {
-                // もしプレイヤーに届く前に「Obstacleレイヤー」の壁に当たったら、隠れていると判断
                 return false;
             }
 
-            // 壁に当たらずに視界が通っていれば発見！
             return true;
         }
 
@@ -161,7 +174,7 @@ namespace CreativeAI.Gameplay
         {
             base.ForceAlert();
 
-            // 未発見状態（Idle）のときに攻撃を受けたら追跡ステートへ
+            // 既に発見済みの場合はステート遷移しない（現在の行動を中断させないため）
             if (!IsAlerted)
             {
                 IsAlerted = true;

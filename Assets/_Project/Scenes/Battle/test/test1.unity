@@ -1102,7 +1102,6 @@ GameObject:
   - component: {fileID: 505500968}
   - component: {fileID: 505500967}
   - component: {fileID: 505500971}
-  - component: {fileID: 505500972}
   - component: {fileID: 505500974}
   m_Layer: 9
   m_Name: Enemy
@@ -1228,33 +1227,6 @@ NavMeshAgent:
   m_BaseOffset: 1
   m_WalkableMask: 4294967295
   m_ObstacleAvoidanceType: 4
---- !u!114 &505500972
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 505500966}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: e7d76f73979cb7548832a37ef447c2ff, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: CreativeAI.Gameplay::CreativeAI.Gameplay.TestEnemyController
-  chaseSpeed: 5
-  strafeSpeed: 3
-  approachSpeed: 4
-  backStepSpeed: 2
-  strafeRange: 6
-  backStepRange: 2
-  attackRange: 1.5
-  strafeDuration: 3
-  backStepDuration: 1.2
-  backStepChance: 0.5
-  viewDistance: 10
-  viewAngle: 45
-  obstacleLayer:
-    serializedVersion: 2
-    m_Bits: 64
 --- !u!114 &505500974
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -4694,7 +4666,7 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_Sprite: {fileID: 21300000, guid: e0b0293929795f74d86de271b0ef5a4a, type: 3}
+  m_Sprite: {fileID: 21300000, guid: 444e96c3eb88f41788b965b228e9cc8e, type: 3}
   m_Type: 0
   m_PreserveAspect: 0
   m_FillCenter: 1
@@ -4976,7 +4948,7 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_Sprite: {fileID: 21300000, guid: 068b9020b9eefae45876837a955ece45, type: 3}
+  m_Sprite: {fileID: 21300000, guid: 5fdccfaa7a48b4c718541844851a1cf1, type: 3}
   m_Type: 0
   m_PreserveAspect: 0
   m_FillCenter: 1
@@ -9063,7 +9035,7 @@ MonoBehaviour:
   weaponNext: 0
   weaponPrev: 0
   analogMovement: 0
-  cursorLocked: 0
+  cursorLocked: 1
   cursorInputForLook: 1
 --- !u!114 &6982812146696338158
 MonoBehaviour:
@@ -9838,7 +9810,7 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_Sprite: {fileID: 21300000, guid: 1a3f25bbcabdc784785264a3ef1d8a67, type: 3}
+  m_Sprite: {fileID: 21300000, guid: 444e96c3eb88f41788b965b228e9cc8e, type: 3}
   m_Type: 0
   m_PreserveAspect: 0
   m_FillCenter: 1
@@ -10522,7 +10494,7 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_Sprite: {fileID: 21300000, guid: a48d5abf045e4974b9ec0f90870b6092, type: 3}
+  m_Sprite: {fileID: 21300000, guid: e32a64ed501e06847b9be7304b132934, type: 3}
   m_Type: 0
   m_PreserveAspect: 0
   m_FillCenter: 1

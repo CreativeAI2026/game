@@ -3,30 +3,57 @@ using UnityEngine.AI;
 
 namespace CreativeAI.Gameplay
 {
+    /// <summary>
+    /// 全敵キャラクターの共通基盤。ステートパターンによる行動制御と、
+    /// 共有コンポーネントへの参照を提供する。
+    /// 敵ごとの固有ロジックは子クラスで実装する。
+    /// </summary>
     public class EnemyBaseController : MonoBehaviour
     {
-        // 行動に必要なコンポーネント群
         public NavMeshAgent Agent { get; private set; }
         public GameObject Player { get; private set; }
         public Animator Animator { get; private set; }
         public EnemyStatus Status { get; private set; }
-
-        // 現在の状態を保持する変数
         private IEnemyState currentState;
-
-        // 発見済みかどうかのフラグ
         public bool IsAlerted { get; set; }
 
         protected virtual void Awake()
         {
+            // Prefab構成によってはコンポーネントが子オブジェクトに配置されるため、
+            // 自身で見つからない場合は子階層からも検索する
             Agent = GetComponent<NavMeshAgent>();
+            if (Agent == null)
+            {
+                Agent = GetComponentInChildren<NavMeshAgent>();
+            }
+
             Player = GameObject.FindGameObjectWithTag("Player");
+
             Animator = GetComponent<Animator>();
+            if (Animator == null)
+            {
+                Animator = GetComponentInChildren<Animator>();
+            }
+
             Status = GetComponent<EnemyStatus>();
+            if (Status == null)
+            {
+                Status = GetComponentInChildren<EnemyStatus>();
+            }
         }
 
         protected virtual void OnEnable()
         {
+            // Awakeより先にOnEnableが呼ばれるケースがあるため、Statusの取得をここでも行う
+            if (Status == null)
+            {
+                Status = GetComponent<EnemyStatus>();
+                if (Status == null)
+                {
+                    Status = GetComponentInChildren<EnemyStatus>();
+                }
+            }
+
             if (Status != null)
             {
                 Status.OnFlinchTriggered += ForceFlinch;
@@ -50,43 +77,43 @@ namespace CreativeAI.Gameplay
 
         protected virtual void Update()
         {
-            // 現在のステートがセットされていれば、そのUpdateを実行し続ける
             if (currentState != null)
             {
                 currentState.Update();
             }
         }
 
-        // ステートを切り替える最重要関数
+        /// <summary>
+        /// ステート遷移を一元管理し、Exit→Enter の呼び出し順序を保証する。
+        /// </summary>
         public void ChangeState(IEnemyState newState)
         {
             Debug.Log(currentState + " → " + newState);
-            // 今の状態を終わらせる
             if (currentState != null)
             {
                 currentState.Exit();
             }
 
-            // 新しい状態に書き換える
             currentState = newState;
 
-            // 新しい状態を開始する
             if (currentState != null)
             {
                 currentState.Enter();
             }
         }
 
-        // 怯み
+        /// <summary>
+        /// 子クラスでオーバーライドして、固有の怯みステートに遷移させる。
+        /// </summary>
         public virtual void ForceFlinch()
         {
-            // 子クラスでオーバーライドして、固有の怯みステートに遷移させる。
         }
 
-        // 不意打ち発見
+        /// <summary>
+        /// 子クラスでオーバーライドして、被弾時に未発見状態から追跡ステートへ遷移させる。
+        /// </summary>
         public virtual void ForceAlert()
         {
-            // 子クラスでオーバーライドして、固有の発見（追跡）ステートに遷移させる。
         }
     }
 }

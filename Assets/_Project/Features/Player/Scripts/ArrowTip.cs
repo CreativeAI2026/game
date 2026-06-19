@@ -2,6 +2,12 @@ using UnityEngine;
 
 namespace CreativeAI.Gameplay
 {
+    /// <summary>
+    /// 矢の先端オブジェクトにアタッチする当たり判定コンポーネント。
+    /// Rigidbodyはルート（ArrowProjectile）が持つため、衝突イベントはルートから転送される。
+    /// 先端を別オブジェクトにすることで、ヒット位置の精度を保ちつつ
+    /// ルート側の物理制御と当たり判定ロジックを分離している。
+    /// </summary>
     [RequireComponent(typeof(CapsuleCollider))]
     public class ArrowTip : MonoBehaviour
     {
@@ -54,9 +60,8 @@ namespace CreativeAI.Gameplay
             }
             else if (collision.gameObject.TryGetComponent(out IArrowHittable hittable))
             {
-                // IArrowHittable を実装したオブジェクト（スポーンボタンなど）に命中
+                // IArrowHittable を実装したオブジェクト（スポーンボタン等のギミック）に命中した場合の処理
                 hittable.OnArrowHit();
-                // 矢は貫通させず消滅
                 if (_projectile != null)
                 {
                     Destroy(_projectile.gameObject);
@@ -74,24 +79,24 @@ namespace CreativeAI.Gameplay
                 )
             )
             {
-                // PlayerとIgnoreRaycast以外は基本的に刺さるようにする
+                // PlayerとIgnoreRaycast以外の全オブジェクトに刺さる仕様。
+                // 自分自身（Player）や非物理オブジェクト（Ignore Raycast）への誤刺さりを防ぐ
                 StickToSurface(collision);
             }
         }
 
         private void HitEnemy(Collision collision)
         {
-            // 敵のIDamageableを取得
             if (collision.gameObject.TryGetComponent(out IDamageable enemy))
             {
                 if (_playerStatus != null)
                 {
-                    // プレイヤーのStatusに倍率を渡して、最終ダメージを計算してもらう
+                    // ダメージ計算はPlayerStatusに委譲し、装備やバフの影響を一元管理する
                     float finalDamage = _playerStatus.RollDamage(
                         _bowMultiplier,
                         out bool isCritical
                     );
-                    // 敵にダメージを与える
+
                     enemy.TakeDamage(finalDamage, isCritical);
                 }
             }
@@ -118,6 +123,7 @@ namespace CreativeAI.Gameplay
             }
         }
 
+        // TODO : 現在はダメージを与えたときにしか生成されないが、のちに壁に当たったときにも別のエフェクトを生成させる
         private void SpawnHitEffect(Vector3 position, Vector3 normal)
         {
             if (_hitEffect == null)

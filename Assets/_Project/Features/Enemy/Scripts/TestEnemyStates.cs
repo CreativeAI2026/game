@@ -2,9 +2,9 @@ using UnityEngine;
 
 namespace CreativeAI.Gameplay
 {
-    // ─────────────────────────────────────────────────────────────────────────
-    // 基底ステート
-    // ─────────────────────────────────────────────────────────────────────────
+    /// <summary>
+    /// テスト用敵の各ステート共通基底。TestEnemyControllerへの参照を保持する。
+    /// </summary>
     public class TestEnemyBaseState : IEnemyState
     {
         protected TestEnemyController testCon;
@@ -21,9 +21,9 @@ namespace CreativeAI.Gameplay
         public virtual void Exit() { }
     }
 
-    // ─────────────────────────────────────────────────────────────────────────
-    // 待機ステート
-    // ─────────────────────────────────────────────────────────────────────────
+    /// <summary>
+    /// 待機ステート。プレイヤーが視界に入るまでこのステートに留まる。
+    /// </summary>
     public class TestEnemyIdleState : TestEnemyBaseState
     {
         public TestEnemyIdleState(TestEnemyController core)
@@ -36,7 +36,6 @@ namespace CreativeAI.Gameplay
 
         public override void Update()
         {
-            // プレイヤーが視界に入ったら追跡開始
             if (testCon.CheckInSight())
             {
                 testCon.IsAlerted = true;
@@ -50,10 +49,9 @@ namespace CreativeAI.Gameplay
         }
     }
 
-    // ─────────────────────────────────────────────────────────────────────────
-    // 追跡ステート
-    // 用途: 射線が切れているとき、またはプレイヤーが遠すぎるときに追跡して射線を作る
-    // ─────────────────────────────────────────────────────────────────────────
+    /// <summary>
+    /// 追跡ステート。プレイヤーをNavMeshで追いかけ、旋回範囲に入ったら戦闘行動に移行する。
+    /// </summary>
     public class TestEnemyChaseState : TestEnemyBaseState
     {
         public TestEnemyChaseState(TestEnemyController core)
@@ -80,13 +78,11 @@ namespace CreativeAI.Gameplay
                 return;
             }
 
-            // 毎フレーム、プレイヤーの場所を目的地に設定
             if (testCon.Agent != null)
             {
                 testCon.Agent.SetDestination(testCon.Player.transform.position);
             }
 
-            // 一定距離以内に入り、かつ射線が確保できたら旋回ステートへ移行
             float distance = Vector3.Distance(
                 testCon.transform.position,
                 testCon.Player.transform.position
@@ -112,17 +108,14 @@ namespace CreativeAI.Gameplay
         }
     }
 
-    // ─────────────────────────────────────────────────────────────────────────
-    // 旋回ステート
-    // 用途: プレイヤーと一定距離を保ちながら旋回。
-    //       - 一定時間経過 → ChaseState（攻撃サイクル再開）
-    //       - 近づかれた  → 確率で BackStepState、外れたら低速後退
-    // ─────────────────────────────────────────────────────────────────────────
+    /// <summary>
+    /// 旋回（ストレイフ）ステート。プレイヤーの周囲を横移動し、隙を窺う。
+    /// 一定時間経過後に接近ステートへ遷移する。
+    /// </summary>
     public class TestEnemyStrafeState : TestEnemyBaseState
     {
         private float _strafeTimer;
 
-        // Enter 時に決定する旋回方向（+1: 右, -1: 左）
         private float _strafeDirection;
 
         public TestEnemyStrafeState(TestEnemyController core)
@@ -133,7 +126,7 @@ namespace CreativeAI.Gameplay
             Debug.Log("旋回ステート開始");
             _strafeTimer = 0f;
 
-            // 旋回方向をランダムに決定
+            // ランダムに左右を決めることで、複数の敵が同じ方向に旋回し続けるのを防ぐ
             _strafeDirection = Random.value > 0.5f ? 1f : -1f;
 
             if (testCon.Agent != null)
@@ -151,7 +144,6 @@ namespace CreativeAI.Gameplay
 
             _strafeTimer += Time.deltaTime;
 
-            // 一定時間経過したら ChaseState へ（攻撃サイクル再開）
             if (_strafeTimer >= testCon.StrafeDuration)
             {
                 testCon.ChangeState(new TestEnemyApproachState(testCon));
@@ -163,24 +155,21 @@ namespace CreativeAI.Gameplay
                 testCon.Player.transform.position
             );
 
-            // 近づかれすぎた場合の対処
+            // プレイヤーが接近しすぎた場合、バックステップか後退で距離を取り直す
             if (distance <= testCon.BackStepRange)
             {
                 if (Random.value <= testCon.BackStepChance)
                 {
-                    // 確率で BackStepState へ
                     testCon.ChangeState(new TestEnemyBackStepState(testCon));
                     return;
                 }
                 else
                 {
-                    // 確率が外れたら低速後退
                     Retreat();
                     return;
                 }
             }
 
-            // プレイヤーを向きながら横方向に旋回移動
             Strafe();
         }
 
@@ -193,7 +182,6 @@ namespace CreativeAI.Gameplay
             }
         }
 
-        // プレイヤーを中心に旋回する移動計算
         private void Strafe()
         {
             if (testCon.Agent == null)
@@ -205,18 +193,15 @@ namespace CreativeAI.Gameplay
                 testCon.Player.transform.position - testCon.transform.position
             ).normalized;
 
-            // プレイヤーへの方向に対して垂直な軸（旋回方向）
             Vector3 strafeDir = Vector3.Cross(Vector3.up, dirToPlayer) * _strafeDirection;
 
-            // 目的地 = 現在位置 + 旋回方向 * 少し先
+            // 2fはNavMeshAgentが次フレームまでに到達しうる十分な距離として設定
             Vector3 targetPos = testCon.transform.position + strafeDir * 2f;
             testCon.Agent.SetDestination(targetPos);
 
-            // プレイヤーの方向を向く
             testCon.transform.rotation = Quaternion.LookRotation(dirToPlayer);
         }
 
-        // プレイヤーより遅いスピードで後退
         private void Retreat()
         {
             if (testCon.Agent == null)
@@ -233,10 +218,9 @@ namespace CreativeAI.Gameplay
         }
     }
 
-    // ─────────────────────────────────────────────────────────────────────────
-    // 接近ステート
-    // 用途: 攻撃間合い（attackRange）に入るための接近。到達で AttackState へ。
-    // ─────────────────────────────────────────────────────────────────────────
+    /// <summary>
+    /// 接近ステート。攻撃範囲までプレイヤーに向かって直進する。
+    /// </summary>
     public class TestEnemyApproachState : TestEnemyBaseState
     {
         public TestEnemyApproachState(TestEnemyController core)
@@ -273,7 +257,6 @@ namespace CreativeAI.Gameplay
                 testCon.Player.transform.position
             );
 
-            // 攻撃間合いに入ったら AttackState へ
             if (distance <= testCon.AttackRange)
             {
                 testCon.ChangeState(new TestEnemyAttackState(testCon));
@@ -295,20 +278,16 @@ namespace CreativeAI.Gameplay
         }
     }
 
-    // ─────────────────────────────────────────────────────────────────────────
-    // 攻撃ステート
-    // 用途: 攻撃を実行する。
-    //       攻撃完了後:
-    //         - 間合い内 → 確率で BackStepState、外れたら StrafeState
-    //         - 間合い外 → ChaseState
-    // ─────────────────────────────────────────────────────────────────────────
+    /// <summary>
+    /// 攻撃ステート。攻撃アニメーション中はプレイヤー方向へホーミング回転し、
+    /// アニメーション完了後に距離に応じて次の行動を決定する。
+    /// </summary>
     public class TestEnemyAttackState : TestEnemyBaseState
     {
-        // 振りかぶり中にプレイヤーを追尾する（旋回する）割合（0.0 ～ 1.0）
-        // 0.3f なら、アニメーションの30%の時点までプレイヤーを追いかけます。
+        // 攻撃アニメーションの最初30%区間のみホーミングを有効にする。
+        // 振り終わりまでホーミングすると不自然な追尾になるため。
         private const float HomingThreshold = 0.3f;
 
-        // 旋回の速さ
         private const float HomingSpeed = 10f;
 
         public TestEnemyAttackState(TestEnemyController core)
@@ -332,17 +311,15 @@ namespace CreativeAI.Gameplay
         public override void Update()
         {
             if (testCon.Animator == null)
+            {
                 return;
+            }
 
-            // Animatorの現在再生されているステートの情報を取得（0はベースレイヤー）
             AnimatorStateInfo stateInfo = testCon.Animator.GetCurrentAnimatorStateInfo(0);
-
-            // アニメーションが「Attack」ステートに入っているか確認
             if (stateInfo.IsName("Attack"))
             {
                 if (stateInfo.normalizedTime < HomingThreshold && testCon.Player != null)
                 {
-                    // プレイヤーの方向を計算（上下の傾きは無視する）
                     Vector3 dirToPlayer = (
                         testCon.Player.transform.position - testCon.transform.position
                     ).normalized;
@@ -350,7 +327,6 @@ namespace CreativeAI.Gameplay
 
                     if (dirToPlayer != Vector3.zero)
                     {
-                        // Quaternion.Slerp を使って、滑らかにプレイヤーの方へ振り向く
                         Quaternion targetRotation = Quaternion.LookRotation(dirToPlayer);
                         testCon.transform.rotation = Quaternion.Slerp(
                             testCon.transform.rotation,
@@ -360,13 +336,10 @@ namespace CreativeAI.Gameplay
                     }
                 }
 
-                // アニメーションが最後まで再生されきっていない場合はここで処理を止める（待機）
                 if (stateInfo.normalizedTime < 1.0f)
                 {
                     return;
                 }
-
-                // ─── ここから下はアニメーションが完了（1.0f以上）した時だけ実行される ───
 
                 if (testCon.Player == null)
                 {
@@ -379,10 +352,9 @@ namespace CreativeAI.Gameplay
                     testCon.Player.transform.position
                 );
 
-                // 攻撃完了後の次の行動を決定
+                // 攻撃後の次の行動をランダム性を持たせて選択し、パターン化を防ぐ
                 if (distance <= testCon.AttackRange)
                 {
-                    // 間合い内: 確率で BackStep、それ以外は Strafe
                     if (Random.value <= testCon.BackStepChance)
                     {
                         testCon.ChangeState(new TestEnemyBackStepState(testCon));
@@ -394,7 +366,6 @@ namespace CreativeAI.Gameplay
                 }
                 else
                 {
-                    // 間合い外: 追跡に戻る
                     testCon.ChangeState(new TestEnemyChaseState(testCon));
                 }
             }
@@ -406,10 +377,9 @@ namespace CreativeAI.Gameplay
         }
     }
 
-    // ─────────────────────────────────────────────────────────────────────────
-    // バックステップステート
-    // 用途: 後退して間合いを開ける。終了後 StrafeState へ。
-    // ─────────────────────────────────────────────────────────────────────────
+    /// <summary>
+    /// バックステップステート。プレイヤーの方を向いたまま後退し距離を取る。
+    /// </summary>
     public class TestEnemyBackStepState : TestEnemyBaseState
     {
         private float _backStepTimer;
@@ -430,10 +400,10 @@ namespace CreativeAI.Gameplay
             if (testCon.Agent != null)
             {
                 testCon.Agent.speed = testCon.BackStepSpeed;
-                testCon.Agent.updateRotation = false; // 自動回転を無効化
+                // バックステップ中はプレイヤーの方を向き続けるため、NavMeshの自動回転を無効にする
+                testCon.Agent.updateRotation = false;
             }
 
-            // 開始時にプレイヤーの方向を向く
             if (testCon.Player != null)
             {
                 Vector3 dirToPlayer = (
@@ -451,7 +421,6 @@ namespace CreativeAI.Gameplay
         {
             _backStepTimer += Time.deltaTime;
 
-            // プレイヤーの方向を向き続ける
             if (testCon.Player != null)
             {
                 Vector3 dirToPlayer = (
@@ -464,12 +433,11 @@ namespace CreativeAI.Gameplay
                 }
             }
 
-            // 後退するアクティブ時間（全体の50%を空中・ジャンプ中とみなす）
+            // 前半は実際に後退移動し、後半は着地・復帰モーションのため停止する
             float activeDuration = testCon.BackStepDuration * 0.5f;
 
             if (_backStepTimer < activeDuration)
             {
-                // ジャンプ中：素早く後退方向へ移動
                 if (testCon.Agent != null && testCon.Player != null)
                 {
                     Vector3 retreatDir = (
@@ -481,14 +449,12 @@ namespace CreativeAI.Gameplay
             }
             else
             {
-                // 着地後：後退を停止
                 if (testCon.Agent != null)
                 {
                     testCon.Agent.ResetPath();
                 }
             }
 
-            // 一定時間経過したら旋回ステートへ
             if (_backStepTimer >= testCon.BackStepDuration)
             {
                 testCon.ChangeState(new TestEnemyStrafeState(testCon));
@@ -501,15 +467,14 @@ namespace CreativeAI.Gameplay
             if (testCon.Agent != null)
             {
                 testCon.Agent.ResetPath();
-                testCon.Agent.updateRotation = true; // 自動回転を有効化に戻す
+                testCon.Agent.updateRotation = true;
             }
         }
     }
 
-    // ─────────────────────────────────────────────────────────────────────────
-    // 怯みステート
-    // 用途: ダメージを受けた時に強制的に移行し、一定時間行動不能になる
-    // ─────────────────────────────────────────────────────────────────────────
+    /// <summary>
+    /// 怯みステート。被弾時に行動を中断し、怯みアニメーション完了後にIdleへ戻る。
+    /// </summary>
     public class TestEnemyFlinchState : TestEnemyBaseState
     {
         public TestEnemyFlinchState(TestEnemyController core)
@@ -534,15 +499,15 @@ namespace CreativeAI.Gameplay
         public override void Update()
         {
             if (testCon.Animator == null)
+            {
                 return;
+            }
 
-            // Animatorの現在再生されているステートの情報を取得する（0はベースレイヤー）
             AnimatorStateInfo stateInfo = testCon.Animator.GetCurrentAnimatorStateInfo(0);
 
-            // アニメーションのステート名がFlinchである必要がある
+            // Animatorのステート名と一致させる必要がある（変更不可）
             if (stateInfo.IsName("Flinch"))
             {
-                // normalizedTime は 0.0=開始、1.0=100%完了（1周） を意味する
                 if (stateInfo.normalizedTime >= 1.0f)
                 {
                     testCon.ChangeState(new TestEnemyIdleState(testCon));
@@ -556,10 +521,9 @@ namespace CreativeAI.Gameplay
         }
     }
 
-    // ─────────────────────────────────────────────────────────────────────────
-    // パリィされ（大怯み）ステート
-    // 用途: プレイヤーのジャストパリィ成功時に移行し、通常の怯みより長く隙を晒す
-    // ─────────────────────────────────────────────────────────────────────────
+    /// <summary>
+    /// ジャストパリィ被弾ステート。通常の怯みより長い硬直を持ち、プレイヤーに反撃の隙を与える。
+    /// </summary>
     public class TestEnemyParriedState : TestEnemyBaseState
     {
         public TestEnemyParriedState(TestEnemyController core)
@@ -577,7 +541,6 @@ namespace CreativeAI.Gameplay
 
             if (testCon.Animator != null)
             {
-                // ★ジャストパリィされた時専用のトリガー
                 testCon.Animator.SetTrigger("Parried");
             }
         }
@@ -589,10 +552,9 @@ namespace CreativeAI.Gameplay
 
             AnimatorStateInfo stateInfo = testCon.Animator.GetCurrentAnimatorStateInfo(0);
 
-            // アニメーションのステート名が Parried である必要がある
+            // Animatorのステート名と一致させる必要がある（変更不可）
             if (stateInfo.IsName("Parried"))
             {
-                // 怯みアニメーションが完全に終わったらIdleへ戻る
                 if (stateInfo.normalizedTime >= 1.0f)
                 {
                     testCon.ChangeState(new TestEnemyIdleState(testCon));

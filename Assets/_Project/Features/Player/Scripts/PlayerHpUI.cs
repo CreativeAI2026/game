@@ -4,20 +4,20 @@ using UnityEngine.UI;
 
 namespace CreativeAI.Gameplay
 {
+    /// <summary>
+    /// PlayerStatusのHP変動イベントを購読し、UIスライダーとテキストに反映する。
+    /// </summary>
     public class PlayerHpUI : MonoBehaviour
     {
         [Header("HPバー")]
-        // 最大HPを表示するテキスト
         [Tooltip("最大HPを表示するテキスト")]
         [SerializeField]
         private TextMeshProUGUI _maxHpText;
 
-        // 現在のHPを表示するテキスト
         [Tooltip("現在のHPを表示するテキスト")]
         [SerializeField]
         private TextMeshProUGUI _currentHpText;
 
-        // HPバー
         [Tooltip("HPバー")]
         [SerializeField]
         private Slider _hpSlider;
@@ -43,7 +43,6 @@ namespace CreativeAI.Gameplay
             }
         }
 
-        // プレイヤーのHPが変わった際に呼ばれる
         private void UpdateUI(float currentHp, float maxHp)
         {
             _hpSlider.maxValue = maxHp;

@@ -5,40 +5,9 @@ using UnityEngine.UI;
 namespace CreativeAI.Gameplay
 {
     /// <summary>
-    /// 弓矢システムの統括コンポーネント。
-    /// このスクリプトは弓オブジェクト本体にアタッチして使用します。
-    /// PlayerInputHandler と Animator は親のプレイヤーオブジェクトから自動取得します。
-    ///
-    /// ■ 状態の流れ
-    ///   Aim開始
-    ///     → 矢が _arrowHandHoldPoint（手）に生成
-    ///     → _drawProgress が 0 → 1 へ増加（弦が滑らかに引かれる）
-    ///     → 引き切り完了（drawProgress = 1）時に矢を _arrowNockPoint へ移動
-    ///     → 発射可能になる
-    ///   発射
-    ///     → 矢が飛翔
-    ///     → _drawProgress が 1 → 0 へ減少（弦が滑らかに戻る）
-    ///     → 戻り完了後、まだ Aim 中なら次の矢を装填して再び引き始める
-    ///   Aim終了
-    ///     → 矢を消去
-    ///     → _drawProgress が 0 へ戻る
-    ///
-    /// ■ セットアップ手順（1回だけ）
-    ///   1. PlayerArmature の右手ボーンの子に「BowMountPoint」（空GO）を追加
-    ///   2. BowMountPoint の子に弓Prefabを配置し、ローカル位置・回転を調整
-    ///   3. 弓Prefab内に以下の空GOを配置：
-    ///      - ArrowNockPoint    : 矢がセットされる点（引き切ったときの矢の位置）
-    ///      - StringTopPoint    : 弦の上端
-    ///      - StringBottomPoint : 弦の下端
-    ///      - StringRestMid     : 弦を引いていないときの中点
-    ///   4. _arrowHandHoldPoint には「引く手（右手）のボーンまたは空GO」を設定
-    ///   5. _stringPullTarget  には「引く手のボーン」を設定（弦の引き手位置）
-    ///   6. Inspector から各Transform・LineRendererを参照設定
-    ///   ※ _bowRootTransform を未設定にすると、弓オブジェクト自身（this.transform）が使われます
-    ///
-    /// ■ 矢Prefabの構造
-    ///   ArrowNockRoot（空GO・Pivotがノック端）← ArrowProjectile + CapsuleCollider（初期無効）
-    ///     └── ArrowMesh（ノックが原点に来るようオフセット配置）
+    /// 弓の状態管理・弦表現・矢の生成/射出を統括するコンポーネント。
+    /// ステートマシン（BowStates.cs）と密接に連携し、各ステートから
+    /// 内部フィールドへ直接アクセスするため、フィールドをpublicにしている。
     /// </summary>
     public class BowController : MonoBehaviour
     {
@@ -127,10 +96,7 @@ namespace CreativeAI.Gameplay
         [SerializeField]
         private float _rotationSpeed = 15f;
 
-        // -------------------------------------------------------
-        // 内部状態（BowStates.cs からアクセスするため public）
-        // -------------------------------------------------------
-
+        // BowStates.cs の各ステートクラスから直接アクセスするため、publicにしている
         [HideInInspector]
         public PlayerInputHandler _input;
 
@@ -161,8 +127,6 @@ namespace CreativeAI.Gameplay
         /// </summary>
         public static event Action OnFired;
 
-        // -------------------------------------------------------
-
         private void Awake()
         {
             _input = GetComponentInParent<PlayerInputHandler>();
@@ -183,7 +147,6 @@ namespace CreativeAI.Gameplay
 
         private void OnEnable()
         {
-            // 武器を持った瞬間はFree（待機）ステートから開始
             ChangeState(new StateFree(this));
         }
 
@@ -197,7 +160,7 @@ namespace CreativeAI.Gameplay
                 _playerController.CanChangeWeapon = true;
             }
 
-            // 弓のトリガーが残らないようにリセット
+            // 弓のトリガーが残ったまま別武器に切り替わると誤発動するためリセット
             if (_animator != null && !string.IsNullOrEmpty(_fireTriggerName))
             {
                 _animator.ResetTrigger(_fireTriggerName);
@@ -213,11 +176,9 @@ namespace CreativeAI.Gameplay
             if (_input == null || _playerController == null)
                 return;
 
-            // 怯み中は弓のステートマシンを完全停止する
             if (_playerController.IsFlinching)
                 return;
 
-            // WeaponManagerが存在する場合のみ、自分のターンか確認する
             if (_weaponManager != null && _weaponManager.CurrentWeaponIndex != weaponIndex)
             {
                 if (!(_currentState is StateFree))
@@ -248,10 +209,6 @@ namespace CreativeAI.Gameplay
             _currentState = newState;
             _currentState?.Enter();
         }
-
-        // ==========================================================
-        // 以降は弓の具体的なアクションメソッド（ステートから呼ばれる）
-        // ==========================================================
 
         public void SpawnArrowInHand()
         {
@@ -306,7 +263,6 @@ namespace CreativeAI.Gameplay
             _nockedArrow = null;
             _isArrowAtNock = false;
 
-            // 発射イベントを通知（BowZoomController などが受け取る）
             OnFired?.Invoke();
 
             if (_animator != null && !string.IsNullOrEmpty(_fireTriggerName))
@@ -323,6 +279,11 @@ namespace CreativeAI.Gameplay
             _isArrowAtNock = false;
         }
 
+        /// <summary>
+        /// 画面中央（クロスヘアー位置）からRaycastして実際のワールド上の着弾点を求め、
+        /// 矢のNockPointからその着弾点への方向ベクトルを返す。
+        /// これにより三人称視点でもカメラが向いている方向に矢が正確に飛ぶ。
+        /// </summary>
         private Vector3 GetShootDirection()
         {
             if (_mainCamera == null)
@@ -336,6 +297,7 @@ namespace CreativeAI.Gameplay
             if (_arrowNockPoint != null)
             {
                 Vector3 dir = targetPoint - _arrowNockPoint.position;
+                // 着弾点と矢の位置がほぼ一致する場合（ゼロ除算防止）はカメラの方向をフォールバックとする
                 return dir.sqrMagnitude < 0.0001f ? ray.direction : dir.normalized;
             }
             return ray.direction;
@@ -350,6 +312,11 @@ namespace CreativeAI.Gameplay
             UpdateBowString(0f);
         }
 
+        /// <summary>
+        /// 弦のLineRendererを弓の引き度合い（0〜1）に応じて更新する。
+        /// 3点（上端・中点・下端）で弦を表現し、中点を引く手の位置に補間で寄せることで
+        /// 弓を引くビジュアルを実現している。
+        /// </summary>
         private void UpdateBowString(float progress)
         {
             if (_bowStringRenderer == null || _stringTopPoint == null || _stringBottomPoint == null)
@@ -384,19 +351,16 @@ namespace CreativeAI.Gameplay
         }
 
         /// <summary>
-        /// PlayerFlinchHandler から呼ばれる。弓のステートを安全にリセットする。
-        /// StateFree.Enter() を呼び、矢の破棄・ IsAiming = false ・クロスヘア非表示を確実に実行する。
-        /// 呼び出し後、FlinchHandler が CanChangeWeapon = false に上書きするので
+        /// PlayerFlinchHandler から呼ばれ、弓のステートを安全にリセットする。
+        /// 呼び出し後に FlinchHandler が CanChangeWeapon = false に上書きするため、
         /// ここでは CanChangeWeapon には触れない。
         /// </summary>
         public void ForceReset()
         {
             _currentState?.Exit();
-            // StateFree に直接移行し Enter() を呼んでクリーンアップを完了させる
-            // StateFree.Enter() 内容： IsAiming=false, CanChangeWeapon=true, DrawProgress=0, DestroyArrow, HideCrossHair
             _currentState = new StateFree(this);
             _currentState.Enter();
-            // CanChangeWeapon は FlinchHandler 側が強制的に false に上書きするのでここではそのまま
+
             _drawProgress = 0f;
             UpdateBowString(0f);
         }

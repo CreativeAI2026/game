@@ -2,19 +2,15 @@ using System.Collections;
 using UnityEngine;
 using UnityEngine.UI;
 
-// ■ セットアップ手順
-//   1. Canvas 上に空の GameObject（例: "DamageVignette"）を作成し、このスクリプトをアタッチする
-//   2. その GameObject の子（または同じ）に Image コンポーネントを追加する
-//      - RectTransform : Stretch / Stretch（全画面を覆う）
-//      - Color         : 赤 (R=1, G=0, B=0) で Alpha=0 に設定しておく
-//      - Raycast Target: OFF にする（クリックを通過させるため）
-//   3. Inspector の _vignetteImage フィールドにその Image を割り当てる
-
 namespace CreativeAI.Gameplay
 {
+    /// <summary>
+    /// 被弾時の赤ビネット演出を管理する。
+    /// 連続被弾時は前回の演出をキャンセルして再スタートすることで、
+    /// 被弾のたびに視覚フィードバックをリセットする。
+    /// </summary>
     public class DamageVignette : MonoBehaviour
     {
-        // シーンに1つだけ存在するシングルトンインスタンス
         public static DamageVignette Instance { get; private set; }
 
         [Tooltip("全画面を覆う赤いビネット用の Image コンポーネント")]
@@ -49,13 +45,12 @@ namespace CreativeAI.Gameplay
             }
             Instance = this;
 
-            // 初期状態は完全透明にしておく
             SetAlpha(0f);
         }
 
         /// <summary>
-        /// 被弾ビネット演出を開始する。PlayerStatus.TakeDamage() から呼び出す。
-        /// 連続で呼ばれた場合は前のコルーチンをキャンセルしてやり直す。
+        /// 被弾ビネット演出を開始する。PlayerStatus.TakeDamage() から呼び出される。
+        /// 連続被弾時は前のコルーチンをキャンセルして最初からやり直す。
         /// </summary>
         public void TriggerVignette()
         {
@@ -71,9 +66,9 @@ namespace CreativeAI.Gameplay
             _vignetteCoroutine = StartCoroutine(VignetteCoroutine());
         }
 
+        // TODO : UniTask導入後に、これをUniTaskで実装しなおす
         private IEnumerator VignetteCoroutine()
         {
-            // ─── フェードイン ───
             float elapsed = 0f;
             while (elapsed < _fadeInDuration)
             {
@@ -83,10 +78,8 @@ namespace CreativeAI.Gameplay
             }
             SetAlpha(_maxAlpha);
 
-            // ─── 持続 ───
             yield return new WaitForSeconds(_sustainDuration);
 
-            // ─── フェードアウト ───
             elapsed = 0f;
             while (elapsed < _fadeOutDuration)
             {
