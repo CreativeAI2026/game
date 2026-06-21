@@ -3,7 +3,12 @@
     "rootNamespace": "CreativeAI.Gameplay",
     "references": [
         "CreativeAI.Core",
-        "CreativeAI.Shared"
+        "CreativeAI.Shared",
+        "Unity.InputSystem",
+        "Unity.Cinemachine",
+        "Unity.TextMeshPro",
+        "Unity.Animation.Rigging.Editor",
+        "Unity.Animation.Rigging"
     ],
     "includePlatforms": [],
     "excludePlatforms": [],

@@ -77,3 +77,7 @@ crashlytics-build.properties
 
 # VS Code workspace files (keep .vscode/ directory shared but ignore personal workspace)
 *.code-workspace
+
+# Purchased Assets
+/Assets/PurchasedAssets/
+/Assets/PurchasedAssets.meta
