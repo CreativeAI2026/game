@@ -10,37 +10,16 @@ namespace CreativeAI.Gameplay
         private static ItemDB _instance;
         public static ItemDB Instance
         {
-            get
-            {
-                return _instance ??= Resources.Load<ItemDB>("ItemDB");
-                /*
-                if (_instance == null)
-                    _instance = Resources.Load<ItemDB>("ItemDB");
-                return _instance;
-            */
-            }
+            get { return _instance ??= Resources.Load<ItemDB>("ItemDB"); }
         }
+
         public List<ItemData> items;
 
         public ItemData GetItemById(int id)
         {
             if (items == null)
                 return null;
-
-            return (
-                from item in items
-                where item != null && item.id == id
-                select item
-            ).FirstOrDefault();
-            /*
-                        foreach (var item in items)
-                        {
-                            if (item != null && item.id == id)
-                                return item;
-                        }
-            
-                        return null;
-                        */
+            return items.FirstOrDefault(i => i != null && i.id == id);
         }
     }
 }

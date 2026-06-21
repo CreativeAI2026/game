@@ -134,8 +134,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 9f9d4f2cc46b47b438117cf35a29e7c7, type: 3}
   m_Name: 
   m_EditorClassIdentifier: CreativeAI.UI::CreativeAI.UI.CharacterUI.TabHighlight
-  _label: {fileID: 0}
-  _activeScale: 1.2
+  _activeScale: 1.5
   _duration: 0.2
 --- !u!1 &1361456675547632796
 GameObject:
@@ -148,7 +147,6 @@ GameObject:
   - component: {fileID: 9078731638683508481}
   - component: {fileID: 5397921168659960897}
   - component: {fileID: 1975259789849997483}
-  - component: {fileID: 4707124557983645551}
   m_Layer: 0
   m_Name: Label
   m_TagString: Untagged
@@ -216,20 +214,4 @@ MonoBehaviour:
     m_HorizontalOverflow: 0
     m_VerticalOverflow: 0
     m_LineSpacing: 1
-  m_Text: 
---- !u!114 &4707124557983645551
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1361456675547632796}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 0fed04f0ec157104f93a96edb9a0c946, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: CreativeAI.UI::CreativeAI.UI.InventoryUI.HoverScaleOnPointer
-  _group: default
-  _lockEnabled: 1
-  _hoverScale: 1.2
-  _animationDuration: 0.2
+  m_Text: "\u30B9\u30C6\u30FC\u30BF\u30B9"

@@ -16,6 +16,8 @@ using CreativeAI.UI.LoadingOverlay;
 using CreativeAI.UI.SaveDialog;
 using CreativeAI.UI.TitleUI;
 using Object = UnityEngine.Object;
+using CreativeAI.UI;
+using CreativeAI.Gameplay;
 
 namespace CreativeAI.EditorTools
 {
@@ -193,7 +195,6 @@ namespace CreativeAI.EditorTools
                 NewSceneMode.Single
             );
 
-            // 3D 環境
             var ground = GameObject.CreatePrimitive(PrimitiveType.Plane);
             ground.name = "Ground";
             ground.transform.localScale = new Vector3(10, 1, 10);
@@ -203,6 +204,10 @@ namespace CreativeAI.EditorTools
                 camera.transform.position = new Vector3(0, 5, -10);
                 camera.transform.rotation = Quaternion.Euler(20, 0, 0);
             }
+
+            // InventoryManager（DontDestroyOnLoad）
+            var managerGo = new GameObject("InventoryManager");
+            managerGo.AddComponent<InventoryManager>();
 
             // Canvas
             var canvasGo = new GameObject("Canvas");
@@ -216,40 +221,25 @@ namespace CreativeAI.EditorTools
             hudGo.transform.SetParent(canvasGo.transform, false);
             StretchFull(hudGo.AddComponent<RectTransform>());
 
-            // シーンラベル（画面上中央）
-            CreateText(
-                hudGo.transform,
-                "SceneLabel",
-                "ここは Field 画面です",
-                anchorMin: new Vector2(0.5f, 1f),
-                anchorMax: new Vector2(0.5f, 1f),
-                size: new Vector2(800, 80),
-                fontSize: 36,
-                color: Color.white,
-                anchoredPosition: new Vector2(0, -60)
-            );
-
-            // 右上の円形メニューボタン（後でアイコンに差し替え予定。色で識別）
             var charBtn = CreateMenuIconButton(
                 hudGo.transform,
                 "CharacterButton",
                 -320,
                 new Color(0.55f, 0.4f, 0.75f, 1f)
-            ); // 紫: Character
+            );
             var invBtn = CreateMenuIconButton(
                 hudGo.transform,
                 "InventoryButton",
                 -210,
                 new Color(0.4f, 0.65f, 0.45f, 1f)
-            ); // 緑: Inventory
+            );
             var saveBtn = CreateMenuIconButton(
                 hudGo.transform,
                 "SaveButton",
                 -100,
                 new Color(0.85f, 0.55f, 0.3f, 1f)
-            ); // 橙: Save
+            );
 
-            // パネル群
             var charStub = CreateCharacterPanel(canvasGo.transform);
             var invStub = CreateInventoryPanel(canvasGo.transform);
             var saveStub = CreateSaveDialog(canvasGo.transform);
@@ -441,7 +431,7 @@ namespace CreativeAI.EditorTools
         /// </summary>
         private static UIPanelStub CreateInventoryPanel(Transform parent)
         {
-            // ---- 全画面背景 ----
+            // ---- InventoryPanel ----
             var panelGo = new GameObject("InventoryPanel");
             panelGo.transform.SetParent(parent, false);
             StretchFull(panelGo.AddComponent<RectTransform>());
@@ -460,51 +450,39 @@ namespace CreativeAI.EditorTools
             }
             bg.raycastTarget = true;
 
-            // ---- カテゴリタブ（最上段・丸ボタン。後でアイコン化）----
-            // 食材タブをデフォルト選択（りんごを表示するため）
-            var weaponTab = CreateTabButton(panelGo.transform, "WeaponTab", "", -150, false);
-            var equipmentTab = CreateTabButton(panelGo.transform, "EquipmentTab", "", 0, false);
-            var foodTab = CreateTabButton(panelGo.transform, "FoodTab", "", 150, true);
+            // ---- Inventory ----
+            var inventoryGo = new GameObject("Inventory");
+            inventoryGo.transform.SetParent(panelGo.transform, false);
+            var inventoryRt = inventoryGo.AddComponent<RectTransform>();
+            inventoryRt.anchorMin = new Vector2(0f, 0f);
+            inventoryRt.anchorMax = new Vector2(0.7f, 1f);
+            inventoryRt.offsetMin = Vector2.zero;
+            inventoryRt.offsetMax = Vector2.zero;
 
-            // ---- 左: アイテムグリッド枠（Scroll View + Content(Grid)）----
-            var scrollViewGo = new GameObject("ItemScrollView");
-            scrollViewGo.transform.SetParent(panelGo.transform, false);
-            var scrollViewRt = scrollViewGo.AddComponent<RectTransform>();
-            scrollViewRt.anchorMin = new Vector2(0.5f, 0.5f);
-            scrollViewRt.anchorMax = new Vector2(0.5f, 0.5f);
-            scrollViewRt.sizeDelta = new Vector2(1200, 920);
-            scrollViewRt.anchoredPosition = new Vector2(-300, -60);
-
-            var scrollImage = scrollViewGo.AddComponent<Image>();
+            // ScrollRect
+            var scrollRect = inventoryGo.AddComponent<ScrollRect>();
+            var scrollImage = inventoryGo.AddComponent<Image>();
             scrollImage.color = new Color(0, 0, 0, 0.001f);
-            var scrollMask = scrollViewGo.AddComponent<Mask>();
-            scrollMask.showMaskGraphic = false;
-            var scrollRect = scrollViewGo.AddComponent<ScrollRect>();
 
             // Viewport
             var viewportGo = new GameObject("Viewport");
-            viewportGo.transform.SetParent(scrollViewGo.transform, false);
+            viewportGo.transform.SetParent(inventoryGo.transform, false);
             var viewportRt = viewportGo.AddComponent<RectTransform>();
             viewportRt.anchorMin = Vector2.zero;
             viewportRt.anchorMax = Vector2.one;
             viewportRt.offsetMin = Vector2.zero;
             viewportRt.offsetMax = Vector2.zero;
-            var viewportImage = viewportGo.AddComponent<Image>();
-            viewportImage.color = new Color(0, 0, 0, 0.001f);
-            var viewportMask = viewportGo.AddComponent<Mask>();
-            viewportMask.showMaskGraphic = false;
+            viewportGo.AddComponent<RectMask2D>();
 
-            // Content (GridLayoutGroup goes here)
+            // Content
             var contentGo = new GameObject("Content");
             contentGo.transform.SetParent(viewportGo.transform, false);
             var contentRt = contentGo.AddComponent<RectTransform>();
-            // anchor to top stretch horizontally
             contentRt.anchorMin = new Vector2(0f, 1f);
             contentRt.anchorMax = new Vector2(1f, 1f);
             contentRt.pivot = new Vector2(0.5f, 1f);
             contentRt.anchoredPosition = Vector2.zero;
             contentRt.sizeDelta = new Vector2(0f, 0f);
-
             var grid = contentGo.AddComponent<GridLayoutGroup>();
             grid.cellSize = new Vector2(130, 130);
             grid.spacing = new Vector2(12, 12);
@@ -512,10 +490,12 @@ namespace CreativeAI.EditorTools
             grid.startCorner = GridLayoutGroup.Corner.UpperLeft;
             grid.startAxis = GridLayoutGroup.Axis.Horizontal;
             grid.constraint = GridLayoutGroup.Constraint.FixedColumnCount;
-            grid.constraintCount = 8;
+            grid.constraintCount = 6;
             grid.childAlignment = TextAnchor.UpperCenter;
+            contentGo.AddComponent<ContentSizeFitter>().verticalFit = ContentSizeFitter
+                .FitMode
+                .PreferredSize;
 
-            // Wire scrollRect
             scrollRect.viewport = viewportRt;
             scrollRect.content = contentRt;
             scrollRect.horizontal = false;
@@ -523,122 +503,51 @@ namespace CreativeAI.EditorTools
             scrollRect.movementType = ScrollRect.MovementType.Clamped;
             scrollRect.inertia = true;
 
-            var appleSprite = LoadSpriteWithImport(AppleIconPath);
-            var clockSprite = LoadSpriteWithImport(ClockIconPath);
-            // 全スロット空で作成。アイテム表示はコントローラがタブ切替に応じて埋める。
-            for (int i = 1; i <= 48; i++)
-            {
-                CreateItemSlot(contentGo.transform, i, null);
-            }
+            // Scrollbar Vertical
+            var scrollbarGo = new GameObject("Scrollbar Vertical");
+            scrollbarGo.transform.SetParent(inventoryGo.transform, false);
+            var scrollbarRt = scrollbarGo.AddComponent<RectTransform>();
+            scrollbarRt.anchorMin = new Vector2(1f, 0f);
+            scrollbarRt.anchorMax = new Vector2(1f, 1f);
+            scrollbarRt.offsetMin = new Vector2(-20f, 0f);
+            scrollbarRt.offsetMax = Vector2.zero;
+            var scrollbarImage = scrollbarGo.AddComponent<Image>();
+            scrollbarImage.color = new Color(1f, 1f, 1f, 0.1f);
+            var scrollbar = scrollbarGo.AddComponent<Scrollbar>();
+            scrollbar.direction = Scrollbar.Direction.BottomToTop;
+            scrollRect.verticalScrollbar = scrollbar;
+            scrollRect.verticalScrollbarVisibility = ScrollRect
+                .ScrollbarVisibility
+                .AutoHideAndExpandViewport;
 
-            // ---- 右: 詳細パネル（3割・縦最大）----
+            // TabGroup
+            var tabGroupGo = new GameObject("TabGroup");
+            tabGroupGo.transform.SetParent(inventoryGo.transform, false);
+            var tabGroupRt = tabGroupGo.AddComponent<RectTransform>();
+            tabGroupRt.anchorMin = new Vector2(0f, 1f);
+            tabGroupRt.anchorMax = new Vector2(1f, 1f);
+            tabGroupRt.sizeDelta = new Vector2(0f, 80f);
+            tabGroupRt.anchoredPosition = new Vector2(0f, 0f);
+            var tabGroup = tabGroupGo.AddComponent<TabGroup>();
+
+            // Inventory.cs
+            var inventory = inventoryGo.AddComponent<Inventory>();
+            SetRef(inventory, "_tabGroup", tabGroup);
+            SetRef(inventory, "_slotsRoot", contentRt);
+
+            // ---- DetailPanel ----
             var detailGo = new GameObject("DetailPanel");
             detailGo.transform.SetParent(panelGo.transform, false);
             var detailRt = detailGo.AddComponent<RectTransform>();
-            detailRt.anchorMin = new Vector2(0.5f, 0.5f);
-            detailRt.anchorMax = new Vector2(0.5f, 0.5f);
-            detailRt.sizeDelta = new Vector2(540, 920);
-            detailRt.anchoredPosition = new Vector2(630, -60);
+            detailRt.anchorMin = new Vector2(0.7f, 0f);
+            detailRt.anchorMax = new Vector2(1f, 1f);
+            detailRt.offsetMin = Vector2.zero;
+            detailRt.offsetMax = Vector2.zero;
+            var detailPanel = detailGo.AddComponent<ItemDetailPanel>();
+            SetRef(inventory, "_detailPanel", detailPanel);
 
-            // アイテムアイコン（りんご画像）
-            var iconGo = new GameObject("ItemIcon");
-            iconGo.transform.SetParent(detailGo.transform, false);
-            var iconRt = iconGo.AddComponent<RectTransform>();
-            iconRt.anchorMin = new Vector2(0.5f, 1f);
-            iconRt.anchorMax = new Vector2(0.5f, 1f);
-            iconRt.sizeDelta = new Vector2(220, 220);
-            iconRt.anchoredPosition = new Vector2(0, -170);
-            var iconImage = iconGo.AddComponent<Image>();
-            if (appleSprite != null)
-            {
-                iconImage.sprite = appleSprite;
-                iconImage.color = Color.white;
-                iconImage.preserveAspect = true;
-            }
-            else
-            {
-                iconImage.color = new Color(0, 0, 0, 0);
-            }
-            iconImage.raycastTarget = false;
-
-            // アイテム名（コントローラが上書き）
-            var itemNameText = CreateText(
-                detailGo.transform,
-                "ItemName",
-                "",
-                anchorMin: new Vector2(0.5f, 1f),
-                anchorMax: new Vector2(0.5f, 1f),
-                size: new Vector2(480, 60),
-                fontSize: 40,
-                color: Color.white,
-                anchoredPosition: new Vector2(0, -320)
-            );
-
-            // カテゴリ・レアリティ（コントローラが上書き）
-            var categoryText = CreateText(
-                detailGo.transform,
-                "Category",
-                "",
-                anchorMin: new Vector2(0.5f, 1f),
-                anchorMax: new Vector2(0.5f, 1f),
-                size: new Vector2(480, 36),
-                fontSize: 22,
-                color: new Color(0.95f, 0.8f, 0.4f, 1f),
-                anchoredPosition: new Vector2(0, -370)
-            );
-
-            // 区切り線
-            var dividerGo = new GameObject("Divider");
-            dividerGo.transform.SetParent(detailGo.transform, false);
-            var dividerRt = dividerGo.AddComponent<RectTransform>();
-            dividerRt.anchorMin = new Vector2(0.5f, 1f);
-            dividerRt.anchorMax = new Vector2(0.5f, 1f);
-            dividerRt.sizeDelta = new Vector2(440, 2);
-            dividerRt.anchoredPosition = new Vector2(0, -410);
-            dividerGo.AddComponent<Image>().color = new Color(1, 1, 1, 0.25f);
-
-            // 説明文（コントローラが上書き）
-            var descriptionText = CreateText(
-                detailGo.transform,
-                "Description",
-                "",
-                anchorMin: new Vector2(0.5f, 1f),
-                anchorMax: new Vector2(0.5f, 1f),
-                size: new Vector2(440, 110),
-                fontSize: 22,
-                color: new Color(0.88f, 0.9f, 0.95f, 1f),
-                anchoredPosition: new Vector2(0, -480)
-            );
-
-            // 効果（コントローラが上書き）
-            var effectText = CreateText(
-                detailGo.transform,
-                "Effect",
-                "",
-                anchorMin: new Vector2(0.5f, 1f),
-                anchorMax: new Vector2(0.5f, 1f),
-                size: new Vector2(440, 40),
-                fontSize: 24,
-                color: new Color(0.7f, 0.95f, 0.75f, 1f),
-                anchoredPosition: new Vector2(0, -580)
-            );
-
-            // ---- 閉じる(✕) ボタン: 右上 ----
+            // ---- CloseButton ----
             var closeBtn = CreateCloseButton(panelGo.transform);
-
-            // ---- コントローラ ----
-            var inventoryCtrl = panelGo.AddComponent<InventoryUIController>();
-            SetRef(inventoryCtrl, "_weaponTab", weaponTab);
-            SetRef(inventoryCtrl, "_equipmentTab", equipmentTab);
-            SetRef(inventoryCtrl, "_foodTab", foodTab);
-            SetRef(inventoryCtrl, "_slotsRoot", contentGo.transform);
-            SetRef(inventoryCtrl, "_detailIcon", iconImage);
-            SetRef(inventoryCtrl, "_detailName", itemNameText);
-            SetRef(inventoryCtrl, "_detailCategory", categoryText);
-            SetRef(inventoryCtrl, "_detailDescription", descriptionText);
-            SetRef(inventoryCtrl, "_detailEffect", effectText);
-            SetRef(inventoryCtrl, "_appleIcon", appleSprite);
-            SetRef(inventoryCtrl, "_clockIcon", clockSprite);
 
             panelGo.SetActive(false);
 

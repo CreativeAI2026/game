@@ -4,6 +4,7 @@
     "references": [
         "CreativeAI.Core",
         "CreativeAI.UI",
+        "CreativeAI.Gameplay",
         "Unity.InputSystem"
     ],
     "includePlatforms": [

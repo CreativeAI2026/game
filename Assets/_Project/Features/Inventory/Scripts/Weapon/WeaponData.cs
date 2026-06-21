@@ -12,5 +12,7 @@ namespace CreativeAI.Gameplay
         public float criticalDamage; // 会心ダメージ
         public float criticalRate; // 会心率
         public int maxHP; // 最大HP
+
+        private void OnEnable() => category = ItemCategory.Weapon;
     }
 }

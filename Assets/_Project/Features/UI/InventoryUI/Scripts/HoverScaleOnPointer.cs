@@ -2,6 +2,8 @@ using System.Collections.Generic;
 using DG.Tweening;
 using UnityEngine;
 using UnityEngine.EventSystems;
+using UnityEngine.InputSystem;
+using UnityEngine.UI;
 
 namespace CreativeAI.UI.InventoryUI
 {
@@ -21,26 +23,68 @@ namespace CreativeAI.UI.InventoryUI
         private bool _lockEnabled = true;
 
         [SerializeField]
+        private bool _releaseLockOnOutsideClick = true;
+
+        [SerializeField]
         private float _hoverScale = 1.2f;
 
         [SerializeField]
         private float _animationDuration = 0.2f;
 
+        [Header("Selected Bounce")]
+        [SerializeField]
+        private float _bounceHeight = 8f;
+
+        [SerializeField]
+        private float _bounceDuration = 0.8f;
+
         private RectTransform _targetRect;
+        private RectTransform _bounceTarget;
         private Tween _currentTween;
+        private Tween _bounceTween;
+        private Vector3 _baseLocalPosition;
+        private Vector2 _bounceTargetBaseAnchoredPosition;
         private bool _isLocked;
 
-        public void SetTarget(RectTransform target) => _targetRect = target;
+        public void SetTarget(RectTransform target)
+        {
+            if (_targetRect == target)
+                return;
+
+            StopBounce();
+            _targetRect = target;
+            CacheBasePosition();
+        }
+
+        public void SetGroup(string group) => _group = group;
+
+        public void SetBounceTarget(RectTransform target)
+        {
+            StopBounce();
+            _bounceTarget = target;
+            CacheBasePosition();
+        }
+
+        public void SetReleaseLockOnOutsideClick(bool release) =>
+            _releaseLockOnOutsideClick = release;
 
         private void Awake()
         {
             if (_targetRect == null)
                 _targetRect = GetComponent<RectTransform>();
+
+            CacheBasePosition();
         }
 
         private void Update()
         {
-            if (!_isLocked || !Input.GetMouseButtonDown(0) || IsPointerOverSelf())
+            if (
+                !_releaseLockOnOutsideClick
+                || !_isLocked
+                || Mouse.current == null
+                || !Mouse.current.leftButton.wasPressedThisFrame
+                || IsPointerOverSelf()
+            )
                 return;
 
             ReleaseLockedState();
@@ -48,13 +92,13 @@ namespace CreativeAI.UI.InventoryUI
 
         private void OnDisable()
         {
-            // 登録状況に関わらず、自分の状態は必ずリセット
             if (_lockedInstances.TryGetValue(_group, out var current) && current == this)
                 _lockedInstances.Remove(_group);
 
             _isLocked = false;
             _currentTween?.Kill();
             _currentTween = null;
+            StopBounce();
 
             if (_targetRect != null)
                 _targetRect.localScale = Vector3.one;
@@ -63,6 +107,7 @@ namespace CreativeAI.UI.InventoryUI
         private void OnDestroy()
         {
             _currentTween?.Kill();
+            _bounceTween?.Kill();
         }
 
         public void OnPointerEnter(PointerEventData eventData)
@@ -94,6 +139,7 @@ namespace CreativeAI.UI.InventoryUI
             _lockedInstances[_group] = this;
             _isLocked = true;
             StartScale(Vector3.one * _hoverScale);
+            StartBounce();
         }
 
         private void ReleaseLockedState()
@@ -103,6 +149,7 @@ namespace CreativeAI.UI.InventoryUI
 
             _isLocked = false;
             StartScale(Vector3.one);
+            StopBounce();
         }
 
         public static HoverScaleOnPointer GetLockedInstance(string group) =>
@@ -132,14 +179,99 @@ namespace CreativeAI.UI.InventoryUI
                 .OnComplete(() => _currentTween = null);
         }
 
+        private void CacheBasePosition()
+        {
+            if (_targetRect != null)
+                _baseLocalPosition = _targetRect.localPosition;
+            if (_bounceTarget != null)
+                _bounceTargetBaseAnchoredPosition = _bounceTarget.anchoredPosition;
+        }
+
+        private void StartBounce()
+        {
+            if (_targetRect == null || _bounceHeight <= 0f || _bounceDuration <= 0f)
+                return;
+
+            StopBounce();
+            CacheBasePosition();
+            float direction = GetBounceDirection();
+
+            var sequence = DOTween.Sequence();
+            sequence.Append(
+                DOTween.To(
+                    () => _targetRect.localPosition.y,
+                    y =>
+                    {
+                        var position = _targetRect.localPosition;
+                        position.y = y;
+                        _targetRect.localPosition = position;
+                    },
+                    _baseLocalPosition.y + _bounceHeight * direction,
+                    _bounceDuration
+                )
+            );
+
+            if (_bounceTarget != null)
+            {
+                sequence.Join(
+                    DOTween.To(
+                        () => _bounceTarget.anchoredPosition.y,
+                        y =>
+                        {
+                            var position = _bounceTarget.anchoredPosition;
+                            position.y = y;
+                            _bounceTarget.anchoredPosition = position;
+                        },
+                        _bounceTargetBaseAnchoredPosition.y + _bounceHeight * direction,
+                        _bounceDuration
+                    )
+                );
+            }
+
+            _bounceTween = sequence
+                .SetEase(Ease.InOutSine)
+                .SetLoops(-1, LoopType.Yoyo)
+                .SetUpdate(true);
+        }
+
+        private void StopBounce()
+        {
+            bool wasBouncing = _bounceTween != null;
+            _bounceTween?.Kill();
+            _bounceTween = null;
+
+            // Layout計算前に保存した古い座標を、未再生時に書き戻さない。
+            if (!wasBouncing || _targetRect == null)
+                return;
+
+            _targetRect.localPosition = _baseLocalPosition;
+            if (_bounceTarget != null)
+                _bounceTarget.anchoredPosition = _bounceTargetBaseAnchoredPosition;
+        }
+
+        private float GetBounceDirection()
+        {
+            var mask = _targetRect.GetComponentInParent<RectMask2D>();
+            if (mask == null)
+                return 1f;
+
+            var targetCorners = new Vector3[4];
+            var maskCorners = new Vector3[4];
+            _targetRect.GetWorldCorners(targetCorners);
+            mask.rectTransform.GetWorldCorners(maskCorners);
+            float scaledBounceHeight = _bounceHeight * _targetRect.lossyScale.y;
+
+            return targetCorners[1].y + scaledBounceHeight > maskCorners[1].y ? -1f : 1f;
+        }
+
         private bool IsPointerOverSelf()
         {
-            if (EventSystem.current == null)
+            if (EventSystem.current == null || Mouse.current == null)
                 return false;
 
             var eventData = new PointerEventData(EventSystem.current)
             {
-                position = Input.mousePosition,
+                position = Mouse.current.position.ReadValue(),
             };
 
             var results = new List<RaycastResult>();
