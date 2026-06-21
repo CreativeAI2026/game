@@ -12,5 +12,7 @@ namespace CreativeAI.Gameplay
         public float criticalDamage; // 会心ダメージ
         public float criticalRate; // 会心率
         public int healAmount; // 回復量
+
+        private void OnEnable() => category = ItemCategory.Food;
     }
 }
