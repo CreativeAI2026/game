@@ -5,7 +5,8 @@
         "CreativeAI.Core",
         "CreativeAI.Shared",
         "CreativeAI.Gameplay",
-        "Unity.TextMeshPro"
+        "Unity.TextMeshPro",
+        "UniTask"
     ],
     "includePlatforms": [],
     "excludePlatforms": [],
