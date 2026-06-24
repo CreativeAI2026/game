@@ -1,0 +1,10 @@
+{
+    "name": "B1024070.Comattenedergltfast.Editor",
+    "references": [
+      "B1024070.Comattenedergltfast"
+    ],
+    "includePlatforms": [
+        "Editor"
+    ],
+    "excludePlatforms": []
+}
