@@ -1,3 +1,4 @@
+using System;
 using UnityEngine;
 
 namespace CreativeAI.Gameplay
@@ -19,6 +20,8 @@ namespace CreativeAI.Gameplay
         private Animator _animator;
         private PlayerController _playerController;
 
+        //private WeaponHUDController _weaponHUDController;
+
         public int CurrentWeaponIndex => _currentWeaponIndex;
 
         private void Awake()
@@ -26,6 +29,7 @@ namespace CreativeAI.Gameplay
             _input = GetComponent<PlayerInputHandler>();
             _animator = GetComponent<Animator>();
             _playerController = GetComponent<PlayerController>();
+            //_weaponHUDController = GetComponent<WeaponHUDController>();
         }
 
         private void Start()
