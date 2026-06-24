@@ -121,6 +121,8 @@ namespace CreativeAI.Gameplay
             }
         }
 
+        private bool _prevSubAction = false;
+
         private void Update()
         {
             if (input == null || _weaponManager == null)
@@ -137,6 +139,17 @@ namespace CreativeAI.Gameplay
                     ChangeState(new SwordStateFree(this));
                 return;
             }
+
+            // パリィタイマーの更新（ステートに依存せず、ボタンの「押し始め」で受付開始）
+            if (input.subAction && !_prevSubAction)
+            {
+                parryTimer = parryWindowDuration;
+            }
+            else if (parryTimer > 0f)
+            {
+                parryTimer -= Time.deltaTime;
+            }
+            _prevSubAction = input.subAction;
 
             _currentState?.Update();
         }
@@ -162,44 +175,47 @@ namespace CreativeAI.Gameplay
         {
             if (_currentState is SwordStateGuard || _currentState is SwordStateParry)
             {
-                if (parryTimer > 0f)
+                // ガード入力がされている、またはパリィ受付時間中のみ防御成立
+                if (parryTimer > 0f || input.subAction)
                 {
-                    SpawnParryEffect(hitPoint);
-
-                    CameraShakeManager.Instance?.Shake(0.4f);
-
-                    if (isMeleeAttack && attacker != null)
+                    if (parryTimer > 0f)
                     {
-                        var enemyCon = attacker.GetComponentInParent<TestEnemyController>();
-                        if (enemyCon != null)
+                        SpawnParryEffect(hitPoint);
+
+                        CameraShakeManager.Instance?.Shake(0.4f);
+
+                        if (isMeleeAttack && attacker != null)
                         {
-                            enemyCon.ChangeState(new TestEnemyParriedState(enemyCon));
+                            var enemyCon = attacker.GetComponentInParent<TestEnemyController>();
+                            if (enemyCon != null)
+                            {
+                                enemyCon.ChangeState(new TestEnemyParriedState(enemyCon));
+                            }
                         }
+
+                        ChangeState(new SwordStateParry(this));
+
+                        // 一回のガード入力で一回のパリィのみ受け付けるため、タイマーを0にする
+                        parryTimer = 0f;
+                        return true;
                     }
 
-                    ChangeState(new SwordStateParry(this));
+                    SpawnGuardEffect(hitPoint);
 
-                    // パリィ成功時にタイマーをリセットし、連続パリィを可能にする
-                    parryTimer = parryWindowDuration;
+                    CameraShakeManager.Instance?.Shake(0.2f);
+
+                    guardHitCount++;
+
+                    // ガード耐久上限を超えたら強制的にガードを崩し、次の攻撃をダメージとして受ける
+                    if (guardHitCount >= guardMaxCount)
+                    {
+                        Debug.Log("ガード上限に達した");
+                        // TODO : 専用アニメーションを追加する。
+                        ChangeState(new SwordStateFree(this));
+                    }
+
                     return true;
                 }
-
-                SpawnGuardEffect(hitPoint);
-
-                CameraShakeManager.Instance?.Shake(0.2f);
-
-                guardHitCount++;
-
-                // ガード耐久上限を超えたら強制的にガードを崩し、次の攻撃をダメージとして受ける
-                if (guardHitCount >= guardMaxCount)
-                {
-                    Debug.Log("ガード上限に達した");
-                    if (animator != null)
-                        animator.SetTrigger("GuardBreak");
-                    ChangeState(new SwordStateFree(this));
-                }
-
-                return true;
             }
 
             return false;

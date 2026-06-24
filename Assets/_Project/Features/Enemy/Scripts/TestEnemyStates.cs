@@ -3,7 +3,8 @@ using UnityEngine;
 namespace CreativeAI.Gameplay
 {
     /// <summary>
-    /// テスト用敵の各ステート共通基底。TestEnemyControllerへの参照を保持する。
+    /// ステートパターンを用いたAI行動制御の基底クラス。
+    /// 各状態間で使用するコンテキスト（TestEnemyController）を共有し、状態遷移をカプセル化する。
     /// </summary>
     public class TestEnemyBaseState : IEnemyState
     {
@@ -22,7 +23,7 @@ namespace CreativeAI.Gameplay
     }
 
     /// <summary>
-    /// 待機ステート。プレイヤーが視界に入るまでこのステートに留まる。
+    /// 未発見状態でのアイドリングを表現するステート。不要な計算負荷を抑えるための初期状態。
     /// </summary>
     public class TestEnemyIdleState : TestEnemyBaseState
     {
@@ -36,7 +37,7 @@ namespace CreativeAI.Gameplay
 
         public override void Update()
         {
-            if (testCon.CheckInSight())
+            if (testCon.Player != null && (testCon.IsAlerted || testCon.CheckInSight()))
             {
                 testCon.IsAlerted = true;
                 testCon.ChangeState(new TestEnemyChaseState(testCon));
@@ -50,7 +51,7 @@ namespace CreativeAI.Gameplay
     }
 
     /// <summary>
-    /// 追跡ステート。プレイヤーをNavMeshで追いかけ、旋回範囲に入ったら戦闘行動に移行する。
+    /// 発見したプレイヤーとの距離を素早く詰め、各種戦闘行動（旋回、攻撃など）へ移行するための繋ぎのステート。
     /// </summary>
     public class TestEnemyChaseState : TestEnemyBaseState
     {
@@ -87,6 +88,17 @@ namespace CreativeAI.Gameplay
                 testCon.transform.position,
                 testCon.Player.transform.position
             );
+
+            if (
+                distance >= testCon.NeedleAttackDistance
+                && testCon.NeedleAttackTimer <= 0f
+                && testCon.CheckInSight()
+            )
+            {
+                testCon.ChangeState(new TestEnemyNeedleAttackState(testCon));
+                return;
+            }
+
             if (distance <= testCon.StrafeRange && testCon.CheckInSight())
             {
                 testCon.ChangeState(new TestEnemyStrafeState(testCon));
@@ -109,8 +121,7 @@ namespace CreativeAI.Gameplay
     }
 
     /// <summary>
-    /// 旋回（ストレイフ）ステート。プレイヤーの周囲を横移動し、隙を窺う。
-    /// 一定時間経過後に接近ステートへ遷移する。
+    /// 単調な直線的追尾を避け、プレイヤーに横方向へのエイムや立ち回りを要求するための立ち回りステート。
     /// </summary>
     public class TestEnemyStrafeState : TestEnemyBaseState
     {
@@ -123,7 +134,6 @@ namespace CreativeAI.Gameplay
 
         public override void Enter()
         {
-            Debug.Log("旋回ステート開始");
             _strafeTimer = 0f;
 
             // ランダムに左右を決めることで、複数の敵が同じ方向に旋回し続けるのを防ぐ
@@ -144,18 +154,28 @@ namespace CreativeAI.Gameplay
 
             _strafeTimer += Time.deltaTime;
 
+            float distance = Vector3.Distance(
+                testCon.transform.position,
+                testCon.Player.transform.position
+            );
+
+            if (
+                distance >= testCon.NeedleAttackDistance
+                && testCon.NeedleAttackTimer <= 0f
+                && testCon.CheckInSight()
+            )
+            {
+                testCon.ChangeState(new TestEnemyNeedleAttackState(testCon));
+                return;
+            }
+
             if (_strafeTimer >= testCon.StrafeDuration)
             {
                 testCon.ChangeState(new TestEnemyApproachState(testCon));
                 return;
             }
 
-            float distance = Vector3.Distance(
-                testCon.transform.position,
-                testCon.Player.transform.position
-            );
-
-            // プレイヤーが接近しすぎた場合、バックステップか後退で距離を取り直す
+            // 至近距離でのプレイヤーの猛攻を回避し、AIが有利な間合いを自律的に維持するため
             if (distance <= testCon.BackStepRange)
             {
                 if (Random.value <= testCon.BackStepChance)
@@ -165,7 +185,7 @@ namespace CreativeAI.Gameplay
                 }
                 else
                 {
-                    Retreat();
+                    testCon.ChangeState(new TestEnemyRetreatState(testCon));
                     return;
                 }
             }
@@ -195,31 +215,23 @@ namespace CreativeAI.Gameplay
 
             Vector3 strafeDir = Vector3.Cross(Vector3.up, dirToPlayer) * _strafeDirection;
 
+            // NavMesh外や障害物にスタックして不自然な足踏み挙動になるのを防ぐため、進行方向に壁があれば反転させる
+            Vector3 rayStart = testCon.transform.position + Vector3.up * 1f;
+            if (Physics.Raycast(rayStart, strafeDir, out RaycastHit hit, 2f, testCon.ObstacleLayer))
+            {
+                _strafeDirection *= -1f; // 方向反転
+                strafeDir = Vector3.Cross(Vector3.up, dirToPlayer) * _strafeDirection;
+            }
+
             // 2fはNavMeshAgentが次フレームまでに到達しうる十分な距離として設定
             Vector3 targetPos = testCon.transform.position + strafeDir * 2f;
             testCon.Agent.SetDestination(targetPos);
-
             testCon.transform.rotation = Quaternion.LookRotation(dirToPlayer);
-        }
-
-        private void Retreat()
-        {
-            if (testCon.Agent == null)
-            {
-                return;
-            }
-
-            testCon.Agent.speed = testCon.BackStepSpeed;
-            Vector3 retreatDir = (
-                testCon.transform.position - testCon.Player.transform.position
-            ).normalized;
-            Vector3 retreatTarget = testCon.transform.position + retreatDir * 2f;
-            testCon.Agent.SetDestination(retreatTarget);
         }
     }
 
     /// <summary>
-    /// 接近ステート。攻撃範囲までプレイヤーに向かって直進する。
+    /// 攻撃直前の予備動作として、意図的にプレイヤーへプレッシャーを与えつつ攻撃レンジへ誘導するステート。
     /// </summary>
     public class TestEnemyApproachState : TestEnemyBaseState
     {
@@ -279,24 +291,26 @@ namespace CreativeAI.Gameplay
     }
 
     /// <summary>
-    /// 攻撃ステート。攻撃アニメーション中はプレイヤー方向へホーミング回転し、
-    /// アニメーション完了後に距離に応じて次の行動を決定する。
+    /// 近接攻撃の実行ステート。プレイヤーの回避行動に対応するためのホーミングと、
+    /// 攻撃時の不自然なスライディングを防ぐための踏み込み制御を切り替えて運用する。
     /// </summary>
     public class TestEnemyAttackState : TestEnemyBaseState
     {
-        // 攻撃アニメーションの最初30%区間のみホーミングを有効にする。
-        // 振り終わりまでホーミングすると不自然な追尾になるため。
-        private const float HomingThreshold = 0.3f;
+        // プレイヤーの回避タイミングをシビアにし、攻撃を当てやすくするためのホーミング猶予区間
+        private const float HomingThreshold = 0.4f;
+
+        // 攻撃判定発生時の不自然な旋回（スライディング）を防ぎ、慣性を表現するための踏み込み区間
+        private const float LungeStartThreshold = 0.4f;
+        private const float LungeEndThreshold = 0.7f;
 
         private const float HomingSpeed = 10f;
+        private const float LungeSpeed = 15f; // 貫通するように大きく前進させるため速度を上げる
 
         public TestEnemyAttackState(TestEnemyController core)
             : base(core) { }
 
         public override void Enter()
         {
-            Debug.Log("攻撃ステート開始");
-
             if (testCon.Agent != null)
             {
                 testCon.Agent.ResetPath();
@@ -305,6 +319,12 @@ namespace CreativeAI.Gameplay
             if (testCon.Animator != null)
             {
                 testCon.Animator.SetTrigger("Attack");
+            }
+
+            if (testCon.EnemyCollider != null && testCon.PlayerCollider != null)
+            {
+                // 踏み込みでプレイヤーが押されることを防ぐために、貫くような攻撃をさせる。
+                Physics.IgnoreCollision(testCon.EnemyCollider, testCon.PlayerCollider, true);
             }
         }
 
@@ -332,6 +352,18 @@ namespace CreativeAI.Gameplay
                             testCon.transform.rotation,
                             targetRotation,
                             Time.deltaTime * HomingSpeed
+                        );
+                    }
+                }
+                else if (
+                    stateInfo.normalizedTime >= LungeStartThreshold
+                    && stateInfo.normalizedTime <= LungeEndThreshold
+                )
+                {
+                    if (testCon.Agent != null)
+                    {
+                        testCon.Agent.Move(
+                            testCon.transform.forward * (LungeSpeed * Time.deltaTime)
                         );
                     }
                 }
@@ -373,12 +405,15 @@ namespace CreativeAI.Gameplay
 
         public override void Exit()
         {
-            Debug.Log("攻撃ステート終了");
+            if (testCon.EnemyCollider != null && testCon.PlayerCollider != null)
+            {
+                Physics.IgnoreCollision(testCon.EnemyCollider, testCon.PlayerCollider, false);
+            }
         }
     }
 
     /// <summary>
-    /// バックステップステート。プレイヤーの方を向いたまま後退し距離を取る。
+    /// プレイヤーの近接攻撃に対する防御的な立ち回りとして、瞬間的に間合いをリセットし態勢を立て直すステート。
     /// </summary>
     public class TestEnemyBackStepState : TestEnemyBaseState
     {
@@ -433,7 +468,7 @@ namespace CreativeAI.Gameplay
                 }
             }
 
-            // 前半は実際に後退移動し、後半は着地・復帰モーションのため停止する
+            // モーションの視覚的な接地感（足の滑り）を損なわないよう、後半の着地・復帰モーション中は移動入力を切る
             float activeDuration = testCon.BackStepDuration * 0.5f;
 
             if (_backStepTimer < activeDuration)
@@ -473,7 +508,57 @@ namespace CreativeAI.Gameplay
     }
 
     /// <summary>
-    /// 怯みステート。被弾時に行動を中断し、怯みアニメーション完了後にIdleへ戻る。
+    /// バックステップのみでは単調になるため、異なるテンポでの距離調整手段を提供しプレイヤーの予測を外すステート。
+    /// </summary>
+    public class TestEnemyRetreatState : TestEnemyBaseState
+    {
+        private float _retreatTimer;
+
+        public TestEnemyRetreatState(TestEnemyController core)
+            : base(core) { }
+
+        public override void Enter()
+        {
+            _retreatTimer = 0f;
+            if (testCon.Agent != null)
+                testCon.Agent.speed = testCon.BackStepSpeed;
+        }
+
+        public override void Update()
+        {
+            if (testCon.Player == null)
+                return;
+            _retreatTimer += Time.deltaTime;
+
+            Vector3 retreatDir = (
+                testCon.transform.position - testCon.Player.transform.position
+            ).normalized;
+            Vector3 retreatTarget = testCon.transform.position + retreatDir * 2f;
+
+            if (testCon.Agent != null)
+                testCon.Agent.SetDestination(retreatTarget);
+            testCon.transform.rotation = Quaternion.LookRotation(-retreatDir); // プレイヤーを向く
+
+            float distance = Vector3.Distance(
+                testCon.transform.position,
+                testCon.Player.transform.position
+            );
+
+            if (distance > testCon.BackStepRange + 1f || _retreatTimer > 1.5f)
+            {
+                testCon.ChangeState(new TestEnemyStrafeState(testCon));
+            }
+        }
+
+        public override void Exit()
+        {
+            if (testCon.Agent != null)
+                testCon.Agent.ResetPath();
+        }
+    }
+
+    /// <summary>
+    /// 攻撃をヒットさせたプレイヤーへ視覚的なフィードバックを与え、明確な反撃のチャンスを確保するステート。
     /// </summary>
     public class TestEnemyFlinchState : TestEnemyBaseState
     {
@@ -510,7 +595,10 @@ namespace CreativeAI.Gameplay
             {
                 if (stateInfo.normalizedTime >= 1.0f)
                 {
-                    testCon.ChangeState(new TestEnemyIdleState(testCon));
+                    if (testCon.IsAlerted)
+                        testCon.ChangeState(new TestEnemyChaseState(testCon));
+                    else
+                        testCon.ChangeState(new TestEnemyIdleState(testCon));
                 }
             }
         }
@@ -557,7 +645,10 @@ namespace CreativeAI.Gameplay
             {
                 if (stateInfo.normalizedTime >= 1.0f)
                 {
-                    testCon.ChangeState(new TestEnemyIdleState(testCon));
+                    if (testCon.IsAlerted)
+                        testCon.ChangeState(new TestEnemyChaseState(testCon));
+                    else
+                        testCon.ChangeState(new TestEnemyIdleState(testCon));
                 }
             }
         }
@@ -565,6 +656,135 @@ namespace CreativeAI.Gameplay
         public override void Exit()
         {
             Debug.Log("敵：大怯みステート終了");
+        }
+    }
+
+    /// <summary>
+    /// AI制御と物理演算を完全に停止させ、死体としての挙動を確定させるための終端ステート。
+    /// </summary>
+    public class TestEnemyDeathState : TestEnemyBaseState
+    {
+        public TestEnemyDeathState(TestEnemyController core)
+            : base(core) { }
+
+        public override void Enter()
+        {
+            Debug.Log("死亡ステート開始");
+
+            if (testCon.Agent != null)
+                testCon.Agent.enabled = false;
+            if (testCon.EnemyCollider != null)
+                testCon.EnemyCollider.enabled = false;
+
+            if (testCon.Animator != null)
+            {
+                testCon.Animator.SetTrigger("Die");
+            }
+        }
+
+        public override void Update() { }
+    }
+
+    /// <summary>
+    /// 遠距離から広範囲に弾幕を展開し、プレイヤーに強制的に回避行動やパリィを要求するためのステート。
+    /// </summary>
+    public class TestEnemyNeedleAttackState : TestEnemyBaseState
+    {
+        private float _timer;
+        private System.Collections.Generic.List<EnemyNeedleProjectile> _needles =
+            new System.Collections.Generic.List<EnemyNeedleProjectile>();
+        private float _fireInterval = 0.2f;
+        private float _riseAimDuration = 1.5f;
+
+        public TestEnemyNeedleAttackState(TestEnemyController core)
+            : base(core) { }
+
+        public override void Enter()
+        {
+            Debug.Log("針攻撃ステート開始");
+            _timer = 0f;
+
+            if (testCon.Agent != null)
+            {
+                testCon.Agent.ResetPath();
+            }
+
+            if (testCon.Animator != null)
+            {
+                testCon.Animator.SetBool("IsRunning", false);
+                testCon.Animator.SetTrigger("Roar");
+            }
+
+            testCon.NeedleAttackTimer = testCon.NeedleAttackCooldown;
+
+            float angleStep = 360f / testCon.NeedleCount;
+            for (int i = 0; i < testCon.NeedleCount; i++)
+            {
+                GameObject needleObj;
+                if (testCon.needlePrefab != null)
+                {
+                    needleObj = UnityEngine.Object.Instantiate(testCon.needlePrefab);
+                }
+                else
+                {
+                    needleObj = new GameObject("NeedleProjectile");
+                }
+
+                var needle = needleObj.GetComponent<EnemyNeedleProjectile>();
+                if (needle == null)
+                {
+                    needle = needleObj.AddComponent<EnemyNeedleProjectile>();
+                }
+
+                // 弾幕の密度を調整し、プレイヤーに連続回避の猶予を与えるためのオフセット時間
+                float delay = i * _fireInterval;
+                needle.Initialize(
+                    testCon.transform,
+                    testCon.Player.transform,
+                    angleStep * i,
+                    delay,
+                    testCon.NeedleDamage
+                );
+                _needles.Add(needle);
+            }
+        }
+
+        public override void Update()
+        {
+            _timer += Time.deltaTime;
+
+            // 攻撃の予備動作中にターゲットを見失い、明後日の方向に発射してしまうのを防ぐため
+            if (testCon.Player != null)
+            {
+                Vector3 dirToPlayer = (
+                    testCon.Player.transform.position - testCon.transform.position
+                ).normalized;
+                dirToPlayer.y = 0f;
+                if (dirToPlayer != Vector3.zero)
+                {
+                    testCon.transform.rotation = Quaternion.Slerp(
+                        testCon.transform.rotation,
+                        Quaternion.LookRotation(dirToPlayer),
+                        Time.deltaTime * 5f
+                    );
+                }
+            }
+
+            // 全ての針の射出シーケンスが完了するまでステートを維持し、途中で別の行動に割り込まれないようにするため
+            float totalDuration = _riseAimDuration + (testCon.NeedleCount * _fireInterval) + 1.0f;
+
+            if (_timer >= totalDuration)
+            {
+                if (testCon.IsAlerted)
+                    testCon.ChangeState(new TestEnemyChaseState(testCon));
+                else
+                    testCon.ChangeState(new TestEnemyIdleState(testCon));
+            }
+        }
+
+        public override void Exit()
+        {
+            Debug.Log("針攻撃ステート終了");
         }
     }
 }

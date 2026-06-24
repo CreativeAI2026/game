@@ -18,7 +18,7 @@ namespace CreativeAI.Gameplay
         private float _nextFlinchTime = 0f;
         public event Action OnFlinchTriggered;
         public event Action OnAlertTriggered;
-
+        public event Action OnDeathTriggered;
         public float MaxHp => _enemyData.baseMaxLife;
 
         public float CurrentAttackPower
@@ -46,17 +46,15 @@ namespace CreativeAI.Gameplay
 
         public void TakeDamage(float damage, bool isCritical)
         {
-            // 防御力が攻撃力を上回ってもダメージが0にならないよう、最低1ダメージを保証する
+            // プレイヤーの攻撃が完全に無効化され、進行不能やフィードバック喪失に陥るのを防ぐための保証値
             float finalDamage = Mathf.Max(1f, damage - CurrentDefense);
 
             _currentHp -= finalDamage;
 
-            // 被弾=敵に気づかれるべきなので、発見状態かどうかに関係なく常にイベントを発火する。
-            // 未発見状態かどうかの判断はコントローラ側の責務とする。
+            // StatusクラスがAIの現在の状態（未発見等）に依存するのを防ぎ、状態管理の責務をコントローラ側に集約するため、イベントは無条件で発火させる
             OnAlertTriggered?.Invoke();
 
-            // クールダウン中は怯みを発生させない（スーパーアーマー期間）。
-            // 連続攻撃でハメ状態になるのを防ぐための設計。
+            // 連続攻撃によるハメ状態（永続的な怯み）を防止し、反撃の機会を確保するためのスーパーアーマー設計
             if (Time.time >= _nextFlinchTime)
             {
                 if (isCritical || finalDamage >= _enemyData.flinchDamageThreshold)
@@ -95,8 +93,9 @@ namespace CreativeAI.Gameplay
 
         private void Die()
         {
+            OnDeathTriggered?.Invoke();
             Debug.Log($"{_enemyData.characterName}は死んだ");
-            // TODO : ゲームオーバー処理やアニメーション再生など
+            Destroy(gameObject, 5.0f);
         }
     }
 }

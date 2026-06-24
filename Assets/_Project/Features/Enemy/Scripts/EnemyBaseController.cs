@@ -4,9 +4,7 @@ using UnityEngine.AI;
 namespace CreativeAI.Gameplay
 {
     /// <summary>
-    /// 全敵キャラクターの共通基盤。ステートパターンによる行動制御と、
-    /// 共有コンポーネントへの参照を提供する。
-    /// 敵ごとの固有ロジックは子クラスで実装する。
+    /// 敵キャラクターの行動制御基盤を標準化し、コードの重複を防ぎつつAIの拡張性を確保するための抽象基底クラス。
     /// </summary>
     public class EnemyBaseController : MonoBehaviour
     {
@@ -14,13 +12,16 @@ namespace CreativeAI.Gameplay
         public GameObject Player { get; private set; }
         public Animator Animator { get; private set; }
         public EnemyStatus Status { get; private set; }
+
+        public Collider EnemyCollider { get; private set; }
+        public Collider PlayerCollider { get; private set; }
+
         private IEnemyState currentState;
         public bool IsAlerted { get; set; }
 
         protected virtual void Awake()
         {
-            // Prefab構成によってはコンポーネントが子オブジェクトに配置されるため、
-            // 自身で見つからない場合は子階層からも検索する
+            // モデルの差し替え等でPrefabの階層構造が変化しても、参照の欠損でスクリプトが破損するのを防ぐためのフォールバック
             Agent = GetComponent<NavMeshAgent>();
             if (Agent == null)
             {
@@ -40,11 +41,17 @@ namespace CreativeAI.Gameplay
             {
                 Status = GetComponentInChildren<EnemyStatus>();
             }
+
+            EnemyCollider = GetComponent<Collider>();
+            if (Player != null)
+            {
+                PlayerCollider = Player.GetComponent<Collider>();
+            }
         }
 
         protected virtual void OnEnable()
         {
-            // Awakeより先にOnEnableが呼ばれるケースがあるため、Statusの取得をここでも行う
+            // Unityのライフサイクルの不定性（非アクティブ状態での生成など）に起因するNullReferenceExceptionを防止するため
             if (Status == null)
             {
                 Status = GetComponent<EnemyStatus>();
@@ -58,6 +65,7 @@ namespace CreativeAI.Gameplay
             {
                 Status.OnFlinchTriggered += ForceFlinch;
                 Status.OnAlertTriggered += ForceAlert;
+                Status.OnDeathTriggered += ForceDeath;
             }
         }
 
@@ -67,12 +75,13 @@ namespace CreativeAI.Gameplay
             {
                 Status.OnFlinchTriggered -= ForceFlinch;
                 Status.OnAlertTriggered -= ForceAlert;
+                Status.OnDeathTriggered -= ForceDeath;
             }
         }
 
         protected virtual void Start()
         {
-            // 子クラス側で最初に遷移するステートを定義する
+            // 初期状態（待機や巡回など）は敵の種別や配置状況に依存するため、具象クラスに委譲する
         }
 
         protected virtual void Update()
@@ -84,7 +93,7 @@ namespace CreativeAI.Gameplay
         }
 
         /// <summary>
-        /// ステート遷移を一元管理し、Exit→Enter の呼び出し順序を保証する。
+        /// 状態が重複して実行されたり、終了処理が漏れてAIの挙動が破綻するのを防ぐため、遷移処理を一元化する。
         /// </summary>
         public void ChangeState(IEnemyState newState)
         {
@@ -103,17 +112,18 @@ namespace CreativeAI.Gameplay
         }
 
         /// <summary>
-        /// 子クラスでオーバーライドして、固有の怯みステートに遷移させる。
+        /// 敵のサイズや耐性によって怯みの表現（専用モーションの再生や無視など）が異なるため、派生クラスでの具象化を要求する。
         /// </summary>
-        public virtual void ForceFlinch()
-        {
-        }
+        public virtual void ForceFlinch() { }
 
         /// <summary>
-        /// 子クラスでオーバーライドして、被弾時に未発見状態から追跡ステートへ遷移させる。
+        /// ステルス状態からの強制発覚等、感知手段や警戒への移行プロセスは敵ごとに固有となるため拡張ポイントとして開放する。
         /// </summary>
-        public virtual void ForceAlert()
-        {
-        }
+        public virtual void ForceAlert() { }
+
+        /// <summary>
+        /// 死亡時の演出（ラグドール化、爆発、分裂など）のバリエーションを吸収するためのフックメソッド。
+        /// </summary>
+        public virtual void ForceDeath() { }
     }
 }

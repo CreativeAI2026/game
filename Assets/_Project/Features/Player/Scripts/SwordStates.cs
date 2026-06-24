@@ -75,8 +75,13 @@ namespace CreativeAI.Gameplay
     /// </summary>
     public class SwordStateGuard : SwordState
     {
-        public SwordStateGuard(SwordController context)
-            : base(context) { }
+        private bool _isConsecutiveGuard;
+
+        public SwordStateGuard(SwordController context, bool isConsecutive = false)
+            : base(context)
+        {
+            _isConsecutiveGuard = isConsecutive;
+        }
 
         public override void Enter()
         {
@@ -84,7 +89,6 @@ namespace CreativeAI.Gameplay
             ctx.playerController.CanChangeWeapon = false;
             ctx.animator.SetBool("IsGuarding", true);
 
-            ctx.parryTimer = ctx.parryWindowDuration;
             ctx.guardHitCount = 0;
 
             if (ctx.weaponMeshRoot != null)
@@ -96,11 +100,6 @@ namespace CreativeAI.Gameplay
         public override void Update()
         {
             ctx.input.ConsumeAttack();
-
-            if (ctx.parryTimer > 0f)
-            {
-                ctx.parryTimer -= Time.deltaTime;
-            }
 
             if (!ctx.input.subAction)
             {
@@ -167,7 +166,7 @@ namespace CreativeAI.Gameplay
                 // ガードボタンを押しっぱなしならGuardに戻り、離していればFreeに戻る
                 if (ctx.input.subAction)
                 {
-                    ctx.ChangeState(new SwordStateGuard(ctx));
+                    ctx.ChangeState(new SwordStateGuard(ctx, true));
                 }
                 else
                 {

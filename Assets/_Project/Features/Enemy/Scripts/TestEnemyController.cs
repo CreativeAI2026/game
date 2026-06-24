@@ -3,8 +3,8 @@ using UnityEngine;
 namespace CreativeAI.Gameplay
 {
     /// <summary>
-    /// テスト用敵の個別コントローラー。
-    /// 視界判定・移動パラメータなど、この敵固有のロジックとインスペクター設定を持つ。
+    /// 敵種別のバリエーションを定義するための具象クラス。
+    /// 固有の索敵ロジックやインスペクター公開パラメータを管理し、AIの個性を決定づける。
     /// </summary>
     public class TestEnemyController : EnemyBaseController
     {
@@ -43,6 +43,30 @@ namespace CreativeAI.Gameplay
         [Range(0f, 1f)]
         private float backStepChance = 0.5f;
 
+        [Header("針攻撃設定")]
+        [SerializeField]
+        public GameObject needlePrefab;
+
+        [SerializeField]
+        private float needleAttackDistance = 10f;
+
+        [SerializeField]
+        private float needleAttackCooldown = 15f;
+
+        [SerializeField]
+        private int needleCount = 5;
+
+        [SerializeField]
+        private int needleDamage = 10;
+
+        public float NeedleAttackDistance => needleAttackDistance;
+        public float NeedleAttackCooldown => needleAttackCooldown;
+        public int NeedleCount => needleCount;
+        public int NeedleDamage => needleDamage;
+
+        [HideInInspector]
+        public float NeedleAttackTimer;
+
         [Header("検知設定")]
         [SerializeField]
         private float viewDistance = 10f;
@@ -52,6 +76,7 @@ namespace CreativeAI.Gameplay
 
         [SerializeField]
         private LayerMask obstacleLayer;
+        public LayerMask ObstacleLayer => obstacleLayer;
 
         public float ChaseSpeed => chaseSpeed;
 
@@ -98,11 +123,16 @@ namespace CreativeAI.Gameplay
         {
             base.Update();
             UpdateAnimatorParameters();
+
+            if (NeedleAttackTimer > 0)
+            {
+                NeedleAttackTimer -= Time.deltaTime;
+            }
         }
 
         /// <summary>
-        /// NavMeshAgentのワールド速度をローカル座標に変換してAnimatorに渡す。
-        /// ブレンドツリーで前後左右の移動アニメーションを制御するために必要。
+        /// アニメーターのブレンドツリーがキャラクター基準の相対的な移動方向を要求するため、
+        /// NavMeshAgentのワールド速度をローカル座標系に変換して適用する。
         /// </summary>
         private void UpdateAnimatorParameters()
         {
@@ -117,7 +147,7 @@ namespace CreativeAI.Gameplay
         }
 
         /// <summary>
-        /// 距離・視野角・遮蔽物の3段階でプレイヤーの視認判定を行う。
+        /// 壁越しの透視や背後の不自然な感知を防ぎ、プレイヤーのステルス行動を成立させるための視界判定。
         /// </summary>
         public bool CheckInSight()
         {
@@ -181,6 +211,12 @@ namespace CreativeAI.Gameplay
                 Debug.Log("攻撃を受けた！ 発見状態になります。");
                 ChangeState(new TestEnemyChaseState(this));
             }
+        }
+
+        public override void ForceDeath()
+        {
+            base.ForceDeath();
+            ChangeState(new TestEnemyDeathState(this));
         }
 
         private void OnDrawGizmosSelected()

@@ -945,7 +945,7 @@ MonoBehaviour:
   _meleeMultiplier: 1
   _enemyStatus: {fileID: 105454173943761905}
   _hitEffect: {fileID: 1758473627833946668, guid: fe43ffc680021e449a8c86605ce01634, type: 3}
-  _hitboxRadius: 0.5
+  _hitboxRadius: 0.75
   _targetLayer:
     serializedVersion: 2
     m_Bits: 128
@@ -2110,15 +2110,21 @@ MonoBehaviour:
   backStepSpeed: 10
   strafeRange: 6
   backStepRange: 3
-  attackRange: 3.55
+  attackRange: 5
   strafeDuration: 3
   backStepDuration: 1.5
-  backStepChance: 0.5
+  backStepChance: 0.25
+  needlePrefab: {fileID: 3334478212411405884, guid: 4ae0c5314576efa4cae61623b18f47b5, type: 3}
+  needleAttackDistance: 5
+  needleAttackCooldown: 15
+  needleCount: 5
+  needleDamage: 10
+  NeedleAttackTimer: 0
   viewDistance: 10
   viewAngle: 45
   obstacleLayer:
     serializedVersion: 2
-    m_Bits: 64
+    m_Bits: 65
 --- !u!195 &5349549655163190820
 NavMeshAgent:
   m_ObjectHideFlags: 0

@@ -81,3 +81,4 @@ crashlytics-build.properties
 # Purchased Assets
 /Assets/PurchasedAssets/
 /Assets/PurchasedAssets.meta
+/Build_Windows/
