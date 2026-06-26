@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using UnityEngine;
 
 namespace CreativeAI.Gameplay
@@ -691,8 +692,7 @@ namespace CreativeAI.Gameplay
     public class TestEnemyNeedleAttackState : TestEnemyBaseState
     {
         private float _timer;
-        private System.Collections.Generic.List<EnemyNeedleProjectile> _needles =
-            new System.Collections.Generic.List<EnemyNeedleProjectile>();
+        private List<EnemyNeedleProjectile> _needles = new List<EnemyNeedleProjectile>();
         private float _fireInterval = 0.2f;
         private float _riseAimDuration = 1.5f;
 
@@ -723,7 +723,7 @@ namespace CreativeAI.Gameplay
                 GameObject needleObj;
                 if (testCon.needlePrefab != null)
                 {
-                    needleObj = UnityEngine.Object.Instantiate(testCon.needlePrefab);
+                    needleObj = Object.Instantiate(testCon.needlePrefab);
                 }
                 else
                 {

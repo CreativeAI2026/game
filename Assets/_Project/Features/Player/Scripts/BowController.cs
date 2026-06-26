@@ -181,7 +181,7 @@ namespace CreativeAI.Gameplay
 
             if (_weaponManager != null && _weaponManager.CurrentWeaponIndex != weaponIndex)
             {
-                if (!(_currentState is StateFree))
+                if (_currentState is not StateFree)
                     ChangeState(new StateFree(this));
                 UpdateBowString(0f);
                 return;

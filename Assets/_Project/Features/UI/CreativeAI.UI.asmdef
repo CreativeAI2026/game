@@ -8,7 +8,6 @@
         "Unity.TextMeshPro",
         "Unity.InputSystem",
         "UniTask",
-        "DOTween.Modules",
         "UniTask.DOTween"
     ],
     "includePlatforms": [],

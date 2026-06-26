@@ -1,6 +1,5 @@
 using System.Collections.Generic;
 using Cysharp.Threading.Tasks;
-using DG.Tweening;
 using UnityEngine;
 using UnityEngine.InputSystem;
 using UnityEngine.UI;
@@ -22,53 +21,123 @@ namespace CreativeAI.Gameplay
         private PlayerInputHandler _input;
 
         // 位置とカラーの定義
-        private Vector2[] positions =
-        {
-            new Vector2(-122, 60),
-            new Vector2(0, 0),
-            new Vector2(122, 60),
-        };
+        private Vector2[] positions;
         private Color darkColor = new Color(0.5f, 0.5f, 0.5f, 1f);
         private Color lightColor = Color.white;
+
+        private WeaponManager _weaponManager;
 
         private void Awake()
         {
             _playerInput = GetComponent<PlayerInput>();
             _input = GetComponent<PlayerInputHandler>();
+            _weaponManager = GetComponent<WeaponManager>();
         }
 
-        private void Update()
+        private void Start()
+        {
+            positions = new Vector2[panels.Count];
+            for (int i = 0; i < panels.Count; i++)
+            {
+                positions[i] = panels[i].anchoredPosition;
+
+                panels[i].GetComponent<Image>().color =
+                    (i == currentIndex) ? lightColor : darkColor;
+                if (i == currentIndex)
+                {
+                    panels[i].SetAsLastSibling();
+                }
+            }
+        }
+
+        private void OnEnable()
+        {
+            if (_weaponManager != null)
+            {
+                _weaponManager.OnWeaponSwitched += HandleWeaponSwitched;
+            }
+        }
+
+        private void OnDisable()
+        {
+            if (_weaponManager != null)
+            {
+                _weaponManager.OnWeaponSwitched -= HandleWeaponSwitched;
+            }
+        }
+
+        private void HandleWeaponSwitched(bool isLeftRotation)
         {
             if (isAnimating)
                 return;
+            MovePanels(isLeftRotation).Forget();
         }
 
         private async UniTask MovePanels(bool isLeftRotation)
         {
             isAnimating = true;
 
-            // インデックス更新（循環させる）
             if (isLeftRotation)
-                currentIndex = (currentIndex - 1 + panels.Count) % panels.Count;
+                currentIndex = (currentIndex + 1 + panels.Count) % panels.Count;
             else
-                currentIndex = (currentIndex + 1) % panels.Count;
+                currentIndex = (currentIndex - 1) % panels.Count;
 
-            // アニメーション実行
-            var sequence = DOTween.Sequence();
+            // アニメーション開始前に各パネルの現在の位置・色を記録
+            var startPositions = new Vector2[panels.Count];
+            var startColors = new Color[panels.Count];
+            var targetPositions = new Vector2[panels.Count];
+            var targetColors = new Color[panels.Count];
+
             for (int i = 0; i < panels.Count; i++)
             {
-                // インデックスの差分に応じて配置を計算
-                int targetIndex = (i - currentIndex + panels.Count) % panels.Count;
+                // currentIndexのパネルが中央（targetIndex=1）に来るように計算
+                int targetIndex = (i - currentIndex + 1 + panels.Count) % panels.Count;
 
-                sequence.Join(panels[i].DOAnchorPos(positions[targetIndex], duration));
-                sequence.Join(
-                    panels[i]
-                        .GetComponent<Image>()
-                        .DOColor(targetIndex == 1 ? lightColor : darkColor, duration)
-                );
+                startPositions[i] = panels[i].anchoredPosition;
+                startColors[i] = panels[i].GetComponent<Image>().color;
+
+                targetPositions[i] = positions[targetIndex];
+                targetColors[i] = targetIndex == 1 ? lightColor : darkColor;
+
+                if (targetIndex == 1)
+                {
+                    panels[i].SetAsLastSibling();
+                }
             }
 
-            await sequence.ToUniTask();
+            // UniTask を使いフレームごとに Lerp でアニメーション
+            float elapsed = 0f;
+            while (elapsed < duration)
+            {
+                elapsed += Time.deltaTime;
+                float t = Mathf.Clamp01(elapsed / duration);
+                // イーズ：SmoothStep（加速→減速）
+                float smoothT = t * t * (3f - 2f * t);
+
+                for (int i = 0; i < panels.Count; i++)
+                {
+                    panels[i].anchoredPosition = Vector2.Lerp(
+                        startPositions[i],
+                        targetPositions[i],
+                        smoothT
+                    );
+                    panels[i].GetComponent<Image>().color = Color.Lerp(
+                        startColors[i],
+                        targetColors[i],
+                        smoothT
+                    );
+                }
+
+                await UniTask.Yield(PlayerLoopTiming.Update);
+            }
+
+            // アニメーション終了時に正確な値にスナップ
+            for (int i = 0; i < panels.Count; i++)
+            {
+                panels[i].anchoredPosition = targetPositions[i];
+                panels[i].GetComponent<Image>().color = targetColors[i];
+            }
+
             isAnimating = false;
         }
     }

@@ -135,7 +135,7 @@ namespace CreativeAI.Gameplay
             // 非装備時に裏で入力を消費するのを防ぐ
             if (_weaponManager.CurrentWeaponIndex != weaponIndex)
             {
-                if (!(_currentState is SwordStateFree))
+                if (_currentState is not SwordStateFree)
                     ChangeState(new SwordStateFree(this));
                 return;
             }
@@ -173,7 +173,7 @@ namespace CreativeAI.Gameplay
             Vector3 hitPoint
         )
         {
-            if (_currentState is SwordStateGuard || _currentState is SwordStateParry)
+            if (_currentState is SwordStateGuard or SwordStateParry)
             {
                 // ガード入力がされている、またはパリィ受付時間中のみ防御成立
                 if (parryTimer > 0f || input.subAction)

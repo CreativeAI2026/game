@@ -29,14 +29,14 @@ namespace CreativeAI.Gameplay
         [SerializeField]
         private float _fadeOutDuration = 0.6f;
 
-        [Tooltip("ビネットの最大アルファ値（0～1）")]
+        [Tooltip("ビネットの最大アルファ値(0~1)")]
         [SerializeField]
         [Range(0f, 1f)]
         private float _maxAlpha = 0.7f;
 
         private Coroutine _vignetteCoroutine;
 
-        private void Awake()
+        private void Start()
         {
             if (Instance != null && Instance != this)
             {

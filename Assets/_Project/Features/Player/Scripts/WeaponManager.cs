@@ -20,7 +20,7 @@ namespace CreativeAI.Gameplay
         private Animator _animator;
         private PlayerController _playerController;
 
-        //private WeaponHUDController _weaponHUDController;
+        public event Action<bool> OnWeaponSwitched; // true: prev (left rotation), false: next (right rotation)
 
         public int CurrentWeaponIndex => _currentWeaponIndex;
 
@@ -29,7 +29,6 @@ namespace CreativeAI.Gameplay
             _input = GetComponent<PlayerInputHandler>();
             _animator = GetComponent<Animator>();
             _playerController = GetComponent<PlayerController>();
-            //_weaponHUDController = GetComponent<WeaponHUDController>();
         }
 
         private void Start()
@@ -54,6 +53,7 @@ namespace CreativeAI.Gameplay
                 _input.weaponNext = false;
                 int nextIndex = (_currentWeaponIndex + 1) % _weapons.Length;
                 EquipWeapon(nextIndex);
+                OnWeaponSwitched?.Invoke(false);
             }
 
             if (_input.weaponPrev)
@@ -63,6 +63,7 @@ namespace CreativeAI.Gameplay
                 if (prevIndex < 0)
                     prevIndex = _weapons.Length - 1;
                 EquipWeapon(prevIndex);
+                OnWeaponSwitched?.Invoke(true);
             }
         }
 

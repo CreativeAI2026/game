@@ -2133,11 +2133,11 @@ RectTransform:
   m_LocalScale: {x: 0.375, y: 0.375, z: 0.375}
   m_ConstrainProportionsScale: 1
   m_Children: []
-  m_Father: {fileID: 1750203044}
+  m_Father: {fileID: 1644461532243026436}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0.5, y: 0.5}
   m_AnchorMax: {x: 0.5, y: 0.5}
-  m_AnchoredPosition: {x: 167, y: 3.5}
+  m_AnchoredPosition: {x: 802, y: -265.5}
   m_SizeDelta: {x: 498, y: 369}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &1038091448
@@ -2590,11 +2590,11 @@ RectTransform:
   m_LocalScale: {x: 0.375, y: 0.375, z: 0.375}
   m_ConstrainProportionsScale: 1
   m_Children: []
-  m_Father: {fileID: 1750203044}
+  m_Father: {fileID: 1644461532243026436}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0.5, y: 0.5}
   m_AnchorMax: {x: 0.5, y: 0.5}
-  m_AnchoredPosition: {x: -152.125, y: 3.5}
+  m_AnchoredPosition: {x: 482.875, y: -265.5}
   m_SizeDelta: {x: 506, y: 400}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &1207802991
@@ -3728,8 +3728,6 @@ RectTransform:
   - {fileID: 1106597694}
   - {fileID: 1836587609}
   - {fileID: 2067109485}
-  - {fileID: 1207802990}
-  - {fileID: 1038091447}
   m_Father: {fileID: 1644461532243026436}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 1, y: 0}
@@ -5049,6 +5047,8 @@ RectTransform:
   - {fileID: 8322015415676410207}
   - {fileID: 4699014937168282806}
   - {fileID: 1750203044}
+  - {fileID: 1207802990}
+  - {fileID: 1038091447}
   - {fileID: 527478128027529982}
   - {fileID: 9012217273775474432}
   - {fileID: 4877389551628667148}
@@ -6783,6 +6783,7 @@ GameObject:
   - component: {fileID: 6982812146696338161}
   - component: {fileID: 6982812146696338160}
   - component: {fileID: 6982812146696338163}
+  - component: {fileID: 6982812146696338164}
   m_Layer: 7
   m_Name: PlayerArmature
   m_TagString: Player
@@ -9139,6 +9140,23 @@ MonoBehaviour:
   _currentHpText: {fileID: 0}
   _hpSlider: {fileID: 2795815849751236492}
   _playerStatus: {fileID: 6982812146696338158}
+--- !u!114 &6982812146696338164
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 4416926082437200423}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 52b2193c734a2f24cb9bdc7fcd92e22b, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: CreativeAI.UI::CreativeAI.Gameplay.WeaponHUDController
+  panels:
+  - {fileID: 1106597694}
+  - {fileID: 2067109485}
+  - {fileID: 1836587609}
+  duration: 0.3
 --- !u!4 &6983258931544785470
 Transform:
   m_ObjectHideFlags: 0
