@@ -56,6 +56,9 @@ namespace CreativeAI.UI.CraftingUI
         private string _readyMessage = "合成できます";
 
         [SerializeField]
+        private string _categoryMismatchMessage = "同じカテゴリーの素材を選択してください";
+
+        [SerializeField]
         private Color _warningColor = new Color(0.85f, 0.2f, 0.2f, 1f);
 
         [SerializeField]
@@ -359,14 +362,19 @@ namespace CreativeAI.UI.CraftingUI
 
         private void UpdateCraftButton()
         {
-            bool canCraft = CanCraft();
+            bool hasEnoughMaterials = HasEnoughMaterials();
+            bool hasCategoryMismatch = HasCategoryMismatch();
+            bool canCraft = hasEnoughMaterials && !hasCategoryMismatch;
 
             if (_craftButton != null)
                 _craftButton.interactable = !_isCrafting && canCraft;
 
             if (_warningText != null)
             {
-                _warningText.text = canCraft ? _readyMessage : _notReadyMessage;
+                _warningText.text =
+                    canCraft ? _readyMessage
+                    : hasCategoryMismatch ? _categoryMismatchMessage
+                    : _notReadyMessage;
                 _warningText.color = canCraft ? _readyColor : _warningColor;
             }
         }
@@ -382,7 +390,26 @@ namespace CreativeAI.UI.CraftingUI
 
         private bool CanCraft()
         {
+            return HasEnoughMaterials() && !HasCategoryMismatch();
+        }
+
+        private bool HasEnoughMaterials()
+        {
             return _slots.Count(slot => slot.Item != null) >= 2;
+        }
+
+        private bool HasCategoryMismatch()
+        {
+            var selectedItems = _slots
+                .Where(slot => slot.Item != null)
+                .Select(slot => slot.Item)
+                .Take(2)
+                .ToList();
+
+            if (selectedItems.Count < 2)
+                return false;
+
+            return selectedItems[0].category != selectedItems[1].category;
         }
 
         private IEnumerator CraftRoutine()
