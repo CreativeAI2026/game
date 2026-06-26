@@ -45,8 +45,8 @@ namespace CreativeAI.UI.CharacterUI
             yield return null;
 
             _resetOnNextEnable = false;
-            _equipmentViewController?.ResetInventoryTab();
             _tabGroup?.ResetToFirstTab();
+            _equipmentViewController?.ResetViewState();
         }
 
         private void OnDestroy()

@@ -652,6 +652,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: b57ffb11dce336840814da10a55a32a8, type: 3}
   m_Name: 
   m_EditorClassIdentifier: CreativeAI.UI::CreativeAI.UI.InventoryUI.Inventory
+  _selectFirstSlotOnRefresh: 1
   _tabGroup: {fileID: 4378624457368349205}
   _categories: 00000000010000000200000003000000
   _slotsRoot: {fileID: 5159119507101400855}

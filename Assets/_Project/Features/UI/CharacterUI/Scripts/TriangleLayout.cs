@@ -26,6 +26,11 @@ namespace CreativeAI.UI
 
         private void Start()
         {
+            RefreshLayout();
+        }
+
+        public void RefreshLayout()
+        {
             ApplyPositionsImmediate();
             RebindButtons();
         }
@@ -101,6 +106,18 @@ namespace CreativeAI.UI
 
         // 左下クリック → 時計回り（左下が上へ来る）
         public void RotateClockwise() => Rotate(1, 2);
+
+        public void RotateSlotToTop(int slotIndex)
+        {
+            if (_isAnimating || slotIndex < 0 || slotIndex >= 3)
+                return;
+
+            int currentVertex = (slotIndex + _offsetIndex) % 3;
+            if (currentVertex == 1)
+                RotateCounterClockwise();
+            else if (currentVertex == 2)
+                RotateClockwise();
+        }
 
         private Vector2 GetVertex(int vertexIndex)
         {

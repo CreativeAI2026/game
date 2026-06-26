@@ -1,92 +1,78 @@
+using System;
 using CreativeAI.Gameplay;
-using CreativeAI.UI.InventoryUI;
+using TMPro;
 using UnityEngine;
+using UnityEngine.EventSystems;
 using UnityEngine.UI;
 
 namespace CreativeAI.UI
 {
     [RequireComponent(typeof(Button)), RequireComponent(typeof(Image))]
-    public class EquipmentSlot : MonoBehaviour
+    public class EquipmentSlot : BaseItemSlot, IPointerClickHandler
     {
-        public Button Button { get; private set; }
-        private Image _icon;
-        private Text _emptyText;
-        private Image _frame;
-        private Text _countText;
-        private HoverScaleOnPointer _hoverScale;
+        private const float SelectedIconScale = 1.08f;
+        private const float IconPadding = 14f;
+        private const float EmptyIconAlpha = 50f / 255f;
 
-        private ItemData _item;
-        public ItemData Item
+        public Button Button { get; private set; }
+        public event Action<EquipmentSlot> DoubleClicked;
+
+        private TMP_Text _emptyText;
+        private Image _frame;
+
+        public new ItemData Item
         {
             get => _item;
-            set
-            {
-                _item = value;
-                UpdateSlot();
-            }
+            set => SetItem(value, FindInventoryCount(value));
         }
 
         public void Init()
         {
+            InitializeBase();
             Button = GetComponent<Button>();
-            _icon = transform.Find("Icon").GetComponent<Image>();
-            _emptyText = transform.Find("EmptyText").GetComponent<Text>();
+            _emptyText = transform.Find("EmptyText")?.GetComponent<TMP_Text>();
             _frame = GetComponent<Image>();
-            _countText = transform.Find("CountText")?.GetComponent<Text>();
-            _hoverScale = GetComponent<HoverScaleOnPointer>();
-            if (_hoverScale == null)
-                _hoverScale = GetComponentInChildren<HoverScaleOnPointer>(true);
 
             if (_hoverScale != null)
             {
-                _hoverScale.SetTarget(_icon.rectTransform);
-                if (_countText != null)
-                    _hoverScale.SetBounceTarget(_countText.rectTransform);
                 _hoverScale.SetGroup("equipment-slots");
+                _hoverScale.SetHoverScale(SelectedIconScale);
+                _hoverScale.SetBounceHeight(0f);
                 _hoverScale.SetReleaseLockOnOutsideClick(false);
             }
 
-            UpdateSlot();
+            ApplyIconPadding();
+            BindSlotHoverTarget();
+            Refresh();
         }
 
-        private void UpdateSlot()
+        protected override void Refresh()
         {
-            if (_icon == null || _emptyText == null)
-                return;
+            base.Refresh();
+            ApplyIconState();
+            BindSlotHoverTarget();
 
-            if (_item != null && _item.icon != null)
-            {
-                _icon.sprite = _item.icon;
-                _icon.gameObject.SetActive(true);
-                _emptyText.gameObject.SetActive(false);
-                UpdateCount();
-            }
-            else
-            {
-                _icon.sprite = null;
-                _icon.gameObject.SetActive(false);
+            if (_emptyText != null)
+                _emptyText.gameObject.SetActive(_item == null || _item.icon == null);
+        }
+
+        public override void Clear()
+        {
+            base.Clear();
+            ApplyIconState();
+
+            if (_emptyText != null)
                 _emptyText.gameObject.SetActive(true);
-                if (_countText != null)
-                    _countText.gameObject.SetActive(false);
-            }
         }
 
         public void UpdateCount()
         {
-            if (_countText == null || _item == null)
-                return;
+            SetCount(FindInventoryCount(_item));
+        }
 
-            if (_item == null)
-            {
-                _countText.gameObject.SetActive(false);
-                return;
-            }
-
-            var stack = InventoryManager.Instance?.GetAllItems().Find(s => s.Data == _item);
-            int count = stack?.Count ?? 1;
-
-            _countText.gameObject.SetActive(count > 1);
-            _countText.text = count.ToString();
+        public void EquipAnimated(ItemData item)
+        {
+            SetItemAnimated(item, FindInventoryCount(item));
         }
 
         public void SetFrameColor(Color color)
@@ -97,13 +83,56 @@ namespace CreativeAI.UI
 
         public void SetSelected(bool selected)
         {
+            if (selected)
+                Select();
+            else
+                Deselect();
+        }
+
+        public void OnPointerClick(PointerEventData eventData)
+        {
+            if (eventData.button == PointerEventData.InputButton.Left && eventData.clickCount >= 2)
+                DoubleClicked?.Invoke(this);
+        }
+
+        private static int FindInventoryCount(ItemData item)
+        {
+            if (item == null)
+                return 0;
+
+            var stack = InventoryManager.Instance?.GetAllItems().Find(s => s.Data == item);
+            return stack?.Count ?? 1;
+        }
+
+        private void ApplyIconPadding()
+        {
+            if (_iconImage == null)
+                return;
+
+            var iconRect = _iconImage.rectTransform;
+            iconRect.anchorMin = Vector2.zero;
+            iconRect.anchorMax = Vector2.one;
+            iconRect.offsetMin = Vector2.one * IconPadding;
+            iconRect.offsetMax = -Vector2.one * IconPadding;
+        }
+
+        private void BindSlotHoverTarget()
+        {
             if (_hoverScale == null)
                 return;
 
-            if (selected)
-                _hoverScale.AcquireLock();
-            else if (_hoverScale.IsLocked())
-                _hoverScale.ReleaseLock();
+            _hoverScale.SetTarget((RectTransform)transform);
+            _hoverScale.SetBounceTarget(null);
+        }
+
+        private void ApplyIconState()
+        {
+            if (_iconImage == null)
+                return;
+
+            bool equipped = _item != null && _item.icon != null;
+            _iconImage.gameObject.SetActive(true);
+            _iconImage.color = new Color(1f, 1f, 1f, equipped ? 1f : EmptyIconAlpha);
         }
     }
 }

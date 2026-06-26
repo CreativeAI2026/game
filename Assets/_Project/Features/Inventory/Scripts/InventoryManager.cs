@@ -9,6 +9,8 @@ namespace CreativeAI.Gameplay
     {
         public static InventoryManager Instance { get; private set; }
 
+        public event System.Action InventoryChanged;
+
         private List<ItemStack> _items = new();
 
         private void Awake()
@@ -34,6 +36,8 @@ namespace CreativeAI.Gameplay
                 existing.Count += count;
             else
                 _items.Add(new ItemStack(data, count));
+
+            InventoryChanged?.Invoke();
         }
 
         public void RemoveItem(ItemData data, int count = 1)
@@ -44,6 +48,42 @@ namespace CreativeAI.Gameplay
             stack.Count -= count;
             if (stack.Count <= 0)
                 _items.Remove(stack);
+
+            InventoryChanged?.Invoke();
+        }
+
+        public int GetItemCount(ItemData data)
+        {
+            if (data == null)
+                return 0;
+
+            return _items.Find(stack => stack.Data == data)?.Count ?? 0;
+        }
+
+        public bool CanCraft(CraftRecipeData recipe, int quantity = 1)
+        {
+            if (recipe == null || recipe.resultItem == null || quantity <= 0)
+                return false;
+
+            var materials = recipe.Materials.ToList();
+            if (materials.Count != 2)
+                return false;
+
+            return materials
+                .GroupBy(material => material)
+                .All(group => GetItemCount(group.Key) >= group.Count() * quantity);
+        }
+
+        public bool TryCraft(CraftRecipeData recipe, int quantity)
+        {
+            if (!CanCraft(recipe, quantity))
+                return false;
+
+            foreach (var group in recipe.Materials.GroupBy(material => material))
+                RemoveItem(group.Key, group.Count() * quantity);
+
+            AddItem(recipe.resultItem, quantity);
+            return true;
         }
 
         public void SetEquipped(ItemStack stack, bool equipped)

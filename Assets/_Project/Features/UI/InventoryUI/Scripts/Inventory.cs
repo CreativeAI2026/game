@@ -1,3 +1,4 @@
+using System.Collections;
 using System.Collections.Generic;
 using CreativeAI.Gameplay;
 using DG.Tweening;
@@ -11,6 +12,8 @@ namespace CreativeAI.UI.InventoryUI
     {
         [SerializeField]
         private bool _selectFirstSlotOnRefresh = true;
+
+        private bool _releaseSelectionOnOutsideClick = true;
 
         [Header("Tab")]
         [SerializeField]
@@ -31,35 +34,101 @@ namespace CreativeAI.UI.InventoryUI
         private ItemDetailPanel _detailPanel;
 
         public System.Action<ItemStack> OnSlotClicked;
+        public System.Action<ItemStack> OnSlotDoubleClicked;
 
         private List<ItemCategory> _activeCategories = new();
         private bool _navigationDisabled = false;
+        private bool _started;
+        private Coroutine _resetRoutine;
         private ItemSlot _currentSelectedSlot;
         private ItemSlot _equippedSlot;
         private ItemStack _selectedStack;
+        private readonly HashSet<ItemData> _craftAssignedItems = new();
 
         public void SetSelectFirstSlotOnRefresh(bool selectFirst) =>
             _selectFirstSlotOnRefresh = selectFirst;
 
+        public void SetReleaseSelectionOnOutsideClick(bool release)
+        {
+            _releaseSelectionOnOutsideClick = release;
+
+            if (_slotsRoot == null)
+                return;
+
+            foreach (var slot in _slotsRoot.GetComponentsInChildren<ItemSlot>(true))
+                slot.SetReleaseSelectionOnOutsideClick(release);
+        }
+
         private void Awake()
         {
-            _tabGroup = GetComponentInChildren<TabGroup>();
-            _tabGroup.OnTabSelected += OnTabSelected;
+            _tabGroup ??= GetComponentInChildren<TabGroup>(true);
+            _detailPanel ??= GetComponentInChildren<ItemDetailPanel>(true);
+
+            if (_tabGroup != null)
+                _tabGroup.OnTabSelected += OnTabSelected;
         }
 
         private void Start()
         {
+            SubscribeToInventoryChanges();
+
             for (int i = 0; i < _categories.Count; i++)
             {
                 if (_tabGroup.IsEnabled(i))
                     _activeCategories.Add(_categories[i]);
             }
 
+            _started = true;
             OnTabSelected(0);
+        }
+
+        private void OnEnable()
+        {
+            SubscribeToInventoryChanges();
+
+            if (_started)
+            {
+                if (_resetRoutine != null)
+                    StopCoroutine(_resetRoutine);
+
+                _resetRoutine = StartCoroutine(ResetViewNextFrame());
+            }
+        }
+
+        private void OnDisable()
+        {
+            if (_resetRoutine != null)
+            {
+                StopCoroutine(_resetRoutine);
+                _resetRoutine = null;
+            }
+
+            if (InventoryManager.Instance != null)
+                InventoryManager.Instance.InventoryChanged -= RefreshCurrentTab;
+        }
+
+        private IEnumerator ResetViewNextFrame()
+        {
+            yield return null;
+
+            ResetViewState();
+            _resetRoutine = null;
+        }
+
+        private void SubscribeToInventoryChanges()
+        {
+            if (InventoryManager.Instance == null)
+                return;
+
+            InventoryManager.Instance.InventoryChanged -= RefreshCurrentTab;
+            InventoryManager.Instance.InventoryChanged += RefreshCurrentTab;
         }
 
         private void OnDestroy()
         {
+            if (InventoryManager.Instance != null)
+                InventoryManager.Instance.InventoryChanged -= RefreshCurrentTab;
+
             if (_tabGroup != null)
                 _tabGroup.OnTabSelected -= OnTabSelected;
         }
@@ -86,7 +155,9 @@ namespace CreativeAI.UI.InventoryUI
                     continue;
 
                 var slot = Instantiate(_slotPrefab, _slotsRoot, false);
+                slot.SetReleaseSelectionOnOutsideClick(_releaseSelectionOnOutsideClick);
                 slot.SetItem(stack);
+                slot.SetCraftAssigned(_craftAssignedItems.Contains(stack.Data));
 
                 var rt = slot.GetComponent<RectTransform>();
                 rt.localScale = Vector3.zero;
@@ -141,6 +212,9 @@ namespace CreativeAI.UI.InventoryUI
             if (slot == null)
                 return;
 
+            if (_currentSelectedSlot != null && _currentSelectedSlot != slot)
+                _currentSelectedSlot.Deselect();
+
             slot.Select();
             _currentSelectedSlot = slot;
             _selectedStack = slot.Stack;
@@ -157,6 +231,12 @@ namespace CreativeAI.UI.InventoryUI
         {
             SelectSlot(slot);
             OnSlotClicked?.Invoke(slot.Stack); // クリック時だけ発火
+        }
+
+        public void SelectSlotByDoubleClick(ItemSlot slot)
+        {
+            SelectSlot(slot);
+            OnSlotDoubleClicked?.Invoke(slot.Stack);
         }
 
         public void HighlightEquippedItem(ItemStack stack)
@@ -206,6 +286,41 @@ namespace CreativeAI.UI.InventoryUI
             _selectedStack = stack;
             _currentSelectedSlot = FindVisibleSlot(stack);
             _currentSelectedSlot?.Select();
+        }
+
+        public void ClearSelection()
+        {
+            if (_currentSelectedSlot != null)
+                _currentSelectedSlot.Deselect();
+
+            _currentSelectedSlot = null;
+            _selectedStack = null;
+        }
+
+        public void ResetViewState()
+        {
+            ClearSelection();
+            _equippedSlot = null;
+            _detailPanel?.Clear();
+            _tabGroup?.ResetToFirstTab();
+
+            if (_tabGroup == null)
+                RefreshCurrentTab();
+        }
+
+        public void SetCraftAssignedItems(IEnumerable<ItemData> items)
+        {
+            _craftAssignedItems.Clear();
+            if (items != null)
+                foreach (var item in items)
+                    if (item != null)
+                        _craftAssignedItems.Add(item);
+
+            if (_slotsRoot == null)
+                return;
+
+            foreach (var slot in _slotsRoot.GetComponentsInChildren<ItemSlot>(true))
+                slot.SetCraftAssigned(slot.Item != null && _craftAssignedItems.Contains(slot.Item));
         }
 
         private ItemSlot FindVisibleSlot(ItemStack stack)

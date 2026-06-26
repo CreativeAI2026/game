@@ -59,7 +59,7 @@ namespace CreativeAI.UI
         private void OnEnable()
         {
             if (_initialized)
-                RestoreCurrentSelection();
+                ResetToFirstTab();
         }
 
         public void SelectTab(int index)

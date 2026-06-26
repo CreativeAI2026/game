@@ -58,6 +58,15 @@ namespace CreativeAI.UI.InventoryUI
 
         public void SetGroup(string group) => _group = group;
 
+        public void SetHoverScale(float scale) => _hoverScale = Mathf.Max(1f, scale);
+
+        public void SetBounceHeight(float height)
+        {
+            _bounceHeight = Mathf.Max(0f, height);
+            if (_bounceHeight <= 0f)
+                StopBounce();
+        }
+
         public void SetBounceTarget(RectTransform target)
         {
             StopBounce();
@@ -255,6 +264,17 @@ namespace CreativeAI.UI.InventoryUI
             if (mask == null)
                 return 1f;
 
+            var grid = _targetRect.GetComponentInParent<GridLayoutGroup>();
+            if (IsInFirstGridRow(grid))
+                return -1f;
+
+            // Programmatic selection can happen before the inventory grid has completed
+            // its first layout pass.
+            Canvas.ForceUpdateCanvases();
+            if (grid != null && grid.transform is RectTransform gridRect)
+                LayoutRebuilder.ForceRebuildLayoutImmediate(gridRect);
+            _targetRect.ForceUpdateRectTransforms();
+
             var targetCorners = new Vector3[4];
             var maskCorners = new Vector3[4];
             _targetRect.GetWorldCorners(targetCorners);
@@ -262,6 +282,39 @@ namespace CreativeAI.UI.InventoryUI
             float scaledBounceHeight = _bounceHeight * _targetRect.lossyScale.y;
 
             return targetCorners[1].y + scaledBounceHeight > maskCorners[1].y ? -1f : 1f;
+        }
+
+        private bool IsInFirstGridRow(GridLayoutGroup grid)
+        {
+            if (grid == null)
+                return false;
+
+            Transform slot = _targetRect;
+            while (slot.parent != null && slot.parent != grid.transform)
+                slot = slot.parent;
+
+            if (slot.parent != grid.transform)
+                return false;
+
+            int columnCount = grid.constraint switch
+            {
+                GridLayoutGroup.Constraint.FixedColumnCount => grid.constraintCount,
+                GridLayoutGroup.Constraint.FixedRowCount => Mathf.CeilToInt(
+                    (float)grid.transform.childCount / grid.constraintCount
+                ),
+                _ => Mathf.Max(
+                    1,
+                    Mathf.FloorToInt(
+                        (
+                            ((RectTransform)grid.transform).rect.width
+                            - grid.padding.horizontal
+                            + grid.spacing.x
+                        ) / (grid.cellSize.x + grid.spacing.x)
+                    )
+                ),
+            };
+
+            return slot.GetSiblingIndex() < columnCount;
         }
 
         private bool IsPointerOverSelf()
