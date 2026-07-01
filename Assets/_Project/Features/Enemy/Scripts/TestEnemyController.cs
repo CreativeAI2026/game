@@ -57,7 +57,7 @@ namespace CreativeAI.Gameplay
         private int needleCount = 5;
 
         [SerializeField]
-        private int needleDamage = 10;
+        private int needleDamage = 50;
 
         public float NeedleAttackDistance => needleAttackDistance;
         public float NeedleAttackCooldown => needleAttackCooldown;

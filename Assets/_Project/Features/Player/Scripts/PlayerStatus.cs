@@ -13,8 +13,7 @@ namespace CreativeAI.Gameplay
         [SerializeField]
         private PlayerParameterData _playerData;
 
-        [SerializeField]
-        private float _currentHp;
+        public float CurrentHp { get; private set; }
 
         // HPが変動したときに通知するデリゲート。引数は（現在のHP、最大HP）
         public Action<float, float> OnHpChanged;
@@ -91,8 +90,8 @@ namespace CreativeAI.Gameplay
 
         private void Start()
         {
-            _currentHp = CurrentMaxHp;
-            OnHpChanged?.Invoke(_currentHp, CurrentMaxHp);
+            CurrentHp = CurrentMaxHp;
+            OnHpChanged?.Invoke(CurrentHp, CurrentMaxHp);
         }
 
         public void TakeDamage(float damage, bool isCritical)
@@ -100,17 +99,17 @@ namespace CreativeAI.Gameplay
             // 防御力で軽減するが、最低1ダメージは保証する（防御力がダメージを上回ってもノーダメージにはしない）
             float finalDamage = Mathf.Max(1f, damage - CurrentDefense);
 
-            _currentHp -= finalDamage;
-            OnHpChanged?.Invoke(_currentHp, CurrentMaxHp);
+            CurrentHp -= finalDamage;
+            OnHpChanged?.Invoke(CurrentHp, CurrentMaxHp);
             Debug.Log(
-                $"プレイヤーは {finalDamage} ダメージを受けた！ 残りHP: {_currentHp}/{CurrentMaxHp}"
+                $"プレイヤーは {finalDamage} ダメージを受けた！ 残りHP: {CurrentHp}/{CurrentMaxHp}"
             );
 
             CameraShakeManager.Instance?.Shake(0.5f);
             DamageVignette.Instance?.TriggerVignette();
             _flinchHandler?.TriggerFlinch();
 
-            if (_currentHp <= 0)
+            if (CurrentHp <= 0)
             {
                 Die();
             }
@@ -137,9 +136,9 @@ namespace CreativeAI.Gameplay
 
         public void Heal(float amount)
         {
-            _currentHp = Mathf.Min(_currentHp + amount, CurrentMaxHp);
-            OnHpChanged?.Invoke(_currentHp, CurrentMaxHp);
-            Debug.Log($"プレイヤーは {amount} 回復した！ 残りHP: {_currentHp}/{CurrentMaxHp}");
+            CurrentHp = Mathf.Min(CurrentHp + amount, CurrentMaxHp);
+            OnHpChanged?.Invoke(CurrentHp, CurrentMaxHp);
+            Debug.Log($"プレイヤーは {amount} 回復した！ 残りHP: {CurrentHp}/{CurrentMaxHp}");
         }
 
         /// <summary>
@@ -148,9 +147,9 @@ namespace CreativeAI.Gameplay
         /// </summary>
         public void OnStatusChanged()
         {
-            if (_currentHp > CurrentMaxHp)
+            if (CurrentHp > CurrentMaxHp)
             {
-                _currentHp = CurrentMaxHp;
+                CurrentHp = CurrentMaxHp;
             }
         }
 

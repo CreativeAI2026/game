@@ -9239,7 +9239,7 @@ MonoBehaviour:
   _hpSlider: {fileID: 2795815849751236492}
   _hpBarGradient: {fileID: 5683792397099066089}
   _ekgImage: {fileID: 661186990}
-  _ekgMaterial: {fileID: 2100000, guid: d6b885b89e34de0429ed827075c96b3c, type: 2}
+  _ekgMaterial: {fileID: 0}
   _ekgPhases:
   - hpRatioThreshold: 1
     texture: {fileID: 2800000, guid: 210c7a3b96c01bb43802fc571c2ae13e, type: 3}
@@ -9253,7 +9253,7 @@ MonoBehaviour:
     hpBarRightColor: {r: 0.6117647, g: 0.44705886, b: 0.0627451, a: 1}
   - hpRatioThreshold: 0.2
     texture: {fileID: 2800000, guid: 2b66af6bd4621e848a2e8277673d7938, type: 3}
-    scrollSpeed: 0.75
+    scrollSpeed: 1
     hpBarLeftColor: {r: 0.7058824, g: 0.039215688, b: 0.121568635, a: 1}
     hpBarRightColor: {r: 0.52156866, g: 0, b: 0.043137256, a: 1}
   _playerStatus: {fileID: 6982812146696338158}

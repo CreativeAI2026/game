@@ -28,7 +28,7 @@ namespace CreativeAI.Gameplay
         private float flySpeed = 30f;
 
         [SerializeField]
-        private int damage = 10;
+        private int damage = 50;
 
         [SerializeField]
         private float spinSpeed = 1080f;

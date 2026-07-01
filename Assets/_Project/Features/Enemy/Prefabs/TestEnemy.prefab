@@ -2118,7 +2118,7 @@ MonoBehaviour:
   needleAttackDistance: 5
   needleAttackCooldown: 15
   needleCount: 5
-  needleDamage: 10
+  needleDamage: 50
   NeedleAttackTimer: 0
   viewDistance: 10
   viewAngle: 45
