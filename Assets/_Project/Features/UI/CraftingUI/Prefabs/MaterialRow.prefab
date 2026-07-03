@@ -87,6 +87,7 @@ GameObject:
   - component: {fileID: 9137062619678405000}
   - component: {fileID: 7594825641040723848}
   - component: {fileID: 7344107259563232672}
+  - component: {fileID: 1893712793043575452}
   m_Layer: 0
   m_Name: MaterialRow
   m_TagString: Untagged
@@ -179,6 +180,18 @@ MonoBehaviour:
   m_ChildScaleWidth: 0
   m_ChildScaleHeight: 0
   m_ReverseArrangement: 0
+--- !u!114 &1893712793043575452
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 6995653836105500142}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 59a1ee3d0f5c445ca45827e8f77a32d4, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: CreativeAI.UI::CreativeAI.UI.CraftingUI.RecipeMaterialRow
 --- !u!1 &7649252721962411585
 GameObject:
   m_ObjectHideFlags: 0

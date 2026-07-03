@@ -23,6 +23,8 @@ namespace CreativeAI.UI.HUD
 
         private void Awake()
         {
+            UIButtonHoverScaleUtility.ApplyToButtonsIn(_buttonsRoot);
+
             if (_buttonsRoot == null || _panelsRoot == null)
                 return;
 

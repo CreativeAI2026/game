@@ -18,11 +18,7 @@ namespace CreativeAI.Gameplay
         private readonly HashSet<CraftRecipeData> _runtimeRevealedRecipes = new();
 
         public IReadOnlyList<CraftRecipeData> Recipes => _recipes;
-
-        private void OnEnable()
-        {
-            ResetRuntimeRevealedRecipes();
-        }
+        public event Action<CraftRecipeData> RecipeRevealed;
 
         [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.BeforeSceneLoad)]
         private static void ResetAllRuntimeRevealedRecipesOnPlayStart()
@@ -53,6 +49,9 @@ namespace CreativeAI.Gameplay
 
             bool wasHidden = !recipe.showInRecipeCraft && !_runtimeRevealedRecipes.Contains(recipe);
             _runtimeRevealedRecipes.Add(recipe);
+            if (wasHidden)
+                RecipeRevealed?.Invoke(recipe);
+
             return wasHidden;
         }
 

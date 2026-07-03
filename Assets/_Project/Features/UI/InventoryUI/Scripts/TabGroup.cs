@@ -32,6 +32,7 @@ namespace CreativeAI.UI
         private int _currentIndex = -1;
         private bool _initialized;
         public int CurrentIndex => _currentIndex;
+        public int EntryCount => _tabEntries.Count;
 
         public event Action<int> OnTabSelected;
 
@@ -113,6 +114,35 @@ namespace CreativeAI.UI
             if (entryIndex < 0 || entryIndex >= _tabEntries.Count)
                 return null;
             return _tabEntries[entryIndex].view;
+        }
+
+        public int FindEntryIndexByView(GameObject view)
+        {
+            if (view == null)
+                return -1;
+
+            for (int i = 0; i < _tabEntries.Count; i++)
+            {
+                if (_tabEntries[i].view == view)
+                    return i;
+            }
+
+            return -1;
+        }
+
+        public int AddTabEntry(Sprite icon, string label, GameObject view, bool enabled = true)
+        {
+            _tabEntries.Add(
+                new TabEntry
+                {
+                    icon = icon,
+                    label = label,
+                    view = view,
+                    enabled = enabled,
+                }
+            );
+
+            return _tabEntries.Count - 1;
         }
     }
 }

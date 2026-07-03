@@ -1,3 +1,4 @@
+using System;
 using System.Linq;
 using DG.Tweening;
 using UnityEngine;
@@ -23,6 +24,8 @@ namespace CreativeAI.UI
         // _offsetIndex=0 のとき子[0]が上、子[1]が左下、子[2]が右下
         private int _offsetIndex = 0;
         private bool _isAnimating = false;
+        public event Action<bool> AnimationStateChanged;
+        public bool IsAnimating => _isAnimating;
 
         private void Start()
         {
@@ -129,6 +132,7 @@ namespace CreativeAI.UI
         private void AnimateToPositions()
         {
             _isAnimating = true;
+            AnimationStateChanged?.Invoke(true);
             int completed = 0;
             int childCount = 0;
 
@@ -163,7 +167,10 @@ namespace CreativeAI.UI
                         {
                             completed++;
                             if (completed >= childCount)
+                            {
                                 _isAnimating = false;
+                                AnimationStateChanged?.Invoke(false);
+                            }
                         });
                 }
                 else

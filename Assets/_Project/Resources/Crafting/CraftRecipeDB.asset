@@ -13,5 +13,4 @@ MonoBehaviour:
   m_Name: CraftRecipeDB
   m_EditorClassIdentifier: CreativeAI.Gameplay::CreativeAI.Gameplay.CraftRecipeDB
   _recipes:
-  - {fileID: 11400000, guid: 4b8f5b217d3cf3a43b8021557896880b, type: 2}
-  - {fileID: 11400000, guid: c26e0cd0806ed1f478a8b1717b21a46f, type: 2}
+  - {fileID: 11400000, guid: 2890fe6bae331d44aa4c6a7c69de2e23, type: 2}

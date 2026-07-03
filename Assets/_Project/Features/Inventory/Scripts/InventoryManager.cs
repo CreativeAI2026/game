@@ -1,17 +1,23 @@
 using System.Collections.Generic;
 using System.Linq;
-using CreativeAI.Gameplay;
 using UnityEngine;
 
 namespace CreativeAI.Gameplay
 {
     public class InventoryManager : MonoBehaviour
     {
+        private const int InitialEquippedTestItemCountPerCategory = 2;
+        private const int InitialTestItemMinCount = 5;
+        private const int InitialTestItemMaxCountExclusive = 16;
+
         public static InventoryManager Instance { get; private set; }
 
         public event System.Action InventoryChanged;
 
-        private List<ItemStack> _items = new();
+        [SerializeField]
+        private bool _addTestItemsOnAwake = true;
+
+        private readonly List<ItemStack> _items = new();
 
         private void Awake()
         {
@@ -20,9 +26,15 @@ namespace CreativeAI.Gameplay
                 Destroy(gameObject);
                 return;
             }
+
             Instance = this;
             DontDestroyOnLoad(gameObject);
-            AddTestItems();
+
+            if (_addTestItemsOnAwake)
+            {
+                AddTestItems();
+                EquipInitialTestItems();
+            }
         }
 
         public void AddItem(ItemData data, int count = 1)
@@ -30,8 +42,7 @@ namespace CreativeAI.Gameplay
             if (data == null)
                 return;
 
-            // 同じアイテムがあればスタック
-            var existing = _items.Find(s => s.Data == data);
+            var existing = _items.Find(stack => stack.Data == data);
             if (existing != null)
                 existing.Count += count;
             else
@@ -42,9 +53,10 @@ namespace CreativeAI.Gameplay
 
         public void RemoveItem(ItemData data, int count = 1)
         {
-            var stack = _items.Find(s => s.Data == data);
+            var stack = _items.Find(stack => stack.Data == data);
             if (stack == null)
                 return;
+
             stack.Count -= count;
             if (stack.Count <= 0)
                 _items.Remove(stack);
@@ -67,6 +79,9 @@ namespace CreativeAI.Gameplay
 
             var materials = recipe.Materials.ToList();
             if (materials.Count != 2)
+                return false;
+
+            if (HasEquippedMaterial(materials))
                 return false;
 
             return materials
@@ -94,9 +109,19 @@ namespace CreativeAI.Gameplay
 
         public bool IsEquipped(ItemStack stack) => stack?.IsEquipped ?? false;
 
+        public bool IsItemEquipped(ItemData data)
+        {
+            return data != null && _items.Any(stack => stack.Data == data && stack.IsEquipped);
+        }
+
+        public bool HasEquippedMaterial(IEnumerable<ItemData> materials)
+        {
+            return materials != null && materials.Any(IsItemEquipped);
+        }
+
         public List<ItemStack> GetItemsByCategory(ItemCategory category)
         {
-            return _items.FindAll(i => i.Data.category == category);
+            return _items.FindAll(stack => stack.Data.category == category);
         }
 
         public List<ItemStack> GetAllItems() => new(_items);
@@ -106,25 +131,42 @@ namespace CreativeAI.Gameplay
             if (ItemDB.Instance == null)
                 return;
 
-            var item1001 = ItemDB.Instance.GetItemById(1001);
-            var item2001 = ItemDB.Instance.GetItemById(2001);
-            var item2002 = ItemDB.Instance.GetItemById(2002);
-            var item3001 = ItemDB.Instance.GetItemById(3001);
-            var item3002 = ItemDB.Instance.GetItemById(3002);
-            var item4001 = ItemDB.Instance.GetItemById(4001);
+            var testItems = ItemDB.Instance.Items.Where(HasZeroSecondDigit).ToList();
+            foreach (var item in testItems)
+                AddItem(
+                    item,
+                    Random.Range(InitialTestItemMinCount, InitialTestItemMaxCountExclusive)
+                );
+        }
 
-            var allItems = new[] { item1001, item2001, item2002, item3001, item3002, item4001 };
+        private void EquipInitialTestItems()
+        {
+            EquipInitialTestItems(ItemCategory.Equipment);
+            EquipInitialTestItems(ItemCategory.Food);
+        }
 
-            foreach (var item in allItems)
-                if (item != null)
-                    AddItem(item);
+        private void EquipInitialTestItems(ItemCategory category)
+        {
+            if (_items.Any(stack => stack.Data.category == category && stack.IsEquipped))
+                return;
 
-            for (int i = 0; i < 40; i++)
+            foreach (
+                var stack in _items
+                    .Where(stack => stack.Data.category == category)
+                    .Take(InitialEquippedTestItemCountPerCategory)
+            )
             {
-                var item = allItems[Random.Range(0, allItems.Length)];
-                if (item != null)
-                    AddItem(item);
+                stack.IsEquipped = true;
             }
+        }
+
+        private static bool HasZeroSecondDigit(ItemData item)
+        {
+            if (item == null)
+                return false;
+
+            string id = Mathf.Abs(item.id).ToString();
+            return id.Length >= 2 && id[1] == '0';
         }
     }
 }

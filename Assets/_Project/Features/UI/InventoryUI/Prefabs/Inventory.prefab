@@ -655,6 +655,8 @@ MonoBehaviour:
   _selectFirstSlotOnRefresh: 1
   _tabGroup: {fileID: 4378624457368349205}
   _categories: 00000000010000000200000003000000
+  _useFixedCategory: 0
+  _fixedCategory: 0
   _slotsRoot: {fileID: 5159119507101400855}
   _slotPrefab: {fileID: -7344806846162860178, guid: 3c72782d0de89764c91460e686b2d7fb, type: 3}
   _detailPanel: {fileID: 0}
@@ -929,7 +931,8 @@ PrefabInstance:
       propertyPath: m_LocalEulerAnglesHint.z
       value: 0
       objectReference: {fileID: 0}
-    m_RemovedComponents: []
+    m_RemovedComponents:
+    - {fileID: 2234662644577297694, guid: 0e1b651be5367e048830972d8401da9c, type: 3}
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
     m_AddedComponents: []
