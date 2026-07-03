@@ -9,8 +9,11 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 7330529793145299999}
+  - component: {fileID: 7820647224105778352}
   - component: {fileID: 6910600594442410550}
   - component: {fileID: 5720426296105040775}
+  - component: {fileID: 2234662644577297694}
+  - component: {fileID: 5392195540676166928}
   m_Layer: 0
   m_Name: TabGroup
   m_TagString: Untagged
@@ -37,6 +40,36 @@ RectTransform:
   m_AnchoredPosition: {x: 0, y: -100}
   m_SizeDelta: {x: 1000, y: 200}
   m_Pivot: {x: 0.5, y: 0.5}
+--- !u!114 &7820647224105778352
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1970737301599882454}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: fe87c0e1cc204ed48ad3b37840f39efc, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: UnityEngine.UI::UnityEngine.UI.Image
+  m_Material: {fileID: 0}
+  m_Color: {r: 0, g: 0, b: 0, a: 0.39215687}
+  m_RaycastTarget: 1
+  m_RaycastPadding: {x: 0, y: 0, z: 0, w: 0}
+  m_Maskable: 1
+  m_OnCullStateChanged:
+    m_PersistentCalls:
+      m_Calls: []
+  m_Sprite: {fileID: 0}
+  m_Type: 0
+  m_PreserveAspect: 0
+  m_FillCenter: 1
+  m_FillMethod: 4
+  m_FillAmount: 1
+  m_FillClockwise: 1
+  m_FillOrigin: 0
+  m_UseSpriteMesh: 0
+  m_PixelsPerUnitMultiplier: 1
 --- !u!114 &6910600594442410550
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -54,7 +87,7 @@ MonoBehaviour:
     m_Right: 0
     m_Top: 0
     m_Bottom: 0
-  m_ChildAlignment: 1
+  m_ChildAlignment: 4
   m_Spacing: 0
   m_ChildForceExpandWidth: 1
   m_ChildForceExpandHeight: 1
@@ -76,5 +109,40 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: CreativeAI.UI::CreativeAI.UI.TabGroup
   _tabButtonPrefab: {fileID: 5510271927287150368, guid: b32822d6fbda1a44e978805497b93af1, type: 3}
-  _tabEntries: []
+  _tabEntries:
+  - icon: {fileID: 21300000, guid: 3815069e16bce474fb0152313970474c, type: 3}
+    label: "\u30B9\u30C6\u30FC\u30BF\u30B9"
+    view: {fileID: 0}
+    enabled: 1
+  - icon: {fileID: 21300000, guid: e43ee6b1ad59024439cf48a0192150d7, type: 3}
+    label: "\u6B66\u5668"
+    view: {fileID: 0}
+    enabled: 1
+  - icon: {fileID: 21300000, guid: 3024d7bd112ceff4dad3738b751a937c, type: 3}
+    label: "\u6240\u6301\u54C1"
+    view: {fileID: 0}
+    enabled: 1
   _animDuration: 0.2
+--- !u!114 &2234662644577297694
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1970737301599882454}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 34b1db5aefa932f4bb3c5a99f9de1a1f, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: CreativeAI.UI::CreativeAI.UI.SlideInPanel
+  _direction: 2
+  _duration: 0.35
+  _ease: 9
+--- !u!222 &5392195540676166928
+CanvasRenderer:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1970737301599882454}
+  m_CullTransparentMesh: 1

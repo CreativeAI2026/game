@@ -1,5 +1,7 @@
+using System.Collections.Generic;
 using CreativeAI.UI.Common;
 using UnityEngine;
+using UnityEngine.Events;
 using UnityEngine.UI;
 
 namespace CreativeAI.UI.HUD
@@ -10,31 +12,49 @@ namespace CreativeAI.UI.HUD
     /// </summary>
     public class HUDController : MonoBehaviour
     {
-        [Header("Buttons (top-right icons)")]
+        [Header("Button / Panel Containers")]
         [SerializeField]
-        private Button _characterButton;
+        private Transform _buttonsRoot;
 
         [SerializeField]
-        private Button _inventoryButton;
+        private Transform _panelsRoot;
 
-        [SerializeField]
-        private Button _saveButton;
-
-        [Header("Panels")]
-        [SerializeField]
-        private UIPanelStub _characterPanel;
-
-        [SerializeField]
-        private UIPanelStub _inventoryPanel;
-
-        [SerializeField]
-        private UIPanelStub _savePanel;
+        private readonly List<(Button button, UnityAction action)> _bindings = new();
 
         private void Awake()
         {
-            _characterButton?.onClick.AddListener(() => _characterPanel?.Open());
-            _inventoryButton?.onClick.AddListener(() => _inventoryPanel?.Open());
-            _saveButton?.onClick.AddListener(() => _savePanel?.Open());
+            UIButtonHoverScaleUtility.ApplyToButtonsIn(_buttonsRoot);
+
+            if (_buttonsRoot == null || _panelsRoot == null)
+                return;
+
+            int pairCount = Mathf.Min(_buttonsRoot.childCount, _panelsRoot.childCount);
+            for (int i = 0; i < pairCount; i++)
+            {
+                var button = _buttonsRoot.GetChild(i).GetComponent<Button>();
+                var panel = _panelsRoot.GetChild(i).GetComponent<UIPanelStub>();
+                if (button == null || panel == null)
+                    continue;
+
+                UnityAction action = panel.Open;
+                button.onClick.AddListener(action);
+                _bindings.Add((button, action));
+            }
+
+            if (_buttonsRoot.childCount != _panelsRoot.childCount)
+            {
+                Debug.LogWarning(
+                    $"{nameof(HUDController)}: ボタン数とパネル数が一致していません。",
+                    this
+                );
+            }
+        }
+
+        private void OnDestroy()
+        {
+            foreach (var binding in _bindings)
+                binding.button.onClick.RemoveListener(binding.action);
+            _bindings.Clear();
         }
     }
 }

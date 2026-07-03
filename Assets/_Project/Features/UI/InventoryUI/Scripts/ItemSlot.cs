@@ -5,139 +5,68 @@ using UnityEngine.UI;
 
 namespace CreativeAI.UI.InventoryUI
 {
-    [RequireComponent(typeof(HoverScaleOnPointer))]
-    public class ItemSlot : MonoBehaviour, IPointerClickHandler
+    public class ItemSlot : BaseItemSlot, IPointerClickHandler
     {
-        private Image _iconImage;
-        private HoverScaleOnPointer _hoverScale;
         private ItemStack _itemStack;
         private Inventory _controller;
-        private Text _countText;
+        private RectTransform _visualRootRect;
+        private bool _isEquipped;
+        private bool _isCraftAssigned;
 
         private static readonly Color EquippedColor = new Color(0.95f, 0.8f, 0.4f, 0.5f);
+        private static readonly Color CraftAssignedColor = new Color(1f, 0.78f, 0.15f, 1f);
         private static readonly Color NormalColor = Color.white;
 
-        private void Awake()
+        protected override void Awake()
         {
-            _iconImage = GetOrCreateIconImage();
-            _countText = GetComponentInChildren<Text>(true);
-            _hoverScale = GetComponent<HoverScaleOnPointer>();
-            if (_hoverScale == null)
-                _hoverScale = GetComponentInChildren<HoverScaleOnPointer>(true);
-
-            if (_hoverScale != null && _iconImage != null)
-            {
-                _hoverScale.SetTarget(_iconImage.rectTransform);
-                if (_countText != null)
-                    _hoverScale.SetBounceTarget(_countText.rectTransform);
-            }
-            // cache controller reference if present in parents
+            base.Awake();
             _controller = GetComponentInParent<Inventory>();
-        }
-
-        private Image GetOrCreateIconImage()
-        {
-            var iconTransform = transform.Find("Icon");
-            if (iconTransform != null && iconTransform.TryGetComponent(out Image icon))
-                return icon;
-
-            var rootImage = GetComponent<Image>();
-            var iconObject = new GameObject(
-                "Icon",
-                typeof(RectTransform),
-                typeof(CanvasRenderer),
-                typeof(Image)
-            );
-            var iconRect = iconObject.GetComponent<RectTransform>();
-            iconRect.SetParent(transform, false);
-            iconRect.anchorMin = Vector2.zero;
-            iconRect.anchorMax = Vector2.one;
-            iconRect.offsetMin = Vector2.zero;
-            iconRect.offsetMax = Vector2.zero;
-            iconRect.SetAsFirstSibling();
-
-            var iconImage = iconObject.GetComponent<Image>();
-            iconImage.preserveAspect = true;
-            iconImage.raycastTarget = false;
-
-            if (rootImage != null)
-            {
-                iconImage.sprite = rootImage.sprite;
-                iconImage.color = rootImage.color;
-                rootImage.sprite = null;
-                rootImage.color = Color.clear;
-            }
-
-            return iconImage;
+            ConfigureVisualRootHover();
         }
 
         private void OnEnable()
         {
-            BindHoverTarget();
+            ConfigureVisualRootHover();
         }
 
         public void SetItem(ItemStack stack)
         {
             _itemStack = stack;
-
-            if (_iconImage == null)
-                return;
-
-            if (stack?.Data != null && stack.Data.icon != null)
-            {
-                _iconImage.sprite = stack.Data.icon;
-                _iconImage.color = Color.white;
-            }
-            else
-            {
-                _iconImage.sprite = null;
-                _iconImage.color = Color.clear;
-            }
-
-            // 数量表示（1個のときは非表示）
-            if (_countText != null)
-            {
-                _countText.gameObject.SetActive(stack != null && stack.Count > 1);
-                _countText.text = stack?.Count.ToString() ?? "";
-            }
-
+            base.SetItem(stack?.Data, stack?.Count ?? 0);
+            ConfigureVisualRootHover();
             SetEquipped(stack?.IsEquipped ?? false);
-
-            BindHoverTarget();
-        }
-
-        private void BindHoverTarget()
-        {
-            if (_hoverScale == null)
-                return;
-
-            if (_iconImage == null)
-                _iconImage = GetComponentInChildren<Image>(true);
-
-            if (_iconImage != null)
-                _hoverScale.SetTarget(_iconImage.rectTransform);
-            if (_countText != null)
-                _hoverScale.SetBounceTarget(_countText.rectTransform);
         }
 
         public ItemStack Stack => _itemStack;
-        public ItemData Item => _itemStack?.Data;
 
-        public void Select()
+        public void SetReleaseSelectionOnOutsideClick(bool release)
         {
-            _hoverScale?.AcquireLock();
+            _hoverScale?.SetReleaseLockOnOutsideClick(release);
         }
 
-        public void Deselect()
+        public override void Select()
         {
-            if (_hoverScale != null && _hoverScale.IsLocked())
-                _hoverScale.ReleaseLock();
+            base.Select();
+        }
+
+        public override void Deselect()
+        {
+            base.Deselect();
         }
 
         public void OnPointerClick(PointerEventData eventData)
         {
             if (_controller != null)
             {
+                if (
+                    eventData.button == PointerEventData.InputButton.Left
+                    && eventData.clickCount >= 2
+                )
+                {
+                    _controller.SelectSlotByDoubleClick(this);
+                    return;
+                }
+
                 _controller.SelectSlotByClick(this);
                 return;
             }
@@ -147,8 +76,88 @@ namespace CreativeAI.UI.InventoryUI
 
         public void SetEquipped(bool isEquipped)
         {
+            _isEquipped = isEquipped;
+            RefreshColor();
+        }
+
+        public void SetCraftAssigned(bool isAssigned)
+        {
+            _isCraftAssigned = isAssigned;
+            RefreshColor();
+        }
+
+        private void RefreshColor()
+        {
+            if (_iconImage == null)
+                return;
+
+            _iconImage.color =
+                _isCraftAssigned ? CraftAssignedColor
+                : _isEquipped ? EquippedColor
+                : NormalColor;
+        }
+
+        private void ConfigureVisualRootHover()
+        {
+            ResolveVisualRoot();
+
+            if (_hoverScale == null || _visualRootRect == null)
+                return;
+
+            _hoverScale.SetTarget(_visualRootRect);
+            _hoverScale.SetBounceTarget(null);
+            _hoverScale.SetLinkedTargets();
+        }
+
+        private void ResolveVisualRoot()
+        {
+            _visualRootRect ??= transform.Find("VisualRoot") as RectTransform;
+            if (_visualRootRect == null)
+                _visualRootRect = CreateVisualRoot();
+
             if (_iconImage != null)
-                _iconImage.color = isEquipped ? EquippedColor : NormalColor;
+            {
+                var iconRect = _iconImage.rectTransform;
+                if (iconRect.parent != _visualRootRect)
+                    iconRect.SetParent(_visualRootRect, false);
+
+                iconRect.SetAsFirstSibling();
+                StretchToFill(iconRect);
+            }
+
+            if (_countContainer != null)
+            {
+                if (_countContainer.parent != _visualRootRect)
+                    _countContainer.SetParent(_visualRootRect, false);
+
+                _countContainer.SetAsLastSibling();
+                _countContainer.anchorMin = new Vector2(0f, 0f);
+                _countContainer.anchorMax = new Vector2(1f, 0f);
+                _countContainer.pivot = new Vector2(0.5f, 0f);
+                _countContainer.anchoredPosition = Vector2.zero;
+                _countContainer.sizeDelta = new Vector2(0f, 40f);
+                _countContainer.localScale = Vector3.one;
+            }
+        }
+
+        private RectTransform CreateVisualRoot()
+        {
+            var visualRootObject = new GameObject("VisualRoot", typeof(RectTransform));
+            var rect = visualRootObject.GetComponent<RectTransform>();
+            rect.SetParent(transform, false);
+            rect.SetAsFirstSibling();
+            StretchToFill(rect);
+            return rect;
+        }
+
+        private static void StretchToFill(RectTransform rect)
+        {
+            rect.anchorMin = Vector2.zero;
+            rect.anchorMax = Vector2.one;
+            rect.offsetMin = Vector2.zero;
+            rect.offsetMax = Vector2.zero;
+            rect.pivot = new Vector2(0.5f, 0.5f);
+            rect.localScale = Vector3.one;
         }
     }
 }

@@ -1,37 +1,28 @@
 using System.Collections;
+using System.Collections.Generic;
 using UnityEngine;
 
 namespace CreativeAI.UI.CharacterUI
 {
-    public class CharacterUIController : MonoBehaviour
+    public partial class CharacterUIController : MonoBehaviour
     {
         [Header("Tabs"), SerializeField]
         private TabGroup _tabGroup;
 
-        [SerializeField]
-        private int _equipmentTabIndex = 2;
-
-        private EquipmentViewController _equipmentViewController;
+        private readonly List<EquipmentViewController> _equipmentViewControllers = new();
         private bool _initialized;
         private bool _resetOnNextEnable;
 
         private void Start()
         {
-            var equipView = _tabGroup.GetView(_equipmentTabIndex);
-            if (equipView != null)
-                _equipmentViewController =
-                    equipView.GetComponentInChildren<EquipmentViewController>();
+            CollectEquipmentViews();
+            foreach (var controller in _equipmentViewControllers)
+                controller?.EnsureInitialized();
 
-            _tabGroup.OnTabSelected += OnTabSelected;
+            if (_tabGroup != null)
+                _tabGroup.OnTabSelected += OnTabSelected;
+
             _initialized = true;
-        }
-
-        private void OnDisable()
-        {
-            if (!_initialized)
-                return;
-
-            _resetOnNextEnable = true;
         }
 
         private void OnEnable()
@@ -40,13 +31,10 @@ namespace CreativeAI.UI.CharacterUI
                 StartCoroutine(ResetAfterOpen());
         }
 
-        private IEnumerator ResetAfterOpen()
+        private void OnDisable()
         {
-            yield return null;
-
-            _resetOnNextEnable = false;
-            _equipmentViewController?.ResetInventoryTab();
-            _tabGroup?.ResetToFirstTab();
+            if (_initialized)
+                _resetOnNextEnable = true;
         }
 
         private void OnDestroy()
@@ -55,12 +43,51 @@ namespace CreativeAI.UI.CharacterUI
                 _tabGroup.OnTabSelected -= OnTabSelected;
         }
 
+        private IEnumerator ResetAfterOpen()
+        {
+            yield return null;
+
+            _resetOnNextEnable = false;
+            _tabGroup?.ResetToFirstTab();
+
+            foreach (var controller in _equipmentViewControllers)
+                controller?.ResetViewState();
+        }
+
         private void OnTabSelected(int index)
         {
-            if (index == _equipmentTabIndex)
-                _equipmentViewController?.OnEnter();
-            else
-                _equipmentViewController?.OnExit();
+            foreach (var controller in _equipmentViewControllers)
+            {
+                if (controller == null)
+                    continue;
+
+                if (controller.gameObject.activeInHierarchy)
+                    controller.OnEnter();
+                else
+                    controller.OnExit();
+            }
+        }
+
+        private void CollectEquipmentViews()
+        {
+            _equipmentViewControllers.Clear();
+            if (_tabGroup == null)
+                return;
+
+            for (int i = 0; i < _tabGroup.EntryCount; i++)
+            {
+                var view = _tabGroup.GetView(i);
+                if (view == null)
+                    continue;
+
+                foreach (
+                    var controller in view.GetComponentsInChildren<EquipmentViewController>(true)
+                )
+                {
+                    if (controller != null && !_equipmentViewControllers.Contains(controller))
+                        _equipmentViewControllers.Add(controller);
+                }
+            }
         }
     }
 }

@@ -1,12 +1,12 @@
 using DG.Tweening;
+using TMPro;
 using UnityEngine;
-using UnityEngine.UI;
 
 namespace CreativeAI.UI.CharacterUI
 {
     public class TabHighlight : MonoBehaviour
     {
-        private Text _label;
+        private TMP_Text _label;
 
         [SerializeField]
         private float _activeScale = 1.2f;
@@ -22,7 +22,7 @@ namespace CreativeAI.UI.CharacterUI
         private void Awake()
         {
             _rect = GetComponent<RectTransform>();
-            _label = GetComponentInChildren<Text>();
+            _label = GetComponentInChildren<TMP_Text>();
         }
 
         public void SetActive(bool isActive)
