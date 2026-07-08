@@ -16,6 +16,7 @@ namespace CreativeAI.UI.Common
         {
             if (_closeButton != null)
             {
+                UIButtonHoverScaleUtility.ApplyTo(_closeButton);
                 _closeButton.onClick.AddListener(Close);
             }
         }

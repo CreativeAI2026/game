@@ -2,6 +2,7 @@
 using System.IO;
 using UnityEditor;
 using UnityEditor.SceneManagement;
+using TMPro;
 using UnityEngine;
 using UnityEngine.EventSystems;
 using UnityEngine.InputSystem.UI;
@@ -18,6 +19,7 @@ using CreativeAI.UI.TitleUI;
 using Object = UnityEngine.Object;
 using CreativeAI.UI;
 using CreativeAI.Gameplay;
+using Text = TMPro.TextMeshProUGUI;
 
 namespace CreativeAI.EditorTools
 {
@@ -221,36 +223,40 @@ namespace CreativeAI.EditorTools
             hudGo.transform.SetParent(canvasGo.transform, false);
             StretchFull(hudGo.AddComponent<RectTransform>());
 
-            var charBtn = CreateMenuIconButton(
-                hudGo.transform,
+            var buttonsGo = new GameObject("Buttons");
+            buttonsGo.transform.SetParent(hudGo.transform, false);
+            StretchFull(buttonsGo.AddComponent<RectTransform>());
+
+            CreateMenuIconButton(
+                buttonsGo.transform,
                 "CharacterButton",
                 -320,
                 new Color(0.55f, 0.4f, 0.75f, 1f)
             );
-            var invBtn = CreateMenuIconButton(
-                hudGo.transform,
+            CreateMenuIconButton(
+                buttonsGo.transform,
                 "InventoryButton",
                 -210,
                 new Color(0.4f, 0.65f, 0.45f, 1f)
             );
-            var saveBtn = CreateMenuIconButton(
-                hudGo.transform,
+            CreateMenuIconButton(
+                buttonsGo.transform,
                 "SaveButton",
                 -100,
                 new Color(0.85f, 0.55f, 0.3f, 1f)
             );
 
-            var charStub = CreateCharacterPanel(canvasGo.transform);
-            var invStub = CreateInventoryPanel(canvasGo.transform);
-            var saveStub = CreateSaveDialog(canvasGo.transform);
+            var panelsGo = new GameObject("Panels");
+            panelsGo.transform.SetParent(canvasGo.transform, false);
+            StretchFull(panelsGo.AddComponent<RectTransform>());
+
+            CreateCharacterPanel(panelsGo.transform);
+            CreateInventoryPanel(panelsGo.transform);
+            CreateSaveDialog(panelsGo.transform);
 
             var hudCtrl = hudGo.AddComponent<HUDController>();
-            SetRef(hudCtrl, "_characterButton", charBtn);
-            SetRef(hudCtrl, "_inventoryButton", invBtn);
-            SetRef(hudCtrl, "_saveButton", saveBtn);
-            SetRef(hudCtrl, "_characterPanel", charStub);
-            SetRef(hudCtrl, "_inventoryPanel", invStub);
-            SetRef(hudCtrl, "_savePanel", saveStub);
+            SetRef(hudCtrl, "_buttonsRoot", buttonsGo.transform);
+            SetRef(hudCtrl, "_panelsRoot", panelsGo.transform);
 
             EnsureInputSystemEventSystem();
 
@@ -306,11 +312,10 @@ namespace CreativeAI.EditorTools
             rt.anchoredPosition = anchoredPosition;
             var text = go.AddComponent<Text>();
             text.text = content;
-            text.alignment = TextAnchor.MiddleCenter;
+            text.alignment = TextAlignmentOptions.Center;
             text.fontSize = fontSize;
             text.color = color;
             text.raycastTarget = false;
-            text.font = Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf");
             return text;
         }
 
@@ -355,11 +360,10 @@ namespace CreativeAI.EditorTools
             StretchFull(labelGo.AddComponent<RectTransform>());
             var labelText = labelGo.AddComponent<Text>();
             labelText.text = label;
-            labelText.alignment = TextAnchor.MiddleCenter;
+            labelText.alignment = TextAlignmentOptions.Center;
             labelText.fontSize = 24;
             labelText.color = Color.white;
             labelText.raycastTarget = false;
-            labelText.font = Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf");
 
             return button;
         }
@@ -973,11 +977,10 @@ namespace CreativeAI.EditorTools
             StretchFull(labelGo.AddComponent<RectTransform>());
             var labelText = labelGo.AddComponent<Text>();
             labelText.text = label;
-            labelText.alignment = TextAnchor.MiddleCenter;
+            labelText.alignment = TextAlignmentOptions.Center;
             labelText.fontSize = fontSize;
             labelText.color = color;
             labelText.raycastTarget = false;
-            labelText.font = Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf");
 
             return button;
         }
@@ -1185,11 +1188,10 @@ namespace CreativeAI.EditorTools
             emptyRt.sizeDelta = new Vector2(80, 80);
             var emptyText = emptyGo.AddComponent<Text>();
             emptyText.text = "+";
-            emptyText.alignment = TextAnchor.MiddleCenter;
+            emptyText.alignment = TextAlignmentOptions.Center;
             emptyText.fontSize = 60;
             emptyText.color = new Color(1, 1, 1, 0.35f);
             emptyText.raycastTarget = false;
-            emptyText.font = Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf");
 
             return new EquipmentSlotUI
             {
@@ -1269,13 +1271,12 @@ namespace CreativeAI.EditorTools
             StretchFull(labelGo.AddComponent<RectTransform>());
             var labelText = labelGo.AddComponent<Text>();
             labelText.text = label;
-            labelText.alignment = TextAnchor.MiddleCenter;
+            labelText.alignment = TextAlignmentOptions.Center;
             labelText.fontSize = 30;
             labelText.color = isActive
                 ? new Color(0.55f, 0.75f, 1f, 1f)
                 : new Color(0.75f, 0.75f, 0.8f, 1f);
             labelText.raycastTarget = false;
-            labelText.font = Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf");
 
             return button;
         }

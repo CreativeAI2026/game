@@ -5,7 +5,8 @@
         "CreativeAI.Core",
         "CreativeAI.UI",
         "CreativeAI.Gameplay",
-        "Unity.InputSystem"
+        "Unity.InputSystem",
+        "Unity.TextMeshPro"
     ],
     "includePlatforms": [
         "Editor"

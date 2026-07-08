@@ -1,3 +1,4 @@
+using System;
 using System.Linq;
 using DG.Tweening;
 using UnityEngine;
@@ -23,8 +24,15 @@ namespace CreativeAI.UI
         // _offsetIndex=0 のとき子[0]が上、子[1]が左下、子[2]が右下
         private int _offsetIndex = 0;
         private bool _isAnimating = false;
+        public event Action<bool> AnimationStateChanged;
+        public bool IsAnimating => _isAnimating;
 
         private void Start()
+        {
+            RefreshLayout();
+        }
+
+        public void RefreshLayout()
         {
             ApplyPositionsImmediate();
             RebindButtons();
@@ -102,9 +110,26 @@ namespace CreativeAI.UI
         // 左下クリック → 時計回り（左下が上へ来る）
         public void RotateClockwise() => Rotate(1, 2);
 
+        public void RotateSlotToTop(int slotIndex)
+        {
+            if (_isAnimating || slotIndex < 0 || slotIndex >= 3)
+                return;
+
+            int currentVertex = (slotIndex + _offsetIndex) % 3;
+            if (currentVertex == 1)
+                RotateCounterClockwise();
+            else if (currentVertex == 2)
+                RotateClockwise();
+        }
+
+        public int GetTopSlotIndex()
+        {
+            return (3 - _offsetIndex) % 3;
+        }
+
         private Vector2 GetVertex(int vertexIndex)
         {
-            float angleDeg = _startAngleDeg + vertexIndex * 120f;
+            float angleDeg = _startAngleDeg - vertexIndex * 120f;
             float angleRad = angleDeg * Mathf.Deg2Rad;
             return new Vector2(_radius * Mathf.Cos(angleRad), _radius * Mathf.Sin(angleRad));
         }
@@ -112,6 +137,7 @@ namespace CreativeAI.UI
         private void AnimateToPositions()
         {
             _isAnimating = true;
+            AnimationStateChanged?.Invoke(true);
             int completed = 0;
             int childCount = 0;
 
@@ -146,7 +172,10 @@ namespace CreativeAI.UI
                         {
                             completed++;
                             if (completed >= childCount)
+                            {
                                 _isAnimating = false;
+                                AnimationStateChanged?.Invoke(false);
+                            }
                         });
                 }
                 else
