@@ -61,10 +61,14 @@ namespace CreativeAI.UI.CharacterUI
                 if (controller == null)
                     continue;
 
-                if (controller.gameObject.activeInHierarchy)
-                    controller.OnEnter();
-                else
+                if (!controller.gameObject.activeInHierarchy)
                     controller.OnExit();
+            }
+
+            foreach (var controller in _equipmentViewControllers)
+            {
+                if (controller != null && controller.gameObject.activeInHierarchy)
+                    controller.OnEnter();
             }
         }
 

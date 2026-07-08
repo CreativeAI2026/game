@@ -163,13 +163,50 @@ namespace CreativeAI.UI.CraftingUI
             CraftQuantityDialogAnimation.Kill(_quantityDialogRect, _quantityDialogCanvasGroup);
         }
 
-        private void SetMinimum() => SetQuantity(1);
+        private void SetMinimum()
+        {
+            if (_quantity <= 1)
+            {
+                PlayQuantityLimitWarning();
+                return;
+            }
 
-        private void Decrease() => SetQuantity(_quantity - 1);
+            SetQuantity(1);
+        }
 
-        private void Increase() => SetQuantity(_quantity + 1);
+        private void Decrease()
+        {
+            if (_quantity <= 1)
+            {
+                PlayQuantityLimitWarning();
+                return;
+            }
 
-        private void SetMaximum() => SetQuantity(GetMaximumCraftable());
+            SetQuantity(_quantity - 1);
+        }
+
+        private void Increase()
+        {
+            if (_quantity >= GetMaximumCraftable())
+            {
+                PlayQuantityLimitWarning();
+                return;
+            }
+
+            SetQuantity(_quantity + 1);
+        }
+
+        private void SetMaximum()
+        {
+            int max = GetMaximumCraftable();
+            if (_quantity >= max)
+            {
+                PlayQuantityLimitWarning();
+                return;
+            }
+
+            SetQuantity(max);
+        }
 
         private void OnQuantityInput(string value)
         {
@@ -180,6 +217,12 @@ namespace CreativeAI.UI.CraftingUI
         {
             _quantity = Mathf.Clamp(quantity, 1, Mathf.Max(1, GetMaximumCraftable()));
             RefreshQuantityDialog();
+        }
+
+        private void PlayQuantityLimitWarning()
+        {
+            ResolveQuantityDialogReferences();
+            CraftUIAnimationUtility.PlayTextLimitWarning(_dialogCounts);
         }
 
         private void RefreshQuantityDialog()

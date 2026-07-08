@@ -33,6 +33,7 @@ namespace CreativeAI.UI.CharacterUI
                         if (IsSlotInputLocked())
                             return;
 
+                        CreativeAI.UI.SlotKeyboardFocus.Claim(this);
                         SelectEquipmentSlot(slotIndex);
                     };
                     _slotButtonActions[slot.Button] = action;
@@ -131,6 +132,7 @@ namespace CreativeAI.UI.CharacterUI
             if (slotIndex < 0)
                 return;
 
+            CreativeAI.UI.SlotKeyboardFocus.Claim(this);
             SelectEquipmentSlot(slotIndex);
             _selectedInventoryStack = null;
             UnequipCurrentSlot();
@@ -160,6 +162,15 @@ namespace CreativeAI.UI.CharacterUI
 
             SelectEquipmentSlot(slotIndex);
             RotateSlotToTop(slotIndex);
+        }
+
+        private int GetTopEquipmentSlotIndex()
+        {
+            if (_triangleLayout == null)
+                return 0;
+
+            int slotIndex = _triangleLayout.GetTopSlotIndex();
+            return slotIndex >= 0 && slotIndex < _slots.Count ? slotIndex : 0;
         }
 
         private void RotateSlotToTop(int slotIndex)
