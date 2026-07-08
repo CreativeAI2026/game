@@ -98,9 +98,10 @@ namespace CreativeAI.UI.CharacterUI
             if (!HasSlots)
                 return;
 
-            SelectEquipmentSlot(0);
+            SelectEquipmentSlot(GetTopEquipmentSlotIndex());
+            CreativeAI.UI.SlotKeyboardFocus.Claim(this);
             _selectedInventoryStack = null;
-            _detailPanel?.Show(CurrentSlot.Item);
+            RefreshDetailFromCurrentSlot();
         }
 
         public void OnExit()
@@ -128,6 +129,7 @@ namespace CreativeAI.UI.CharacterUI
 
             SelectEquipmentSlot(0);
             RotateSlotToTop(0);
+            CreativeAI.UI.SlotKeyboardFocus.Claim(this);
             RefreshDetailFromCurrentSlot();
         }
 

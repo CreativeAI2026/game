@@ -124,6 +124,8 @@ namespace CreativeAI.UI.CraftingUI
         {
             if (_isCrafting && _loadingGear != null)
                 _loadingGear.Rotate(0f, 0f, -_gearRotationSpeed * Time.unscaledDeltaTime);
+
+            UpdateMaterialSlotKeyboardNavigation();
         }
 
         private void Initialize()

@@ -26,12 +26,14 @@ namespace CreativeAI.UI.InventoryUI
 
         public void SelectSlotByClick(ItemSlot slot)
         {
+            CreativeAI.UI.SlotKeyboardFocus.Claim(this);
             SelectSlot(slot);
             OnSlotClicked?.Invoke(slot.Stack);
         }
 
         public void SelectSlotByDoubleClick(ItemSlot slot)
         {
+            CreativeAI.UI.SlotKeyboardFocus.Claim(this);
             SelectSlot(slot);
             OnSlotDoubleClicked?.Invoke(slot.Stack);
         }
@@ -86,6 +88,7 @@ namespace CreativeAI.UI.InventoryUI
 
             _currentSelectedSlot = null;
             _selectedStack = null;
+            CreativeAI.UI.SlotKeyboardFocus.Release(this);
         }
 
         public void ResetViewState()

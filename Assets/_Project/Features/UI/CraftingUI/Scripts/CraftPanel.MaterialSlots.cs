@@ -23,8 +23,8 @@ namespace CreativeAI.UI.CraftingUI
                 if (slot == null)
                     slot = slotObject.AddComponent<MaterialSlot>();
 
-                slot.Clicked += SelectSlot;
-                slot.DoubleClicked += ClearSlot;
+                slot.Clicked += OnMaterialSlotClicked;
+                slot.DoubleClicked += OnMaterialSlotDoubleClicked;
                 _slots.Add(slot);
             }
         }
@@ -36,8 +36,8 @@ namespace CreativeAI.UI.CraftingUI
                 if (slot == null)
                     continue;
 
-                slot.Clicked -= SelectSlot;
-                slot.DoubleClicked -= ClearSlot;
+                slot.Clicked -= OnMaterialSlotClicked;
+                slot.DoubleClicked -= OnMaterialSlotDoubleClicked;
             }
         }
 
@@ -62,6 +62,8 @@ namespace CreativeAI.UI.CraftingUI
         {
             if (_selectedSlot == null && _slots.Count > 0)
                 SelectSlot(_slots[0]);
+
+            ClaimMaterialSlotFocus();
         }
 
         private IEnumerator EnsureInitialSelectionNextFrame()
@@ -70,6 +72,8 @@ namespace CreativeAI.UI.CraftingUI
 
             if (_slots.Count > 0)
                 SelectSlot(_slots[0]);
+
+            ClaimMaterialSlotFocus();
 
             _initialSelectionRoutine = null;
         }
@@ -114,6 +118,24 @@ namespace CreativeAI.UI.CraftingUI
                 && previousSlot.Item == null
                 && selectedSlot.Item == null;
             _detailPanel?.Show(selectedSlot.Item, EmptyMaterialLabel, changedBetweenEmptySlots);
+        }
+
+        private void OnMaterialSlotClicked(MaterialSlot slot)
+        {
+            CreativeAI.UI.SlotKeyboardFocus.Claim(this);
+            SelectSlot(slot);
+        }
+
+        private void OnMaterialSlotDoubleClicked(MaterialSlot slot)
+        {
+            CreativeAI.UI.SlotKeyboardFocus.Claim(this);
+            ClearSlot(slot);
+        }
+
+        private void ClaimMaterialSlotFocus()
+        {
+            if (_selectedSlot != null)
+                CreativeAI.UI.SlotKeyboardFocus.Claim(this);
         }
 
         private void ClearSlot(MaterialSlot slot)

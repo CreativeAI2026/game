@@ -122,9 +122,14 @@ namespace CreativeAI.UI
                 RotateClockwise();
         }
 
+        public int GetTopSlotIndex()
+        {
+            return (3 - _offsetIndex) % 3;
+        }
+
         private Vector2 GetVertex(int vertexIndex)
         {
-            float angleDeg = _startAngleDeg + vertexIndex * 120f;
+            float angleDeg = _startAngleDeg - vertexIndex * 120f;
             float angleRad = angleDeg * Mathf.Deg2Rad;
             return new Vector2(_radius * Mathf.Cos(angleRad), _radius * Mathf.Sin(angleRad));
         }

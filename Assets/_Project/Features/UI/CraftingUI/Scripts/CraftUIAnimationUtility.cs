@@ -1,4 +1,6 @@
+using System.Collections.Generic;
 using DG.Tweening;
+using TMPro;
 using UnityEngine;
 
 namespace CreativeAI.UI.CraftingUI
@@ -8,6 +10,7 @@ namespace CreativeAI.UI.CraftingUI
         private const float PopDuration = 0.18f;
         private const float FadeDuration = 0.16f;
         private const float RowSlideDistance = 18f;
+        private static readonly Dictionary<TMP_Text, Color> TextBaseColors = new();
 
         public static void PlayPopIn(GameObject target, float delay = 0f)
         {
@@ -85,6 +88,27 @@ namespace CreativeAI.UI.CraftingUI
             target.DOKill();
             target.localScale = Vector3.one;
             target.DOPunchScale(Vector3.one * 0.12f, 0.18f, 1, 0.4f).SetUpdate(true);
+        }
+
+        public static void PlayTextLimitWarning(TMP_Text text)
+        {
+            if (text == null)
+                return;
+
+            if (!TextBaseColors.TryGetValue(text, out Color baseColor))
+            {
+                baseColor = text.color;
+                TextBaseColors[text] = baseColor;
+            }
+
+            text.DOKill();
+            text.color = new Color(1f, 0.22f, 0.18f, baseColor.a);
+            DOTween
+                .To(() => text.color, value => text.color = value, baseColor, 0.22f)
+                .SetTarget(text)
+                .SetEase(Ease.OutQuad)
+                .SetUpdate(true);
+            PlayBump(text.rectTransform);
         }
     }
 }
