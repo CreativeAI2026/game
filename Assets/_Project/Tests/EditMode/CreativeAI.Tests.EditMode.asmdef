@@ -3,6 +3,7 @@
     "rootNamespace": "CreativeAI.Tests.EditMode",
     "references": [
         "CreativeAI.Crafting",
+        "CreativeAI.Core",
         "UnityEngine.TestRunner",
         "UnityEditor.TestRunner"
     ],
