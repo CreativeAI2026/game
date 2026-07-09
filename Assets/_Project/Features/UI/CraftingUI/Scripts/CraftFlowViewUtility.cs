@@ -82,6 +82,12 @@ namespace CreativeAI.UI.CraftingUI
                 loadingGear.gameObject.SetActive(false);
         }
 
+        public static void HideLoadingPanel(GameObject loadingPanel)
+        {
+            if (loadingPanel != null)
+                loadingPanel.SetActive(false);
+        }
+
         public static void HidePanels(GameObject loadingPanel, GameObject resultPanel)
         {
             if (resultPanel != null)

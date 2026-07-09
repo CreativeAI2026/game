@@ -34,6 +34,17 @@ namespace CreativeAI.UI.CraftingUI
         [SerializeField]
         private Transform _recipeContent;
 
+        [Header("Recipe Tabs")]
+        [SerializeField]
+        private TabGroup _recipeTabGroup;
+
+        [SerializeField]
+        private List<ItemCategory> _recipeCategories = new()
+        {
+            ItemCategory.Equipment,
+            ItemCategory.Food,
+        };
+
         [SerializeField]
         private ItemDetailPanel _detailPanel;
 
@@ -78,6 +89,7 @@ namespace CreativeAI.UI.CraftingUI
 
         private readonly List<RecipeSlot> _slots = new();
         private readonly List<RecipeMaterialRow> _materialRows = new();
+        private readonly List<ItemCategory> _activeRecipeCategories = new();
         private CraftRecipeDB _subscribedRecipeDB;
         private CraftRecipeData _selectedRecipe;
         private CraftRecipeData _craftedRecipeForResult;
@@ -93,6 +105,7 @@ namespace CreativeAI.UI.CraftingUI
         private void Awake()
         {
             ResolveAllReferences();
+            BindRecipeTabs();
             PrepareInitialHiddenTemplates();
             ValidateSetup();
             SubscribeRecipeDBChanges();
@@ -127,6 +140,12 @@ namespace CreativeAI.UI.CraftingUI
             if (_loadingPanel != null)
                 _loadingPanel.SetActive(false);
             SetCloseButtonVisible(true);
+        }
+
+        private void OnDestroy()
+        {
+            UnbindRecipeTabs();
+            UnsubscribeRecipeDBChanges();
         }
 
         private void Update()
@@ -164,6 +183,7 @@ namespace CreativeAI.UI.CraftingUI
         {
             _recipeList ??= Find("RecipeList");
             _recipeContent ??= FindRecipeContent();
+            _recipeTabGroup ??= GetComponentInChildren<TabGroup>(true);
             _detailPanel ??= FindDetailPanel();
             _materialList ??= Find("MaterialList");
         }

@@ -21,9 +21,6 @@ namespace CreativeAI.UI.CraftingUI
         private TMP_Text _emptyText;
         private Image _frame;
         private RectTransform _visualRootRect;
-        private RectTransform _numberSlotRect;
-        private CanvasGroup _numberSlotCanvasGroup;
-        private Image _numberSlotImage;
         private Coroutine _materialAnimationRoutine;
         private bool _isSelected;
 
@@ -55,7 +52,6 @@ namespace CreativeAI.UI.CraftingUI
         {
             base.SetItem(item, count);
             ResolveVisualReferences();
-            ApplyNumberSlotState();
             BindSlotHoverTarget();
         }
 
@@ -79,6 +75,18 @@ namespace CreativeAI.UI.CraftingUI
                 Select();
             else
                 Deselect();
+        }
+
+        public void NormalizeVisualState()
+        {
+            ResolveVisualReferences();
+            ApplyIconPadding();
+            ApplyIconState();
+            ApplySelectedVisual();
+            BindSlotHoverTarget();
+
+            if (_emptyText != null)
+                _emptyText.gameObject.SetActive(_item == null || _item.icon == null);
         }
 
         private void ApplySelectedVisual()
@@ -108,7 +116,6 @@ namespace CreativeAI.UI.CraftingUI
             base.Refresh();
             ResolveVisualReferences();
             ApplyIconState();
-            ApplyNumberSlotState();
             BindSlotHoverTarget();
 
             if (_emptyText != null)
@@ -120,7 +127,6 @@ namespace CreativeAI.UI.CraftingUI
             base.Clear();
             ResolveVisualReferences();
             ApplyIconState();
-            ApplyNumberSlotState();
 
             if (_emptyText != null)
                 _emptyText.gameObject.SetActive(true);
@@ -278,35 +284,12 @@ namespace CreativeAI.UI.CraftingUI
             return 1f + c3 * Mathf.Pow(t - 1f, 3f) + c1 * Mathf.Pow(t - 1f, 2f);
         }
 
-        private void ApplyNumberSlotState()
-        {
-            ResolveVisualReferences();
-
-            if (_numberSlotRect == null)
-                return;
-
-            bool hasItem = _item != null && _item.icon != null;
-            _numberSlotRect.gameObject.SetActive(hasItem);
-            if (_numberSlotCanvasGroup != null)
-                _numberSlotCanvasGroup.alpha = hasItem ? 1f : 0f;
-            if (_numberSlotImage != null)
-            {
-                _numberSlotImage.enabled = true;
-                _numberSlotImage.color = new Color32(0, 0, 0, 200);
-            }
-        }
-
         private void ResolveVisualReferences()
         {
             if (_visualRootRect == null)
                 _visualRootRect = FindChildRectIgnoreCase("VisualRoot");
             if (_visualRootRect == null)
                 _visualRootRect = CreateVisualRoot();
-
-            if (_numberSlotRect == null)
-                _numberSlotRect = FindNumberSlotRect();
-            if (_numberSlotRect == null && _countContainer != null)
-                _numberSlotRect = _countContainer;
 
             if (
                 _iconImage != null
@@ -317,32 +300,6 @@ namespace CreativeAI.UI.CraftingUI
                 _iconImage.rectTransform.SetParent(_visualRootRect, false);
                 _iconImage.rectTransform.SetAsFirstSibling();
             }
-
-            if (
-                _numberSlotRect != null
-                && _visualRootRect != null
-                && _numberSlotRect.parent != _visualRootRect
-            )
-                _numberSlotRect.SetParent(_visualRootRect, false);
-
-            if (_numberSlotRect == null)
-                return;
-
-            _countContainer = _numberSlotRect;
-            ConfigureNumberSlotRect(_numberSlotRect);
-
-            _numberSlotCanvasGroup ??= _numberSlotRect.GetComponent<CanvasGroup>();
-            if (_numberSlotCanvasGroup == null)
-                _numberSlotCanvasGroup = _numberSlotRect.gameObject.AddComponent<CanvasGroup>();
-
-            _numberSlotCanvasGroup.interactable = false;
-            _numberSlotCanvasGroup.blocksRaycasts = false;
-
-            _numberSlotImage ??= _numberSlotRect.GetComponent<Image>();
-            if (_numberSlotImage == null)
-                _numberSlotImage = _numberSlotRect.gameObject.AddComponent<Image>();
-
-            _numberSlotImage.raycastTarget = false;
         }
 
         private RectTransform FindChildRectIgnoreCase(string childName)
@@ -351,22 +308,6 @@ namespace CreativeAI.UI.CraftingUI
             {
                 if (string.Equals(rect.name, childName, StringComparison.OrdinalIgnoreCase))
                     return rect;
-            }
-
-            return null;
-        }
-
-        private RectTransform FindNumberSlotRect()
-        {
-            foreach (var rect in GetComponentsInChildren<RectTransform>(true))
-            {
-                if (!string.Equals(rect.name, "numberSlot", StringComparison.OrdinalIgnoreCase))
-                    continue;
-
-                if (rect.GetComponent<TMP_Text>() != null)
-                    continue;
-
-                return rect;
             }
 
             return null;
@@ -395,17 +336,6 @@ namespace CreativeAI.UI.CraftingUI
             rect.offsetMin = Vector2.one * IconPadding;
             rect.offsetMax = -Vector2.one * IconPadding;
             rect.pivot = new Vector2(0.5f, 0.5f);
-            rect.localScale = Vector3.one;
-        }
-
-        private static void ConfigureNumberSlotRect(RectTransform rect)
-        {
-            rect.SetAsLastSibling();
-            rect.anchorMin = new Vector2(0f, 0f);
-            rect.anchorMax = new Vector2(1f, 0f);
-            rect.pivot = new Vector2(0.5f, 0f);
-            rect.anchoredPosition = Vector2.zero;
-            rect.sizeDelta = new Vector2(0f, 40f);
             rect.localScale = Vector3.one;
         }
     }
