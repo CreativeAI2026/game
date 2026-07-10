@@ -79,6 +79,7 @@ namespace CreativeAI.UI.CraftingUI
                 recipe != null && (InventoryManager.Instance?.TryCraft(recipe, quantity) ?? false);
             CraftFlowViewUtility.CompleteCraftRoutine(ref _craftRoutine, ref _isCrafting);
             CraftFlowViewUtility.HideLoadingGear(_loadingGear);
+            CraftFlowViewUtility.HideLoadingPanel(_loadingPanel);
 
             if (!crafted)
             {

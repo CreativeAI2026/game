@@ -8,6 +8,56 @@ namespace CreativeAI.UI.CraftingUI
 {
     public partial class RecipeCraftPanel
     {
+        private void BindRecipeTabs()
+        {
+            ResolveMainReferences();
+            if (_recipeTabGroup == null)
+                return;
+
+            _recipeTabGroup.OnTabSelected -= OnRecipeTabSelected;
+            _recipeTabGroup.OnTabSelected += OnRecipeTabSelected;
+            BuildActiveRecipeCategories();
+        }
+
+        private void UnbindRecipeTabs()
+        {
+            if (_recipeTabGroup != null)
+                _recipeTabGroup.OnTabSelected -= OnRecipeTabSelected;
+        }
+
+        private void BuildActiveRecipeCategories()
+        {
+            _activeRecipeCategories.Clear();
+
+            for (int i = 0; i < _recipeCategories.Count; i++)
+            {
+                if (_recipeTabGroup == null || _recipeTabGroup.IsEnabled(i))
+                    _activeRecipeCategories.Add(_recipeCategories[i]);
+            }
+        }
+
+        private void OnRecipeTabSelected(int index)
+        {
+            if (!isActiveAndEnabled)
+                return;
+
+            BuildActiveRecipeCategories();
+            BuildRecipeList();
+            SelectInitialRecipe(true);
+            ForceRebuildLayouts();
+        }
+
+        private bool IsRecipeInCurrentTab(CraftRecipeData recipe)
+        {
+            if (recipe == null || recipe.resultItem == null || _recipeTabGroup == null)
+                return true;
+
+            int index = _recipeTabGroup.CurrentIndex;
+            return index >= 0
+                && index < _activeRecipeCategories.Count
+                && recipe.resultItem.category == _activeRecipeCategories[index];
+        }
+
         private void PrepareInitialHiddenTemplates()
         {
             HideInactiveRecipeSlots();
@@ -92,7 +142,8 @@ namespace CreativeAI.UI.CraftingUI
                     slot != null
                     && slot.Recipe != null
                     && _recipeDB != null
-                    && _recipeDB.IsVisible(slot.Recipe);
+                    && _recipeDB.IsVisible(slot.Recipe)
+                    && IsRecipeInCurrentTab(slot.Recipe);
 
                 if (slot != null)
                     slot.gameObject.SetActive(isVisible);
@@ -126,7 +177,10 @@ namespace CreativeAI.UI.CraftingUI
 
                 bool isGenerated = slot.GetComponent<GeneratedRecipeSlotMarker>() != null;
                 bool isVisibleExisting =
-                    slot.Recipe != null && _recipeDB != null && _recipeDB.IsVisible(slot.Recipe);
+                    slot.Recipe != null
+                    && _recipeDB != null
+                    && _recipeDB.IsVisible(slot.Recipe)
+                    && IsRecipeInCurrentTab(slot.Recipe);
 
                 slot.gameObject.SetActive(isGenerated || isVisibleExisting);
             }
@@ -176,7 +230,7 @@ namespace CreativeAI.UI.CraftingUI
         {
             ResolveRecipeDB();
             if (_recipeDB != null)
-                return _recipeDB.VisibleRecipes;
+                return _recipeDB.VisibleRecipes.Where(IsRecipeInCurrentTab);
 
             return Enumerable.Empty<CraftRecipeData>();
         }
@@ -209,7 +263,17 @@ namespace CreativeAI.UI.CraftingUI
 
         private void SelectRecipeSlot(RecipeSlot selectedSlot)
         {
-            _selectedRecipe = selectedSlot?.Recipe;
+            var selectedRecipe = selectedSlot?.Recipe;
+            if (_selectedRecipe == selectedRecipe && selectedRecipe != null)
+            {
+                foreach (var slot in _slots)
+                    slot?.SetSelected(slot == selectedSlot);
+
+                _detailPanel?.Show(_selectedRecipe.resultItem, NoRecipeLabel);
+                return;
+            }
+
+            _selectedRecipe = selectedRecipe;
 
             foreach (var slot in _slots)
                 slot?.SetSelected(slot == selectedSlot);
@@ -218,7 +282,7 @@ namespace CreativeAI.UI.CraftingUI
             RebuildMaterialRows();
         }
 
-        private void SelectInitialRecipe()
+        private void SelectInitialRecipe(bool forceEmptyLabelRefresh = false)
         {
             var firstSlot = _slots.FirstOrDefault(slot =>
                 slot != null && slot.Recipe != null && slot.Recipe.resultItem != null
@@ -234,7 +298,7 @@ namespace CreativeAI.UI.CraftingUI
             foreach (var slot in _slots)
                 slot?.SetSelected(false);
 
-            _detailPanel?.Show(null, NoRecipeLabel);
+            _detailPanel?.Show(null, NoRecipeLabel, forceEmptyLabelRefresh);
             RebuildMaterialRows();
         }
 

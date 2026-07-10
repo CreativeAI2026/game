@@ -20,9 +20,12 @@ namespace CreativeAI.UI.CraftingUI
             {
                 var slotObject = _slotsRoot.GetChild(i).gameObject;
                 var slot = slotObject.GetComponent<MaterialSlot>();
-                if (slot == null)
+                if (slot == null && slotObject.name.StartsWith("MaterialSlot"))
                     slot = slotObject.AddComponent<MaterialSlot>();
+                if (slot == null)
+                    continue;
 
+                slot.NormalizeVisualState();
                 slot.Clicked += OnMaterialSlotClicked;
                 slot.DoubleClicked += OnMaterialSlotDoubleClicked;
                 _slots.Add(slot);

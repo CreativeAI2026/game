@@ -146,6 +146,7 @@ namespace CreativeAI.UI.CraftingUI
             CraftFlowViewUtility.CompleteCraftRoutine(ref _craftRoutine, ref _isCrafting);
 
             CraftFlowViewUtility.HideLoadingGear(_loadingGear);
+            CraftFlowViewUtility.HideLoadingPanel(_loadingPanel);
             if (!crafted)
             {
                 CraftFlowViewUtility.HidePanels(_loadingPanel, null);
