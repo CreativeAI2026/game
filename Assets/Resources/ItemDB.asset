@@ -13,9 +13,16 @@ MonoBehaviour:
   m_Name: ItemDB
   m_EditorClassIdentifier: CreativeAI.Gameplay::CreativeAI.Gameplay.ItemDB
   items:
-  - {fileID: 11400000, guid: 2ebb5bdd3d3e852419a745d1aed05ea4, type: 2}
+  - {fileID: 11400000, guid: d50673e5f8234ffa997515445c6786d0, type: 2}
   - {fileID: 11400000, guid: e7fbd7ecfd83ba64284e68d09bba1571, type: 2}
-  - {fileID: 11400000, guid: 566e3fc3dfceeb44b8d8c84eaee0b7da, type: 2}
-  - {fileID: 11400000, guid: fb07f226cfcb149469740f237ffe4d7d, type: 2}
-  - {fileID: 11400000, guid: f233de84432cdf74280e73c245fb346e, type: 2}
-  - {fileID: 11400000, guid: f6622028dc905c74289f2ce3d9378f2a, type: 2}
+  - {fileID: 11400000, guid: 194ce770bcb04d7fa9e7e3dae62863b7, type: 2}
+  - {fileID: 11400000, guid: c64d3855eeab47c19a8e777c3871f7b6, type: 2}
+  - {fileID: 11400000, guid: 44b9f0d4a05746b2a4386844b4ce0166, type: 2}
+  - {fileID: 11400000, guid: 2ebb5bdd3d3e852419a745d1aed05ea4, type: 2}
+  - {fileID: 11400000, guid: 71839228ad8a466dac4035c72a1f8d0c, type: 2}
+  - {fileID: 11400000, guid: fbbd837ed22546f9878dc0ed682aea2b, type: 2}
+  - {fileID: 11400000, guid: 2eb5d3fd27304bd9910bb746953d70a5, type: 2}
+  - {fileID: 11400000, guid: b451bc339ee442319638382ca5c2766a, type: 2}
+  - {fileID: 11400000, guid: 4d3fa0cefa2f449db371240a45db0bba, type: 2}
+  - {fileID: 11400000, guid: b6140ffa0bfa42adbf6ad57ba2aad975, type: 2}
+  - {fileID: 11400000, guid: 371762ab4d8b4bf3b2518e7e21d9d043, type: 2}

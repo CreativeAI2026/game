@@ -1,14 +1,20 @@
+using System.Collections;
 using System.Collections.Generic;
-using System.Linq;
 using CreativeAI.Gameplay;
 using CreativeAI.UI.InventoryUI;
 using UnityEngine;
+using UnityEngine.Events;
 using UnityEngine.UI;
 
 namespace CreativeAI.UI.CharacterUI
 {
-    public class EquipmentViewController : MonoBehaviour
+    public partial class EquipmentViewController : MonoBehaviour
     {
+        private static readonly Color SlotFrameSelected = new(1f, 0.78f, 0.15f, 0.9f);
+        private static readonly Color SlotFrameNormal = new(1f, 1f, 1f, 0.15f);
+
+        private TriangleLayout _triangleLayout;
+
         [Header("Equipment Slots")]
         [SerializeField]
         private Transform _equipmentSlotsContainer;
@@ -21,288 +27,145 @@ namespace CreativeAI.UI.CharacterUI
         [SerializeField]
         private Inventory _inventory;
 
-        [Header("Buttons")]
         [SerializeField]
-        private Transform _equipButtonsContainer;
+        private ItemCategory _inventoryCategory = ItemCategory.Equipment;
 
-        private Button _equipButton;
-        private Text _equipButtonText;
-        private Button _unequipButton;
+        [SerializeField]
+        private string _emptyLabel = "\uFF08\u672A\u88C5\u5099\uFF09";
 
-        private static readonly Color SlotFrameSelected = new Color(0.95f, 0.8f, 0.4f, 0.6f);
-        private static readonly Color SlotFrameNormal = new Color(1f, 1f, 1f, 0.15f);
-
-        private List<EquipmentSlot> _slots;
-        private int _currentSlotIndex = 0;
+        private readonly List<EquipmentSlot> _slots = new();
+        private readonly Dictionary<Button, UnityAction> _slotButtonActions = new();
+        private int _currentSlotIndex;
         private ItemStack _selectedInventoryStack;
-        private bool _resetInventoryTabOnNextEnter;
+        private bool _initialized;
+
+        private bool HasSlots => _slots.Count > 0;
+
+        private EquipmentSlot CurrentSlot =>
+            HasSlots && _currentSlotIndex >= 0 && _currentSlotIndex < _slots.Count
+                ? _slots[_currentSlotIndex]
+                : null;
 
         private void Awake()
         {
-            // 装備画面のインベントリは、タブ変更だけでは選択や詳細を変えない。
-            _inventory?.SetSelectFirstSlotOnRefresh(false);
+            ResolveReferences();
+            ConfigureInventory();
         }
 
         private void Start()
         {
-            if (_equipButtonsContainer != null)
-            {
-                _equipButton = _equipButtonsContainer.GetChild(0).GetComponent<Button>();
-                _equipButtonText = _equipButtonsContainer
-                    .GetChild(0)
-                    .GetComponentInChildren<Text>();
-                _unequipButton = _equipButtonsContainer.GetChild(1).GetComponent<Button>();
-            }
+            EnsureInitialized();
+        }
 
-            _slots = new();
-            for (int i = 0; i < _equipmentSlotsContainer.childCount; i++)
-            {
-                var slot = _equipmentSlotsContainer.GetChild(i).GetComponent<EquipmentSlot>();
-                slot.Init();
-                _slots.Add(slot);
-            }
+        public void EnsureInitialized()
+        {
+            if (_initialized)
+                return;
 
-            // EquipmentとFoodカテゴリからランダムで装備
-            var equipableItems = InventoryManager
-                .Instance?.GetAllItems()
-                .Where(s =>
-                    s.Data.category == ItemCategory.Equipment
-                    || s.Data.category == ItemCategory.Food
-                )
-                .ToList();
+            ResolveReferences();
+            ConfigureInventory();
+            InitializeSlots();
+            EquipInitialTestItems();
+            BindInventoryEvents();
 
-            if (equipableItems != null && equipableItems.Count > 0)
-            {
-                var shuffled = new List<ItemStack>(equipableItems);
-                for (int i = shuffled.Count - 1; i > 0; i--)
-                {
-                    int j = Random.Range(0, i + 1);
-                    (shuffled[i], shuffled[j]) = (shuffled[j], shuffled[i]);
-                }
-
-                int equipCount = Mathf.Min(2, _slots.Count, shuffled.Count);
-                for (int i = 0; i < equipCount; i++)
-                {
-                    _slots[i].Item = shuffled[i].Data;
-                    InventoryManager.Instance?.SetEquipped(shuffled[i], true);
-                    _slots[i].UpdateCount();
-                }
-            }
-
-            for (int slotIndex = 0; slotIndex < _slots.Count; slotIndex++)
-            {
-                var btn = _slots[slotIndex].GetComponent<Button>();
-                if (btn != null)
-                {
-                    int captured = slotIndex;
-                    btn.onClick.AddListener(() => SelectEquipmentSlot(captured));
-                }
-            }
-
-            if (_inventory != null)
-                _inventory.OnSlotClicked += OnInventorySlotSelected;
-
-            if (_equipButton != null)
-                _equipButton.onClick.AddListener(EquipSelectedItem);
-
-            if (_unequipButton != null)
-                _unequipButton.onClick.AddListener(UnequipCurrentSlot);
-
+            RefreshSlotLayout();
             SelectEquipmentSlot(0);
+
+            _initialized = true;
+            BindTriangleLayoutEvents();
         }
 
         private void OnDestroy()
         {
-            if (_slots != null)
-                foreach (var slot in _slots)
-                    if (slot.Button != null)
-                        slot.Button.onClick.RemoveAllListeners();
+            UnbindSlots();
+            UnbindInventoryEvents();
+            if (_triangleLayout != null)
+                _triangleLayout.AnimationStateChanged -= SetSlotsInputLocked;
+        }
 
-            if (_inventory != null)
-                _inventory.OnSlotClicked -= OnInventorySlotSelected;
-
-            if (_equipButton != null)
-                _equipButton.onClick.RemoveAllListeners();
-
-            if (_unequipButton != null)
-                _unequipButton.onClick.RemoveAllListeners();
+        public void Configure(ItemCategory inventoryCategory, string emptyLabel)
+        {
+            _inventoryCategory = inventoryCategory;
+            _emptyLabel = emptyLabel;
+            ResolveReferences();
+            ConfigureInventory();
         }
 
         public void OnEnter()
         {
-            if (_slots == null || _slots.Count == 0)
+            EnsureInitialized();
+
+            if (!HasSlots)
                 return;
 
-            if (_resetInventoryTabOnNextEnter)
-            {
-                _resetInventoryTabOnNextEnter = false;
-                _inventory?.ResetToFirstTab();
-            }
-
-            SelectEquipmentSlot(0);
+            SelectEquipmentSlot(GetTopEquipmentSlotIndex());
+            CreativeAI.UI.SlotKeyboardFocus.Claim(this);
             _selectedInventoryStack = null;
-            _detailPanel?.Show(_slots[_currentSlotIndex].Item);
-            UpdateButtons();
-        }
-
-        private System.Collections.IEnumerator RefreshInventoryNextFrame()
-        {
-            yield return null;
-            _inventory?.RefreshCurrentTab();
-            yield return null; // もう1フレーム待つ
-            _selectedInventoryStack = null;
-            _detailPanel?.Show(_slots[_currentSlotIndex].Item);
-            UpdateButtons();
+            RefreshDetailFromCurrentSlot();
         }
 
         public void OnExit()
         {
-            if (_slots == null || _slots.Count == 0)
+            if (!HasSlots)
                 return;
+
             _detailPanel?.Clear();
             _selectedInventoryStack = null;
-            _detailPanel?.Show(_slots[_currentSlotIndex].Item);
-            _selectedInventoryStack = null;
-            UpdateButtons();
+            _inventory?.ClearSelection();
         }
 
-        private void SelectEquipmentSlot(int i)
+        public void ResetViewState()
         {
-            if (_slots == null || i < 0 || i >= _slots.Count)
-                return;
-
-            _currentSlotIndex = i;
-
-            for (int j = 0; j < _slots.Count; j++)
-            {
-                _slots[j].SetFrameColor(j == i ? SlotFrameSelected : SlotFrameNormal);
-                _slots[j].SetSelected(j == i);
-            }
+            EnsureInitialized();
 
             _selectedInventoryStack = null;
-            var selectedItem = _slots[i].Item;
-            var selectedStack = InventoryManager
-                .Instance?.GetAllItems()
-                .Find(stack => stack.Data == selectedItem);
+            _inventory?.ResetViewState();
 
-            _inventory?.SelectItem(selectedStack);
-            _detailPanel?.Show(selectedItem);
-            UpdateButtons();
-        }
-
-        public void ResetInventoryTab()
-        {
-            _resetInventoryTabOnNextEnter = true;
-        }
-
-        private void OnInventorySlotSelected(ItemStack stack)
-        {
-            _selectedInventoryStack = stack;
-            _detailPanel?.Show(stack?.Data);
-            UpdateButtons();
-        }
-
-        private void UpdateButtons()
-        {
-            var currentSlotItem = _slots[_currentSlotIndex].Item;
-            bool slotHasItem = currentSlotItem != null;
-            bool inventoryItemSelected = _selectedInventoryStack != null;
-            bool selectedIsEquipped = _selectedInventoryStack?.IsEquipped ?? false;
-
-            if (inventoryItemSelected && selectedIsEquipped)
+            if (!HasSlots)
             {
-                // 装備済みアイテムを選択中 → 外すのみ
-                _equipButton?.gameObject.SetActive(false);
-                _unequipButton?.gameObject.SetActive(true);
-            }
-            else if (inventoryItemSelected)
-            {
-                // 未装備アイテムを選択中 → 装備/変更
-                _equipButton?.gameObject.SetActive(true);
-                if (_equipButtonText != null)
-                    _equipButtonText.text = slotHasItem ? "変更" : "装備";
-                _unequipButton?.gameObject.SetActive(false);
-            }
-            else if (slotHasItem)
-            {
-                // インベントリ未選択、スロットにアイテムあり → 外すのみ
-                _equipButton?.gameObject.SetActive(false);
-                _unequipButton?.gameObject.SetActive(true);
-            }
-            else
-            {
-                _equipButton?.gameObject.SetActive(false);
-                _unequipButton?.gameObject.SetActive(false);
-            }
-        }
-
-        private void EquipSelectedItem()
-        {
-            if (_selectedInventoryStack == null)
-                return;
-
-            // 他のスロットに同じアイテムがあれば弾く
-            for (int i = 0; i < _slots.Count; i++)
-            {
-                if (i == _currentSlotIndex)
-                    continue;
-                if (_slots[i].Item == _selectedInventoryStack.Data)
-                    return;
-            }
-
-            // 前の装備を解除
-            var prevItem = _slots[_currentSlotIndex].Item;
-            var prevStack = InventoryManager.Instance?.GetAllItems().Find(s => s.Data == prevItem);
-            InventoryManager.Instance?.SetEquipped(prevStack, false);
-            _inventory?.UpdateItemEquippedState(prevStack, false, false);
-
-            // 新しく装備
-            _slots[_currentSlotIndex].Item = _selectedInventoryStack.Data;
-            InventoryManager.Instance?.SetEquipped(_selectedInventoryStack, true);
-            _slots[_currentSlotIndex].UpdateCount();
-
-            _detailPanel?.Show(_selectedInventoryStack.Data);
-            _inventory?.UpdateItemEquippedState(_selectedInventoryStack, true, true);
-            UpdateButtons();
-        }
-
-        private void UnequipCurrentSlot()
-        {
-            // インベントリから装備済みアイテムを選んで外す場合
-            if (_selectedInventoryStack != null && _selectedInventoryStack.IsEquipped)
-            {
-                InventoryManager.Instance?.SetEquipped(_selectedInventoryStack, false);
-
-                // 装備スロットからも削除
-                for (int i = 0; i < _slots.Count; i++)
-                {
-                    if (_slots[i].Item == _selectedInventoryStack.Data)
-                    {
-                        _slots[i].Item = null;
-                        _slots[i].UpdateCount();
-                        break;
-                    }
-                }
-
-                _inventory?.UpdateItemEquippedState(_selectedInventoryStack, false, true);
-                UpdateButtons();
+                _detailPanel?.Clear();
                 return;
             }
 
-            // 装備スロット選択中の外す
-            var currentItem = _slots[_currentSlotIndex].Item;
-            if (currentItem == null)
+            SelectEquipmentSlot(0);
+            RotateSlotToTop(0);
+            CreativeAI.UI.SlotKeyboardFocus.Claim(this);
+            RefreshDetailFromCurrentSlot();
+        }
+
+        private void ResolveReferences()
+        {
+            _detailPanel ??= GetComponentInChildren<ItemDetailPanel>(true);
+            _inventory ??= GetComponentInChildren<Inventory>(true);
+
+            if (_triangleLayout == null && _equipmentSlotsContainer != null)
+                _triangleLayout = _equipmentSlotsContainer.GetComponent<TriangleLayout>();
+        }
+
+        private void ConfigureInventory()
+        {
+            _inventory?.SetSelectFirstSlotOnRefresh(false);
+            _inventory?.SetFixedCategory(_inventoryCategory);
+        }
+
+        private bool IsSlotInputLocked()
+        {
+            return _triangleLayout != null && _triangleLayout.IsAnimating;
+        }
+
+        private void BindTriangleLayoutEvents()
+        {
+            if (_triangleLayout == null)
                 return;
 
-            var stack = InventoryManager.Instance?.GetAllItems().Find(s => s.Data == currentItem);
-            InventoryManager.Instance?.SetEquipped(stack, false);
+            _triangleLayout.AnimationStateChanged -= SetSlotsInputLocked;
+            _triangleLayout.AnimationStateChanged += SetSlotsInputLocked;
+        }
 
-            _slots[_currentSlotIndex].Item = null;
-            _slots[_currentSlotIndex].UpdateCount();
-
-            _inventory?.UpdateItemEquippedState(stack, false, false);
-            _detailPanel?.Show(null);
-            UpdateButtons();
+        private void SetSlotsInputLocked(bool locked)
+        {
+            foreach (var slot in _slots)
+                slot?.SetInputLocked(locked);
         }
     }
 }

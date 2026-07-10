@@ -2,20 +2,16 @@ using System.Collections.Generic;
 using DG.Tweening;
 using UnityEngine;
 using UnityEngine.EventSystems;
-using UnityEngine.InputSystem;
-using UnityEngine.UI;
 
 namespace CreativeAI.UI.InventoryUI
 {
     [RequireComponent(typeof(RectTransform))]
-    public class HoverScaleOnPointer
+    public partial class HoverScaleOnPointer
         : MonoBehaviour,
             IPointerEnterHandler,
             IPointerExitHandler,
             IPointerClickHandler
     {
-        private static readonly Dictionary<string, HoverScaleOnPointer> _lockedInstances = new();
-
         [SerializeField]
         private string _group = "default";
 
@@ -40,11 +36,25 @@ namespace CreativeAI.UI.InventoryUI
 
         private RectTransform _targetRect;
         private RectTransform _bounceTarget;
+        private readonly List<RectTransform> _linkedTargets = new();
+        private readonly List<Vector3> _linkedTargetBaseLocalPositions = new();
         private Tween _currentTween;
         private Tween _bounceTween;
         private Vector3 _baseLocalPosition;
         private Vector2 _bounceTargetBaseAnchoredPosition;
         private bool _isLocked;
+
+        private void Awake()
+        {
+            _targetRect ??= GetComponent<RectTransform>();
+            CacheBasePosition();
+        }
+
+        private void OnDestroy()
+        {
+            _currentTween?.Kill();
+            _bounceTween?.Kill();
+        }
 
         public void SetTarget(RectTransform target)
         {
@@ -58,6 +68,17 @@ namespace CreativeAI.UI.InventoryUI
 
         public void SetGroup(string group) => _group = group;
 
+        public void SetHoverScale(float scale) => _hoverScale = Mathf.Max(1f, scale);
+
+        public void SetLockEnabled(bool enabled) => _lockEnabled = enabled;
+
+        public void SetBounceHeight(float height)
+        {
+            _bounceHeight = Mathf.Max(0f, height);
+            if (_bounceHeight <= 0f)
+                StopBounce();
+        }
+
         public void SetBounceTarget(RectTransform target)
         {
             StopBounce();
@@ -65,106 +86,28 @@ namespace CreativeAI.UI.InventoryUI
             CacheBasePosition();
         }
 
-        public void SetReleaseLockOnOutsideClick(bool release) =>
-            _releaseLockOnOutsideClick = release;
-
-        private void Awake()
+        public void SetLinkedTargets(params RectTransform[] targets)
         {
-            if (_targetRect == null)
-                _targetRect = GetComponent<RectTransform>();
+            StopBounce();
+            _linkedTargets.Clear();
+
+            if (targets != null)
+            {
+                foreach (var target in targets)
+                {
+                    if (target == null || target == _targetRect)
+                        continue;
+
+                    if (!_linkedTargets.Contains(target))
+                        _linkedTargets.Add(target);
+                }
+            }
 
             CacheBasePosition();
         }
 
-        private void Update()
-        {
-            if (
-                !_releaseLockOnOutsideClick
-                || !_isLocked
-                || Mouse.current == null
-                || !Mouse.current.leftButton.wasPressedThisFrame
-                || IsPointerOverSelf()
-            )
-                return;
-
-            ReleaseLockedState();
-        }
-
-        private void OnDisable()
-        {
-            if (_lockedInstances.TryGetValue(_group, out var current) && current == this)
-                _lockedInstances.Remove(_group);
-
-            _isLocked = false;
-            _currentTween?.Kill();
-            _currentTween = null;
-            StopBounce();
-
-            if (_targetRect != null)
-                _targetRect.localScale = Vector3.one;
-        }
-
-        private void OnDestroy()
-        {
-            _currentTween?.Kill();
-            _bounceTween?.Kill();
-        }
-
-        public void OnPointerEnter(PointerEventData eventData)
-        {
-            if (_isLocked)
-                return;
-            StartScale(Vector3.one * _hoverScale);
-        }
-
-        public void OnPointerExit(PointerEventData eventData)
-        {
-            if (_isLocked)
-                return;
-            StartScale(Vector3.one);
-        }
-
-        public void OnPointerClick(PointerEventData eventData)
-        {
-            if (!_lockEnabled)
-                return;
-            LockSelection();
-        }
-
-        private void LockSelection()
-        {
-            if (_lockedInstances.TryGetValue(_group, out var current) && current != this)
-                current.ReleaseLockedState();
-
-            _lockedInstances[_group] = this;
-            _isLocked = true;
-            StartScale(Vector3.one * _hoverScale);
-            StartBounce();
-        }
-
-        private void ReleaseLockedState()
-        {
-            if (_lockedInstances.TryGetValue(_group, out var current) && current == this)
-                _lockedInstances.Remove(_group);
-
-            _isLocked = false;
-            StartScale(Vector3.one);
-            StopBounce();
-        }
-
-        public static HoverScaleOnPointer GetLockedInstance(string group) =>
-            _lockedInstances.TryGetValue(group, out var instance) ? instance : null;
-
-        public bool IsLocked() => _isLocked;
-
-        public void AcquireLock()
-        {
-            if (!_lockEnabled)
-                return;
-            LockSelection();
-        }
-
-        public void ReleaseLock() => ReleaseLockedState();
+        public void SetReleaseLockOnOutsideClick(bool release) =>
+            _releaseLockOnOutsideClick = release;
 
         private void StartScale(Vector3 target)
         {
@@ -172,11 +115,20 @@ namespace CreativeAI.UI.InventoryUI
                 return;
 
             _currentTween?.Kill();
-            _currentTween = _targetRect
-                .DOScale(target, _animationDuration)
-                .SetEase(Ease.OutQuad)
-                .SetUpdate(true)
-                .OnComplete(() => _currentTween = null);
+            var sequence = DOTween.Sequence().SetUpdate(true);
+            sequence.Join(_targetRect.DOScale(target, _animationDuration).SetEase(Ease.OutQuad));
+
+            foreach (var linkedTarget in _linkedTargets)
+            {
+                if (linkedTarget == null)
+                    continue;
+
+                sequence.Join(
+                    linkedTarget.DOScale(target, _animationDuration).SetEase(Ease.OutQuad)
+                );
+            }
+
+            _currentTween = sequence.OnComplete(() => _currentTween = null);
         }
 
         private void CacheBasePosition()
@@ -185,108 +137,12 @@ namespace CreativeAI.UI.InventoryUI
                 _baseLocalPosition = _targetRect.localPosition;
             if (_bounceTarget != null)
                 _bounceTargetBaseAnchoredPosition = _bounceTarget.anchoredPosition;
-        }
 
-        private void StartBounce()
-        {
-            if (_targetRect == null || _bounceHeight <= 0f || _bounceDuration <= 0f)
-                return;
-
-            StopBounce();
-            CacheBasePosition();
-            float direction = GetBounceDirection();
-
-            var sequence = DOTween.Sequence();
-            sequence.Append(
-                DOTween.To(
-                    () => _targetRect.localPosition.y,
-                    y =>
-                    {
-                        var position = _targetRect.localPosition;
-                        position.y = y;
-                        _targetRect.localPosition = position;
-                    },
-                    _baseLocalPosition.y + _bounceHeight * direction,
-                    _bounceDuration
-                )
-            );
-
-            if (_bounceTarget != null)
-            {
-                sequence.Join(
-                    DOTween.To(
-                        () => _bounceTarget.anchoredPosition.y,
-                        y =>
-                        {
-                            var position = _bounceTarget.anchoredPosition;
-                            position.y = y;
-                            _bounceTarget.anchoredPosition = position;
-                        },
-                        _bounceTargetBaseAnchoredPosition.y + _bounceHeight * direction,
-                        _bounceDuration
-                    )
+            _linkedTargetBaseLocalPositions.Clear();
+            foreach (var linkedTarget in _linkedTargets)
+                _linkedTargetBaseLocalPositions.Add(
+                    linkedTarget != null ? linkedTarget.localPosition : Vector3.zero
                 );
-            }
-
-            _bounceTween = sequence
-                .SetEase(Ease.InOutSine)
-                .SetLoops(-1, LoopType.Yoyo)
-                .SetUpdate(true);
-        }
-
-        private void StopBounce()
-        {
-            bool wasBouncing = _bounceTween != null;
-            _bounceTween?.Kill();
-            _bounceTween = null;
-
-            // Layout計算前に保存した古い座標を、未再生時に書き戻さない。
-            if (!wasBouncing || _targetRect == null)
-                return;
-
-            _targetRect.localPosition = _baseLocalPosition;
-            if (_bounceTarget != null)
-                _bounceTarget.anchoredPosition = _bounceTargetBaseAnchoredPosition;
-        }
-
-        private float GetBounceDirection()
-        {
-            var mask = _targetRect.GetComponentInParent<RectMask2D>();
-            if (mask == null)
-                return 1f;
-
-            var targetCorners = new Vector3[4];
-            var maskCorners = new Vector3[4];
-            _targetRect.GetWorldCorners(targetCorners);
-            mask.rectTransform.GetWorldCorners(maskCorners);
-            float scaledBounceHeight = _bounceHeight * _targetRect.lossyScale.y;
-
-            return targetCorners[1].y + scaledBounceHeight > maskCorners[1].y ? -1f : 1f;
-        }
-
-        private bool IsPointerOverSelf()
-        {
-            if (EventSystem.current == null || Mouse.current == null)
-                return false;
-
-            var eventData = new PointerEventData(EventSystem.current)
-            {
-                position = Mouse.current.position.ReadValue(),
-            };
-
-            var results = new List<RaycastResult>();
-            EventSystem.current.RaycastAll(eventData, results);
-
-            foreach (var result in results)
-            {
-                if (
-                    result.gameObject == gameObject
-                    || result.gameObject.transform.IsChildOf(transform)
-                )
-                    return true;
-            }
-
-            return false;
         }
     }
 }

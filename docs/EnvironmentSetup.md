@@ -93,19 +93,7 @@ mise exec -- dotnet csharpier --version   # 1.2.6 が出れば OK
 
 ---
 
-## 4. IDE の CSharpier 連携（推奨：保存時に自動整形）
-
-CI は整形漏れを **赤くするだけ**で自動修正はしない（[DevelopmentWorkflow.md](./DevelopmentWorkflow.md) 参照）。
-保存時に自動整形しておくと CI で落ちにくく、手戻りが減る。
-
-### VS Code
-
-1. 拡張機能 **CSharpier**（`csharpier.csharpier-vscode`）をインストール。
-2. `.vscode/` にワークスペース設定が入っているのでそのまま使う。format-on-save が有効になる。
-
----
-
-## 5. 動作確認
+## 4. 動作確認
 
 - Unity Editor でシーンを開いて Play できる。
 - 下記が成功する（整形漏れがなければ何も出力されない）:
