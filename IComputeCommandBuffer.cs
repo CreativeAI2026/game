@@ -1,11 +1,10 @@
-
 using System;
 using System.Collections.Generic;
 using Unity.Collections;
-using UnityEngine.Profiling;
 using Unity.Profiling;
-using UnityEngine.Rendering.RenderGraphModule;
 using UnityEngine.Experimental.Rendering;
+using UnityEngine.Profiling;
+using UnityEngine.Rendering.RenderGraphModule;
 
 // NOTE  NOTE  NOTE  NOTE  NOTE  NOTE  NOTE  NOTE  NOTE
 //
@@ -26,70 +25,78 @@ using UnityEngine.Experimental.Rendering;
 // NOTE  NOTE  NOTE  NOTE  NOTE  NOTE  NOTE  NOTE  NOTE
 namespace UnityEngine.Rendering
 {
-
     /// <summary>
     /// This interface declares functions that are specific to a compute command buffer.
     /// </summary>
     public interface IComputeCommandBuffer : IBaseCommandBuffer
     {
-
         /// <summary>Wraps [SetComputeFloatParam](https://docs.unity3d.com/ScriptReference/Rendering.CommandBuffer.SetComputeFloatParam.html) on a CommandBuffer.</summary>
         /// <param name="computeShader">[See CommandBuffer documentation](https://docs.unity3d.com/ScriptReference/Rendering.CommandBuffer.SetComputeFloatParam.html)</param>
         /// <param name="nameID">[See CommandBuffer documentation](https://docs.unity3d.com/ScriptReference/Rendering.CommandBuffer.SetComputeFloatParam.html)</param>
         /// <param name="val">[See CommandBuffer documentation](https://docs.unity3d.com/ScriptReference/Rendering.CommandBuffer.SetComputeFloatParam.html)</param>
-        public void SetComputeFloatParam(ComputeShader computeShader, int nameID, float val) ;
+        public void SetComputeFloatParam(ComputeShader computeShader, int nameID, float val);
 
         /// <summary>Wraps [SetComputeIntParam](https://docs.unity3d.com/ScriptReference/Rendering.CommandBuffer.SetComputeIntParam.html) on a CommandBuffer.</summary>
         /// <param name="computeShader">[See CommandBuffer documentation](https://docs.unity3d.com/ScriptReference/Rendering.CommandBuffer.SetComputeIntParam.html)</param>
         /// <param name="nameID">[See CommandBuffer documentation](https://docs.unity3d.com/ScriptReference/Rendering.CommandBuffer.SetComputeIntParam.html)</param>
         /// <param name="val">[See CommandBuffer documentation](https://docs.unity3d.com/ScriptReference/Rendering.CommandBuffer.SetComputeIntParam.html)</param>
-        public void SetComputeIntParam(ComputeShader computeShader, int nameID, int val) ;
+        public void SetComputeIntParam(ComputeShader computeShader, int nameID, int val);
 
         /// <summary>Wraps [SetComputeVectorParam](https://docs.unity3d.com/ScriptReference/Rendering.CommandBuffer.SetComputeVectorParam.html) on a CommandBuffer.</summary>
         /// <param name="computeShader">[See CommandBuffer documentation](https://docs.unity3d.com/ScriptReference/Rendering.CommandBuffer.SetComputeVectorParam.html)</param>
         /// <param name="nameID">[See CommandBuffer documentation](https://docs.unity3d.com/ScriptReference/Rendering.CommandBuffer.SetComputeVectorParam.html)</param>
         /// <param name="val">[See CommandBuffer documentation](https://docs.unity3d.com/ScriptReference/Rendering.CommandBuffer.SetComputeVectorParam.html)</param>
-        public void SetComputeVectorParam(ComputeShader computeShader, int nameID, Vector4 val) ;
+        public void SetComputeVectorParam(ComputeShader computeShader, int nameID, Vector4 val);
 
         /// <summary>Wraps [SetComputeVectorArrayParam](https://docs.unity3d.com/ScriptReference/Rendering.CommandBuffer.SetComputeVectorArrayParam.html) on a CommandBuffer.</summary>
         /// <param name="computeShader">[See CommandBuffer documentation](https://docs.unity3d.com/ScriptReference/Rendering.CommandBuffer.SetComputeVectorArrayParam.html)</param>
         /// <param name="nameID">[See CommandBuffer documentation](https://docs.unity3d.com/ScriptReference/Rendering.CommandBuffer.SetComputeVectorArrayParam.html)</param>
         /// <param name="values">[See CommandBuffer documentation](https://docs.unity3d.com/ScriptReference/Rendering.CommandBuffer.SetComputeVectorArrayParam.html)</param>
-        public void SetComputeVectorArrayParam(ComputeShader computeShader, int nameID, Vector4[] values) ;
+        public void SetComputeVectorArrayParam(
+            ComputeShader computeShader,
+            int nameID,
+            Vector4[] values
+        );
 
         /// <summary>Wraps [SetComputeMatrixParam](https://docs.unity3d.com/ScriptReference/Rendering.CommandBuffer.SetComputeMatrixParam.html) on a CommandBuffer.</summary>
         /// <param name="computeShader">[See CommandBuffer documentation](https://docs.unity3d.com/ScriptReference/Rendering.CommandBuffer.SetComputeMatrixParam.html)</param>
         /// <param name="nameID">[See CommandBuffer documentation](https://docs.unity3d.com/ScriptReference/Rendering.CommandBuffer.SetComputeMatrixParam.html)</param>
         /// <param name="val">[See CommandBuffer documentation](https://docs.unity3d.com/ScriptReference/Rendering.CommandBuffer.SetComputeMatrixParam.html)</param>
-        public void SetComputeMatrixParam(ComputeShader computeShader, int nameID, Matrix4x4 val) ;
+        public void SetComputeMatrixParam(ComputeShader computeShader, int nameID, Matrix4x4 val);
 
         /// <summary>Wraps [SetComputeMatrixArrayParam](https://docs.unity3d.com/ScriptReference/Rendering.CommandBuffer.SetComputeMatrixArrayParam.html) on a CommandBuffer.</summary>
         /// <param name="computeShader">[See CommandBuffer documentation](https://docs.unity3d.com/ScriptReference/Rendering.CommandBuffer.SetComputeMatrixArrayParam.html)</param>
         /// <param name="nameID">[See CommandBuffer documentation](https://docs.unity3d.com/ScriptReference/Rendering.CommandBuffer.SetComputeMatrixArrayParam.html)</param>
         /// <param name="values">[See CommandBuffer documentation](https://docs.unity3d.com/ScriptReference/Rendering.CommandBuffer.SetComputeMatrixArrayParam.html)</param>
-        public void SetComputeMatrixArrayParam(ComputeShader computeShader, int nameID, Matrix4x4[] values) ;
+        public void SetComputeMatrixArrayParam(
+            ComputeShader computeShader,
+            int nameID,
+            Matrix4x4[] values
+        );
 
         /// <summary>Wraps [SetRayTracingShaderPass](https://docs.unity3d.com/ScriptReference/Rendering.CommandBuffer.SetRayTracingShaderPass.html) on a CommandBuffer.</summary>
         /// <param name="rayTracingShader">[See CommandBuffer documentation](https://docs.unity3d.com/ScriptReference/Rendering.CommandBuffer.SetRayTracingShaderPass.html)</param>
         /// <param name="passName">[See CommandBuffer documentation](https://docs.unity3d.com/ScriptReference/Rendering.CommandBuffer.SetRayTracingShaderPass.html)</param>
-        public void SetRayTracingShaderPass(RayTracingShader rayTracingShader, string passName) ;
+        public void SetRayTracingShaderPass(RayTracingShader rayTracingShader, string passName);
 
         /// <summary>Wraps [SetBufferData](https://docs.unity3d.com/ScriptReference/Rendering.CommandBuffer.SetBufferData.html) on a CommandBuffer.</summary>
         /// <param name="buffer">[See CommandBuffer documentation](https://docs.unity3d.com/ScriptReference/Rendering.CommandBuffer.SetBufferData.html)</param>
         /// <param name="data">[See CommandBuffer documentation](https://docs.unity3d.com/ScriptReference/Rendering.CommandBuffer.SetBufferData.html)</param>
-        public void SetBufferData(ComputeBuffer buffer, Array data) ;
-
-        /// <summary>Wraps [SetBufferData](https://docs.unity3d.com/ScriptReference/Rendering.CommandBuffer.SetBufferData.html) on a CommandBuffer.</summary>
-        /// <param name="buffer">[See CommandBuffer documentation](https://docs.unity3d.com/ScriptReference/Rendering.CommandBuffer.SetBufferData.html)</param>
-        /// <param name="data">[See CommandBuffer documentation](https://docs.unity3d.com/ScriptReference/Rendering.CommandBuffer.SetBufferData.html)</param>
-        /// <typeparam name="T">[See CommandBuffer documentation](https://docs.unity3d.com/ScriptReference/Rendering.CommandBuffer.SetBufferData.html)</typeparam>
-        public void SetBufferData<T>(ComputeBuffer buffer, List<T> data) where T : struct;
+        public void SetBufferData(ComputeBuffer buffer, Array data);
 
         /// <summary>Wraps [SetBufferData](https://docs.unity3d.com/ScriptReference/Rendering.CommandBuffer.SetBufferData.html) on a CommandBuffer.</summary>
         /// <param name="buffer">[See CommandBuffer documentation](https://docs.unity3d.com/ScriptReference/Rendering.CommandBuffer.SetBufferData.html)</param>
         /// <param name="data">[See CommandBuffer documentation](https://docs.unity3d.com/ScriptReference/Rendering.CommandBuffer.SetBufferData.html)</param>
         /// <typeparam name="T">[See CommandBuffer documentation](https://docs.unity3d.com/ScriptReference/Rendering.CommandBuffer.SetBufferData.html)</typeparam>
-        public void SetBufferData<T>(ComputeBuffer buffer, NativeArray<T> data) where T : struct;
+        public void SetBufferData<T>(ComputeBuffer buffer, List<T> data)
+            where T : struct;
+
+        /// <summary>Wraps [SetBufferData](https://docs.unity3d.com/ScriptReference/Rendering.CommandBuffer.SetBufferData.html) on a CommandBuffer.</summary>
+        /// <param name="buffer">[See CommandBuffer documentation](https://docs.unity3d.com/ScriptReference/Rendering.CommandBuffer.SetBufferData.html)</param>
+        /// <param name="data">[See CommandBuffer documentation](https://docs.unity3d.com/ScriptReference/Rendering.CommandBuffer.SetBufferData.html)</param>
+        /// <typeparam name="T">[See CommandBuffer documentation](https://docs.unity3d.com/ScriptReference/Rendering.CommandBuffer.SetBufferData.html)</typeparam>
+        public void SetBufferData<T>(ComputeBuffer buffer, NativeArray<T> data)
+            where T : struct;
 
         /// <summary>Wraps [SetBufferData](https://docs.unity3d.com/ScriptReference/Rendering.CommandBuffer.SetBufferData.html) on a CommandBuffer.</summary>
         /// <param name="buffer">[See CommandBuffer documentation](https://docs.unity3d.com/ScriptReference/Rendering.CommandBuffer.SetBufferData.html)</param>
@@ -97,7 +104,13 @@ namespace UnityEngine.Rendering
         /// <param name="managedBufferStartIndex">[See CommandBuffer documentation](https://docs.unity3d.com/ScriptReference/Rendering.CommandBuffer.SetBufferData.html)</param>
         /// <param name="graphicsBufferStartIndex">[See CommandBuffer documentation](https://docs.unity3d.com/ScriptReference/Rendering.CommandBuffer.SetBufferData.html)</param>
         /// <param name="count">[See CommandBuffer documentation](https://docs.unity3d.com/ScriptReference/Rendering.CommandBuffer.SetBufferData.html)</param>
-        public void SetBufferData(ComputeBuffer buffer, Array data, int managedBufferStartIndex, int graphicsBufferStartIndex, int count) ;
+        public void SetBufferData(
+            ComputeBuffer buffer,
+            Array data,
+            int managedBufferStartIndex,
+            int graphicsBufferStartIndex,
+            int count
+        );
 
         /// <summary>Wraps [SetBufferData](https://docs.unity3d.com/ScriptReference/Rendering.CommandBuffer.SetBufferData.html) on a CommandBuffer.</summary>
         /// <param name="buffer">[See CommandBuffer documentation](https://docs.unity3d.com/ScriptReference/Rendering.CommandBuffer.SetBufferData.html)</param>
@@ -106,7 +119,14 @@ namespace UnityEngine.Rendering
         /// <param name="graphicsBufferStartIndex">[See CommandBuffer documentation](https://docs.unity3d.com/ScriptReference/Rendering.CommandBuffer.SetBufferData.html)</param>
         /// <param name="count">[See CommandBuffer documentation](https://docs.unity3d.com/ScriptReference/Rendering.CommandBuffer.SetBufferData.html)</param>
         /// <typeparam name="T">[See CommandBuffer documentation](https://docs.unity3d.com/ScriptReference/Rendering.CommandBuffer.SetBufferData.html)</typeparam>
-        public void SetBufferData<T>(ComputeBuffer buffer, List<T> data, int managedBufferStartIndex, int graphicsBufferStartIndex, int count) where T : struct;
+        public void SetBufferData<T>(
+            ComputeBuffer buffer,
+            List<T> data,
+            int managedBufferStartIndex,
+            int graphicsBufferStartIndex,
+            int count
+        )
+            where T : struct;
 
         /// <summary>Wraps [SetBufferData](https://docs.unity3d.com/ScriptReference/Rendering.CommandBuffer.SetBufferData.html) on a CommandBuffer.</summary>
         /// <param name="buffer">[See CommandBuffer documentation](https://docs.unity3d.com/ScriptReference/Rendering.CommandBuffer.SetBufferData.html)</param>
@@ -115,29 +135,38 @@ namespace UnityEngine.Rendering
         /// <param name="graphicsBufferStartIndex">[See CommandBuffer documentation](https://docs.unity3d.com/ScriptReference/Rendering.CommandBuffer.SetBufferData.html)</param>
         /// <param name="count">[See CommandBuffer documentation](https://docs.unity3d.com/ScriptReference/Rendering.CommandBuffer.SetBufferData.html)</param>
         /// <typeparam name="T">[See CommandBuffer documentation](https://docs.unity3d.com/ScriptReference/Rendering.CommandBuffer.SetBufferData.html)</typeparam>
-        public void SetBufferData<T>(ComputeBuffer buffer, NativeArray<T> data, int nativeBufferStartIndex, int graphicsBufferStartIndex, int count) where T : struct;
+        public void SetBufferData<T>(
+            ComputeBuffer buffer,
+            NativeArray<T> data,
+            int nativeBufferStartIndex,
+            int graphicsBufferStartIndex,
+            int count
+        )
+            where T : struct;
 
         /// <summary>Wraps [SetBufferCounterValue](https://docs.unity3d.com/ScriptReference/Rendering.CommandBuffer.SetBufferCounterValue.html) on a CommandBuffer.</summary>
         /// <param name="buffer">[See CommandBuffer documentation](https://docs.unity3d.com/ScriptReference/Rendering.CommandBuffer.SetBufferCounterValue.html)</param>
         /// <param name="counterValue">[See CommandBuffer documentation](https://docs.unity3d.com/ScriptReference/Rendering.CommandBuffer.SetBufferCounterValue.html)</param>
-        public void SetBufferCounterValue(ComputeBuffer buffer, uint counterValue) ;
+        public void SetBufferCounterValue(ComputeBuffer buffer, uint counterValue);
 
         /// <summary>Wraps [SetBufferData](https://docs.unity3d.com/ScriptReference/Rendering.CommandBuffer.SetBufferData.html) on a CommandBuffer.</summary>
         /// <param name="buffer">[See CommandBuffer documentation](https://docs.unity3d.com/ScriptReference/Rendering.CommandBuffer.SetBufferData.html)</param>
         /// <param name="data">[See CommandBuffer documentation](https://docs.unity3d.com/ScriptReference/Rendering.CommandBuffer.SetBufferData.html)</param>
-        public void SetBufferData(GraphicsBuffer buffer, Array data) ;
-
-        /// <summary>Wraps [SetBufferData](https://docs.unity3d.com/ScriptReference/Rendering.CommandBuffer.SetBufferData.html) on a CommandBuffer.</summary>
-        /// <param name="buffer">[See CommandBuffer documentation](https://docs.unity3d.com/ScriptReference/Rendering.CommandBuffer.SetBufferData.html)</param>
-        /// <param name="data">[See CommandBuffer documentation](https://docs.unity3d.com/ScriptReference/Rendering.CommandBuffer.SetBufferData.html)</param>
-        /// <typeparam name="T">[See CommandBuffer documentation](https://docs.unity3d.com/ScriptReference/Rendering.CommandBuffer.SetBufferData.html)</typeparam>
-        public void SetBufferData<T>(GraphicsBuffer buffer, List<T> data) where T : struct;
+        public void SetBufferData(GraphicsBuffer buffer, Array data);
 
         /// <summary>Wraps [SetBufferData](https://docs.unity3d.com/ScriptReference/Rendering.CommandBuffer.SetBufferData.html) on a CommandBuffer.</summary>
         /// <param name="buffer">[See CommandBuffer documentation](https://docs.unity3d.com/ScriptReference/Rendering.CommandBuffer.SetBufferData.html)</param>
         /// <param name="data">[See CommandBuffer documentation](https://docs.unity3d.com/ScriptReference/Rendering.CommandBuffer.SetBufferData.html)</param>
         /// <typeparam name="T">[See CommandBuffer documentation](https://docs.unity3d.com/ScriptReference/Rendering.CommandBuffer.SetBufferData.html)</typeparam>
-        public void SetBufferData<T>(GraphicsBuffer buffer, NativeArray<T> data) where T : struct;
+        public void SetBufferData<T>(GraphicsBuffer buffer, List<T> data)
+            where T : struct;
+
+        /// <summary>Wraps [SetBufferData](https://docs.unity3d.com/ScriptReference/Rendering.CommandBuffer.SetBufferData.html) on a CommandBuffer.</summary>
+        /// <param name="buffer">[See CommandBuffer documentation](https://docs.unity3d.com/ScriptReference/Rendering.CommandBuffer.SetBufferData.html)</param>
+        /// <param name="data">[See CommandBuffer documentation](https://docs.unity3d.com/ScriptReference/Rendering.CommandBuffer.SetBufferData.html)</param>
+        /// <typeparam name="T">[See CommandBuffer documentation](https://docs.unity3d.com/ScriptReference/Rendering.CommandBuffer.SetBufferData.html)</typeparam>
+        public void SetBufferData<T>(GraphicsBuffer buffer, NativeArray<T> data)
+            where T : struct;
 
         /// <summary>Wraps [SetBufferData](https://docs.unity3d.com/ScriptReference/Rendering.CommandBuffer.SetBufferData.html) on a CommandBuffer.</summary>
         /// <param name="buffer">[See CommandBuffer documentation](https://docs.unity3d.com/ScriptReference/Rendering.CommandBuffer.SetBufferData.html)</param>
@@ -145,7 +174,13 @@ namespace UnityEngine.Rendering
         /// <param name="managedBufferStartIndex">[See CommandBuffer documentation](https://docs.unity3d.com/ScriptReference/Rendering.CommandBuffer.SetBufferData.html)</param>
         /// <param name="graphicsBufferStartIndex">[See CommandBuffer documentation](https://docs.unity3d.com/ScriptReference/Rendering.CommandBuffer.SetBufferData.html)</param>
         /// <param name="count">[See CommandBuffer documentation](https://docs.unity3d.com/ScriptReference/Rendering.CommandBuffer.SetBufferData.html)</param>
-        public void SetBufferData(GraphicsBuffer buffer, Array data, int managedBufferStartIndex, int graphicsBufferStartIndex, int count) ;
+        public void SetBufferData(
+            GraphicsBuffer buffer,
+            Array data,
+            int managedBufferStartIndex,
+            int graphicsBufferStartIndex,
+            int count
+        );
 
         /// <summary>Wraps [SetBufferData](https://docs.unity3d.com/ScriptReference/Rendering.CommandBuffer.SetBufferData.html) on a CommandBuffer.</summary>
         /// <param name="buffer">[See CommandBuffer documentation](https://docs.unity3d.com/ScriptReference/Rendering.CommandBuffer.SetBufferData.html)</param>
@@ -154,7 +189,14 @@ namespace UnityEngine.Rendering
         /// <param name="graphicsBufferStartIndex">[See CommandBuffer documentation](https://docs.unity3d.com/ScriptReference/Rendering.CommandBuffer.SetBufferData.html)</param>
         /// <param name="count">[See CommandBuffer documentation](https://docs.unity3d.com/ScriptReference/Rendering.CommandBuffer.SetBufferData.html)</param>
         /// <typeparam name="T">[See CommandBuffer documentation](https://docs.unity3d.com/ScriptReference/Rendering.CommandBuffer.SetBufferData.html)</typeparam>
-        public void SetBufferData<T>(GraphicsBuffer buffer, List<T> data, int managedBufferStartIndex, int graphicsBufferStartIndex, int count) where T : struct;
+        public void SetBufferData<T>(
+            GraphicsBuffer buffer,
+            List<T> data,
+            int managedBufferStartIndex,
+            int graphicsBufferStartIndex,
+            int count
+        )
+            where T : struct;
 
         /// <summary>Wraps [SetBufferData](https://docs.unity3d.com/ScriptReference/Rendering.CommandBuffer.SetBufferData.html) on a CommandBuffer.</summary>
         /// <param name="buffer">[See CommandBuffer documentation](https://docs.unity3d.com/ScriptReference/Rendering.CommandBuffer.SetBufferData.html)</param>
@@ -163,86 +205,127 @@ namespace UnityEngine.Rendering
         /// <param name="graphicsBufferStartIndex">[See CommandBuffer documentation](https://docs.unity3d.com/ScriptReference/Rendering.CommandBuffer.SetBufferData.html)</param>
         /// <param name="count">[See CommandBuffer documentation](https://docs.unity3d.com/ScriptReference/Rendering.CommandBuffer.SetBufferData.html)</param>
         /// <typeparam name="T">[See CommandBuffer documentation](https://docs.unity3d.com/ScriptReference/Rendering.CommandBuffer.SetBufferData.html)</typeparam>
-        public void SetBufferData<T>(GraphicsBuffer buffer, NativeArray<T> data, int nativeBufferStartIndex, int graphicsBufferStartIndex, int count) where T : struct;
+        public void SetBufferData<T>(
+            GraphicsBuffer buffer,
+            NativeArray<T> data,
+            int nativeBufferStartIndex,
+            int graphicsBufferStartIndex,
+            int count
+        )
+            where T : struct;
 
         /// <summary>Wraps [SetBufferCounterValue](https://docs.unity3d.com/ScriptReference/Rendering.CommandBuffer.SetBufferCounterValue.html) on a CommandBuffer.</summary>
         /// <param name="buffer">[See CommandBuffer documentation](https://docs.unity3d.com/ScriptReference/Rendering.CommandBuffer.SetBufferCounterValue.html)</param>
         /// <param name="counterValue">[See CommandBuffer documentation](https://docs.unity3d.com/ScriptReference/Rendering.CommandBuffer.SetBufferCounterValue.html)</param>
-        public void SetBufferCounterValue(GraphicsBuffer buffer, uint counterValue) ;
+        public void SetBufferCounterValue(GraphicsBuffer buffer, uint counterValue);
 
         /// <summary>Wraps [SetComputeFloatParam](https://docs.unity3d.com/ScriptReference/Rendering.CommandBuffer.SetComputeFloatParam.html) on a CommandBuffer.</summary>
         /// <param name="computeShader">[See CommandBuffer documentation](https://docs.unity3d.com/ScriptReference/Rendering.CommandBuffer.SetComputeFloatParam.html)</param>
         /// <param name="name">[See CommandBuffer documentation](https://docs.unity3d.com/ScriptReference/Rendering.CommandBuffer.SetComputeFloatParam.html)</param>
         /// <param name="val">[See CommandBuffer documentation](https://docs.unity3d.com/ScriptReference/Rendering.CommandBuffer.SetComputeFloatParam.html)</param>
-        public void SetComputeFloatParam(ComputeShader computeShader, string name, float val) ;
+        public void SetComputeFloatParam(ComputeShader computeShader, string name, float val);
 
         /// <summary>Wraps [SetComputeIntParam](https://docs.unity3d.com/ScriptReference/Rendering.CommandBuffer.SetComputeIntParam.html) on a CommandBuffer.</summary>
         /// <param name="computeShader">[See CommandBuffer documentation](https://docs.unity3d.com/ScriptReference/Rendering.CommandBuffer.SetComputeIntParam.html)</param>
         /// <param name="name">[See CommandBuffer documentation](https://docs.unity3d.com/ScriptReference/Rendering.CommandBuffer.SetComputeIntParam.html)</param>
         /// <param name="val">[See CommandBuffer documentation](https://docs.unity3d.com/ScriptReference/Rendering.CommandBuffer.SetComputeIntParam.html)</param>
-        public void SetComputeIntParam(ComputeShader computeShader, string name, int val) ;
+        public void SetComputeIntParam(ComputeShader computeShader, string name, int val);
 
         /// <summary>Wraps [SetComputeVectorParam](https://docs.unity3d.com/ScriptReference/Rendering.CommandBuffer.SetComputeVectorParam.html) on a CommandBuffer.</summary>
         /// <param name="computeShader">[See CommandBuffer documentation](https://docs.unity3d.com/ScriptReference/Rendering.CommandBuffer.SetComputeVectorParam.html)</param>
         /// <param name="name">[See CommandBuffer documentation](https://docs.unity3d.com/ScriptReference/Rendering.CommandBuffer.SetComputeVectorParam.html)</param>
         /// <param name="val">[See CommandBuffer documentation](https://docs.unity3d.com/ScriptReference/Rendering.CommandBuffer.SetComputeVectorParam.html)</param>
-        public void SetComputeVectorParam(ComputeShader computeShader, string name, Vector4 val) ;
+        public void SetComputeVectorParam(ComputeShader computeShader, string name, Vector4 val);
 
         /// <summary>Wraps [SetComputeVectorArrayParam](https://docs.unity3d.com/ScriptReference/Rendering.CommandBuffer.SetComputeVectorArrayParam.html) on a CommandBuffer.</summary>
         /// <param name="computeShader">[See CommandBuffer documentation](https://docs.unity3d.com/ScriptReference/Rendering.CommandBuffer.SetComputeVectorArrayParam.html)</param>
         /// <param name="name">[See CommandBuffer documentation](https://docs.unity3d.com/ScriptReference/Rendering.CommandBuffer.SetComputeVectorArrayParam.html)</param>
         /// <param name="values">[See CommandBuffer documentation](https://docs.unity3d.com/ScriptReference/Rendering.CommandBuffer.SetComputeVectorArrayParam.html)</param>
-        public void SetComputeVectorArrayParam(ComputeShader computeShader, string name, Vector4[] values) ;
+        public void SetComputeVectorArrayParam(
+            ComputeShader computeShader,
+            string name,
+            Vector4[] values
+        );
 
         /// <summary>Wraps [SetComputeMatrixParam](https://docs.unity3d.com/ScriptReference/Rendering.CommandBuffer.SetComputeMatrixParam.html) on a CommandBuffer.</summary>
         /// <param name="computeShader">[See CommandBuffer documentation](https://docs.unity3d.com/ScriptReference/Rendering.CommandBuffer.SetComputeMatrixParam.html)</param>
         /// <param name="name">[See CommandBuffer documentation](https://docs.unity3d.com/ScriptReference/Rendering.CommandBuffer.SetComputeMatrixParam.html)</param>
         /// <param name="val">[See CommandBuffer documentation](https://docs.unity3d.com/ScriptReference/Rendering.CommandBuffer.SetComputeMatrixParam.html)</param>
-        public void SetComputeMatrixParam(ComputeShader computeShader, string name, Matrix4x4 val) ;
+        public void SetComputeMatrixParam(ComputeShader computeShader, string name, Matrix4x4 val);
 
         /// <summary>Wraps [SetComputeMatrixArrayParam](https://docs.unity3d.com/ScriptReference/Rendering.CommandBuffer.SetComputeMatrixArrayParam.html) on a CommandBuffer.</summary>
         /// <param name="computeShader">[See CommandBuffer documentation](https://docs.unity3d.com/ScriptReference/Rendering.CommandBuffer.SetComputeMatrixArrayParam.html)</param>
         /// <param name="name">[See CommandBuffer documentation](https://docs.unity3d.com/ScriptReference/Rendering.CommandBuffer.SetComputeMatrixArrayParam.html)</param>
         /// <param name="values">[See CommandBuffer documentation](https://docs.unity3d.com/ScriptReference/Rendering.CommandBuffer.SetComputeMatrixArrayParam.html)</param>
-        public void SetComputeMatrixArrayParam(ComputeShader computeShader, string name, Matrix4x4[] values) ;
+        public void SetComputeMatrixArrayParam(
+            ComputeShader computeShader,
+            string name,
+            Matrix4x4[] values
+        );
 
         /// <summary>Wraps [SetComputeFloatParams](https://docs.unity3d.com/ScriptReference/Rendering.CommandBuffer.SetComputeFloatParams.html) on a CommandBuffer.</summary>
         /// <param name="computeShader">[See CommandBuffer documentation](https://docs.unity3d.com/ScriptReference/Rendering.CommandBuffer.SetComputeFloatParams.html)</param>
         /// <param name="name">[See CommandBuffer documentation](https://docs.unity3d.com/ScriptReference/Rendering.CommandBuffer.SetComputeFloatParams.html)</param>
         /// <param name="values">[See CommandBuffer documentation](https://docs.unity3d.com/ScriptReference/Rendering.CommandBuffer.SetComputeFloatParams.html)</param>
-        public void SetComputeFloatParams(ComputeShader computeShader, string name, params float[] values) ;
+        public void SetComputeFloatParams(
+            ComputeShader computeShader,
+            string name,
+            params float[] values
+        );
 
         /// <summary>Wraps [SetComputeFloatParams](https://docs.unity3d.com/ScriptReference/Rendering.CommandBuffer.SetComputeFloatParams.html) on a CommandBuffer.</summary>
         /// <param name="computeShader">[See CommandBuffer documentation](https://docs.unity3d.com/ScriptReference/Rendering.CommandBuffer.SetComputeFloatParams.html)</param>
         /// <param name="nameID">[See CommandBuffer documentation](https://docs.unity3d.com/ScriptReference/Rendering.CommandBuffer.SetComputeFloatParams.html)</param>
         /// <param name="values">[See CommandBuffer documentation](https://docs.unity3d.com/ScriptReference/Rendering.CommandBuffer.SetComputeFloatParams.html)</param>
-        public void SetComputeFloatParams(ComputeShader computeShader, int nameID, params float[] values) ;
+        public void SetComputeFloatParams(
+            ComputeShader computeShader,
+            int nameID,
+            params float[] values
+        );
 
         /// <summary>Wraps [SetComputeIntParams](https://docs.unity3d.com/ScriptReference/Rendering.CommandBuffer.SetComputeIntParams.html) on a CommandBuffer.</summary>
         /// <param name="computeShader">[See CommandBuffer documentation](https://docs.unity3d.com/ScriptReference/Rendering.CommandBuffer.SetComputeIntParams.html)</param>
         /// <param name="name">[See CommandBuffer documentation](https://docs.unity3d.com/ScriptReference/Rendering.CommandBuffer.SetComputeIntParams.html)</param>
         /// <param name="values">[See CommandBuffer documentation](https://docs.unity3d.com/ScriptReference/Rendering.CommandBuffer.SetComputeIntParams.html)</param>
-        public void SetComputeIntParams(ComputeShader computeShader, string name, params int[] values) ;
+        public void SetComputeIntParams(
+            ComputeShader computeShader,
+            string name,
+            params int[] values
+        );
 
         /// <summary>Wraps [SetComputeIntParams](https://docs.unity3d.com/ScriptReference/Rendering.CommandBuffer.SetComputeIntParams.html) on a CommandBuffer.</summary>
         /// <param name="computeShader">[See CommandBuffer documentation](https://docs.unity3d.com/ScriptReference/Rendering.CommandBuffer.SetComputeIntParams.html)</param>
         /// <param name="nameID">[See CommandBuffer documentation](https://docs.unity3d.com/ScriptReference/Rendering.CommandBuffer.SetComputeIntParams.html)</param>
         /// <param name="values">[See CommandBuffer documentation](https://docs.unity3d.com/ScriptReference/Rendering.CommandBuffer.SetComputeIntParams.html)</param>
-        public void SetComputeIntParams(ComputeShader computeShader, int nameID, params int[] values) ;
+        public void SetComputeIntParams(
+            ComputeShader computeShader,
+            int nameID,
+            params int[] values
+        );
 
         /// <summary>Wraps [SetComputeTextureParam](https://docs.unity3d.com/ScriptReference/Rendering.CommandBuffer.SetComputeTextureParam.html) on a CommandBuffer.</summary>
         /// <param name="computeShader">[See CommandBuffer documentation](https://docs.unity3d.com/ScriptReference/Rendering.CommandBuffer.SetComputeTextureParam.html)</param>
         /// <param name="kernelIndex">[See CommandBuffer documentation](https://docs.unity3d.com/ScriptReference/Rendering.CommandBuffer.SetComputeTextureParam.html)</param>
         /// <param name="name">[See CommandBuffer documentation](https://docs.unity3d.com/ScriptReference/Rendering.CommandBuffer.SetComputeTextureParam.html)</param>
         /// <param name="rt">[See CommandBuffer documentation](https://docs.unity3d.com/ScriptReference/Rendering.CommandBuffer.SetComputeTextureParam.html)</param>
-        public void SetComputeTextureParam(ComputeShader computeShader, int kernelIndex, string name, TextureHandle rt) ;
+        public void SetComputeTextureParam(
+            ComputeShader computeShader,
+            int kernelIndex,
+            string name,
+            TextureHandle rt
+        );
 
         /// <summary>Wraps [SetComputeTextureParam](https://docs.unity3d.com/ScriptReference/Rendering.CommandBuffer.SetComputeTextureParam.html) on a CommandBuffer.</summary>
         /// <param name="computeShader">[See CommandBuffer documentation](https://docs.unity3d.com/ScriptReference/Rendering.CommandBuffer.SetComputeTextureParam.html)</param>
         /// <param name="kernelIndex">[See CommandBuffer documentation](https://docs.unity3d.com/ScriptReference/Rendering.CommandBuffer.SetComputeTextureParam.html)</param>
         /// <param name="nameID">[See CommandBuffer documentation](https://docs.unity3d.com/ScriptReference/Rendering.CommandBuffer.SetComputeTextureParam.html)</param>
         /// <param name="rt">[See CommandBuffer documentation](https://docs.unity3d.com/ScriptReference/Rendering.CommandBuffer.SetComputeTextureParam.html)</param>
-        public void SetComputeTextureParam(ComputeShader computeShader, int kernelIndex, int nameID, TextureHandle rt) ;
+        public void SetComputeTextureParam(
+            ComputeShader computeShader,
+            int kernelIndex,
+            int nameID,
+            TextureHandle rt
+        );
 
         /// <summary>Wraps [SetComputeTextureParam](https://docs.unity3d.com/ScriptReference/Rendering.CommandBuffer.SetComputeTextureParam.html) on a CommandBuffer.</summary>
         /// <param name="computeShader">[See CommandBuffer documentation](https://docs.unity3d.com/ScriptReference/Rendering.CommandBuffer.SetComputeTextureParam.html)</param>
@@ -250,7 +333,13 @@ namespace UnityEngine.Rendering
         /// <param name="name">[See CommandBuffer documentation](https://docs.unity3d.com/ScriptReference/Rendering.CommandBuffer.SetComputeTextureParam.html)</param>
         /// <param name="rt">[See CommandBuffer documentation](https://docs.unity3d.com/ScriptReference/Rendering.CommandBuffer.SetComputeTextureParam.html)</param>
         /// <param name="mipLevel">[See CommandBuffer documentation](https://docs.unity3d.com/ScriptReference/Rendering.CommandBuffer.SetComputeTextureParam.html)</param>
-        public void SetComputeTextureParam(ComputeShader computeShader, int kernelIndex, string name, TextureHandle rt, int mipLevel) ;
+        public void SetComputeTextureParam(
+            ComputeShader computeShader,
+            int kernelIndex,
+            string name,
+            TextureHandle rt,
+            int mipLevel
+        );
 
         /// <summary>Wraps [SetComputeTextureParam](https://docs.unity3d.com/ScriptReference/Rendering.CommandBuffer.SetComputeTextureParam.html) on a CommandBuffer.</summary>
         /// <param name="computeShader">[See CommandBuffer documentation](https://docs.unity3d.com/ScriptReference/Rendering.CommandBuffer.SetComputeTextureParam.html)</param>
@@ -258,7 +347,13 @@ namespace UnityEngine.Rendering
         /// <param name="nameID">[See CommandBuffer documentation](https://docs.unity3d.com/ScriptReference/Rendering.CommandBuffer.SetComputeTextureParam.html)</param>
         /// <param name="rt">[See CommandBuffer documentation](https://docs.unity3d.com/ScriptReference/Rendering.CommandBuffer.SetComputeTextureParam.html)</param>
         /// <param name="mipLevel">[See CommandBuffer documentation](https://docs.unity3d.com/ScriptReference/Rendering.CommandBuffer.SetComputeTextureParam.html)</param>
-        public void SetComputeTextureParam(ComputeShader computeShader, int kernelIndex, int nameID, TextureHandle rt, int mipLevel) ;
+        public void SetComputeTextureParam(
+            ComputeShader computeShader,
+            int kernelIndex,
+            int nameID,
+            TextureHandle rt,
+            int mipLevel
+        );
 
         /// <summary>Wraps [SetComputeTextureParam](https://docs.unity3d.com/ScriptReference/Rendering.CommandBuffer.SetComputeTextureParam.html) on a CommandBuffer.</summary>
         /// <param name="computeShader">[See CommandBuffer documentation](https://docs.unity3d.com/ScriptReference/Rendering.CommandBuffer.SetComputeTextureParam.html)</param>
@@ -267,7 +362,14 @@ namespace UnityEngine.Rendering
         /// <param name="rt">[See CommandBuffer documentation](https://docs.unity3d.com/ScriptReference/Rendering.CommandBuffer.SetComputeTextureParam.html)</param>
         /// <param name="mipLevel">[See CommandBuffer documentation](https://docs.unity3d.com/ScriptReference/Rendering.CommandBuffer.SetComputeTextureParam.html)</param>
         /// <param name="element">[See CommandBuffer documentation](https://docs.unity3d.com/ScriptReference/Rendering.CommandBuffer.SetComputeTextureParam.html)</param>
-        public void SetComputeTextureParam(ComputeShader computeShader, int kernelIndex, string name, TextureHandle rt, int mipLevel, RenderTextureSubElement element) ;
+        public void SetComputeTextureParam(
+            ComputeShader computeShader,
+            int kernelIndex,
+            string name,
+            TextureHandle rt,
+            int mipLevel,
+            RenderTextureSubElement element
+        );
 
         /// <summary>Wraps [SetComputeTextureParam](https://docs.unity3d.com/ScriptReference/Rendering.CommandBuffer.SetComputeTextureParam.html) on a CommandBuffer.</summary>
         /// <param name="computeShader">[See CommandBuffer documentation](https://docs.unity3d.com/ScriptReference/Rendering.CommandBuffer.SetComputeTextureParam.html)</param>
@@ -276,49 +378,86 @@ namespace UnityEngine.Rendering
         /// <param name="rt">[See CommandBuffer documentation](https://docs.unity3d.com/ScriptReference/Rendering.CommandBuffer.SetComputeTextureParam.html)</param>
         /// <param name="mipLevel">[See CommandBuffer documentation](https://docs.unity3d.com/ScriptReference/Rendering.CommandBuffer.SetComputeTextureParam.html)</param>
         /// <param name="element">[See CommandBuffer documentation](https://docs.unity3d.com/ScriptReference/Rendering.CommandBuffer.SetComputeTextureParam.html)</param>
-        public void SetComputeTextureParam(ComputeShader computeShader, int kernelIndex, int nameID, TextureHandle rt, int mipLevel, RenderTextureSubElement element) ;
+        public void SetComputeTextureParam(
+            ComputeShader computeShader,
+            int kernelIndex,
+            int nameID,
+            TextureHandle rt,
+            int mipLevel,
+            RenderTextureSubElement element
+        );
 
         /// <summary>Wraps [SetComputeBufferParam](https://docs.unity3d.com/ScriptReference/Rendering.CommandBuffer.SetComputeBufferParam.html) on a CommandBuffer.</summary>
         /// <param name="computeShader">[See CommandBuffer documentation](https://docs.unity3d.com/ScriptReference/Rendering.CommandBuffer.SetComputeBufferParam.html)</param>
         /// <param name="kernelIndex">[See CommandBuffer documentation](https://docs.unity3d.com/ScriptReference/Rendering.CommandBuffer.SetComputeBufferParam.html)</param>
         /// <param name="nameID">[See CommandBuffer documentation](https://docs.unity3d.com/ScriptReference/Rendering.CommandBuffer.SetComputeBufferParam.html)</param>
         /// <param name="buffer">[See CommandBuffer documentation](https://docs.unity3d.com/ScriptReference/Rendering.CommandBuffer.SetComputeBufferParam.html)</param>
-        public void SetComputeBufferParam(ComputeShader computeShader, int kernelIndex, int nameID, ComputeBuffer buffer) ;
+        public void SetComputeBufferParam(
+            ComputeShader computeShader,
+            int kernelIndex,
+            int nameID,
+            ComputeBuffer buffer
+        );
 
         /// <summary>Wraps [SetComputeBufferParam](https://docs.unity3d.com/ScriptReference/Rendering.CommandBuffer.SetComputeBufferParam.html) on a CommandBuffer.</summary>
         /// <param name="computeShader">[See CommandBuffer documentation](https://docs.unity3d.com/ScriptReference/Rendering.CommandBuffer.SetComputeBufferParam.html)</param>
         /// <param name="kernelIndex">[See CommandBuffer documentation](https://docs.unity3d.com/ScriptReference/Rendering.CommandBuffer.SetComputeBufferParam.html)</param>
         /// <param name="name">[See CommandBuffer documentation](https://docs.unity3d.com/ScriptReference/Rendering.CommandBuffer.SetComputeBufferParam.html)</param>
         /// <param name="buffer">[See CommandBuffer documentation](https://docs.unity3d.com/ScriptReference/Rendering.CommandBuffer.SetComputeBufferParam.html)</param>
-        public void SetComputeBufferParam(ComputeShader computeShader, int kernelIndex, string name, ComputeBuffer buffer) ;
+        public void SetComputeBufferParam(
+            ComputeShader computeShader,
+            int kernelIndex,
+            string name,
+            ComputeBuffer buffer
+        );
 
         /// <summary>Wraps [SetComputeBufferParam](https://docs.unity3d.com/ScriptReference/Rendering.CommandBuffer.SetComputeBufferParam.html) on a CommandBuffer.</summary>
         /// <param name="computeShader">[See CommandBuffer documentation](https://docs.unity3d.com/ScriptReference/Rendering.CommandBuffer.SetComputeBufferParam.html)</param>
         /// <param name="kernelIndex">[See CommandBuffer documentation](https://docs.unity3d.com/ScriptReference/Rendering.CommandBuffer.SetComputeBufferParam.html)</param>
         /// <param name="nameID">[See CommandBuffer documentation](https://docs.unity3d.com/ScriptReference/Rendering.CommandBuffer.SetComputeBufferParam.html)</param>
         /// <param name="bufferHandle">[See CommandBuffer documentation](https://docs.unity3d.com/ScriptReference/Rendering.CommandBuffer.SetComputeBufferParam.html)</param>
-        public void SetComputeBufferParam(ComputeShader computeShader, int kernelIndex, int nameID, GraphicsBufferHandle bufferHandle) ;
+        public void SetComputeBufferParam(
+            ComputeShader computeShader,
+            int kernelIndex,
+            int nameID,
+            GraphicsBufferHandle bufferHandle
+        );
 
         /// <summary>Wraps [SetComputeBufferParam](https://docs.unity3d.com/ScriptReference/Rendering.CommandBuffer.SetComputeBufferParam.html) on a CommandBuffer.</summary>
         /// <param name="computeShader">[See CommandBuffer documentation](https://docs.unity3d.com/ScriptReference/Rendering.CommandBuffer.SetComputeBufferParam.html)</param>
         /// <param name="kernelIndex">[See CommandBuffer documentation](https://docs.unity3d.com/ScriptReference/Rendering.CommandBuffer.SetComputeBufferParam.html)</param>
         /// <param name="name">[See CommandBuffer documentation](https://docs.unity3d.com/ScriptReference/Rendering.CommandBuffer.SetComputeBufferParam.html)</param>
         /// <param name="bufferHandle">[See CommandBuffer documentation](https://docs.unity3d.com/ScriptReference/Rendering.CommandBuffer.SetComputeBufferParam.html)</param>
-        public void SetComputeBufferParam(ComputeShader computeShader, int kernelIndex, string name, GraphicsBufferHandle bufferHandle) ;
+        public void SetComputeBufferParam(
+            ComputeShader computeShader,
+            int kernelIndex,
+            string name,
+            GraphicsBufferHandle bufferHandle
+        );
 
         /// <summary>Wraps [SetComputeBufferParam](https://docs.unity3d.com/ScriptReference/Rendering.CommandBuffer.SetComputeBufferParam.html) on a CommandBuffer.</summary>
         /// <param name="computeShader">[See CommandBuffer documentation](https://docs.unity3d.com/ScriptReference/Rendering.CommandBuffer.SetComputeBufferParam.html)</param>
         /// <param name="kernelIndex">[See CommandBuffer documentation](https://docs.unity3d.com/ScriptReference/Rendering.CommandBuffer.SetComputeBufferParam.html)</param>
         /// <param name="nameID">[See CommandBuffer documentation](https://docs.unity3d.com/ScriptReference/Rendering.CommandBuffer.SetComputeBufferParam.html)</param>
         /// <param name="buffer">[See CommandBuffer documentation](https://docs.unity3d.com/ScriptReference/Rendering.CommandBuffer.SetComputeBufferParam.html)</param>
-        public void SetComputeBufferParam(ComputeShader computeShader, int kernelIndex, int nameID, GraphicsBuffer buffer) ;
+        public void SetComputeBufferParam(
+            ComputeShader computeShader,
+            int kernelIndex,
+            int nameID,
+            GraphicsBuffer buffer
+        );
 
         /// <summary>Wraps [SetComputeBufferParam](https://docs.unity3d.com/ScriptReference/Rendering.CommandBuffer.SetComputeBufferParam.html) on a CommandBuffer.</summary>
         /// <param name="computeShader">[See CommandBuffer documentation](https://docs.unity3d.com/ScriptReference/Rendering.CommandBuffer.SetComputeBufferParam.html)</param>
         /// <param name="kernelIndex">[See CommandBuffer documentation](https://docs.unity3d.com/ScriptReference/Rendering.CommandBuffer.SetComputeBufferParam.html)</param>
         /// <param name="name">[See CommandBuffer documentation](https://docs.unity3d.com/ScriptReference/Rendering.CommandBuffer.SetComputeBufferParam.html)</param>
         /// <param name="buffer">[See CommandBuffer documentation](https://docs.unity3d.com/ScriptReference/Rendering.CommandBuffer.SetComputeBufferParam.html)</param>
-        public void SetComputeBufferParam(ComputeShader computeShader, int kernelIndex, string name, GraphicsBuffer buffer) ;
+        public void SetComputeBufferParam(
+            ComputeShader computeShader,
+            int kernelIndex,
+            string name,
+            GraphicsBuffer buffer
+        );
 
         /// <summary>Wraps [SetComputeConstantBufferParam](https://docs.unity3d.com/ScriptReference/Rendering.CommandBuffer.SetComputeConstantBufferParam.html) on a CommandBuffer.</summary>
         /// <param name="computeShader">[See CommandBuffer documentation](https://docs.unity3d.com/ScriptReference/Rendering.CommandBuffer.SetComputeConstantBufferParam.html)</param>
@@ -326,7 +465,13 @@ namespace UnityEngine.Rendering
         /// <param name="buffer">[See CommandBuffer documentation](https://docs.unity3d.com/ScriptReference/Rendering.CommandBuffer.SetComputeConstantBufferParam.html)</param>
         /// <param name="offset">[See CommandBuffer documentation](https://docs.unity3d.com/ScriptReference/Rendering.CommandBuffer.SetComputeConstantBufferParam.html)</param>
         /// <param name="size">[See CommandBuffer documentation](https://docs.unity3d.com/ScriptReference/Rendering.CommandBuffer.SetComputeConstantBufferParam.html)</param>
-        public void SetComputeConstantBufferParam(ComputeShader computeShader, int nameID, ComputeBuffer buffer, int offset, int size) ;
+        public void SetComputeConstantBufferParam(
+            ComputeShader computeShader,
+            int nameID,
+            ComputeBuffer buffer,
+            int offset,
+            int size
+        );
 
         /// <summary>Wraps [SetComputeConstantBufferParam](https://docs.unity3d.com/ScriptReference/Rendering.CommandBuffer.SetComputeConstantBufferParam.html) on a CommandBuffer.</summary>
         /// <param name="computeShader">[See CommandBuffer documentation](https://docs.unity3d.com/ScriptReference/Rendering.CommandBuffer.SetComputeConstantBufferParam.html)</param>
@@ -334,7 +479,13 @@ namespace UnityEngine.Rendering
         /// <param name="buffer">[See CommandBuffer documentation](https://docs.unity3d.com/ScriptReference/Rendering.CommandBuffer.SetComputeConstantBufferParam.html)</param>
         /// <param name="offset">[See CommandBuffer documentation](https://docs.unity3d.com/ScriptReference/Rendering.CommandBuffer.SetComputeConstantBufferParam.html)</param>
         /// <param name="size">[See CommandBuffer documentation](https://docs.unity3d.com/ScriptReference/Rendering.CommandBuffer.SetComputeConstantBufferParam.html)</param>
-        public void SetComputeConstantBufferParam(ComputeShader computeShader, string name, ComputeBuffer buffer, int offset, int size) ;
+        public void SetComputeConstantBufferParam(
+            ComputeShader computeShader,
+            string name,
+            ComputeBuffer buffer,
+            int offset,
+            int size
+        );
 
         /// <summary>Wraps [SetComputeConstantBufferParam](https://docs.unity3d.com/ScriptReference/Rendering.CommandBuffer.SetComputeConstantBufferParam.html) on a CommandBuffer.</summary>
         /// <param name="computeShader">[See CommandBuffer documentation](https://docs.unity3d.com/ScriptReference/Rendering.CommandBuffer.SetComputeConstantBufferParam.html)</param>
@@ -342,7 +493,13 @@ namespace UnityEngine.Rendering
         /// <param name="buffer">[See CommandBuffer documentation](https://docs.unity3d.com/ScriptReference/Rendering.CommandBuffer.SetComputeConstantBufferParam.html)</param>
         /// <param name="offset">[See CommandBuffer documentation](https://docs.unity3d.com/ScriptReference/Rendering.CommandBuffer.SetComputeConstantBufferParam.html)</param>
         /// <param name="size">[See CommandBuffer documentation](https://docs.unity3d.com/ScriptReference/Rendering.CommandBuffer.SetComputeConstantBufferParam.html)</param>
-        public void SetComputeConstantBufferParam(ComputeShader computeShader, int nameID, GraphicsBuffer buffer, int offset, int size) ;
+        public void SetComputeConstantBufferParam(
+            ComputeShader computeShader,
+            int nameID,
+            GraphicsBuffer buffer,
+            int offset,
+            int size
+        );
 
         /// <summary>Wraps [SetComputeConstantBufferParam](https://docs.unity3d.com/ScriptReference/Rendering.CommandBuffer.SetComputeConstantBufferParam.html) on a CommandBuffer.</summary>
         /// <param name="computeShader">[See CommandBuffer documentation](https://docs.unity3d.com/ScriptReference/Rendering.CommandBuffer.SetComputeConstantBufferParam.html)</param>
@@ -350,13 +507,23 @@ namespace UnityEngine.Rendering
         /// <param name="buffer">[See CommandBuffer documentation](https://docs.unity3d.com/ScriptReference/Rendering.CommandBuffer.SetComputeConstantBufferParam.html)</param>
         /// <param name="offset">[See CommandBuffer documentation](https://docs.unity3d.com/ScriptReference/Rendering.CommandBuffer.SetComputeConstantBufferParam.html)</param>
         /// <param name="size">[See CommandBuffer documentation](https://docs.unity3d.com/ScriptReference/Rendering.CommandBuffer.SetComputeConstantBufferParam.html)</param>
-        public void SetComputeConstantBufferParam(ComputeShader computeShader, string name, GraphicsBuffer buffer, int offset, int size) ;
+        public void SetComputeConstantBufferParam(
+            ComputeShader computeShader,
+            string name,
+            GraphicsBuffer buffer,
+            int offset,
+            int size
+        );
 
         /// <summary>Wraps [SetComputeParamsFromMaterial](https://docs.unity3d.com/ScriptReference/Rendering.CommandBuffer.SetComputeParamsFromMaterial.html) on a CommandBuffer.</summary>
         /// <param name="computeShader">[See CommandBuffer documentation](https://docs.unity3d.com/ScriptReference/Rendering.CommandBuffer.SetComputeParamsFromMaterial.html)</param>
         /// <param name="kernelIndex">[See CommandBuffer documentation](https://docs.unity3d.com/ScriptReference/Rendering.CommandBuffer.SetComputeParamsFromMaterial.html)</param>
         /// <param name="material">[See CommandBuffer documentation](https://docs.unity3d.com/ScriptReference/Rendering.CommandBuffer.SetComputeParamsFromMaterial.html)</param>
-        public void SetComputeParamsFromMaterial(ComputeShader computeShader, int kernelIndex, Material material) ;
+        public void SetComputeParamsFromMaterial(
+            ComputeShader computeShader,
+            int kernelIndex,
+            Material material
+        );
 
         /// <summary>Wraps [DispatchCompute](https://docs.unity3d.com/ScriptReference/Rendering.CommandBuffer.DispatchCompute.html) on a CommandBuffer.</summary>
         /// <param name="computeShader">[See CommandBuffer documentation](https://docs.unity3d.com/ScriptReference/Rendering.CommandBuffer.DispatchCompute.html)</param>
@@ -364,97 +531,163 @@ namespace UnityEngine.Rendering
         /// <param name="threadGroupsX">[See CommandBuffer documentation](https://docs.unity3d.com/ScriptReference/Rendering.CommandBuffer.DispatchCompute.html)</param>
         /// <param name="threadGroupsY">[See CommandBuffer documentation](https://docs.unity3d.com/ScriptReference/Rendering.CommandBuffer.DispatchCompute.html)</param>
         /// <param name="threadGroupsZ">[See CommandBuffer documentation](https://docs.unity3d.com/ScriptReference/Rendering.CommandBuffer.DispatchCompute.html)</param>
-        public void DispatchCompute(ComputeShader computeShader, int kernelIndex, int threadGroupsX, int threadGroupsY, int threadGroupsZ) ;
+        public void DispatchCompute(
+            ComputeShader computeShader,
+            int kernelIndex,
+            int threadGroupsX,
+            int threadGroupsY,
+            int threadGroupsZ
+        );
 
         /// <summary>Wraps [DispatchCompute](https://docs.unity3d.com/ScriptReference/Rendering.CommandBuffer.DispatchCompute.html) on a CommandBuffer.</summary>
         /// <param name="computeShader">[See CommandBuffer documentation](https://docs.unity3d.com/ScriptReference/Rendering.CommandBuffer.DispatchCompute.html)</param>
         /// <param name="kernelIndex">[See CommandBuffer documentation](https://docs.unity3d.com/ScriptReference/Rendering.CommandBuffer.DispatchCompute.html)</param>
         /// <param name="indirectBuffer">[See CommandBuffer documentation](https://docs.unity3d.com/ScriptReference/Rendering.CommandBuffer.DispatchCompute.html)</param>
         /// <param name="argsOffset">[See CommandBuffer documentation](https://docs.unity3d.com/ScriptReference/Rendering.CommandBuffer.DispatchCompute.html)</param>
-        public void DispatchCompute(ComputeShader computeShader, int kernelIndex, ComputeBuffer indirectBuffer, uint argsOffset) ;
+        public void DispatchCompute(
+            ComputeShader computeShader,
+            int kernelIndex,
+            ComputeBuffer indirectBuffer,
+            uint argsOffset
+        );
 
         /// <summary>Wraps [DispatchCompute](https://docs.unity3d.com/ScriptReference/Rendering.CommandBuffer.DispatchCompute.html) on a CommandBuffer.</summary>
         /// <param name="computeShader">[See CommandBuffer documentation](https://docs.unity3d.com/ScriptReference/Rendering.CommandBuffer.DispatchCompute.html)</param>
         /// <param name="kernelIndex">[See CommandBuffer documentation](https://docs.unity3d.com/ScriptReference/Rendering.CommandBuffer.DispatchCompute.html)</param>
         /// <param name="indirectBuffer">[See CommandBuffer documentation](https://docs.unity3d.com/ScriptReference/Rendering.CommandBuffer.DispatchCompute.html)</param>
         /// <param name="argsOffset">[See CommandBuffer documentation](https://docs.unity3d.com/ScriptReference/Rendering.CommandBuffer.DispatchCompute.html)</param>
-        public void DispatchCompute(ComputeShader computeShader, int kernelIndex, GraphicsBuffer indirectBuffer, uint argsOffset) ;
+        public void DispatchCompute(
+            ComputeShader computeShader,
+            int kernelIndex,
+            GraphicsBuffer indirectBuffer,
+            uint argsOffset
+        );
 
         /// <summary>Wraps [BuildRayTracingAccelerationStructure](https://docs.unity3d.com/ScriptReference/Rendering.CommandBuffer.BuildRayTracingAccelerationStructure.html) on a CommandBuffer.</summary>
         /// <param name="accelerationStructure">[See CommandBuffer documentation](https://docs.unity3d.com/ScriptReference/Rendering.CommandBuffer.BuildRayTracingAccelerationStructure.html)</param>
-        public void BuildRayTracingAccelerationStructure(RayTracingAccelerationStructure accelerationStructure) ;
+        public void BuildRayTracingAccelerationStructure(
+            RayTracingAccelerationStructure accelerationStructure
+        );
 
         /// <summary>Wraps [BuildRayTracingAccelerationStructure](https://docs.unity3d.com/ScriptReference/Rendering.CommandBuffer.BuildRayTracingAccelerationStructure.html) on a CommandBuffer.</summary>
         /// <param name="accelerationStructure">[See CommandBuffer documentation](https://docs.unity3d.com/ScriptReference/Rendering.CommandBuffer.BuildRayTracingAccelerationStructure.html)</param>
         /// <param name="relativeOrigin">[See CommandBuffer documentation](https://docs.unity3d.com/ScriptReference/Rendering.CommandBuffer.BuildRayTracingAccelerationStructure.html)</param>
-        public void BuildRayTracingAccelerationStructure(RayTracingAccelerationStructure accelerationStructure, Vector3 relativeOrigin) ;
+        public void BuildRayTracingAccelerationStructure(
+            RayTracingAccelerationStructure accelerationStructure,
+            Vector3 relativeOrigin
+        );
 
         /// <summary>Wraps [BuildRayTracingAccelerationStructure](https://docs.unity3d.com/ScriptReference/Rendering.CommandBuffer.BuildRayTracingAccelerationStructure.html) on a CommandBuffer.</summary>
         /// <param name="accelerationStructure">[See CommandBuffer documentation](https://docs.unity3d.com/ScriptReference/Rendering.CommandBuffer.BuildRayTracingAccelerationStructure.html)</param>
         /// <param name="buildSettings">[See CommandBuffer documentation](https://docs.unity3d.com/ScriptReference/Rendering.CommandBuffer.BuildRayTracingAccelerationStructure.html)</param>
-        public void BuildRayTracingAccelerationStructure(RayTracingAccelerationStructure accelerationStructure, BuildSettings buildSettings) ;
+        public void BuildRayTracingAccelerationStructure(
+            RayTracingAccelerationStructure accelerationStructure,
+            BuildSettings buildSettings
+        );
 
         /// <summary>Wraps [SetRayTracingAccelerationStructure](https://docs.unity3d.com/ScriptReference/Rendering.CommandBuffer.SetRayTracingAccelerationStructure.html) on a CommandBuffer.</summary>
         /// <param name="rayTracingShader">[See CommandBuffer documentation](https://docs.unity3d.com/ScriptReference/Rendering.CommandBuffer.SetRayTracingAccelerationStructure.html)</param>
         /// <param name="name">[See CommandBuffer documentation](https://docs.unity3d.com/ScriptReference/Rendering.CommandBuffer.SetRayTracingAccelerationStructure.html)</param>
         /// <param name="rayTracingAccelerationStructure">[See CommandBuffer documentation](https://docs.unity3d.com/ScriptReference/Rendering.CommandBuffer.SetRayTracingAccelerationStructure.html)</param>
-        public void SetRayTracingAccelerationStructure(RayTracingShader rayTracingShader, string name, RayTracingAccelerationStructure rayTracingAccelerationStructure) ;
+        public void SetRayTracingAccelerationStructure(
+            RayTracingShader rayTracingShader,
+            string name,
+            RayTracingAccelerationStructure rayTracingAccelerationStructure
+        );
 
         /// <summary>Wraps [SetRayTracingAccelerationStructure](https://docs.unity3d.com/ScriptReference/Rendering.CommandBuffer.SetRayTracingAccelerationStructure.html) on a CommandBuffer.</summary>
         /// <param name="rayTracingShader">[See CommandBuffer documentation](https://docs.unity3d.com/ScriptReference/Rendering.CommandBuffer.SetRayTracingAccelerationStructure.html)</param>
         /// <param name="nameID">[See CommandBuffer documentation](https://docs.unity3d.com/ScriptReference/Rendering.CommandBuffer.SetRayTracingAccelerationStructure.html)</param>
         /// <param name="rayTracingAccelerationStructure">[See CommandBuffer documentation](https://docs.unity3d.com/ScriptReference/Rendering.CommandBuffer.SetRayTracingAccelerationStructure.html)</param>
-        public void SetRayTracingAccelerationStructure(RayTracingShader rayTracingShader, int nameID, RayTracingAccelerationStructure rayTracingAccelerationStructure) ;
+        public void SetRayTracingAccelerationStructure(
+            RayTracingShader rayTracingShader,
+            int nameID,
+            RayTracingAccelerationStructure rayTracingAccelerationStructure
+        );
 
         /// <summary>Wraps [SetRayTracingAccelerationStructure](https://docs.unity3d.com/ScriptReference/Rendering.CommandBuffer.SetRayTracingAccelerationStructure.html) on a CommandBuffer.</summary>
         /// <param name="computeShader">[See CommandBuffer documentation](https://docs.unity3d.com/ScriptReference/Rendering.CommandBuffer.SetRayTracingAccelerationStructure.html)</param>
         /// <param name="kernelIndex">[See CommandBuffer documentation](https://docs.unity3d.com/ScriptReference/Rendering.CommandBuffer.SetRayTracingAccelerationStructure.html)</param>
         /// <param name="name">[See CommandBuffer documentation](https://docs.unity3d.com/ScriptReference/Rendering.CommandBuffer.SetRayTracingAccelerationStructure.html)</param>
         /// <param name="rayTracingAccelerationStructure">[See CommandBuffer documentation](https://docs.unity3d.com/ScriptReference/Rendering.CommandBuffer.SetRayTracingAccelerationStructure.html)</param>
-        public void SetRayTracingAccelerationStructure(ComputeShader computeShader, int kernelIndex, string name, RayTracingAccelerationStructure rayTracingAccelerationStructure) ;
+        public void SetRayTracingAccelerationStructure(
+            ComputeShader computeShader,
+            int kernelIndex,
+            string name,
+            RayTracingAccelerationStructure rayTracingAccelerationStructure
+        );
 
         /// <summary>Wraps [SetRayTracingAccelerationStructure](https://docs.unity3d.com/ScriptReference/Rendering.CommandBuffer.SetRayTracingAccelerationStructure.html) on a CommandBuffer.</summary>
         /// <param name="computeShader">[See CommandBuffer documentation](https://docs.unity3d.com/ScriptReference/Rendering.CommandBuffer.SetRayTracingAccelerationStructure.html)</param>
         /// <param name="kernelIndex">[See CommandBuffer documentation](https://docs.unity3d.com/ScriptReference/Rendering.CommandBuffer.SetRayTracingAccelerationStructure.html)</param>
         /// <param name="nameID">[See CommandBuffer documentation](https://docs.unity3d.com/ScriptReference/Rendering.CommandBuffer.SetRayTracingAccelerationStructure.html)</param>
         /// <param name="rayTracingAccelerationStructure">[See CommandBuffer documentation](https://docs.unity3d.com/ScriptReference/Rendering.CommandBuffer.SetRayTracingAccelerationStructure.html)</param>
-        public void SetRayTracingAccelerationStructure(ComputeShader computeShader, int kernelIndex, int nameID, RayTracingAccelerationStructure rayTracingAccelerationStructure) ;
+        public void SetRayTracingAccelerationStructure(
+            ComputeShader computeShader,
+            int kernelIndex,
+            int nameID,
+            RayTracingAccelerationStructure rayTracingAccelerationStructure
+        );
 
         /// <summary>Wraps [SetRayTracingBufferParam](https://docs.unity3d.com/ScriptReference/Rendering.CommandBuffer.SetRayTracingBufferParam.html) on a CommandBuffer.</summary>
         /// <param name="rayTracingShader">[See CommandBuffer documentation](https://docs.unity3d.com/ScriptReference/Rendering.CommandBuffer.SetRayTracingBufferParam.html)</param>
         /// <param name="name">[See CommandBuffer documentation](https://docs.unity3d.com/ScriptReference/Rendering.CommandBuffer.SetRayTracingBufferParam.html)</param>
         /// <param name="buffer">[See CommandBuffer documentation](https://docs.unity3d.com/ScriptReference/Rendering.CommandBuffer.SetRayTracingBufferParam.html)</param>
-        public void SetRayTracingBufferParam(RayTracingShader rayTracingShader, string name, ComputeBuffer buffer) ;
+        public void SetRayTracingBufferParam(
+            RayTracingShader rayTracingShader,
+            string name,
+            ComputeBuffer buffer
+        );
 
         /// <summary>Wraps [SetRayTracingBufferParam](https://docs.unity3d.com/ScriptReference/Rendering.CommandBuffer.SetRayTracingBufferParam.html) on a CommandBuffer.</summary>
         /// <param name="rayTracingShader">[See CommandBuffer documentation](https://docs.unity3d.com/ScriptReference/Rendering.CommandBuffer.SetRayTracingBufferParam.html)</param>
         /// <param name="nameID">[See CommandBuffer documentation](https://docs.unity3d.com/ScriptReference/Rendering.CommandBuffer.SetRayTracingBufferParam.html)</param>
         /// <param name="buffer">[See CommandBuffer documentation](https://docs.unity3d.com/ScriptReference/Rendering.CommandBuffer.SetRayTracingBufferParam.html)</param>
-        public void SetRayTracingBufferParam(RayTracingShader rayTracingShader, int nameID, ComputeBuffer buffer) ;
+        public void SetRayTracingBufferParam(
+            RayTracingShader rayTracingShader,
+            int nameID,
+            ComputeBuffer buffer
+        );
 
         /// <summary>Wraps [SetRayTracingBufferParam](https://docs.unity3d.com/ScriptReference/Rendering.CommandBuffer.SetRayTracingBufferParam.html) on a CommandBuffer.</summary>
         /// <param name="rayTracingShader">[See CommandBuffer documentation](https://docs.unity3d.com/ScriptReference/Rendering.CommandBuffer.SetRayTracingBufferParam.html)</param>
         /// <param name="name">[See CommandBuffer documentation](https://docs.unity3d.com/ScriptReference/Rendering.CommandBuffer.SetRayTracingBufferParam.html)</param>
         /// <param name="buffer">[See CommandBuffer documentation](https://docs.unity3d.com/ScriptReference/Rendering.CommandBuffer.SetRayTracingBufferParam.html)</param>
-        public void SetRayTracingBufferParam(RayTracingShader rayTracingShader, string name, GraphicsBuffer buffer) ;
+        public void SetRayTracingBufferParam(
+            RayTracingShader rayTracingShader,
+            string name,
+            GraphicsBuffer buffer
+        );
 
         /// <summary>Wraps [SetRayTracingBufferParam](https://docs.unity3d.com/ScriptReference/Rendering.CommandBuffer.SetRayTracingBufferParam.html) on a CommandBuffer.</summary>
         /// <param name="rayTracingShader">[See CommandBuffer documentation](https://docs.unity3d.com/ScriptReference/Rendering.CommandBuffer.SetRayTracingBufferParam.html)</param>
         /// <param name="nameID">[See CommandBuffer documentation](https://docs.unity3d.com/ScriptReference/Rendering.CommandBuffer.SetRayTracingBufferParam.html)</param>
         /// <param name="buffer">[See CommandBuffer documentation](https://docs.unity3d.com/ScriptReference/Rendering.CommandBuffer.SetRayTracingBufferParam.html)</param>
-        public void SetRayTracingBufferParam(RayTracingShader rayTracingShader, int nameID, GraphicsBuffer buffer) ;
+        public void SetRayTracingBufferParam(
+            RayTracingShader rayTracingShader,
+            int nameID,
+            GraphicsBuffer buffer
+        );
 
         /// <summary>Wraps [SetRayTracingBufferParam](https://docs.unity3d.com/ScriptReference/Rendering.CommandBuffer.SetRayTracingBufferParam.html) on a CommandBuffer.</summary>
         /// <param name="rayTracingShader">[See CommandBuffer documentation](https://docs.unity3d.com/ScriptReference/Rendering.CommandBuffer.SetRayTracingBufferParam.html)</param>
         /// <param name="name">[See CommandBuffer documentation](https://docs.unity3d.com/ScriptReference/Rendering.CommandBuffer.SetRayTracingBufferParam.html)</param>
         /// <param name="bufferHandle">[See CommandBuffer documentation](https://docs.unity3d.com/ScriptReference/Rendering.CommandBuffer.SetRayTracingBufferParam.html)</param>
-        public void SetRayTracingBufferParam(RayTracingShader rayTracingShader, string name, GraphicsBufferHandle bufferHandle) ;
+        public void SetRayTracingBufferParam(
+            RayTracingShader rayTracingShader,
+            string name,
+            GraphicsBufferHandle bufferHandle
+        );
 
         /// <summary>Wraps [SetRayTracingBufferParam](https://docs.unity3d.com/ScriptReference/Rendering.CommandBuffer.SetRayTracingBufferParam.html) on a CommandBuffer.</summary>
         /// <param name="rayTracingShader">[See CommandBuffer documentation](https://docs.unity3d.com/ScriptReference/Rendering.CommandBuffer.SetRayTracingBufferParam.html)</param>
         /// <param name="nameID">[See CommandBuffer documentation](https://docs.unity3d.com/ScriptReference/Rendering.CommandBuffer.SetRayTracingBufferParam.html)</param>
         /// <param name="bufferHandle">[See CommandBuffer documentation](https://docs.unity3d.com/ScriptReference/Rendering.CommandBuffer.SetRayTracingBufferParam.html)</param>
-        public void SetRayTracingBufferParam(RayTracingShader rayTracingShader, int nameID, GraphicsBufferHandle bufferHandle) ;
+        public void SetRayTracingBufferParam(
+            RayTracingShader rayTracingShader,
+            int nameID,
+            GraphicsBufferHandle bufferHandle
+        );
 
         /// <summary>Wraps [SetRayTracingConstantBufferParam](https://docs.unity3d.com/ScriptReference/Rendering.CommandBuffer.SetRayTracingConstantBufferParam.html) on a CommandBuffer.</summary>
         /// <param name="rayTracingShader">[See CommandBuffer documentation](https://docs.unity3d.com/ScriptReference/Rendering.CommandBuffer.SetRayTracingConstantBufferParam.html)</param>
@@ -462,7 +695,13 @@ namespace UnityEngine.Rendering
         /// <param name="buffer">[See CommandBuffer documentation](https://docs.unity3d.com/ScriptReference/Rendering.CommandBuffer.SetRayTracingConstantBufferParam.html)</param>
         /// <param name="offset">[See CommandBuffer documentation](https://docs.unity3d.com/ScriptReference/Rendering.CommandBuffer.SetRayTracingConstantBufferParam.html)</param>
         /// <param name="size">[See CommandBuffer documentation](https://docs.unity3d.com/ScriptReference/Rendering.CommandBuffer.SetRayTracingConstantBufferParam.html)</param>
-        public void SetRayTracingConstantBufferParam(RayTracingShader rayTracingShader, int nameID, ComputeBuffer buffer, int offset, int size) ;
+        public void SetRayTracingConstantBufferParam(
+            RayTracingShader rayTracingShader,
+            int nameID,
+            ComputeBuffer buffer,
+            int offset,
+            int size
+        );
 
         /// <summary>Wraps [SetRayTracingConstantBufferParam](https://docs.unity3d.com/ScriptReference/Rendering.CommandBuffer.SetRayTracingConstantBufferParam.html) on a CommandBuffer.</summary>
         /// <param name="rayTracingShader">[See CommandBuffer documentation](https://docs.unity3d.com/ScriptReference/Rendering.CommandBuffer.SetRayTracingConstantBufferParam.html)</param>
@@ -470,7 +709,13 @@ namespace UnityEngine.Rendering
         /// <param name="buffer">[See CommandBuffer documentation](https://docs.unity3d.com/ScriptReference/Rendering.CommandBuffer.SetRayTracingConstantBufferParam.html)</param>
         /// <param name="offset">[See CommandBuffer documentation](https://docs.unity3d.com/ScriptReference/Rendering.CommandBuffer.SetRayTracingConstantBufferParam.html)</param>
         /// <param name="size">[See CommandBuffer documentation](https://docs.unity3d.com/ScriptReference/Rendering.CommandBuffer.SetRayTracingConstantBufferParam.html)</param>
-        public void SetRayTracingConstantBufferParam(RayTracingShader rayTracingShader, string name, ComputeBuffer buffer, int offset, int size) ;
+        public void SetRayTracingConstantBufferParam(
+            RayTracingShader rayTracingShader,
+            string name,
+            ComputeBuffer buffer,
+            int offset,
+            int size
+        );
 
         /// <summary>Wraps [SetRayTracingConstantBufferParam](https://docs.unity3d.com/ScriptReference/Rendering.CommandBuffer.SetRayTracingConstantBufferParam.html) on a CommandBuffer.</summary>
         /// <param name="rayTracingShader">[See CommandBuffer documentation](https://docs.unity3d.com/ScriptReference/Rendering.CommandBuffer.SetRayTracingConstantBufferParam.html)</param>
@@ -478,7 +723,13 @@ namespace UnityEngine.Rendering
         /// <param name="buffer">[See CommandBuffer documentation](https://docs.unity3d.com/ScriptReference/Rendering.CommandBuffer.SetRayTracingConstantBufferParam.html)</param>
         /// <param name="offset">[See CommandBuffer documentation](https://docs.unity3d.com/ScriptReference/Rendering.CommandBuffer.SetRayTracingConstantBufferParam.html)</param>
         /// <param name="size">[See CommandBuffer documentation](https://docs.unity3d.com/ScriptReference/Rendering.CommandBuffer.SetRayTracingConstantBufferParam.html)</param>
-        public void SetRayTracingConstantBufferParam(RayTracingShader rayTracingShader, int nameID, GraphicsBuffer buffer, int offset, int size) ;
+        public void SetRayTracingConstantBufferParam(
+            RayTracingShader rayTracingShader,
+            int nameID,
+            GraphicsBuffer buffer,
+            int offset,
+            int size
+        );
 
         /// <summary>Wraps [SetRayTracingConstantBufferParam](https://docs.unity3d.com/ScriptReference/Rendering.CommandBuffer.SetRayTracingConstantBufferParam.html) on a CommandBuffer.</summary>
         /// <param name="rayTracingShader">[See CommandBuffer documentation](https://docs.unity3d.com/ScriptReference/Rendering.CommandBuffer.SetRayTracingConstantBufferParam.html)</param>
@@ -486,115 +737,185 @@ namespace UnityEngine.Rendering
         /// <param name="buffer">[See CommandBuffer documentation](https://docs.unity3d.com/ScriptReference/Rendering.CommandBuffer.SetRayTracingConstantBufferParam.html)</param>
         /// <param name="offset">[See CommandBuffer documentation](https://docs.unity3d.com/ScriptReference/Rendering.CommandBuffer.SetRayTracingConstantBufferParam.html)</param>
         /// <param name="size">[See CommandBuffer documentation](https://docs.unity3d.com/ScriptReference/Rendering.CommandBuffer.SetRayTracingConstantBufferParam.html)</param>
-        public void SetRayTracingConstantBufferParam(RayTracingShader rayTracingShader, string name, GraphicsBuffer buffer, int offset, int size) ;
+        public void SetRayTracingConstantBufferParam(
+            RayTracingShader rayTracingShader,
+            string name,
+            GraphicsBuffer buffer,
+            int offset,
+            int size
+        );
 
         /// <summary>Wraps [SetRayTracingTextureParam](https://docs.unity3d.com/ScriptReference/Rendering.CommandBuffer.SetRayTracingTextureParam.html) on a CommandBuffer.</summary>
         /// <param name="rayTracingShader">[See CommandBuffer documentation](https://docs.unity3d.com/ScriptReference/Rendering.CommandBuffer.SetRayTracingTextureParam.html)</param>
         /// <param name="name">[See CommandBuffer documentation](https://docs.unity3d.com/ScriptReference/Rendering.CommandBuffer.SetRayTracingTextureParam.html)</param>
         /// <param name="rt">[See CommandBuffer documentation](https://docs.unity3d.com/ScriptReference/Rendering.CommandBuffer.SetRayTracingTextureParam.html)</param>
-        public void SetRayTracingTextureParam(RayTracingShader rayTracingShader, string name, TextureHandle rt) ;
+        public void SetRayTracingTextureParam(
+            RayTracingShader rayTracingShader,
+            string name,
+            TextureHandle rt
+        );
 
         /// <summary>Wraps [SetRayTracingTextureParam](https://docs.unity3d.com/ScriptReference/Rendering.CommandBuffer.SetRayTracingTextureParam.html) on a CommandBuffer.</summary>
         /// <param name="rayTracingShader">[See CommandBuffer documentation](https://docs.unity3d.com/ScriptReference/Rendering.CommandBuffer.SetRayTracingTextureParam.html)</param>
         /// <param name="nameID">[See CommandBuffer documentation](https://docs.unity3d.com/ScriptReference/Rendering.CommandBuffer.SetRayTracingTextureParam.html)</param>
         /// <param name="rt">[See CommandBuffer documentation](https://docs.unity3d.com/ScriptReference/Rendering.CommandBuffer.SetRayTracingTextureParam.html)</param>
-        public void SetRayTracingTextureParam(RayTracingShader rayTracingShader, int nameID, TextureHandle rt) ;
+        public void SetRayTracingTextureParam(
+            RayTracingShader rayTracingShader,
+            int nameID,
+            TextureHandle rt
+        );
 
         /// <summary>Wraps [SetRayTracingFloatParam](https://docs.unity3d.com/ScriptReference/Rendering.CommandBuffer.SetRayTracingFloatParam.html) on a CommandBuffer.</summary>
         /// <param name="rayTracingShader">[See CommandBuffer documentation](https://docs.unity3d.com/ScriptReference/Rendering.CommandBuffer.SetRayTracingFloatParam.html)</param>
         /// <param name="name">[See CommandBuffer documentation](https://docs.unity3d.com/ScriptReference/Rendering.CommandBuffer.SetRayTracingFloatParam.html)</param>
         /// <param name="val">[See CommandBuffer documentation](https://docs.unity3d.com/ScriptReference/Rendering.CommandBuffer.SetRayTracingFloatParam.html)</param>
-        public void SetRayTracingFloatParam(RayTracingShader rayTracingShader, string name, float val) ;
+        public void SetRayTracingFloatParam(
+            RayTracingShader rayTracingShader,
+            string name,
+            float val
+        );
 
         /// <summary>Wraps [SetRayTracingFloatParam](https://docs.unity3d.com/ScriptReference/Rendering.CommandBuffer.SetRayTracingFloatParam.html) on a CommandBuffer.</summary>
         /// <param name="rayTracingShader">[See CommandBuffer documentation](https://docs.unity3d.com/ScriptReference/Rendering.CommandBuffer.SetRayTracingFloatParam.html)</param>
         /// <param name="nameID">[See CommandBuffer documentation](https://docs.unity3d.com/ScriptReference/Rendering.CommandBuffer.SetRayTracingFloatParam.html)</param>
         /// <param name="val">[See CommandBuffer documentation](https://docs.unity3d.com/ScriptReference/Rendering.CommandBuffer.SetRayTracingFloatParam.html)</param>
-        public void SetRayTracingFloatParam(RayTracingShader rayTracingShader, int nameID, float val) ;
+        public void SetRayTracingFloatParam(
+            RayTracingShader rayTracingShader,
+            int nameID,
+            float val
+        );
 
         /// <summary>Wraps [SetRayTracingFloatParams](https://docs.unity3d.com/ScriptReference/Rendering.CommandBuffer.SetRayTracingFloatParams.html) on a CommandBuffer.</summary>
         /// <param name="rayTracingShader">[See CommandBuffer documentation](https://docs.unity3d.com/ScriptReference/Rendering.CommandBuffer.SetRayTracingFloatParams.html)</param>
         /// <param name="name">[See CommandBuffer documentation](https://docs.unity3d.com/ScriptReference/Rendering.CommandBuffer.SetRayTracingFloatParams.html)</param>
         /// <param name="values">[See CommandBuffer documentation](https://docs.unity3d.com/ScriptReference/Rendering.CommandBuffer.SetRayTracingFloatParams.html)</param>
-        public void SetRayTracingFloatParams(RayTracingShader rayTracingShader, string name, params float[] values) ;
+        public void SetRayTracingFloatParams(
+            RayTracingShader rayTracingShader,
+            string name,
+            params float[] values
+        );
 
         /// <summary>Wraps [SetRayTracingFloatParams](https://docs.unity3d.com/ScriptReference/Rendering.CommandBuffer.SetRayTracingFloatParams.html) on a CommandBuffer.</summary>
         /// <param name="rayTracingShader">[See CommandBuffer documentation](https://docs.unity3d.com/ScriptReference/Rendering.CommandBuffer.SetRayTracingFloatParams.html)</param>
         /// <param name="nameID">[See CommandBuffer documentation](https://docs.unity3d.com/ScriptReference/Rendering.CommandBuffer.SetRayTracingFloatParams.html)</param>
         /// <param name="values">[See CommandBuffer documentation](https://docs.unity3d.com/ScriptReference/Rendering.CommandBuffer.SetRayTracingFloatParams.html)</param>
-        public void SetRayTracingFloatParams(RayTracingShader rayTracingShader, int nameID, params float[] values) ;
+        public void SetRayTracingFloatParams(
+            RayTracingShader rayTracingShader,
+            int nameID,
+            params float[] values
+        );
 
         /// <summary>Wraps [SetRayTracingIntParam](https://docs.unity3d.com/ScriptReference/Rendering.CommandBuffer.SetRayTracingIntParam.html) on a CommandBuffer.</summary>
         /// <param name="rayTracingShader">[See CommandBuffer documentation](https://docs.unity3d.com/ScriptReference/Rendering.CommandBuffer.SetRayTracingIntParam.html)</param>
         /// <param name="name">[See CommandBuffer documentation](https://docs.unity3d.com/ScriptReference/Rendering.CommandBuffer.SetRayTracingIntParam.html)</param>
         /// <param name="val">[See CommandBuffer documentation](https://docs.unity3d.com/ScriptReference/Rendering.CommandBuffer.SetRayTracingIntParam.html)</param>
-        public void SetRayTracingIntParam(RayTracingShader rayTracingShader, string name, int val) ;
+        public void SetRayTracingIntParam(RayTracingShader rayTracingShader, string name, int val);
 
         /// <summary>Wraps [SetRayTracingIntParam](https://docs.unity3d.com/ScriptReference/Rendering.CommandBuffer.SetRayTracingIntParam.html) on a CommandBuffer.</summary>
         /// <param name="rayTracingShader">[See CommandBuffer documentation](https://docs.unity3d.com/ScriptReference/Rendering.CommandBuffer.SetRayTracingIntParam.html)</param>
         /// <param name="nameID">[See CommandBuffer documentation](https://docs.unity3d.com/ScriptReference/Rendering.CommandBuffer.SetRayTracingIntParam.html)</param>
         /// <param name="val">[See CommandBuffer documentation](https://docs.unity3d.com/ScriptReference/Rendering.CommandBuffer.SetRayTracingIntParam.html)</param>
-        public void SetRayTracingIntParam(RayTracingShader rayTracingShader, int nameID, int val) ;
+        public void SetRayTracingIntParam(RayTracingShader rayTracingShader, int nameID, int val);
 
         /// <summary>Wraps [SetRayTracingIntParams](https://docs.unity3d.com/ScriptReference/Rendering.CommandBuffer.SetRayTracingIntParams.html) on a CommandBuffer.</summary>
         /// <param name="rayTracingShader">[See CommandBuffer documentation](https://docs.unity3d.com/ScriptReference/Rendering.CommandBuffer.SetRayTracingIntParams.html)</param>
         /// <param name="name">[See CommandBuffer documentation](https://docs.unity3d.com/ScriptReference/Rendering.CommandBuffer.SetRayTracingIntParams.html)</param>
         /// <param name="values">[See CommandBuffer documentation](https://docs.unity3d.com/ScriptReference/Rendering.CommandBuffer.SetRayTracingIntParams.html)</param>
-        public void SetRayTracingIntParams(RayTracingShader rayTracingShader, string name, params int[] values) ;
+        public void SetRayTracingIntParams(
+            RayTracingShader rayTracingShader,
+            string name,
+            params int[] values
+        );
 
         /// <summary>Wraps [SetRayTracingIntParams](https://docs.unity3d.com/ScriptReference/Rendering.CommandBuffer.SetRayTracingIntParams.html) on a CommandBuffer.</summary>
         /// <param name="rayTracingShader">[See CommandBuffer documentation](https://docs.unity3d.com/ScriptReference/Rendering.CommandBuffer.SetRayTracingIntParams.html)</param>
         /// <param name="nameID">[See CommandBuffer documentation](https://docs.unity3d.com/ScriptReference/Rendering.CommandBuffer.SetRayTracingIntParams.html)</param>
         /// <param name="values">[See CommandBuffer documentation](https://docs.unity3d.com/ScriptReference/Rendering.CommandBuffer.SetRayTracingIntParams.html)</param>
-        public void SetRayTracingIntParams(RayTracingShader rayTracingShader, int nameID, params int[] values) ;
+        public void SetRayTracingIntParams(
+            RayTracingShader rayTracingShader,
+            int nameID,
+            params int[] values
+        );
 
         /// <summary>Wraps [SetRayTracingVectorParam](https://docs.unity3d.com/ScriptReference/Rendering.CommandBuffer.SetRayTracingVectorParam.html) on a CommandBuffer.</summary>
         /// <param name="rayTracingShader">[See CommandBuffer documentation](https://docs.unity3d.com/ScriptReference/Rendering.CommandBuffer.SetRayTracingVectorParam.html)</param>
         /// <param name="name">[See CommandBuffer documentation](https://docs.unity3d.com/ScriptReference/Rendering.CommandBuffer.SetRayTracingVectorParam.html)</param>
         /// <param name="val">[See CommandBuffer documentation](https://docs.unity3d.com/ScriptReference/Rendering.CommandBuffer.SetRayTracingVectorParam.html)</param>
-        public void SetRayTracingVectorParam(RayTracingShader rayTracingShader, string name, Vector4 val) ;
+        public void SetRayTracingVectorParam(
+            RayTracingShader rayTracingShader,
+            string name,
+            Vector4 val
+        );
 
         /// <summary>Wraps [SetRayTracingVectorParam](https://docs.unity3d.com/ScriptReference/Rendering.CommandBuffer.SetRayTracingVectorParam.html) on a CommandBuffer.</summary>
         /// <param name="rayTracingShader">[See CommandBuffer documentation](https://docs.unity3d.com/ScriptReference/Rendering.CommandBuffer.SetRayTracingVectorParam.html)</param>
         /// <param name="nameID">[See CommandBuffer documentation](https://docs.unity3d.com/ScriptReference/Rendering.CommandBuffer.SetRayTracingVectorParam.html)</param>
         /// <param name="val">[See CommandBuffer documentation](https://docs.unity3d.com/ScriptReference/Rendering.CommandBuffer.SetRayTracingVectorParam.html)</param>
-        public void SetRayTracingVectorParam(RayTracingShader rayTracingShader, int nameID, Vector4 val) ;
+        public void SetRayTracingVectorParam(
+            RayTracingShader rayTracingShader,
+            int nameID,
+            Vector4 val
+        );
 
         /// <summary>Wraps [SetRayTracingVectorArrayParam](https://docs.unity3d.com/ScriptReference/Rendering.CommandBuffer.SetRayTracingVectorArrayParam.html) on a CommandBuffer.</summary>
         /// <param name="rayTracingShader">[See CommandBuffer documentation](https://docs.unity3d.com/ScriptReference/Rendering.CommandBuffer.SetRayTracingVectorArrayParam.html)</param>
         /// <param name="name">[See CommandBuffer documentation](https://docs.unity3d.com/ScriptReference/Rendering.CommandBuffer.SetRayTracingVectorArrayParam.html)</param>
         /// <param name="values">[See CommandBuffer documentation](https://docs.unity3d.com/ScriptReference/Rendering.CommandBuffer.SetRayTracingVectorArrayParam.html)</param>
-        public void SetRayTracingVectorArrayParam(RayTracingShader rayTracingShader, string name, params Vector4[] values) ;
+        public void SetRayTracingVectorArrayParam(
+            RayTracingShader rayTracingShader,
+            string name,
+            params Vector4[] values
+        );
 
         /// <summary>Wraps [SetRayTracingVectorArrayParam](https://docs.unity3d.com/ScriptReference/Rendering.CommandBuffer.SetRayTracingVectorArrayParam.html) on a CommandBuffer.</summary>
         /// <param name="rayTracingShader">[See CommandBuffer documentation](https://docs.unity3d.com/ScriptReference/Rendering.CommandBuffer.SetRayTracingVectorArrayParam.html)</param>
         /// <param name="nameID">[See CommandBuffer documentation](https://docs.unity3d.com/ScriptReference/Rendering.CommandBuffer.SetRayTracingVectorArrayParam.html)</param>
         /// <param name="values">[See CommandBuffer documentation](https://docs.unity3d.com/ScriptReference/Rendering.CommandBuffer.SetRayTracingVectorArrayParam.html)</param>
-        public void SetRayTracingVectorArrayParam(RayTracingShader rayTracingShader, int nameID, params Vector4[] values) ;
+        public void SetRayTracingVectorArrayParam(
+            RayTracingShader rayTracingShader,
+            int nameID,
+            params Vector4[] values
+        );
 
         /// <summary>Wraps [SetRayTracingMatrixParam](https://docs.unity3d.com/ScriptReference/Rendering.CommandBuffer.SetRayTracingMatrixParam.html) on a CommandBuffer.</summary>
         /// <param name="rayTracingShader">[See CommandBuffer documentation](https://docs.unity3d.com/ScriptReference/Rendering.CommandBuffer.SetRayTracingMatrixParam.html)</param>
         /// <param name="name">[See CommandBuffer documentation](https://docs.unity3d.com/ScriptReference/Rendering.CommandBuffer.SetRayTracingMatrixParam.html)</param>
         /// <param name="val">[See CommandBuffer documentation](https://docs.unity3d.com/ScriptReference/Rendering.CommandBuffer.SetRayTracingMatrixParam.html)</param>
-        public void SetRayTracingMatrixParam(RayTracingShader rayTracingShader, string name, Matrix4x4 val) ;
+        public void SetRayTracingMatrixParam(
+            RayTracingShader rayTracingShader,
+            string name,
+            Matrix4x4 val
+        );
 
         /// <summary>Wraps [SetRayTracingMatrixParam](https://docs.unity3d.com/ScriptReference/Rendering.CommandBuffer.SetRayTracingMatrixParam.html) on a CommandBuffer.</summary>
         /// <param name="rayTracingShader">[See CommandBuffer documentation](https://docs.unity3d.com/ScriptReference/Rendering.CommandBuffer.SetRayTracingMatrixParam.html)</param>
         /// <param name="nameID">[See CommandBuffer documentation](https://docs.unity3d.com/ScriptReference/Rendering.CommandBuffer.SetRayTracingMatrixParam.html)</param>
         /// <param name="val">[See CommandBuffer documentation](https://docs.unity3d.com/ScriptReference/Rendering.CommandBuffer.SetRayTracingMatrixParam.html)</param>
-        public void SetRayTracingMatrixParam(RayTracingShader rayTracingShader, int nameID, Matrix4x4 val) ;
+        public void SetRayTracingMatrixParam(
+            RayTracingShader rayTracingShader,
+            int nameID,
+            Matrix4x4 val
+        );
 
         /// <summary>Wraps [SetRayTracingMatrixArrayParam](https://docs.unity3d.com/ScriptReference/Rendering.CommandBuffer.SetRayTracingMatrixArrayParam.html) on a CommandBuffer.</summary>
         /// <param name="rayTracingShader">[See CommandBuffer documentation](https://docs.unity3d.com/ScriptReference/Rendering.CommandBuffer.SetRayTracingMatrixArrayParam.html)</param>
         /// <param name="name">[See CommandBuffer documentation](https://docs.unity3d.com/ScriptReference/Rendering.CommandBuffer.SetRayTracingMatrixArrayParam.html)</param>
         /// <param name="values">[See CommandBuffer documentation](https://docs.unity3d.com/ScriptReference/Rendering.CommandBuffer.SetRayTracingMatrixArrayParam.html)</param>
-        public void SetRayTracingMatrixArrayParam(RayTracingShader rayTracingShader, string name, params Matrix4x4[] values) ;
+        public void SetRayTracingMatrixArrayParam(
+            RayTracingShader rayTracingShader,
+            string name,
+            params Matrix4x4[] values
+        );
 
         /// <summary>Wraps [SetRayTracingMatrixArrayParam](https://docs.unity3d.com/ScriptReference/Rendering.CommandBuffer.SetRayTracingMatrixArrayParam.html) on a CommandBuffer.</summary>
         /// <param name="rayTracingShader">[See CommandBuffer documentation](https://docs.unity3d.com/ScriptReference/Rendering.CommandBuffer.SetRayTracingMatrixArrayParam.html)</param>
         /// <param name="nameID">[See CommandBuffer documentation](https://docs.unity3d.com/ScriptReference/Rendering.CommandBuffer.SetRayTracingMatrixArrayParam.html)</param>
         /// <param name="values">[See CommandBuffer documentation](https://docs.unity3d.com/ScriptReference/Rendering.CommandBuffer.SetRayTracingMatrixArrayParam.html)</param>
-        public void SetRayTracingMatrixArrayParam(RayTracingShader rayTracingShader, int nameID, params Matrix4x4[] values) ;
+        public void SetRayTracingMatrixArrayParam(
+            RayTracingShader rayTracingShader,
+            int nameID,
+            params Matrix4x4[] values
+        );
 
         /// <summary>Wraps [DispatchRays](https://docs.unity3d.com/ScriptReference/Rendering.CommandBuffer.DispatchRays.html) on a CommandBuffer.</summary>
         /// <param name="rayTracingShader">[See CommandBuffer documentation](https://docs.unity3d.com/ScriptReference/Rendering.CommandBuffer.DispatchRays.html)</param>
@@ -603,7 +924,14 @@ namespace UnityEngine.Rendering
         /// <param name="height">[See CommandBuffer documentation](https://docs.unity3d.com/ScriptReference/Rendering.CommandBuffer.DispatchRays.html)</param>
         /// <param name="depth">[See CommandBuffer documentation](https://docs.unity3d.com/ScriptReference/Rendering.CommandBuffer.DispatchRays.html)</param>
         /// <param name="camera">[See CommandBuffer documentation](https://docs.unity3d.com/ScriptReference/Rendering.CommandBuffer.DispatchRays.html)</param>
-        public void DispatchRays(RayTracingShader rayTracingShader, string rayGenName, uint width, uint height, uint depth, Camera camera) ;
+        public void DispatchRays(
+            RayTracingShader rayTracingShader,
+            string rayGenName,
+            uint width,
+            uint height,
+            uint depth,
+            Camera camera
+        );
 
         /// <summary>Wraps [DispatchRays](https://docs.unity3d.com/ScriptReference/Rendering.CommandBuffer.DispatchRays.html) on a CommandBuffer.</summary>
         /// <param name="rayTracingShader">[See CommandBuffer documentation](https://docs.unity3d.com/ScriptReference/Rendering.CommandBuffer.DispatchRays.html)</param>
@@ -611,31 +939,36 @@ namespace UnityEngine.Rendering
         /// <param name="argsBuffer">[See CommandBuffer documentation](https://docs.unity3d.com/ScriptReference/Rendering.CommandBuffer.DispatchRays.html)</param>
         /// <param name="argsOffset">[See CommandBuffer documentation](https://docs.unity3d.com/ScriptReference/Rendering.CommandBuffer.DispatchRays.html)</param>
         /// <param name="camera">[See CommandBuffer documentation](https://docs.unity3d.com/ScriptReference/Rendering.CommandBuffer.DispatchRays.html)</param>
-        public void DispatchRays(RayTracingShader rayTracingShader, string rayGenName, GraphicsBuffer argsBuffer, uint argsOffset, Camera camera) ;
+        public void DispatchRays(
+            RayTracingShader rayTracingShader,
+            string rayGenName,
+            GraphicsBuffer argsBuffer,
+            uint argsOffset,
+            Camera camera
+        );
 
         /// <summary>Wraps [CopyCounterValue](https://docs.unity3d.com/ScriptReference/Rendering.CommandBuffer.CopyCounterValue.html) on a CommandBuffer.</summary>
         /// <param name="src">[See CommandBuffer documentation](https://docs.unity3d.com/ScriptReference/Rendering.CommandBuffer.CopyCounterValue.html)</param>
         /// <param name="dst">[See CommandBuffer documentation](https://docs.unity3d.com/ScriptReference/Rendering.CommandBuffer.CopyCounterValue.html)</param>
         /// <param name="dstOffsetBytes">[See CommandBuffer documentation](https://docs.unity3d.com/ScriptReference/Rendering.CommandBuffer.CopyCounterValue.html)</param>
-        public void CopyCounterValue(ComputeBuffer src, ComputeBuffer dst, uint dstOffsetBytes) ;
+        public void CopyCounterValue(ComputeBuffer src, ComputeBuffer dst, uint dstOffsetBytes);
 
         /// <summary>Wraps [CopyCounterValue](https://docs.unity3d.com/ScriptReference/Rendering.CommandBuffer.CopyCounterValue.html) on a CommandBuffer.</summary>
         /// <param name="src">[See CommandBuffer documentation](https://docs.unity3d.com/ScriptReference/Rendering.CommandBuffer.CopyCounterValue.html)</param>
         /// <param name="dst">[See CommandBuffer documentation](https://docs.unity3d.com/ScriptReference/Rendering.CommandBuffer.CopyCounterValue.html)</param>
         /// <param name="dstOffsetBytes">[See CommandBuffer documentation](https://docs.unity3d.com/ScriptReference/Rendering.CommandBuffer.CopyCounterValue.html)</param>
-        public void CopyCounterValue(GraphicsBuffer src, ComputeBuffer dst, uint dstOffsetBytes) ;
+        public void CopyCounterValue(GraphicsBuffer src, ComputeBuffer dst, uint dstOffsetBytes);
 
         /// <summary>Wraps [CopyCounterValue](https://docs.unity3d.com/ScriptReference/Rendering.CommandBuffer.CopyCounterValue.html) on a CommandBuffer.</summary>
         /// <param name="src">[See CommandBuffer documentation](https://docs.unity3d.com/ScriptReference/Rendering.CommandBuffer.CopyCounterValue.html)</param>
         /// <param name="dst">[See CommandBuffer documentation](https://docs.unity3d.com/ScriptReference/Rendering.CommandBuffer.CopyCounterValue.html)</param>
         /// <param name="dstOffsetBytes">[See CommandBuffer documentation](https://docs.unity3d.com/ScriptReference/Rendering.CommandBuffer.CopyCounterValue.html)</param>
-        public void CopyCounterValue(ComputeBuffer src, GraphicsBuffer dst, uint dstOffsetBytes) ;
+        public void CopyCounterValue(ComputeBuffer src, GraphicsBuffer dst, uint dstOffsetBytes);
 
         /// <summary>Wraps [CopyCounterValue](https://docs.unity3d.com/ScriptReference/Rendering.CommandBuffer.CopyCounterValue.html) on a CommandBuffer.</summary>
         /// <param name="src">[See CommandBuffer documentation](https://docs.unity3d.com/ScriptReference/Rendering.CommandBuffer.CopyCounterValue.html)</param>
         /// <param name="dst">[See CommandBuffer documentation](https://docs.unity3d.com/ScriptReference/Rendering.CommandBuffer.CopyCounterValue.html)</param>
         /// <param name="dstOffsetBytes">[See CommandBuffer documentation](https://docs.unity3d.com/ScriptReference/Rendering.CommandBuffer.CopyCounterValue.html)</param>
-        public void CopyCounterValue(GraphicsBuffer src, GraphicsBuffer dst, uint dstOffsetBytes) ;
-
+        public void CopyCounterValue(GraphicsBuffer src, GraphicsBuffer dst, uint dstOffsetBytes);
     }
 }
