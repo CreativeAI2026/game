@@ -26,7 +26,7 @@ namespace CreativeAI.UI.InventoryUI
             if (_isLocked)
                 return;
 
-            StartScale(Vector3.one * _hoverScale);
+            StartScale(_hoverScale);
         }
 
         public void OnPointerExit(PointerEventData eventData)
@@ -34,7 +34,7 @@ namespace CreativeAI.UI.InventoryUI
             if (_isLocked)
                 return;
 
-            StartScale(Vector3.one);
+            StartScale(1f);
         }
 
         public void OnPointerClick(PointerEventData eventData)

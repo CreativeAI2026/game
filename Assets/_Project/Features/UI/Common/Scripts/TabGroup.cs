@@ -29,10 +29,11 @@ namespace CreativeAI.UI
         private float _animDuration = 0.2f;
 
         private List<TabButton> _buttons = new();
+        private readonly List<int> _buttonToEntryIndices = new();
         private int _currentIndex = -1;
         private bool _initialized;
         public int CurrentIndex => _currentIndex;
-        public int EntryCount => _tabEntries.Count;
+        public int EntryCount => _tabEntries?.Count ?? 0;
 
         public event Action<int> OnTabSelected;
 
@@ -40,17 +41,34 @@ namespace CreativeAI.UI
         {
             string selectionGroup = $"tab-group-{_nextSelectionGroupId++}";
 
-            foreach (var entry in _tabEntries)
+            _buttons.Clear();
+            _buttonToEntryIndices.Clear();
+
+            if (_tabEntries == null)
+                _tabEntries = new List<TabEntry>();
+
+            if (_tabButtonPrefab == null)
             {
+                _initialized = true;
+                return;
+            }
+
+            for (int entryIndex = 0; entryIndex < _tabEntries.Count; entryIndex++)
+            {
+                var entry = _tabEntries[entryIndex];
                 if (!entry.enabled)
                     continue;
 
                 var btn = Instantiate(_tabButtonPrefab, transform, false);
+                if (btn == null || btn.Button == null)
+                    continue;
+
                 btn.SetSelectionGroup(selectionGroup);
                 btn.Setup(entry.icon, entry.label);
                 int captured = _buttons.Count;
                 btn.Button.onClick.AddListener(() => SelectTab(captured));
                 _buttons.Add(btn);
+                _buttonToEntryIndices.Add(entryIndex);
             }
 
             _initialized = true;
@@ -65,23 +83,37 @@ namespace CreativeAI.UI
 
         public void SelectTab(int index)
         {
+            if (index < 0 || index >= _buttons.Count || index >= _buttonToEntryIndices.Count)
+                return;
+
             if (index == _currentIndex)
             {
                 RestoreCurrentSelection();
                 return;
             }
+
             _currentIndex = index;
+            ApplySelection(index);
+
+            // Keep the existing public contract: subscribers receive the enabled button index.
+            OnTabSelected?.Invoke(index);
+        }
+
+        private void ApplySelection(int buttonIndex)
+        {
+            int entryIndex = _buttonToEntryIndices[buttonIndex];
 
             for (int i = 0; i < _buttons.Count; i++)
             {
-                bool isActive = i == index;
-                _buttons[i].SetActive(isActive, _animDuration);
-
-                if (_tabEntries[i].view != null)
-                    _tabEntries[i].view.SetActive(isActive);
+                if (_buttons[i] != null)
+                    _buttons[i].SetActive(i == buttonIndex, _animDuration);
             }
 
-            OnTabSelected?.Invoke(index);
+            for (int i = 0; i < _tabEntries.Count; i++)
+            {
+                if (_tabEntries[i].view != null)
+                    _tabEntries[i].view.SetActive(i == entryIndex);
+            }
         }
 
         public void ResetToFirstTab()
@@ -95,11 +127,15 @@ namespace CreativeAI.UI
 
         public void RestoreCurrentSelection()
         {
-            if (!_initialized || _currentIndex < 0)
+            if (
+                !_initialized
+                || _currentIndex < 0
+                || _currentIndex >= _buttons.Count
+                || _currentIndex >= _buttonToEntryIndices.Count
+            )
                 return;
 
-            for (int i = 0; i < _buttons.Count; i++)
-                _buttons[i].SetActive(i == _currentIndex, _animDuration);
+            ApplySelection(_currentIndex);
         }
 
         public bool IsEnabled(int entryIndex)
@@ -132,6 +168,7 @@ namespace CreativeAI.UI
 
         public int AddTabEntry(Sprite icon, string label, GameObject view, bool enabled = true)
         {
+            _tabEntries ??= new List<TabEntry>();
             _tabEntries.Add(
                 new TabEntry
                 {

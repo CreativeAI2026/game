@@ -38,15 +38,19 @@ namespace CreativeAI.UI.InventoryUI
         private RectTransform _bounceTarget;
         private readonly List<RectTransform> _linkedTargets = new();
         private readonly List<Vector3> _linkedTargetBaseLocalPositions = new();
+        private readonly List<Vector3> _linkedTargetBaseLocalScales = new();
+        private readonly Dictionary<RectTransform, Vector3> _cachedBaseLocalScales = new();
         private Tween _currentTween;
         private Tween _bounceTween;
         private Vector3 _baseLocalPosition;
+        private Vector3 _baseLocalScale = Vector3.one;
         private Vector2 _bounceTargetBaseAnchoredPosition;
         private bool _isLocked;
 
         private void Awake()
         {
             _targetRect ??= GetComponent<RectTransform>();
+            CacheBaseScale();
             CacheBasePosition();
         }
 
@@ -63,6 +67,7 @@ namespace CreativeAI.UI.InventoryUI
 
             StopBounce();
             _targetRect = target;
+            CacheBaseScale();
             CacheBasePosition();
         }
 
@@ -103,28 +108,41 @@ namespace CreativeAI.UI.InventoryUI
                 }
             }
 
+            CacheLinkedTargetBaseScales();
             CacheBasePosition();
         }
 
         public void SetReleaseLockOnOutsideClick(bool release) =>
             _releaseLockOnOutsideClick = release;
 
-        private void StartScale(Vector3 target)
+        private void StartScale(float scaleMultiplier)
         {
             if (_targetRect == null)
                 return;
 
             _currentTween?.Kill();
             var sequence = DOTween.Sequence().SetUpdate(true);
-            sequence.Join(_targetRect.DOScale(target, _animationDuration).SetEase(Ease.OutQuad));
+            sequence.Join(
+                _targetRect
+                    .DOScale(_baseLocalScale * scaleMultiplier, _animationDuration)
+                    .SetEase(Ease.OutQuad)
+            );
 
-            foreach (var linkedTarget in _linkedTargets)
+            for (int i = 0; i < _linkedTargets.Count; i++)
             {
+                var linkedTarget = _linkedTargets[i];
                 if (linkedTarget == null)
                     continue;
 
+                var baseScale =
+                    i < _linkedTargetBaseLocalScales.Count
+                        ? _linkedTargetBaseLocalScales[i]
+                        : linkedTarget.localScale;
+
                 sequence.Join(
-                    linkedTarget.DOScale(target, _animationDuration).SetEase(Ease.OutQuad)
+                    linkedTarget
+                        .DOScale(baseScale * scaleMultiplier, _animationDuration)
+                        .SetEase(Ease.OutQuad)
                 );
             }
 
@@ -143,6 +161,39 @@ namespace CreativeAI.UI.InventoryUI
                 _linkedTargetBaseLocalPositions.Add(
                     linkedTarget != null ? linkedTarget.localPosition : Vector3.zero
                 );
+        }
+
+        private void CacheBaseScale(bool force = false)
+        {
+            if (_targetRect == null)
+                return;
+
+            if (force || !_cachedBaseLocalScales.TryGetValue(_targetRect, out _baseLocalScale))
+            {
+                _baseLocalScale = _targetRect.localScale;
+                _cachedBaseLocalScales[_targetRect] = _baseLocalScale;
+            }
+        }
+
+        private void CacheLinkedTargetBaseScales()
+        {
+            _linkedTargetBaseLocalScales.Clear();
+            foreach (var linkedTarget in _linkedTargets)
+            {
+                if (linkedTarget == null)
+                {
+                    _linkedTargetBaseLocalScales.Add(Vector3.one);
+                    continue;
+                }
+
+                if (!_cachedBaseLocalScales.TryGetValue(linkedTarget, out var baseScale))
+                {
+                    baseScale = linkedTarget.localScale;
+                    _cachedBaseLocalScales[linkedTarget] = baseScale;
+                }
+
+                _linkedTargetBaseLocalScales.Add(baseScale);
+            }
         }
     }
 }

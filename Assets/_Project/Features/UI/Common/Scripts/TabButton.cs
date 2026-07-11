@@ -6,6 +6,7 @@ using UnityEngine.UI;
 
 namespace CreativeAI.UI
 {
+    [RequireComponent(typeof(Button))]
     public class TabButton : MonoBehaviour
     {
         [SerializeField]
@@ -84,9 +85,12 @@ namespace CreativeAI.UI
             var targetColor = isActive ? ActiveColor : InactiveColor;
 
             if (_icon != null)
+            {
+                _icon.DOKill();
                 DOTween
                     .To(() => _icon.color, x => _icon.color = x, targetColor, duration)
                     .SetEase(Ease.OutQuad);
+            }
 
             if (isActive)
                 _hoverScale?.AcquireLock();

@@ -34,12 +34,18 @@ namespace CreativeAI.UI.InventoryUI
             StopBounce();
 
             if (_targetRect != null)
-                _targetRect.localScale = Vector3.one;
+                _targetRect.localScale = _baseLocalScale;
 
-            foreach (var linkedTarget in _linkedTargets)
+            for (int i = 0; i < _linkedTargets.Count; i++)
             {
+                var linkedTarget = _linkedTargets[i];
                 if (linkedTarget != null)
-                    linkedTarget.localScale = Vector3.one;
+                {
+                    linkedTarget.localScale =
+                        i < _linkedTargetBaseLocalScales.Count
+                            ? _linkedTargetBaseLocalScales[i]
+                            : linkedTarget.localScale;
+                }
             }
         }
 
@@ -50,7 +56,7 @@ namespace CreativeAI.UI.InventoryUI
 
             _lockedInstances[_group] = this;
             _isLocked = true;
-            StartScale(Vector3.one * _hoverScale);
+            StartScale(_hoverScale);
             StartBounce();
         }
 
@@ -60,7 +66,7 @@ namespace CreativeAI.UI.InventoryUI
                 _lockedInstances.Remove(_group);
 
             _isLocked = false;
-            StartScale(Vector3.one);
+            StartScale(1f);
             StopBounce();
         }
     }
