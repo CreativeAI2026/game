@@ -11,6 +11,7 @@ namespace CreativeAI.UI
             if (target == null)
                 return;
 
+            DOTween.Kill(target);
             text ??= string.Empty;
             target.text = text;
             target.ForceMeshUpdate();
@@ -39,7 +40,7 @@ namespace CreativeAI.UI
                 )
                 .SetEase(Ease.Linear)
                 .SetUpdate(true)
-                .SetTarget(this)
+                .SetTarget(target)
                 .OnComplete(() => target.maxVisibleCharacters = characterCount);
         }
 

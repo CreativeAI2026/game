@@ -5,7 +5,7 @@ using UnityEngine.UI;
 
 namespace CreativeAI.UI.InventoryUI
 {
-    public class ItemSlot : BaseItemSlot, IPointerClickHandler
+    public partial class ItemSlot : BaseItemSlot, IPointerClickHandler
     {
         private ItemStack _itemStack;
         private Inventory _controller;
@@ -14,20 +14,10 @@ namespace CreativeAI.UI.InventoryUI
         private RectTransform _visualRootRect;
 
         [SerializeField]
+        private RectTransform _iconRect;
+
+        [SerializeField]
         private RectTransform _selectedFrameRect;
-
-        [SerializeField]
-        private GameObject _equippedMarker;
-
-        [SerializeField]
-        private Image _equippedDimOverlay;
-
-        [SerializeField]
-        private GameObject _craftAssignedMarker;
-
-        private bool _createdEquippedDimOverlay;
-        private bool _isEquipped;
-        private bool _isCraftAssigned;
 
         protected override void Awake()
         {
@@ -41,6 +31,12 @@ namespace CreativeAI.UI.InventoryUI
         {
             ConfigureVisualRootHover();
             RefreshSelectionVisuals();
+        }
+
+        private void OnRectTransformDimensionsChange()
+        {
+            ConfigureEquippedMarker();
+            ConfigureCraftAssignedMarker();
         }
 
         public void SetItem(ItemStack stack)
@@ -93,50 +89,6 @@ namespace CreativeAI.UI.InventoryUI
             Select();
         }
 
-        public void SetEquipped(bool isEquipped)
-        {
-            _isEquipped = isEquipped;
-            ResolveMarkers();
-            if (_equippedMarker != null)
-                _equippedMarker.SetActive(_isEquipped);
-            if (_equippedDimOverlay != null)
-                _equippedDimOverlay.gameObject.SetActive(_isEquipped);
-        }
-
-        public void SetCraftAssigned(bool isAssigned)
-        {
-            _isCraftAssigned = isAssigned;
-            ResolveMarkers();
-            if (_craftAssignedMarker != null)
-                _craftAssignedMarker.SetActive(_isCraftAssigned);
-        }
-
-        private void ResolveMarkers()
-        {
-            _equippedMarker ??=
-                FindChildGameObject("VisualRoot/EquippedMarker")
-                ?? FindChildGameObject("EquippedMarker");
-            _craftAssignedMarker ??=
-                FindChildGameObject("VisualRoot/CraftAssignedMarker")
-                ?? FindChildGameObject("CraftAssignedMarker");
-            _equippedDimOverlay ??= ResolveEquippedDimOverlay();
-
-            ConfigureSelectedFrame();
-            ConfigureEquippedDimOverlay();
-            ConfigureDecorativeRaycasts();
-            ApplyMarkerStates();
-        }
-
-        private void ApplyMarkerStates()
-        {
-            if (_equippedMarker != null)
-                _equippedMarker.SetActive(_isEquipped);
-            if (_equippedDimOverlay != null)
-                _equippedDimOverlay.gameObject.SetActive(_isEquipped);
-            if (_craftAssignedMarker != null)
-                _craftAssignedMarker.SetActive(_isCraftAssigned);
-        }
-
         private void ConfigureVisualRootHover()
         {
             ResolveVisualRoot();
@@ -186,36 +138,6 @@ namespace CreativeAI.UI.InventoryUI
             return child != null ? child.gameObject : null;
         }
 
-        private Image ResolveEquippedDimOverlay()
-        {
-            var overlayTransform =
-                transform.Find("VisualRoot/EquippedDimOverlay")
-                ?? transform.Find("EquippedDimOverlay");
-            if (overlayTransform != null)
-                return overlayTransform.GetComponent<Image>();
-
-            if (_visualRootRect == null)
-                return null;
-
-            var overlayObject = new GameObject(
-                "EquippedDimOverlay",
-                typeof(RectTransform),
-                typeof(CanvasRenderer),
-                typeof(Image)
-            );
-            var overlayRect = overlayObject.GetComponent<RectTransform>();
-            overlayRect.SetParent(_visualRootRect, false);
-            StretchToFill(overlayRect);
-
-            var overlayImage = overlayObject.GetComponent<Image>();
-            overlayImage.color = new Color(0f, 0f, 0f, 0.35f);
-            overlayImage.raycastTarget = false;
-            overlayObject.SetActive(false);
-            _createdEquippedDimOverlay = true;
-            PlaceGeneratedEquippedDimOverlay(overlayImage.rectTransform);
-            return overlayImage;
-        }
-
         private void ConfigureSelectedFrame()
         {
             _selectedFrameRect ??=
@@ -226,33 +148,6 @@ namespace CreativeAI.UI.InventoryUI
 
             DisableGraphicRaycasts(_selectedFrameRect);
             _selectedFrameRect.gameObject.SetActive(_isSlotSelected);
-        }
-
-        private void ConfigureEquippedDimOverlay()
-        {
-            if (_equippedDimOverlay == null)
-                return;
-
-            _equippedDimOverlay.color = new Color(0f, 0f, 0f, 0.35f);
-            _equippedDimOverlay.raycastTarget = false;
-            if (_createdEquippedDimOverlay)
-                StretchToFill(_equippedDimOverlay.rectTransform);
-        }
-
-        private void PlaceGeneratedEquippedDimOverlay(RectTransform overlayRect)
-        {
-            if (_visualRootRect == null || overlayRect == null)
-                return;
-
-            var overlayTransform = overlayRect.transform;
-            if (overlayTransform.parent != _visualRootRect)
-                return;
-
-            var iconTransform = transform.Find("VisualRoot/Icon");
-            int targetIndex = iconTransform != null ? iconTransform.GetSiblingIndex() + 1 : 0;
-            overlayTransform.SetSiblingIndex(
-                Mathf.Clamp(targetIndex, 0, _visualRootRect.childCount - 1)
-            );
         }
 
         private void ConfigureDecorativeRaycasts()
@@ -277,9 +172,12 @@ namespace CreativeAI.UI.InventoryUI
             DisableGraphicRaycasts(_equippedMarker != null ? _equippedMarker.transform : null);
             DisableGraphicRaycasts(
                 _equippedMarker != null
-                    ? _equippedMarker.transform.Find("EquipText")
+                    ? _equippedMarker.transform.Find("EquippedText")
+                        ?? _equippedMarker.transform.Find("EquipText")
                     : transform.Find("VisualRoot/EquippedMarker/EquipText")
+                        ?? transform.Find("VisualRoot/EquippedMarker/EquippedText")
                         ?? transform.Find("EquippedMarker/EquipText")
+                        ?? transform.Find("EquippedMarker/EquippedText")
             );
             DisableGraphicRaycasts(
                 _craftAssignedMarker != null ? _craftAssignedMarker.transform : null

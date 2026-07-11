@@ -2,6 +2,7 @@ using CreativeAI.Gameplay;
 using DG.Tweening;
 using TMPro;
 using UnityEngine;
+using UnityEngine.Serialization;
 using UnityEngine.UI;
 
 namespace CreativeAI.UI
@@ -22,11 +23,8 @@ namespace CreativeAI.UI
         [SerializeField]
         private TMP_Text _stats;
 
-        [SerializeField]
-        private TMP_Text _passiveTitle;
-
-        [SerializeField]
-        private TMP_Text _passiveDesc;
+        [SerializeField, FormerlySerializedAs("_passiveDesc")]
+        private TMP_Text _description;
 
         [SerializeField]
         private float _iconSpinDuration = 1f;
@@ -65,8 +63,7 @@ namespace CreativeAI.UI
             SetTextImmediately(_name, string.Empty);
             SetTextImmediately(_category, string.Empty);
             SetTextImmediately(_stats, string.Empty);
-            SetTextImmediately(_passiveTitle, string.Empty);
-            SetTextImmediately(_passiveDesc, string.Empty);
+            SetTextImmediately(_description, string.Empty);
         }
 
         public void Show(ItemData item)
@@ -131,16 +128,35 @@ namespace CreativeAI.UI
         private void RefreshTexts(ItemData item, string emptyLabel)
         {
             bool hasItem = item != null;
-            TypeText(_name, hasItem ? item.itemName : emptyLabel);
-            TypeText(_category, hasItem ? item.category.ToDisplayName() : string.Empty);
-            TypeText(_stats, hasItem ? item.effect : string.Empty);
-            TypeText(_passiveTitle, hasItem ? item.effect : string.Empty);
-            TypeText(_passiveDesc, hasItem ? item.description : string.Empty);
+            SetTextImmediately(_name, hasItem ? item.itemName : emptyLabel);
+            SetTextImmediately(
+                _category,
+                hasItem ? $"[{item.category.ToDisplayName()}]" : string.Empty
+            );
+            TypeText(_stats, hasItem ? ItemStatTextFormatter.BuildStatsText(item) : string.Empty);
+            TypeText(_description, hasItem ? RemoveLineBreaks(item.description) : string.Empty);
+            RebuildLayout();
+        }
+
+        private static string RemoveLineBreaks(string text) =>
+            string.IsNullOrEmpty(text) ? string.Empty : text.Replace("\r", "").Replace("\n", "");
+
+        private void RebuildLayout()
+        {
+            if (transform is not RectTransform rectTransform)
+                return;
+
+            Canvas.ForceUpdateCanvases();
+            LayoutRebuilder.ForceRebuildLayoutImmediate(rectTransform);
         }
 
         private void KillTweens()
         {
             DOTween.Kill(this);
+            DOTween.Kill(_name);
+            DOTween.Kill(_category);
+            DOTween.Kill(_stats);
+            DOTween.Kill(_description);
             _icon?.rectTransform.DOKill();
         }
     }
