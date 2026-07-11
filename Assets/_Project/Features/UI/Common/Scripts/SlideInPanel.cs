@@ -34,18 +34,36 @@ namespace CreativeAI.UI
 
         private void Start()
         {
+            if (_rect == null)
+                return;
+
             _shownPos = _rect.anchoredPosition;
             _hiddenPos = GetHiddenPos();
             _rect.anchoredPosition = _hiddenPos;
             _initialized = true;
 
-            OnEnable();
+            PlayShowAnimation();
         }
 
         private void OnEnable()
         {
             if (!_initialized)
                 return;
+
+            PlayShowAnimation();
+        }
+
+        private void OnDisable()
+        {
+            if (_rect != null)
+                _rect.DOKill();
+        }
+
+        private void PlayShowAnimation()
+        {
+            if (_rect == null)
+                return;
+
             _rect.DOKill();
             _rect.anchoredPosition = _hiddenPos;
             DOTween
