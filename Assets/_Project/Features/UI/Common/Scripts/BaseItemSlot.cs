@@ -23,6 +23,7 @@ namespace CreativeAI.UI
 
         protected ItemData _item;
         protected int _count;
+        protected bool _isSlotSelected;
 
         private const float CountContainerVisibleAlpha = 200f / 255f;
 
@@ -48,8 +49,7 @@ namespace CreativeAI.UI
             _item = item;
             _count = item == null ? 0 : Mathf.Max(0, count);
 
-            if (_item != null)
-                SetCountContainerVisible(true);
+            SetCountContainerVisible(ShouldShowCountBadge());
 
             Refresh();
             ResetItemVisuals();
@@ -77,6 +77,8 @@ namespace CreativeAI.UI
             }
 
             SetCountContainerVisible(false);
+            _isSlotSelected = false;
+            RefreshSelectionVisuals();
 
             ResetItemVisuals();
         }
@@ -90,31 +92,37 @@ namespace CreativeAI.UI
         protected virtual void Refresh()
         {
             EnsureCountReferences();
-            bool hasItem = _item != null && _item.icon != null;
+            bool hasItem = _item != null;
+            bool hasIcon = _item != null && _item.icon != null;
+            bool showCountBadge = ShouldShowCountBadge();
 
             if (_iconImage != null)
             {
-                _iconImage.sprite = hasItem ? _item.icon : null;
+                _iconImage.sprite = hasIcon ? _item.icon : null;
                 _iconImage.color = Color.white;
-                _iconImage.gameObject.SetActive(hasItem);
+                _iconImage.raycastTarget = false;
+                _iconImage.gameObject.SetActive(hasIcon);
             }
 
             if (_countText != null)
             {
                 _countText.text = hasItem ? _count.ToString() : string.Empty;
-                _countText.gameObject.SetActive(hasItem);
+                _countText.raycastTarget = false;
+                _countText.gameObject.SetActive(showCountBadge);
             }
 
-            SetCountContainerVisible(hasItem);
+            SetCountContainerVisible(showCountBadge);
 
             BindHoverTargets();
         }
+
+        private bool ShouldShowCountBadge() => _item != null && _item.MaxStack > 1 && _count > 1;
 
         private void SetCountContainerVisible(bool visible)
         {
             if (_countContainer != null)
             {
-                _countContainer.gameObject.SetActive(true);
+                _countContainer.gameObject.SetActive(visible);
                 _countContainerCanvasGroup ??= _countContainer.GetComponent<CanvasGroup>();
                 if (_countContainerCanvasGroup == null)
                     _countContainerCanvasGroup =
@@ -127,12 +135,16 @@ namespace CreativeAI.UI
                 _countContainerImage = _countContainer.gameObject.AddComponent<Image>();
 
             if (_countText != null)
+            {
+                _countText.raycastTarget = false;
                 _countText.gameObject.SetActive(visible);
+            }
 
             if (_countContainerImage != null)
             {
                 _countContainerImage.enabled = true;
                 _countContainerImage.color = new Color32(0, 0, 0, 200);
+                _countContainerImage.raycastTarget = false;
                 _countContainerImage.canvasRenderer.SetAlpha(1f);
                 _countContainerImage.SetVerticesDirty();
             }
@@ -147,13 +159,19 @@ namespace CreativeAI.UI
 
         public virtual void Select()
         {
+            _isSlotSelected = true;
+            RefreshSelectionVisuals();
             _hoverScale?.AcquireLock();
         }
 
         public virtual void Deselect()
         {
+            _isSlotSelected = false;
+            RefreshSelectionVisuals();
             if (_hoverScale != null && _hoverScale.IsLocked())
                 _hoverScale.ReleaseLock();
         }
+
+        protected virtual void RefreshSelectionVisuals() { }
     }
 }

@@ -90,7 +90,10 @@ namespace CreativeAI.UI
         {
             var iconTransform = transform.Find("VisualRoot/Icon") ?? transform.Find("Icon");
             if (iconTransform != null && iconTransform.TryGetComponent(out Image icon))
+            {
+                icon.raycastTarget = false;
                 return icon;
+            }
 
             var rootImage = GetComponent<Image>();
             var iconObject = new GameObject(
@@ -124,19 +127,30 @@ namespace CreativeAI.UI
 
         private TMP_Text FindCountText()
         {
-            var numberSlotTextTransform =
-                transform.Find("VisualRoot/numberSlot/Text")
+            var countTextTransform =
+                transform.Find("VisualRoot/CountBadge/CountText")
+                ?? transform.Find("CountBadge/CountText")
+                ?? transform.Find("VisualRoot/numberSlot/Text")
                 ?? transform.Find("Icon/numberSlot/Text")
                 ?? transform.Find("numberSlot/Text");
             if (
-                numberSlotTextTransform != null
-                && numberSlotTextTransform.TryGetComponent(out TMP_Text numberSlotText)
+                countTextTransform != null
+                && countTextTransform.TryGetComponent(out TMP_Text countText)
             )
-                return numberSlotText;
+            {
+                countText.raycastTarget = false;
+                return countText;
+            }
 
             var countTransform = transform.Find("CountText");
-            if (countTransform != null && countTransform.TryGetComponent(out TMP_Text countText))
-                return countText;
+            if (
+                countTransform != null
+                && countTransform.TryGetComponent(out TMP_Text directCountText)
+            )
+            {
+                directCountText.raycastTarget = false;
+                return directCountText;
+            }
 
             foreach (var text in GetComponentsInChildren<TMP_Text>(true))
             {
@@ -157,11 +171,13 @@ namespace CreativeAI.UI
 
         private RectTransform FindCountContainer()
         {
-            var numberSlotTransform =
-                transform.Find("VisualRoot/numberSlot")
+            var countBadgeTransform =
+                transform.Find("VisualRoot/CountBadge")
+                ?? transform.Find("CountBadge")
+                ?? transform.Find("VisualRoot/numberSlot")
                 ?? transform.Find("Icon/numberSlot")
                 ?? transform.Find("numberSlot");
-            return numberSlotTransform as RectTransform;
+            return countBadgeTransform as RectTransform;
         }
 
         private RectTransform GetOrCreateCountContainer()
