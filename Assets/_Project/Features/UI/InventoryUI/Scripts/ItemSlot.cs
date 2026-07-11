@@ -16,9 +16,6 @@ namespace CreativeAI.UI.InventoryUI
         [SerializeField]
         private RectTransform _iconRect;
 
-        [SerializeField]
-        private RectTransform _selectedFrameRect;
-
         protected override void Awake()
         {
             base.Awake();
@@ -52,21 +49,6 @@ namespace CreativeAI.UI.InventoryUI
         public void SetReleaseSelectionOnOutsideClick(bool release)
         {
             _hoverScale?.SetReleaseLockOnOutsideClick(release);
-        }
-
-        public override void Select()
-        {
-            base.Select();
-        }
-
-        public override void Deselect()
-        {
-            base.Deselect();
-        }
-
-        protected override void RefreshSelectionVisuals()
-        {
-            ConfigureSelectedFrame();
         }
 
         public void OnPointerClick(PointerEventData eventData)
@@ -136,18 +118,6 @@ namespace CreativeAI.UI.InventoryUI
         {
             var child = transform.Find(path);
             return child != null ? child.gameObject : null;
-        }
-
-        private void ConfigureSelectedFrame()
-        {
-            _selectedFrameRect ??=
-                transform.Find("VisualRoot/SelectedFrame") as RectTransform
-                ?? transform.Find("SelectedFrame") as RectTransform;
-            if (_selectedFrameRect == null)
-                return;
-
-            DisableGraphicRaycasts(_selectedFrameRect);
-            _selectedFrameRect.gameObject.SetActive(_isSlotSelected);
         }
 
         private void ConfigureDecorativeRaycasts()
