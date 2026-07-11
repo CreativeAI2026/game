@@ -250,25 +250,7 @@ namespace CreativeAI.UI.CraftingUI
             if (_selectedRecipe == null)
                 return 0;
 
-            if (HasEquippedRecipeMaterial())
-                return 0;
-
-            int max = int.MaxValue;
-            var materials = _selectedRecipe.Materials.ToList();
-            if (materials.Count != 2)
-                return 0;
-
-            foreach (var group in materials.GroupBy(material => material))
-            {
-                if (group.Key == null)
-                    return 0;
-
-                int required = group.Count();
-                int owned = InventoryManager.Instance?.GetItemCount(group.Key) ?? 0;
-                max = Mathf.Min(max, owned / required);
-            }
-
-            return Mathf.Max(0, max);
+            return InventoryManager.Instance?.GetMaximumCraftable(_selectedRecipe) ?? 0;
         }
     }
 }

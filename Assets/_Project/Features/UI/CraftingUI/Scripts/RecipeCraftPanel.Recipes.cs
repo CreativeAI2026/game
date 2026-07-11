@@ -437,6 +437,7 @@ namespace CreativeAI.UI.CraftingUI
         private bool HasEquippedRecipeMaterial()
         {
             return _selectedRecipe != null
+                && GetMaximumCraftable() <= 0
                 && (
                     InventoryManager.Instance?.HasEquippedMaterial(_selectedRecipe.Materials)
                     ?? false

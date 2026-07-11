@@ -24,12 +24,15 @@ namespace CreativeAI.UI
         private CanvasGroup _numberSlotCanvasGroup;
         private Image _numberSlotImage;
         private bool _inputLocked;
+        private ItemStack _stack;
 
         public new ItemData Item
         {
-            get => _item;
+            get => _stack?.Data;
             set => SetItem(value, FindInventoryCount(value));
         }
+
+        public ItemStack Stack => _stack;
 
         public void Init()
         {
@@ -57,7 +60,16 @@ namespace CreativeAI.UI
 
         public override void SetItem(ItemData item, int count = 1)
         {
+            _stack = null;
             base.SetItem(item, count);
+            ResolveVisualReferences();
+            ApplyNumberSlotState();
+        }
+
+        public void SetStack(ItemStack stack)
+        {
+            _stack = stack;
+            base.SetItem(stack?.Data, stack?.Count ?? 0);
             ResolveVisualReferences();
             ApplyNumberSlotState();
         }
@@ -77,6 +89,7 @@ namespace CreativeAI.UI
 
         public override void Clear()
         {
+            _stack = null;
             base.Clear();
 
             ResolveVisualReferences();
@@ -87,14 +100,26 @@ namespace CreativeAI.UI
                 _emptyText.gameObject.SetActive(true);
         }
 
+        public new void ClearAnimated(Action onComplete = null)
+        {
+            _stack = null;
+            base.ClearAnimated(onComplete);
+        }
+
         public void UpdateCount()
         {
-            SetCount(FindInventoryCount(_item));
+            SetCount(_stack?.Count ?? FindInventoryCount(_item));
         }
 
         public void EquipAnimated(ItemData item)
         {
             SetItemAnimated(item, FindInventoryCount(item));
+        }
+
+        public void EquipAnimated(ItemStack stack)
+        {
+            SetItemAnimated(stack?.Data, stack?.Count ?? 0);
+            _stack = stack;
         }
 
         public void SetFrameColor(Color color)

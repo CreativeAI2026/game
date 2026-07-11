@@ -88,19 +88,27 @@ namespace CreativeAI.UI.CraftingUI
         private bool CanCraft()
         {
             var recipe = FindSelectedRecipe();
-            return recipe != null && (InventoryManager.Instance?.CanCraft(recipe) ?? false);
+            return recipe != null
+                && (
+                    InventoryManager.Instance?.CanCraft(
+                        recipe,
+                        GetMaterialStack(0),
+                        GetMaterialStack(1)
+                    )
+                    ?? false
+                );
         }
 
         private bool HasEnoughMaterials()
         {
-            return _slots.Count(slot => slot.Item != null) >= 2;
+            return _slots.Count(slot => slot.Stack != null) >= 2;
         }
 
         private bool HasCategoryMismatch()
         {
             var selectedItems = _slots
-                .Where(slot => slot.Item != null)
-                .Select(slot => slot.Item)
+                .Where(slot => slot.Stack?.Data != null)
+                .Select(slot => slot.Stack.Data)
                 .Take(2)
                 .ToList();
 
@@ -112,12 +120,11 @@ namespace CreativeAI.UI.CraftingUI
 
         private bool HasEquippedMaterial()
         {
-            var selectedItems = _slots
-                .Where(slot => slot.Item != null)
-                .Select(slot => slot.Item)
-                .Take(2);
-
-            return InventoryManager.Instance?.HasEquippedMaterial(selectedItems) ?? false;
+            return _slots
+                .Where(slot => slot.Stack != null)
+                .Select(slot => slot.Stack)
+                .Take(2)
+                .Any(stack => stack.IsEquipped);
         }
 
         private IEnumerator CraftRoutine()
@@ -135,7 +142,14 @@ namespace CreativeAI.UI.CraftingUI
 
             bool crafted =
                 _lastCraftedRecipe != null
-                && (InventoryManager.Instance?.TryCraft(_lastCraftedRecipe, 1) ?? false);
+                && (
+                    InventoryManager.Instance?.TryCraft(
+                        _lastCraftedRecipe,
+                        GetMaterialStack(0),
+                        GetMaterialStack(1)
+                    )
+                    ?? false
+                );
             if (crafted)
                 _recipeDB?.RevealRecipe(
                     _lastCraftedRecipe.material1,
@@ -173,8 +187,8 @@ namespace CreativeAI.UI.CraftingUI
                 return null;
 
             var selectedItems = _slots
-                .Where(slot => slot.Item != null)
-                .Select(slot => slot.Item)
+                .Where(slot => slot.Stack?.Data != null)
+                .Select(slot => slot.Stack.Data)
                 .Take(2)
                 .ToList();
 
@@ -182,6 +196,11 @@ namespace CreativeAI.UI.CraftingUI
                 return null;
 
             return _recipeDB.FindRecipe(selectedItems[0], selectedItems[1]);
+        }
+
+        private ItemStack GetMaterialStack(int index)
+        {
+            return index >= 0 && index < _slots.Count ? _slots[index].Stack : null;
         }
 
         private void RefreshResultPanel()

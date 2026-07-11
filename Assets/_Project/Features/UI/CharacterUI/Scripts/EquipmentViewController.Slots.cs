@@ -91,8 +91,7 @@ namespace CreativeAI.UI.CharacterUI
             foreach (var stack in initialItems)
             {
                 int slotIndex = initialItems.IndexOf(stack);
-                _slots[slotIndex].Item = stack.Data;
-                _slots[slotIndex].UpdateCount();
+                _slots[slotIndex].SetStack(stack);
                 InventoryManager.Instance?.SetEquipped(stack, true);
             }
         }
@@ -113,13 +112,13 @@ namespace CreativeAI.UI.CharacterUI
             }
 
             _selectedInventoryStack = null;
-            SyncInventorySelection(CurrentSlot.Item);
+            SyncInventorySelection(CurrentSlot.Stack);
 
             bool changedBetweenEmptySlots =
                 previousSlot != null
                 && previousSlot != CurrentSlot
-                && previousSlot.Item == null
-                && CurrentSlot.Item == null;
+                && previousSlot.Stack == null
+                && CurrentSlot.Stack == null;
             _detailPanel?.Show(CurrentSlot.Item, _emptyLabel, changedBetweenEmptySlots);
         }
 
@@ -147,7 +146,7 @@ namespace CreativeAI.UI.CharacterUI
             for (int offset = 1; offset < _slots.Count; offset++)
             {
                 int slotIndex = (equippedSlotIndex + offset) % _slots.Count;
-                if (_slots[slotIndex].Item != null)
+                if (_slots[slotIndex].Stack != null)
                     continue;
 
                 SelectAndRotateSlot(slotIndex);

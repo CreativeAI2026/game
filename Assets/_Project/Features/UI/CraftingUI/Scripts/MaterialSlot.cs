@@ -23,9 +23,11 @@ namespace CreativeAI.UI.CraftingUI
         private RectTransform _visualRootRect;
         private Coroutine _materialAnimationRoutine;
         private bool _isSelected;
+        private ItemStack _stack;
 
         public event Action<MaterialSlot> Clicked;
         public event Action<MaterialSlot> DoubleClicked;
+        public ItemStack Stack => _stack;
 
         protected override void Awake()
         {
@@ -50,6 +52,7 @@ namespace CreativeAI.UI.CraftingUI
 
         public override void SetItem(ItemData item, int count = 1)
         {
+            _stack = null;
             base.SetItem(item, count);
             ResolveVisualReferences();
             BindSlotHoverTarget();
@@ -60,9 +63,23 @@ namespace CreativeAI.UI.CraftingUI
             SetItem(item, count);
         }
 
+        public void SetMaterial(ItemStack stack)
+        {
+            _stack = stack;
+            base.SetItem(stack?.Data, stack == null ? 0 : 1);
+            ResolveVisualReferences();
+            BindSlotHoverTarget();
+        }
+
         public void SetMaterialAnimated(ItemData item, int count)
         {
             SetItem(item, count);
+            PlayMaterialChangedAnimation();
+        }
+
+        public void SetMaterialAnimated(ItemStack stack)
+        {
+            SetMaterial(stack);
             PlayMaterialChangedAnimation();
         }
 
@@ -124,6 +141,7 @@ namespace CreativeAI.UI.CraftingUI
 
         public override void Clear()
         {
+            _stack = null;
             base.Clear();
             ResolveVisualReferences();
             ApplyIconState();

@@ -38,6 +38,7 @@ namespace CreativeAI.UI.CharacterUI
         private int _currentSlotIndex;
         private ItemStack _selectedInventoryStack;
         private bool _initialized;
+        private bool _subscribedToInventoryChanged;
 
         private bool HasSlots => _slots.Count > 0;
 
@@ -67,6 +68,7 @@ namespace CreativeAI.UI.CharacterUI
             InitializeSlots();
             EquipInitialTestItems();
             BindInventoryEvents();
+            BindInventoryChangedEvent();
 
             RefreshSlotLayout();
             SelectEquipmentSlot(0);
@@ -75,10 +77,22 @@ namespace CreativeAI.UI.CharacterUI
             BindTriangleLayoutEvents();
         }
 
+        private void OnEnable()
+        {
+            if (_initialized)
+                BindInventoryChangedEvent();
+        }
+
+        private void OnDisable()
+        {
+            UnbindInventoryChangedEvent();
+        }
+
         private void OnDestroy()
         {
             UnbindSlots();
             UnbindInventoryEvents();
+            UnbindInventoryChangedEvent();
             if (_triangleLayout != null)
                 _triangleLayout.AnimationStateChanged -= SetSlotsInputLocked;
         }

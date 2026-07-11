@@ -107,11 +107,8 @@ namespace CreativeAI.UI.CraftingUI
             foreach (var slot in _slots)
                 slot.SetSelected(slot == selectedSlot);
 
-            var selectedStack = InventoryManager
-                .Instance?.GetAllItems()
-                .Find(stack => stack.Data == selectedSlot.Item);
-            if (selectedStack != null)
-                _inventory?.SelectItem(selectedStack);
+            if (selectedSlot.Stack != null)
+                _inventory?.SelectItem(selectedSlot.Stack);
             else
                 _inventory?.ClearSelection();
 
@@ -164,15 +161,18 @@ namespace CreativeAI.UI.CraftingUI
             if (_selectedSlot == null || stack?.Data == null || stack.Count <= 0)
                 return;
 
+            if (stack.IsEquipped)
+            {
+                ShowEquippedMaterialWarning();
+                return;
+            }
+
             if (ClearAssignedMaterialSlot(stack.Data))
                 return;
 
-            int currentCount = _selectedSlot.Item == stack.Data ? _selectedSlot.Count : 0;
-            int desiredCount = Mathf.Min(currentCount + 1, stack.Count);
-
             ClearMaterialFromOtherSlots(stack.Data, _selectedSlot);
 
-            _selectedSlot.SetMaterialAnimated(stack.Data, desiredCount);
+            _selectedSlot.SetMaterialAnimated(stack);
             SyncInventoryAssignedColors();
             _detailPanel?.Show(stack.Data);
             SelectNextEmptyCraftSlot();
