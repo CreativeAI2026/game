@@ -7,7 +7,9 @@
         "CreativeAI.Gameplay",
         "DOTween.Modules",
         "Unity.TextMeshPro",
-        "Unity.InputSystem"
+        "Unity.InputSystem",
+        "UniTask",
+        "UniTask.DOTween"
     ],
     "includePlatforms": [],
     "excludePlatforms": [],
