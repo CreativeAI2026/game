@@ -1,5 +1,6 @@
 using CreativeAI.UI.InventoryUI;
 using DG.Tweening;
+using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
 
@@ -11,7 +12,7 @@ namespace CreativeAI.UI
         private Image _icon;
 
         [SerializeField]
-        private Text _label;
+        private TMP_Text _label;
 
         public Button Button { get; private set; }
         private HoverScaleOnPointer _hoverScale;

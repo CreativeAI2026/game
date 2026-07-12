@@ -1,106 +1,147 @@
 using CreativeAI.Gameplay;
 using DG.Tweening;
+using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
 
 namespace CreativeAI.UI
 {
-    public class ItemDetailPanel : MonoBehaviour
+    public partial class ItemDetailPanel : MonoBehaviour
     {
+        private const string DefaultEmptyLabel = "\uFF08\u672A\u88C5\u5099\uFF09";
+
         [SerializeField]
         private Image _icon;
 
         [SerializeField]
-        private Text _name;
+        private TMP_Text _name;
 
         [SerializeField]
-        private Text _category;
+        private TMP_Text _category;
 
         [SerializeField]
-        private Text _stats;
+        private TMP_Text _stats;
 
         [SerializeField]
-        private Text _passiveTitle;
+        private TMP_Text _passiveTitle;
 
         [SerializeField]
-        private Text _passiveDesc;
-
-        [SerializeField]
-        private float _typingDuration = 0.5f;
+        private TMP_Text _passiveDesc;
 
         [SerializeField]
         private float _iconSpinDuration = 1f;
 
+        [SerializeField, Min(1f)]
+        private float _charactersPerSecond = 24f;
+
+        private ItemData _displayedItem;
+        private bool _hasDisplayedContent;
+        private string _displayedEmptyLabel;
+        private FontStyles _defaultNameFontStyle;
+        private bool _hasDefaultNameFontStyle;
+
         private void Awake()
         {
+            ResolveReferences();
             Clear();
         }
 
         public void Clear()
         {
+            ResolveReferences();
+            KillTweens();
+            _displayedItem = null;
+            _hasDisplayedContent = false;
+            _displayedEmptyLabel = null;
+
             if (_icon != null)
             {
                 _icon.sprite = null;
                 _icon.color = Color.clear;
+                _icon.rectTransform.localRotation = Quaternion.identity;
             }
 
-            if (_name != null)
-                _name.text = "";
-            if (_category != null)
-                _category.text = "";
-            if (_stats != null)
-                _stats.text = "";
-            if (_passiveTitle != null)
-                _passiveTitle.text = "";
-            if (_passiveDesc != null)
-                _passiveDesc.text = "";
+            ApplyNameUnderline(false);
+            SetTextImmediately(_name, string.Empty);
+            SetTextImmediately(_category, string.Empty);
+            SetTextImmediately(_stats, string.Empty);
+            SetTextImmediately(_passiveTitle, string.Empty);
+            SetTextImmediately(_passiveDesc, string.Empty);
         }
 
         public void Show(ItemData item)
         {
-            DOTween.Kill(this);
-            bool hasItem = item != null;
-
-            if (_icon != null)
-            {
-                _icon.sprite = hasItem ? item.icon : null;
-                _icon.color = hasItem ? Color.white : Color.clear;
-
-                // 回転リセットしてから1回転
-                _icon.rectTransform.localRotation = Quaternion.identity;
-                DOTween
-                    .To(
-                        () => 0f,
-                        x => _icon.rectTransform.localRotation = Quaternion.Euler(0, x, 0),
-                        360f,
-                        _iconSpinDuration
-                    )
-                    .SetEase(Ease.OutQuint)
-                    .SetTarget(this);
-            }
-
-            TypeText(_name, hasItem ? item.itemName : "（未装備）");
-            TypeText(_category, hasItem ? item.category.ToDisplayName() : "");
-            TypeText(_stats, hasItem ? item.effect : "");
-            TypeText(_passiveTitle, hasItem ? item.effect : "");
-            TypeText(_passiveDesc, hasItem ? item.description : "");
+            Show(item, DefaultEmptyLabel);
         }
 
-        private void TypeText(Text target, string text)
+        public void Show(ItemData item, string emptyLabel)
         {
-            if (target == null)
+            Show(item, emptyLabel, false);
+        }
+
+        public void Show(ItemData item, string emptyLabel, bool forceTextRefresh)
+        {
+            ResolveReferences();
+            bool hasItem = item != null;
+            ApplyNameUnderline(hasItem);
+
+            if (!forceTextRefresh && IsSameDisplay(item, emptyLabel))
+            {
+                if (hasItem)
+                    PlayIconSpin();
                 return;
-            target.text = "";
-            int totalChars = text.Length;
-            DOTween
-                .To(
-                    () => 0f,
-                    x => target.text = text.Substring(0, Mathf.RoundToInt(x)),
-                    (float)totalChars,
-                    _typingDuration
-                )
-                .SetEase(Ease.Linear)
-                .SetTarget(this); // SetTarget追加
+            }
+
+            KillTweens();
+            _displayedItem = item;
+            _hasDisplayedContent = true;
+            _displayedEmptyLabel = item == null ? emptyLabel : null;
+
+            RefreshIcon(item);
+            RefreshTexts(item, emptyLabel);
+        }
+
+        private bool IsSameDisplay(ItemData item, string emptyLabel)
+        {
+            bool hasItem = item != null;
+            bool sameItem = hasItem && item == _displayedItem;
+            bool sameEmptyState =
+                !hasItem
+                && _hasDisplayedContent
+                && _displayedItem == null
+                && _displayedEmptyLabel == emptyLabel;
+
+            return sameItem || sameEmptyState;
+        }
+
+        private void RefreshIcon(ItemData item)
+        {
+            if (_icon == null)
+                return;
+
+            bool hasIcon = item?.icon != null;
+            _icon.sprite = hasIcon ? item.icon : null;
+            _icon.color = hasIcon ? Color.white : Color.clear;
+            _icon.rectTransform.localRotation = Quaternion.identity;
+
+            if (hasIcon)
+                PlayIconSpin();
+        }
+
+        private void RefreshTexts(ItemData item, string emptyLabel)
+        {
+            bool hasItem = item != null;
+            TypeText(_name, hasItem ? item.itemName : emptyLabel);
+            TypeText(_category, hasItem ? item.category.ToDisplayName() : string.Empty);
+            TypeText(_stats, hasItem ? item.effect : string.Empty);
+            TypeText(_passiveTitle, hasItem ? item.effect : string.Empty);
+            TypeText(_passiveDesc, hasItem ? item.description : string.Empty);
+        }
+
+        private void KillTweens()
+        {
+            DOTween.Kill(this);
+            _icon?.rectTransform.DOKill();
         }
     }
 }

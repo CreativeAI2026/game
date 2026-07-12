@@ -24,15 +24,15 @@ namespace CreativeAI.UI.SaveDialog
         private void OnDestroy()
         {
             if (_yesButton != null)
-                _yesButton.onClick.RemoveAllListeners();
+                _yesButton.onClick.RemoveListener(OnYes);
             if (_noButton != null)
-                _noButton.onClick.RemoveAllListeners();
+                _noButton.onClick.RemoveListener(OnNo);
         }
 
         private void OnYes()
         {
-            // 実セーブ処理は別途実装予定。今はログのみ
-            Debug.Log("[SaveDialog] セーブ実行（仮）");
+            // TODO: Replace with the real save implementation.
+            Debug.Log("[SaveDialog] Save requested.");
             Close();
         }
 

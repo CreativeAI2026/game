@@ -5,6 +5,7 @@
         "CreativeAI.Core",
         "CreativeAI.Shared",
         "CreativeAI.Gameplay",
+        "DOTween.Modules",
         "Unity.TextMeshPro",
         "Unity.InputSystem",
         "UniTask",
@@ -13,8 +14,10 @@
     "includePlatforms": [],
     "excludePlatforms": [],
     "allowUnsafeCode": false,
-    "overrideReferences": false,
-    "precompiledReferences": [],
+    "overrideReferences": true,
+    "precompiledReferences": [
+        "DOTween.dll"
+    ],
     "autoReferenced": true,
     "defineConstraints": [],
     "versionDefines": [],
