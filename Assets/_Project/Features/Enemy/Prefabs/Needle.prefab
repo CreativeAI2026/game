@@ -132,7 +132,7 @@ MonoBehaviour:
   riseHeight: 5
   riseDuration: 1.5
   flySpeed: 30
-  damage: 50
+  damage: 25
   spinSpeed: 1080
 --- !u!54 &1414607688729542695
 Rigidbody:

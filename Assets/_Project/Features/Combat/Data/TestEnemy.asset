@@ -14,7 +14,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: CreativeAI.Gameplay::CreativeAI.Gameplay.EnemyParameterData
   characterName: TestEnemy
   baseMaxLife: 2000
-  baseAttackPower: 100
+  baseAttackPower: 50
   baseDefense: 10
   baseMoveSpeed: 5
   flinchCooldownTime: 10
