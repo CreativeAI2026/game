@@ -31,11 +31,15 @@ namespace CreativeAI.UI.Common
                 return;
             }
 
+            _onSelfClick?.Invoke();
+            if (_runtimeSelfClickAction != null)
+            {
+                _runtimeSelfClickAction.Invoke();
+                return;
+            }
+
             if (_targetToHide != null)
                 _targetToHide.SetActive(false);
-
-            _onSelfClick?.Invoke();
-            _runtimeSelfClickAction?.Invoke();
         }
     }
 }

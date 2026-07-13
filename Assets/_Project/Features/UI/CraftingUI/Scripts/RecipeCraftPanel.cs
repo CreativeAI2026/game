@@ -74,6 +74,7 @@ namespace CreativeAI.UI.CraftingUI
         private bool _warnedMissingMaterialRows;
         private bool _warnedMissingQuantityDialogPanel;
         private bool _warnedMissingQuantityDialog;
+        private bool _warnedMissingQuantityDialogController;
         private Coroutine _craftRoutine;
         private Coroutine _initializeRoutine;
 
@@ -111,7 +112,6 @@ namespace CreativeAI.UI.CraftingUI
             HideWarningImmediately();
             CloseQuantityDialogImmediately();
             _craftPanel?.HideLoadingAndResult();
-            _craftPanel?.SetCloseButtonVisible(true);
         }
 
         private void OnDestroy()
@@ -211,7 +211,6 @@ namespace CreativeAI.UI.CraftingUI
             CloseQuantityDialogImmediately();
 
             _craftPanel?.HideLoadingAndResult();
-            _craftPanel?.SetCloseButtonVisible(true);
         }
 
         private void ValidateSetup()

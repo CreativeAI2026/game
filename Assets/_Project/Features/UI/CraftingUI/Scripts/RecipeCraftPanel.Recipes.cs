@@ -90,6 +90,12 @@ namespace CreativeAI.UI.CraftingUI
         {
             ClearGeneratedRecipeSlots();
 
+            if (_recipeSlotPrefab.GetComponent<RecipeSlot>() == null)
+            {
+                WarnMissingRecipeSlotComponentOnce();
+                return;
+            }
+
             int slotIndex = 0;
             foreach (var recipe in recipes)
             {
@@ -97,16 +103,34 @@ namespace CreativeAI.UI.CraftingUI
                 slotObject.name = _recipeSlotPrefab.name;
                 slotObject.SetActive(true);
 
+                var slot = slotObject.GetComponent<RecipeSlot>();
+                if (slot == null)
+                {
+                    WarnMissingRecipeSlotComponentOnce();
+                    Destroy(slotObject);
+                    continue;
+                }
+
                 if (slotObject.GetComponent<GeneratedRecipeSlotMarker>() == null)
                     slotObject.AddComponent<GeneratedRecipeSlotMarker>();
 
-                var slot = slotObject.GetComponent<RecipeSlot>();
-                slot ??= slotObject.AddComponent<RecipeSlot>();
                 slot.SetRecipe(recipe);
                 BindSlot(slot);
                 CraftUIAnimationUtility.PlayPopIn(slotObject, slotIndex * 0.04f);
                 slotIndex++;
             }
+        }
+
+        private void WarnMissingRecipeSlotComponentOnce()
+        {
+            if (_warnedMissingRecipeSlotPrefab)
+                return;
+
+            Debug.LogWarning(
+                $"{nameof(RecipeCraftPanel)} on {name}: RecipeSlotPrefab '{_recipeSlotPrefab.name}' のRootに {nameof(RecipeSlot)} がありません。Prefabに追加してください。レシピスロットの生成をスキップします。",
+                this
+            );
+            _warnedMissingRecipeSlotPrefab = true;
         }
 
         private void ClearGeneratedRecipeSlots()

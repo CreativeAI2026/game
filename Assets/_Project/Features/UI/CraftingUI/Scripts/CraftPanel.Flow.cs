@@ -87,8 +87,7 @@ namespace CreativeAI.UI.CraftingUI
 
         public void HideResult()
         {
-            CraftFlowViewUtility.HidePanels(null, _resultPanel);
-            SetCloseButtonVisible(true);
+            CraftUIAnimationUtility.PlayResultOut(_resultPanel);
         }
 
         private void HideSharedResult()
@@ -103,13 +102,6 @@ namespace CreativeAI.UI.CraftingUI
             HideWarning();
             if (_loadingGear != null)
                 _loadingGear.localRotation = Quaternion.identity;
-
-            SetCloseButtonVisible(true);
-        }
-
-        public void SetCloseButtonVisible(bool visible)
-        {
-            CraftFlowViewUtility.SetCloseButtonVisible(_closeButton, visible);
         }
     }
 }

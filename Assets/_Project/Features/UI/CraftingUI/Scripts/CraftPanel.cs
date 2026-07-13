@@ -75,6 +75,8 @@ namespace CreativeAI.UI.CraftingUI
 
         private CloseOnSelfClick _resultCloseOnSelfClick;
         private bool _warnedMissingResultPanel;
+        private bool _warnedMissingWarningText;
+        private bool _warnedMissingWarningTextCanvasGroup;
 
         public CraftRecipeDB RecipeDB
         {
@@ -109,12 +111,15 @@ namespace CreativeAI.UI.CraftingUI
             BindCraftFlow();
         }
 
-        private void ResolveWarningReferences()
+        private bool ResolveWarningReferences()
         {
             if (_warningText == null)
                 _warningText = FindDescendant("WarningText")?.GetComponent<TMP_Text>();
             if (_warningText == null)
-                return;
+            {
+                WarnMissingReferenceOnce(ref _warnedMissingWarningText, "WarningText");
+                return false;
+            }
 
             _warningTextRect ??= _warningText.rectTransform;
             if (!_hasWarningTextBasePosition && _warningTextRect != null)
@@ -125,7 +130,15 @@ namespace CreativeAI.UI.CraftingUI
 
             _warningTextCanvasGroup ??= _warningText.GetComponent<CanvasGroup>();
             if (_warningTextCanvasGroup == null)
-                _warningTextCanvasGroup = _warningText.gameObject.AddComponent<CanvasGroup>();
+            {
+                WarnMissingReferenceOnce(
+                    ref _warnedMissingWarningTextCanvasGroup,
+                    "WarningText.CanvasGroup"
+                );
+                return false;
+            }
+
+            return true;
         }
 
         private Transform FindDescendant(string objectName)

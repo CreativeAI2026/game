@@ -18,6 +18,11 @@ namespace CreativeAI.UI.CraftingUI
                 WarnMissingReferenceOnce(ref _warnedMissingQuantityDialogPanel, "CQD-Panel");
             if (_quantityDialog == null)
                 WarnMissingReferenceOnce(ref _warnedMissingQuantityDialog, "CraftQuantityDialog");
+            if (_quantityDialogController == null)
+                WarnMissingReferenceOnce(
+                    ref _warnedMissingQuantityDialogController,
+                    nameof(CraftQuantityDialog)
+                );
         }
 
         private void BindDialog()
@@ -38,9 +43,17 @@ namespace CreativeAI.UI.CraftingUI
                 return;
             }
 
+            if (_quantityDialogController == null)
+            {
+                WarnMissingReferenceOnce(
+                    ref _warnedMissingQuantityDialogController,
+                    nameof(CraftQuantityDialog)
+                );
+                return;
+            }
+
             _quantity = Mathf.Clamp(_quantity, 1, Mathf.Max(1, max));
-            _craftPanel?.SetCloseButtonVisible(false);
-            _quantityDialogController?.Show(
+            _quantityDialogController.Show(
                 _selectedRecipe.resultItem?.icon,
                 _selectedRecipe.resultItem?.itemName,
                 1,
@@ -53,14 +66,11 @@ namespace CreativeAI.UI.CraftingUI
         private void CloseQuantityDialog()
         {
             _quantityDialogController?.Hide();
-            if (!_isCrafting)
-                _craftPanel?.SetCloseButtonVisible(true);
         }
 
         private void CloseQuantityDialogImmediately()
         {
             _quantityDialogController?.HideImmediate();
-            _craftPanel?.SetCloseButtonVisible(true);
         }
 
         private void OnQuantityConfirmed(int quantity)

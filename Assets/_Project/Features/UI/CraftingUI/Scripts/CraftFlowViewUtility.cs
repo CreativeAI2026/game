@@ -12,12 +12,6 @@ namespace CreativeAI.UI.CraftingUI
         private static readonly System.Collections.Generic.HashSet<GameObject> WarnedMissingCloseOnSelfClick =
             new();
 
-        public static void SetCloseButtonVisible(GameObject closeButton, bool visible)
-        {
-            if (closeButton != null)
-                closeButton.SetActive(visible);
-        }
-
         public static void StopCraftRoutine(
             MonoBehaviour owner,
             ref Coroutine routine,
@@ -87,7 +81,7 @@ namespace CreativeAI.UI.CraftingUI
         public static void HidePanels(GameObject loadingPanel, GameObject resultPanel)
         {
             if (resultPanel != null)
-                resultPanel.SetActive(false);
+                CraftUIAnimationUtility.HideResultImmediately(resultPanel);
             if (loadingPanel != null)
                 loadingPanel.SetActive(false);
         }

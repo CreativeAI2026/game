@@ -62,6 +62,7 @@ namespace CreativeAI.UI.CraftingUI
         private int _quantity = 1;
         private bool _warnedMissingRequiredReferences;
         private bool _warnedMissingCloseOnSelfClick;
+        private bool _warnedMissingDialogCanvasGroup;
 
         public bool IsOpen => _dialogRoot != null && _dialogRoot.activeInHierarchy;
 
@@ -69,7 +70,6 @@ namespace CreativeAI.UI.CraftingUI
         {
             ResolveReferences();
             Bind();
-            HideImmediate();
         }
 
         public void Show(
@@ -116,6 +116,7 @@ namespace CreativeAI.UI.CraftingUI
                 _dialogRoot,
                 _dialogRect,
                 _dialogCanvasGroup,
+                _startScale,
                 _animationDuration
             );
         }
@@ -212,6 +213,8 @@ namespace CreativeAI.UI.CraftingUI
             {
                 _dialogRect ??= _dialogRoot.GetComponent<RectTransform>();
                 _dialogCanvasGroup ??= _dialogRoot.GetComponent<CanvasGroup>();
+                if (_dialogCanvasGroup == null)
+                    WarnMissingDialogCanvasGroupOnce();
             }
 
             if (_panelRoot != null)
@@ -303,7 +306,14 @@ namespace CreativeAI.UI.CraftingUI
         private bool HasRequiredReferences()
         {
             bool hasRequiredReferences =
-                _dialogRoot != null
+                _panelRoot != null
+                && _dialogRoot != null
+                && _dialogRect != null
+                && _dialogCanvasGroup != null
+                && _panelCloseOnSelfClick != null
+                && _itemImage != null
+                && _itemName != null
+                && _countLabel != null
                 && _inputField != null
                 && _minButton != null
                 && _minusButton != null
@@ -332,6 +342,18 @@ namespace CreativeAI.UI.CraftingUI
                 this
             );
             _warnedMissingCloseOnSelfClick = true;
+        }
+
+        private void WarnMissingDialogCanvasGroupOnce()
+        {
+            if (_warnedMissingDialogCanvasGroup)
+                return;
+
+            Debug.LogWarning(
+                $"{nameof(CraftQuantityDialog)} on {name}: {_dialogRoot.name} に {nameof(CanvasGroup)} がありません。QuantityDialogの表示を中止します。Unity上で追加してください。",
+                this
+            );
+            _warnedMissingDialogCanvasGroup = true;
         }
 
         private static T FindComponentIn<T>(Transform root, string objectName)

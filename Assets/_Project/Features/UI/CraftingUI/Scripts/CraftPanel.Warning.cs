@@ -46,8 +46,7 @@ namespace CreativeAI.UI.CraftingUI
 
         private void ShowWarning(string message)
         {
-            ResolveWarningReferences();
-            if (_warningText == null)
+            if (!ResolveWarningReferences())
                 return;
 
             StopWarningAnimation();

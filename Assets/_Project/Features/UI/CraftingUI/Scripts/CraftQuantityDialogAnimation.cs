@@ -57,6 +57,7 @@ namespace CreativeAI.UI.CraftingUI
             GameObject dialog,
             RectTransform dialogRect,
             CanvasGroup canvasGroup,
+            float endScale,
             float duration,
             Action onClosed = null
         )
@@ -75,11 +76,11 @@ namespace CreativeAI.UI.CraftingUI
             if (dialogRect != null)
             {
                 sequence.Join(
-                    dialogRect.DOScale(Vector3.one * 0.9f, duration * 0.75f).SetEase(Ease.InBack)
+                    dialogRect.DOScale(Vector3.one * endScale, duration).SetEase(Ease.InBack)
                 );
             }
             if (canvasGroup != null)
-                sequence.Join(canvasGroup.DOFade(0f, duration * 0.65f));
+                sequence.Join(canvasGroup.DOFade(0f, duration * 0.75f));
 
             sequence.OnComplete(() =>
             {

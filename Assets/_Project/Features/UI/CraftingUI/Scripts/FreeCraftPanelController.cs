@@ -502,7 +502,6 @@ namespace CreativeAI.UI.CraftingUI
             _lastCraftedRecipe = FindSelectedRecipe();
             UpdateCraftButton();
 
-            _craftPanel?.SetCloseButtonVisible(false);
             _craftPanel?.HideWarning();
 
             _craftPanel?.ShowLoading();
@@ -532,7 +531,6 @@ namespace CreativeAI.UI.CraftingUI
             if (!crafted)
             {
                 _craftPanel?.HideLoadingAndResult();
-                _craftPanel?.SetCloseButtonVisible(true);
                 _craftPanel?.ShowNotReadyWarning();
                 UpdateCraftButton();
                 yield break;
@@ -580,7 +578,6 @@ namespace CreativeAI.UI.CraftingUI
 
             _craftPanel?.HideLoadingAndResult();
             _craftPanel?.HideWarning();
-            _craftPanel?.SetCloseButtonVisible(true);
             UpdateCraftButton();
         }
 

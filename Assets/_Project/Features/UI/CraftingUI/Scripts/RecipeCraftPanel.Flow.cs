@@ -45,7 +45,6 @@ namespace CreativeAI.UI.CraftingUI
         private IEnumerator CraftRoutine(CraftRecipeData recipe, int quantity)
         {
             _isCrafting = true;
-            _craftPanel?.SetCloseButtonVisible(false);
             HideWarningImmediately();
             _craftPanel?.ShowLoading();
 
@@ -59,7 +58,6 @@ namespace CreativeAI.UI.CraftingUI
             if (!crafted)
             {
                 _craftPanel?.HideLoadingAndResult();
-                _craftPanel?.SetCloseButtonVisible(true);
                 RebuildMaterialRows();
                 PlayMissingMaterialsWarning();
                 yield break;
@@ -83,7 +81,6 @@ namespace CreativeAI.UI.CraftingUI
         {
             _craftPanel?.HideResult();
             HideWarningImmediately();
-            _craftPanel?.SetCloseButtonVisible(true);
 
             SelectRecipeSlot(_slots.FirstOrDefault(slot => slot?.Recipe == _selectedRecipe));
             RebuildMaterialRows();
