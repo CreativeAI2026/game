@@ -82,3 +82,12 @@ crashlytics-build.properties
 /Assets/PurchasedAssets/
 /Assets/PurchasedAssets.meta
 /Build_Windows/
+
+# SRP "Generate Core CommandBuffers" auto-generated files (accidentally output to project root)
+/ComputeCommandBuffer.cs
+/IBaseCommandBuffer.cs
+/IComputeCommandBuffer.cs
+/IRasterCommandBuffer.cs
+/IUnsafeCommandBuffer.cs
+/RasterCommandBuffer.cs
+/UnsafeCommandBuffer.cs
