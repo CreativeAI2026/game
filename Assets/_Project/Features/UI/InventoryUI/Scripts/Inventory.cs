@@ -48,9 +48,9 @@ namespace CreativeAI.UI.InventoryUI
         private bool _started;
         private Coroutine _resetRoutine;
         private ItemSlot _currentSelectedSlot;
-        private ItemSlot _equippedSlot;
         private ItemStack _selectedStack;
         private readonly HashSet<ItemData> _craftAssignedItems = new();
+        private readonly HashSet<ItemStack> _craftAssignedStacks = new();
 
         public void SetSelectFirstSlotOnRefresh(bool selectFirst) =>
             _selectFirstSlotOnRefresh = selectFirst;

@@ -2,7 +2,6 @@ using System.Collections;
 using System.Collections.Generic;
 using CreativeAI.Gameplay;
 using CreativeAI.UI.InventoryUI;
-using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
 
@@ -58,34 +57,8 @@ namespace CreativeAI.UI.CraftingUI
         [SerializeField]
         private GameObject _quantityDialog;
 
-        [Header("Craft Flow Roots")]
         [SerializeField]
-        private GameObject _loadingPanel;
-
-        [SerializeField]
-        private GameObject _resultPanel;
-
-        [SerializeField]
-        private GameObject _closeButton;
-
-        private RectTransform _quantityDialogRect;
-        private CanvasGroup _quantityDialogCanvasGroup;
-        private Image _dialogItemImage;
-        private TMP_Text _dialogItemName;
-        private TMP_Text _dialogCounts;
-        private TMP_InputField _quantityInput;
-        private Button _minButton;
-        private Button _minusButton;
-        private Button _plusButton;
-        private Button _maxButton;
-        private Button _cancelButton;
-        private Button _dialogCraftButton;
-
-        private RectTransform _loadingGear;
-        private Image _resultItemImage;
-        private TMP_Text _resultItemName;
-        private ResultPanelClickCatcher _resultClickCatcher;
-        private ResultPanelClickCatcher _quantityDialogPanelClickCatcher;
+        private CraftQuantityDialog _quantityDialogController;
 
         private readonly List<RecipeSlot> _slots = new();
         private readonly List<RecipeMaterialRow> _materialRows = new();
@@ -99,6 +72,8 @@ namespace CreativeAI.UI.CraftingUI
         private bool _warnedMissingRecipeDB;
         private bool _warnedMissingRecipeSlotPrefab;
         private bool _warnedMissingMaterialRows;
+        private bool _warnedMissingQuantityDialogPanel;
+        private bool _warnedMissingQuantityDialog;
         private Coroutine _craftRoutine;
         private Coroutine _initializeRoutine;
 
@@ -135,11 +110,8 @@ namespace CreativeAI.UI.CraftingUI
             _isCrafting = false;
             HideWarningImmediately();
             CloseQuantityDialogImmediately();
-            if (_resultPanel != null)
-                _resultPanel.SetActive(false);
-            if (_loadingPanel != null)
-                _loadingPanel.SetActive(false);
-            SetCloseButtonVisible(true);
+            _craftPanel?.HideLoadingAndResult();
+            _craftPanel?.SetCloseButtonVisible(true);
         }
 
         private void OnDestroy()
@@ -150,8 +122,8 @@ namespace CreativeAI.UI.CraftingUI
 
         private void Update()
         {
-            if (_isCrafting && _loadingGear != null)
-                _loadingGear.Rotate(0f, 0f, -_gearRotationSpeed * Time.unscaledDeltaTime);
+            if (_isCrafting)
+                _craftPanel?.RotateLoadingGear(_gearRotationSpeed);
 
             UpdateQuantityDialogKeyboardControls();
         }
@@ -162,7 +134,6 @@ namespace CreativeAI.UI.CraftingUI
             ResolveRecipeDB();
             ResolveMainReferences();
             ResolveQuantityDialogReferences();
-            ResolveCraftFlowReferences();
         }
 
         private void ResolveCraftPanelReference()
@@ -239,20 +210,8 @@ namespace CreativeAI.UI.CraftingUI
             HideWarningImmediately();
             CloseQuantityDialogImmediately();
 
-            if (_resultPanel != null)
-                _resultPanel.SetActive(false);
-            if (_loadingPanel != null)
-                _loadingPanel.SetActive(false);
-
-            SetCloseButtonVisible(true);
-        }
-
-        private void SetCloseButtonVisible(bool visible)
-        {
-            if (_closeButton == null)
-                ResolveCraftFlowReferences();
-
-            CraftFlowViewUtility.SetCloseButtonVisible(_closeButton, visible);
+            _craftPanel?.HideLoadingAndResult();
+            _craftPanel?.SetCloseButtonVisible(true);
         }
 
         private void ValidateSetup()
@@ -277,6 +236,18 @@ namespace CreativeAI.UI.CraftingUI
                     $"{nameof(RecipeCraftPanel)} on {name}: MaterialList が見つかりません。",
                     this
                 );
+        }
+
+        private void WarnMissingReferenceOnce(ref bool flag, string referenceName)
+        {
+            if (flag)
+                return;
+
+            Debug.LogWarning(
+                $"{nameof(RecipeCraftPanel)} on {name}: {referenceName} が見つかりません。Inspector参照を設定するか、Prefab上の名前を確認してください。",
+                this
+            );
+            flag = true;
         }
     }
 }

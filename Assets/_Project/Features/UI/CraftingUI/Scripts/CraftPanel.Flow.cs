@@ -12,236 +12,104 @@ namespace CreativeAI.UI.CraftingUI
     {
         private void FindCraftFlowReferences()
         {
-            _craftButton ??= FindDescendant("CraftButton")?.GetComponent<Button>();
             _loadingPanel ??= FindDescendant("LoadingPanel")?.gameObject;
             _loadingGear ??= FindDescendant("LoadingGear") as RectTransform;
             _resultPanel ??= FindDescendant("ResultPanel")?.gameObject;
             if (_resultPanel != null)
             {
-                _resultItemImage ??= FindComponentIn<Image>(_resultPanel.transform, "ItemImage");
+                _resultPanelBackground ??= FindGameObjectIn(_resultPanel.transform, "Background");
+                _resultPanelTitle ??= FindComponentIn<TMP_Text>(_resultPanel.transform, "Title");
+                _resultItemImage ??=
+                    FindComponentIn<Image>(_resultPanel.transform, "Icon")
+                    ?? FindComponentIn<Image>(_resultPanel.transform, "ItemImage");
                 _resultItemName ??= FindComponentIn<TMP_Text>(_resultPanel.transform, "ItemName");
             }
             _closeButton ??= FindDescendant("CloseButton")?.gameObject;
-            UIButtonHoverScaleUtility.ApplyTo(_craftButton);
-            UIButtonHoverScaleUtility.ApplyTo(_closeButton?.GetComponent<Button>());
+            _closeButtonButton ??= _closeButton?.GetComponent<Button>();
+            UIButtonHoverScaleUtility.ApplyTo(_closeButtonButton);
         }
 
         private void BindCraftFlow()
         {
-            if (_craftButton != null)
+            if (_resultPanel == null)
             {
-                _craftButton.onClick.RemoveListener(StartCraft);
-                _craftButton.onClick.AddListener(StartCraft);
+                WarnMissingReferenceOnce(ref _warnedMissingResultPanel, "ResultPanel");
+                return;
             }
 
-            if (_resultPanel == null)
-                return;
-
-            _resultClickCatcher = CraftFlowViewUtility.PrepareClickCatcher(
+            _resultCloseOnSelfClick = CraftFlowViewUtility.PrepareCloseOnSelfClick(
                 _resultPanel,
-                CloseResult
+                HideSharedResult
             );
         }
 
-        private void UpdateCraftButton()
+        public void ShowLoading()
         {
-            bool hasEnoughMaterials = HasEnoughMaterials();
-            bool hasCategoryMismatch = HasCategoryMismatch();
-            bool hasEquippedMaterial = HasEquippedMaterial();
-            bool hasRecipe = FindSelectedRecipe() != null;
-            bool canCraft = hasRecipe && CanCraft();
-
-            if (_craftButton != null)
-                _craftButton.interactable = !_isCrafting && canCraft;
-
-            if (_isCrafting || canCraft)
-                HideWarning();
-            else if (hasEquippedMaterial)
-                ShowEquippedMaterialWarning();
-            else if (!hasEnoughMaterials)
-                HideWarning();
-            else if (hasCategoryMismatch)
-                ShowCategoryMismatchWarning();
-        }
-
-        private void StartCraft()
-        {
-            if (_isCrafting)
-                return;
-
-            if (!CanCraft())
-            {
-                if (HasEquippedMaterial())
-                    ShowEquippedMaterialWarning();
-                else if (HasCategoryMismatch())
-                    ShowCategoryMismatchWarning();
-                else
-                    ShowNotReadyWarning();
-
-                return;
-            }
-
-            StopCraftRoutine();
-            _craftRoutine = StartCoroutine(CraftRoutine());
-        }
-
-        private bool CanCraft()
-        {
-            var recipe = FindSelectedRecipe();
-            return recipe != null
-                && (
-                    InventoryManager.Instance?.CanCraft(
-                        recipe,
-                        GetMaterialStack(0),
-                        GetMaterialStack(1)
-                    )
-                    ?? false
-                );
-        }
-
-        private bool HasEnoughMaterials()
-        {
-            return _slots.Count(slot => slot.Stack != null) >= 2;
-        }
-
-        private bool HasCategoryMismatch()
-        {
-            var selectedItems = _slots
-                .Where(slot => slot.Stack?.Data != null)
-                .Select(slot => slot.Stack.Data)
-                .Take(2)
-                .ToList();
-
-            if (selectedItems.Count < 2)
-                return false;
-
-            return selectedItems[0].category != selectedItems[1].category;
-        }
-
-        private bool HasEquippedMaterial()
-        {
-            return _slots
-                .Where(slot => slot.Stack != null)
-                .Select(slot => slot.Stack)
-                .Take(2)
-                .Any(stack => stack.IsEquipped);
-        }
-
-        private IEnumerator CraftRoutine()
-        {
-            _isCrafting = true;
-            _lastCraftedRecipe = FindSelectedRecipe();
-            UpdateCraftButton();
-
-            SetCloseButtonVisible(false);
-            HideWarning();
-
             CraftFlowViewUtility.ShowLoading(_loadingPanel, _loadingGear, _resultPanel);
+        }
 
-            yield return new WaitForSecondsRealtime(_testCraftDuration);
-
-            bool crafted =
-                _lastCraftedRecipe != null
-                && (
-                    InventoryManager.Instance?.TryCraft(
-                        _lastCraftedRecipe,
-                        GetMaterialStack(0),
-                        GetMaterialStack(1)
-                    )
-                    ?? false
-                );
-            if (crafted)
-                _recipeDB?.RevealRecipe(
-                    _lastCraftedRecipe.material1,
-                    _lastCraftedRecipe.material2,
-                    out _
-                );
-
-            CraftFlowViewUtility.CompleteCraftRoutine(ref _craftRoutine, ref _isCrafting);
-
+        public void HideLoading()
+        {
             CraftFlowViewUtility.HideLoadingGear(_loadingGear);
             CraftFlowViewUtility.HideLoadingPanel(_loadingPanel);
-            if (!crafted)
-            {
-                CraftFlowViewUtility.HidePanels(_loadingPanel, null);
-                SetCloseButtonVisible(true);
-                ShowNotReadyWarning();
-                UpdateCraftButton();
-                yield break;
-            }
-
-            if (_resultPanel != null)
-            {
-                HideWarning();
-                RefreshResultPanel();
-                _resultClickCatcher?.SetClickAction(CloseResult);
-                CraftUIAnimationUtility.PlayResultIn(_resultPanel);
-            }
-
-            UpdateCraftButton();
         }
 
-        private CraftRecipeData FindSelectedRecipe()
+        public void HideLoadingAndResult()
         {
-            if (_recipeDB == null)
-                return null;
-
-            var selectedItems = _slots
-                .Where(slot => slot.Stack?.Data != null)
-                .Select(slot => slot.Stack.Data)
-                .Take(2)
-                .ToList();
-
-            if (selectedItems.Count < 2)
-                return null;
-
-            return _recipeDB.FindRecipe(selectedItems[0], selectedItems[1]);
+            CraftFlowViewUtility.HidePanels(_loadingPanel, _resultPanel);
         }
 
-        private ItemStack GetMaterialStack(int index)
+        public void RotateLoadingGear(float speed)
         {
-            return index >= 0 && index < _slots.Count ? _slots[index].Stack : null;
+            if (_loadingGear != null)
+                _loadingGear.Rotate(0f, 0f, -speed * Time.unscaledDeltaTime);
         }
 
-        private void RefreshResultPanel()
+        public void ShowResult(ItemData resultItem, int count, System.Action closeAction)
         {
             FindCraftFlowReferences();
-            var resultItem = _lastCraftedRecipe?.resultItem;
-            CraftFlowViewUtility.RefreshResult(_resultItemImage, _resultItemName, resultItem, 1);
-        }
+            if (_resultPanel == null)
+            {
+                WarnMissingReferenceOnce(ref _warnedMissingResultPanel, "ResultPanel");
+                return;
+            }
 
-        private void CloseResult()
-        {
-            CraftFlowViewUtility.HidePanels(_loadingPanel, _resultPanel);
             HideWarning();
-            SetCloseButtonVisible(true);
-            ResetSlots();
-            SelectFirstSlotIfNeeded();
+            CraftFlowViewUtility.ShowResultPanel(
+                _resultPanel,
+                _resultItemImage,
+                _resultItemName,
+                resultItem,
+                count,
+                closeAction
+            );
         }
 
-        private void ResetCraftFlow()
+        public void HideResult()
         {
-            StopCraftRoutine();
-            _lastCraftedRecipe = null;
-            RefreshResultPanel();
+            CraftFlowViewUtility.HidePanels(null, _resultPanel);
+            SetCloseButtonVisible(true);
+        }
 
-            CraftFlowViewUtility.HidePanels(_loadingPanel, _resultPanel);
+        private void HideSharedResult()
+        {
+            HideResult();
+            HideWarning();
+        }
+
+        private void ResetSharedFlow()
+        {
+            HideLoadingAndResult();
             HideWarning();
             if (_loadingGear != null)
                 _loadingGear.localRotation = Quaternion.identity;
 
             SetCloseButtonVisible(true);
-            UpdateCraftButton();
         }
 
-        private void SetCloseButtonVisible(bool visible)
+        public void SetCloseButtonVisible(bool visible)
         {
             CraftFlowViewUtility.SetCloseButtonVisible(_closeButton, visible);
-        }
-
-        private void StopCraftRoutine()
-        {
-            CraftFlowViewUtility.StopCraftRoutine(this, ref _craftRoutine, ref _isCrafting);
         }
     }
 }

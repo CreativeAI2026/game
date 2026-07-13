@@ -23,8 +23,13 @@ namespace CreativeAI.UI.CraftingUI
 
         public void OnPointerClick(PointerEventData eventData)
         {
-            if (eventData.button == PointerEventData.InputButton.Left)
+            if (
+                eventData.button == PointerEventData.InputButton.Left
+                && eventData.pointerCurrentRaycast.gameObject == gameObject
+            )
+            {
                 _clickAction?.Invoke();
+            }
         }
     }
 }

@@ -29,6 +29,9 @@ namespace CreativeAI.UI.InventoryUI
 
         [Header("Selected Bounce")]
         [SerializeField]
+        private bool _bounceEnabled = true;
+
+        [SerializeField]
         private float _bounceHeight = 8f;
 
         [SerializeField]
@@ -76,6 +79,13 @@ namespace CreativeAI.UI.InventoryUI
         public void SetHoverScale(float scale) => _hoverScale = Mathf.Max(1f, scale);
 
         public void SetLockEnabled(bool enabled) => _lockEnabled = enabled;
+
+        public void SetBounceEnabled(bool enabled)
+        {
+            _bounceEnabled = enabled;
+            if (!_bounceEnabled)
+                StopBounce();
+        }
 
         public void SetBounceHeight(float height)
         {

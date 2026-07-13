@@ -8,7 +8,12 @@ namespace CreativeAI.UI.InventoryUI
     {
         private void StartBounce()
         {
-            if (_targetRect == null || _bounceHeight <= 0f || _bounceDuration <= 0f)
+            if (
+                !_bounceEnabled
+                || _targetRect == null
+                || _bounceHeight <= 0f
+                || _bounceDuration <= 0f
+            )
                 return;
 
             StopBounce();

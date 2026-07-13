@@ -24,9 +24,6 @@ namespace CreativeAI.UI.InventoryUI
         [SerializeField]
         private Image _craftAssignedMarkerImage;
 
-        [SerializeField]
-        private TMP_Text _craftAssignedText;
-
         private bool _createdEquippedDimOverlay;
         private bool _isEquipped;
         private bool _isCraftAssigned;
@@ -39,17 +36,13 @@ namespace CreativeAI.UI.InventoryUI
             0xEF,
             0xFF
         );
-        private static readonly Color EquippedDimOverlayColor = new Color(0f, 0f, 0f, 0.25f);
+        private static readonly Color EquippedDimOverlayColor = new Color(0f, 0f, 0f, 0.8f);
         private const float EquippedMarkerScale = 0.28f;
         private const float EquippedMarkerMaxIconRatio = 0.33f;
         private const float EquippedMarkerMinSize = 14f;
         private const float EquippedMarkerMaxSize = 44f;
         private const float EquippedTextVisibleMinSize = 26f;
         private const float EquippedTextMaxFontSizeScale = 0.55f;
-        private const float CraftAssignedMarkerScale = 0.22f;
-        private const float CraftAssignedMarkerMaxIconRatio = 0.28f;
-        private const float CraftAssignedMarkerMinSize = 10f;
-        private const float CraftAssignedMarkerMaxSize = 22f;
 
         public void SetEquipped(bool isEquipped)
         {
@@ -67,7 +60,7 @@ namespace CreativeAI.UI.InventoryUI
             _isCraftAssigned = isAssigned;
             ResolveMarkers();
             if (_craftAssignedMarker != null)
-                _craftAssignedMarker.SetActive(ShouldShowCraftAssignedMarker());
+                _craftAssignedMarker.SetActive(CanControlCraftAssignedMarker());
             ConfigureCraftAssignedMarker();
         }
 
@@ -85,6 +78,9 @@ namespace CreativeAI.UI.InventoryUI
             _craftAssignedMarker ??=
                 FindChildGameObject("VisualRoot/CraftAssignedMarker")
                 ?? FindChildGameObject("CraftAssignedMarker");
+            if (MarkersShareReference())
+                _craftAssignedMarker = null;
+
             ResolveCraftAssignedMarkerParts();
             _equippedDimOverlay ??= ResolveEquippedDimOverlay();
 
@@ -103,7 +99,7 @@ namespace CreativeAI.UI.InventoryUI
             if (_equippedDimOverlay != null)
                 _equippedDimOverlay.gameObject.SetActive(_isEquipped);
             if (_craftAssignedMarker != null)
-                _craftAssignedMarker.SetActive(ShouldShowCraftAssignedMarker());
+                _craftAssignedMarker.SetActive(CanControlCraftAssignedMarker());
         }
 
         private void ResolveEquippedMarkerParts()
@@ -123,9 +119,6 @@ namespace CreativeAI.UI.InventoryUI
                 return;
 
             _craftAssignedMarkerImage ??= _craftAssignedMarker.GetComponent<Image>();
-            _craftAssignedText ??= _craftAssignedMarker
-                .transform.Find("CraftAssignedText")
-                ?.GetComponent<TMP_Text>();
         }
 
         private Image ResolveEquippedDimOverlay()
@@ -181,12 +174,7 @@ namespace CreativeAI.UI.InventoryUI
                 float iconShortSide = GetIconShortSide();
                 if (iconShortSide > 0f)
                 {
-                    float markerSize = Mathf.Clamp(
-                        iconShortSide * EquippedMarkerScale,
-                        EquippedMarkerMinSize,
-                        EquippedMarkerMaxSize
-                    );
-                    markerSize = Mathf.Min(markerSize, iconShortSide * EquippedMarkerMaxIconRatio);
+                    float markerSize = CalculateMarkerSize(iconShortSide);
 
                     markerRect.anchorMin = new Vector2(0f, 1f);
                     markerRect.anchorMax = new Vector2(0f, 1f);
@@ -229,15 +217,7 @@ namespace CreativeAI.UI.InventoryUI
                 float iconShortSide = GetIconShortSide();
                 if (iconShortSide > 0f)
                 {
-                    float markerSize = Mathf.Clamp(
-                        iconShortSide * CraftAssignedMarkerScale,
-                        CraftAssignedMarkerMinSize,
-                        CraftAssignedMarkerMaxSize
-                    );
-                    markerSize = Mathf.Min(
-                        markerSize,
-                        iconShortSide * CraftAssignedMarkerMaxIconRatio
-                    );
+                    float markerSize = CalculateMarkerSize(iconShortSide);
 
                     markerRect.anchorMin = new Vector2(0f, 1f);
                     markerRect.anchorMax = new Vector2(0f, 1f);
@@ -253,16 +233,28 @@ namespace CreativeAI.UI.InventoryUI
                 _craftAssignedMarkerImage.raycastTarget = false;
             }
 
-            if (_craftAssignedText != null)
-            {
-                _craftAssignedText.gameObject.SetActive(false);
-                _craftAssignedText.raycastTarget = false;
-            }
-
-            _craftAssignedMarker.SetActive(ShouldShowCraftAssignedMarker());
+            _craftAssignedMarker.SetActive(CanControlCraftAssignedMarker());
         }
 
         private bool ShouldShowCraftAssignedMarker() => _isCraftAssigned && !_isEquipped;
+
+        private bool CanControlCraftAssignedMarker() =>
+            !MarkersShareReference() && ShouldShowCraftAssignedMarker();
+
+        private bool MarkersShareReference() =>
+            _equippedMarker != null
+            && _craftAssignedMarker != null
+            && ReferenceEquals(_equippedMarker, _craftAssignedMarker);
+
+        private static float CalculateMarkerSize(float iconShortSide)
+        {
+            float markerSize = Mathf.Clamp(
+                iconShortSide * EquippedMarkerScale,
+                EquippedMarkerMinSize,
+                EquippedMarkerMaxSize
+            );
+            return Mathf.Min(markerSize, iconShortSide * EquippedMarkerMaxIconRatio);
+        }
 
         private float GetIconShortSide()
         {

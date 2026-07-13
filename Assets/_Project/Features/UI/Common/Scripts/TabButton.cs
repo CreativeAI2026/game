@@ -15,8 +15,12 @@ namespace CreativeAI.UI
         [SerializeField]
         private TMP_Text _label;
 
+        [SerializeField]
+        private RectTransform _visualTarget;
+
         public Button Button { get; private set; }
         private HoverScaleOnPointer _hoverScale;
+        private bool _hasVisualHoverTarget;
 
         private static readonly Color ActiveColor = Color.white;
         private static readonly Color InactiveColor = new Color(0.5f, 0.5f, 0.5f, 1f);
@@ -26,6 +30,7 @@ namespace CreativeAI.UI
             Button = GetComponent<Button>();
             _hoverScale = GetComponent<HoverScaleOnPointer>();
             CreateVisualTarget();
+            ConfigureHoverScaleTarget();
         }
 
         private void CreateVisualTarget()
@@ -56,8 +61,30 @@ namespace CreativeAI.UI
             rootImage.sprite = null;
             rootImage.color = Color.clear;
             _icon = visualImage;
+            _visualTarget = visualRect;
+        }
 
-            _hoverScale?.SetTarget(visualRect);
+        private void ConfigureHoverScaleTarget()
+        {
+            if (_hoverScale == null)
+                return;
+
+            var target = _visualTarget != null ? _visualTarget : _icon?.rectTransform;
+            if (target != null)
+            {
+                _hoverScale.SetTarget(target);
+                _hasVisualHoverTarget = true;
+                _hoverScale.SetBounceEnabled(true);
+            }
+            else
+            {
+                _hoverScale.SetTarget(null);
+                _hasVisualHoverTarget = false;
+                _hoverScale.SetBounceEnabled(false);
+            }
+
+            _hoverScale.SetBounceTarget(null);
+            _hoverScale.SetLinkedTargets();
         }
 
         public void SetSelectionGroup(string group)
@@ -80,9 +107,17 @@ namespace CreativeAI.UI
             }
         }
 
-        public void SetActive(bool isActive, float duration)
+        public void SetActive(bool isActive, float duration) =>
+            SetActive(isActive, duration, true, true);
+
+        public void SetActive(
+            bool isActive,
+            float duration,
+            bool dimInactive,
+            bool allowSelectedBounce
+        )
         {
-            var targetColor = isActive ? ActiveColor : InactiveColor;
+            var targetColor = isActive || !dimInactive ? ActiveColor : InactiveColor;
 
             if (_icon != null)
             {
@@ -91,6 +126,16 @@ namespace CreativeAI.UI
                     .To(() => _icon.color, x => _icon.color = x, targetColor, duration)
                     .SetEase(Ease.OutQuad);
             }
+
+            if (_label != null)
+            {
+                _label.DOKill();
+                DOTween
+                    .To(() => _label.color, x => _label.color = x, targetColor, duration)
+                    .SetEase(Ease.OutQuad);
+            }
+
+            _hoverScale?.SetBounceEnabled(_hasVisualHoverTarget && allowSelectedBounce);
 
             if (isActive)
                 _hoverScale?.AcquireLock();

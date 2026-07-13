@@ -28,6 +28,18 @@ namespace CreativeAI.UI
         [SerializeField]
         private float _animDuration = 0.2f;
 
+        [SerializeField]
+        /*  */private bool _autoSelectFirstTabOnStart = true;
+
+        [SerializeField]
+        private bool _resetToFirstTabOnEnable = true;
+
+        [SerializeField]
+        private bool _dimInactiveTabs = true;
+
+        [SerializeField]
+        private bool _allowSelectedBounce = true;
+
         private List<TabButton> _buttons = new();
         private readonly List<int> _buttonToEntryIndices = new();
         private int _currentIndex = -1;
@@ -50,6 +62,8 @@ namespace CreativeAI.UI
             if (_tabButtonPrefab == null)
             {
                 _initialized = true;
+                if (!_autoSelectFirstTabOnStart)
+                    ApplyNoSelection();
                 return;
             }
 
@@ -72,13 +86,29 @@ namespace CreativeAI.UI
             }
 
             _initialized = true;
-            SelectTab(0);
+            if (_autoSelectFirstTabOnStart)
+                SelectTab(0);
+            else
+                ApplyNoSelection();
         }
 
         private void OnEnable()
         {
-            if (_initialized)
+            if (!_initialized)
+                return;
+
+            if (_resetToFirstTabOnEnable)
+            {
                 ResetToFirstTab();
+                return;
+            }
+
+            if (HasValidCurrentIndex())
+                RestoreCurrentSelection();
+            else if (_autoSelectFirstTabOnStart)
+                SelectTab(0);
+            else
+                ApplyNoSelection();
         }
 
         public void SelectTab(int index)
@@ -106,7 +136,13 @@ namespace CreativeAI.UI
             for (int i = 0; i < _buttons.Count; i++)
             {
                 if (_buttons[i] != null)
-                    _buttons[i].SetActive(i == buttonIndex, _animDuration);
+                    _buttons[i]
+                        .SetActive(
+                            i == buttonIndex,
+                            _animDuration,
+                            _dimInactiveTabs,
+                            _allowSelectedBounce
+                        );
             }
 
             for (int i = 0; i < _tabEntries.Count; i++)
@@ -118,8 +154,14 @@ namespace CreativeAI.UI
 
         public void ResetToFirstTab()
         {
-            if (!_initialized || _buttons.Count == 0)
+            if (!_initialized)
                 return;
+
+            if (_buttons.Count == 0)
+            {
+                ApplyNoSelection();
+                return;
+            }
 
             _currentIndex = -1;
             SelectTab(0);
@@ -136,6 +178,32 @@ namespace CreativeAI.UI
                 return;
 
             ApplySelection(_currentIndex);
+        }
+
+        private bool HasValidCurrentIndex() =>
+            _currentIndex >= 0
+            && _currentIndex < _buttons.Count
+            && _currentIndex < _buttonToEntryIndices.Count;
+
+        private void ApplyNoSelection()
+        {
+            _currentIndex = -1;
+
+            for (int i = 0; i < _buttons.Count; i++)
+            {
+                if (_buttons[i] != null)
+                    _buttons[i]
+                        .SetActive(false, _animDuration, _dimInactiveTabs, _allowSelectedBounce);
+            }
+
+            if (_tabEntries == null)
+                return;
+
+            for (int i = 0; i < _tabEntries.Count; i++)
+            {
+                if (_tabEntries[i].view != null)
+                    _tabEntries[i].view.SetActive(false);
+            }
         }
 
         public bool IsEnabled(int entryIndex)

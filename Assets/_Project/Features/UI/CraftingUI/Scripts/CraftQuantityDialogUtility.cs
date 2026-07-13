@@ -1,5 +1,6 @@
 using System;
 using CreativeAI.Gameplay;
+using CreativeAI.UI.Common;
 using TMPro;
 using UnityEngine;
 using UnityEngine.Events;
@@ -26,12 +27,9 @@ namespace CreativeAI.UI.CraftingUI
             return canvasGroup;
         }
 
-        public static ResultPanelClickCatcher PrepareBackground(
-            GameObject panel,
-            Action closeAction
-        )
+        public static CloseOnSelfClick PrepareBackground(GameObject panel, Action closeAction)
         {
-            return CraftFlowViewUtility.PrepareClickCatcher(panel, closeAction);
+            return CraftFlowViewUtility.PrepareCloseOnSelfClick(panel, closeAction);
         }
 
         public static void BindButton(Button button, UnityAction action)

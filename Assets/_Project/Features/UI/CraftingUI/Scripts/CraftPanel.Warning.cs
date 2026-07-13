@@ -15,12 +15,12 @@ namespace CreativeAI.UI.CraftingUI
             ShowWarning(_equippedMaterialMessage);
         }
 
-        private void ShowNotReadyWarning()
+        public void ShowNotReadyWarning()
         {
             ShowWarning(_notReadyMessage);
         }
 
-        private void ShowCategoryMismatchWarning()
+        public void ShowCategoryMismatchWarning()
         {
             ShowWarning(_categoryMismatchMessage);
         }
