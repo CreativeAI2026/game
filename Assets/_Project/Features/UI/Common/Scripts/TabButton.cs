@@ -13,14 +13,12 @@ namespace CreativeAI.UI
         private Image _icon;
 
         [SerializeField]
-        private TMP_Text _label;
-
-        [SerializeField]
         private RectTransform _visualTarget;
 
         public Button Button { get; private set; }
         private HoverScaleOnPointer _hoverScale;
         private bool _hasVisualHoverTarget;
+        private bool _hasWarnedMissingVisualHoverTarget;
 
         private static readonly Color ActiveColor = Color.white;
         private static readonly Color InactiveColor = new Color(0.5f, 0.5f, 0.5f, 1f);
@@ -29,39 +27,7 @@ namespace CreativeAI.UI
         {
             Button = GetComponent<Button>();
             _hoverScale = GetComponent<HoverScaleOnPointer>();
-            CreateVisualTarget();
             ConfigureHoverScaleTarget();
-        }
-
-        private void CreateVisualTarget()
-        {
-            if (_icon == null || _icon.transform != transform)
-                return;
-
-            var rootImage = _icon;
-            var visualObject = new GameObject(
-                "Visual",
-                typeof(RectTransform),
-                typeof(CanvasRenderer),
-                typeof(Image)
-            );
-            var visualRect = visualObject.GetComponent<RectTransform>();
-            visualRect.SetParent(transform, false);
-            visualRect.anchorMin = Vector2.zero;
-            visualRect.anchorMax = Vector2.one;
-            visualRect.offsetMin = Vector2.zero;
-            visualRect.offsetMax = Vector2.zero;
-
-            var visualImage = visualObject.GetComponent<Image>();
-            visualImage.sprite = rootImage.sprite;
-            visualImage.color = rootImage.color;
-            visualImage.preserveAspect = rootImage.preserveAspect;
-            visualImage.raycastTarget = false;
-
-            rootImage.sprite = null;
-            rootImage.color = Color.clear;
-            _icon = visualImage;
-            _visualTarget = visualRect;
         }
 
         private void ConfigureHoverScaleTarget()
@@ -69,7 +35,7 @@ namespace CreativeAI.UI
             if (_hoverScale == null)
                 return;
 
-            var target = _visualTarget != null ? _visualTarget : _icon?.rectTransform;
+            var target = ResolveVisualHoverTarget();
             if (target != null)
             {
                 _hoverScale.SetTarget(target);
@@ -78,13 +44,38 @@ namespace CreativeAI.UI
             }
             else
             {
-                _hoverScale.SetTarget(null);
                 _hasVisualHoverTarget = false;
                 _hoverScale.SetBounceEnabled(false);
+                _hoverScale.enabled = false;
+                WarnMissingVisualHoverTargetOnce();
+                return;
             }
 
             _hoverScale.SetBounceTarget(null);
             _hoverScale.SetLinkedTargets();
+        }
+
+        private RectTransform ResolveVisualHoverTarget()
+        {
+            if (_visualTarget != null && _visualTarget != transform)
+                return _visualTarget;
+
+            if (_icon != null && _icon.rectTransform != transform)
+                return _icon.rectTransform;
+
+            return null;
+        }
+
+        private void WarnMissingVisualHoverTargetOnce()
+        {
+            if (_hasWarnedMissingVisualHoverTarget)
+                return;
+
+            _hasWarnedMissingVisualHoverTarget = true;
+            Debug.LogWarning(
+                $"{nameof(TabButton)} '{name}' にRoot以外のVisualTargetまたはIconが設定されていないため、Hover演出を無効化しました。Prefab上で参照を設定してください。",
+                this
+            );
         }
 
         public void SetSelectionGroup(string group)
@@ -100,11 +91,6 @@ namespace CreativeAI.UI
         {
             if (_icon != null)
                 _icon.sprite = icon;
-            if (_label != null)
-            {
-                _label.text = label;
-                _label.gameObject.SetActive(!string.IsNullOrEmpty(label));
-            }
         }
 
         public void SetActive(bool isActive, float duration) =>
@@ -127,19 +113,14 @@ namespace CreativeAI.UI
                     .SetEase(Ease.OutQuad);
             }
 
-            if (_label != null)
-            {
-                _label.DOKill();
-                DOTween
-                    .To(() => _label.color, x => _label.color = x, targetColor, duration)
-                    .SetEase(Ease.OutQuad);
-            }
-
             _hoverScale?.SetBounceEnabled(_hasVisualHoverTarget && allowSelectedBounce);
 
+            if (_hoverScale == null || !_hasVisualHoverTarget)
+                return;
+
             if (isActive)
-                _hoverScale?.AcquireLock();
-            else if (_hoverScale != null && _hoverScale.IsLocked())
+                _hoverScale.AcquireLock();
+            else if (_hoverScale.IsLocked())
                 _hoverScale.ReleaseLock();
         }
     }
