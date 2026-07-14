@@ -22,6 +22,26 @@ namespace CreativeAI.Core.EventSystem
 
         private readonly Dictionary<string, string> _flags = new();
 
+        /// <summary>保存用にフラグ全体を読む(スナップショット)。</summary>
+        public IReadOnlyDictionary<string, string> Flags => _flags;
+
+        /// <summary>
+        /// ロード時に進行度・フラグをまとめて復元する。値の異同に関わらず OnProgressChanged を通知する
+        /// (購読側に読み直させる)。
+        /// </summary>
+        public void LoadState(int progress, IReadOnlyDictionary<string, string> flags)
+        {
+            _flags.Clear();
+            if (flags != null)
+            {
+                foreach (var kv in flags)
+                    if (!string.IsNullOrEmpty(kv.Key))
+                        _flags[kv.Key] = kv.Value;
+            }
+            Progress = progress;
+            OnProgressChanged?.Invoke();
+        }
+
         private void Awake()
         {
             if (Instance != null && Instance != this)

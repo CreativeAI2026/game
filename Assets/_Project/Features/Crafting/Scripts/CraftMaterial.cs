@@ -1,6 +1,6 @@
 namespace CreativeAI.Crafting
 {
-    /// <summary>調合のカテゴリ(GameSystems.md 3.3)。武器は調合不可。</summary>
+    /// <summary>調合のカテゴリ(documents/CraftingArchitecture.md「全体像」)。武器は調合不可。</summary>
     public enum CraftCategory
     {
         Equipment, // 装備品

@@ -7,7 +7,7 @@ using UnityEngine;
 using UnityEngine.EventSystems;
 using UnityEngine.InputSystem.UI;
 using UnityEngine.UI;
-using CreativeAI.Core.Bootstrap;
+using CreativeAI.Core;
 using CreativeAI.Core.SceneManagement;
 using CreativeAI.UI.Common;
 using CreativeAI.UI.CharacterUI;
@@ -24,14 +24,17 @@ using Text = TMPro.TextMeshProUGUI;
 namespace CreativeAI.EditorTools
 {
     /// <summary>
-    /// 00_Boot / 01_Title / Field_Area01 の3シーンを生成し、Build Settings に登録する。
+    /// 01_Title / Field_Area00(スカフォールド)の2シーンを生成し、Build Settings に登録する(Title 先頭)。
+    /// 手作りの Field_Area01+ は上書きしない。
+    /// アプリ常駐(SceneController + ロードオーバーレイ)は Title が生成する(Boot シーンは廃止)。
     /// Tools > CreativeAI > Setup Initial Scenes から実行。
     /// </summary>
     public static class SetupInitialScenes
     {
-        private const string BootPath = "Assets/_Project/Scenes/00_Boot.unity";
         private const string TitlePath = "Assets/_Project/Scenes/01_Title.unity";
-        private const string FieldPath = "Assets/_Project/Scenes/Field/Field_Area01.unity";
+
+        // 生成器はスカフォールド用の Field_Area00 を作る。手作りの Field_Area01+ は上書きしない。
+        private const string FieldPath = "Assets/_Project/Scenes/Field/Field_Area00.unity";
         private const string TitleBgPath = "Assets/_Project/Art/UI/Backgrounds/bg_title_main.png";
         private const string CharacterBgPath =
             "Assets/_Project/Art/UI/Backgrounds/bg_character_main.png";
@@ -45,13 +48,12 @@ namespace CreativeAI.EditorTools
         [MenuItem("Tools/CreativeAI/Setup Initial Scenes")]
         public static void Run()
         {
-            bool anyExists =
-                File.Exists(BootPath) || File.Exists(TitlePath) || File.Exists(FieldPath);
+            bool anyExists = File.Exists(TitlePath) || File.Exists(FieldPath);
             if (anyExists)
             {
                 bool overwrite = EditorUtility.DisplayDialog(
                     "Setup Initial Scenes",
-                    $"シーンファイルが既に存在します。上書きしますか？\n\n対象:\n- {BootPath}\n- {TitlePath}\n- {FieldPath}",
+                    $"シーンファイルが既に存在します。上書きしますか？\n\n対象:\n- {TitlePath}\n- {FieldPath}",
                     "上書きする",
                     "キャンセル"
                 );
@@ -61,26 +63,25 @@ namespace CreativeAI.EditorTools
 
             EditorSceneManager.SaveCurrentModifiedScenesIfUserWantsTo();
 
-            CreateBootScene();
             CreateTitleScene();
             CreateFieldScene();
             RegisterBuildSettings();
 
-            EditorSceneManager.OpenScene(BootPath);
+            EditorSceneManager.OpenScene(TitlePath);
 
             EditorUtility.DisplayDialog(
                 "Setup Initial Scenes",
-                "完了しました。\n\n- 00_Boot / 01_Title / Field_Area01 を生成\n- Field に HUD(Character/Inventory/Save) を配置\n- Build Settings に登録\n- 00_Boot を開きました\n\nそのまま Play してください。",
+                "完了しました。\n\n- 01_Title / Field_Area00(スカフォールド) を生成\n- Title にアプリ常駐(SceneController + ロードオーバーレイ)を配置\n- Field_Area00 に HUD(Character/Inventory/Save) を配置\n- 手作りの Field_Area01+ は上書きしていません\n- Build Settings に登録(Title を先頭)\n- 01_Title を開きました\n\nそのまま Play してください。",
                 "OK"
             );
         }
 
-        // ---------------- 00_Boot ----------------
-        private static void CreateBootScene()
+        // ---------------- アプリ常駐(SceneController + ロードオーバーレイ)----------------
+        // Title シーンに置き、起動時に1回だけ生成する(spec §6.1「生成はすべてタイトルが担う」)。
+        // Canvas/Overlay は SceneController の子。タイトル再入場時は SceneController.Awake の
+        // Instance ガードが重複した PersistentSystems ごと Destroy するので二重生成しない。
+        private static void CreatePersistentSystems()
         {
-            var scene = EditorSceneManager.NewScene(NewSceneSetup.EmptyScene, NewSceneMode.Single);
-            CreateEditorNote();
-
             var systems = new GameObject("PersistentSystems");
             systems.AddComponent<SceneController>();
 
@@ -119,14 +120,6 @@ namespace CreativeAI.EditorTools
             var overlayController = overlayGo.AddComponent<LoadingOverlayController>();
             SetRef(overlayController, "_canvasGroup", canvasGroup);
             SetRef(overlayController, "_progressBar", slider);
-
-            var bootstrap = new GameObject("Bootstrap");
-            bootstrap.AddComponent<BootstrapLoader>();
-
-            CreateEventSystem();
-
-            Directory.CreateDirectory(Path.GetDirectoryName(BootPath));
-            EditorSceneManager.SaveScene(scene, BootPath);
         }
 
         // ---------------- 01_Title ----------------
@@ -136,6 +129,9 @@ namespace CreativeAI.EditorTools
                 NewSceneSetup.DefaultGameObjects,
                 NewSceneMode.Single
             );
+
+            // アプリ常駐(SceneController + ロードオーバーレイ)は Title が生成する(Boot 廃止)。
+            CreatePersistentSystems();
 
             var canvasGo = new GameObject("Canvas");
             var canvas = canvasGo.AddComponent<Canvas>();
@@ -181,15 +177,23 @@ namespace CreativeAI.EditorTools
                 color: new Color(1f, 1f, 1f, 0.85f)
             );
 
+            // 開始処理(プレイヤーリグ生成)。PlayerRig Prefab スロットは未割当のまま
+            // (プレイヤー担当が Project の PlayerRig Prefab をドラッグ)。
+            var starterGo = new GameObject("GameStarter");
+            var starter = starterGo.AddComponent<GameStarter>();
+
             var titleController = canvasGo.AddComponent<TitleUIController>();
             SetRef(titleController, "_tapToStartButton", button);
+            SetRef(titleController, "_gameStarter", starter);
+            // 生成器の Title はスカフォールド用 Field_Area00 へ遷移(本番 Field_Area01 に依存しない)。
+            SetStr(titleController, "_nextSceneName", SceneNames.FieldArea00);
 
             EnsureInputSystemEventSystem();
 
             EditorSceneManager.SaveScene(scene, TitlePath);
         }
 
-        // ---------------- Field_Area01 ----------------
+        // ---------------- Field_Area00(スカフォールド)----------------
         private static void CreateFieldScene()
         {
             var scene = EditorSceneManager.NewScene(
@@ -269,7 +273,6 @@ namespace CreativeAI.EditorTools
         {
             EditorBuildSettings.scenes = new[]
             {
-                new EditorBuildSettingsScene(BootPath, true),
                 new EditorBuildSettingsScene(TitlePath, true),
                 new EditorBuildSettingsScene(FieldPath, true),
             };
@@ -1407,29 +1410,6 @@ namespace CreativeAI.EditorTools
             }
         }
 
-        private static void CreateEditorNote()
-        {
-            var noteGo = new GameObject("__EditorNote (Scene view only)");
-            var textMesh = noteGo.AddComponent<TextMesh>();
-            textMesh.text =
-                "=== 00_Boot シーン ===\n"
-                + "起動時の初期化シーン。\n"
-                + "PersistentSystems を生成し、\n"
-                + "BootstrapLoader が 01_Title へ自動遷移。\n"
-                + "\n"
-                + "このシーンは Play 時に一瞬で抜けるため\n"
-                + "通常編集する必要はありません。\n"
-                + "永続させたい新規マネージャーを追加する時のみ\n"
-                + "PersistentSystems 配下に置いてください。";
-            textMesh.fontSize = 40;
-            textMesh.characterSize = 0.15f;
-            textMesh.color = new Color(1f, 0.9f, 0.3f, 1f);
-            textMesh.anchor = TextAnchor.MiddleCenter;
-            textMesh.alignment = TextAlignment.Center;
-            noteGo.transform.position = Vector3.zero;
-            noteGo.tag = "EditorOnly";
-        }
-
         private static Sprite LoadSpriteWithImport(string path)
         {
             if (!File.Exists(path))
@@ -1456,6 +1436,21 @@ namespace CreativeAI.EditorTools
                 return;
             }
             prop.objectReferenceValue = value;
+            so.ApplyModifiedProperties();
+        }
+
+        private static void SetStr(Object target, string fieldName, string value)
+        {
+            var so = new SerializedObject(target);
+            var prop = so.FindProperty(fieldName);
+            if (prop == null)
+            {
+                Debug.LogError(
+                    $"[SetupInitialScenes] SerializedProperty '{fieldName}' not found on {target.GetType().Name}."
+                );
+                return;
+            }
+            prop.stringValue = value;
             so.ApplyModifiedProperties();
         }
     }
