@@ -145,6 +145,42 @@ namespace CreativeAI.Tests.EditMode
         }
 
         [Test]
+        public void SaveData_JsonRoundTrip_PreservesPlayerState()
+        {
+            var data = new SaveData
+            {
+                hasPlayerState = true,
+                sceneName = "Field_Area02",
+                posX = 1.5f,
+                posY = 2.5f,
+                posZ = -3.5f,
+                rotationY = 90f,
+                currentHp = 42f,
+            };
+
+            var back = JsonUtility.FromJson<SaveData>(JsonUtility.ToJson(data));
+
+            Assert.IsTrue(back.hasPlayerState);
+            Assert.AreEqual("Field_Area02", back.sceneName);
+            Assert.AreEqual(1.5f, back.posX);
+            Assert.AreEqual(2.5f, back.posY);
+            Assert.AreEqual(-3.5f, back.posZ);
+            Assert.AreEqual(90f, back.rotationY);
+            Assert.AreEqual(42f, back.currentHp);
+        }
+
+        [Test]
+        public void SaveData_PlayerState_DefaultsToDisabled()
+        {
+            // 旧セーブ(プレイヤー状態なし)を模した JSON。hasPlayerState が既定 false で復元スキップされる。
+            var back = JsonUtility.FromJson<SaveData>("{\"progress\":3}");
+
+            Assert.AreEqual(3, back.progress);
+            Assert.IsFalse(back.hasPlayerState);
+            Assert.AreEqual(string.Empty, back.sceneName ?? string.Empty);
+        }
+
+        [Test]
         public void ProgressManager_LoadState_RestoresProgressAndFlags()
         {
             var pmGo = new GameObject(nameof(ProgressManager));

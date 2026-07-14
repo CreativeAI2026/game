@@ -8,7 +8,7 @@ namespace CreativeAI.Gameplay
     /// ベースパラメータはPlayerParameterData（ScriptableObject）で定義し、
     /// 装備やバフによる加算は各プロパティ内で計算する拡張ポイントを持つ。
     /// </summary>
-    public class PlayerStatus : MonoBehaviour, IDamageable
+    public class PlayerStatus : MonoBehaviour, IDamageable, ISaveableActor
     {
         [SerializeField]
         private PlayerParameterData _playerData;
@@ -193,6 +193,21 @@ namespace CreativeAI.Gameplay
         {
             Debug.Log("プレイヤーは力尽きた...");
             // ゲームオーバー処理やアニメーション再生など
+        }
+
+        // --- ISaveableActor(セーブ復元の境界。SaveService から呼ばれる) ---
+
+        /// <summary>保存時の現在HPを返す。</summary>
+        public float CaptureHp() => CurrentHp;
+
+        /// <summary>
+        /// 復元時に現在HPを設定する。装備込みの最大HPでクランプする
+        /// (装備の復元が先に済んでいる前提。SaveService 側で順序を保証)。
+        /// </summary>
+        public void RestoreHp(float hp)
+        {
+            CurrentHp = Mathf.Clamp(hp, 0f, CurrentMaxHp);
+            OnHpChanged?.Invoke(CurrentHp, CurrentMaxHp);
         }
     }
 }

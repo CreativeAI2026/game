@@ -7,7 +7,9 @@ namespace CreativeAI.Core
     /// セッション常駐(進行度・モード…)を「はじめる/続きから」時に生成する入口。
     /// 生成順は マネージャ → プレイヤー(プレイヤーが GameModeManager を購読するため。spec §6.1)。
     /// 各マネージャの Awake が Instance で二重生成をガードするため、再入場で呼んでも冪等。
-    /// プレイヤーリグ・Inventory は各担当が同フローに追加していく。
+    /// ここで生成するのは Core 内のマネージャのみ。Inventory(Gameplay) は Core→Gameplay の循環参照になるため
+    /// ここでは生成せず、Title フロー(UI 層)から InventoryManager.EnsureResident() で生成する。
+    /// プレイヤーリグは GameStarter.EnsurePlayer()。生成順は マネージャ → Inventory → プレイヤー(spec §6.1)。
     /// </summary>
     public static class SessionBootstrap
     {
