@@ -1,0 +1,136 @@
+#if UNITY_EDITOR
+using System;
+using System.IO;
+using System.Linq;
+using CreativeAI.Core.EventSystem;
+using CreativeAI.Gameplay;
+using UnityEditor;
+using UnityEngine;
+
+namespace CreativeAI.Scenario.Editor
+{
+    /// <summary>
+    /// EventImporter を叩いて events.json を EventDefinition(.asset)に書き出すエディタ拡張。
+    /// 手順は documents/EventImplementation.md「Importer」。
+    /// 手動: Tools > CreativeAI > Import Events / バッチ:
+    /// Unity -batchmode -quit -executeMethod CreativeAI.Scenario.Editor.EventImporterMenu.Run
+    /// </summary>
+    public static class EventImporterMenu
+    {
+        private const string DefaultSource = "Assets/_Project/Features/Scenario/events.json";
+        private const string OutputDir = "Assets/_Project/Features/Scenario/Data/Dialogues";
+        private const string EnemyDataDir = "Assets/_Project/Features/Enemy/Data";
+        private const string ItemDataDir = "Assets/_Project/Features/Inventory/Data";
+
+        [MenuItem("Tools/CreativeAI/Import Events")]
+        public static void Import()
+        {
+            var start = File.Exists(DefaultSource)
+                ? Path.GetDirectoryName(Path.GetFullPath(DefaultSource))
+                : Application.dataPath;
+            var picked = EditorUtility.OpenFilePanel("Import events.json", start, "json");
+            if (string.IsNullOrEmpty(picked))
+                return; // キャンセル
+            RunImport(picked);
+        }
+
+        /// <summary>バッチ実行の入口。既定パスの events.json を取り込む。</summary>
+        public static void Run() => RunImport(DefaultSource);
+
+        private static void RunImport(string path)
+        {
+            if (!File.Exists(path))
+            {
+                Debug.LogError($"[EventImporter] ファイルが見つかりません: {path}");
+                return;
+            }
+
+            var report = EventImporter.Parse(File.ReadAllText(path), BuildCatalog());
+
+            foreach (var d in report.Diagnostics)
+            {
+                if (d.Severity == EventImporter.Severity.Error)
+                    Debug.LogError($"[EventImporter] {d}");
+                else
+                    Debug.LogWarning($"[EventImporter] {d}");
+            }
+
+            if (report.HasErrors)
+            {
+                Debug.LogError(
+                    $"[EventImporter] エラー {report.ErrorCount} 件のため中止しました(1件も書き出していません)。"
+                );
+                return;
+            }
+
+            EnsureFolder(OutputDir);
+
+            int created = 0,
+                updated = 0;
+            foreach (var built in report.Events)
+            {
+                var assetPath = $"{OutputDir}/{built.Id}.asset";
+                var existing = AssetDatabase.LoadAssetAtPath<EventDefinition>(assetPath);
+                if (existing != null)
+                {
+                    // 既存 asset に上書き。GUID を保つのでシーンの EventTrigger 参照が壊れない。
+                    EditorUtility.CopySerialized(built, existing);
+                    EditorUtility.SetDirty(existing);
+                    updated++;
+                }
+                else
+                {
+                    AssetDatabase.CreateAsset(built, assetPath);
+                    created++;
+                }
+            }
+
+            AssetDatabase.SaveAssets();
+            AssetDatabase.Refresh();
+            Debug.Log(
+                $"[EventImporter] 完了: 新規 {created} / 更新 {updated}(警告 {report.WarningCount} 件)→ {OutputDir}"
+            );
+        }
+
+        /// <summary>
+        /// EnemyData(id=enemyKey)と ItemData(key)から有効キー集合を作る。
+        /// アセットが1つも無いカテゴリは null(=未検証・警告どまり)にし、作成前に全 battle/giveItem を
+        /// 弾かないようにする。1つでもあれば、その集合で存在検証(未一致はエラー)。
+        /// </summary>
+        private static EventImporter.ImportCatalog BuildCatalog()
+        {
+            var enemyKeys = AssetDatabase
+                .FindAssets("t:EnemyData", new[] { EnemyDataDir })
+                .Select(AssetDatabase.GUIDToAssetPath)
+                .Select(AssetDatabase.LoadAssetAtPath<EnemyData>)
+                .Where(e => e != null && !string.IsNullOrEmpty(e.Id))
+                .Select(e => e.Id)
+                .ToHashSet(StringComparer.Ordinal);
+
+            var itemKeys = AssetDatabase
+                .FindAssets("t:ItemData", new[] { ItemDataDir })
+                .Select(AssetDatabase.GUIDToAssetPath)
+                .Select(AssetDatabase.LoadAssetAtPath<ItemData>)
+                .Where(i => i != null && !string.IsNullOrEmpty(i.key))
+                .Select(i => i.key)
+                .ToHashSet(StringComparer.Ordinal);
+
+            return new EventImporter.ImportCatalog(
+                enemyKeys.Count > 0 ? enemyKeys : null,
+                itemKeys.Count > 0 ? itemKeys : null
+            );
+        }
+
+        /// <summary>Assets 相対フォルダを親から順に作成する。</summary>
+        private static void EnsureFolder(string folder)
+        {
+            if (AssetDatabase.IsValidFolder(folder))
+                return;
+            var parent = Path.GetDirectoryName(folder).Replace('\\', '/');
+            var leaf = Path.GetFileName(folder);
+            EnsureFolder(parent);
+            AssetDatabase.CreateFolder(parent, leaf);
+        }
+    }
+}
+#endif

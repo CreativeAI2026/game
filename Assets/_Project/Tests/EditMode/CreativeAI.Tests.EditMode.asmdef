@@ -4,6 +4,8 @@
     "references": [
         "CreativeAI.Crafting",
         "CreativeAI.Core",
+        "CreativeAI.Gameplay",
+        "CreativeAI.Scenario.Editor",
         "UnityEngine.TestRunner",
         "UnityEditor.TestRunner"
     ],
