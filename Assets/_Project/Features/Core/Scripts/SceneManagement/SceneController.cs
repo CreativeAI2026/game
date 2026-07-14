@@ -30,7 +30,11 @@ namespace CreativeAI.Core.SceneManagement
             _overlay = GetComponentInChildren<ILoadingOverlay>(includeInactive: true);
         }
 
-        public void LoadScene(string sceneName)
+        /// <param name="onSceneActivated">
+        /// 対象シーンが有効化された直後(オーバーレイを閉じる前)に一度だけ呼ばれる。
+        /// セーブ復元でプレイヤーを保存座標へ配置する等、ロード後処理をここで行う(画面はまだ暗幕の下)。
+        /// </param>
+        public void LoadScene(string sceneName, System.Action onSceneActivated = null)
         {
             if (_isLoading)
             {
@@ -39,10 +43,10 @@ namespace CreativeAI.Core.SceneManagement
                 );
                 return;
             }
-            StartCoroutine(LoadRoutine(sceneName));
+            StartCoroutine(LoadRoutine(sceneName, onSceneActivated));
         }
 
-        private IEnumerator LoadRoutine(string sceneName)
+        private IEnumerator LoadRoutine(string sceneName, System.Action onSceneActivated)
         {
             _isLoading = true;
 
@@ -69,6 +73,9 @@ namespace CreativeAI.Core.SceneManagement
             op.allowSceneActivation = true;
             while (!op.isDone)
                 yield return null;
+
+            // シーン有効化直後・暗幕を閉じる前にロード後処理(プレイヤー配置など)を実行する。
+            onSceneActivated?.Invoke();
 
             if (_overlay != null)
                 yield return _overlay.HideCoroutine(_fadeSeconds);

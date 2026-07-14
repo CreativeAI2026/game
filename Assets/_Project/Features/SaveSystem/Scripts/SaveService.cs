@@ -2,15 +2,18 @@ using System.Collections.Generic;
 using System.IO;
 using CreativeAI.Core.EventSystem;
 using UnityEngine;
+using UnityEngine.SceneManagement;
 
 namespace CreativeAI.Gameplay
 {
     /// <summary>
-    /// 進行度・フラグ(ProgressManager)と所持品(InventoryManager)を1ファイルに全書き/復元する。
-    /// マニュアルセーブ専用(セーブUIの「はい」から Save を呼ぶ)。単一スロット上書き。spec §6。
+    /// 進行度・フラグ(ProgressManager)・所持品(InventoryManager)・プレイヤー状態(現在HP・座標・シーン)を
+    /// 1ファイルに全書き/復元する。マニュアルセーブ専用(セーブUIの「はい」から Save を呼ぶ)。単一スロット上書き。spec §6。
     /// </summary>
     public static class SaveService
     {
+        private const string PlayerTag = "Player";
+
         private static string FilePath => Path.Combine(Application.persistentDataPath, "save.json");
 
         public static bool HasSave() => File.Exists(FilePath);
@@ -50,19 +53,45 @@ namespace CreativeAI.Gameplay
                 }
             }
 
+            CapturePlayer(data);
+
             File.WriteAllText(FilePath, JsonUtility.ToJson(data, true));
             Debug.Log($"[SaveService] 保存しました: {FilePath}");
         }
 
-        /// <summary>ディスクから復元する。セーブが無ければ false。</summary>
-        public static bool Load()
+        /// <summary>tag=Player のリグ root から座標・向き・現在HP・現在シーンを取り込む。リグ未生成なら hasPlayerState=false。</summary>
+        private static void CapturePlayer(SaveData data)
+        {
+            var player = GameObject.FindWithTag(PlayerTag);
+            if (player == null)
+                return;
+
+            data.sceneName = SceneManager.GetActiveScene().name;
+            var pos = player.transform.position;
+            data.posX = pos.x;
+            data.posY = pos.y;
+            data.posZ = pos.z;
+            data.rotationY = player.transform.eulerAngles.y;
+
+            // 現在HPの実体は担当班の実装(ISaveableActor)から取る。窓口が無ければ座標だけ保存。
+            var actor = player.GetComponentInChildren<ISaveableActor>();
+            data.currentHp = actor != null ? actor.CaptureHp() : 0f;
+            data.hasPlayerState = true;
+        }
+
+        /// <summary>
+        /// ディスクから進行度・フラグ・所持品を復元し、読み込んだ SaveData を返す(セーブが無ければ null)。
+        /// プレイヤーの座標・HP は対象シーンのロード後でないと配置できないため、ここでは復元しない。
+        /// 呼び出し側は戻り値の sceneName でシーンをロードし、その完了時に <see cref="RestorePlayerState"/> を呼ぶ。
+        /// </summary>
+        public static SaveData Load()
         {
             if (!HasSave())
-                return false;
+                return null;
 
             var data = JsonUtility.FromJson<SaveData>(File.ReadAllText(FilePath));
             if (data == null)
-                return false;
+                return null;
 
             var pm = ProgressManager.Instance;
             if (pm != null)
@@ -87,7 +116,29 @@ namespace CreativeAI.Gameplay
             }
 
             Debug.Log($"[SaveService] 復元しました: {FilePath}");
-            return true;
+            return data;
+        }
+
+        /// <summary>
+        /// 対象シーンのロード完了後に、tag=Player のリグを保存座標・向きへ移し、現在HPを復元する。
+        /// 所持品(装備)の復元が済んだ後に呼ぶこと(最大HPが確定してから HP をクランプするため)。
+        /// </summary>
+        public static void RestorePlayerState(SaveData data)
+        {
+            if (data == null || !data.hasPlayerState)
+                return;
+
+            var player = GameObject.FindWithTag(PlayerTag);
+            if (player == null)
+                return;
+
+            player.transform.SetPositionAndRotation(
+                new Vector3(data.posX, data.posY, data.posZ),
+                Quaternion.Euler(0f, data.rotationY, 0f)
+            );
+
+            var actor = player.GetComponentInChildren<ISaveableActor>();
+            actor?.RestoreHp(data.currentHp);
         }
 
         private static void RestoreItems(InventoryManager inv, ItemDB db, List<ItemEntry> entries)
