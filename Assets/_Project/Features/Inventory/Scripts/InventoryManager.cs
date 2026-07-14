@@ -13,6 +13,11 @@ namespace CreativeAI.Gameplay
 
         public static InventoryManager Instance { get; private set; }
 
+        // EnsureResident() 経由(本番Title フロー)で生成中は true。
+        // この間に Awake したインスタンスはデバッグ用テストアイテムを積まない(新規はまっさら。spec §6.1)。
+        // シーン直置き(開発時に Field を直接 Play)では false のままなので従来どおりテスト品が入る。
+        private static bool _creatingResident;
+
         public event System.Action InventoryChanged;
 
         /// <summary>
@@ -26,6 +31,29 @@ namespace CreativeAI.Gameplay
 
         private readonly List<ItemStack> _items = new();
 
+        /// <summary>
+        /// セッション常駐の Inventory を「はじめる/続きから」時に1つだけ生成する(spec §6.1: 生成はTitleが担う)。
+        /// 既に在ればそれを返す。Core は Gameplay を参照できない(循環)ため SessionBootstrap ではなくここに置き、
+        /// Title フロー(UI 層)から マネージャ生成の後・プレイヤー生成の前に呼ぶ。
+        /// コード生成なのでシーン配置に依存せず、どのエリアから開始しても Inventory が必ず存在する。
+        /// </summary>
+        public static InventoryManager EnsureResident()
+        {
+            if (Instance != null)
+                return Instance;
+
+            _creatingResident = true;
+            try
+            {
+                // AddComponent は Awake を同期実行する。_creatingResident 中の Awake はテスト品を積まない。
+                return new GameObject(nameof(InventoryManager)).AddComponent<InventoryManager>();
+            }
+            finally
+            {
+                _creatingResident = false;
+            }
+        }
+
         private void Awake()
         {
             if (Instance != null)
@@ -37,7 +65,7 @@ namespace CreativeAI.Gameplay
             Instance = this;
             DontDestroyOnLoad(gameObject);
 
-            if (_addTestItemsOnAwake)
+            if (_addTestItemsOnAwake && !_creatingResident)
             {
                 AddTestItems();
                 EquipInitialTestItems();
