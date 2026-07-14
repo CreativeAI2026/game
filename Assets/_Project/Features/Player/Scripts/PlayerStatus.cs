@@ -15,8 +15,15 @@ namespace CreativeAI.Gameplay
 
         public float CurrentHp { get; private set; }
 
+        // 装備による補正合計(素の値に足すと最終ステータス)。装備変更で再計算する。
+        private EquipmentBonus _equipment;
+
         // HPが変動したときに通知するデリゲート。引数は（現在のHP、最大HP）
         public Action<float, float> OnHpChanged;
+
+        // 装備変更などで攻撃/防御/最大HP等が変わったときの通知(HUD等が最終値を読み直す)。
+        public event Action OnStatsChanged;
+
         private PlayerFlinchHandler _flinchHandler;
 
         private void Awake()
@@ -24,14 +31,23 @@ namespace CreativeAI.Gameplay
             _flinchHandler = GetComponent<PlayerFlinchHandler>();
         }
 
+        private void OnEnable()
+        {
+            // 静的イベント:InventoryManager が後から生成されても購読は成立する。
+            InventoryManager.EquipmentChanged += RecalculateFromInventory;
+        }
+
+        private void OnDisable()
+        {
+            InventoryManager.EquipmentChanged -= RecalculateFromInventory;
+        }
+
         public float CurrentMaxHp
         {
             get
             {
-                // TODO: 装備マネージャーやバフマネージャーから加算値を取得して足す
-                float equipmentBonus = 0f;
                 float buffBonus = 0f;
-                return _playerData.baseMaxLife + equipmentBonus + buffBonus;
+                return _playerData.baseMaxLife + _equipment.maxHp + buffBonus;
             }
         }
 
@@ -39,9 +55,8 @@ namespace CreativeAI.Gameplay
         {
             get
             {
-                float equipmentBonus = 0f;
                 float buffBonus = 0f;
-                return _playerData.baseAttackPower + equipmentBonus + buffBonus;
+                return _playerData.baseAttackPower + _equipment.attack + buffBonus;
             }
         }
 
@@ -49,9 +64,8 @@ namespace CreativeAI.Gameplay
         {
             get
             {
-                float equipmentBonus = 0f;
                 float buffBonus = 0f;
-                return _playerData.baseDefense + equipmentBonus + buffBonus;
+                return _playerData.baseDefense + _equipment.defense + buffBonus;
             }
         }
 
@@ -59,11 +73,10 @@ namespace CreativeAI.Gameplay
         {
             get
             {
-                float equipmentBonus = 0f;
                 float buffBonus = 0f;
 
                 float finalCriticalChance =
-                    _playerData.baseCriticalChance + equipmentBonus + buffBonus;
+                    _playerData.baseCriticalChance + _equipment.criticalChance + buffBonus;
 
                 if (finalCriticalChance > 100f)
                 {
@@ -82,15 +95,38 @@ namespace CreativeAI.Gameplay
         {
             get
             {
-                float equipmentBonus = 0f;
                 float buffBonus = 0f;
-                return _playerData.baseCriticalDamageRatio + equipmentBonus + buffBonus;
+                return _playerData.baseCriticalDamageRatio + _equipment.criticalDamage + buffBonus;
             }
         }
 
         private void Start()
         {
-            CurrentHp = CurrentMaxHp;
+            _equipment =
+                InventoryManager.Instance != null
+                    ? InventoryManager.Instance.GetEquippedBonus()
+                    : default;
+            CurrentHp = CurrentMaxHp; // 装備込みの最大HPで満タン開始
+            OnHpChanged?.Invoke(CurrentHp, CurrentMaxHp);
+            OnStatsChanged?.Invoke();
+        }
+
+        /// <summary>装備中アイテムから補正を引き直して最終ステータスへ反映する(装備変更時に呼ばれる)。</summary>
+        public void RecalculateFromInventory()
+        {
+            SetEquipment(
+                InventoryManager.Instance != null
+                    ? InventoryManager.Instance.GetEquippedBonus()
+                    : default
+            );
+        }
+
+        /// <summary>装備補正を差し替えて最終ステータスを更新する。最大HP減少時は現在HPをクランプする。</summary>
+        public void SetEquipment(EquipmentBonus bonus)
+        {
+            _equipment = bonus;
+            OnStatusChanged(); // 現在HP > 最大HP のクランプ
+            OnStatsChanged?.Invoke();
             OnHpChanged?.Invoke(CurrentHp, CurrentMaxHp);
         }
 
