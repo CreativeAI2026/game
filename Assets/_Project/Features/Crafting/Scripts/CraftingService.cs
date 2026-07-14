@@ -44,7 +44,7 @@ namespace CreativeAI.Crafting
             if (rng == null)
                 throw new ArgumentNullException(nameof(rng));
 
-            // 武器は調合不可(GameSystems.md 3.3)。
+            // 武器は調合不可(documents/CraftingArchitecture.md「全体像」)。
             if (a.Category == CraftCategory.Weapon || b.Category == CraftCategory.Weapon)
             {
                 error = CraftError.WeaponNotAllowed;

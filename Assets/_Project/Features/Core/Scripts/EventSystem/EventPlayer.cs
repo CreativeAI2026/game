@@ -6,7 +6,7 @@ namespace CreativeAI.Core.EventSystem
     /// <summary>
     /// EventTrigger に発火を託され、1本の会話イベントを頭から順に再生し切る指揮役(非常駐)。
     /// 各ステップで会話UI(IDialogueView) / Inventory(IItemGiver) / ProgressManager を叩き、
-    /// 終了時に進行度を進める。documents/StoryProgressionSystem.md 参照。
+    /// 終了時に進行度を進める。documents/Specification.md §4, EventImplementation.md 参照。
     /// </summary>
     public sealed class EventPlayer : MonoBehaviour, IEventPlayer
     {

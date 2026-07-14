@@ -1,7 +1,7 @@
 namespace CreativeAI.Crafting
 {
     /// <summary>
-    /// 付与ステータスの型(GameSystems.md 3.1)。
+    /// 付与ステータスの型(documents/Specification.md §1.1「アイテムカテゴリと付与ステータス」)。
     /// 装備品/武器は MaxHpPct、食材は HealAmount を持つ(排他)。
     /// アルゴリズム上はどれも「ステータス枠」として等価に扱う。
     /// </summary>
