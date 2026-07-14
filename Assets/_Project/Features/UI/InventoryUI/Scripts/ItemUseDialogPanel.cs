@@ -1,14 +1,23 @@
+using System.Collections.Generic;
 using CreativeAI.Gameplay;
+using CreativeAI.UI.Common;
 using TMPro;
 using UnityEngine;
-using UnityEngine.EventSystems;
 using UnityEngine.UI;
 
 namespace CreativeAI.UI.InventoryUI
 {
-    [RequireComponent(typeof(Image))]
-    public class ItemUseDialogPanel : MonoBehaviour, IPointerClickHandler
+    public class ItemUseDialogPanel : MonoBehaviour
     {
+        [SerializeField]
+        private CloseOnSelfClick _closeOnSelfClick;
+
+        [SerializeField]
+        private Image _backgroundImage;
+
+        [SerializeField]
+        private RectTransform _dialogRoot;
+
         [SerializeField]
         private Image _itemIconImage;
 
@@ -24,9 +33,9 @@ namespace CreativeAI.UI.InventoryUI
         [SerializeField]
         private Button _useButton;
 
-        private RectTransform _dialogRoot;
         private ItemStack _targetStack;
         private bool _initialized;
+        private bool _hasWarnedMissingReferences;
 
         private void Awake()
         {
@@ -40,9 +49,13 @@ namespace CreativeAI.UI.InventoryUI
 
         public void Show(ItemStack stack)
         {
-            EnsureInitialized();
-
             if (stack?.Data is not FoodData)
+            {
+                Hide();
+                return;
+            }
+
+            if (!EnsureInitialized())
             {
                 Hide();
                 return;
@@ -59,15 +72,6 @@ namespace CreativeAI.UI.InventoryUI
             gameObject.SetActive(false);
         }
 
-        public void OnPointerClick(PointerEventData eventData)
-        {
-            if (eventData.button != PointerEventData.InputButton.Left)
-                return;
-
-            if (IsOutsideDialog(eventData))
-                Hide();
-        }
-
         private void UseCurrentItem()
         {
             var stack = _targetStack;
@@ -79,50 +83,82 @@ namespace CreativeAI.UI.InventoryUI
             InventoryManager.Instance?.TryUse(stack);
         }
 
-        private void EnsureInitialized()
+        private bool EnsureInitialized()
         {
             if (_initialized)
-                return;
+                return true;
 
-            EnsureBackgroundCanReceiveClicks();
             ResolveReferences();
+            if (!ValidateRequiredReferences())
+                return false;
+
             BindButtons();
             _initialized = true;
-        }
-
-        private void EnsureBackgroundCanReceiveClicks()
-        {
-            var background = GetComponent<Image>();
-            if (background == null)
-            {
-                background = gameObject.AddComponent<Image>();
-                background.color = Color.clear;
-            }
-
-            if (background != null)
-                background.raycastTarget = true;
+            return true;
         }
 
         private void ResolveReferences()
         {
+            _backgroundImage ??= FindComponentInChildren<Image>("Background");
+            _backgroundImage ??= GetComponent<Image>();
+            _closeOnSelfClick ??= GetComponent<CloseOnSelfClick>();
+            if (_closeOnSelfClick == null && _backgroundImage != null)
+                _closeOnSelfClick = _backgroundImage.GetComponent<CloseOnSelfClick>();
+            _dialogRoot ??= FindChild("DialogRoot") as RectTransform;
             _dialogRoot ??= FindChild("ItemUseDialog") as RectTransform;
             _itemIconImage ??= FindComponentInChildren<Image>("ItemIcon");
             _itemNameText ??= FindComponentInChildren<TMP_Text>("ItemName");
+            _itemEffectText ??= FindComponentInChildren<TMP_Text>("EffectText");
             _itemEffectText ??= FindComponentInChildren<TMP_Text>("ItemEffect");
             _messageText ??= FindComponentInChildren<TMP_Text>("Message");
             _useButton ??= FindButton("UseButton");
             _useButton ??= FindButton("YesButton");
         }
 
-        private bool IsOutsideDialog(PointerEventData eventData)
+        private bool ValidateRequiredReferences()
         {
+            var missingReferences = new List<string>();
+            if (_closeOnSelfClick == null)
+                missingReferences.Add(nameof(CloseOnSelfClick));
+            if (_backgroundImage == null)
+                missingReferences.Add("Background Image");
+            else if (!_backgroundImage.raycastTarget)
+                missingReferences.Add("Background Image の Raycast Target");
             if (_dialogRoot == null)
+                missingReferences.Add("Dialog Root");
+            else
+            {
+                var dialogGraphic = _dialogRoot.GetComponent<Graphic>();
+                if (dialogGraphic == null)
+                    missingReferences.Add("Dialog Root の Graphic");
+                else if (!dialogGraphic.raycastTarget)
+                    missingReferences.Add("Dialog Root の Raycast Target");
+            }
+            if (_itemIconImage == null)
+                missingReferences.Add("Item Icon Image");
+            if (_itemNameText == null)
+                missingReferences.Add("Item Name Text");
+            if (_itemEffectText == null)
+                missingReferences.Add("Effect Text");
+            if (_useButton == null)
+                missingReferences.Add("Use Button");
+
+            if (missingReferences.Count == 0)
                 return true;
 
-            return !RectTransformUtility.RectangleContainsScreenPoint(
-                _dialogRoot,
-                eventData.position,
-                eventData.pressEventCamera
+            WarnMissingReferencesOnce(missingReferences);
+            return false;
+        }
+
+        private void WarnMissingReferencesOnce(IReadOnlyCollection<string> missingReferences)
+        {
+            if (_hasWarnedMissingReferences)
+                return;
+
+            _hasWarnedMissingReferences = true;
+            Debug.LogWarning(
+                $"{nameof(ItemUseDialogPanel)} '{name}' の必須参照が不足しています: {string.Join(", ", missingReferences)}。PrefabまたはScene上で設定してください。",
+                this
             );
         }
 

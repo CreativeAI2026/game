@@ -1,7 +1,7 @@
+using System.Collections.Generic;
 using CreativeAI.Gameplay;
 using UnityEngine;
 using UnityEngine.EventSystems;
-using UnityEngine.UI;
 
 namespace CreativeAI.UI.InventoryUI
 {
@@ -14,10 +14,29 @@ namespace CreativeAI.UI.InventoryUI
         private RectTransform _visualRootRect;
 
         [SerializeField]
-        private RectTransform _iconRect;
+        private SlotIconView _iconView;
+
+        [SerializeField]
+        private SlotCountBadgeView _countBadgeView;
+
+        [SerializeField]
+        private SlotHoverView _hoverView;
+
+        [SerializeField]
+        private SlotSelectionView _selectionView;
+
+        [SerializeField]
+        private SlotMarkerView _markerView;
+
+        private readonly HashSet<string> _warnedMissingViews = new();
+
+        protected override SlotIconView IconView => _iconView;
+        protected override SlotCountBadgeView CountBadgeView => _countBadgeView;
+        protected override SlotHoverView HoverView => _hoverView;
 
         protected override void Awake()
         {
+            ResolveViewReferences();
             base.Awake();
             _controller = GetComponentInParent<Inventory>();
             ConfigureVisualRootHover();
@@ -26,21 +45,15 @@ namespace CreativeAI.UI.InventoryUI
 
         private void OnEnable()
         {
+            ResolveViewReferences();
             ConfigureVisualRootHover();
             RefreshSelectionVisuals();
-        }
-
-        private void OnRectTransformDimensionsChange()
-        {
-            ConfigureEquippedMarker();
-            ConfigureCraftAssignedMarker();
         }
 
         public void SetItem(ItemStack stack)
         {
             _itemStack = stack;
             base.SetItem(stack?.Data, stack?.Count ?? 0);
-            ConfigureVisualRootHover();
             SetEquipped(stack?.IsEquipped ?? false);
         }
 
@@ -48,7 +61,8 @@ namespace CreativeAI.UI.InventoryUI
 
         public void SetReleaseSelectionOnOutsideClick(bool release)
         {
-            _hoverScale?.SetReleaseLockOnOutsideClick(release);
+            ResolveViewReferences();
+            _hoverView?.SetReleaseLockOnOutsideClick(release);
         }
 
         public void OnPointerClick(PointerEventData eventData)
@@ -73,100 +87,36 @@ namespace CreativeAI.UI.InventoryUI
 
         private void ConfigureVisualRootHover()
         {
-            ResolveVisualRoot();
-            ResolveMarkers();
-
-            if (_hoverScale == null || _visualRootRect == null)
-                return;
-
-            _hoverScale.SetTarget(_visualRootRect);
-            _hoverScale.SetBounceTarget(null);
-            _hoverScale.SetLinkedTargets();
+            ResolveViewReferences();
+            _hoverView?.Bind(_visualRootRect);
         }
 
-        private void ResolveVisualRoot()
+        private void ResolveViewReferences()
         {
             _visualRootRect ??= transform.Find("VisualRoot") as RectTransform;
-            if (_visualRootRect == null)
-                _visualRootRect = CreateVisualRoot();
+            _iconView ??= GetComponentInChildren<SlotIconView>(true);
+            _countBadgeView ??= GetComponentInChildren<SlotCountBadgeView>(true);
+            _hoverView ??= GetComponentInChildren<SlotHoverView>(true);
+            _selectionView ??= GetComponentInChildren<SlotSelectionView>(true);
+            _markerView ??= GetComponentInChildren<SlotMarkerView>(true);
 
-            ConfigureSelectedFrame();
-            ConfigureDecorativeRaycasts();
+            WarnIfMissing(_visualRootRect, "VisualRoot");
+            WarnIfMissing(_iconView, nameof(SlotIconView));
+            WarnIfMissing(_countBadgeView, nameof(SlotCountBadgeView));
+            WarnIfMissing(_hoverView, nameof(SlotHoverView));
+            WarnIfMissing(_selectionView, nameof(SlotSelectionView));
+            WarnIfMissing(_markerView, nameof(SlotMarkerView));
         }
 
-        private RectTransform CreateVisualRoot()
+        private void WarnIfMissing(Object reference, string referenceName)
         {
-            var visualRootObject = new GameObject("VisualRoot", typeof(RectTransform));
-            var rect = visualRootObject.GetComponent<RectTransform>();
-            rect.SetParent(transform, false);
-            rect.SetAsFirstSibling();
-            StretchToFill(rect);
-            return rect;
-        }
-
-        private static void StretchToFill(RectTransform rect)
-        {
-            rect.anchorMin = Vector2.zero;
-            rect.anchorMax = Vector2.one;
-            rect.offsetMin = Vector2.zero;
-            rect.offsetMax = Vector2.zero;
-            rect.pivot = new Vector2(0.5f, 0.5f);
-            rect.localScale = Vector3.one;
-        }
-
-        private GameObject FindChildGameObject(string path)
-        {
-            var child = transform.Find(path);
-            return child != null ? child.gameObject : null;
-        }
-
-        private void ConfigureDecorativeRaycasts()
-        {
-            DisableGraphicRaycasts(
-                transform.Find("VisualRoot/SelectedFrame") ?? transform.Find("SelectedFrame")
-            );
-            DisableGraphicRaycasts(transform.Find("VisualRoot/Icon") ?? transform.Find("Icon"));
-            DisableGraphicRaycasts(
-                transform.Find("VisualRoot/EquippedDimOverlay")
-                    ?? transform.Find("EquippedDimOverlay")
-            );
-            DisableGraphicRaycasts(
-                transform.Find("VisualRoot/CountBadge") ?? transform.Find("CountBadge")
-            );
-            DisableGraphicRaycasts(
-                transform.Find("VisualRoot/CountBadge/CountText")
-                    ?? transform.Find("CountBadge/CountText")
-                    ?? transform.Find("VisualRoot/numberSlot/Text")
-                    ?? transform.Find("numberSlot/Text")
-            );
-            DisableGraphicRaycasts(_equippedMarker != null ? _equippedMarker.transform : null);
-            DisableGraphicRaycasts(
-                _equippedMarker != null
-                    ? _equippedMarker.transform.Find("EquippedText")
-                        ?? _equippedMarker.transform.Find("EquipText")
-                    : transform.Find("VisualRoot/EquippedMarker/EquipText")
-                        ?? transform.Find("VisualRoot/EquippedMarker/EquippedText")
-                        ?? transform.Find("EquippedMarker/EquipText")
-                        ?? transform.Find("EquippedMarker/EquippedText")
-            );
-            DisableGraphicRaycasts(
-                _craftAssignedMarker != null ? _craftAssignedMarker.transform : null
-            );
-            DisableGraphicRaycasts(
-                _craftAssignedMarker != null
-                    ? _craftAssignedMarker.transform.Find("CraftAssignedText")
-                    : transform.Find("VisualRoot/CraftAssignedMarker/CraftAssignedText")
-                        ?? transform.Find("CraftAssignedMarker/CraftAssignedText")
-            );
-        }
-
-        private static void DisableGraphicRaycasts(Transform root)
-        {
-            if (root == null)
+            if (reference != null || !_warnedMissingViews.Add(referenceName))
                 return;
 
-            foreach (var graphic in root.GetComponentsInChildren<Graphic>(true))
-                graphic.raycastTarget = false;
+            Debug.LogWarning(
+                $"{nameof(ItemSlot)} '{name}' に {referenceName} がないため、該当表示をスキップします。Prefab上で設定してください。",
+                this
+            );
         }
     }
 }

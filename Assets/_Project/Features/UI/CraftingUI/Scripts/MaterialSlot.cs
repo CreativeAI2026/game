@@ -1,5 +1,6 @@
 using System;
 using System.Collections;
+using System.Collections.Generic;
 using CreativeAI.Gameplay;
 using TMPro;
 using UnityEngine;
@@ -12,18 +13,33 @@ namespace CreativeAI.UI.CraftingUI
     public class MaterialSlot : BaseItemSlot, IPointerClickHandler
     {
         private const float SelectedSlotScale = 1.08f;
-        private const float IconPadding = 14f;
         private const float EmptyIconAlpha = 50f / 255f;
 
-        private static readonly Color SelectedFrameColor = new Color(1f, 0.78f, 0.15f, 0.9f);
-        private static readonly Color NormalFrameColor = new Color(1f, 1f, 1f, 0.2f);
-
-        private TMP_Text _emptyText;
-        private Image _frame;
+        [SerializeField]
         private RectTransform _visualRootRect;
+
+        [SerializeField]
+        private SlotIconView _iconView;
+
+        [SerializeField]
+        private SlotEmptyView _emptyView;
+
+        [SerializeField]
+        private SlotHoverView _hoverView;
+
+        [SerializeField]
+        private SlotFrameView _frameView;
+
+        [SerializeField]
+        private TMP_Text _slotLabel;
+
         private Coroutine _materialAnimationRoutine;
         private bool _isSelected;
         private ItemStack _stack;
+        private readonly HashSet<string> _warnedMissingViews = new();
+
+        protected override SlotIconView IconView => _iconView;
+        protected override SlotHoverView HoverView => _hoverView;
 
         public event Action<MaterialSlot> Clicked;
         public event Action<MaterialSlot> DoubleClicked;
@@ -31,21 +47,10 @@ namespace CreativeAI.UI.CraftingUI
 
         protected override void Awake()
         {
+            ResolveViewReferences();
+            _iconView?.SetEmptyAlpha(EmptyIconAlpha);
             base.Awake();
-            _emptyText = transform.Find("EmptyText")?.GetComponent<TMP_Text>();
-            _frame = GetComponent<Image>();
-            ResolveVisualReferences();
-
-            if (_hoverScale != null)
-            {
-                _hoverScale.SetGroup("craft-slots");
-                _hoverScale.SetHoverScale(SelectedSlotScale);
-                _hoverScale.SetBounceHeight(0f);
-                _hoverScale.SetReleaseLockOnOutsideClick(false);
-            }
-
-            ApplyIconPadding();
-            BindSlotHoverTarget();
+            ConfigureHover();
             Clear();
             SetSelected(false);
         }
@@ -54,8 +59,7 @@ namespace CreativeAI.UI.CraftingUI
         {
             _stack = null;
             base.SetItem(item, count);
-            ResolveVisualReferences();
-            BindSlotHoverTarget();
+            ConfigureHover();
         }
 
         public void SetMaterial(ItemData item, int count)
@@ -67,8 +71,7 @@ namespace CreativeAI.UI.CraftingUI
         {
             _stack = stack;
             base.SetItem(stack?.Data, stack == null ? 0 : 1);
-            ResolveVisualReferences();
-            BindSlotHoverTarget();
+            ConfigureHover();
         }
 
         public void SetMaterialAnimated(ItemData item, int count)
@@ -86,7 +89,7 @@ namespace CreativeAI.UI.CraftingUI
         public void SetSelected(bool selected)
         {
             _isSelected = selected;
-            ApplySelectedVisual();
+            _frameView?.SetSelected(selected);
 
             if (selected)
                 Select();
@@ -96,25 +99,10 @@ namespace CreativeAI.UI.CraftingUI
 
         public void NormalizeVisualState()
         {
-            ResolveVisualReferences();
-            ApplyIconPadding();
-            ApplyIconState();
-            ApplySelectedVisual();
-            BindSlotHoverTarget();
-
-            if (_emptyText != null)
-                _emptyText.gameObject.SetActive(_item == null || _item.icon == null);
-        }
-
-        private void ApplySelectedVisual()
-        {
-            if (_frame != null)
-                _frame.color = _isSelected ? SelectedFrameColor : NormalFrameColor;
-        }
-
-        private Color GetCurrentFrameColor()
-        {
-            return _isSelected ? SelectedFrameColor : NormalFrameColor;
+            ResolveViewReferences();
+            Refresh();
+            _frameView?.SetSelected(_isSelected);
+            ConfigureHover();
         }
 
         public void OnPointerClick(PointerEventData eventData)
@@ -130,24 +118,17 @@ namespace CreativeAI.UI.CraftingUI
 
         protected override void Refresh()
         {
+            ResolveViewReferences();
+            _iconView?.SetEmptyAlpha(EmptyIconAlpha);
             base.Refresh();
-            ResolveVisualReferences();
-            ApplyIconState();
-            BindSlotHoverTarget();
-
-            if (_emptyText != null)
-                _emptyText.gameObject.SetActive(_item == null || _item.icon == null);
+            _emptyView?.SetEmpty(_item == null);
         }
 
         public override void Clear()
         {
             _stack = null;
             base.Clear();
-            ResolveVisualReferences();
-            ApplyIconState();
-
-            if (_emptyText != null)
-                _emptyText.gameObject.SetActive(true);
+            _emptyView?.SetEmpty(true);
         }
 
         public void ClearMaterialAnimated(Action onCleared = null)
@@ -156,66 +137,23 @@ namespace CreativeAI.UI.CraftingUI
             _materialAnimationRoutine = StartCoroutine(PlayMaterialClearedRoutine(onCleared));
         }
 
-        private void ApplyIconPadding()
+        private void ConfigureHover()
         {
-            if (_iconImage == null)
+            ResolveViewReferences();
+            if (_hoverView == null)
                 return;
 
-            var iconRect = _iconImage.rectTransform;
-
-            if (_visualRootRect != null)
-            {
-                ApplyVisualRootPadding();
-                iconRect.anchorMin = Vector2.zero;
-                iconRect.anchorMax = Vector2.one;
-                iconRect.offsetMin = Vector2.zero;
-                iconRect.offsetMax = Vector2.zero;
-                return;
-            }
-
-            iconRect.anchorMin = Vector2.zero;
-            iconRect.anchorMax = Vector2.one;
-            iconRect.offsetMin = Vector2.one * IconPadding;
-            iconRect.offsetMax = -Vector2.one * IconPadding;
-        }
-
-        private void BindSlotHoverTarget()
-        {
-            if (_hoverScale == null)
-                return;
-
-            ResolveVisualReferences();
-
-            RectTransform target =
-                _visualRootRect != null ? _visualRootRect
-                : _iconImage != null ? _iconImage.rectTransform
-                : (RectTransform)transform;
-
-            _hoverScale.SetTarget(target);
-            _hoverScale.SetBounceTarget(null);
-            _hoverScale.SetLinkedTargets();
-        }
-
-        private void ApplyIconState()
-        {
-            if (_iconImage == null)
-                return;
-
-            bool hasMaterial = _item != null && _item.icon != null;
-            _iconImage.gameObject.SetActive(true);
-            _iconImage.color = new Color(1f, 1f, 1f, hasMaterial ? 1f : EmptyIconAlpha);
+            _hoverView.Bind(_visualRootRect);
+            _hoverView.SetGroup("craft-slots");
+            _hoverView.SetHoverScale(SelectedSlotScale);
+            _hoverView.SetBounceHeight(0f);
+            _hoverView.SetReleaseLockOnOutsideClick(false);
         }
 
         private void PlayMaterialChangedAnimation()
         {
             StopMaterialAnimation();
             _materialAnimationRoutine = StartCoroutine(PlayMaterialChangedRoutine());
-        }
-
-        private void PlayMaterialClearedAnimation(Action onCleared = null)
-        {
-            StopMaterialAnimation();
-            _materialAnimationRoutine = StartCoroutine(PlayMaterialClearedRoutine());
         }
 
         private IEnumerator PlayMaterialChangedRoutine()
@@ -233,8 +171,10 @@ namespace CreativeAI.UI.CraftingUI
 
                 if (animatedRect != null)
                     animatedRect.localScale = Vector3.one * scale;
-                if (_frame != null)
-                    _frame.color = Color.Lerp(Color.white, GetCurrentFrameColor(), t);
+                if (_frameView != null)
+                    _frameView.SetColor(
+                        Color.Lerp(Color.white, _frameView.GetColor(_isSelected), t)
+                    );
 
                 elapsed += Time.unscaledDeltaTime;
                 yield return null;
@@ -242,36 +182,29 @@ namespace CreativeAI.UI.CraftingUI
 
             if (animatedRect != null)
                 animatedRect.localScale = Vector3.one;
-            ApplySelectedVisual();
-
+            _frameView?.SetSelected(_isSelected);
             _materialAnimationRoutine = null;
         }
 
-        private IEnumerator PlayMaterialClearedRoutine(Action onCleared = null)
+        private IEnumerator PlayMaterialClearedRoutine(Action onCleared)
         {
             const float duration = 0.16f;
             float elapsed = 0f;
             var animatedRect = GetAnimatedVisualRect();
-
             Vector3 startScale = animatedRect != null ? animatedRect.localScale : Vector3.one;
 
             while (elapsed < duration)
             {
                 float t = Mathf.Clamp01(elapsed / duration);
-
                 if (animatedRect != null)
-                {
                     animatedRect.localScale = Vector3.Lerp(startScale, Vector3.one * 0.35f, t);
-                }
 
                 elapsed += Time.unscaledDeltaTime;
                 yield return null;
             }
 
             Clear();
-
             onCleared?.Invoke();
-
             _materialAnimationRoutine = null;
             PlayMaterialChangedAnimation();
         }
@@ -283,7 +216,6 @@ namespace CreativeAI.UI.CraftingUI
 
             StopCoroutine(_materialAnimationRoutine);
             _materialAnimationRoutine = null;
-
             var animatedRect = GetAnimatedVisualRect();
             if (animatedRect != null)
                 animatedRect.localScale = Vector3.one;
@@ -291,8 +223,8 @@ namespace CreativeAI.UI.CraftingUI
 
         private RectTransform GetAnimatedVisualRect()
         {
-            ResolveVisualReferences();
-            return _visualRootRect != null ? _visualRootRect : _iconImage?.rectTransform;
+            ResolveViewReferences();
+            return _visualRootRect != transform ? _visualRootRect : null;
         }
 
         private static float EaseOutBack(float t)
@@ -302,59 +234,32 @@ namespace CreativeAI.UI.CraftingUI
             return 1f + c3 * Mathf.Pow(t - 1f, 3f) + c1 * Mathf.Pow(t - 1f, 2f);
         }
 
-        private void ResolveVisualReferences()
+        private void ResolveViewReferences()
         {
-            if (_visualRootRect == null)
-                _visualRootRect = FindChildRectIgnoreCase("VisualRoot");
-            if (_visualRootRect == null)
-                _visualRootRect = CreateVisualRoot();
+            _visualRootRect ??= transform.Find("VisualRoot") as RectTransform;
+            _iconView ??= GetComponentInChildren<SlotIconView>(true);
+            _emptyView ??= GetComponentInChildren<SlotEmptyView>(true);
+            _hoverView ??= GetComponentInChildren<SlotHoverView>(true);
+            _frameView ??= GetComponentInChildren<SlotFrameView>(true);
+            _slotLabel ??= transform.Find("SlotLabel")?.GetComponent<TMP_Text>();
 
-            if (
-                _iconImage != null
-                && _visualRootRect != null
-                && _iconImage.rectTransform.parent != _visualRootRect
-            )
-            {
-                _iconImage.rectTransform.SetParent(_visualRootRect, false);
-                _iconImage.rectTransform.SetAsFirstSibling();
-            }
+            WarnIfMissing(_visualRootRect, "VisualRoot");
+            WarnIfMissing(_iconView, nameof(SlotIconView));
+            WarnIfMissing(_emptyView, nameof(SlotEmptyView));
+            WarnIfMissing(_hoverView, nameof(SlotHoverView));
+            WarnIfMissing(_frameView, nameof(SlotFrameView));
+            WarnIfMissing(_slotLabel, "SlotLabel");
         }
 
-        private RectTransform FindChildRectIgnoreCase(string childName)
+        private void WarnIfMissing(UnityEngine.Object reference, string referenceName)
         {
-            foreach (var rect in GetComponentsInChildren<RectTransform>(true))
-            {
-                if (string.Equals(rect.name, childName, StringComparison.OrdinalIgnoreCase))
-                    return rect;
-            }
+            if (reference != null || !_warnedMissingViews.Add(referenceName))
+                return;
 
-            return null;
-        }
-
-        private RectTransform CreateVisualRoot()
-        {
-            var visualRootObject = new GameObject("VisualRoot", typeof(RectTransform));
-            var rect = visualRootObject.GetComponent<RectTransform>();
-            rect.SetParent(transform, false);
-            rect.SetAsFirstSibling();
-            ApplyVisualRootRect(rect);
-            return rect;
-        }
-
-        private void ApplyVisualRootPadding()
-        {
-            if (_visualRootRect != null)
-                ApplyVisualRootRect(_visualRootRect);
-        }
-
-        private static void ApplyVisualRootRect(RectTransform rect)
-        {
-            rect.anchorMin = Vector2.zero;
-            rect.anchorMax = Vector2.one;
-            rect.offsetMin = Vector2.one * IconPadding;
-            rect.offsetMax = -Vector2.one * IconPadding;
-            rect.pivot = new Vector2(0.5f, 0.5f);
-            rect.localScale = Vector3.one;
+            Debug.LogWarning(
+                $"{nameof(MaterialSlot)} '{name}' に {referenceName} がないため、該当表示をスキップします。Prefab上で設定してください。",
+                this
+            );
         }
     }
 }

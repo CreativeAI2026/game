@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using CreativeAI.UI.InventoryUI;
 using UnityEngine;
 using UnityEngine.UI;
@@ -7,6 +8,7 @@ namespace CreativeAI.UI.Common
     public static class UIButtonHoverScaleUtility
     {
         private const float DefaultButtonHoverScale = 1.1f;
+        private static readonly HashSet<Button> WarnedMissingHoverScaleButtons = new();
 
         public static void ApplyTo(Button button)
         {
@@ -15,7 +17,10 @@ namespace CreativeAI.UI.Common
 
             var hoverScale = button.GetComponent<HoverScaleOnPointer>();
             if (hoverScale == null)
-                hoverScale = button.gameObject.AddComponent<HoverScaleOnPointer>();
+            {
+                WarnMissingHoverScaleOnce(button);
+                return;
+            }
 
             hoverScale.SetTarget(button.transform as RectTransform);
             hoverScale.SetHoverScale(DefaultButtonHoverScale);
@@ -31,6 +36,17 @@ namespace CreativeAI.UI.Common
 
             foreach (var button in root.GetComponentsInChildren<Button>(true))
                 ApplyTo(button);
+        }
+
+        private static void WarnMissingHoverScaleOnce(Button button)
+        {
+            if (button == null || !WarnedMissingHoverScaleButtons.Add(button))
+                return;
+
+            Debug.LogWarning(
+                $"{nameof(UIButtonHoverScaleUtility)}: Button '{button.name}' に {nameof(HoverScaleOnPointer)} がないため、Hover設定をスキップしました。PrefabまたはScene上で追加してください。",
+                button
+            );
         }
     }
 }

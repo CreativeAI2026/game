@@ -89,6 +89,7 @@ GameObject:
   - component: {fileID: 3477135668278140648}
   - component: {fileID: 4356066742525432493}
   - component: {fileID: 5496505792501689819}
+  - component: {fileID: 8453484232894532282}
   m_Layer: 0
   m_Name: CountBadge
   m_TagString: Untagged
@@ -194,6 +195,18 @@ MonoBehaviour:
   m_ChildScaleWidth: 0
   m_ChildScaleHeight: 0
   m_ReverseArrangement: 0
+--- !u!225 &8453484232894532282
+CanvasGroup:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2212805541973559091}
+  m_Enabled: 1
+  m_Alpha: 1
+  m_Interactable: 1
+  m_BlocksRaycasts: 1
+  m_IgnoreParentGroups: 0
 --- !u!1 &2413138959580911073
 GameObject:
   m_ObjectHideFlags: 0
@@ -206,6 +219,7 @@ GameObject:
   - component: {fileID: 1260108344564892879}
   - component: {fileID: 7410378127703049361}
   - component: {fileID: 5113201044862956783}
+  - component: {fileID: 6996727544528832253}
   m_Layer: 0
   m_Name: CountText
   m_TagString: Untagged
@@ -348,6 +362,18 @@ MonoBehaviour:
   m_EditorClassIdentifier: UnityEngine.UI::UnityEngine.UI.ContentSizeFitter
   m_HorizontalFit: 2
   m_VerticalFit: 2
+--- !u!225 &6996727544528832253
+CanvasGroup:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2413138959580911073}
+  m_Enabled: 1
+  m_Alpha: 1
+  m_Interactable: 1
+  m_BlocksRaycasts: 1
+  m_IgnoreParentGroups: 0
 --- !u!1 &3025497494565781539
 GameObject:
   m_ObjectHideFlags: 0
@@ -361,6 +387,11 @@ GameObject:
   - component: {fileID: 6190101298754717925}
   - component: {fileID: 7039143086210805446}
   - component: {fileID: -7344806846162860178}
+  - component: {fileID: 4348630341578043313}
+  - component: {fileID: 5394293114787635093}
+  - component: {fileID: 1039244666184877791}
+  - component: {fileID: 2546480897286698282}
+  - component: {fileID: 3533088681844090927}
   - component: {fileID: -1138212406952457358}
   m_Layer: 0
   m_Name: ItemSlot
@@ -483,20 +514,85 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 2af7714d4be8b3444b857a4efad3a4fe, type: 3}
   m_Name: 
   m_EditorClassIdentifier: CreativeAI.UI::CreativeAI.UI.InventoryUI.Slot
-  _iconImage: {fileID: 8702310080619518934}
-  _countText: {fileID: 7410378127703049361}
-  _countContainer: {fileID: 3385234002345788802}
-  _hoverScale: {fileID: -1138212406952457358}
-  _equippedMarker: {fileID: 1272470226906119403}
-  _equippedMarkerImage: {fileID: 5271740678795597552}
-  _equippedText: {fileID: 6633102793392126692}
-  _equippedDimOverlay: {fileID: 4432140307753366424}
-  _craftAssignedMarker: {fileID: 5295749552970864917}
-  _craftAssignedMarkerImage: {fileID: 360983705222036082}
-  _craftAssignedText: {fileID: 0}
-  _selectedFrameRect: {fileID: 375818535452574685}
   _visualRootRect: {fileID: 4203204539812090445}
-  _iconRect: {fileID: 1785989552369121319}
+  _iconView: {fileID: 4348630341578043313}
+  _countBadgeView: {fileID: 5394293114787635093}
+  _hoverView: {fileID: 1039244666184877791}
+  _selectionView: {fileID: 2546480897286698282}
+  _markerView: {fileID: 3533088681844090927}
+--- !u!114 &4348630341578043313
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 3025497494565781539}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: d3231c44711d4358a8b07ebb474027cf, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: CreativeAI.UI::CreativeAI.UI.SlotIconView
+  _image: {fileID: 0}
+  _emptyAlpha: 0
+--- !u!114 &5394293114787635093
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 3025497494565781539}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: d1b6c845fd974efe8c18d4f8112f78f5, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: CreativeAI.UI::CreativeAI.UI.SlotCountBadgeView
+  _container: {fileID: 3385234002345788802}
+  _countText: {fileID: 7410378127703049361}
+  _containerCanvasGroup: {fileID: 8453484232894532282}
+  _countTextCanvasGroup: {fileID: 6996727544528832253}
+  _backgroundImage: {fileID: 3477135668278140648}
+--- !u!114 &1039244666184877791
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 3025497494565781539}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 506b0f0d9219431f824c8b56f81b1b02, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: CreativeAI.UI::CreativeAI.UI.SlotHoverView
+  _hoverScale: {fileID: -1138212406952457358}
+  _visualRoot: {fileID: 4203204539812090445}
+--- !u!114 &2546480897286698282
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 3025497494565781539}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 0bf3155840774f3bb81e3472e186a20c, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: CreativeAI.UI::CreativeAI.UI.SlotSelectionView
+  _selectedFrame: {fileID: 4813040697029269010}
+--- !u!114 &3533088681844090927
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 3025497494565781539}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 2bb42bd5fbdf465b8cf3e33f8fd137d9, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: CreativeAI.UI::CreativeAI.UI.SlotMarkerView
+  _equippedMarker: {fileID: 1272470226906119403}
+  _craftAssignedMarker: {fileID: 5295749552970864917}
+  _equippedDimOverlay: {fileID: 8449945814807609571}
 --- !u!114 &-1138212406952457358
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -514,6 +610,7 @@ MonoBehaviour:
   _releaseLockOnOutsideClick: 1
   _hoverScale: 1.2
   _animationDuration: 0.2
+  _bounceEnabled: 1
   _bounceHeight: 8
   _bounceDuration: 0.8
 --- !u!1 &4666128864765761364

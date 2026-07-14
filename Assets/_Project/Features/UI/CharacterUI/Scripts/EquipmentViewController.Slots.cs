@@ -1,12 +1,14 @@
+using System.Collections.Generic;
 using System.Linq;
 using CreativeAI.Gameplay;
-using CreativeAI.UI.CraftingUI;
 using UnityEngine;
 
 namespace CreativeAI.UI.CharacterUI
 {
     public partial class EquipmentViewController
     {
+        private readonly HashSet<GameObject> _warnedMissingEquipmentSlots = new();
+
         private void InitializeSlots()
         {
             UnbindSlots();
@@ -17,7 +19,7 @@ namespace CreativeAI.UI.CharacterUI
 
             for (int i = 0; i < _equipmentSlotsContainer.childCount; i++)
             {
-                var slot = GetOrConvertSlot(_equipmentSlotsContainer.GetChild(i).gameObject);
+                var slot = GetEquipmentSlot(_equipmentSlotsContainer.GetChild(i).gameObject);
                 if (slot == null)
                     continue;
 
@@ -44,18 +46,21 @@ namespace CreativeAI.UI.CharacterUI
             }
         }
 
-        private static EquipmentSlot GetOrConvertSlot(GameObject slotObject)
+        private EquipmentSlot GetEquipmentSlot(GameObject slotObject)
         {
             var slot = slotObject.GetComponent<EquipmentSlot>();
             if (slot != null)
                 return slot;
 
-            var materialSlot = slotObject.GetComponent<MaterialSlot>();
-            if (materialSlot == null)
-                return null;
+            if (_warnedMissingEquipmentSlots.Add(slotObject))
+            {
+                Debug.LogWarning(
+                    $"{nameof(EquipmentViewController)}: Slot '{slotObject.name}' に {nameof(EquipmentSlot)} がないため、このスロットをスキップしました。PrefabまたはScene上で追加してください。",
+                    slotObject
+                );
+            }
 
-            materialSlot.enabled = false;
-            return slotObject.AddComponent<EquipmentSlot>();
+            return null;
         }
 
         private void UnbindSlots()
