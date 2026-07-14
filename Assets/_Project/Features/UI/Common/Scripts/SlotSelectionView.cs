@@ -19,13 +19,6 @@ namespace CreativeAI.UI
 
         private bool ResolveSelectedFrame()
         {
-            if (_selectedFrame == null)
-            {
-                var frameTransform =
-                    transform.Find("VisualRoot/SelectedFrame") ?? transform.Find("SelectedFrame");
-                _selectedFrame = frameTransform != null ? frameTransform.gameObject : null;
-            }
-
             if (_selectedFrame != null)
                 return true;
 
@@ -40,5 +33,20 @@ namespace CreativeAI.UI
 
             return false;
         }
+
+#if UNITY_EDITOR
+        private void Reset() => AutoAssignReferences();
+
+        [ContextMenu("Auto Assign References")]
+        private void AutoAssignReferences()
+        {
+            if (_selectedFrame != null)
+                return;
+
+            var frameTransform =
+                transform.Find("VisualRoot/SelectedFrame") ?? transform.Find("SelectedFrame");
+            _selectedFrame = frameTransform != null ? frameTransform.gameObject : null;
+        }
+#endif
     }
 }

@@ -97,12 +97,6 @@ namespace CreativeAI.UI
         {
             if (_image == null)
             {
-                var iconTransform = transform.Find("VisualRoot/Icon") ?? transform.Find("Icon");
-                _image = iconTransform != null ? iconTransform.GetComponent<Image>() : null;
-            }
-
-            if (_image == null)
-            {
                 WarnMissingImageOnce();
                 return false;
             }
@@ -115,6 +109,20 @@ namespace CreativeAI.UI
 
             return true;
         }
+
+#if UNITY_EDITOR
+        private void Reset() => AutoAssignReferences();
+
+        [ContextMenu("Auto Assign References")]
+        private void AutoAssignReferences()
+        {
+            if (_image != null)
+                return;
+
+            var iconTransform = transform.Find("VisualRoot/Icon") ?? transform.Find("Icon");
+            _image = iconTransform != null ? iconTransform.GetComponent<Image>() : null;
+        }
+#endif
 
         private void ApplyVisibility(bool hasIcon)
         {

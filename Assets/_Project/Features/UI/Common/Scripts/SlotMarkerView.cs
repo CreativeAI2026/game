@@ -34,10 +34,6 @@ namespace CreativeAI.UI
 
         private void ResolveReferences()
         {
-            _equippedMarker ??= Find("VisualRoot/EquippedMarker", "EquippedMarker");
-            _craftAssignedMarker ??= Find("VisualRoot/CraftAssignedMarker", "CraftAssignedMarker");
-            _equippedDimOverlay ??= Find("VisualRoot/EquippedDimOverlay", "EquippedDimOverlay");
-
             if (_equippedMarker == null)
                 WarnMissingMarkerOnce("EquippedMarker");
             if (_craftAssignedMarker == null)
@@ -53,11 +49,29 @@ namespace CreativeAI.UI
             _craftAssignedMarker?.SetActive(_isCraftAssigned && !_isEquipped);
         }
 
-        private GameObject Find(string primaryPath, string fallbackPath)
+#if UNITY_EDITOR
+        private void Reset() => AutoAssignReferences();
+
+        [ContextMenu("Auto Assign References")]
+        private void AutoAssignReferences()
+        {
+            _equippedMarker ??= FindExisting("VisualRoot/EquippedMarker", "EquippedMarker");
+            _craftAssignedMarker ??= FindExisting(
+                "VisualRoot/CraftAssignedMarker",
+                "CraftAssignedMarker"
+            );
+            _equippedDimOverlay ??= FindExisting(
+                "VisualRoot/EquippedDimOverlay",
+                "EquippedDimOverlay"
+            );
+        }
+
+        private GameObject FindExisting(string primaryPath, string fallbackPath)
         {
             var target = transform.Find(primaryPath) ?? transform.Find(fallbackPath);
             return target != null ? target.gameObject : null;
         }
+#endif
 
         private void WarnMissingMarkerOnce(string markerName)
         {

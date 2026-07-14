@@ -23,7 +23,7 @@ namespace CreativeAI.UI.CraftingUI
         private SlotHoverView _hoverView;
 
         [SerializeField]
-        private SlotFrameView _frameView;
+        private SlotSelectionView _selectionView;
 
         private CraftRecipeData _recipe;
         private readonly HashSet<string> _warnedMissingViews = new();
@@ -61,7 +61,7 @@ namespace CreativeAI.UI.CraftingUI
         {
             ResolveViewReferences();
             ConfigureHover();
-            _frameView?.SetSelected(selected);
+            _selectionView?.SetSelected(selected);
 
             if (selected)
                 Select();
@@ -92,7 +92,7 @@ namespace CreativeAI.UI.CraftingUI
             if (_hoverView == null)
                 return;
 
-            _hoverView.Bind(_visualRootRect);
+            _hoverView.Bind();
             _hoverView.SetGroup("recipe-slots");
             _hoverView.SetHoverScale(SelectedSlotScale);
             _hoverView.SetBounceHeight(SelectedBounceHeight);
@@ -101,19 +101,27 @@ namespace CreativeAI.UI.CraftingUI
 
         private void ResolveViewReferences(bool warn = true)
         {
-            _visualRootRect ??= transform.Find("VisualRoot") as RectTransform;
-            _iconView ??= GetComponentInChildren<SlotIconView>(true);
-            _hoverView ??= GetComponentInChildren<SlotHoverView>(true);
-            _frameView ??= GetComponentInChildren<SlotFrameView>(true);
-
             if (!warn)
                 return;
 
             WarnIfMissing(_visualRootRect, "VisualRoot");
             WarnIfMissing(_iconView, nameof(SlotIconView));
             WarnIfMissing(_hoverView, nameof(SlotHoverView));
-            WarnIfMissing(_frameView, nameof(SlotFrameView));
+            WarnIfMissing(_selectionView, nameof(SlotSelectionView));
         }
+
+#if UNITY_EDITOR
+        private void Reset() => AutoAssignReferences();
+
+        [ContextMenu("Auto Assign References")]
+        private void AutoAssignReferences()
+        {
+            _visualRootRect ??= transform.Find("VisualRoot") as RectTransform;
+            _iconView ??= GetComponentInChildren<SlotIconView>(true);
+            _hoverView ??= GetComponentInChildren<SlotHoverView>(true);
+            _selectionView ??= GetComponentInChildren<SlotSelectionView>(true);
+        }
+#endif
 
         private void WarnIfMissing(UnityEngine.Object reference, string referenceName)
         {

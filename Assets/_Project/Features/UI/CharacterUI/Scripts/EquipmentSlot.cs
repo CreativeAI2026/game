@@ -8,7 +8,7 @@ using UnityEngine.UI;
 namespace CreativeAI.UI
 {
     [RequireComponent(typeof(Button), typeof(Image))]
-    public class EquipmentSlot : BaseItemSlot, IPointerClickHandler
+    public class EquipmentSlot : BaseItemSlot, IPointerDownHandler, IPointerClickHandler
     {
         private const float SelectedIconScale = 1.08f;
         private const float EmptyIconAlpha = 50f / 255f;
@@ -32,6 +32,7 @@ namespace CreativeAI.UI
         private SlotFrameView _frameView;
 
         private bool _inputLocked;
+        private bool _acceptPointerClick;
         private ItemStack _stack;
         private readonly HashSet<string> _warnedMissingViews = new();
 
@@ -40,6 +41,7 @@ namespace CreativeAI.UI
         protected override SlotHoverView HoverView => _hoverView;
 
         public Button Button { get; private set; }
+        public event Action<EquipmentSlot> Clicked;
         public event Action<EquipmentSlot> DoubleClicked;
 
         public new ItemData Item
@@ -109,27 +111,35 @@ namespace CreativeAI.UI
             _stack = stack;
         }
 
-        public void SetFrameColor(Color color)
-        {
-            ResolveViewReferences();
-            _frameView?.SetColor(color);
-        }
-
         public void SetSelected(bool selected)
         {
+            ResolveViewReferences();
+            _frameView?.SetSelected(selected);
+
             if (selected)
                 Select();
             else
                 Deselect();
         }
 
+        public void OnPointerDown(PointerEventData eventData)
+        {
+            _acceptPointerClick =
+                !_inputLocked && eventData.button == PointerEventData.InputButton.Left;
+        }
+
         public void OnPointerClick(PointerEventData eventData)
         {
-            if (_inputLocked)
+            bool accepted = _acceptPointerClick;
+            _acceptPointerClick = false;
+
+            if (!accepted || eventData.button != PointerEventData.InputButton.Left)
                 return;
 
-            if (eventData.button == PointerEventData.InputButton.Left && eventData.clickCount >= 2)
+            if (eventData.clickCount >= 2)
                 DoubleClicked?.Invoke(this);
+            else
+                Clicked?.Invoke(this);
         }
 
         public void SetInputLocked(bool locked)
@@ -154,7 +164,7 @@ namespace CreativeAI.UI
             if (_hoverView == null)
                 return;
 
-            _hoverView.Bind(_visualRootRect);
+            _hoverView.Bind();
             _hoverView.SetGroup("equipment-slots");
             _hoverView.SetHoverScale(SelectedIconScale);
             _hoverView.SetBounceHeight(0f);
@@ -163,13 +173,6 @@ namespace CreativeAI.UI
 
         private void ResolveViewReferences(bool warn = true)
         {
-            _visualRootRect ??= transform.Find("VisualRoot") as RectTransform;
-            _iconView ??= GetComponentInChildren<SlotIconView>(true);
-            _countBadgeView ??= GetComponentInChildren<SlotCountBadgeView>(true);
-            _emptyView ??= GetComponentInChildren<SlotEmptyView>(true);
-            _hoverView ??= GetComponentInChildren<SlotHoverView>(true);
-            _frameView ??= GetComponentInChildren<SlotFrameView>(true);
-
             if (!warn)
                 return;
 
@@ -180,6 +183,21 @@ namespace CreativeAI.UI
             WarnIfMissing(_hoverView, nameof(SlotHoverView));
             WarnIfMissing(_frameView, nameof(SlotFrameView));
         }
+
+#if UNITY_EDITOR
+        private void Reset() => AutoAssignReferences();
+
+        [ContextMenu("Auto Assign References")]
+        private void AutoAssignReferences()
+        {
+            _visualRootRect ??= transform.Find("VisualRoot") as RectTransform;
+            _iconView ??= GetComponentInChildren<SlotIconView>(true);
+            _countBadgeView ??= GetComponentInChildren<SlotCountBadgeView>(true);
+            _emptyView ??= GetComponentInChildren<SlotEmptyView>(true);
+            _hoverView ??= GetComponentInChildren<SlotHoverView>(true);
+            _frameView ??= GetComponentInChildren<SlotFrameView>(true);
+        }
+#endif
 
         private void WarnIfMissing(UnityEngine.Object reference, string referenceName)
         {

@@ -119,10 +119,11 @@ namespace CreativeAI.UI
             bool hasIcon = item?.icon != null;
             _icon.sprite = hasIcon ? item.icon : null;
             _icon.color = hasIcon ? Color.white : Color.clear;
-            _icon.rectTransform.localRotation = Quaternion.identity;
 
             if (hasIcon)
-                PlayIconSpin();
+                PlayIconReveal();
+            else
+                _icon.rectTransform.localRotation = Quaternion.identity;
         }
 
         private void RefreshTexts(ItemData item, string emptyLabel)

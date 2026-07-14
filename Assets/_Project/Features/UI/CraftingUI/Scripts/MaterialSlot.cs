@@ -88,6 +88,7 @@ namespace CreativeAI.UI.CraftingUI
 
         public void SetSelected(bool selected)
         {
+            ResolveViewReferences();
             _isSelected = selected;
             _frameView?.SetSelected(selected);
 
@@ -143,7 +144,7 @@ namespace CreativeAI.UI.CraftingUI
             if (_hoverView == null)
                 return;
 
-            _hoverView.Bind(_visualRootRect);
+            _hoverView.Bind();
             _hoverView.SetGroup("craft-slots");
             _hoverView.SetHoverScale(SelectedSlotScale);
             _hoverView.SetBounceHeight(0f);
@@ -236,13 +237,6 @@ namespace CreativeAI.UI.CraftingUI
 
         private void ResolveViewReferences()
         {
-            _visualRootRect ??= transform.Find("VisualRoot") as RectTransform;
-            _iconView ??= GetComponentInChildren<SlotIconView>(true);
-            _emptyView ??= GetComponentInChildren<SlotEmptyView>(true);
-            _hoverView ??= GetComponentInChildren<SlotHoverView>(true);
-            _frameView ??= GetComponentInChildren<SlotFrameView>(true);
-            _slotLabel ??= transform.Find("SlotLabel")?.GetComponent<TMP_Text>();
-
             WarnIfMissing(_visualRootRect, "VisualRoot");
             WarnIfMissing(_iconView, nameof(SlotIconView));
             WarnIfMissing(_emptyView, nameof(SlotEmptyView));
@@ -250,6 +244,21 @@ namespace CreativeAI.UI.CraftingUI
             WarnIfMissing(_frameView, nameof(SlotFrameView));
             WarnIfMissing(_slotLabel, "SlotLabel");
         }
+
+#if UNITY_EDITOR
+        private void Reset() => AutoAssignReferences();
+
+        [ContextMenu("Auto Assign References")]
+        private void AutoAssignReferences()
+        {
+            _visualRootRect ??= transform.Find("VisualRoot") as RectTransform;
+            _iconView ??= GetComponentInChildren<SlotIconView>(true);
+            _emptyView ??= GetComponentInChildren<SlotEmptyView>(true);
+            _hoverView ??= GetComponentInChildren<SlotHoverView>(true);
+            _frameView ??= GetComponentInChildren<SlotFrameView>(true);
+            _slotLabel ??= transform.Find("SlotLabel")?.GetComponent<TMP_Text>();
+        }
+#endif
 
         private void WarnIfMissing(UnityEngine.Object reference, string referenceName)
         {

@@ -88,18 +88,11 @@ namespace CreativeAI.UI.InventoryUI
         private void ConfigureVisualRootHover()
         {
             ResolveViewReferences();
-            _hoverView?.Bind(_visualRootRect);
+            _hoverView?.Bind();
         }
 
         private void ResolveViewReferences()
         {
-            _visualRootRect ??= transform.Find("VisualRoot") as RectTransform;
-            _iconView ??= GetComponentInChildren<SlotIconView>(true);
-            _countBadgeView ??= GetComponentInChildren<SlotCountBadgeView>(true);
-            _hoverView ??= GetComponentInChildren<SlotHoverView>(true);
-            _selectionView ??= GetComponentInChildren<SlotSelectionView>(true);
-            _markerView ??= GetComponentInChildren<SlotMarkerView>(true);
-
             WarnIfMissing(_visualRootRect, "VisualRoot");
             WarnIfMissing(_iconView, nameof(SlotIconView));
             WarnIfMissing(_countBadgeView, nameof(SlotCountBadgeView));
@@ -107,6 +100,21 @@ namespace CreativeAI.UI.InventoryUI
             WarnIfMissing(_selectionView, nameof(SlotSelectionView));
             WarnIfMissing(_markerView, nameof(SlotMarkerView));
         }
+
+#if UNITY_EDITOR
+        private void Reset() => AutoAssignReferences();
+
+        [ContextMenu("Auto Assign References")]
+        private void AutoAssignReferences()
+        {
+            _visualRootRect ??= transform.Find("VisualRoot") as RectTransform;
+            _iconView ??= GetComponentInChildren<SlotIconView>(true);
+            _countBadgeView ??= GetComponentInChildren<SlotCountBadgeView>(true);
+            _hoverView ??= GetComponentInChildren<SlotHoverView>(true);
+            _selectionView ??= GetComponentInChildren<SlotSelectionView>(true);
+            _markerView ??= GetComponentInChildren<SlotMarkerView>(true);
+        }
+#endif
 
         private void WarnIfMissing(Object reference, string referenceName)
         {

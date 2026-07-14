@@ -58,5 +58,20 @@ namespace CreativeAI.UI
                 .SetEase(Ease.OutQuint)
                 .SetUpdate(true);
         }
+
+        private void PlayIconReveal()
+        {
+            if (_icon == null || _icon.sprite == null)
+                return;
+
+            var iconRect = _icon.rectTransform;
+            iconRect.DOKill();
+            iconRect.localRotation = Quaternion.Euler(0f, 180f, 0f);
+
+            iconRect
+                .DORotate(new Vector3(0f, 360f, 0f), _iconSpinDuration, RotateMode.FastBeyond360)
+                .SetEase(Ease.OutQuint)
+                .SetUpdate(true);
+        }
     }
 }

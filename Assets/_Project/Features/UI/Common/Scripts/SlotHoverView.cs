@@ -14,12 +14,8 @@ namespace CreativeAI.UI
         private bool _hasWarnedMissingHoverScale;
         private bool _hasWarnedMissingVisualRoot;
 
-        public void Bind(RectTransform visualRoot = null)
+        public void Bind()
         {
-            _visualRoot ??= visualRoot;
-            _visualRoot ??= transform.Find("VisualRoot") as RectTransform;
-            _hoverScale ??= GetComponent<HoverScaleOnPointer>();
-
             if (_hoverScale == null)
             {
                 WarnMissingHoverScaleOnce();
@@ -79,11 +75,21 @@ namespace CreativeAI.UI
 
         private HoverScaleOnPointer ResolveHoverScale()
         {
-            _hoverScale ??= GetComponent<HoverScaleOnPointer>();
             if (_hoverScale == null)
                 WarnMissingHoverScaleOnce();
             return _hoverScale;
         }
+
+#if UNITY_EDITOR
+        private void Reset() => AutoAssignReferences();
+
+        [ContextMenu("Auto Assign References")]
+        private void AutoAssignReferences()
+        {
+            _hoverScale ??= GetComponent<HoverScaleOnPointer>();
+            _visualRoot ??= transform.Find("VisualRoot") as RectTransform;
+        }
+#endif
 
         private void WarnMissingHoverScaleOnce()
         {

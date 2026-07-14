@@ -3,6 +3,7 @@ using CreativeAI.UI.Common;
 using DG.Tweening;
 using TMPro;
 using UnityEngine;
+using UnityEngine.Serialization;
 using UnityEngine.UI;
 
 namespace CreativeAI.UI.CraftingUI
@@ -50,9 +51,8 @@ namespace CreativeAI.UI.CraftingUI
         [SerializeField]
         private TMP_Text _warningText;
 
-        [SerializeField]
-        private string _notReadyMessage =
-            "\u7D20\u6750\u30922\u3064\u9078\u629E\u3057\u3066\u304F\u3060\u3055\u3044";
+        [SerializeField, FormerlySerializedAs("_warningTextCanvasGroup")]
+        private CanvasGroup _warningCanvasGroup;
 
         [SerializeField]
         private string _categoryMismatchMessage =
@@ -67,7 +67,6 @@ namespace CreativeAI.UI.CraftingUI
             "\u7D20\u6750\u304C\u8DB3\u308A\u307E\u305B\u3093\uFF01";
 
         private RectTransform _warningTextRect;
-        private CanvasGroup _warningTextCanvasGroup;
         private Vector2 _warningTextBasePosition;
         private bool _hasWarningTextBasePosition;
         private Sequence _warningSequence;
@@ -76,7 +75,7 @@ namespace CreativeAI.UI.CraftingUI
         private CloseOnSelfClick _resultCloseOnSelfClick;
         private bool _warnedMissingResultPanel;
         private bool _warnedMissingWarningText;
-        private bool _warnedMissingWarningTextCanvasGroup;
+        private bool _warnedMissingWarningCanvasGroup;
 
         public CraftRecipeDB RecipeDB
         {
@@ -114,8 +113,6 @@ namespace CreativeAI.UI.CraftingUI
         private bool ResolveWarningReferences()
         {
             if (_warningText == null)
-                _warningText = FindDescendant("WarningText")?.GetComponent<TMP_Text>();
-            if (_warningText == null)
             {
                 WarnMissingReferenceOnce(ref _warnedMissingWarningText, "WarningText");
                 return false;
@@ -128,11 +125,10 @@ namespace CreativeAI.UI.CraftingUI
                 _hasWarningTextBasePosition = true;
             }
 
-            _warningTextCanvasGroup ??= _warningText.GetComponent<CanvasGroup>();
-            if (_warningTextCanvasGroup == null)
+            if (_warningCanvasGroup == null)
             {
                 WarnMissingReferenceOnce(
-                    ref _warnedMissingWarningTextCanvasGroup,
+                    ref _warnedMissingWarningCanvasGroup,
                     "WarningText.CanvasGroup"
                 );
                 return false;
@@ -140,6 +136,15 @@ namespace CreativeAI.UI.CraftingUI
 
             return true;
         }
+
+#if UNITY_EDITOR
+        [ContextMenu("Auto Assign Warning References")]
+        private void AutoAssignWarningReferences()
+        {
+            if (_warningText != null)
+                _warningCanvasGroup ??= _warningText.GetComponent<CanvasGroup>();
+        }
+#endif
 
         private Transform FindDescendant(string objectName)
         {

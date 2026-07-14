@@ -111,9 +111,7 @@ namespace CreativeAI.UI.CraftingUI
                     continue;
                 }
 
-                if (slotObject.GetComponent<GeneratedRecipeSlotMarker>() == null)
-                    slotObject.AddComponent<GeneratedRecipeSlotMarker>();
-
+                _generatedRecipeSlots.Add(slot);
                 slot.SetRecipe(recipe);
                 BindSlot(slot);
                 CraftUIAnimationUtility.PlayPopIn(slotObject, slotIndex * 0.04f);
@@ -135,7 +133,7 @@ namespace CreativeAI.UI.CraftingUI
 
         private void ClearGeneratedRecipeSlots()
         {
-            foreach (var slot in _recipeContent.GetComponentsInChildren<RecipeSlot>(true))
+            foreach (var slot in _generatedRecipeSlots)
             {
                 if (slot == null)
                     continue;
@@ -143,17 +141,21 @@ namespace CreativeAI.UI.CraftingUI
                 slot.Clicked -= OnRecipeClicked;
                 slot.DoubleClicked -= OnRecipeDoubleClicked;
                 slot.SetSelected(false);
+                Destroy(slot.gameObject);
+            }
 
-                bool isGenerated = slot.GetComponent<GeneratedRecipeSlotMarker>() != null;
-                if (isGenerated)
-                {
-                    Destroy(slot.gameObject);
+            foreach (var slot in _recipeContent.GetComponentsInChildren<RecipeSlot>(true))
+            {
+                if (slot == null || _generatedRecipeSlots.Contains(slot))
                     continue;
-                }
 
+                slot.Clicked -= OnRecipeClicked;
+                slot.DoubleClicked -= OnRecipeDoubleClicked;
+                slot.SetSelected(false);
                 slot.gameObject.SetActive(false);
             }
 
+            _generatedRecipeSlots.Clear();
             HideRecipeMaterialSlotTemplates();
         }
 
@@ -199,7 +201,7 @@ namespace CreativeAI.UI.CraftingUI
                 if (slot == null)
                     continue;
 
-                bool isGenerated = slot.GetComponent<GeneratedRecipeSlotMarker>() != null;
+                bool isGenerated = _generatedRecipeSlots.Contains(slot);
                 bool isVisibleExisting =
                     slot.Recipe != null
                     && _recipeDB != null

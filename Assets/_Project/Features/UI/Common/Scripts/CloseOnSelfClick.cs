@@ -20,6 +20,12 @@ namespace CreativeAI.UI.Common
             _runtimeSelfClickAction = clickAction;
         }
 
+        public void ClearClickAction(Action clickAction)
+        {
+            if (_runtimeSelfClickAction == clickAction)
+                _runtimeSelfClickAction = null;
+        }
+
         public void OnPointerClick(PointerEventData eventData)
         {
             if (
@@ -31,13 +37,13 @@ namespace CreativeAI.UI.Common
                 return;
             }
 
-            _onSelfClick?.Invoke();
             if (_runtimeSelfClickAction != null)
             {
                 _runtimeSelfClickAction.Invoke();
                 return;
             }
 
+            _onSelfClick?.Invoke();
             if (_targetToHide != null)
                 _targetToHide.SetActive(false);
         }

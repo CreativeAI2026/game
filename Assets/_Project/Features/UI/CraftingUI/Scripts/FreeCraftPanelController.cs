@@ -227,9 +227,14 @@ namespace CreativeAI.UI.CraftingUI
                 return;
 
             var previousSlot = _selectedSlot;
-            _selectedSlot = selectedSlot;
+            previousSlot?.SetSelected(false);
+
             foreach (var slot in _slots)
-                slot.SetSelected(slot == selectedSlot);
+                if (slot != null && slot != previousSlot && slot != selectedSlot)
+                    slot.SetSelected(false);
+
+            _selectedSlot = selectedSlot;
+            selectedSlot.SetSelected(true);
 
             if (selectedSlot.Stack != null)
                 _inventory?.SelectItem(selectedSlot.Stack);
@@ -444,8 +449,6 @@ namespace CreativeAI.UI.CraftingUI
                     _craftPanel?.ShowEquippedMaterialWarning();
                 else if (HasCategoryMismatch())
                     _craftPanel?.ShowCategoryMismatchWarning();
-                else
-                    _craftPanel?.ShowNotReadyWarning();
 
                 return;
             }
@@ -531,7 +534,6 @@ namespace CreativeAI.UI.CraftingUI
             if (!crafted)
             {
                 _craftPanel?.HideLoadingAndResult();
-                _craftPanel?.ShowNotReadyWarning();
                 UpdateCraftButton();
                 yield break;
             }

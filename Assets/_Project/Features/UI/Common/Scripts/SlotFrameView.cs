@@ -30,7 +30,6 @@ namespace CreativeAI.UI
 
         private bool ResolveFrame()
         {
-            _frame ??= GetComponent<Image>();
             if (_frame != null)
                 return true;
 
@@ -45,5 +44,23 @@ namespace CreativeAI.UI
 
             return false;
         }
+
+#if UNITY_EDITOR
+        private void Reset() => AutoAssignReferences();
+
+        [ContextMenu("Auto Assign References")]
+        private void AutoAssignReferences()
+        {
+            if (_frame != null)
+                return;
+
+            var frameTransform =
+                transform.Find("VisualRoot/Frame")
+                ?? transform.Find("Frame")
+                ?? transform.Find("VisualRoot/SelectedFrame")
+                ?? transform.Find("SelectedFrame");
+            _frame = frameTransform != null ? frameTransform.GetComponent<Image>() : null;
+        }
+#endif
     }
 }

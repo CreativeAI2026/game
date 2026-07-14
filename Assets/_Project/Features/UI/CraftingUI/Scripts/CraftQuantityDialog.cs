@@ -53,9 +53,13 @@ namespace CreativeAI.UI.CraftingUI
         [SerializeField]
         private float _startScale = 0.82f;
 
-        private RectTransform _dialogRect;
+        [SerializeField]
         private CanvasGroup _dialogCanvasGroup;
-        private CloseOnSelfClick _panelCloseOnSelfClick;
+
+        [SerializeField]
+        private CloseOnSelfClick _outsideClickCatcher;
+
+        private RectTransform _dialogRect;
         private Action<int> _onConfirmed;
         private int _min = 1;
         private int _max = 1;
@@ -70,6 +74,22 @@ namespace CreativeAI.UI.CraftingUI
         {
             ResolveReferences();
             Bind();
+            BindOutsideClick();
+        }
+
+        private void OnEnable()
+        {
+            BindOutsideClick();
+        }
+
+        private void OnDisable()
+        {
+            _outsideClickCatcher?.ClearClickAction(Hide);
+        }
+
+        private void OnDestroy()
+        {
+            _outsideClickCatcher?.ClearClickAction(Hide);
         }
 
         public void Show(
@@ -83,6 +103,7 @@ namespace CreativeAI.UI.CraftingUI
         {
             ResolveReferences();
             Bind();
+            BindOutsideClick();
 
             _min = Mathf.Max(1, min);
             _max = Mathf.Max(_min, max);
@@ -212,19 +233,22 @@ namespace CreativeAI.UI.CraftingUI
             if (_dialogRoot != null)
             {
                 _dialogRect ??= _dialogRoot.GetComponent<RectTransform>();
-                _dialogCanvasGroup ??= _dialogRoot.GetComponent<CanvasGroup>();
                 if (_dialogCanvasGroup == null)
                     WarnMissingDialogCanvasGroupOnce();
             }
 
-            if (_panelRoot != null)
-                _panelCloseOnSelfClick ??= _panelRoot.GetComponent<CloseOnSelfClick>();
-
-            if (_panelCloseOnSelfClick != null)
-                _panelCloseOnSelfClick.SetClickAction(Hide);
-            else if (_panelRoot != null)
+            if (_outsideClickCatcher == null && _panelRoot != null)
                 WarnMissingCloseOnSelfClickOnce();
         }
+
+#if UNITY_EDITOR
+        [ContextMenu("Auto Assign Dialog CanvasGroup")]
+        private void AutoAssignDialogCanvasGroup()
+        {
+            if (_dialogRoot != null)
+                _dialogCanvasGroup ??= _dialogRoot.GetComponent<CanvasGroup>();
+        }
+#endif
 
         private void Bind()
         {
@@ -246,6 +270,11 @@ namespace CreativeAI.UI.CraftingUI
             _inputField.contentType = TMP_InputField.ContentType.IntegerNumber;
             _inputField.onEndEdit.RemoveListener(OnInputEndEdit);
             _inputField.onEndEdit.AddListener(OnInputEndEdit);
+        }
+
+        private void BindOutsideClick()
+        {
+            _outsideClickCatcher?.SetClickAction(Hide);
         }
 
         private void Confirm()
@@ -310,7 +339,7 @@ namespace CreativeAI.UI.CraftingUI
                 && _dialogRoot != null
                 && _dialogRect != null
                 && _dialogCanvasGroup != null
-                && _panelCloseOnSelfClick != null
+                && _outsideClickCatcher != null
                 && _itemImage != null
                 && _itemName != null
                 && _countLabel != null

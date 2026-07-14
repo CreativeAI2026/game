@@ -106,17 +106,6 @@ namespace CreativeAI.UI
 
         private bool ResolveReferences()
         {
-            _container ??= FindContainer();
-            if (_container != null)
-            {
-                _countText ??= _container.GetComponentInChildren<TMP_Text>(true);
-                _containerCanvasGroup ??= _container.GetComponent<CanvasGroup>();
-                _backgroundImage ??= _container.GetComponent<Image>();
-            }
-
-            if (_countText != null)
-                _countTextCanvasGroup ??= _countText.GetComponent<CanvasGroup>();
-
             bool valid =
                 _container != null
                 && _countText != null
@@ -127,6 +116,24 @@ namespace CreativeAI.UI
                 WarnMissingReferencesOnce();
 
             return valid;
+        }
+
+#if UNITY_EDITOR
+        private void Reset() => AutoAssignReferences();
+
+        [ContextMenu("Auto Assign References")]
+        private void AutoAssignReferences()
+        {
+            _container ??= FindContainer();
+            if (_container != null)
+            {
+                _countText ??= _container.GetComponentInChildren<TMP_Text>(true);
+                _containerCanvasGroup ??= _container.GetComponent<CanvasGroup>();
+                _backgroundImage ??= _container.GetComponent<Image>();
+            }
+
+            if (_countText != null)
+                _countTextCanvasGroup ??= _countText.GetComponent<CanvasGroup>();
         }
 
         private RectTransform FindContainer()
@@ -142,6 +149,7 @@ namespace CreativeAI.UI
                 ?? transform.Find("CountBadge") as RectTransform
                 ?? transform.Find("numberSlot") as RectTransform;
         }
+#endif
 
         private void WarnMissingReferencesOnce()
         {

@@ -61,6 +61,7 @@ namespace CreativeAI.UI.CraftingUI
         private CraftQuantityDialog _quantityDialogController;
 
         private readonly List<RecipeSlot> _slots = new();
+        private readonly List<RecipeSlot> _generatedRecipeSlots = new();
         private readonly List<RecipeMaterialRow> _materialRows = new();
         private readonly List<ItemCategory> _activeRecipeCategories = new();
         private CraftRecipeDB _subscribedRecipeDB;

@@ -3,23 +3,18 @@ using System.Collections.Generic;
 using CreativeAI.Gameplay;
 using CreativeAI.UI.InventoryUI;
 using UnityEngine;
-using UnityEngine.Events;
-using UnityEngine.UI;
 
 namespace CreativeAI.UI.CharacterUI
 {
     public partial class EquipmentViewController : MonoBehaviour
     {
-        private static readonly Color SlotFrameSelected = new(1f, 0.78f, 0.15f, 0.9f);
-        private static readonly Color SlotFrameNormal = new(1f, 1f, 1f, 0.15f);
-
         private TriangleLayout _triangleLayout;
 
-        [Header("Equipment Slots")]
+        [Header("Equipment Slots Root")]
         [SerializeField]
-        private Transform _equipmentSlotsContainer;
+        private Transform _equipmentSlotsRoot;
 
-        [Header("Detail")]
+        [Header("Detail Panel")]
         [SerializeField]
         private ItemDetailPanel _detailPanel;
 
@@ -34,7 +29,6 @@ namespace CreativeAI.UI.CharacterUI
         private string _emptyLabel = "\uFF08\u672A\u88C5\u5099\uFF09";
 
         private readonly List<EquipmentSlot> _slots = new();
-        private readonly Dictionary<Button, UnityAction> _slotButtonActions = new();
         private int _currentSlotIndex;
         private ItemStack _selectedInventoryStack;
         private bool _initialized;
@@ -152,8 +146,8 @@ namespace CreativeAI.UI.CharacterUI
             _detailPanel ??= GetComponentInChildren<ItemDetailPanel>(true);
             _inventory ??= GetComponentInChildren<Inventory>(true);
 
-            if (_triangleLayout == null && _equipmentSlotsContainer != null)
-                _triangleLayout = _equipmentSlotsContainer.GetComponent<TriangleLayout>();
+            if (_triangleLayout == null && _equipmentSlotsRoot != null)
+                _triangleLayout = _equipmentSlotsRoot.GetComponent<TriangleLayout>();
         }
 
         private void ConfigureInventory()
