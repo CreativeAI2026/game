@@ -15,6 +15,13 @@ namespace CreativeAI.Gameplay
         [SerializeField]
         private GameObject[] _weapons;
 
+        [Header("武器ごとのステータス補正(_weapons と同じ index 順で登録)")]
+        [Tooltip(
+            "選択中の1本の補正のみが最終ステータスに乗る(Specification.md「アイテムカテゴリと付与ステータス」)"
+        )]
+        [SerializeField]
+        private WeaponData[] _weaponStats;
+
         private int _currentWeaponIndex = 0;
         private PlayerInputHandler _input;
         private Animator _animator;
@@ -23,6 +30,38 @@ namespace CreativeAI.Gameplay
         public event Action<bool> OnWeaponSwitched; // true: prev (left rotation), false: next (right rotation)
 
         public int CurrentWeaponIndex => _currentWeaponIndex;
+
+        /// <summary>
+        /// 選択中の武器の補正を装備品と同じ <see cref="EquipmentBonus"/> 形式で返す。
+        /// PlayerStatus が「装備補正 + 武器補正」として最終ステータスに合算する
+        /// (装備品:InventoryManager と対称。選択の情報源はここ 1 箇所)。
+        /// spec: 選択中の 1 本の補正のみが乗る。移動速度/攻撃速度は PlayerStatus の対象外なので含めない。
+        /// </summary>
+        public EquipmentBonus GetSelectedBonus()
+        {
+            var b = new EquipmentBonus();
+            if (
+                _weaponStats == null
+                || _currentWeaponIndex < 0
+                || _currentWeaponIndex >= _weaponStats.Length
+            )
+            {
+                return b;
+            }
+
+            var w = _weaponStats[_currentWeaponIndex];
+            if (w == null)
+            {
+                return b;
+            }
+
+            b.attack += w.attack;
+            b.defense += w.defense;
+            b.maxHp += w.maxHP;
+            b.criticalChance += w.criticalRate;
+            b.criticalDamage += w.criticalDamage;
+            return b;
+        }
 
         private void Awake()
         {
