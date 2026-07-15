@@ -8,7 +8,8 @@
         "Unity.Cinemachine",
         "Unity.TextMeshPro",
         "Unity.Animation.Rigging.Editor",
-        "Unity.Animation.Rigging"
+        "Unity.Animation.Rigging",
+        "UniTask"
     ],
     "includePlatforms": [],
     "excludePlatforms": [],

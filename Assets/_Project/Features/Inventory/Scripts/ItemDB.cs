@@ -46,6 +46,14 @@ namespace CreativeAI.Gameplay
             return items.FirstOrDefault(i => i != null && i.id == id);
         }
 
+        /// <summary>events.json の giveItem/itemKey(文字列)から ItemData を引く。未設定・未一致は null。</summary>
+        public ItemData GetItemByKey(string key)
+        {
+            if (string.IsNullOrEmpty(key) || items == null)
+                return null;
+            return items.FirstOrDefault(i => i != null && i.key == key);
+        }
+
 #if UNITY_EDITOR
         [ContextMenu("Sync From Inventory Data Folder")]
         public void SyncFromInventoryDataFolder()

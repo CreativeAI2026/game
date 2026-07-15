@@ -17,6 +17,7 @@ namespace CreativeAI.Gameplay
     {
         public Sprite icon; // アイコン
         public int id; // ID
+        public string key; // events.json の giveItem/itemKey が参照する文字列キー(任意。大事なもの等で使用)
         public string itemName; // アイテム名
         public ItemCategory category; // カテゴリ
 
@@ -43,6 +44,25 @@ namespace CreativeAI.Gameplay
             };
     }
 
+    /// <summary>
+    /// 調合でロールされた個体ステータス1つ(付与ステータスの型 + 値)。
+    /// stat は Specification §1.1「アイテムカテゴリと付与ステータス」の型名(例: "attackPct")。
+    /// </summary>
+    [System.Serializable]
+    public sealed class RolledStat
+    {
+        public string stat;
+        public float value;
+
+        public RolledStat() { }
+
+        public RolledStat(string stat, float value)
+        {
+            this.stat = stat;
+            this.value = value;
+        }
+    }
+
     public class ItemStack
     {
         public ItemData Data { get; }
@@ -50,12 +70,22 @@ namespace CreativeAI.Gameplay
 
         public int Count
         {
-            get => EquipmentInstance != null ? 1 : _count;
-            set => _count = EquipmentInstance != null ? 1 : value;
+            get => IsInstance ? 1 : _count;
+            set => _count = IsInstance ? 1 : value;
         }
 
         public EquipmentInstance EquipmentInstance { get; }
         public bool IsEquipped { get; set; }
+
+        /// <summary>
+        /// 調合でロールされた個体ステータス(装備品/武器の個体差)。
+        /// null/空 = 未ロールのスタック品(数量でまとめる)。値あり = 個体(マージ不可)。
+        /// </summary>
+        public IReadOnlyList<RolledStat> RolledStats { get; }
+
+        /// <summary>ロール済み個体か(true ならマージ・スタックしない)。</summary>
+        public bool IsInstance =>
+            EquipmentInstance != null || (RolledStats != null && RolledStats.Count > 0);
 
         public ItemStack(ItemData data, int count = 1)
         {
@@ -69,6 +99,14 @@ namespace CreativeAI.Gameplay
             EquipmentInstance =
                 equipmentInstance
                 ?? throw new System.ArgumentNullException(nameof(equipmentInstance));
+            Count = 1;
+        }
+
+        /// <summary>ロール済み個体を1つ作る（数量は常に1・マージしない）。</summary>
+        public ItemStack(ItemData data, IReadOnlyList<RolledStat> rolledStats)
+        {
+            Data = data;
+            RolledStats = rolledStats;
             Count = 1;
         }
     }

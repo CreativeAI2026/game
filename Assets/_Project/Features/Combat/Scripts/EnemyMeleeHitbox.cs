@@ -3,6 +3,12 @@ using UnityEngine;
 
 namespace CreativeAI.Gameplay
 {
+    /// <summary>
+    /// 敵の近接攻撃ヒットボックス。
+    /// 武器オブジェクトにアタッチし、アニメーションイベントから有効/無効を切り替えて使用する。
+    /// SphereCastによる軌跡判定とOverlapSphereによる重なり判定の二段構えで、
+    /// 高速スイング時のすり抜けと密着時の検出漏れの両方を防ぐ。
+    /// </summary>
     public class EnemyMeleeHitbox : MonoBehaviour
     {
         [Header("敵のダメージ倍率(1.0 = 100%)")]
@@ -41,7 +47,6 @@ namespace CreativeAI.Gameplay
 
         private void Update()
         {
-            // 判定がONの時（攻撃モーション中）だけ毎フレーム実行
             if (!_isHitboxActive)
                 return;
 
@@ -49,8 +54,8 @@ namespace CreativeAI.Gameplay
             Vector3 direction = currentPosition - _previousPosition;
             float distance = direction.magnitude;
 
-            // ① 軌跡の判定（すり抜け防止）
-            // 前のフレームから今のフレームまでの移動ルート上にプレイヤーがいなかったかチェック
+            // 高速スイング時に武器がターゲットをすり抜けないよう、
+            // 前フレームから現フレームまでの軌跡全体を太いRayで判定する
             if (distance > 0)
             {
                 RaycastHit[] hits = Physics.SphereCastAll(
@@ -62,8 +67,9 @@ namespace CreativeAI.Gameplay
                 );
                 foreach (var hit in hits)
                 {
-                    // SphereCastAll の hit.point は始点とコライダーが重なっている場合に
-                    // Vector3.zero を返すことがある。その場合はコライダー上の最近傍点を使う。
+                    // SphereCastAll は始点でコライダーと既に重なっている場合
+                    // hit.point に Vector3.zero を返す仕様上の問題があるため、
+                    // その場合はClosestPointで代替する
                     Vector3 resolvedPoint =
                         (hit.point == Vector3.zero)
                             ? hit.collider.ClosestPoint(currentPosition)
@@ -72,8 +78,8 @@ namespace CreativeAI.Gameplay
                 }
             }
 
-            // ② 現在位置の判定（めり込み防止）
-            // 敵が踏み込みすぎて、すでにプレイヤーが武器の中心(currentPosition)にいる場合用
+            // SphereCastは始点内部の重なりを検出できないため、
+            // 密着・めり込み状態をOverlapSphereで補完する
             Collider[] overlaps = Physics.OverlapSphere(
                 currentPosition,
                 _hitboxRadius,
@@ -81,17 +87,15 @@ namespace CreativeAI.Gameplay
             );
             foreach (var col in overlaps)
             {
-                // OverlapSphereは正確なヒットポイントが取れないため、一番近い表面の座標を取得
+                // OverlapSphereは接触点を返さないため、エフェクト表示用にClosestPointで近似する
                 Vector3 hitPoint = col.ClosestPoint(currentPosition);
                 Vector3 hitNormal = (currentPosition - hitPoint).normalized;
                 ProcessHit(col, hitPoint, hitNormal);
             }
 
-            // 次のフレームでの軌跡計算のために、今の位置を保存しておく
             _previousPosition = currentPosition;
         }
 
-        // ダメージとエフェクトの処理をまとめた関数
         private void ProcessHit(Collider other, Vector3 hitPoint, Vector3 hitNormal)
         {
             if (_alreadyHitTargets.Contains(other))
@@ -99,17 +103,16 @@ namespace CreativeAI.Gameplay
 
             if (other.CompareTag("Player"))
             {
-                _alreadyHitTargets.Add(other); // 多段ヒット防止
+                // 1スイングにつき同一対象へは1回だけヒットさせる
+                _alreadyHitTargets.Add(other);
                 float finalDamage = _enemyStatus.CurrentAttackPower * _meleeMultiplier;
 
-                // ─── 追加：ダメージを与える前にガード・パリィ判定を行う ───
-                // プレイヤー側から SwordController を探す（ルートや子オブジェクトにあっても取得可能）
+                // ガード・パリィ判定を先に行い、成立した場合はダメージ処理をスキップする。
+                // これにより防御側の応答を攻撃側で一元管理できる。
                 SwordController sword = other.GetComponentInChildren<SwordController>();
 
-                // 剣を装備中（アクティブ）かチェック
                 if (sword != null && sword.gameObject.activeInHierarchy)
                 {
-                    // SwordControllerに攻撃の情報を渡し、ガードできたか(isBlocked)を受け取る
                     bool isBlocked = sword.ReceiveAttack(
                         finalDamage,
                         true,
@@ -119,19 +122,14 @@ namespace CreativeAI.Gameplay
 
                     if (isBlocked)
                     {
-                        // ガード・ジャストパリィ成功！
-                        // ダメージ処理を行わずにここで終了する（敵の剣が弾かれたSEなどを鳴らしても良い）
                         return;
                     }
                 }
-                // ──────────────────────────────────────────────
 
-                // ガードしていなかった、もしくは弓などを装備していて無防備だった場合の通常の被弾処理
                 if (other.TryGetComponent(out IDamageable target))
                 {
                     target.TakeDamage(finalDamage, false);
 
-                    // 取得した「実際に当たった正確な座標」で流血などの被弾エフェクトを出す！
                     SpawnHitEffect(hitPoint, hitNormal);
                 }
             }
@@ -140,7 +138,8 @@ namespace CreativeAI.Gameplay
         public void EnableHitbox()
         {
             _alreadyHitTargets.Clear();
-            _previousPosition = transform.position; // 判定開始時の位置を初期位置として記録
+            // 軌跡判定の起点を記録し、最初のフレームで正しくSphereCastできるようにする
+            _previousPosition = transform.position;
             _isHitboxActive = true;
         }
 
@@ -159,7 +158,6 @@ namespace CreativeAI.Gameplay
             Instantiate(_hitEffect, position, rotation);
         }
 
-        // 調整用：エディタ上で判定の大きさを赤い球で可視化する
         private void OnDrawGizmosSelected()
         {
             Gizmos.color = new Color(1f, 0f, 0f, 0.5f);

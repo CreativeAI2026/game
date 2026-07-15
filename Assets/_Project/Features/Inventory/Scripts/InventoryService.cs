@@ -56,6 +56,26 @@ namespace CreativeAI.Gameplay
             InventoryChanged?.Invoke();
         }
 
+        public ItemStack AddInstance(ItemData data, IReadOnlyList<RolledStat> rolledStats)
+        {
+            if (data == null)
+                return null;
+
+            var stack = new ItemStack(data, rolledStats);
+            _storage.Items.Add(stack);
+            InventoryChanged?.Invoke();
+            return stack;
+        }
+
+        public void Clear()
+        {
+            if (_storage.Items.Count == 0)
+                return;
+
+            _storage.Items.Clear();
+            InventoryChanged?.Invoke();
+        }
+
         public bool ConsumeItem(ItemData data, int count = 1)
         {
             if (data == null || count <= 0 || GetItemCount(data) < count)
@@ -137,7 +157,7 @@ namespace CreativeAI.Gameplay
         private IEnumerable<ItemStack> GetStacksWithRoom(ItemData data, int maxStack)
         {
             return _storage.Items.Where(stack =>
-                stack.Data == data && stack.EquipmentInstance == null && stack.Count < maxStack
+                stack.Data == data && !stack.IsInstance && stack.Count < maxStack
             );
         }
     }

@@ -2,6 +2,11 @@ using UnityEngine;
 
 namespace CreativeAI.Gameplay
 {
+    /// <summary>
+    /// Animation Rigging のLook At ターゲットを動的に制御し、
+    /// 近くの敵がいれば視線を向け、いなければ正面を見るようにする。
+    /// 可動域を制限することで、首が不自然に回りすぎるのを防ぐ。
+    /// </summary>
     public class HeadLookController : MonoBehaviour
     {
         [Header("参照")]
@@ -31,21 +36,18 @@ namespace CreativeAI.Gameplay
             if (targetManager != null && targetManager.currentTarget != null)
             {
                 Transform enemy = targetManager.currentTarget;
-                // 頭から敵への方向ベクトル
                 Vector3 dirToEnemy = enemy.position - headBone.position;
 
-                // プレイヤーの正面（体の向き）と、敵への方向の角度差を計算
                 float angleToEnemy = Vector3.Angle(playerRoot.forward, dirToEnemy);
 
                 if (angleToEnemy <= maxAngle)
                 {
-                    // 限界角度以内なら、敵の座標をそのままターゲットにする
                     targetPosition = enemy.position;
                 }
                 else
                 {
-                    // 限界角度を超えている場合、可動域のギリギリの角度の場所にターゲットを留める
-                    // RotateTowardsを使って、正面方向からmaxAngle分だけ敵の方向に傾けたベクトルを作る
+                    // 可動域を超えた敵に対しては、限界角度の境界にターゲットを留める。
+                    // こうしないと首が180度回転する等の不自然な見た目になる
                     Vector3 clampedDir = Vector3.RotateTowards(
                         playerRoot.forward,
                         dirToEnemy,
@@ -53,17 +55,16 @@ namespace CreativeAI.Gameplay
                         0f
                     );
 
-                    // 頭の位置から制限された方向へ少し伸ばした位置をターゲットにする
+                    // 5fは「十分遠い仮想ポイント」を作るための距離。Look Atは方向のみ参照するため値自体は重要ではない
                     targetPosition = headBone.position + clampedDir * 5f;
                 }
             }
             else
             {
-                // 敵がいない場合は、常に体の真正面をターゲットにする
                 targetPosition = headBone.position + playerRoot.forward * 5f;
             }
 
-            // ターゲット位置を滑らかに移動させる（急に首がカクつくのを防ぐ）
+            // Lerpで補間することで、ターゲットが切り替わった瞬間に首がカクつくのを防ぐ
             lookTarget.position = Vector3.Lerp(
                 lookTarget.position,
                 targetPosition,

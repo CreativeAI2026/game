@@ -1,7 +1,13 @@
+using System;
 using UnityEngine;
 
 namespace CreativeAI.Gameplay
 {
+    /// <summary>
+    /// プレイヤーの武器切り替えを管理する。
+    /// 武器切り替え時にAnimator.Rebind()で状態を完全リセットすることで、
+    /// 前の武器のアニメーショントリガーやステートが残留するのを防ぐ。
+    /// </summary>
     public class WeaponManager : MonoBehaviour
     {
         [Header("武器リスト(0:剣, 1:弓 など)")]
@@ -14,7 +20,8 @@ namespace CreativeAI.Gameplay
         private Animator _animator;
         private PlayerController _playerController;
 
-        /// <summary>現在装備している武器のインデックス（0=剣, 1=弓 など）</summary>
+        public event Action<bool> OnWeaponSwitched; // true: prev (left rotation), false: next (right rotation)
+
         public int CurrentWeaponIndex => _currentWeaponIndex;
 
         private void Awake()
@@ -36,7 +43,6 @@ namespace CreativeAI.Gameplay
                 return;
             }
 
-            // 攻撃や防御中など、武器切り替えが禁止されている場合は入力を無視する
             if (!_playerController.CanChangeWeapon)
             {
                 return;
@@ -47,6 +53,7 @@ namespace CreativeAI.Gameplay
                 _input.weaponNext = false;
                 int nextIndex = (_currentWeaponIndex + 1) % _weapons.Length;
                 EquipWeapon(nextIndex);
+                OnWeaponSwitched?.Invoke(false);
             }
 
             if (_input.weaponPrev)
@@ -56,6 +63,7 @@ namespace CreativeAI.Gameplay
                 if (prevIndex < 0)
                     prevIndex = _weapons.Length - 1;
                 EquipWeapon(prevIndex);
+                OnWeaponSwitched?.Invoke(true);
             }
         }
 
@@ -73,11 +81,11 @@ namespace CreativeAI.Gameplay
 
             if (_animator != null)
             {
-                // アニメーターの現在の状態や進行中のトランジション、残存しているトリガーをすべて破棄し、
-                // デフォルト状態（通常はIdle/Locomotion）に強制的にスナップさせる（最も堅牢な手法）
+                // Rebindで全パラメータ・遷移・トリガーをリセットし、
+                // 前の武器のアニメーション状態が新しい武器に漏れるのを防ぐ
                 _animator.Rebind();
 
-                // RebindによってリセットされたWeaponTypeパラメータを再設定する
+                // RebindによってWeaponTypeもリセットされるため、再設定が必要
                 _animator.SetInteger("WeaponType", _currentWeaponIndex);
             }
         }

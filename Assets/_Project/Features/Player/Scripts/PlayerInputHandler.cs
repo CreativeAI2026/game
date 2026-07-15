@@ -3,8 +3,11 @@ using UnityEngine.InputSystem;
 
 namespace CreativeAI.Gameplay
 {
-    // プレイヤーの操作入力を受け取るスクリプト。
-    // 追加操作があれば、随時ここに追加していく。
+    /// <summary>
+    /// Input Systemからの入力イベントを受け取り、各フィールドに保持する。
+    /// 攻撃入力はConsumeパターン（1回消費）を採用し、
+    /// 武器コントローラー側が任意のタイミングで入力を読み取れるようにしている。
+    /// </summary>
     public class PlayerInputHandler : MonoBehaviour
     {
         [Header("キャラクターの入力値")]
@@ -12,8 +15,8 @@ namespace CreativeAI.Gameplay
         public Vector2 look;
         public bool jump;
         public bool sprint;
-        public bool attack; // 左クリック
-        public bool subAction; // 弓の構え 、 剣の防御
+        public bool attack;
+        public bool subAction; // 武器ごとに異なるアクション（弓：構え、剣：防御）に使用
         public bool weaponNext;
         public bool weaponPrev;
 
@@ -28,6 +31,11 @@ namespace CreativeAI.Gameplay
 
         public bool HasAttackInput => _attackPending;
 
+        /// <summary>
+        /// 攻撃入力を消費する。1回の入力に対して1回だけtrueを返す。
+        /// 武器コントローラー側で攻撃可能なタイミングまで入力を保持し、
+        /// 準備ができた時点で消費する設計。
+        /// </summary>
         public bool ConsumeAttack()
         {
             if (_attackPending)

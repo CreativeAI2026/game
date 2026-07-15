@@ -2,7 +2,10 @@ using UnityEngine;
 
 namespace CreativeAI.Gameplay
 {
-    // Animatorと同じ「大元の親オブジェクト」にアタッチする中継ぎスクリプト
+    /// <summary>
+    /// Animatorのアニメーションイベントは同一GameObject上のスクリプトしか呼び出せないため、
+    /// Animatorがアタッチされたルートオブジェクトに配置し、子オブジェクトのヒットボックスへイベントを中継する。
+    /// </summary>
     public class AnimationEventReceiver : MonoBehaviour
     {
         [Header("武器のヒットボックス")]
@@ -46,7 +49,6 @@ namespace CreativeAI.Gameplay
                 return;
             }
 
-            // ② プレイヤーのヒットボックスを無効化
             var playerHitbox = _meleeHitbox.GetComponent<PlayerMeleeHitbox>();
             if (playerHitbox != null)
             {

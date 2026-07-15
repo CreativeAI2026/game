@@ -3,6 +3,12 @@ using UnityEngine;
 
 namespace CreativeAI.Gameplay
 {
+    /// <summary>
+    /// プレイヤーの近接攻撃ヒットボックス。
+    /// 武器オブジェクトにアタッチし、アニメーションイベントから有効/無効を切り替えて使用する。
+    /// SphereCastによる軌跡判定とOverlapSphereによる重なり判定の二段構えで、
+    /// 高速スイング時のすり抜けと密着時の検出漏れの両方を防ぐ。
+    /// </summary>
     public class PlayerMeleeHitbox : MonoBehaviour
     {
         [Header("近接のダメージ倍率(1.0 = 100%)")]
@@ -18,7 +24,7 @@ namespace CreativeAI.Gameplay
         [SerializeField]
         private float _hitboxRadius = 0.5f;
 
-        [Tooltip("判定するレイヤー(Enemyのレイヤー等を指定すると処理が軽くなります)")]
+        [Tooltip("判定するレイヤー(Enemyのレイヤー等を指定すると処理が軽くなる)")]
         [SerializeField]
         private LayerMask _targetLayer = ~0;
 
@@ -38,7 +44,6 @@ namespace CreativeAI.Gameplay
 
         private void Update()
         {
-            // 判定がONの時（攻撃モーション中）だけ毎フレーム実行
             if (!_isHitboxActive)
                 return;
 
@@ -46,8 +51,8 @@ namespace CreativeAI.Gameplay
             Vector3 direction = currentPosition - _previousPosition;
             float distance = direction.magnitude;
 
-            // ① 軌跡の判定（すり抜け防止）
-            // 前のフレームから今のフレームまでの移動ルート上に敵がいなかったかチェック
+            // 高速スイング時に武器がターゲットをすり抜けないよう、
+            // 前フレームから現フレームまでの軌跡全体を太いレイで判定する
             if (distance > 0)
             {
                 RaycastHit[] hits = Physics.SphereCastAll(
@@ -59,8 +64,9 @@ namespace CreativeAI.Gameplay
                 );
                 foreach (var hit in hits)
                 {
-                    // SphereCastAll の hit.point は始点とコライダーが重なっている場合に
-                    // Vector3.zero を返すことがある。その場合はコライダー上の最近傍点を使う。
+                    // SphereCastAll は始点でコライダーと既に重なっている場合
+                    // hit.point に Vector3.zero を返す仕様上の問題があるため、
+                    // その場合はClosestPointで代替する
                     Vector3 resolvedPoint =
                         (hit.point == Vector3.zero)
                             ? hit.collider.ClosestPoint(currentPosition)
@@ -69,8 +75,8 @@ namespace CreativeAI.Gameplay
                 }
             }
 
-            // ② 現在位置の判定（めり込み防止）
-            // プレイヤーが踏み込みすぎて、すでに敵が武器の中心(currentPosition)にいる場合用
+            // SphereCastは始点内部の重なりを検出できないため、
+            // 密着・めり込み状態をOverlapSphereで補完する
             Collider[] overlaps = Physics.OverlapSphere(
                 currentPosition,
                 _hitboxRadius,
@@ -78,38 +84,34 @@ namespace CreativeAI.Gameplay
             );
             foreach (var col in overlaps)
             {
-                // OverlapSphereは正確なヒットポイントが取れないため、一番近い表面の座標を取得
+                // OverlapSphereは接触点を返さないため、エフェクト表示用にClosestPointで近似する
                 Vector3 hitPoint = col.ClosestPoint(currentPosition);
                 Vector3 hitNormal = (currentPosition - hitPoint).normalized;
                 ProcessHit(col, hitPoint, hitNormal);
             }
 
-            // 次のフレームでの軌跡計算のために、今の位置を保存しておく
             _previousPosition = currentPosition;
         }
 
-        // ダメージとエフェクトの処理をまとめた関数
         private void ProcessHit(Collider other, Vector3 hitPoint, Vector3 hitNormal)
         {
             if (_alreadyHitTargets.Contains(other))
                 return;
 
-            // プレイヤー自身へのヒットは無視する
+            // 武器がプレイヤー自身のコライダーに触れてもヒット扱いにしない
             if (other.CompareTag("Player"))
                 return;
 
             if (other.TryGetComponent(out IDamageable enemy))
             {
-                _alreadyHitTargets.Add(other); // 多段ヒット防止
+                // 1スイングにつき同一対象へは1回だけヒットさせる
+                _alreadyHitTargets.Add(other);
 
-                // プレイヤーに近接の倍率を渡して計算してもらう
                 float finalDamage = _playerStatus.RollDamage(_meleeMultiplier, out bool isCritical);
                 enemy.TakeDamage(finalDamage, isCritical);
 
-                // 敵ヒット時のカメラシェイク
                 CameraShakeManager.Instance?.Shake(0.3f);
 
-                // 取得した「実際に当たった正確な坐標」でエフェクトを出す！
                 SpawnHitEffect(hitPoint, hitNormal);
             }
         }
@@ -117,7 +119,8 @@ namespace CreativeAI.Gameplay
         public void EnableHitbox()
         {
             _alreadyHitTargets.Clear();
-            _previousPosition = transform.position; // 判定開始時の位置を初期位置として記録
+            // 軌跡判定の起点を記録し、最初のフレームで正しくSphereCastできるようにする
+            _previousPosition = transform.position;
             _isHitboxActive = true;
         }
 
@@ -136,7 +139,6 @@ namespace CreativeAI.Gameplay
             Instantiate(_hitEffect, position, rotation);
         }
 
-        // 調整用：エディタ上で判定の大きさを赤い球で可視化する
         private void OnDrawGizmosSelected()
         {
             Gizmos.color = new Color(1f, 0f, 0f, 0.5f);
