@@ -190,9 +190,11 @@ namespace CreativeAI.Gameplay
         }
 
         /// <summary>
-        /// 装備中(IsEquipped)の装備品・武器の補正合計。素の値に足すと最終ステータス。
+        /// 装備中(IsEquipped)の装備品の補正合計。素の値に足すと最終ステータス。
+        /// 武器は在庫外(仕様 L30・3本固定切替)なのでここでは扱わない。選択中武器の補正は
+        /// WeaponManager.GetSelectedBonus() から PlayerStatus が別ルートで合算する。
         /// TODO(A-5): ロール済み個体(stack.RolledStats)の合算は、調合→インベントリ橋渡しと
-        /// stat キー語彙の確定後に対応する。現状は固定 SO(EquipmentData/WeaponData)のみ。
+        /// stat キー語彙の確定後に対応する。現状は固定 SO(EquipmentData)のみ。
         /// </summary>
         public EquipmentBonus GetEquippedBonus()
         {
@@ -201,22 +203,14 @@ namespace CreativeAI.Gameplay
             {
                 if (stack == null || !stack.IsEquipped)
                     continue;
-                switch (stack.Data)
+                // 武器(WeaponData)は在庫外・WeaponManager 管理なので意図的に加算しない。
+                if (stack.Data is EquipmentData e)
                 {
-                    case EquipmentData e:
-                        b.attack += e.attack;
-                        b.defense += e.defense;
-                        b.maxHp += e.maxHP;
-                        b.criticalChance += e.criticalRate;
-                        b.criticalDamage += e.criticalDamage;
-                        break;
-                    case WeaponData w:
-                        b.attack += w.attack;
-                        b.defense += w.defense;
-                        b.maxHp += w.maxHP;
-                        b.criticalChance += w.criticalRate;
-                        b.criticalDamage += w.criticalDamage;
-                        break;
+                    b.attack += e.attack;
+                    b.defense += e.defense;
+                    b.maxHp += e.maxHP;
+                    b.criticalChance += e.criticalRate;
+                    b.criticalDamage += e.criticalDamage;
                 }
             }
             return b;
