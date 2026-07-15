@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.Linq;
 using CreativeAI.UI.Common;
 using CreativeAI.UI.CraftingUI;
-using CreativeAI.UI.InventoryUI;
 using UnityEditor;
 using UnityEditor.SceneManagement;
 using UnityEngine;
@@ -53,7 +52,6 @@ namespace CreativeAI.EditorTools.UI
 
         public static void ValidateAllFromCommandLine()
         {
-            SlotPrefabValidator.ValidateFromMenu();
             ValidateFromMenu();
         }
 
@@ -68,19 +66,10 @@ namespace CreativeAI.EditorTools.UI
             var craftPanels = FindAll<CraftPanel>(scene);
             var quantityDialogs = FindAll<CraftQuantityDialog>(scene);
             var recipeCraftPanels = FindAll<RecipeCraftPanel>(scene);
-            var itemUseDialogs = FindAll<ItemUseDialogPanel>(scene);
-            var inventoryPanelControllers = FindAll<InventoryPanelController>(scene);
-            var inventories = FindAll<Inventory>(scene);
 
             ValidateExpectedCount(craftPanels, nameof(CraftPanel), report);
             ValidateExpectedCount(quantityDialogs, nameof(CraftQuantityDialog), report);
             ValidateExpectedCount(recipeCraftPanels, nameof(RecipeCraftPanel), report);
-            ValidateExpectedCount(
-                itemUseDialogs,
-                nameof(ItemUseDialogPanel),
-                report,
-                allowMultiple: true
-            );
 
             foreach (var craftPanel in craftPanels)
                 ValidateCraftPanel(craftPanel, report);
@@ -88,27 +77,6 @@ namespace CreativeAI.EditorTools.UI
                 ValidateQuantityDialog(quantityDialog, report);
             foreach (var recipeCraftPanel in recipeCraftPanels)
                 ValidateRecipeCraftPanel(recipeCraftPanel, report);
-            foreach (var itemUseDialog in itemUseDialogs)
-                ValidateItemUseDialog(itemUseDialog, report);
-            foreach (var inventoryPanelController in inventoryPanelControllers)
-                ValidateInventoryPanelController(inventoryPanelController, report);
-            foreach (var inventory in inventories)
-                ValidateInventory(inventory, report);
-        }
-
-        private static void ValidateInventoryPanelController(
-            InventoryPanelController panel,
-            UIValidationReport report
-        )
-        {
-            string[] requiredFields = { "_inventory", "_itemUseDialogPanel" };
-            ValidateRequiredReferences(panel, requiredFields, report);
-        }
-
-        private static void ValidateInventory(Inventory inventory, UIValidationReport report)
-        {
-            string[] requiredFields = { "_tabGroup", "_detailPanel", "_slotsRoot", "_slotPrefab" };
-            ValidateRequiredReferences(inventory, requiredFields, report);
         }
 
         private static void ValidateCraftPanel(CraftPanel panel, UIValidationReport report)
@@ -336,39 +304,6 @@ namespace CreativeAI.EditorTools.UI
                     panel
                 );
             }
-        }
-
-        private static void ValidateItemUseDialog(
-            ItemUseDialogPanel dialog,
-            UIValidationReport report
-        )
-        {
-            string[] requiredFields =
-            {
-                "_closeOnSelfClick",
-                "_backgroundImage",
-                "_dialogRoot",
-                "_itemIconImage",
-                "_itemNameText",
-                "_itemEffectText",
-                "_useButton",
-            };
-            ValidateRequiredReferences(dialog, requiredFields, report);
-
-            var serializedDialog = new SerializedObject(dialog);
-            var background = GetReference<Image>(serializedDialog, "_backgroundImage");
-            var dialogRoot = GetReference<RectTransform>(serializedDialog, "_dialogRoot");
-            if (background != null && !background.raycastTarget)
-            {
-                report.Error(
-                    dialog.name,
-                    "_backgroundImage",
-                    "Raycast TargetをONにしてください。",
-                    dialog
-                );
-            }
-            if (dialogRoot != null)
-                ValidateRaycastGraphic(dialogRoot.gameObject, "DialogRoot", report);
         }
 
         private static void ValidateRaycastGraphic(
