@@ -43,7 +43,7 @@ namespace CreativeAI.Scenario.Editor
 
         /// <summary>
         /// enemyKey / itemKey を弾くための有効キー集合。null のフィールドは「未提供」= 警告どまり。
-        /// エディタ側(EventImporterMenu)が EnemyData / ItemData から構築して渡す。
+        /// エディタ側(EventImporterMenu)が EnemyDB / ItemData から構築して渡す。
         /// </summary>
         public sealed class ImportCatalog
         {
@@ -412,7 +412,7 @@ namespace CreativeAI.Scenario.Editor
                         {
                             report.Error(
                                 id,
-                                $"steps[{i}] battle の enemyKey '{enemyKey}' が EnemyData カタログに存在しません。"
+                                $"steps[{i}] battle の enemyKey '{enemyKey}' が EnemyDB に存在しません。"
                             );
                             return null;
                         }
@@ -421,7 +421,7 @@ namespace CreativeAI.Scenario.Editor
                     {
                         report.Warn(
                             id,
-                            $"steps[{i}] battle の enemyKey '{enemyKey}' は未検証(EnemyData カタログ未提供)。"
+                            $"steps[{i}] battle の enemyKey '{enemyKey}' は未検証(EnemyDB 未提供)。"
                         );
                     }
                     return EventStep.Battle(enemyKey);

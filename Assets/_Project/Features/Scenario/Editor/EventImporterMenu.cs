@@ -19,7 +19,6 @@ namespace CreativeAI.Scenario.Editor
     {
         private const string DefaultSource = "Assets/_Project/Features/Scenario/events.json";
         private const string OutputDir = "Assets/_Project/Features/Scenario/Data/Dialogues";
-        private const string EnemyDataDir = "Assets/_Project/Features/Enemy/Data";
         private const string ItemDataDir = "Assets/_Project/Features/Inventory/Data";
 
         [MenuItem("Tools/CreativeAI/Import Events")]
@@ -93,19 +92,17 @@ namespace CreativeAI.Scenario.Editor
         }
 
         /// <summary>
-        /// EnemyData(id=enemyKey)と ItemData(key)から有効キー集合を作る。
+        /// EnemyDB(enemyKey 一覧)と ItemData(key)から有効キー集合を作る。
         /// アセットが1つも無いカテゴリは null(=未検証・警告どまり)にし、作成前に全 battle/giveItem を
         /// 弾かないようにする。1つでもあれば、その集合で存在検証(未一致はエラー)。
         /// </summary>
         private static EventImporter.ImportCatalog BuildCatalog()
         {
-            var enemyKeys = AssetDatabase
-                .FindAssets("t:EnemyData", new[] { EnemyDataDir })
-                .Select(AssetDatabase.GUIDToAssetPath)
-                .Select(AssetDatabase.LoadAssetAtPath<EnemyData>)
-                .Where(e => e != null && !string.IsNullOrEmpty(e.Id))
-                .Select(e => e.Id)
-                .ToHashSet(StringComparer.Ordinal);
+            var enemyDb = Resources.Load<EnemyDB>("EnemyDB");
+            var enemyKeys =
+                enemyDb != null
+                    ? enemyDb.Keys.ToHashSet(StringComparer.Ordinal)
+                    : new HashSet<string>(StringComparer.Ordinal);
 
             var itemKeys = AssetDatabase
                 .FindAssets("t:ItemData", new[] { ItemDataDir })
