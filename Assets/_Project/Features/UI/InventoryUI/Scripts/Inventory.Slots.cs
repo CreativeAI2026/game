@@ -8,6 +8,8 @@ namespace CreativeAI.UI.InventoryUI
 {
     public partial class Inventory
     {
+        private Tween _scrollTween;
+
         public void SetReleaseSelectionOnOutsideClick(bool release)
         {
             _releaseSelectionOnOutsideClick = release;
@@ -16,8 +18,12 @@ namespace CreativeAI.UI.InventoryUI
                 slot.SetReleaseSelectionOnOutsideClick(release);
         }
 
-        private void RefreshSlots(List<ItemStack> items)
+        private void RefreshSlots(List<ItemStack> items, ScrollRefreshMode scrollMode)
         {
+            KillScrollTween();
+            var scrollRect = GetScrollRect();
+            float previousVerticalPosition = scrollRect?.verticalNormalizedPosition ?? 1f;
+            float previousHorizontalPosition = scrollRect?.horizontalNormalizedPosition ?? 0f;
             ClearSlots();
 
             if (_slotsRoot == null || _slotPrefab == null || items == null)
@@ -37,7 +43,12 @@ namespace CreativeAI.UI.InventoryUI
             }
 
             RestoreSelectionAfterRefresh();
-            RebuildLayoutAndScrollToTop();
+            RebuildLayoutAndApplyScroll(
+                scrollRect,
+                scrollMode,
+                previousVerticalPosition,
+                previousHorizontalPosition
+            );
         }
 
         private ItemSlot CreateSlot(ItemStack stack, int index)
@@ -111,7 +122,19 @@ namespace CreativeAI.UI.InventoryUI
                 _currentSelectedSlot = null;
         }
 
-        private void RebuildLayoutAndScrollToTop()
+        private ScrollRect GetScrollRect()
+        {
+            return _slotsRoot is RectTransform contentRect
+                ? contentRect.GetComponentInParent<ScrollRect>()
+                : null;
+        }
+
+        private void RebuildLayoutAndApplyScroll(
+            ScrollRect scrollRect,
+            ScrollRefreshMode scrollMode,
+            float previousVerticalPosition,
+            float previousHorizontalPosition
+        )
         {
             if (_slotsRoot is not RectTransform contentRect)
                 return;
@@ -119,18 +142,32 @@ namespace CreativeAI.UI.InventoryUI
             Canvas.ForceUpdateCanvases();
             LayoutRebuilder.ForceRebuildLayoutImmediate(contentRect);
 
-            var scroll = contentRect.GetComponentInParent<ScrollRect>();
-            if (scroll == null)
+            if (scrollRect == null)
                 return;
 
-            DOTween
+            if (scrollMode == ScrollRefreshMode.KeepPosition)
+            {
+                scrollRect.verticalNormalizedPosition = Mathf.Clamp01(previousVerticalPosition);
+                scrollRect.horizontalNormalizedPosition = Mathf.Clamp01(previousHorizontalPosition);
+                return;
+            }
+
+            _scrollTween = DOTween
                 .To(
-                    () => scroll.verticalNormalizedPosition,
-                    value => scroll.verticalNormalizedPosition = value,
+                    () => scrollRect.verticalNormalizedPosition,
+                    value => scrollRect.verticalNormalizedPosition = value,
                     1f,
                     0.3f
                 )
-                .SetEase(Ease.OutQuint);
+                .SetEase(Ease.OutQuint)
+                .SetTarget(scrollRect)
+                .OnKill(() => _scrollTween = null);
+        }
+
+        private void KillScrollTween()
+        {
+            _scrollTween?.Kill();
+            _scrollTween = null;
         }
 
         private void ClearSlots()

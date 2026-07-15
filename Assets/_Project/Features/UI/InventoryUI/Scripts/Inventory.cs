@@ -7,6 +7,12 @@ namespace CreativeAI.UI.InventoryUI
 {
     public partial class Inventory : MonoBehaviour
     {
+        private enum ScrollRefreshMode
+        {
+            KeepPosition,
+            ScrollToTop,
+        }
+
         [SerializeField]
         private bool _selectFirstSlotOnRefresh = true;
 
@@ -73,7 +79,7 @@ namespace CreativeAI.UI.InventoryUI
             SubscribeToInventoryChanges();
             BuildActiveCategories();
             _started = true;
-            RefreshCurrentTab();
+            RefreshCurrentTab(ScrollRefreshMode.ScrollToTop);
         }
 
         private void OnEnable()
@@ -90,12 +96,14 @@ namespace CreativeAI.UI.InventoryUI
         private void OnDisable()
         {
             StopResetRoutine();
+            KillScrollTween();
             RestoreNavigation();
             UnsubscribeFromInventoryChanges();
         }
 
         private void OnDestroy()
         {
+            KillScrollTween();
             RestoreNavigation();
             UnsubscribeFromInventoryChanges();
 
@@ -112,7 +120,7 @@ namespace CreativeAI.UI.InventoryUI
                 _tabGroup.gameObject.SetActive(false);
 
             if (_started)
-                RefreshCurrentTab();
+                RefreshCurrentTab(ScrollRefreshMode.ScrollToTop);
         }
 
         public void ClearFixedCategory()
@@ -122,27 +130,31 @@ namespace CreativeAI.UI.InventoryUI
                 _tabGroup.gameObject.SetActive(true);
 
             if (_started)
-                RefreshCurrentTab();
+                RefreshCurrentTab(ScrollRefreshMode.ScrollToTop);
         }
 
-        public void RefreshCurrentTab()
+        public void RefreshCurrentTab() => RefreshCurrentTab(ScrollRefreshMode.KeepPosition);
+
+        private void RefreshCurrentTab(ScrollRefreshMode scrollMode)
         {
             if (_useFixedCategory)
             {
                 var items = InventoryManager.Instance?.GetItemsByCategory(_fixedCategory);
-                RefreshSlots(FilterVisibleItems(items));
+                RefreshSlots(FilterVisibleItems(items), scrollMode);
                 return;
             }
 
-            OnTabSelected(_tabGroup != null ? _tabGroup.CurrentIndex : 0);
+            RefreshTab(_tabGroup != null ? _tabGroup.CurrentIndex : 0, scrollMode);
         }
 
         public void ResetToFirstTab()
         {
             if (_useFixedCategory)
-                RefreshCurrentTab();
-            else
+                RefreshCurrentTab(ScrollRefreshMode.ScrollToTop);
+            else if (_tabGroup != null)
                 _tabGroup?.ResetToFirstTab();
+            else
+                RefreshCurrentTab(ScrollRefreshMode.ScrollToTop);
         }
 
         private IEnumerator ResetViewNextFrame()
@@ -167,15 +179,17 @@ namespace CreativeAI.UI.InventoryUI
             if (InventoryManager.Instance == null)
                 return;
 
-            InventoryManager.Instance.InventoryChanged -= RefreshCurrentTab;
-            InventoryManager.Instance.InventoryChanged += RefreshCurrentTab;
+            InventoryManager.Instance.InventoryChanged -= OnInventoryChanged;
+            InventoryManager.Instance.InventoryChanged += OnInventoryChanged;
         }
 
         private void UnsubscribeFromInventoryChanges()
         {
             if (InventoryManager.Instance != null)
-                InventoryManager.Instance.InventoryChanged -= RefreshCurrentTab;
+                InventoryManager.Instance.InventoryChanged -= OnInventoryChanged;
         }
+
+        private void OnInventoryChanged() => RefreshCurrentTab(ScrollRefreshMode.KeepPosition);
 
         private void BuildActiveCategories()
         {
@@ -187,12 +201,14 @@ namespace CreativeAI.UI.InventoryUI
             }
         }
 
-        private void OnTabSelected(int index)
+        private void OnTabSelected(int index) => RefreshTab(index, ScrollRefreshMode.ScrollToTop);
+
+        private void RefreshTab(int index, ScrollRefreshMode scrollMode)
         {
             if (_useFixedCategory)
             {
                 var items = InventoryManager.Instance?.GetItemsByCategory(_fixedCategory);
-                RefreshSlots(FilterVisibleItems(items));
+                RefreshSlots(FilterVisibleItems(items), scrollMode);
                 return;
             }
 
@@ -202,7 +218,7 @@ namespace CreativeAI.UI.InventoryUI
             var categoryItems = InventoryManager.Instance?.GetItemsByCategory(
                 _activeCategories[index]
             );
-            RefreshSlots(FilterVisibleItems(categoryItems));
+            RefreshSlots(FilterVisibleItems(categoryItems), scrollMode);
         }
 
         private List<ItemStack> FilterVisibleItems(List<ItemStack> items)

@@ -96,12 +96,12 @@ namespace CreativeAI.UI.InventoryUI
             _detailPanel?.Clear();
 
             if (_useFixedCategory)
-                RefreshCurrentTab();
+                RefreshCurrentTab(ScrollRefreshMode.ScrollToTop);
             else
                 _tabGroup?.ResetToFirstTab();
 
             if (!_useFixedCategory && _tabGroup == null)
-                RefreshCurrentTab();
+                RefreshCurrentTab(ScrollRefreshMode.ScrollToTop);
         }
 
         public void SetCraftAssignedItems(IEnumerable<ItemData> items)
@@ -147,6 +147,7 @@ namespace CreativeAI.UI.InventoryUI
 
         public void ResetToTop()
         {
+            KillScrollTween();
             if (_slotsRoot is RectTransform contentRect)
             {
                 var scroll = contentRect.GetComponentInParent<ScrollRect>();
