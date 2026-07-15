@@ -65,6 +65,9 @@ namespace CreativeAI.Gameplay
             Instance = this;
             DontDestroyOnLoad(gameObject);
 
+            // giveItem ステップの seam に自身を登録(EventPlayer が Inspector 未配線時に拾う)。
+            ItemGiverService.Current = this;
+
             if (_addTestItemsOnAwake && !_creatingResident)
             {
                 AddTestItems();
