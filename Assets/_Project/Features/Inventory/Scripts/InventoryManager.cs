@@ -20,6 +20,9 @@ namespace CreativeAI.Gameplay
 
         public event System.Action InventoryChanged;
 
+        /// <summary>戦闘食材スロット(最大3)の内容が変わったときに発火。即時食材使用UI / 戦闘食材タブが購読する。</summary>
+        public event System.Action BattleFoodChanged;
+
         /// <summary>
         /// 装備の着脱で発火(静的:PlayerStatus は先に生成され得るため、インスタンス無しでも購読できる)。
         /// PlayerStatus がこれを受けて装備補正を再計算する。
@@ -238,6 +241,19 @@ namespace CreativeAI.Gameplay
 
         public List<ItemStack> GetAllItems() => InventoryService.GetAllItems();
 
+        // --- 戦闘食材スロット(最大3)。即時食材使用UIにセットする食材の選択状態(spec §1.2) ---
+
+        /// <summary>戦闘食材スロットの内容(食材スタック or null)。即時食材使用UI / 戦闘食材タブが読む。</summary>
+        public IReadOnlyList<ItemStack> GetBattleFoodSlots() =>
+            InventoryService.GetBattleFoodSlots();
+
+        /// <summary>スロット slot に食材をセットする(CharacterUI 戦闘食材タブから)。食材以外・在庫外は false。</summary>
+        public bool SetBattleFood(int slot, ItemStack stack) =>
+            InventoryService.SetBattleFood(slot, stack);
+
+        /// <summary>スロット slot を空にする。</summary>
+        public void ClearBattleFood(int slot) => InventoryService.ClearBattleFood(slot);
+
         private void AddTestItems()
         {
             if (ItemDB.Instance == null)
@@ -280,12 +296,18 @@ namespace CreativeAI.Gameplay
         {
             var service = new InventoryService(_storage);
             service.InventoryChanged += OnInventoryServiceChanged;
+            service.BattleFoodChanged += OnBattleFoodChanged;
             return service;
         }
 
         private void OnInventoryServiceChanged()
         {
             InventoryChanged?.Invoke();
+        }
+
+        private void OnBattleFoodChanged()
+        {
+            BattleFoodChanged?.Invoke();
         }
 
         private static bool HasZeroSecondDigit(ItemData item)

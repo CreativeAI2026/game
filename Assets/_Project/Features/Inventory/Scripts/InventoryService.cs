@@ -19,6 +19,12 @@ namespace CreativeAI.Gameplay
 
         public event Action InventoryChanged;
 
+        /// <summary>
+        /// 戦闘食材スロット(最大3)の内容が変わったときに発火。
+        /// 即時食材使用UI / CharacterUI 戦闘食材タブが購読して表示を更新する。
+        /// </summary>
+        public event Action BattleFoodChanged;
+
         public void AddItem(ItemData data, int count = 1)
         {
             if (data == null || count <= 0)
@@ -69,11 +75,19 @@ namespace CreativeAI.Gameplay
 
         public void Clear()
         {
+            bool hadBattleFood = ClearAllBattleFoodSlots();
+
             if (_storage.Items.Count == 0)
+            {
+                if (hadBattleFood)
+                    BattleFoodChanged?.Invoke();
                 return;
+            }
 
             _storage.Items.Clear();
             InventoryChanged?.Invoke();
+            if (hadBattleFood)
+                BattleFoodChanged?.Invoke();
         }
 
         public bool ConsumeItem(ItemData data, int count = 1)
@@ -94,10 +108,16 @@ namespace CreativeAI.Gameplay
                 return false;
 
             stack.Count -= count;
+            bool battleFoodChanged = false;
             if (stack.Count <= 0)
+            {
                 _storage.Items.Remove(stack);
+                battleFoodChanged = ClearBattleFoodReferencing(stack);
+            }
 
             InventoryChanged?.Invoke();
+            if (battleFoodChanged)
+                BattleFoodChanged?.Invoke();
             return true;
         }
 
@@ -108,6 +128,7 @@ namespace CreativeAI.Gameplay
 
             int remaining = count;
             bool removedAny = false;
+            bool battleFoodChanged = false;
             for (int i = _storage.Items.Count - 1; i >= 0 && remaining > 0; i--)
             {
                 var stack = _storage.Items[i];
@@ -120,11 +141,16 @@ namespace CreativeAI.Gameplay
                 removedAny = true;
 
                 if (stack.Count <= 0)
+                {
                     _storage.Items.RemoveAt(i);
+                    battleFoodChanged |= ClearBattleFoodReferencing(stack);
+                }
             }
 
             if (removedAny)
                 InventoryChanged?.Invoke();
+            if (battleFoodChanged)
+                BattleFoodChanged?.Invoke();
         }
 
         public bool HasItem(ItemData data, int count = 1)
@@ -153,6 +179,80 @@ namespace CreativeAI.Gameplay
         }
 
         public List<ItemStack> GetAllItems() => new(_storage.Items);
+
+        // --- 戦闘食材スロット(最大3・順序あり)。即時食材使用UIにセットする食材の選択状態 ---
+
+        /// <summary>戦闘食材スロットの現在の内容(要素は食材スタック or null)。読み取り専用のスナップショット。</summary>
+        public IReadOnlyList<ItemStack> GetBattleFoodSlots() =>
+            (ItemStack[])_storage.BattleFoodSlots.Clone();
+
+        /// <summary>
+        /// スロット slot に食材スタックをセットする。食材(FoodData)かつ在庫にあるスタックのみ受け付ける。
+        /// 同じスタックが別スロットにあれば移動(重複セットを防ぐ)。範囲外や非食材は false。
+        /// </summary>
+        public bool SetBattleFood(int slot, ItemStack stack)
+        {
+            var slots = _storage.BattleFoodSlots;
+            if (slot < 0 || slot >= slots.Length)
+                return false;
+            if (
+                stack == null
+                || stack.Data is not FoodData
+                || !_storage.Items.Contains(stack)
+            )
+                return false;
+
+            for (int i = 0; i < slots.Length; i++)
+                if (slots[i] == stack)
+                    slots[i] = null;
+
+            slots[slot] = stack;
+            BattleFoodChanged?.Invoke();
+            return true;
+        }
+
+        /// <summary>スロット slot を空にする。既に空なら何もしない。</summary>
+        public void ClearBattleFood(int slot)
+        {
+            var slots = _storage.BattleFoodSlots;
+            if (slot < 0 || slot >= slots.Length || slots[slot] == null)
+                return;
+
+            slots[slot] = null;
+            BattleFoodChanged?.Invoke();
+        }
+
+        /// <summary>指定スタックを参照している戦闘食材スロットを空にする(在庫から消えたときの後始末)。発火は呼び出し側。</summary>
+        private bool ClearBattleFoodReferencing(ItemStack stack)
+        {
+            var slots = _storage.BattleFoodSlots;
+            bool changed = false;
+            for (int i = 0; i < slots.Length; i++)
+            {
+                if (slots[i] == stack)
+                {
+                    slots[i] = null;
+                    changed = true;
+                }
+            }
+            return changed;
+        }
+
+        /// <summary>全スロットを空にする(Clear 用)。発火は呼び出し側。</summary>
+        private bool ClearAllBattleFoodSlots()
+        {
+            var slots = _storage.BattleFoodSlots;
+            bool changed = false;
+            for (int i = 0; i < slots.Length; i++)
+            {
+                if (slots[i] != null)
+                {
+                    slots[i] = null;
+                    changed = true;
+                }
+            }
+            return changed;
+        }
 
         private IEnumerable<ItemStack> GetStacksWithRoom(ItemData data, int maxStack)
         {
