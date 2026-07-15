@@ -4,12 +4,44 @@ using UnityEngine;
 namespace CreativeAI.Core.EventSystem
 {
     /// <summary>
-    /// EventTrigger に発火を託され、1本の会話イベントを頭から順に再生し切る指揮役(非常駐)。
+    /// EventTrigger に発火を託され、1本の会話イベントを頭から順に再生し切る指揮役。
+    /// Title フローで EnsureResident により常駐生成され、EventPlayerService.Current に自身を登録する
+    /// (非常駐の EventTrigger はこの seam 経由で受け取るため、per-field 配線は不要)。
     /// 各ステップで会話UI(IDialogueView) / Inventory(IItemGiver) / ProgressManager を叩き、
-    /// 終了時に進行度を進める。documents/Specification.md §4, EventImplementation.md 参照。
+    /// 終了時に進行度を進める。documents/Specification.md §4, §6, EventImplementation.md 参照。
     /// </summary>
     public sealed class EventPlayer : MonoBehaviour, IEventPlayer
     {
+        public static EventPlayer Instance { get; private set; }
+
+        /// <summary>セッション常駐生成の入口。既に在ればそれを返す(SessionBootstrap から呼ぶ)。</summary>
+        public static EventPlayer EnsureResident()
+        {
+            if (Instance != null)
+                return Instance;
+            return new GameObject(nameof(EventPlayer)).AddComponent<EventPlayer>();
+        }
+
+        private void Awake()
+        {
+            if (Instance != null && Instance != this)
+            {
+                Destroy(gameObject);
+                return;
+            }
+            Instance = this;
+            DontDestroyOnLoad(gameObject);
+            EventPlayerService.Current = this; // EventTrigger の発火先 seam に自身を登録
+        }
+
+        private void OnDestroy()
+        {
+            if (Instance == this)
+                Instance = null;
+            if (ReferenceEquals(EventPlayerService.Current, this))
+                EventPlayerService.Current = null;
+        }
+
         [SerializeField]
         private ProgressManager _progress; // 未設定なら ProgressManager.Instance にフォールバック
 
@@ -17,10 +49,10 @@ namespace CreativeAI.Core.EventSystem
         private MonoBehaviour _dialogueView; // IDialogueView を実装する MonoBehaviour(UI 側)
 
         [SerializeField]
-        private MonoBehaviour _itemGiver; // IItemGiver を実装する MonoBehaviour(Gameplay 側)
+        private MonoBehaviour _itemGiver; // IItemGiver 実装。未設定なら ItemGiverService.Current(= InventoryManager)にフォールバック
 
         [SerializeField]
-        private MonoBehaviour _battleRunner; // IBattleRunner を実装する MonoBehaviour(戦闘班)
+        private MonoBehaviour _battleRunner; // IBattleRunner 実装。未設定なら BattleRunnerService.Current(= BattleRunner)にフォールバック
 
         [SerializeField]
         private GameModeManager _gameMode; // 未設定なら GameModeManager.Instance にフォールバック
@@ -29,9 +61,12 @@ namespace CreativeAI.Core.EventSystem
         private IItemGiver _items;
         private IBattleRunner _battle;
 
-        private IDialogueView View => _view ??= _dialogueView as IDialogueView;
-        private IItemGiver Items => _items ??= _itemGiver as IItemGiver;
-        private IBattleRunner BattleRunner => _battle ??= _battleRunner as IBattleRunner;
+        private IDialogueView View =>
+            _view ??= (_dialogueView as IDialogueView) ?? DialogueViewService.Current;
+        private IItemGiver Items =>
+            _items ??= (_itemGiver as IItemGiver) ?? ItemGiverService.Current;
+        private IBattleRunner BattleRunner =>
+            _battle ??= (_battleRunner as IBattleRunner) ?? BattleRunnerService.Current;
         private ProgressManager Progress =>
             _progress != null ? _progress : ProgressManager.Instance;
         private GameModeManager GameModes =>

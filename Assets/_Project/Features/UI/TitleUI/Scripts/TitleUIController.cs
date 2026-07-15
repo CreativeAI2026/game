@@ -1,4 +1,5 @@
 using CreativeAI.Core;
+using CreativeAI.Core.EventSystem;
 using CreativeAI.Core.SceneManagement;
 using CreativeAI.Gameplay;
 using UnityEngine;
@@ -97,8 +98,9 @@ namespace CreativeAI.UI.TitleUI
 
             SessionBootstrap.EnsureSession(); // ① マネージャ(ProgressManager / GameModeManager)
             InventoryManager.EnsureResident(); // ② 所持品(Core は Gameplay を参照できないためここで生成)
+            BattleRunnerService.Current ??= new BattleRunner(); // ③ 戦闘実行(状態なしの plain class。battle ステップの seam に登録)
             if (_gameStarter != null)
-                _gameStarter.EnsurePlayer(); // ③ プレイヤーリグ
+                _gameStarter.EnsurePlayer(); // ④ プレイヤーリグ
             return true;
         }
     }

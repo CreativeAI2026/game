@@ -12,4 +12,15 @@ namespace CreativeAI.Core.EventSystem
     {
         IEnumerator Run(string enemyKey);
     }
+
+    /// <summary>
+    /// 実行時に有効な IBattleRunner を Core 側へ登録する seam。Gameplay の BattleRunner を
+    /// Title フローで生成してここに登録し、EventPlayer は Inspector 未配線時のフォールバックとして
+    /// ここを見る(ItemGiverService と同じ思想)。BattleRunner は状態を持たない plain class で
+    /// シーンから drag 配線できず、かつ Core は Gameplay を参照できないため契約経由で受け取る。
+    /// </summary>
+    public static class BattleRunnerService
+    {
+        public static IBattleRunner Current { get; set; }
+    }
 }
