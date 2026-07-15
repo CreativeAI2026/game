@@ -11,7 +11,6 @@ using CreativeAI.Core;
 using CreativeAI.Core.SceneManagement;
 using CreativeAI.UI.Common;
 using CreativeAI.UI.CharacterUI;
-using CreativeAI.UI.HUD;
 using CreativeAI.UI.InventoryUI;
 using CreativeAI.UI.LoadingOverlay;
 using CreativeAI.UI.SaveDialog;
@@ -26,12 +25,19 @@ namespace CreativeAI.EditorTools
     /// <summary>
     /// 01_Title / Field_Area00(スカフォールド)の2シーンを生成し、Build Settings に登録する(Title 先頭)。
     /// 手作りの Field_Area01+ は上書きしない。
-    /// アプリ常駐(SceneController + ロードオーバーレイ)は Title が生成する(Boot シーンは廃止)。
+    /// - アプリ常駐(SceneController + ロードオーバーレイ / EventSystem)は Title が生成する(Boot シーンは廃止)。
+    /// - セッション常駐の UI レイヤー(UIRoot)は Title で Prefab 化し、TitleUIController が「はじめる」で生成する。
+    ///   HUD(HP) / 右上アイコンバー(HudIconBar) / 即時食材使用UI / 武器切替UI / 各パネル / 会話UI を
+    ///   UI ごとに別 Canvas で束ねる。フィールドシーンには UI を置かない(spec/UIImplementation.md)。
     /// Tools > CreativeAI > Setup Initial Scenes から実行。
     /// </summary>
     public static class SetupInitialScenes
     {
         private const string TitlePath = "Assets/_Project/Scenes/01_Title.unity";
+
+        // セッション常駐 UI レイヤー(UIRoot)の Prefab 出力先。TitleUIController から参照して生成する。
+        private const string UIRootPrefabPath =
+            "Assets/_Project/Features/UI/Root/Prefabs/UIRoot.prefab";
 
         // 生成器はスカフォールド用の Field_Area00 を作る。手作りの Field_Area01+ は上書きしない。
         private const string FieldPath = "Assets/_Project/Scenes/Field/Field_Area00.unity";
@@ -48,8 +54,10 @@ namespace CreativeAI.EditorTools
         [MenuItem("Tools/CreativeAI/Setup Initial Scenes")]
         public static void Run()
         {
+            // バッチモード(CLI: -executeMethod)ではダイアログが出せず false 相当になるため、
+            // 対話確認をスキップして常に上書き実行する(手動 GUI 実行時のみ確認する)。
             bool anyExists = File.Exists(TitlePath) || File.Exists(FieldPath);
-            if (anyExists)
+            if (anyExists && !Application.isBatchMode)
             {
                 bool overwrite = EditorUtility.DisplayDialog(
                     "Setup Initial Scenes",
@@ -69,11 +77,12 @@ namespace CreativeAI.EditorTools
 
             EditorSceneManager.OpenScene(TitlePath);
 
-            EditorUtility.DisplayDialog(
-                "Setup Initial Scenes",
-                "完了しました。\n\n- 01_Title / Field_Area00(スカフォールド) を生成\n- Title にアプリ常駐(SceneController + ロードオーバーレイ)を配置\n- Field_Area00 に HUD(Character/Inventory/Save) を配置\n- 手作りの Field_Area01+ は上書きしていません\n- Build Settings に登録(Title を先頭)\n- 01_Title を開きました\n\nそのまま Play してください。",
-                "OK"
-            );
+            const string summary =
+                "完了しました。\n\n- 01_Title / Field_Area00(スカフォールド) を生成\n- Title にアプリ常駐(SceneController + ロードオーバーレイ + EventSystem)を配置\n- セッション常駐の UI レイヤー UIRoot を Prefab 化し TitleUIController に配線\n  (HUD / HudIconBar / 即時食材使用UI / 武器切替UI / Character・Inventory・Save パネル / 会話UI)\n- Field_Area00 は 3D 世界のみ(UI は置かない)\n- 手作りの Field_Area01+ は上書きしていません\n- Build Settings に登録(Title を先頭)\n- 01_Title を開きました\n\nそのまま Play してください。";
+            if (Application.isBatchMode)
+                Debug.Log("[SetupInitialScenes] " + summary);
+            else
+                EditorUtility.DisplayDialog("Setup Initial Scenes", summary, "OK");
         }
 
         // ---------------- アプリ常駐(SceneController + ロードオーバーレイ)----------------
@@ -188,12 +197,24 @@ namespace CreativeAI.EditorTools
             // 生成器の Title はスカフォールド用 Field_Area00 へ遷移(本番 Field_Area01 に依存しない)。
             SetStr(titleController, "_nextSceneName", SceneNames.FieldArea00);
 
+            // セッション常駐の UI レイヤーを Prefab 化して TitleUIController に配線する
+            // (「はじめる/続きから」で UIRoot.EnsureResident が Instantiate → DontDestroyOnLoad)。
+            var uiRootPrefab = BuildAndSaveUIRootPrefab();
+            if (uiRootPrefab != null)
+                SetRef(titleController, "_uiRootPrefab", uiRootPrefab);
+
+            // EventSystem はアプリ常駐(Title の1つを DontDestroyOnLoad 化)。フィールドには置かない。
             EnsureInputSystemEventSystem();
+            var eventSystem = Object.FindAnyObjectByType<EventSystem>();
+            if (eventSystem != null && eventSystem.GetComponent<PersistentEventSystem>() == null)
+                eventSystem.gameObject.AddComponent<PersistentEventSystem>();
 
             EditorSceneManager.SaveScene(scene, TitlePath);
         }
 
         // ---------------- Field_Area00(スカフォールド)----------------
+        // フィールドシーンは 3D 世界のみ(地形・敵・EventTrigger)。UI / EventSystem / 常駐マネージャは置かない
+        // ── UI は Title で生成する UIRoot(セッション常駐)へ集約、EventSystem は Title のアプリ常駐を使い回す。
         private static void CreateFieldScene()
         {
             var scene = EditorSceneManager.NewScene(
@@ -211,61 +232,116 @@ namespace CreativeAI.EditorTools
                 camera.transform.rotation = Quaternion.Euler(20, 0, 0);
             }
 
-            // InventoryManager（DontDestroyOnLoad）
-            var managerGo = new GameObject("InventoryManager");
-            managerGo.AddComponent<InventoryManager>();
+            Directory.CreateDirectory(Path.GetDirectoryName(FieldPath));
+            EditorSceneManager.SaveScene(scene, FieldPath);
+        }
 
-            // Canvas
-            var canvasGo = new GameObject("Canvas");
-            var canvas = canvasGo.AddComponent<Canvas>();
-            canvas.renderMode = RenderMode.ScreenSpaceOverlay;
-            ConfigureScaler(canvasGo.AddComponent<CanvasScaler>());
-            canvasGo.AddComponent<GraphicRaycaster>();
+        // ---------------- セッション常駐 UI レイヤー(UIRoot Prefab)----------------
+        // UI ごとに別 Canvas を持つ整理用の親 GameObject を組み、Prefab として保存して返す
+        // (Title の TitleUIController に配線し、「はじめる」で Instantiate → DontDestroyOnLoad)。
+        // 重なり順は各 Canvas の sortingOrder で決める(HUD/バー/食材/武器=0、操作パネル=10、会話=20)。
+        // 排他パネル(Character/Inventory/Save)は各自の Canvas を常時アクティブにし、中身のパネルを
+        // UiRouter が SetActive で出し入れする(パネル未表示時の空 Canvas はほぼ無コスト)。
+        private static GameObject BuildAndSaveUIRootPrefab()
+        {
+            var root = new GameObject("UIRoot");
+            root.AddComponent<UIRoot>();
+            var router = root.AddComponent<UiRouter>();
 
-            // HUD
-            var hudGo = new GameObject("HUD");
-            hudGo.transform.SetParent(canvasGo.transform, false);
-            StretchFull(hudGo.AddComponent<RectTransform>());
+            // HP の HUD: 入力を受けないので GraphicRaycaster を持たせない(頻繁な更新での再バッチも避ける)。
+            // 中身(HP バー等)は視覚/プレイヤー班の Prefab を後から差し込む。ここでは空 Canvas の骨組みのみ。
+            CreateUICanvas(root.transform, "HUD", sortingOrder: 0, addRaycaster: false);
 
-            var buttonsGo = new GameObject("Buttons");
-            buttonsGo.transform.SetParent(hudGo.transform, false);
-            StretchFull(buttonsGo.AddComponent<RectTransform>());
-
-            CreateMenuIconButton(
-                buttonsGo.transform,
+            // 右上アイコンバー(HudIconBar): HP とは別 Canvas。モード連動で自分を出し入れする。
+            var iconBarGo = CreateUICanvas(root.transform, "HudIconBar", 0, addRaycaster: true);
+            var charBtn = CreateMenuIconButton(
+                iconBarGo.transform,
                 "CharacterButton",
                 -320,
                 new Color(0.55f, 0.4f, 0.75f, 1f)
             );
-            CreateMenuIconButton(
-                buttonsGo.transform,
+            var invBtn = CreateMenuIconButton(
+                iconBarGo.transform,
                 "InventoryButton",
                 -210,
                 new Color(0.4f, 0.65f, 0.45f, 1f)
             );
-            CreateMenuIconButton(
-                buttonsGo.transform,
+            var saveBtn = CreateMenuIconButton(
+                iconBarGo.transform,
                 "SaveButton",
                 -100,
                 new Color(0.85f, 0.55f, 0.3f, 1f)
             );
+            var iconBar = iconBarGo.AddComponent<HudIconBar>();
+            SetRef(iconBar, "_router", router);
+            SetRef(iconBar, "_characterButton", charBtn);
+            SetRef(iconBar, "_inventoryButton", invBtn);
+            SetRef(iconBar, "_saveButton", saveBtn);
+            SetRef(iconBar, "_canvas", iconBarGo.GetComponent<Canvas>());
+            SetRef(iconBar, "_raycaster", iconBarGo.GetComponent<GraphicRaycaster>());
 
-            var panelsGo = new GameObject("Panels");
-            panelsGo.transform.SetParent(canvasGo.transform, false);
-            StretchFull(panelsGo.AddComponent<RectTransform>());
+            // 即時食材使用UI / 武器切替UI: 全モード常時表示。中身は他班(gameplay)が後から入れるので
+            // ここでは空 Canvas の骨組みのみ(SetActive で出し入れできる状態にしておく)。
+            CreateUICanvas(root.transform, "ImmediateFoodUI", 0, addRaycaster: true);
+            CreateUICanvas(root.transform, "WeaponSwitchUI", 0, addRaycaster: true);
 
-            CreateCharacterPanel(panelsGo.transform);
-            CreateInventoryPanel(panelsGo.transform);
-            CreateSaveDialog(panelsGo.transform);
+            // 操作で開くパネル(排他)。各自の Canvas(sortingOrder=10)配下に既存ビルダーで組み、
+            // パネル本体を UiRouter に登録する。
+            var characterCanvas = CreateUICanvas(
+                root.transform,
+                "CharacterUI",
+                10,
+                addRaycaster: true
+            );
+            var characterPanel = CreateCharacterPanel(characterCanvas.transform);
 
-            var hudCtrl = hudGo.AddComponent<HUDController>();
-            SetRef(hudCtrl, "_buttonsRoot", buttonsGo.transform);
-            SetRef(hudCtrl, "_panelsRoot", panelsGo.transform);
+            var inventoryCanvas = CreateUICanvas(
+                root.transform,
+                "InventoryUI",
+                10,
+                addRaycaster: true
+            );
+            var inventoryPanel = CreateInventoryPanel(inventoryCanvas.transform);
 
-            EnsureInputSystemEventSystem();
+            var saveCanvas = CreateUICanvas(root.transform, "SaveUI", 10, addRaycaster: true);
+            var savePanel = CreateSaveDialog(saveCanvas.transform);
 
-            Directory.CreateDirectory(Path.GetDirectoryName(FieldPath));
-            EditorSceneManager.SaveScene(scene, FieldPath);
+            SetRef(router, "_characterUI", characterPanel.gameObject);
+            SetRef(router, "_inventoryUI", inventoryPanel.gameObject);
+            SetRef(router, "_saveUI", savePanel.gameObject);
+            // _craftUI は調合場所実装時に配線(未割当のまま=調合は開かない)。
+
+            // 会話UI(DialogueUI): EventPlayer が出し入れする。中身は会話UI班の Prefab を後から入れる骨組み。
+            var dialogue = CreateUICanvas(root.transform, "DialogueUI", 20, addRaycaster: true);
+            dialogue.SetActive(false);
+
+            Directory.CreateDirectory(Path.GetDirectoryName(UIRootPrefabPath));
+            var prefab = PrefabUtility.SaveAsPrefabAsset(root, UIRootPrefabPath);
+            Object.DestroyImmediate(root); // シーンには残さず Prefab のみ(TitleUIController が参照して生成)
+            if (prefab == null)
+                Debug.LogError(
+                    $"[SetupInitialScenes] UIRoot Prefab の保存に失敗: {UIRootPrefabPath}"
+                );
+            return prefab;
+        }
+
+        /// <summary>UIRoot 配下の 1 UI = 1 Canvas を作る。Overlay + スケーラ、必要なら Raycaster。</summary>
+        private static GameObject CreateUICanvas(
+            Transform parent,
+            string name,
+            int sortingOrder,
+            bool addRaycaster
+        )
+        {
+            var go = new GameObject(name);
+            go.transform.SetParent(parent, false);
+            var canvas = go.AddComponent<Canvas>();
+            canvas.renderMode = RenderMode.ScreenSpaceOverlay;
+            canvas.sortingOrder = sortingOrder;
+            ConfigureScaler(go.AddComponent<CanvasScaler>());
+            if (addRaycaster)
+                go.AddComponent<GraphicRaycaster>();
+            return go;
         }
 
         // ---------------- Build Settings ----------------
