@@ -49,8 +49,11 @@ namespace CreativeAI.UI.InventoryUI
         private Coroutine _resetRoutine;
         private ItemSlot _currentSelectedSlot;
         private ItemStack _selectedStack;
+        private readonly List<ItemSlot> _visibleSlots = new();
+        private readonly List<ItemSlot> _pooledSlots = new();
         private readonly HashSet<ItemData> _craftAssignedItems = new();
         private readonly HashSet<ItemStack> _craftAssignedStacks = new();
+        private bool _slotPoolInitialized;
         private bool _hasWarnedMissingTabGroup;
         private bool _hasWarnedMissingDetailPanel;
 
