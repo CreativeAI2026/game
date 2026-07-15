@@ -93,6 +93,8 @@ namespace CreativeAI.Tests.EditMode
             gear.criticalRate = 3f;
             gear.criticalDamage = 0.5f;
 
+            // 武器は在庫外(仕様 L30)。仮に在庫へ入れて装備フラグを立てても、
+            // GetEquippedBonus は武器を加算しない(補正は WeaponManager 経由に一本化)。
             var weapon = ScriptableObject.CreateInstance<WeaponData>();
             weapon.attack = 20;
             weapon.maxHP = 50;
@@ -110,9 +112,9 @@ namespace CreativeAI.Tests.EditMode
 
             var b = _inv.GetEquippedBonus();
 
-            Assert.AreEqual(30f, b.attack); // 10 + 20(999は除外)
+            Assert.AreEqual(10f, b.attack); // gear のみ(武器20・unequipped999 は除外)
             Assert.AreEqual(5f, b.defense);
-            Assert.AreEqual(150f, b.maxHp); // 100 + 50
+            Assert.AreEqual(100f, b.maxHp); // gear のみ(武器50 は除外)
             Assert.AreEqual(3f, b.criticalChance);
             Assert.AreEqual(0.5f, b.criticalDamage);
         }
