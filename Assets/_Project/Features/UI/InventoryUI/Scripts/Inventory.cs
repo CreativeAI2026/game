@@ -51,14 +51,15 @@ namespace CreativeAI.UI.InventoryUI
         private ItemStack _selectedStack;
         private readonly HashSet<ItemData> _craftAssignedItems = new();
         private readonly HashSet<ItemStack> _craftAssignedStacks = new();
+        private bool _hasWarnedMissingTabGroup;
+        private bool _hasWarnedMissingDetailPanel;
 
         public void SetSelectFirstSlotOnRefresh(bool selectFirst) =>
             _selectFirstSlotOnRefresh = selectFirst;
 
         private void Awake()
         {
-            _tabGroup ??= GetComponentInChildren<TabGroup>(true);
-            _detailPanel ??= GetComponentInChildren<ItemDetailPanel>(true);
+            WarnMissingReferencesOnce();
 
             if (_tabGroup != null)
                 _tabGroup.OnTabSelected += OnTabSelected;
@@ -220,5 +221,48 @@ namespace CreativeAI.UI.InventoryUI
             string id = Mathf.Abs(item.id).ToString();
             return id.Length >= 2 && id[1] == '0';
         }
+
+        private void WarnMissingReferencesOnce()
+        {
+            if (_tabGroup == null)
+                WarnMissingTabGroupOnce();
+            if (_detailPanel == null)
+                WarnMissingDetailPanelOnce();
+        }
+
+        private void WarnMissingTabGroupOnce()
+        {
+            if (_hasWarnedMissingTabGroup)
+                return;
+
+            _hasWarnedMissingTabGroup = true;
+            Debug.LogWarning(
+                $"{nameof(Inventory)} '{name}' の必須参照 '{nameof(_tabGroup)}' が未設定です。タブイベントの購読をスキップし、タブなしの既存動作を使用します。Inspectorで設定してください。",
+                this
+            );
+        }
+
+        private void WarnMissingDetailPanelOnce()
+        {
+            if (_hasWarnedMissingDetailPanel)
+                return;
+
+            _hasWarnedMissingDetailPanel = true;
+            Debug.LogWarning(
+                $"{nameof(Inventory)} '{name}' の必須参照 '{nameof(_detailPanel)}' が未設定です。アイテム詳細表示をスキップします。Inspectorで設定してください。",
+                this
+            );
+        }
+
+#if UNITY_EDITOR
+        private void Reset() => AutoAssignReferences();
+
+        [ContextMenu("Auto Assign References")]
+        private void AutoAssignReferences()
+        {
+            _tabGroup ??= GetComponentInChildren<TabGroup>(true);
+            _detailPanel ??= GetComponentInChildren<ItemDetailPanel>(true);
+        }
+#endif
     }
 }

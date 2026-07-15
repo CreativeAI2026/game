@@ -12,18 +12,19 @@ namespace CreativeAI.UI.InventoryUI
         [SerializeField]
         private ItemUseDialogPanel _itemUseDialogPanel;
 
+        private bool _hasWarnedMissingInventory;
         private bool _hasWarnedMissingItemUseDialogPanel;
 
         protected override void Awake()
         {
             base.Awake();
-            ResolveReferences();
+            WarnMissingReferencesOnce();
             _itemUseDialogPanel?.Hide();
         }
 
         private void OnEnable()
         {
-            ResolveReferences();
+            WarnMissingInventoryOnce();
             BindInventoryEvents();
         }
 
@@ -69,25 +70,47 @@ namespace CreativeAI.UI.InventoryUI
             _itemUseDialogPanel.Show(stack);
         }
 
-        private void ResolveReferences()
+        private void WarnMissingReferencesOnce()
         {
-            _inventory ??= GetComponentInChildren<Inventory>(true);
-            _itemUseDialogPanel ??= GetComponentInChildren<ItemUseDialogPanel>(true);
-
+            if (_inventory == null)
+                WarnMissingInventoryOnce();
             if (_itemUseDialogPanel == null)
                 WarnMissingItemUseDialogPanelOnce();
         }
 
+        private void WarnMissingInventoryOnce()
+        {
+            if (_inventory != null || _hasWarnedMissingInventory)
+                return;
+
+            _hasWarnedMissingInventory = true;
+            Debug.LogWarning(
+                $"{nameof(InventoryPanelController)} '{name}' の必須参照 '{nameof(_inventory)}' が未設定です。Inventoryイベントの購読をスキップします。Inspectorで設定してください。",
+                this
+            );
+        }
+
         private void WarnMissingItemUseDialogPanelOnce()
         {
-            if (_hasWarnedMissingItemUseDialogPanel)
+            if (_itemUseDialogPanel != null || _hasWarnedMissingItemUseDialogPanel)
                 return;
 
             _hasWarnedMissingItemUseDialogPanel = true;
             Debug.LogWarning(
-                $"{nameof(InventoryPanelController)} '{name}' に {nameof(ItemUseDialogPanel)} が設定されておらず、既存の子Objectからも見つかりません。Inspectorで参照を設定してください。",
+                $"{nameof(InventoryPanelController)} '{name}' の必須参照 '{nameof(_itemUseDialogPanel)}' が未設定です。Food使用ダイアログの表示をスキップします。Inspectorで設定してください。",
                 this
             );
         }
+
+#if UNITY_EDITOR
+        private void Reset() => AutoAssignReferences();
+
+        [ContextMenu("Auto Assign References")]
+        private void AutoAssignReferences()
+        {
+            _inventory ??= GetComponentInChildren<Inventory>(true);
+            _itemUseDialogPanel ??= GetComponentInChildren<ItemUseDialogPanel>(true);
+        }
+#endif
     }
 }
