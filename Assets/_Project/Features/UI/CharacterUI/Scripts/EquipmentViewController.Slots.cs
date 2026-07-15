@@ -1,61 +1,52 @@
+using System.Collections.Generic;
 using System.Linq;
 using CreativeAI.Gameplay;
-using CreativeAI.UI.CraftingUI;
 using UnityEngine;
 
 namespace CreativeAI.UI.CharacterUI
 {
     public partial class EquipmentViewController
     {
+        private readonly HashSet<GameObject> _warnedMissingEquipmentSlots = new();
+
         private void InitializeSlots()
         {
             UnbindSlots();
             _slots.Clear();
 
-            if (_equipmentSlotsContainer == null)
+            if (_equipmentSlotsRoot == null)
                 return;
 
-            for (int i = 0; i < _equipmentSlotsContainer.childCount; i++)
+            for (int i = 0; i < _equipmentSlotsRoot.childCount; i++)
             {
-                var slot = GetOrConvertSlot(_equipmentSlotsContainer.GetChild(i).gameObject);
+                var slot = GetEquipmentSlot(_equipmentSlotsRoot.GetChild(i).gameObject);
                 if (slot == null)
                     continue;
 
-                int slotIndex = _slots.Count;
-
                 slot.Init();
                 slot.Clear();
+                slot.Clicked += OnEquipmentSlotClicked;
                 slot.DoubleClicked += OnEquipmentSlotDoubleClicked;
-                if (slot.Button != null)
-                {
-                    UnityEngine.Events.UnityAction action = () =>
-                    {
-                        if (IsSlotInputLocked())
-                            return;
-
-                        CreativeAI.UI.SlotKeyboardFocus.Claim(this);
-                        SelectEquipmentSlot(slotIndex);
-                    };
-                    _slotButtonActions[slot.Button] = action;
-                    slot.Button.onClick.AddListener(action);
-                }
 
                 _slots.Add(slot);
             }
         }
 
-        private static EquipmentSlot GetOrConvertSlot(GameObject slotObject)
+        private EquipmentSlot GetEquipmentSlot(GameObject slotObject)
         {
             var slot = slotObject.GetComponent<EquipmentSlot>();
             if (slot != null)
                 return slot;
 
-            var materialSlot = slotObject.GetComponent<MaterialSlot>();
-            if (materialSlot == null)
-                return null;
+            if (_warnedMissingEquipmentSlots.Add(slotObject))
+            {
+                Debug.LogWarning(
+                    $"{nameof(EquipmentViewController)}: Slot '{slotObject.name}' に {nameof(EquipmentSlot)} がないため、このスロットをスキップしました。PrefabまたはScene上で追加してください。",
+                    slotObject
+                );
+            }
 
-            materialSlot.enabled = false;
-            return slotObject.AddComponent<EquipmentSlot>();
+            return null;
         }
 
         private void UnbindSlots()
@@ -65,15 +56,8 @@ namespace CreativeAI.UI.CharacterUI
                 if (slot == null)
                     continue;
 
+                slot.Clicked -= OnEquipmentSlotClicked;
                 slot.DoubleClicked -= OnEquipmentSlotDoubleClicked;
-                if (
-                    slot.Button != null
-                    && _slotButtonActions.TryGetValue(slot.Button, out var action)
-                )
-                {
-                    slot.Button.onClick.RemoveListener(action);
-                    _slotButtonActions.Remove(slot.Button);
-                }
             }
         }
 
@@ -91,8 +75,7 @@ namespace CreativeAI.UI.CharacterUI
             foreach (var stack in initialItems)
             {
                 int slotIndex = initialItems.IndexOf(stack);
-                _slots[slotIndex].Item = stack.Data;
-                _slots[slotIndex].UpdateCount();
+                _slots[slotIndex].SetStack(stack);
                 InventoryManager.Instance?.SetEquipped(stack, true);
             }
         }
@@ -103,31 +86,30 @@ namespace CreativeAI.UI.CharacterUI
                 return;
 
             var previousSlot = CurrentSlot;
-            _currentSlotIndex = index;
+            var selectedSlot = _slots[index];
 
-            for (int i = 0; i < _slots.Count; i++)
-            {
-                bool selected = i == index;
-                _slots[i].SetFrameColor(selected ? SlotFrameSelected : SlotFrameNormal);
-                _slots[i].SetSelected(selected);
-            }
+            previousSlot?.SetSelected(false);
+
+            foreach (var slot in _slots)
+                if (slot != null && slot != previousSlot && slot != selectedSlot)
+                    slot.SetSelected(false);
+
+            _currentSlotIndex = index;
+            selectedSlot.SetSelected(true);
 
             _selectedInventoryStack = null;
-            SyncInventorySelection(CurrentSlot.Item);
+            SyncInventorySelection(CurrentSlot.Stack);
 
             bool changedBetweenEmptySlots =
                 previousSlot != null
-                && previousSlot != CurrentSlot
-                && previousSlot.Item == null
-                && CurrentSlot.Item == null;
-            _detailPanel?.Show(CurrentSlot.Item, _emptyLabel, changedBetweenEmptySlots);
+                && previousSlot != selectedSlot
+                && previousSlot.Stack == null
+                && selectedSlot.Stack == null;
+            _detailPanel?.Show(selectedSlot.Item, _emptyLabel, changedBetweenEmptySlots);
         }
 
         private void OnEquipmentSlotDoubleClicked(EquipmentSlot slot)
         {
-            if (IsSlotInputLocked())
-                return;
-
             int slotIndex = _slots.IndexOf(slot);
             if (slotIndex < 0)
                 return;
@@ -136,6 +118,16 @@ namespace CreativeAI.UI.CharacterUI
             SelectEquipmentSlot(slotIndex);
             _selectedInventoryStack = null;
             UnequipCurrentSlot();
+        }
+
+        private void OnEquipmentSlotClicked(EquipmentSlot slot)
+        {
+            int slotIndex = _slots.IndexOf(slot);
+            if (slotIndex < 0)
+                return;
+
+            CreativeAI.UI.SlotKeyboardFocus.Claim(this);
+            SelectEquipmentSlot(slotIndex);
         }
 
         private void SelectNextEmptySlot()
@@ -147,7 +139,7 @@ namespace CreativeAI.UI.CharacterUI
             for (int offset = 1; offset < _slots.Count; offset++)
             {
                 int slotIndex = (equippedSlotIndex + offset) % _slots.Count;
-                if (_slots[slotIndex].Item != null)
+                if (_slots[slotIndex].Stack != null)
                     continue;
 
                 SelectAndRotateSlot(slotIndex);
@@ -175,12 +167,12 @@ namespace CreativeAI.UI.CharacterUI
 
         private void RotateSlotToTop(int slotIndex)
         {
-            _equipmentSlotsContainer?.GetComponent<TriangleLayout>()?.RotateSlotToTop(slotIndex);
+            _equipmentSlotsRoot?.GetComponent<TriangleLayout>()?.RotateSlotToTop(slotIndex);
         }
 
         private void RefreshSlotLayout()
         {
-            _equipmentSlotsContainer?.GetComponent<TriangleLayout>()?.RefreshLayout();
+            _equipmentSlotsRoot?.GetComponent<TriangleLayout>()?.RefreshLayout();
         }
 
         private void RefreshDetailFromCurrentSlot()

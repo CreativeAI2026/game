@@ -14,13 +14,14 @@ MonoBehaviour:
   m_EditorClassIdentifier: CreativeAI.Gameplay::CreativeAI.Gameplay.EquipmentData
   icon: {fileID: 21300000, guid: 0aa183290233c3946bf681a78989d17a, type: 3}
   id: 2005
-  itemName: "靴"
+  itemName: "\u9774"
   category: 1
-  description: "軽くて丈夫な旅用の靴。\n長い道のりでも足をしっかり支えてくれる。"
-  effect: "効果   移動速度 +15%"
+  effect: "\u52B9\u679C   \u79FB\u52D5\u901F\u5EA6 +15%"
+  description: "\u8EFD\u304F\u3066\u4E08\u592B\u306A\u65C5\u7528\u306E\u9774\u3002\n\u9577\u3044\u9053\u306E\u308A\u3067\u3082\u8DB3\u3092\u3057\u3063\u304B\u308A\u652F\u3048\u3066\u304F\u308C\u308B\u3002"
+  _maxStack: 1
   attack: 0
   defense: 0
-  moveSpeed: 0.15
+  moveSpeed: 15
   attackSpeed: 0
   criticalDamage: 0
   criticalRate: 0

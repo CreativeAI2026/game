@@ -1,5 +1,6 @@
 using System;
 using CreativeAI.Gameplay;
+using CreativeAI.UI.Common;
 using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
@@ -8,11 +9,8 @@ namespace CreativeAI.UI.CraftingUI
 {
     public static class CraftFlowViewUtility
     {
-        public static void SetCloseButtonVisible(GameObject closeButton, bool visible)
-        {
-            if (closeButton != null)
-                closeButton.SetActive(visible);
-        }
+        private static readonly System.Collections.Generic.HashSet<GameObject> WarnedMissingCloseOnSelfClick =
+            new();
 
         public static void StopCraftRoutine(
             MonoBehaviour owner,
@@ -35,28 +33,20 @@ namespace CreativeAI.UI.CraftingUI
             isCrafting = false;
         }
 
-        public static ResultPanelClickCatcher PrepareClickCatcher(
-            GameObject panel,
-            Action clickAction
-        )
+        public static CloseOnSelfClick PrepareCloseOnSelfClick(GameObject panel, Action clickAction)
         {
             if (panel == null)
                 return null;
 
-            var image = panel.GetComponent<Image>();
-            if (image == null)
+            var closeOnSelfClick = panel.GetComponent<CloseOnSelfClick>();
+            if (closeOnSelfClick == null)
             {
-                image = panel.AddComponent<Image>();
-                image.color = Color.clear;
+                WarnMissingCloseOnSelfClickOnce(panel);
+                return null;
             }
-            image.raycastTarget = true;
 
-            var clickCatcher = panel.GetComponent<ResultPanelClickCatcher>();
-            if (clickCatcher == null)
-                clickCatcher = panel.AddComponent<ResultPanelClickCatcher>();
-
-            clickCatcher.SetClickAction(clickAction);
-            return clickCatcher;
+            closeOnSelfClick.SetClickAction(clickAction);
+            return closeOnSelfClick;
         }
 
         public static void ShowLoading(
@@ -91,7 +81,7 @@ namespace CreativeAI.UI.CraftingUI
         public static void HidePanels(GameObject loadingPanel, GameObject resultPanel)
         {
             if (resultPanel != null)
-                resultPanel.SetActive(false);
+                CraftUIAnimationUtility.HideResultImmediately(resultPanel);
             if (loadingPanel != null)
                 loadingPanel.SetActive(false);
         }
@@ -109,7 +99,9 @@ namespace CreativeAI.UI.CraftingUI
                 return;
 
             RefreshResult(itemImage, itemName, resultItem, count);
-            PrepareClickCatcher(resultPanel, closeAction);
+            if (PrepareCloseOnSelfClick(resultPanel, closeAction) == null)
+                return;
+
             CraftUIAnimationUtility.PlayResultIn(resultPanel);
         }
 
@@ -135,6 +127,20 @@ namespace CreativeAI.UI.CraftingUI
                 resultItem == null ? string.Empty
                 : safeCount > 1 ? $"{resultItem.itemName} \u00d7{safeCount}"
                 : resultItem.itemName;
+        }
+
+        private static void WarnMissingCloseOnSelfClickOnce(GameObject panel)
+        {
+            if (panel == null)
+                return;
+
+            if (!WarnedMissingCloseOnSelfClick.Add(panel))
+                return;
+
+            Debug.LogWarning(
+                $"{nameof(CraftFlowViewUtility)}: {panel.name} に {nameof(CloseOnSelfClick)} が見つかりません。Inspectorで追加してから外側クリックの閉じる処理を設定してください。",
+                panel
+            );
         }
     }
 }

@@ -40,12 +40,9 @@ namespace CreativeAI.UI.InventoryUI
 
         public void HighlightEquippedItem(ItemStack stack)
         {
-            if (_equippedSlot != null)
-                _equippedSlot.SetEquipped(false);
-
-            _equippedSlot = _currentSelectedSlot;
-            if (_equippedSlot != null)
-                _equippedSlot.SetEquipped(true);
+            var slot = FindVisibleSlot(stack);
+            if (slot != null)
+                slot.SetEquipped(stack.IsEquipped);
         }
 
         public void UpdateItemEquippedState(ItemStack stack, bool isEquipped, bool keepSelected)
@@ -58,10 +55,6 @@ namespace CreativeAI.UI.InventoryUI
                 return;
 
             slot.SetEquipped(isEquipped);
-            if (isEquipped)
-                _equippedSlot = slot;
-            else if (_equippedSlot == slot)
-                _equippedSlot = null;
 
             if (!keepSelected)
                 return;
@@ -94,7 +87,6 @@ namespace CreativeAI.UI.InventoryUI
         public void ResetViewState()
         {
             ClearSelection();
-            _equippedSlot = null;
             _detailPanel?.Clear();
 
             if (_useFixedCategory)
@@ -109,6 +101,7 @@ namespace CreativeAI.UI.InventoryUI
         public void SetCraftAssignedItems(IEnumerable<ItemData> items)
         {
             _craftAssignedItems.Clear();
+            _craftAssignedStacks.Clear();
             if (items != null)
             {
                 foreach (var item in items)
@@ -116,11 +109,37 @@ namespace CreativeAI.UI.InventoryUI
                         _craftAssignedItems.Add(item);
             }
 
+            RefreshCraftAssignedSlots();
+        }
+
+        public void SetCraftAssignedStacks(IEnumerable<ItemStack> stacks)
+        {
+            _craftAssignedItems.Clear();
+            _craftAssignedStacks.Clear();
+            if (stacks != null)
+            {
+                foreach (var stack in stacks)
+                    if (stack != null)
+                        _craftAssignedStacks.Add(stack);
+            }
+
+            RefreshCraftAssignedSlots();
+        }
+
+        private bool IsCraftAssigned(ItemStack stack) =>
+            stack != null
+            && (
+                _craftAssignedStacks.Contains(stack)
+                || (stack.Data != null && _craftAssignedItems.Contains(stack.Data))
+            );
+
+        private void RefreshCraftAssignedSlots()
+        {
             if (_slotsRoot == null)
                 return;
 
             foreach (var slot in _slotsRoot.GetComponentsInChildren<ItemSlot>(true))
-                slot.SetCraftAssigned(slot.Item != null && _craftAssignedItems.Contains(slot.Item));
+                slot.SetCraftAssigned(IsCraftAssigned(slot.Stack));
         }
 
         public void ResetToTop()

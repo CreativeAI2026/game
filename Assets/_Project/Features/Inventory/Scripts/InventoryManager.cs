@@ -29,7 +29,18 @@ namespace CreativeAI.Gameplay
         [SerializeField]
         private bool _addTestItemsOnAwake = true;
 
-        private readonly List<ItemStack> _items = new();
+        private readonly InventoryStorage _storage = new();
+        private InventoryService _inventoryService;
+        private RecipeCraftingService _recipeCraftingService;
+        private ItemUseService _itemUseService;
+
+        public InventoryService InventoryService => _inventoryService ??= CreateInventoryService();
+
+        public RecipeCraftingService RecipeCraftingService =>
+            _recipeCraftingService ??= new RecipeCraftingService(InventoryService);
+
+        public ItemUseService ItemUseService =>
+            _itemUseService ??= new ItemUseService(InventoryService);
 
         /// <summary>
         /// セッション常駐の Inventory を「はじめる/続きから」時に1つだけ生成する(spec §6.1: 生成はTitleが担う)。
@@ -77,17 +88,12 @@ namespace CreativeAI.Gameplay
 
         public void AddItem(ItemData data, int count = 1)
         {
-            if (data == null)
-                return;
+            InventoryService.AddItem(data, count);
+        }
 
-            // スタック品同士だけをまとめる。ロール済み個体(IsInstance)には合流させない。
-            var existing = _items.Find(stack => stack.Data == data && !stack.IsInstance);
-            if (existing != null)
-                existing.Count += count;
-            else
-                _items.Add(new ItemStack(data, count));
-
-            InventoryChanged?.Invoke();
+        public void AddEquipmentItem(EquipmentData data, EquipmentInstance instance)
+        {
+            InventoryService.AddEquipmentItem(data, instance);
         }
 
         /// <summary>
@@ -96,20 +102,13 @@ namespace CreativeAI.Gameplay
         /// </summary>
         public ItemStack AddInstance(ItemData data, IReadOnlyList<RolledStat> rolledStats)
         {
-            if (data == null)
-                return null;
-
-            var stack = new ItemStack(data, rolledStats);
-            _items.Add(stack);
-            InventoryChanged?.Invoke();
-            return stack;
+            return InventoryService.AddInstance(data, rolledStats);
         }
 
         /// <summary>所持品を全消去する(ロード時の再構築用)。</summary>
         public void Clear()
         {
-            _items.Clear();
-            InventoryChanged?.Invoke();
+            InventoryService.Clear();
         }
 
         /// <summary>
@@ -131,52 +130,52 @@ namespace CreativeAI.Gameplay
 
         public void RemoveItem(ItemData data, int count = 1)
         {
-            var stack = _items.Find(stack => stack.Data == data);
-            if (stack == null)
-                return;
+            InventoryService.RemoveItem(data, count);
+        }
 
-            stack.Count -= count;
-            if (stack.Count <= 0)
-                _items.Remove(stack);
+        public bool ConsumeItem(ItemData data, int count = 1)
+        {
+            return InventoryService.ConsumeItem(data, count);
+        }
 
-            InventoryChanged?.Invoke();
+        public bool TryUse(ItemStack stack)
+        {
+            return ItemUseService.TryUse(stack);
+        }
+
+        public bool HasItem(ItemData data, int count = 1)
+        {
+            return InventoryService.HasItem(data, count);
         }
 
         public int GetItemCount(ItemData data)
         {
-            if (data == null)
-                return 0;
-
-            return _items.Find(stack => stack.Data == data)?.Count ?? 0;
+            return InventoryService.GetItemCount(data);
         }
 
         public bool CanCraft(CraftRecipeData recipe, int quantity = 1)
         {
-            if (recipe == null || recipe.resultItem == null || quantity <= 0)
-                return false;
+            return RecipeCraftingService.CanCraft(recipe, quantity);
+        }
 
-            var materials = recipe.Materials.ToList();
-            if (materials.Count != 2)
-                return false;
+        public bool CanCraft(CraftRecipeData recipe, ItemStack materialA, ItemStack materialB)
+        {
+            return RecipeCraftingService.CanCraft(recipe, materialA, materialB);
+        }
 
-            if (HasEquippedMaterial(materials))
-                return false;
-
-            return materials
-                .GroupBy(material => material)
-                .All(group => GetItemCount(group.Key) >= group.Count() * quantity);
+        public int GetMaximumCraftable(CraftRecipeData recipe)
+        {
+            return RecipeCraftingService.GetMaximumCraftable(recipe);
         }
 
         public bool TryCraft(CraftRecipeData recipe, int quantity)
         {
-            if (!CanCraft(recipe, quantity))
-                return false;
+            return RecipeCraftingService.TryCraft(recipe, quantity);
+        }
 
-            foreach (var group in recipe.Materials.GroupBy(material => material))
-                RemoveItem(group.Key, group.Count() * quantity);
-
-            AddItem(recipe.resultItem, quantity);
-            return true;
+        public bool TryCraft(CraftRecipeData recipe, ItemStack materialA, ItemStack materialB)
+        {
+            return RecipeCraftingService.TryCraft(recipe, materialA, materialB);
         }
 
         public void SetEquipped(ItemStack stack, bool equipped)
@@ -195,7 +194,7 @@ namespace CreativeAI.Gameplay
         public EquipmentBonus GetEquippedBonus()
         {
             var b = new EquipmentBonus();
-            foreach (var stack in _items)
+            foreach (var stack in InventoryService.GetAllItems())
             {
                 if (stack == null || !stack.IsEquipped)
                     continue;
@@ -224,7 +223,10 @@ namespace CreativeAI.Gameplay
 
         public bool IsItemEquipped(ItemData data)
         {
-            return data != null && _items.Any(stack => stack.Data == data && stack.IsEquipped);
+            return data != null
+                && InventoryService
+                    .GetAllItems()
+                    .Any(stack => stack.Data == data && stack.IsEquipped);
         }
 
         public bool HasEquippedMaterial(IEnumerable<ItemData> materials)
@@ -234,10 +236,10 @@ namespace CreativeAI.Gameplay
 
         public List<ItemStack> GetItemsByCategory(ItemCategory category)
         {
-            return _items.FindAll(stack => stack.Data.category == category);
+            return InventoryService.GetItemsByCategory(category);
         }
 
-        public List<ItemStack> GetAllItems() => new(_items);
+        public List<ItemStack> GetAllItems() => InventoryService.GetAllItems();
 
         private void AddTestItems()
         {
@@ -246,10 +248,13 @@ namespace CreativeAI.Gameplay
 
             var testItems = ItemDB.Instance.Items.Where(HasZeroSecondDigit).ToList();
             foreach (var item in testItems)
-                AddItem(
-                    item,
-                    Random.Range(InitialTestItemMinCount, InitialTestItemMaxCountExclusive)
-                );
+            {
+                int count =
+                    item.MaxStack > 1
+                        ? Random.Range(InitialTestItemMinCount, InitialTestItemMaxCountExclusive)
+                        : 1;
+                AddItem(item, count);
+            }
         }
 
         private void EquipInitialTestItems()
@@ -260,17 +265,30 @@ namespace CreativeAI.Gameplay
 
         private void EquipInitialTestItems(ItemCategory category)
         {
-            if (_items.Any(stack => stack.Data.category == category && stack.IsEquipped))
+            var items = InventoryService.GetAllItems();
+            if (items.Any(stack => stack.Data.category == category && stack.IsEquipped))
                 return;
 
             foreach (
-                var stack in _items
+                var stack in items
                     .Where(stack => stack.Data.category == category)
                     .Take(InitialEquippedTestItemCountPerCategory)
             )
             {
                 stack.IsEquipped = true;
             }
+        }
+
+        private InventoryService CreateInventoryService()
+        {
+            var service = new InventoryService(_storage);
+            service.InventoryChanged += OnInventoryServiceChanged;
+            return service;
+        }
+
+        private void OnInventoryServiceChanged()
+        {
+            InventoryChanged?.Invoke();
         }
 
         private static bool HasZeroSecondDigit(ItemData item)
