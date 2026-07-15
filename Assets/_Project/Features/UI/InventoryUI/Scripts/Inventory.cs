@@ -7,7 +7,7 @@ namespace CreativeAI.UI.InventoryUI
 {
     public partial class Inventory : MonoBehaviour
     {
-        private enum ScrollRefreshMode
+        public enum ScrollRefreshMode
         {
             KeepPosition,
             ScrollToTop,
@@ -47,6 +47,7 @@ namespace CreativeAI.UI.InventoryUI
 
         public event System.Action<ItemStack> OnSlotClicked;
         public event System.Action<ItemStack> OnSlotDoubleClicked;
+        public event System.Action<ItemCategory, ScrollRefreshMode> ItemsRequested;
 
         private readonly List<ItemCategory> _activeCategories = new();
         private bool _navigationDisabled;
@@ -135,12 +136,17 @@ namespace CreativeAI.UI.InventoryUI
 
         public void RefreshCurrentTab() => RefreshCurrentTab(ScrollRefreshMode.KeepPosition);
 
+        public void SetItems(List<ItemStack> items) =>
+            SetItems(items, ScrollRefreshMode.KeepPosition);
+
+        public void SetItems(List<ItemStack> items, ScrollRefreshMode scrollMode) =>
+            RefreshSlots(FilterVisibleItems(items), scrollMode);
+
         private void RefreshCurrentTab(ScrollRefreshMode scrollMode)
         {
             if (_useFixedCategory)
             {
-                var items = InventoryManager.Instance?.GetItemsByCategory(_fixedCategory);
-                RefreshSlots(FilterVisibleItems(items), scrollMode);
+                RequestItems(_fixedCategory, scrollMode);
                 return;
             }
 
@@ -189,7 +195,13 @@ namespace CreativeAI.UI.InventoryUI
                 InventoryManager.Instance.InventoryChanged -= OnInventoryChanged;
         }
 
-        private void OnInventoryChanged() => RefreshCurrentTab(ScrollRefreshMode.KeepPosition);
+        private void OnInventoryChanged()
+        {
+            if (ItemsRequested != null)
+                return;
+
+            RefreshCurrentTab(ScrollRefreshMode.KeepPosition);
+        }
 
         private void BuildActiveCategories()
         {
@@ -207,18 +219,26 @@ namespace CreativeAI.UI.InventoryUI
         {
             if (_useFixedCategory)
             {
-                var items = InventoryManager.Instance?.GetItemsByCategory(_fixedCategory);
-                RefreshSlots(FilterVisibleItems(items), scrollMode);
+                RequestItems(_fixedCategory, scrollMode);
                 return;
             }
 
             if (index < 0 || index >= _activeCategories.Count)
                 return;
 
-            var categoryItems = InventoryManager.Instance?.GetItemsByCategory(
-                _activeCategories[index]
-            );
-            RefreshSlots(FilterVisibleItems(categoryItems), scrollMode);
+            RequestItems(_activeCategories[index], scrollMode);
+        }
+
+        private void RequestItems(ItemCategory category, ScrollRefreshMode scrollMode)
+        {
+            if (ItemsRequested != null)
+            {
+                ItemsRequested.Invoke(category, scrollMode);
+                return;
+            }
+
+            var items = InventoryManager.Instance?.GetItemsByCategory(category);
+            SetItems(items, scrollMode);
         }
 
         private List<ItemStack> FilterVisibleItems(List<ItemStack> items)

@@ -26,16 +26,19 @@ namespace CreativeAI.UI.InventoryUI
         {
             WarnMissingInventoryOnce();
             BindInventoryEvents();
+            SubscribeToInventoryChanges();
         }
 
         private void OnDisable()
         {
+            UnsubscribeFromInventoryChanges();
             UnbindInventoryEvents();
             _itemUseDialogPanel?.Hide();
         }
 
         private void OnDestroy()
         {
+            UnsubscribeFromInventoryChanges();
             UnbindInventoryEvents();
         }
 
@@ -46,6 +49,8 @@ namespace CreativeAI.UI.InventoryUI
 
             _inventory.OnSlotDoubleClicked -= OnInventorySlotDoubleClicked;
             _inventory.OnSlotDoubleClicked += OnInventorySlotDoubleClicked;
+            _inventory.ItemsRequested -= OnInventoryItemsRequested;
+            _inventory.ItemsRequested += OnInventoryItemsRequested;
         }
 
         private void UnbindInventoryEvents()
@@ -54,6 +59,39 @@ namespace CreativeAI.UI.InventoryUI
                 return;
 
             _inventory.OnSlotDoubleClicked -= OnInventorySlotDoubleClicked;
+            _inventory.ItemsRequested -= OnInventoryItemsRequested;
+        }
+
+        private void SubscribeToInventoryChanges()
+        {
+            if (_inventory == null || InventoryManager.Instance == null)
+                return;
+
+            InventoryManager.Instance.InventoryChanged -= OnInventoryChanged;
+            InventoryManager.Instance.InventoryChanged += OnInventoryChanged;
+        }
+
+        private void UnsubscribeFromInventoryChanges()
+        {
+            if (InventoryManager.Instance != null)
+                InventoryManager.Instance.InventoryChanged -= OnInventoryChanged;
+        }
+
+        private void OnInventoryChanged()
+        {
+            _inventory?.RefreshCurrentTab();
+        }
+
+        private void OnInventoryItemsRequested(
+            ItemCategory category,
+            Inventory.ScrollRefreshMode scrollMode
+        )
+        {
+            if (_inventory == null)
+                return;
+
+            var items = InventoryManager.Instance?.GetItemsByCategory(category);
+            _inventory.SetItems(items, scrollMode);
         }
 
         private void OnInventorySlotDoubleClicked(ItemStack stack)
