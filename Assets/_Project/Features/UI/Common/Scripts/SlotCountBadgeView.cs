@@ -23,6 +23,38 @@ namespace CreativeAI.UI
         [SerializeField]
         private Image _backgroundImage;
 
+        [Header("Responsive Layout")]
+        [SerializeField]
+        [Min(0f)]
+        private float _badgeRatio = 0.32f;
+
+        [SerializeField]
+        [Min(0f)]
+        private float _minBadgeHeight = 20f;
+
+        [SerializeField]
+        [Min(0f)]
+        private float _maxBadgeHeight = 34f;
+
+        [SerializeField]
+        [Min(0f)]
+        private float _horizontalPadding = 10f;
+
+        [SerializeField]
+        [Min(0f)]
+        private float _fontRatio = 0.72f;
+
+        [SerializeField]
+        [Min(0f)]
+        private float _minFontSize = 12f;
+
+        [SerializeField]
+        [Min(0f)]
+        private float _maxFontSize = 20f;
+
+        [SerializeField]
+        private Vector2 _anchoredPosition = new(-4f, 4f);
+
         private bool _hasWarnedMissingReferences;
 
         public bool HasRequiredReferences => ResolveReferences();
@@ -45,6 +77,39 @@ namespace CreativeAI.UI
             _countText.gameObject.SetActive(true);
             _containerCanvasGroup.alpha = 1f;
             _countTextCanvasGroup.alpha = 1f;
+            RefreshLayout();
+        }
+
+        public void RefreshLayout()
+        {
+            if (!ResolveReferences() || transform is not RectTransform slotRect)
+                return;
+
+            float slotShortEdge = Mathf.Min(slotRect.rect.width, slotRect.rect.height);
+            if (slotShortEdge <= 0f)
+                return;
+
+            float badgeHeight = Mathf.Clamp(
+                slotShortEdge * _badgeRatio,
+                _minBadgeHeight,
+                _maxBadgeHeight
+            );
+            float fontSize = Mathf.Clamp(badgeHeight * _fontRatio, _minFontSize, _maxFontSize);
+
+            _countText.enableAutoSizing = false;
+            _countText.fontSize = fontSize;
+            float preferredTextWidth = _countText.GetPreferredValues(_countText.text).x;
+            float badgeWidth = Mathf.Max(badgeHeight, preferredTextWidth + _horizontalPadding);
+            if (_countText.text.Length >= 2)
+                badgeWidth = Mathf.Max(badgeWidth, badgeHeight + _horizontalPadding);
+
+            Vector2 bottomRight = new(1f, 0f);
+            _container.anchorMin = bottomRight;
+            _container.anchorMax = bottomRight;
+            _container.pivot = bottomRight;
+            _container.anchoredPosition = _anchoredPosition;
+            _container.SetSizeWithCurrentAnchors(RectTransform.Axis.Horizontal, badgeWidth);
+            _container.SetSizeWithCurrentAnchors(RectTransform.Axis.Vertical, badgeHeight);
         }
 
         public void Hide()
@@ -102,6 +167,14 @@ namespace CreativeAI.UI
             _countText.rectTransform.localScale = Vector3.one;
             _countTextCanvasGroup.alpha = 1f;
             _containerCanvasGroup.alpha = IsVisible ? 1f : 0f;
+        }
+
+        private void OnRectTransformDimensionsChange()
+        {
+            if (!isActiveAndEnabled || !IsVisible)
+                return;
+
+            RefreshLayout();
         }
 
         private bool ResolveReferences()

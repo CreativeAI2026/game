@@ -1,6 +1,6 @@
+using System.Collections.Generic;
 using CreativeAI.Gameplay;
 using CreativeAI.UI.Common;
-using DG.Tweening;
 using TMPro;
 using UnityEngine;
 using UnityEngine.Serialization;
@@ -69,13 +69,10 @@ namespace CreativeAI.UI.CraftingUI
         private RectTransform _warningTextRect;
         private Vector2 _warningTextBasePosition;
         private bool _hasWarningTextBasePosition;
-        private Sequence _warningSequence;
-        private string _activeWarningMessage;
+        private Coroutine _warningRoutine;
 
         private CloseOnSelfClick _resultCloseOnSelfClick;
-        private bool _warnedMissingResultPanel;
-        private bool _warnedMissingWarningText;
-        private bool _warnedMissingWarningCanvasGroup;
+        private readonly HashSet<string> _warnedMissingReferences = new();
 
         public CraftRecipeDB RecipeDB
         {
@@ -105,18 +102,15 @@ namespace CreativeAI.UI.CraftingUI
         private void Initialize()
         {
             _recipeDB ??= Resources.Load<CraftRecipeDB>("Crafting/CraftRecipeDB");
-            FindCraftFlowReferences();
+            ValidateCraftFlowReferences();
             ResolveWarningReferences();
             BindCraftFlow();
         }
 
         private bool ResolveWarningReferences()
         {
-            if (_warningText == null)
-            {
-                WarnMissingReferenceOnce(ref _warnedMissingWarningText, "WarningText");
+            if (!ValidateRequiredReference(_warningText, nameof(_warningText)))
                 return false;
-            }
 
             _warningTextRect ??= _warningText.rectTransform;
             if (!_hasWarningTextBasePosition && _warningTextRect != null)
@@ -125,14 +119,8 @@ namespace CreativeAI.UI.CraftingUI
                 _hasWarningTextBasePosition = true;
             }
 
-            if (_warningCanvasGroup == null)
-            {
-                WarnMissingReferenceOnce(
-                    ref _warnedMissingWarningCanvasGroup,
-                    "WarningText.CanvasGroup"
-                );
+            if (!ValidateRequiredReference(_warningCanvasGroup, nameof(_warningCanvasGroup)))
                 return false;
-            }
 
             return true;
         }
@@ -146,32 +134,20 @@ namespace CreativeAI.UI.CraftingUI
         }
 #endif
 
-        private Transform FindDescendant(string objectName)
+        private bool ValidateRequiredReference(UnityEngine.Object reference, string fieldName)
         {
-            return UIChildFinder.Find(transform, objectName);
-        }
+            if (reference != null)
+                return true;
 
-        private static T FindComponentIn<T>(Transform root, string objectName)
-            where T : Component
-        {
-            return UIChildFinder.FindComponent<T>(root, objectName);
-        }
+            if (_warnedMissingReferences.Add(fieldName))
+            {
+                Debug.LogWarning(
+                    $"{nameof(CraftPanel)} on {name}: 必須参照 '{fieldName}' が未設定です。Inspectorで設定してください。該当UI処理を中止します。",
+                    this
+                );
+            }
 
-        private static GameObject FindGameObjectIn(Transform root, string objectName)
-        {
-            return UIChildFinder.FindGameObject(root, objectName);
-        }
-
-        private void WarnMissingReferenceOnce(ref bool flag, string referenceName)
-        {
-            if (flag)
-                return;
-
-            Debug.LogWarning(
-                $"{nameof(CraftPanel)} on {name}: {referenceName} が見つかりません。Inspector参照を設定するか、Prefab上の名前を確認してください。",
-                this
-            );
-            flag = true;
+            return false;
         }
     }
 }

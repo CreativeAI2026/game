@@ -134,7 +134,7 @@ namespace CreativeAI.UI.CraftingUI
             ResolveCraftPanelReference();
             ResolveRecipeDB();
             ResolveMainReferences();
-            ResolveQuantityDialogReferences();
+            ValidateQuantityDialogReferences();
         }
 
         private void ResolveCraftPanelReference()
@@ -244,7 +244,7 @@ namespace CreativeAI.UI.CraftingUI
                 return;
 
             Debug.LogWarning(
-                $"{nameof(RecipeCraftPanel)} on {name}: {referenceName} が見つかりません。Inspector参照を設定するか、Prefab上の名前を確認してください。",
+                $"{nameof(RecipeCraftPanel)} on {name}: 必須参照 '{referenceName}' が未設定です。Inspectorで設定してください。該当UI処理を中止します。",
                 this
             );
             flag = true;
