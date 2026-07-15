@@ -2,7 +2,9 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using CreativeAI.UI;
+using CreativeAI.UI.CharacterUI;
 using CreativeAI.UI.Common;
+using CreativeAI.UI.CraftingUI;
 using CreativeAI.UI.InventoryUI;
 using UnityEditor;
 using UnityEditor.SceneManagement;
@@ -60,6 +62,8 @@ namespace CreativeAI.EditorTools.UI
             }
 
             var panelControllers = FindAll<InventoryPanelController>(scene);
+            var freeCraftControllers = FindAll<FreeCraftPanelController>(scene);
+            var equipmentControllers = FindAll<EquipmentViewController>(scene);
             var inventories = FindAll<Inventory>(scene);
             var itemUseDialogs = FindAll<ItemUseDialogPanel>(scene);
 
@@ -73,6 +77,78 @@ namespace CreativeAI.EditorTools.UI
                 ValidateInventory(inventory, report);
             foreach (var itemUseDialog in itemUseDialogs)
                 ValidateItemUseDialog(itemUseDialog, report);
+
+            ValidateInventoryDataProviders(
+                inventories,
+                panelControllers,
+                freeCraftControllers,
+                equipmentControllers,
+                report
+            );
+        }
+
+        private static void ValidateInventoryDataProviders(
+            Inventory[] inventories,
+            InventoryPanelController[] panelControllers,
+            FreeCraftPanelController[] freeCraftControllers,
+            EquipmentViewController[] equipmentControllers,
+            UIValidationReport report
+        )
+        {
+            var providers = inventories.ToDictionary(
+                inventory => inventory,
+                _ => new List<string>()
+            );
+
+            foreach (var controller in panelControllers)
+                AddProvider(controller, "_inventory", nameof(InventoryPanelController));
+            foreach (var controller in freeCraftControllers)
+                AddProvider(controller, "_inventory", nameof(FreeCraftPanelController));
+            foreach (var controller in equipmentControllers)
+                AddProvider(controller, "_inventory", nameof(EquipmentViewController));
+
+            foreach (var inventory in inventories)
+            {
+                var inventoryProviders = providers[inventory];
+                if (inventoryProviders.Count == 0)
+                {
+                    report.Error(
+                        inventory.name,
+                        "ItemsRequested provider",
+                        "ItemsRequestedへ応答するControllerが接続されていません。対応するControllerの_inventory参照を設定してください。",
+                        inventory
+                    );
+                }
+                else if (inventoryProviders.Count > 1)
+                {
+                    report.Error(
+                        inventory.name,
+                        "ItemsRequested provider",
+                        $"複数のControllerが接続されています: {string.Join(", ", inventoryProviders)}。供給元を1つにしてください。",
+                        inventory
+                    );
+                }
+                else
+                {
+                    report.Ok(
+                        inventory.name,
+                        "ItemsRequested provider",
+                        $"{inventoryProviders[0]}からItemStack一覧を受け取る構成です。",
+                        inventory
+                    );
+                }
+            }
+
+            void AddProvider(MonoBehaviour controller, string fieldName, string providerName)
+            {
+                var serializedController = new SerializedObject(controller);
+                var inventory = GetReference<Inventory>(serializedController, fieldName);
+                if (
+                    inventory != null
+                    && providers.TryGetValue(inventory, out var inventoryProviders)
+                )
+                    inventoryProviders.Add(providerName);
+            }
         }
 
         private static void ValidateInventoryPanelController(

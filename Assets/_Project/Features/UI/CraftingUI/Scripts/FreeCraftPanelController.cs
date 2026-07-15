@@ -56,9 +56,9 @@ namespace CreativeAI.UI.CraftingUI
         private void OnEnable()
         {
             Initialize();
+            Subscribe();
             _inventory?.ResetViewState();
             ResetSlots();
-            Subscribe();
             SelectFirstSlotIfNeeded();
             RestartInitialSelectionRoutine();
             ResetCraftFlow();
@@ -69,6 +69,11 @@ namespace CreativeAI.UI.CraftingUI
             Unsubscribe();
             StopCraftRoutine();
             StopInitialSelectionRoutine();
+        }
+
+        private void OnDestroy()
+        {
+            Unsubscribe();
         }
 
         private void Update()
@@ -159,15 +164,44 @@ namespace CreativeAI.UI.CraftingUI
                 return;
 
             _inventory.OnSlotDoubleClicked += OnInventorySlotDoubleClicked;
+            _inventory.ItemsRequested += OnInventoryItemsRequested;
+            if (InventoryManager.Instance != null)
+            {
+                InventoryManager.Instance.InventoryChanged -= OnInventoryChanged;
+                InventoryManager.Instance.InventoryChanged += OnInventoryChanged;
+            }
             _isSubscribed = true;
         }
 
         private void Unsubscribe()
         {
             if (_inventory != null && _isSubscribed)
+            {
                 _inventory.OnSlotDoubleClicked -= OnInventorySlotDoubleClicked;
+                _inventory.ItemsRequested -= OnInventoryItemsRequested;
+            }
+
+            if (InventoryManager.Instance != null)
+                InventoryManager.Instance.InventoryChanged -= OnInventoryChanged;
 
             _isSubscribed = false;
+        }
+
+        private void OnInventoryChanged()
+        {
+            _inventory?.RefreshCurrentTab();
+        }
+
+        private void OnInventoryItemsRequested(
+            ItemCategory category,
+            Inventory.ScrollRefreshMode scrollMode
+        )
+        {
+            if (_inventory == null)
+                return;
+
+            var items = InventoryManager.Instance?.GetItemsByCategory(category);
+            _inventory.SetItems(items, scrollMode);
         }
 
         private void SelectFirstSlotIfNeeded()

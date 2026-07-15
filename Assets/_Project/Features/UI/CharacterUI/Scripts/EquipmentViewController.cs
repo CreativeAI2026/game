@@ -44,6 +44,7 @@ namespace CreativeAI.UI.CharacterUI
         private void Awake()
         {
             ResolveReferences();
+            BindInventoryItemsRequested();
             ConfigureInventory();
         }
 
@@ -58,6 +59,7 @@ namespace CreativeAI.UI.CharacterUI
                 return;
 
             ResolveReferences();
+            BindInventoryItemsRequested();
             ConfigureInventory();
             InitializeSlots();
             EquipInitialTestItems();
@@ -73,12 +75,15 @@ namespace CreativeAI.UI.CharacterUI
 
         private void OnEnable()
         {
+            BindInventoryItemsRequested();
+
             if (_initialized)
                 BindInventoryChangedEvent();
         }
 
         private void OnDisable()
         {
+            UnbindInventoryItemsRequested();
             UnbindInventoryChangedEvent();
         }
 
@@ -86,6 +91,7 @@ namespace CreativeAI.UI.CharacterUI
         {
             UnbindSlots();
             UnbindInventoryEvents();
+            UnbindInventoryItemsRequested();
             UnbindInventoryChangedEvent();
             if (_triangleLayout != null)
                 _triangleLayout.AnimationStateChanged -= SetSlotsInputLocked;
@@ -96,6 +102,7 @@ namespace CreativeAI.UI.CharacterUI
             _inventoryCategory = inventoryCategory;
             _emptyLabel = emptyLabel;
             ResolveReferences();
+            BindInventoryItemsRequested();
             ConfigureInventory();
         }
 

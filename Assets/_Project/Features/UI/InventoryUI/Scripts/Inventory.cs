@@ -63,6 +63,7 @@ namespace CreativeAI.UI.InventoryUI
         private bool _slotPoolInitialized;
         private bool _hasWarnedMissingTabGroup;
         private bool _hasWarnedMissingDetailPanel;
+        private bool _hasWarnedMissingItemsProvider;
 
         public void SetSelectFirstSlotOnRefresh(bool selectFirst) =>
             _selectFirstSlotOnRefresh = selectFirst;
@@ -77,7 +78,6 @@ namespace CreativeAI.UI.InventoryUI
 
         private void Start()
         {
-            SubscribeToInventoryChanges();
             BuildActiveCategories();
             _started = true;
             RefreshCurrentTab(ScrollRefreshMode.ScrollToTop);
@@ -85,8 +85,6 @@ namespace CreativeAI.UI.InventoryUI
 
         private void OnEnable()
         {
-            SubscribeToInventoryChanges();
-
             if (!_started)
                 return;
 
@@ -99,14 +97,12 @@ namespace CreativeAI.UI.InventoryUI
             StopResetRoutine();
             KillScrollTween();
             RestoreNavigation();
-            UnsubscribeFromInventoryChanges();
         }
 
         private void OnDestroy()
         {
             KillScrollTween();
             RestoreNavigation();
-            UnsubscribeFromInventoryChanges();
 
             if (_tabGroup != null)
                 _tabGroup.OnTabSelected -= OnTabSelected;
@@ -180,29 +176,6 @@ namespace CreativeAI.UI.InventoryUI
             _resetRoutine = null;
         }
 
-        private void SubscribeToInventoryChanges()
-        {
-            if (InventoryManager.Instance == null)
-                return;
-
-            InventoryManager.Instance.InventoryChanged -= OnInventoryChanged;
-            InventoryManager.Instance.InventoryChanged += OnInventoryChanged;
-        }
-
-        private void UnsubscribeFromInventoryChanges()
-        {
-            if (InventoryManager.Instance != null)
-                InventoryManager.Instance.InventoryChanged -= OnInventoryChanged;
-        }
-
-        private void OnInventoryChanged()
-        {
-            if (ItemsRequested != null)
-                return;
-
-            RefreshCurrentTab(ScrollRefreshMode.KeepPosition);
-        }
-
         private void BuildActiveCategories()
         {
             _activeCategories.Clear();
@@ -237,8 +210,17 @@ namespace CreativeAI.UI.InventoryUI
                 return;
             }
 
-            var items = InventoryManager.Instance?.GetItemsByCategory(category);
-            SetItems(items, scrollMode);
+            if (!_hasWarnedMissingItemsProvider)
+            {
+                Debug.LogWarning(
+                    $"Inventory '{name}' has no ItemsRequested subscriber for category '{category}'. "
+                        + "Connect an Inventory data provider controller to this Inventory.",
+                    this
+                );
+                _hasWarnedMissingItemsProvider = true;
+            }
+
+            SetItems(null, scrollMode);
         }
 
         private List<ItemStack> FilterVisibleItems(List<ItemStack> items)
