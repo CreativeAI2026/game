@@ -90,6 +90,12 @@ namespace CreativeAI.UI.CraftingUI
         {
             ClearGeneratedRecipeSlots();
 
+            if (_recipeSlotPrefab.GetComponent<RecipeSlot>() == null)
+            {
+                WarnMissingRecipeSlotComponentOnce();
+                return;
+            }
+
             int slotIndex = 0;
             foreach (var recipe in recipes)
             {
@@ -97,11 +103,15 @@ namespace CreativeAI.UI.CraftingUI
                 slotObject.name = _recipeSlotPrefab.name;
                 slotObject.SetActive(true);
 
-                if (slotObject.GetComponent<GeneratedRecipeSlotMarker>() == null)
-                    slotObject.AddComponent<GeneratedRecipeSlotMarker>();
-
                 var slot = slotObject.GetComponent<RecipeSlot>();
-                slot ??= slotObject.AddComponent<RecipeSlot>();
+                if (slot == null)
+                {
+                    WarnMissingRecipeSlotComponentOnce();
+                    Destroy(slotObject);
+                    continue;
+                }
+
+                _generatedRecipeSlots.Add(slot);
                 slot.SetRecipe(recipe);
                 BindSlot(slot);
                 CraftUIAnimationUtility.PlayPopIn(slotObject, slotIndex * 0.04f);
@@ -109,9 +119,21 @@ namespace CreativeAI.UI.CraftingUI
             }
         }
 
+        private void WarnMissingRecipeSlotComponentOnce()
+        {
+            if (_warnedMissingRecipeSlotPrefab)
+                return;
+
+            Debug.LogWarning(
+                $"{nameof(RecipeCraftPanel)} on {name}: RecipeSlotPrefab '{_recipeSlotPrefab.name}' のRootに {nameof(RecipeSlot)} がありません。Prefabに追加してください。レシピスロットの生成をスキップします。",
+                this
+            );
+            _warnedMissingRecipeSlotPrefab = true;
+        }
+
         private void ClearGeneratedRecipeSlots()
         {
-            foreach (var slot in _recipeContent.GetComponentsInChildren<RecipeSlot>(true))
+            foreach (var slot in _generatedRecipeSlots)
             {
                 if (slot == null)
                     continue;
@@ -119,17 +141,21 @@ namespace CreativeAI.UI.CraftingUI
                 slot.Clicked -= OnRecipeClicked;
                 slot.DoubleClicked -= OnRecipeDoubleClicked;
                 slot.SetSelected(false);
+                Destroy(slot.gameObject);
+            }
 
-                bool isGenerated = slot.GetComponent<GeneratedRecipeSlotMarker>() != null;
-                if (isGenerated)
-                {
-                    Destroy(slot.gameObject);
+            foreach (var slot in _recipeContent.GetComponentsInChildren<RecipeSlot>(true))
+            {
+                if (slot == null || _generatedRecipeSlots.Contains(slot))
                     continue;
-                }
 
+                slot.Clicked -= OnRecipeClicked;
+                slot.DoubleClicked -= OnRecipeDoubleClicked;
+                slot.SetSelected(false);
                 slot.gameObject.SetActive(false);
             }
 
+            _generatedRecipeSlots.Clear();
             HideRecipeMaterialSlotTemplates();
         }
 
@@ -175,7 +201,7 @@ namespace CreativeAI.UI.CraftingUI
                 if (slot == null)
                     continue;
 
-                bool isGenerated = slot.GetComponent<GeneratedRecipeSlotMarker>() != null;
+                bool isGenerated = _generatedRecipeSlots.Contains(slot);
                 bool isVisibleExisting =
                     slot.Recipe != null
                     && _recipeDB != null
@@ -437,6 +463,7 @@ namespace CreativeAI.UI.CraftingUI
         private bool HasEquippedRecipeMaterial()
         {
             return _selectedRecipe != null
+                && GetMaximumCraftable() <= 0
                 && (
                     InventoryManager.Instance?.HasEquippedMaterial(_selectedRecipe.Materials)
                     ?? false

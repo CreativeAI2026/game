@@ -33,7 +33,7 @@ namespace CreativeAI.UI.InventoryUI
                     continue;
 
                 var slot = CreateSlot(stack, index);
-                slot.SetCraftAssigned(_craftAssignedItems.Contains(stack.Data));
+                slot.SetCraftAssigned(IsCraftAssigned(stack));
                 index++;
             }
 

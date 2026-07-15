@@ -15,12 +15,7 @@ namespace CreativeAI.UI.CraftingUI
             ShowWarning(_equippedMaterialMessage);
         }
 
-        private void ShowNotReadyWarning()
-        {
-            ShowWarning(_notReadyMessage);
-        }
-
-        private void ShowCategoryMismatchWarning()
+        public void ShowCategoryMismatchWarning()
         {
             ShowWarning(_categoryMismatchMessage);
         }
@@ -34,11 +29,11 @@ namespace CreativeAI.UI.CraftingUI
 
             _warningText.DOKill();
             _warningTextRect?.DOKill();
-            _warningTextCanvasGroup?.DOKill();
+            _warningCanvasGroup?.DOKill();
             ResetWarningTransform();
 
-            if (_warningTextCanvasGroup != null)
-                _warningTextCanvasGroup.alpha = 0f;
+            if (_warningCanvasGroup != null)
+                _warningCanvasGroup.alpha = 0f;
 
             _warningText.gameObject.SetActive(false);
             _activeWarningMessage = null;
@@ -46,14 +41,13 @@ namespace CreativeAI.UI.CraftingUI
 
         private void ShowWarning(string message)
         {
-            ResolveWarningReferences();
-            if (_warningText == null)
+            if (!ResolveWarningReferences())
                 return;
 
             StopWarningAnimation();
             _warningText.DOKill();
             _warningTextRect?.DOKill();
-            _warningTextCanvasGroup?.DOKill();
+            _warningCanvasGroup?.DOKill();
 
             _activeWarningMessage = message;
             _warningText.text = message;
@@ -61,8 +55,8 @@ namespace CreativeAI.UI.CraftingUI
 
             ResetWarningTransform();
 
-            if (_warningTextCanvasGroup != null)
-                _warningTextCanvasGroup.alpha = 1f;
+            if (_warningCanvasGroup != null)
+                _warningCanvasGroup.alpha = 1f;
 
             PlayWarningAnimation();
         }
@@ -89,8 +83,8 @@ namespace CreativeAI.UI.CraftingUI
 
             _warningSequence.AppendInterval(WarningFadeDelay);
 
-            if (_warningTextCanvasGroup != null)
-                _warningSequence.Append(_warningTextCanvasGroup.DOFade(0f, WarningFadeDuration));
+            if (_warningCanvasGroup != null)
+                _warningSequence.Append(_warningCanvasGroup.DOFade(0f, WarningFadeDuration));
 
             _warningSequence.OnComplete(() =>
             {

@@ -1,10 +1,9 @@
-using System.Collections;
-using System.Collections.Generic;
 using CreativeAI.Gameplay;
-using CreativeAI.UI.InventoryUI;
+using CreativeAI.UI.Common;
 using DG.Tweening;
 using TMPro;
 using UnityEngine;
+using UnityEngine.Serialization;
 using UnityEngine.UI;
 
 namespace CreativeAI.UI.CraftingUI
@@ -16,22 +15,11 @@ namespace CreativeAI.UI.CraftingUI
         private const float WarningFadeDelay = 0.8f;
         private const float WarningFadeDuration = 0.6f;
 
-        [SerializeField]
-        private Inventory _inventory;
-
-        [SerializeField]
-        private Transform _slotsRoot;
-
-        [SerializeField]
-        private ItemDetailPanel _detailPanel;
-
-        [Header("Craft Flow")]
+        [Header("Shared Data")]
         [SerializeField]
         private CraftRecipeDB _recipeDB;
 
-        [SerializeField]
-        private Button _craftButton;
-
+        [Header("Shared Flow")]
         [SerializeField]
         private GameObject _loadingPanel;
 
@@ -42,21 +30,29 @@ namespace CreativeAI.UI.CraftingUI
         private GameObject _resultPanel;
 
         [SerializeField]
+        private GameObject _resultPanelBackground;
+
+        [SerializeField]
+        private TMP_Text _resultPanelTitle;
+
+        [SerializeField]
+        private Image _resultItemImage;
+
+        [SerializeField]
+        private TMP_Text _resultItemName;
+
+        [SerializeField]
         private GameObject _closeButton;
 
         [SerializeField]
-        private float _testCraftDuration = 5f;
-
-        [SerializeField]
-        private float _gearRotationSpeed = 180f;
+        private Button _closeButtonButton;
 
         [Header("Warning")]
         [SerializeField]
         private TMP_Text _warningText;
 
-        [SerializeField]
-        private string _notReadyMessage =
-            "\u7D20\u6750\u30922\u3064\u9078\u629E\u3057\u3066\u304F\u3060\u3055\u3044";
+        [SerializeField, FormerlySerializedAs("_warningTextCanvasGroup")]
+        private CanvasGroup _warningCanvasGroup;
 
         [SerializeField]
         private string _categoryMismatchMessage =
@@ -71,22 +67,15 @@ namespace CreativeAI.UI.CraftingUI
             "\u7D20\u6750\u304C\u8DB3\u308A\u307E\u305B\u3093\uFF01";
 
         private RectTransform _warningTextRect;
-        private CanvasGroup _warningTextCanvasGroup;
         private Vector2 _warningTextBasePosition;
         private bool _hasWarningTextBasePosition;
         private Sequence _warningSequence;
         private string _activeWarningMessage;
 
-        private readonly List<MaterialSlot> _slots = new();
-        private MaterialSlot _selectedSlot;
-        private bool _isSubscribed;
-        private bool _isCrafting;
-        private CraftRecipeData _lastCraftedRecipe;
-        private Image _resultItemImage;
-        private TMP_Text _resultItemName;
-        private Coroutine _craftRoutine;
-        private Coroutine _initialSelectionRoutine;
-        private ResultPanelClickCatcher _resultClickCatcher;
+        private CloseOnSelfClick _resultCloseOnSelfClick;
+        private bool _warnedMissingResultPanel;
+        private bool _warnedMissingWarningText;
+        private bool _warnedMissingWarningCanvasGroup;
 
         public CraftRecipeDB RecipeDB
         {
@@ -105,48 +94,29 @@ namespace CreativeAI.UI.CraftingUI
         private void OnEnable()
         {
             Initialize();
-            _inventory?.ResetViewState();
-            ResetSlots();
-            Subscribe();
-            SelectFirstSlotIfNeeded();
-            RestartInitialSelectionRoutine();
-            ResetCraftFlow();
+            ResetSharedFlow();
         }
 
         private void OnDisable()
         {
-            Unsubscribe();
-            StopCraftRoutine();
-            StopInitialSelectionRoutine();
-        }
-
-        private void Update()
-        {
-            if (_isCrafting && _loadingGear != null)
-                _loadingGear.Rotate(0f, 0f, -_gearRotationSpeed * Time.unscaledDeltaTime);
-
-            UpdateMaterialSlotKeyboardNavigation();
+            HideWarning();
         }
 
         private void Initialize()
         {
-            _inventory ??= GetComponentInChildren<Inventory>(true);
-            _inventory?.SetSelectFirstSlotOnRefresh(false);
-            _inventory?.SetReleaseSelectionOnOutsideClick(false);
-            _detailPanel ??= FindDetailPanel();
             _recipeDB ??= Resources.Load<CraftRecipeDB>("Crafting/CraftRecipeDB");
             FindCraftFlowReferences();
             ResolveWarningReferences();
-            InitializeSlots();
             BindCraftFlow();
         }
 
-        private void ResolveWarningReferences()
+        private bool ResolveWarningReferences()
         {
             if (_warningText == null)
-                _warningText = FindDescendant("WarningText")?.GetComponent<TMP_Text>();
-            if (_warningText == null)
-                return;
+            {
+                WarnMissingReferenceOnce(ref _warnedMissingWarningText, "WarningText");
+                return false;
+            }
 
             _warningTextRect ??= _warningText.rectTransform;
             if (!_hasWarningTextBasePosition && _warningTextRect != null)
@@ -155,36 +125,26 @@ namespace CreativeAI.UI.CraftingUI
                 _hasWarningTextBasePosition = true;
             }
 
-            _warningTextCanvasGroup ??= _warningText.GetComponent<CanvasGroup>();
-            if (_warningTextCanvasGroup == null)
-                _warningTextCanvasGroup = _warningText.gameObject.AddComponent<CanvasGroup>();
-        }
-
-        private void RestartInitialSelectionRoutine()
-        {
-            StopInitialSelectionRoutine();
-            _initialSelectionRoutine = StartCoroutine(EnsureInitialSelectionNextFrame());
-        }
-
-        private void StopInitialSelectionRoutine()
-        {
-            if (_initialSelectionRoutine == null)
-                return;
-
-            StopCoroutine(_initialSelectionRoutine);
-            _initialSelectionRoutine = null;
-        }
-
-        private ItemDetailPanel FindDetailPanel()
-        {
-            foreach (var panel in GetComponentsInChildren<ItemDetailPanel>(true))
+            if (_warningCanvasGroup == null)
             {
-                if (panel.GetComponentInParent<Inventory>(true) == null)
-                    return panel;
+                WarnMissingReferenceOnce(
+                    ref _warnedMissingWarningCanvasGroup,
+                    "WarningText.CanvasGroup"
+                );
+                return false;
             }
 
-            return GetComponentInChildren<ItemDetailPanel>(true);
+            return true;
         }
+
+#if UNITY_EDITOR
+        [ContextMenu("Auto Assign Warning References")]
+        private void AutoAssignWarningReferences()
+        {
+            if (_warningText != null)
+                _warningCanvasGroup ??= _warningText.GetComponent<CanvasGroup>();
+        }
+#endif
 
         private Transform FindDescendant(string objectName)
         {
@@ -195,6 +155,23 @@ namespace CreativeAI.UI.CraftingUI
             where T : Component
         {
             return UIChildFinder.FindComponent<T>(root, objectName);
+        }
+
+        private static GameObject FindGameObjectIn(Transform root, string objectName)
+        {
+            return UIChildFinder.FindGameObject(root, objectName);
+        }
+
+        private void WarnMissingReferenceOnce(ref bool flag, string referenceName)
+        {
+            if (flag)
+                return;
+
+            Debug.LogWarning(
+                $"{nameof(CraftPanel)} on {name}: {referenceName} が見つかりません。Inspector参照を設定するか、Prefab上の名前を確認してください。",
+                this
+            );
+            flag = true;
         }
     }
 }

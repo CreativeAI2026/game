@@ -1,3 +1,4 @@
+using DG.Tweening;
 using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
@@ -12,8 +13,8 @@ namespace CreativeAI.UI
             _name ??= FindComponent<TMP_Text>("Name");
             _category ??= FindComponent<TMP_Text>("Category");
             _stats ??= FindComponent<TMP_Text>("Stats");
-            _passiveTitle ??= FindComponent<TMP_Text>("PassiveTitle");
-            _passiveDesc ??= FindComponent<TMP_Text>("PassiveDesc");
+            _description ??=
+                FindComponent<TMP_Text>("Description") ?? FindComponent<TMP_Text>("PassiveDesc");
             CaptureDefaultNameFontStyle();
         }
 
@@ -52,6 +53,7 @@ namespace CreativeAI.UI
             if (target == null)
                 return;
 
+            DOTween.Kill(target);
             target.text = text;
             target.maxVisibleCharacters = int.MaxValue;
         }
