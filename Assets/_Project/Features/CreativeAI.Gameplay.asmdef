@@ -3,6 +3,7 @@
     "rootNamespace": "CreativeAI.Gameplay",
     "references": [
         "CreativeAI.Core",
+        "CreativeAI.Crafting",
         "CreativeAI.Shared",
         "Unity.InputSystem",
         "Unity.Cinemachine",
