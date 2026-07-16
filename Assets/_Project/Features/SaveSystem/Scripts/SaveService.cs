@@ -34,10 +34,12 @@ namespace CreativeAI.Gameplay
             var inv = InventoryManager.Instance;
             if (inv != null)
             {
+                var battleFoodSlots = inv.GetBattleFoodSlots();
                 foreach (var stack in inv.GetAllItems())
                 {
                     if (stack?.Data == null)
                         continue;
+                    int battleSlot = IndexOfBattleFoodSlot(battleFoodSlots, stack);
                     data.items.Add(
                         new ItemEntry
                         {
@@ -48,6 +50,8 @@ namespace CreativeAI.Gameplay
                                 stack.RolledStats != null
                                     ? new List<RolledStat>(stack.RolledStats)
                                     : null,
+                            inBattleFood = battleSlot >= 0,
+                            battleFoodSlot = battleSlot >= 0 ? battleSlot : 0,
                         }
                     );
                 }
@@ -154,24 +158,34 @@ namespace CreativeAI.Gameplay
                     continue;
                 }
 
+                ItemStack stack;
                 if (e.rolledStats != null && e.rolledStats.Count > 0)
                 {
-                    var stack = inv.AddInstance(itemData, e.rolledStats);
+                    stack = inv.AddInstance(itemData, e.rolledStats);
                     if (stack != null)
                         stack.IsEquipped = e.equipped;
                 }
                 else
                 {
                     inv.AddItem(itemData, e.count);
-                    if (e.equipped)
-                    {
-                        var restored = inv.GetAllItems()
-                            .Find(s => s.Data == itemData && !s.IsInstance);
-                        if (restored != null)
-                            restored.IsEquipped = true;
-                    }
+                    stack = inv.GetAllItems().Find(s => s.Data == itemData && !s.IsInstance);
+                    if (stack != null && e.equipped)
+                        stack.IsEquipped = true;
                 }
+
+                // 戦闘食材スロットの復元(食材のみ・SetBattleFood 側で食材/在庫を検証)。
+                if (stack != null && e.inBattleFood)
+                    inv.SetBattleFood(e.battleFoodSlot, stack);
             }
+        }
+
+        /// <summary>stack が入っている戦闘食材スロット番号を返す。未セットは -1。</summary>
+        private static int IndexOfBattleFoodSlot(IReadOnlyList<ItemStack> slots, ItemStack stack)
+        {
+            for (int i = 0; i < slots.Count; i++)
+                if (slots[i] == stack)
+                    return i;
+            return -1;
         }
     }
 }

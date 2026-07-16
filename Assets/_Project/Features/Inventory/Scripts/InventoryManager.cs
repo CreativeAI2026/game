@@ -20,6 +20,9 @@ namespace CreativeAI.Gameplay
 
         public event System.Action InventoryChanged;
 
+        /// <summary>戦闘食材スロット(最大3)の内容が変わったときに発火。即時食材使用UI / 戦闘食材タブが購読する。</summary>
+        public event System.Action BattleFoodChanged;
+
         /// <summary>
         /// 装備の着脱で発火(静的:PlayerStatus は先に生成され得るため、インスタンス無しでも購読できる)。
         /// PlayerStatus がこれを受けて装備補正を再計算する。
@@ -190,9 +193,11 @@ namespace CreativeAI.Gameplay
         }
 
         /// <summary>
-        /// 装備中(IsEquipped)の装備品・武器の補正合計。素の値に足すと最終ステータス。
+        /// 装備中(IsEquipped)の装備品の補正合計。素の値に足すと最終ステータス。
+        /// 武器は在庫外(仕様 L30・3本固定切替)なのでここでは扱わない。選択中武器の補正は
+        /// WeaponManager.GetSelectedBonus() から PlayerStatus が別ルートで合算する。
         /// TODO(A-5): ロール済み個体(stack.RolledStats)の合算は、調合→インベントリ橋渡しと
-        /// stat キー語彙の確定後に対応する。現状は固定 SO(EquipmentData/WeaponData)のみ。
+        /// stat キー語彙の確定後に対応する。現状は固定 SO(EquipmentData)のみ。
         /// </summary>
         public EquipmentBonus GetEquippedBonus()
         {
@@ -201,22 +206,14 @@ namespace CreativeAI.Gameplay
             {
                 if (stack == null || !stack.IsEquipped)
                     continue;
-                switch (stack.Data)
+                // 武器(WeaponData)は在庫外・WeaponManager 管理なので意図的に加算しない。
+                if (stack.Data is EquipmentData e)
                 {
-                    case EquipmentData e:
-                        b.attack += e.attack;
-                        b.defense += e.defense;
-                        b.maxHp += e.maxHP;
-                        b.criticalChance += e.criticalRate;
-                        b.criticalDamage += e.criticalDamage;
-                        break;
-                    case WeaponData w:
-                        b.attack += w.attack;
-                        b.defense += w.defense;
-                        b.maxHp += w.maxHP;
-                        b.criticalChance += w.criticalRate;
-                        b.criticalDamage += w.criticalDamage;
-                        break;
+                    b.attack += e.attack;
+                    b.defense += e.defense;
+                    b.maxHp += e.maxHP;
+                    b.criticalChance += e.criticalRate;
+                    b.criticalDamage += e.criticalDamage;
                 }
             }
             return b;
@@ -243,6 +240,19 @@ namespace CreativeAI.Gameplay
         }
 
         public List<ItemStack> GetAllItems() => InventoryService.GetAllItems();
+
+        // --- 戦闘食材スロット(最大3)。即時食材使用UIにセットする食材の選択状態(spec §1.2) ---
+
+        /// <summary>戦闘食材スロットの内容(食材スタック or null)。即時食材使用UI / 戦闘食材タブが読む。</summary>
+        public IReadOnlyList<ItemStack> GetBattleFoodSlots() =>
+            InventoryService.GetBattleFoodSlots();
+
+        /// <summary>スロット slot に食材をセットする(CharacterUI 戦闘食材タブから)。食材以外・在庫外は false。</summary>
+        public bool SetBattleFood(int slot, ItemStack stack) =>
+            InventoryService.SetBattleFood(slot, stack);
+
+        /// <summary>スロット slot を空にする。</summary>
+        public void ClearBattleFood(int slot) => InventoryService.ClearBattleFood(slot);
 
         private void AddTestItems()
         {
@@ -286,12 +296,18 @@ namespace CreativeAI.Gameplay
         {
             var service = new InventoryService(_storage);
             service.InventoryChanged += OnInventoryServiceChanged;
+            service.BattleFoodChanged += OnBattleFoodChanged;
             return service;
         }
 
         private void OnInventoryServiceChanged()
         {
             InventoryChanged?.Invoke();
+        }
+
+        private void OnBattleFoodChanged()
+        {
+            BattleFoodChanged?.Invoke();
         }
 
         private static bool HasZeroSecondDigit(ItemData item)
