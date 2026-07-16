@@ -64,19 +64,39 @@ namespace CreativeAI.EditorTools.UI
             }
 
             var craftPanels = FindAll<CraftPanel>(scene);
+            var freeCraftPanels = FindAll<FreeCraftPanelController>(scene);
             var quantityDialogs = FindAll<CraftQuantityDialog>(scene);
             var recipeCraftPanels = FindAll<RecipeCraftPanel>(scene);
 
             ValidateExpectedCount(craftPanels, nameof(CraftPanel), report);
+            ValidateExpectedCount(freeCraftPanels, nameof(FreeCraftPanelController), report);
             ValidateExpectedCount(quantityDialogs, nameof(CraftQuantityDialog), report);
             ValidateExpectedCount(recipeCraftPanels, nameof(RecipeCraftPanel), report);
 
             foreach (var craftPanel in craftPanels)
                 ValidateCraftPanel(craftPanel, report);
+            foreach (var freeCraftPanel in freeCraftPanels)
+                ValidateFreeCraftPanel(freeCraftPanel, report);
             foreach (var quantityDialog in quantityDialogs)
                 ValidateQuantityDialog(quantityDialog, report);
             foreach (var recipeCraftPanel in recipeCraftPanels)
                 ValidateRecipeCraftPanel(recipeCraftPanel, report);
+        }
+
+        private static void ValidateFreeCraftPanel(
+            FreeCraftPanelController panel,
+            UIValidationReport report
+        )
+        {
+            string[] requiredFields =
+            {
+                "_craftPanel",
+                "_inventory",
+                "_slotsRoot",
+                "_detailPanel",
+                "_craftButton",
+            };
+            ValidateRequiredReferences(panel, requiredFields, report);
         }
 
         private static void ValidateCraftPanel(CraftPanel panel, UIValidationReport report)

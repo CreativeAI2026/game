@@ -160,7 +160,6 @@ namespace CreativeAI.UI.CharacterUI
         private void ConfigureInventory()
         {
             _inventory?.SetSelectFirstSlotOnRefresh(false);
-            _inventory?.SetFixedCategory(_inventoryCategory);
         }
 
         private bool IsSlotInputLocked()

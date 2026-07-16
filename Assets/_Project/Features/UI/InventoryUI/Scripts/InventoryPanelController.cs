@@ -14,6 +14,7 @@ namespace CreativeAI.UI.InventoryUI
 
         private bool _hasWarnedMissingInventory;
         private bool _hasWarnedMissingItemUseDialogPanel;
+        private bool _hasWarnedInvalidTabDefinition;
 
         protected override void Awake()
         {
@@ -49,6 +50,8 @@ namespace CreativeAI.UI.InventoryUI
 
             _inventory.OnSlotDoubleClicked -= OnInventorySlotDoubleClicked;
             _inventory.OnSlotDoubleClicked += OnInventorySlotDoubleClicked;
+            _inventory.DisplayRefreshRequested -= OnInventoryDisplayRefreshRequested;
+            _inventory.DisplayRefreshRequested += OnInventoryDisplayRefreshRequested;
             _inventory.ItemsRequested -= OnInventoryItemsRequested;
             _inventory.ItemsRequested += OnInventoryItemsRequested;
         }
@@ -59,6 +62,7 @@ namespace CreativeAI.UI.InventoryUI
                 return;
 
             _inventory.OnSlotDoubleClicked -= OnInventorySlotDoubleClicked;
+            _inventory.DisplayRefreshRequested -= OnInventoryDisplayRefreshRequested;
             _inventory.ItemsRequested -= OnInventoryItemsRequested;
         }
 
@@ -80,6 +84,25 @@ namespace CreativeAI.UI.InventoryUI
         private void OnInventoryChanged()
         {
             _inventory?.RefreshCurrentTab();
+        }
+
+        private void OnInventoryDisplayRefreshRequested(
+            TabDefinition definition,
+            int tabIndex,
+            Inventory.ScrollRefreshMode scrollMode
+        )
+        {
+            if (_inventory == null)
+                return;
+
+            if (definition is InventoryTabDefinition inventoryDefinition)
+            {
+                _inventory.RequestItems(inventoryDefinition.Category, scrollMode);
+                return;
+            }
+
+            WarnInvalidTabDefinitionOnce(tabIndex);
+            _inventory.SetItems(null, scrollMode);
         }
 
         private void OnInventoryItemsRequested(
@@ -136,6 +159,18 @@ namespace CreativeAI.UI.InventoryUI
             _hasWarnedMissingItemUseDialogPanel = true;
             Debug.LogWarning(
                 $"{nameof(InventoryPanelController)} '{name}' の必須参照 '{nameof(_itemUseDialogPanel)}' が未設定です。Food使用ダイアログの表示をスキップします。Inspectorで設定してください。",
+                this
+            );
+        }
+
+        private void WarnInvalidTabDefinitionOnce(int tabIndex)
+        {
+            if (_hasWarnedInvalidTabDefinition)
+                return;
+
+            _hasWarnedInvalidTabDefinition = true;
+            Debug.LogWarning(
+                $"{nameof(InventoryPanelController)} '{name}' cannot resolve Inventory tab index {tabIndex}. Assign an {nameof(InventoryTabDefinition)} to every Inventory TabEntry.",
                 this
             );
         }

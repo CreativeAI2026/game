@@ -45,6 +45,7 @@ namespace CreativeAI.UI.CraftingUI
         private Coroutine _craftRoutine;
         private Coroutine _initialSelectionRoutine;
         private bool _warnedMissingCraftButton;
+        private bool _warnedInvalidTabDefinition;
 
         private CraftRecipeDB RecipeDB => _craftPanel != null ? _craftPanel.RecipeDB : null;
 
@@ -164,6 +165,7 @@ namespace CreativeAI.UI.CraftingUI
                 return;
 
             _inventory.OnSlotDoubleClicked += OnInventorySlotDoubleClicked;
+            _inventory.DisplayRefreshRequested += OnInventoryDisplayRefreshRequested;
             _inventory.ItemsRequested += OnInventoryItemsRequested;
             if (InventoryManager.Instance != null)
             {
@@ -178,6 +180,7 @@ namespace CreativeAI.UI.CraftingUI
             if (_inventory != null && _isSubscribed)
             {
                 _inventory.OnSlotDoubleClicked -= OnInventorySlotDoubleClicked;
+                _inventory.DisplayRefreshRequested -= OnInventoryDisplayRefreshRequested;
                 _inventory.ItemsRequested -= OnInventoryItemsRequested;
             }
 
@@ -192,6 +195,25 @@ namespace CreativeAI.UI.CraftingUI
             _inventory?.RefreshCurrentTab();
         }
 
+        private void OnInventoryDisplayRefreshRequested(
+            TabDefinition definition,
+            int tabIndex,
+            Inventory.ScrollRefreshMode scrollMode
+        )
+        {
+            if (_inventory == null)
+                return;
+
+            if (definition is InventoryTabDefinition inventoryDefinition)
+            {
+                _inventory.RequestItems(inventoryDefinition.Category, scrollMode);
+                return;
+            }
+
+            WarnInvalidTabDefinitionOnce(tabIndex);
+            _inventory.SetItems(null, scrollMode);
+        }
+
         private void OnInventoryItemsRequested(
             ItemCategory category,
             Inventory.ScrollRefreshMode scrollMode
@@ -202,6 +224,18 @@ namespace CreativeAI.UI.CraftingUI
 
             var items = InventoryManager.Instance?.GetItemsByCategory(category);
             _inventory.SetItems(items, scrollMode);
+        }
+
+        private void WarnInvalidTabDefinitionOnce(int tabIndex)
+        {
+            if (_warnedInvalidTabDefinition)
+                return;
+
+            _warnedInvalidTabDefinition = true;
+            Debug.LogWarning(
+                $"{nameof(FreeCraftPanelController)} '{name}' cannot resolve Inventory tab index {tabIndex}. Assign an {nameof(InventoryTabDefinition)} to every Inventory TabEntry.",
+                this
+            );
         }
 
         private void SelectFirstSlotIfNeeded()

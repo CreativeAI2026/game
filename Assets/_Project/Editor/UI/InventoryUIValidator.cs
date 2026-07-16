@@ -163,7 +163,7 @@ namespace CreativeAI.EditorTools.UI
 
         private static void ValidateInventory(Inventory inventory, UIValidationReport report)
         {
-            string[] requiredFields = { "_tabGroup", "_detailPanel", "_slotsRoot", "_slotPrefab" };
+            string[] requiredFields = { "_detailPanel", "_slotsRoot", "_slotPrefab" };
             ValidateRequiredReferences(inventory, requiredFields, report);
 
             var serializedInventory = new SerializedObject(inventory);

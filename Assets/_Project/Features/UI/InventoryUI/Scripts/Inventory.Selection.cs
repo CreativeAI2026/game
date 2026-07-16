@@ -95,12 +95,9 @@ namespace CreativeAI.UI.InventoryUI
             ClearSelection();
             _detailPanel?.Clear();
 
-            if (_useFixedCategory)
-                RefreshCurrentTab(ScrollRefreshMode.ScrollToTop);
-            else
-                _tabGroup?.ResetToFirstTab();
+            _tabGroup?.ResetToFirstTab();
 
-            if (!_useFixedCategory && _tabGroup == null)
+            if (_tabGroup == null)
                 RefreshCurrentTab(ScrollRefreshMode.ScrollToTop);
         }
 

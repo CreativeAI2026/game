@@ -31,6 +31,8 @@ namespace CreativeAI.UI.CharacterUI
             if (_inventory == null)
                 return;
 
+            _inventory.DisplayRefreshRequested -= OnInventoryDisplayRefreshRequested;
+            _inventory.DisplayRefreshRequested += OnInventoryDisplayRefreshRequested;
             _inventory.ItemsRequested -= OnInventoryItemsRequested;
             _inventory.ItemsRequested += OnInventoryItemsRequested;
         }
@@ -38,7 +40,19 @@ namespace CreativeAI.UI.CharacterUI
         private void UnbindInventoryItemsRequested()
         {
             if (_inventory != null)
+            {
+                _inventory.DisplayRefreshRequested -= OnInventoryDisplayRefreshRequested;
                 _inventory.ItemsRequested -= OnInventoryItemsRequested;
+            }
+        }
+
+        private void OnInventoryDisplayRefreshRequested(
+            TabDefinition _definition,
+            int _tabIndex,
+            Inventory.ScrollRefreshMode scrollMode
+        )
+        {
+            _inventory?.RequestItems(_inventoryCategory, scrollMode);
         }
 
         private void OnInventoryItemsRequested(

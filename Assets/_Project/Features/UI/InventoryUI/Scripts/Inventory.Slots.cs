@@ -28,7 +28,7 @@ namespace CreativeAI.UI.InventoryUI
 
             if (_slotsRoot == null || _slotPrefab == null || items == null)
             {
-                _currentSelectedSlot = null;
+                ClearSelectionAfterRefresh();
                 return;
             }
 
@@ -104,7 +104,7 @@ namespace CreativeAI.UI.InventoryUI
         {
             if (_visibleSlots.Count <= 0)
             {
-                _currentSelectedSlot = null;
+                ClearSelectionAfterRefresh();
                 return;
             }
 
@@ -112,14 +112,22 @@ namespace CreativeAI.UI.InventoryUI
             if (selectedSlot != null)
             {
                 _currentSelectedSlot = selectedSlot;
+                _selectedStack = selectedSlot.Stack;
                 selectedSlot.Select();
+                _detailPanel?.Show(selectedSlot.Item);
                 return;
             }
 
             if (_selectFirstSlotOnRefresh)
                 SelectSlot(_visibleSlots[0]);
             else
-                _currentSelectedSlot = null;
+                ClearSelectionAfterRefresh();
+        }
+
+        private void ClearSelectionAfterRefresh()
+        {
+            ClearSelection();
+            _detailPanel?.Clear();
         }
 
         private ScrollRect GetScrollRect()

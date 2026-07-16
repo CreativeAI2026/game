@@ -30,10 +30,7 @@ namespace CreativeAI.UI.CraftingUI
             _activeRecipeCategories.Clear();
 
             for (int i = 0; i < _recipeCategories.Count; i++)
-            {
-                if (_recipeTabGroup == null || _recipeTabGroup.IsEnabled(i))
-                    _activeRecipeCategories.Add(_recipeCategories[i]);
-            }
+                _activeRecipeCategories.Add(_recipeCategories[i]);
         }
 
         private void OnRecipeTabSelected(int index)

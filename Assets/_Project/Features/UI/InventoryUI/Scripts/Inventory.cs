@@ -22,15 +22,6 @@ namespace CreativeAI.UI.InventoryUI
         [SerializeField]
         private TabGroup _tabGroup;
 
-        [SerializeField]
-        private List<ItemCategory> _categories;
-
-        [SerializeField]
-        private bool _useFixedCategory;
-
-        [SerializeField]
-        private ItemCategory _fixedCategory;
-
         [Header("Slots")]
         [SerializeField]
         private Transform _slotsRoot;
@@ -47,9 +38,9 @@ namespace CreativeAI.UI.InventoryUI
 
         public event System.Action<ItemStack> OnSlotClicked;
         public event System.Action<ItemStack> OnSlotDoubleClicked;
+        public event System.Action<TabDefinition, int, ScrollRefreshMode> DisplayRefreshRequested;
         public event System.Action<ItemCategory, ScrollRefreshMode> ItemsRequested;
 
-        private readonly List<ItemCategory> _activeCategories = new();
         private bool _navigationDisabled;
         private bool _previousSendNavigationEvents;
         private bool _started;
@@ -61,9 +52,9 @@ namespace CreativeAI.UI.InventoryUI
         private readonly HashSet<ItemData> _craftAssignedItems = new();
         private readonly HashSet<ItemStack> _craftAssignedStacks = new();
         private bool _slotPoolInitialized;
-        private bool _hasWarnedMissingTabGroup;
         private bool _hasWarnedMissingDetailPanel;
         private bool _hasWarnedMissingItemsProvider;
+        private bool _hasWarnedMissingDisplayProvider;
 
         public void SetSelectFirstSlotOnRefresh(bool selectFirst) =>
             _selectFirstSlotOnRefresh = selectFirst;
@@ -73,12 +64,11 @@ namespace CreativeAI.UI.InventoryUI
             WarnMissingReferencesOnce();
 
             if (_tabGroup != null)
-                _tabGroup.OnTabSelected += OnTabSelected;
+                _tabGroup.OnTabDefinitionSelected += OnTabSelected;
         }
 
         private void Start()
         {
-            BuildActiveCategories();
             _started = true;
             RefreshCurrentTab(ScrollRefreshMode.ScrollToTop);
         }
@@ -105,29 +95,7 @@ namespace CreativeAI.UI.InventoryUI
             RestoreNavigation();
 
             if (_tabGroup != null)
-                _tabGroup.OnTabSelected -= OnTabSelected;
-        }
-
-        public void SetFixedCategory(ItemCategory category, bool hideTabGroup = true)
-        {
-            _useFixedCategory = true;
-            _fixedCategory = category;
-
-            if (_tabGroup != null && hideTabGroup)
-                _tabGroup.gameObject.SetActive(false);
-
-            if (_started)
-                RefreshCurrentTab(ScrollRefreshMode.ScrollToTop);
-        }
-
-        public void ClearFixedCategory()
-        {
-            _useFixedCategory = false;
-            if (_tabGroup != null)
-                _tabGroup.gameObject.SetActive(true);
-
-            if (_started)
-                RefreshCurrentTab(ScrollRefreshMode.ScrollToTop);
+                _tabGroup.OnTabDefinitionSelected -= OnTabSelected;
         }
 
         public void RefreshCurrentTab() => RefreshCurrentTab(ScrollRefreshMode.KeepPosition);
@@ -140,21 +108,24 @@ namespace CreativeAI.UI.InventoryUI
 
         private void RefreshCurrentTab(ScrollRefreshMode scrollMode)
         {
-            if (_useFixedCategory)
-            {
-                RequestItems(_fixedCategory, scrollMode);
+            int tabIndex = _tabGroup != null ? Mathf.Max(0, _tabGroup.CurrentIndex) : 0;
+            if (
+                TryRequestDisplayRefresh(
+                    _tabGroup?.GetDefinitionForButtonIndex(tabIndex),
+                    tabIndex,
+                    scrollMode
+                )
+            )
                 return;
-            }
 
-            RefreshTab(_tabGroup != null ? _tabGroup.CurrentIndex : 0, scrollMode);
+            WarnMissingDisplayProviderOnce();
+            SetItems(null, scrollMode);
         }
 
         public void ResetToFirstTab()
         {
-            if (_useFixedCategory)
-                RefreshCurrentTab(ScrollRefreshMode.ScrollToTop);
-            else if (_tabGroup != null)
-                _tabGroup?.ResetToFirstTab();
+            if (_tabGroup != null)
+                _tabGroup.ResetToFirstTab();
             else
                 RefreshCurrentTab(ScrollRefreshMode.ScrollToTop);
         }
@@ -176,33 +147,29 @@ namespace CreativeAI.UI.InventoryUI
             _resetRoutine = null;
         }
 
-        private void BuildActiveCategories()
+        private void OnTabSelected(int index, TabDefinition definition)
         {
-            _activeCategories.Clear();
-            for (int i = 0; i < _categories.Count; i++)
+            if (!TryRequestDisplayRefresh(definition, index, ScrollRefreshMode.ScrollToTop))
             {
-                if (_tabGroup == null || _tabGroup.IsEnabled(i))
-                    _activeCategories.Add(_categories[i]);
+                WarnMissingDisplayProviderOnce();
+                SetItems(null, ScrollRefreshMode.ScrollToTop);
             }
         }
 
-        private void OnTabSelected(int index) => RefreshTab(index, ScrollRefreshMode.ScrollToTop);
-
-        private void RefreshTab(int index, ScrollRefreshMode scrollMode)
+        private bool TryRequestDisplayRefresh(
+            TabDefinition definition,
+            int tabIndex,
+            ScrollRefreshMode scrollMode
+        )
         {
-            if (_useFixedCategory)
-            {
-                RequestItems(_fixedCategory, scrollMode);
-                return;
-            }
+            if (DisplayRefreshRequested == null)
+                return false;
 
-            if (index < 0 || index >= _activeCategories.Count)
-                return;
-
-            RequestItems(_activeCategories[index], scrollMode);
+            DisplayRefreshRequested.Invoke(definition, tabIndex, scrollMode);
+            return true;
         }
 
-        private void RequestItems(ItemCategory category, ScrollRefreshMode scrollMode)
+        public void RequestItems(ItemCategory category, ScrollRefreshMode scrollMode)
         {
             if (ItemsRequested != null)
             {
@@ -221,6 +188,18 @@ namespace CreativeAI.UI.InventoryUI
             }
 
             SetItems(null, scrollMode);
+        }
+
+        private void WarnMissingDisplayProviderOnce()
+        {
+            if (_hasWarnedMissingDisplayProvider)
+                return;
+
+            _hasWarnedMissingDisplayProvider = true;
+            Debug.LogWarning(
+                $"{nameof(Inventory)} '{name}' has no display provider. Connect a controller that handles {nameof(DisplayRefreshRequested)}.",
+                this
+            );
         }
 
         private List<ItemStack> FilterVisibleItems(List<ItemStack> items)
@@ -245,22 +224,8 @@ namespace CreativeAI.UI.InventoryUI
 
         private void WarnMissingReferencesOnce()
         {
-            if (_tabGroup == null)
-                WarnMissingTabGroupOnce();
             if (_detailPanel == null)
                 WarnMissingDetailPanelOnce();
-        }
-
-        private void WarnMissingTabGroupOnce()
-        {
-            if (_hasWarnedMissingTabGroup)
-                return;
-
-            _hasWarnedMissingTabGroup = true;
-            Debug.LogWarning(
-                $"{nameof(Inventory)} '{name}' の必須参照 '{nameof(_tabGroup)}' が未設定です。タブイベントの購読をスキップし、タブなしの既存動作を使用します。Inspectorで設定してください。",
-                this
-            );
         }
 
         private void WarnMissingDetailPanelOnce()
