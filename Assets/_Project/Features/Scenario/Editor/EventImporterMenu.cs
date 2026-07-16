@@ -93,18 +93,13 @@ namespace CreativeAI.Scenario.Editor
         }
 
         /// <summary>
-        /// EnemyDB(enemyKey 一覧)と ItemData(key)から有効キー集合を作る。
-        /// アセットが1つも無いカテゴリは null(=未検証・警告どまり)にし、作成前に全 battle/giveItem を
-        /// 弾かないようにする。1つでもあれば、その集合で存在検証(未一致はエラー)。
+        /// ItemData(key)から有効キー集合を作る(giveItem の itemKey 照合用)。
+        /// アセットが1つも無ければ null(=未検証・警告どまり)にし、作成前に全 giveItem を弾かない。
+        /// 1つでもあれば、その集合で存在検証(未一致はエラー)。
+        /// 敵は events.json に書かず EventTrigger に配線するため、ここでは照合しない。
         /// </summary>
         private static EventImporter.ImportCatalog BuildCatalog()
         {
-            var enemyDb = Resources.Load<EnemyDB>("EnemyDB");
-            var enemyKeys =
-                enemyDb != null
-                    ? enemyDb.Keys.ToHashSet(StringComparer.Ordinal)
-                    : new HashSet<string>(StringComparer.Ordinal);
-
             var itemKeys = AssetDatabase
                 .FindAssets("t:ItemData", new[] { ItemDataDir })
                 .Select(AssetDatabase.GUIDToAssetPath)
@@ -113,10 +108,7 @@ namespace CreativeAI.Scenario.Editor
                 .Select(i => i.key)
                 .ToHashSet(StringComparer.Ordinal);
 
-            return new EventImporter.ImportCatalog(
-                enemyKeys.Count > 0 ? enemyKeys : null,
-                itemKeys.Count > 0 ? itemKeys : null
-            );
+            return new EventImporter.ImportCatalog(itemKeys.Count > 0 ? itemKeys : null);
         }
 
         /// <summary>Assets 相対フォルダを親から順に作成する。</summary>

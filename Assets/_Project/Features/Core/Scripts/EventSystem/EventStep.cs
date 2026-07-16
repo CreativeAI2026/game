@@ -63,9 +63,6 @@ namespace CreativeAI.Core.EventSystem
         [SerializeField]
         private string _itemKey; // giveItem
 
-        [SerializeField]
-        private string _enemyKey; // battle
-
         public EventStep() { }
 
         public static EventStep Line(string speaker, string portrait, string text) =>
@@ -88,8 +85,11 @@ namespace CreativeAI.Core.EventSystem
         public static EventStep GiveItem(string itemKey) =>
             new() { _kind = StepKind.GiveItem, _itemKey = itemKey };
 
-        public static EventStep Battle(string enemyKey) =>
-            new() { _kind = StepKind.Battle, _enemyKey = enemyKey };
+        /// <summary>
+        /// 戦闘ステップ。敵は JSON に書かず、シーンの EventTrigger の Enemy スロットに Prefab を配線する
+        /// (documents/CharactersAndEvents.md「battle は { "kind": "battle" } のみ」, EventImplementation.md)。
+        /// </summary>
+        public static EventStep Battle() => new() { _kind = StepKind.Battle };
 
         public StepKind Kind => _kind;
         public string Speaker => _speaker;
@@ -98,6 +98,5 @@ namespace CreativeAI.Core.EventSystem
         public string FlagKey => _flagKey;
         public IReadOnlyList<ChoiceOption> Options => _options;
         public string ItemKey => _itemKey;
-        public string EnemyKey => _enemyKey;
     }
 }

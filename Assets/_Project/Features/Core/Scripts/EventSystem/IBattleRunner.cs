@@ -1,16 +1,39 @@
 using System.Collections;
+using UnityEngine;
 
 namespace CreativeAI.Core.EventSystem
 {
     /// <summary>
+    /// 戦闘の入力一式。敵は events.json ではなくシーンの EventTrigger の Enemy スロットに
+    /// 配線した Prefab を使い、トリガー位置(または子の SpawnPoint)へ出す
+    /// (documents/EventImplementation.md「敵はトリガーに配線」)。
+    /// </summary>
+    public readonly struct BattleSetup
+    {
+        public readonly GameObject EnemyPrefab;
+        public readonly Vector3 Position;
+        public readonly Quaternion Rotation;
+
+        public BattleSetup(GameObject enemyPrefab, Vector3 position, Quaternion rotation)
+        {
+            EnemyPrefab = enemyPrefab;
+            Position = position;
+            Rotation = rotation;
+        }
+
+        /// <summary>敵 Prefab が配線されているか。false ならこの戦闘は警告してスキップする。</summary>
+        public bool HasEnemy => EnemyPrefab != null;
+    }
+
+    /// <summary>
     /// battle ステップの seam。実体は戦闘班が実装し、EventPlayer に注入する。
-    /// 戦闘を実行し、勝利して決着するまで待つ(コルーチン)。敗北時は直近セーブから
-    /// 再開(シーン再読込)されるため、このコルーチンは完了しない想定
+    /// 配線された敵 Prefab をトリガー位置に出し、勝利して決着するまで待つ(コルーチン)。敗北時は
+    /// 直近セーブから再開(シーン再読込)されるため、このコルーチンは完了しない想定
     /// (戦闘は勝敗を記録しない・documents/Specification.md §4, §6)。
     /// </summary>
     public interface IBattleRunner
     {
-        IEnumerator Run(string enemyKey);
+        IEnumerator Run(BattleSetup setup);
     }
 
     /// <summary>
