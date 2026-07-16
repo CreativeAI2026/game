@@ -195,11 +195,7 @@ namespace CreativeAI.Gameplay
             var slots = _storage.BattleFoodSlots;
             if (slot < 0 || slot >= slots.Length)
                 return false;
-            if (
-                stack == null
-                || stack.Data is not FoodData
-                || !_storage.Items.Contains(stack)
-            )
+            if (stack == null || stack.Data is not FoodData || !_storage.Items.Contains(stack))
                 return false;
 
             for (int i = 0; i < slots.Length; i++)
