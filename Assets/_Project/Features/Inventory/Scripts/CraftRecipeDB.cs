@@ -14,24 +14,20 @@ namespace CreativeAI.Gameplay
         [SerializeField]
         private List<CraftRecipeData> _recipes = new();
 
-        [NonSerialized]
-        private readonly HashSet<CraftRecipeData> _runtimeRevealedRecipes = new();
-
         public IReadOnlyList<CraftRecipeData> Recipes => _recipes;
+
+        /// <summary>非表示だったレシピが新規解禁されたときに発火(UIが一覧を組み直す)。</summary>
         public event Action<CraftRecipeData> RecipeRevealed;
 
-        [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.BeforeSceneLoad)]
-        private static void ResetAllRuntimeRevealedRecipesOnPlayStart()
-        {
-            foreach (var database in Resources.LoadAll<CraftRecipeDB>("Crafting"))
-                database.ResetRuntimeRevealedRecipes();
-        }
+        // 解禁(発見)状態は保持しない。セッション常駐でセーブ対象の RecipeBookManager が唯一の持ち主。
+        // カタログ(この SO)は読み取り専用に徹し、表示判定はそこへ委譲する
+        // (documents/CraftingArchitecture.md「データ形式」/ Specification.md §6)。
+        private static bool IsRecipeRevealed(CraftRecipeData recipe) =>
+            RecipeBookManager.Instance?.IsRevealed(recipe) ?? false;
 
         public IEnumerable<CraftRecipeData> VisibleRecipes =>
             _recipes.Where(recipe =>
-                recipe != null
-                && recipe.resultItem != null
-                && (recipe.showInRecipeCraft || _runtimeRevealedRecipes.Contains(recipe))
+                recipe != null && recipe.resultItem != null && IsVisible(recipe)
             );
 
         public CraftRecipeData FindRecipe(ItemData materialA, ItemData materialB)
@@ -47,24 +43,19 @@ namespace CreativeAI.Gameplay
             if (recipe == null)
                 return false;
 
-            bool wasHidden = !recipe.showInRecipeCraft && !_runtimeRevealedRecipes.Contains(recipe);
-            _runtimeRevealedRecipes.Add(recipe);
-            if (wasHidden)
+            bool wasHidden = !recipe.showInRecipeCraft && !IsRecipeRevealed(recipe);
+            bool newlyRevealed = RecipeBookManager.Instance?.Reveal(recipe) ?? false;
+            if (wasHidden && newlyRevealed)
                 RecipeRevealed?.Invoke(recipe);
 
-            return wasHidden;
+            return wasHidden && newlyRevealed;
         }
 
         public bool IsVisible(CraftRecipeData recipe)
         {
             return recipe != null
                 && recipe.resultItem != null
-                && (recipe.showInRecipeCraft || _runtimeRevealedRecipes.Contains(recipe));
-        }
-
-        public void ResetRuntimeRevealedRecipes()
-        {
-            _runtimeRevealedRecipes.Clear();
+                && (recipe.showInRecipeCraft || IsRecipeRevealed(recipe));
         }
     }
 }

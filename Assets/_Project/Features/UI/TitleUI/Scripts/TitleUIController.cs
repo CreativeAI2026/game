@@ -101,6 +101,7 @@ namespace CreativeAI.UI.TitleUI
 
             SessionBootstrap.EnsureSession(); // ① マネージャ(ProgressManager / GameModeManager / EventPlayer)
             InventoryManager.EnsureResident(); // ② 所持品(Core は Gameplay を参照できないためここで生成)
+            RecipeBookManager.EnsureResident(); // ②' レシピ解禁状態(セッション常駐・セーブ対象。Inventory と同じ層でここで生成)
             UIRoot.EnsureResident(_uiRootPrefab); // ③ UI レイヤー(Core→UI 循環回避のため Inventory と同様ここで生成。GameModeManager 生成後=HudIconBar が購読できる)
             BattleRunnerService.Current ??= new BattleRunner(); // ④ 戦闘実行(状態なしの plain class。battle ステップの seam に登録)
             if (_gameStarter != null)
