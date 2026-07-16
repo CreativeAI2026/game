@@ -57,6 +57,10 @@ namespace CreativeAI.Gameplay
                 }
             }
 
+            var book = RecipeBookManager.Instance;
+            if (book != null)
+                data.revealedRecipes = new List<int>(book.CaptureRevealed());
+
             CapturePlayer(data);
 
             File.WriteAllText(FilePath, JsonUtility.ToJson(data, true));
@@ -80,6 +84,11 @@ namespace CreativeAI.Gameplay
             // 現在HPの実体は担当班の実装(ISaveableActor)から取る。窓口が無ければ座標だけ保存。
             var actor = player.GetComponentInChildren<ISaveableActor>();
             data.currentHp = actor != null ? actor.CaptureHp() : 0f;
+
+            // 選択武器も保存(spec §6)。窓口(WeaponManager)が無ければ既定 0。
+            var weapon = player.GetComponentInChildren<IWeaponSaveState>();
+            data.selectedWeaponIndex = weapon != null ? weapon.CaptureSelectedWeaponIndex() : 0;
+
             data.hasPlayerState = true;
         }
 
@@ -119,6 +128,8 @@ namespace CreativeAI.Gameplay
                     RestoreItems(inv, db, data.items);
             }
 
+            RecipeBookManager.Instance?.RestoreRevealed(data.revealedRecipes);
+
             Debug.Log($"[SaveService] 復元しました: {FilePath}");
             return data;
         }
@@ -140,6 +151,10 @@ namespace CreativeAI.Gameplay
                 new Vector3(data.posX, data.posY, data.posZ),
                 Quaternion.Euler(0f, data.rotationY, 0f)
             );
+
+            // 武器を先に復元して最終ステータス(最大HP等)を確定させてから HP をクランプする。
+            var weapon = player.GetComponentInChildren<IWeaponSaveState>();
+            weapon?.RestoreSelectedWeaponIndex(data.selectedWeaponIndex);
 
             var actor = player.GetComponentInChildren<ISaveableActor>();
             actor?.RestoreHp(data.currentHp);

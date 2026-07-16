@@ -184,20 +184,41 @@ namespace CreativeAI.Gameplay
             return RecipeCraftingService.TryCraft(recipe, materialA, materialB);
         }
 
+        /// <summary>装備品の同時装備上限(仕様 §2.1「装備品 最大3つ」)。</summary>
+        public const int MaxEquippedEquipment = 3;
+
         public void SetEquipped(ItemStack stack, bool equipped)
         {
             if (stack == null || stack.IsEquipped == equipped)
                 return;
+            // 装備品は最大3つまで。上限に達していたら装着を拒否する(武器は在庫外なので数えない)。
+            if (
+                equipped
+                && stack.Data is EquipmentData
+                && CountEquippedEquipment() >= MaxEquippedEquipment
+            )
+            {
+                Debug.LogWarning(
+                    $"[InventoryManager] 装備品は最大 {MaxEquippedEquipment} つまでです。装着をスキップしました。"
+                );
+                return;
+            }
             stack.IsEquipped = equipped;
             EquipmentChanged?.Invoke(); // 最終ステータス再計算のトリガー
         }
+
+        /// <summary>現在装備中の装備品(EquipmentData)の数。武器は在庫外なので数えない。</summary>
+        private int CountEquippedEquipment() =>
+            InventoryService
+                .GetAllItems()
+                .Count(s => s != null && s.IsEquipped && s.Data is EquipmentData);
 
         /// <summary>
         /// 装備中(IsEquipped)の装備品の補正合計。素の値に足すと最終ステータス。
         /// 武器は在庫外(仕様 L30・3本固定切替)なのでここでは扱わない。選択中武器の補正は
         /// WeaponManager.GetSelectedBonus() から PlayerStatus が別ルートで合算する。
-        /// TODO(A-5): ロール済み個体(stack.RolledStats)の合算は、調合→インベントリ橋渡しと
-        /// stat キー語彙の確定後に対応する。現状は固定 SO(EquipmentData)のみ。
+        /// 調合で作られた個体(stack.RolledStats あり)は端末でロールした個体差を持つので、そのロール値を
+        /// 使う(CraftStatBridge 経由)。素材の固定 SO(RolledStats 無し)は EquipmentData の値を使う。
         /// </summary>
         public EquipmentBonus GetEquippedBonus()
         {
@@ -207,8 +228,17 @@ namespace CreativeAI.Gameplay
                 if (stack == null || !stack.IsEquipped)
                     continue;
                 // 武器(WeaponData)は在庫外・WeaponManager 管理なので意図的に加算しない。
-                if (stack.Data is EquipmentData e)
+                if (stack.Data is not EquipmentData e)
+                    continue;
+
+                if (stack.RolledStats != null && stack.RolledStats.Count > 0)
                 {
+                    // 調合でロールされた個体(個体差あり)。
+                    CraftStatBridge.Accumulate(ref b, stack.RolledStats);
+                }
+                else
+                {
+                    // 固定 SO の装備品(素材など未ロール)。
                     b.attack += e.attack;
                     b.defense += e.defense;
                     b.maxHp += e.maxHP;
@@ -259,7 +289,12 @@ namespace CreativeAI.Gameplay
             if (ItemDB.Instance == null)
                 return;
 
-            var testItems = ItemDB.Instance.Items.Where(HasZeroSecondDigit).ToList();
+            // 武器はインベントリ管理の対象外(仕様 §2)。ItemDB はフォルダ一括同期で武器も拾うため、ここで除外する。
+            var testItems = ItemDB
+                .Instance.Items.Where(item =>
+                    item != null && item.category != ItemCategory.Weapon && HasZeroSecondDigit(item)
+                )
+                .ToList();
             foreach (var item in testItems)
             {
                 int count =
@@ -272,8 +307,8 @@ namespace CreativeAI.Gameplay
 
         private void EquipInitialTestItems()
         {
+            // 食材は装備の概念を持たない(仕様 §2.1)。装備扱いにするのは装備品のみ。
             EquipInitialTestItems(ItemCategory.Equipment);
-            EquipInitialTestItems(ItemCategory.Food);
         }
 
         private void EquipInitialTestItems(ItemCategory category)

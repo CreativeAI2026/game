@@ -8,7 +8,7 @@ namespace CreativeAI.Gameplay
     /// 武器切り替え時にAnimator.Rebind()で状態を完全リセットすることで、
     /// 前の武器のアニメーショントリガーやステートが残留するのを防ぐ。
     /// </summary>
-    public class WeaponManager : MonoBehaviour
+    public class WeaponManager : MonoBehaviour, IWeaponSaveState
     {
         [Header("武器リスト(0:剣, 1:弓 など)")]
         [Tooltip("子オブジェクトにある各武器のルートオブジェクトを登録します")]
@@ -30,6 +30,19 @@ namespace CreativeAI.Gameplay
         public event Action<bool> OnWeaponSwitched; // true: prev (left rotation), false: next (right rotation)
 
         public int CurrentWeaponIndex => _currentWeaponIndex;
+
+        // --- セーブ復元(IWeaponSaveState): 選択武器を保存/復元する(spec §6) ---
+
+        public int CaptureSelectedWeaponIndex() => _currentWeaponIndex;
+
+        public void RestoreSelectedWeaponIndex(int index)
+        {
+            if (_weapons == null || index < 0 || index >= _weapons.Length)
+                return;
+            EquipWeapon(index);
+            // PlayerStatus が購読して武器補正を再計算する(bool は HUD 回転向きの区別用。復元は次向き扱い)。
+            OnWeaponSwitched?.Invoke(false);
+        }
 
         /// <summary>
         /// 選択中の武器の補正を装備品と同じ <see cref="EquipmentBonus"/> 形式で返す。

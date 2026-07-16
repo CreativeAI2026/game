@@ -15,6 +15,12 @@ namespace CreativeAI.Gameplay
         public List<FlagEntry> flags = new();
         public List<ItemEntry> items = new();
 
+        /// <summary>
+        /// 解禁(発見)済みレシピのキー(= 結果アイテムの id)。実体は RecipeBookManager(セッション常駐)。
+        /// 旧セーブに無ければ空=解禁なしで復元される(showInRecipeCraft のレシピは常に表示)。
+        /// </summary>
+        public List<int> revealedRecipes = new();
+
         // プレイヤー状態(spec §6 図: 現在HP・座標を保存 → 死亡時は直近セーブから再開)。
         // hasPlayerState=false の場合(リグ未実装・旧セーブ)は復元をスキップし、既定スポーン/満タンで開始する。
         public bool hasPlayerState;
@@ -30,6 +36,12 @@ namespace CreativeAI.Gameplay
 
         /// <summary>保存時点の現在HP。実体は担当班の PlayerStatus(ISaveableActor)から取得する。</summary>
         public float currentHp;
+
+        /// <summary>
+        /// 選択中の武器 index(spec §6: プレイヤーリグは選択武器も保存)。実体は WeaponManager(IWeaponSaveState)。
+        /// 旧セーブは既定 0(先頭=剣)で復元される。
+        /// </summary>
+        public int selectedWeaponIndex;
     }
 
     [Serializable]

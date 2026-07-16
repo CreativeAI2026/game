@@ -16,6 +16,16 @@ namespace CreativeAI.Core.EventSystem
         [SerializeField]
         private string _playerTag = "Player";
 
+        [Tooltip(
+            "battle ステップを含むイベント用。トリガー位置に出す敵 Prefab(Project の Prefab)。"
+        )]
+        [SerializeField]
+        private GameObject _enemy;
+
+        [Tooltip("敵の出現位置(任意)。未設定ならこのトリガーの位置・向きに出す。")]
+        [SerializeField]
+        private Transform _spawnPoint;
+
         // IEventPlayer を実装する MonoBehaviour を割り当てる(任意)。EventPlayer は常駐化したので
         // 未割当なら EventPlayerService.Current にフォールバックする(per-field 配線は不要)。
         [SerializeField]
@@ -58,7 +68,8 @@ namespace CreativeAI.Core.EventSystem
                 return;
             }
 
-            player.Play(_event);
+            var spawn = _spawnPoint != null ? _spawnPoint : transform;
+            player.Play(_event, new BattleSetup(_enemy, spawn.position, spawn.rotation));
         }
     }
 }

@@ -88,18 +88,19 @@ namespace CreativeAI.Core.EventSystem
             _gameMode = gameMode;
         }
 
-        public void Play(EventDefinition ev)
+        public void Play(EventDefinition ev, BattleSetup battle = default)
         {
             if (ev == null)
                 return;
-            StartCoroutine(PlayRoutine(ev));
+            StartCoroutine(PlayRoutine(ev, battle));
         }
 
         /// <summary>
         /// 会話ステップを順に再生し、終了時に AdvanceTo する本体。
+        /// battle ステップは <paramref name="battle"/>(トリガーが配線した敵)を使う。
         /// テストは fake を注入し、この IEnumerator を駆動して検証する。
         /// </summary>
-        public IEnumerator PlayRoutine(EventDefinition ev)
+        public IEnumerator PlayRoutine(EventDefinition ev, BattleSetup battle = default)
         {
             if (ev == null)
                 yield break;
@@ -109,46 +110,61 @@ namespace CreativeAI.Core.EventSystem
                     $"[EventPlayer] IDialogueView 未設定 (event={ev.Id}). 会話は表示されません。"
                 );
 
-            foreach (var step in ev.Steps)
+            // 会話イベント中は操作不能。右上ナビ(セーブ/インベ入口)を隠すため再生中フラグを立てる
+            // (documents/Specification.md §2.2, §5)。中断されても finally で必ず戻す。
+            EventPlaybackService.SetPlaying(true);
+            try
             {
-                if (step == null)
-                    continue;
-
-                switch (step.Kind)
+                foreach (var step in ev.Steps)
                 {
-                    case StepKind.Line:
-                        if (View != null)
-                            yield return View.ShowLine(step.Speaker, step.Portrait, step.Text);
-                        break;
+                    if (step == null)
+                        continue;
 
-                    case StepKind.Choice:
-                        string picked = null;
-                        if (View != null)
-                            yield return View.ShowChoice(step.Options, v => picked = v);
-                        if (!string.IsNullOrEmpty(picked))
-                            Progress?.SetFlag(step.FlagKey, picked);
-                        break;
+                    switch (step.Kind)
+                    {
+                        case StepKind.Line:
+                            if (View != null)
+                                yield return View.ShowLine(step.Speaker, step.Portrait, step.Text);
+                            break;
 
-                    case StepKind.GiveItem:
-                        Items?.Give(step.ItemKey);
-                        break;
+                        case StepKind.Choice:
+                            string picked = null;
+                            if (View != null)
+                                yield return View.ShowChoice(step.Options, v => picked = v);
+                            if (!string.IsNullOrEmpty(picked))
+                                Progress?.SetFlag(step.FlagKey, picked);
+                            break;
 
-                    case StepKind.Battle:
-                        var mode = GameModes;
-                        mode?.EnterBattle();
-                        if (BattleRunner != null)
-                            yield return BattleRunner.Run(step.EnemyKey);
-                        else
-                            Debug.LogWarning(
-                                $"[EventPlayer] IBattleRunner 未設定 (enemy={step.EnemyKey}). 戦闘をスキップ。"
-                            );
-                        mode?.ExitBattle();
-                        break;
+                        case StepKind.GiveItem:
+                            Items?.Give(step.ItemKey);
+                            break;
+
+                        case StepKind.Battle:
+                            var mode = GameModes;
+                            mode?.EnterBattle();
+                            if (BattleRunner == null)
+                                Debug.LogWarning(
+                                    $"[EventPlayer] IBattleRunner 未設定 (event={ev.Id}). 戦闘をスキップ。"
+                                );
+                            else if (!battle.HasEnemy)
+                                Debug.LogWarning(
+                                    $"[EventPlayer] battle ステップに敵 Prefab が未配線 (event={ev.Id})."
+                                        + " EventTrigger の Enemy スロットにアサインしてください。戦闘をスキップ。"
+                                );
+                            else
+                                yield return BattleRunner.Run(battle);
+                            mode?.ExitBattle();
+                            break;
+                    }
                 }
-            }
 
-            if (ev.HasNextProgress)
-                Progress?.AdvanceTo(ev.NextProgress);
+                if (ev.HasNextProgress)
+                    Progress?.AdvanceTo(ev.NextProgress);
+            }
+            finally
+            {
+                EventPlaybackService.SetPlaying(false);
+            }
         }
     }
 }

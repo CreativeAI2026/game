@@ -33,7 +33,11 @@ namespace CreativeAI.Gameplay
 
             var playerStatus = ResolvePlayerStatus();
             if (playerStatus != null)
-                playerStatus.Heal(food.healAmount);
+            {
+                // 食材はHP即時回復のみ。回復量は最大HPに対する固定割合(合成前20%/合成後50%)。
+                float heal = playerStatus.CurrentMaxHp * food.HealFraction;
+                playerStatus.Heal(heal);
+            }
 
             return _inventoryService.ConsumeFromStack(stack, 1);
         }

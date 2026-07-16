@@ -1,4 +1,5 @@
 using CreativeAI.Core;
+using CreativeAI.Core.EventSystem;
 using UnityEngine;
 using UnityEngine.UI;
 
@@ -52,20 +53,17 @@ namespace CreativeAI.UI
             // 常駐生成順ではマネージャが先に居るので Instance を取れる。無ければ Field 既定で表示。
             _gameMode = GameModeManager.Instance;
             if (_gameMode != null)
-            {
                 _gameMode.OnModeChanged += OnModeChanged;
-                Apply(_gameMode.CurrentMode);
-            }
-            else
-            {
-                Apply(GameMode.Field);
-            }
+            // 会話イベント中も隠す(セーブ/インベを開けなくする)。
+            EventPlaybackService.PlayingChanged += OnPlaybackChanged;
+            ApplyCurrent();
         }
 
         private void OnDisable()
         {
             if (_gameMode != null)
                 _gameMode.OnModeChanged -= OnModeChanged;
+            EventPlaybackService.PlayingChanged -= OnPlaybackChanged;
         }
 
         private void Bind(Button button, UiRouter.UiId id)
@@ -75,16 +73,24 @@ namespace CreativeAI.UI
             button.onClick.AddListener(() => _router.Toggle(id));
         }
 
-        private void OnModeChanged(GameMode mode) => Apply(mode);
+        private void OnModeChanged(GameMode mode) => ApplyCurrent();
+
+        private void OnPlaybackChanged(bool playing) => ApplyCurrent();
+
+        private void ApplyCurrent()
+        {
+            var mode = _gameMode != null ? _gameMode.CurrentMode : GameMode.Field;
+            Apply(mode);
+        }
 
         /// <summary>
-        /// Field でのみ表示。Battle では非表示にしてセーブ等を開けなくする。
-        /// GameObject ごと SetActive すると自分が止まって購読を失うため、Canvas / Raycaster を
-        /// 無効化するだけにして自身は生かし続ける。
+        /// Field かつ会話イベント中でないときだけ表示。Battle・会話中は非表示にしてセーブ等を開けなくする
+        /// (documents/Specification.md §2.2, §5)。GameObject ごと SetActive すると自分が止まって購読を失うため、
+        /// Canvas / Raycaster を無効化するだけにして自身は生かし続ける。
         /// </summary>
         private void Apply(GameMode mode)
         {
-            bool show = mode == GameMode.Field;
+            bool show = mode == GameMode.Field && !EventPlaybackService.IsPlaying;
             if (_canvas != null)
                 _canvas.enabled = show;
             if (_raycaster != null)
