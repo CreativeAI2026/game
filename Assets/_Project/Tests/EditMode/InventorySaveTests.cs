@@ -34,11 +34,10 @@ namespace CreativeAI.Tests.EditMode
             return d;
         }
 
-        private static FoodData MakeFood(int id, int healAmount = 10)
+        private static FoodData MakeFood(int id)
         {
             var d = ScriptableObject.CreateInstance<FoodData>(); // OnEnable が category=Food を設定
             d.id = id;
-            d.healAmount = healAmount;
             return d;
         }
 
