@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using CreativeAI.UI.Common;
 using TMPro;
 using UnityEngine;
@@ -65,20 +66,25 @@ namespace CreativeAI.UI.CraftingUI
         private int _max = 1;
         private int _quantity = 1;
         private bool _warnedMissingRequiredReferences;
-        private bool _warnedMissingCloseOnSelfClick;
-        private bool _warnedMissingDialogCanvasGroup;
 
         public bool IsOpen => _dialogRoot != null && _dialogRoot.activeInHierarchy;
 
         private void Awake()
         {
-            ResolveReferences();
+            InitializeDerivedReferences();
+            if (!HasRequiredReferences())
+                return;
+
             Bind();
             BindOutsideClick();
         }
 
         private void OnEnable()
         {
+            InitializeDerivedReferences();
+            if (!HasRequiredReferences())
+                return;
+
             BindOutsideClick();
         }
 
@@ -101,16 +107,16 @@ namespace CreativeAI.UI.CraftingUI
             Action<int> onConfirmed
         )
         {
-            ResolveReferences();
+            InitializeDerivedReferences();
+            if (!HasRequiredReferences())
+                return;
+
             Bind();
             BindOutsideClick();
 
             _min = Mathf.Max(1, min);
             _max = Mathf.Max(_min, max);
             _onConfirmed = onConfirmed;
-
-            if (!HasRequiredReferences())
-                return;
 
             RefreshItem(icon, itemName);
             SetQuantity(initial);
@@ -127,9 +133,8 @@ namespace CreativeAI.UI.CraftingUI
 
         public void Hide()
         {
-            ResolveReferences();
-
-            if (_dialogRoot == null)
+            InitializeDerivedReferences();
+            if (!HasRequiredReferences())
                 return;
 
             CraftQuantityDialogAnimation.PlayClose(
@@ -144,7 +149,10 @@ namespace CreativeAI.UI.CraftingUI
 
         public void HideImmediate()
         {
-            ResolveReferences();
+            InitializeDerivedReferences();
+            if (!HasRequiredReferences())
+                return;
+
             CraftQuantityDialogAnimation.Kill(_dialogRect, _dialogCanvasGroup);
             CraftQuantityDialogUtility.HideImmediately(_panelRoot, _dialogRoot);
         }
@@ -198,55 +206,73 @@ namespace CreativeAI.UI.CraftingUI
             SetQuantity(_max, true);
         }
 
-        private void ResolveReferences()
+        private void InitializeDerivedReferences()
         {
-            _panelRoot ??= gameObject;
-            _dialogRoot ??= FindDialogRoot();
-
-            var dialogTransform = _dialogRoot != null ? _dialogRoot.transform : transform;
-            _itemImage ??=
-                FindComponentIn<Image>(dialogTransform, "Icon")
-                ?? FindComponentIn<Image>(dialogTransform, "ItemImage");
-            _itemName ??=
-                FindComponentIn<TMP_Text>(dialogTransform, "Name")
-                ?? FindComponentIn<TMP_Text>(dialogTransform, "ItemName");
-            _countLabel ??= FindComponentIn<TMP_Text>(dialogTransform, "Counts");
-            _countLabel ??= FindComponentIn<TMP_Text>(dialogTransform, "CountLabel");
-            _countLabel ??= FindComponentIn<TMP_Text>(dialogTransform, "QuantityLabel");
-            _inputField ??= FindComponentIn<TMP_InputField>(dialogTransform, "InputField");
-            if (_inputField != null)
-            {
-                if (_inputText != null)
-                    _inputField.textComponent = _inputText;
-                else
-                    _inputText = _inputField.textComponent;
-            }
-
-            _minButton ??= FindButton(dialogTransform, "MIN");
-            _minusButton ??= FindButton(dialogTransform, "-");
-            _plusButton ??= FindButton(dialogTransform, "+");
-            _maxButton ??= FindButton(dialogTransform, "MAX");
-            _craftButton ??= FindButton(dialogTransform, "CraftButton");
-            if (_craftButton != null)
-                _craftButtonText ??= _craftButton.GetComponentInChildren<TMP_Text>(true);
-
-            if (_dialogRoot != null)
-            {
-                _dialogRect ??= _dialogRoot.GetComponent<RectTransform>();
-                if (_dialogCanvasGroup == null)
-                    WarnMissingDialogCanvasGroupOnce();
-            }
-
-            if (_outsideClickCatcher == null && _panelRoot != null)
-                WarnMissingCloseOnSelfClickOnce();
+            _dialogRect = _dialogRoot != null ? _dialogRoot.transform as RectTransform : null;
+            if (_inputField != null && _inputText != null)
+                _inputField.textComponent = _inputText;
         }
 
 #if UNITY_EDITOR
-        [ContextMenu("Auto Assign Dialog CanvasGroup")]
-        private void AutoAssignDialogCanvasGroup()
+        [ContextMenu("Auto Assign References")]
+        private void AutoAssignReferences()
         {
+            _panelRoot ??= FindPanelRootForEditor();
+            _dialogRoot ??= FindDialogRootForEditor();
+
+            var dialogTransform = _dialogRoot != null ? _dialogRoot.transform : transform;
+            _itemImage ??=
+                FindComponentInForEditor<Image>(dialogTransform, "Icon")
+                ?? FindComponentInForEditor<Image>(dialogTransform, "ItemImage");
+            _itemName ??=
+                FindComponentInForEditor<TMP_Text>(dialogTransform, "Name")
+                ?? FindComponentInForEditor<TMP_Text>(dialogTransform, "ItemName");
+            _countLabel ??= FindComponentInForEditor<TMP_Text>(dialogTransform, "Counts");
+            _countLabel ??= FindComponentInForEditor<TMP_Text>(dialogTransform, "CountLabel");
+            _countLabel ??= FindComponentInForEditor<TMP_Text>(dialogTransform, "QuantityLabel");
+            _inputField ??= FindComponentInForEditor<TMP_InputField>(dialogTransform, "InputField");
+            _inputText ??= _inputField != null ? _inputField.textComponent : null;
+            _minButton ??= FindButtonForEditor(dialogTransform, "MIN");
+            _minusButton ??= FindButtonForEditor(dialogTransform, "-");
+            _plusButton ??= FindButtonForEditor(dialogTransform, "+");
+            _maxButton ??= FindButtonForEditor(dialogTransform, "MAX");
+            _craftButton ??= FindButtonForEditor(dialogTransform, "CraftButton");
+            _craftButtonText ??= _craftButton?.GetComponentInChildren<TMP_Text>(true);
             if (_dialogRoot != null)
                 _dialogCanvasGroup ??= _dialogRoot.GetComponent<CanvasGroup>();
+            if (_panelRoot != null)
+                _outsideClickCatcher ??= _panelRoot.GetComponent<CloseOnSelfClick>();
+        }
+
+        private static T FindComponentInForEditor<T>(Transform root, string objectName)
+            where T : Component
+        {
+            return root == null ? null : UIChildFinder.FindComponent<T>(root, objectName);
+        }
+
+        private static Button FindButtonForEditor(Transform root, string objectName)
+        {
+            return root == null ? null : UIChildFinder.FindButton(root, objectName);
+        }
+
+        private GameObject FindDialogRootForEditor()
+        {
+            if (gameObject.name == "CraftQuantityDialog")
+                return gameObject;
+
+            var dialog = UIChildFinder.Find(transform, "CraftQuantityDialog");
+            return dialog != null ? dialog.gameObject : gameObject;
+        }
+
+        private GameObject FindPanelRootForEditor()
+        {
+            for (var current = transform; current != null; current = current.parent)
+            {
+                if (current.name == "CQD-Panel")
+                    return current.gameObject;
+            }
+
+            return null;
         }
 #endif
 
@@ -334,78 +360,48 @@ namespace CreativeAI.UI.CraftingUI
 
         private bool HasRequiredReferences()
         {
-            bool hasRequiredReferences =
-                _panelRoot != null
-                && _dialogRoot != null
-                && _dialogRect != null
-                && _dialogCanvasGroup != null
-                && _outsideClickCatcher != null
-                && _itemImage != null
-                && _itemName != null
-                && _countLabel != null
-                && _inputField != null
-                && _minButton != null
-                && _minusButton != null
-                && _plusButton != null
-                && _maxButton != null
-                && _craftButton != null;
+            var missingFields = new List<string>();
+            AddMissingField(_panelRoot, nameof(_panelRoot), missingFields);
+            AddMissingField(_dialogRoot, nameof(_dialogRoot), missingFields);
+            AddMissingField(_dialogRect, nameof(_dialogRoot), missingFields);
+            AddMissingField(_dialogCanvasGroup, nameof(_dialogCanvasGroup), missingFields);
+            AddMissingField(_outsideClickCatcher, nameof(_outsideClickCatcher), missingFields);
+            AddMissingField(_itemImage, nameof(_itemImage), missingFields);
+            AddMissingField(_itemName, nameof(_itemName), missingFields);
+            AddMissingField(_countLabel, nameof(_countLabel), missingFields);
+            AddMissingField(_inputField, nameof(_inputField), missingFields);
+            AddMissingField(_inputText, nameof(_inputText), missingFields);
+            AddMissingField(_minButton, nameof(_minButton), missingFields);
+            AddMissingField(_minusButton, nameof(_minusButton), missingFields);
+            AddMissingField(_plusButton, nameof(_plusButton), missingFields);
+            AddMissingField(_maxButton, nameof(_maxButton), missingFields);
+            AddMissingField(_craftButton, nameof(_craftButton), missingFields);
+            AddMissingField(_craftButtonText, nameof(_craftButtonText), missingFields);
 
-            if (hasRequiredReferences || _warnedMissingRequiredReferences)
-                return hasRequiredReferences;
+            if (missingFields.Count == 0)
+                return true;
+
+            if (_warnedMissingRequiredReferences)
+                return false;
 
             Debug.LogWarning(
-                $"{nameof(CraftQuantityDialog)} on {name}: 必要なUI参照が不足しています。Inspector参照またはPrefab上の名前を確認してください。",
+                $"{nameof(CraftQuantityDialog)} on {name}: 必須参照が未設定です: {string.Join(", ", missingFields)}。Inspectorで設定してください。QuantityDialog処理を中止します。",
                 this
             );
             _warnedMissingRequiredReferences = true;
             return false;
         }
 
-        private void WarnMissingCloseOnSelfClickOnce()
+        private static void AddMissingField(
+            UnityEngine.Object reference,
+            string fieldName,
+            ICollection<string> missingFields
+        )
         {
-            if (_warnedMissingCloseOnSelfClick)
+            if (reference != null || missingFields.Contains(fieldName))
                 return;
 
-            Debug.LogWarning(
-                $"{nameof(CraftQuantityDialog)} on {name}: {_panelRoot.name} に {nameof(CloseOnSelfClick)} が見つかりません。CQD-Panelに追加して外側クリックで閉じる対象を設定してください。",
-                this
-            );
-            _warnedMissingCloseOnSelfClick = true;
-        }
-
-        private void WarnMissingDialogCanvasGroupOnce()
-        {
-            if (_warnedMissingDialogCanvasGroup)
-                return;
-
-            Debug.LogWarning(
-                $"{nameof(CraftQuantityDialog)} on {name}: {_dialogRoot.name} に {nameof(CanvasGroup)} がありません。QuantityDialogの表示を中止します。Unity上で追加してください。",
-                this
-            );
-            _warnedMissingDialogCanvasGroup = true;
-        }
-
-        private static T FindComponentIn<T>(Transform root, string objectName)
-            where T : Component
-        {
-            return root == null ? null : UIChildFinder.FindComponent<T>(root, objectName);
-        }
-
-        private static Button FindButton(Transform root, string objectName)
-        {
-            return root == null ? null : UIChildFinder.FindButton(root, objectName);
-        }
-
-        private GameObject FindDialogRoot()
-        {
-            if (gameObject.name == "CraftQuantityDialog")
-                return gameObject;
-
-            var dialog = UIChildFinder.Find(transform, "CraftQuantityDialog");
-            if (dialog != null)
-                return dialog.gameObject;
-
-            return gameObject;
+            missingFields.Add(fieldName);
         }
     }
 }

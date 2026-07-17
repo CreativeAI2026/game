@@ -1,5 +1,6 @@
 using System.Linq;
 using CreativeAI.Gameplay;
+using CreativeAI.UI.InventoryUI;
 
 namespace CreativeAI.UI.CharacterUI
 {
@@ -25,6 +26,47 @@ namespace CreativeAI.UI.CharacterUI
             _inventory.OnSlotDoubleClicked -= OnInventorySlotDoubleClicked;
         }
 
+        private void BindInventoryItemsRequested()
+        {
+            if (_inventory == null)
+                return;
+
+            _inventory.DisplayRefreshRequested -= OnInventoryDisplayRefreshRequested;
+            _inventory.DisplayRefreshRequested += OnInventoryDisplayRefreshRequested;
+            _inventory.ItemsRequested -= OnInventoryItemsRequested;
+            _inventory.ItemsRequested += OnInventoryItemsRequested;
+        }
+
+        private void UnbindInventoryItemsRequested()
+        {
+            if (_inventory != null)
+            {
+                _inventory.DisplayRefreshRequested -= OnInventoryDisplayRefreshRequested;
+                _inventory.ItemsRequested -= OnInventoryItemsRequested;
+            }
+        }
+
+        private void OnInventoryDisplayRefreshRequested(
+            TabDefinition _definition,
+            int _tabIndex,
+            Inventory.ScrollRefreshMode scrollMode
+        )
+        {
+            _inventory?.RequestItems(_inventoryCategory, scrollMode);
+        }
+
+        private void OnInventoryItemsRequested(
+            ItemCategory category,
+            Inventory.ScrollRefreshMode scrollMode
+        )
+        {
+            if (_inventory == null || category != _inventoryCategory)
+                return;
+
+            var items = InventoryManager.Instance?.GetItemsByCategory(_inventoryCategory);
+            _inventory.SetItems(items, scrollMode);
+        }
+
         private void BindInventoryChangedEvent()
         {
             if (_subscribedToInventoryChanged || InventoryManager.Instance == null)
@@ -48,6 +90,7 @@ namespace CreativeAI.UI.CharacterUI
 
         private void OnInventoryChanged()
         {
+            _inventory?.RefreshCurrentTab();
             SyncEquipmentSlotsWithInventory();
         }
 

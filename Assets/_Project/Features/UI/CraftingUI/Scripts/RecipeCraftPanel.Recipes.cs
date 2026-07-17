@@ -1,6 +1,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using CreativeAI.Gameplay;
+using CreativeAI.UI.InventoryUI;
 using UnityEngine;
 using UnityEngine.UI;
 
@@ -8,40 +9,26 @@ namespace CreativeAI.UI.CraftingUI
 {
     public partial class RecipeCraftPanel
     {
-        private void BindRecipeTabs()
+        private void BindCategoryTabs()
         {
-            ResolveMainReferences();
-            if (_recipeTabGroup == null)
+            if (_categoryTabGroup == null)
                 return;
 
-            _recipeTabGroup.OnTabSelected -= OnRecipeTabSelected;
-            _recipeTabGroup.OnTabSelected += OnRecipeTabSelected;
-            BuildActiveRecipeCategories();
+            _categoryTabGroup.OnTabDefinitionSelected -= OnCategoryTabSelected;
+            _categoryTabGroup.OnTabDefinitionSelected += OnCategoryTabSelected;
         }
 
-        private void UnbindRecipeTabs()
+        private void UnbindCategoryTabs()
         {
-            if (_recipeTabGroup != null)
-                _recipeTabGroup.OnTabSelected -= OnRecipeTabSelected;
+            if (_categoryTabGroup != null)
+                _categoryTabGroup.OnTabDefinitionSelected -= OnCategoryTabSelected;
         }
 
-        private void BuildActiveRecipeCategories()
-        {
-            _activeRecipeCategories.Clear();
-
-            for (int i = 0; i < _recipeCategories.Count; i++)
-            {
-                if (_recipeTabGroup == null || _recipeTabGroup.IsEnabled(i))
-                    _activeRecipeCategories.Add(_recipeCategories[i]);
-            }
-        }
-
-        private void OnRecipeTabSelected(int index)
+        private void OnCategoryTabSelected(int _index, TabDefinition _definition)
         {
             if (!isActiveAndEnabled)
                 return;
 
-            BuildActiveRecipeCategories();
             BuildRecipeList();
             SelectInitialRecipe(true);
             ForceRebuildLayouts();
@@ -49,13 +36,40 @@ namespace CreativeAI.UI.CraftingUI
 
         private bool IsRecipeInCurrentTab(CraftRecipeData recipe)
         {
-            if (recipe == null || recipe.resultItem == null || _recipeTabGroup == null)
-                return true;
+            if (recipe == null || recipe.resultItem == null)
+                return false;
 
-            int index = _recipeTabGroup.CurrentIndex;
-            return index >= 0
-                && index < _activeRecipeCategories.Count
-                && recipe.resultItem.category == _activeRecipeCategories[index];
+            return TryGetCurrentCategory(out var category)
+                && recipe.resultItem.category == category;
+        }
+
+        private bool TryGetCurrentCategory(out ItemCategory category)
+        {
+            category = default;
+            if (_categoryTabGroup == null || _categoryTabGroup.CurrentIndex < 0)
+                return false;
+
+            var definition = _categoryTabGroup.CurrentDefinition;
+            if (definition is InventoryTabDefinition inventoryDefinition)
+            {
+                category = inventoryDefinition.Category;
+                return true;
+            }
+
+            WarnInvalidCategoryTabOnce(definition);
+            return false;
+        }
+
+        private void WarnInvalidCategoryTabOnce(TabDefinition definition)
+        {
+            if (_warnedInvalidCategoryTab)
+                return;
+
+            _warnedInvalidCategoryTab = true;
+            Debug.LogWarning(
+                $"{nameof(RecipeCraftPanel)} on {name}: Category TabEntry must use {nameof(InventoryTabDefinition)}. Current definition: {(definition != null ? definition.name : "None")}. Recipe list will remain empty.",
+                this
+            );
         }
 
         private void PrepareInitialHiddenTemplates()
@@ -67,7 +81,6 @@ namespace CreativeAI.UI.CraftingUI
 
         private void BuildRecipeList()
         {
-            ResolveMainReferences();
             if (_recipeContent == null)
                 return;
 
@@ -254,7 +267,6 @@ namespace CreativeAI.UI.CraftingUI
 
         private IEnumerable<CraftRecipeData> GetVisibleRecipes()
         {
-            ResolveRecipeDB();
             if (_recipeDB != null)
                 return _recipeDB.VisibleRecipes.Where(IsRecipeInCurrentTab);
 
@@ -330,7 +342,6 @@ namespace CreativeAI.UI.CraftingUI
 
         private void RebuildMaterialRows()
         {
-            ResolveMainReferences();
             CacheMaterialRows();
 
             if (_materialList == null)
@@ -385,16 +396,10 @@ namespace CreativeAI.UI.CraftingUI
 
         private void CacheMaterialRows()
         {
-            _materialRows.Clear();
-
-            if (_materialList == null)
-                return;
-
-            _materialRows.AddRange(
-                _materialList
-                    .GetComponentsInChildren<RecipeMaterialRow>(true)
-                    .Where(row => row != null)
-                    .OrderBy(row => row.transform.GetSiblingIndex())
+            _materialRows.RemoveAll(row => row == null);
+            _materialRows.Sort(
+                (left, right) =>
+                    left.transform.GetSiblingIndex().CompareTo(right.transform.GetSiblingIndex())
             );
         }
 
@@ -422,7 +427,6 @@ namespace CreativeAI.UI.CraftingUI
 
         private void SubscribeRecipeDBChanges()
         {
-            ResolveRecipeDB();
             if (_subscribedRecipeDB == _recipeDB)
                 return;
 
@@ -449,7 +453,6 @@ namespace CreativeAI.UI.CraftingUI
             if (!isActiveAndEnabled)
                 return;
 
-            ResolveAllReferences();
             BuildRecipeList();
             SelectRecipeSlot(
                 _slots.FirstOrDefault(slot => slot != null && slot.Recipe == recipe)

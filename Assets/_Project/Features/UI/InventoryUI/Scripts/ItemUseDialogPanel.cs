@@ -28,18 +28,17 @@ namespace CreativeAI.UI.InventoryUI
         private TMP_Text _itemEffectText;
 
         [SerializeField]
-        private TMP_Text _messageText;
-
-        [SerializeField]
         private Button _useButton;
 
         private ItemStack _targetStack;
         private bool _initialized;
         private bool _hasWarnedMissingReferences;
+        private bool _hasWarnedInvalidConfiguration;
 
         private void Awake()
         {
-            EnsureInitialized();
+            if (!EnsureInitialized())
+                Hide();
         }
 
         private void OnDestroy()
@@ -85,69 +84,42 @@ namespace CreativeAI.UI.InventoryUI
 
         private bool EnsureInitialized()
         {
-            if (_initialized)
-                return true;
-
-            ResolveReferences();
             if (!ValidateRequiredReferences())
                 return false;
+
+            if (_initialized)
+                return true;
 
             BindButtons();
             _initialized = true;
             return true;
         }
 
-        private void ResolveReferences()
-        {
-            _backgroundImage ??= FindComponentInChildren<Image>("Background");
-            _backgroundImage ??= GetComponent<Image>();
-            _closeOnSelfClick ??= GetComponent<CloseOnSelfClick>();
-            if (_closeOnSelfClick == null && _backgroundImage != null)
-                _closeOnSelfClick = _backgroundImage.GetComponent<CloseOnSelfClick>();
-            _dialogRoot ??= FindChild("DialogRoot") as RectTransform;
-            _dialogRoot ??= FindChild("ItemUseDialog") as RectTransform;
-            _itemIconImage ??= FindComponentInChildren<Image>("ItemIcon");
-            _itemNameText ??= FindComponentInChildren<TMP_Text>("ItemName");
-            _itemEffectText ??= FindComponentInChildren<TMP_Text>("EffectText");
-            _itemEffectText ??= FindComponentInChildren<TMP_Text>("ItemEffect");
-            _messageText ??= FindComponentInChildren<TMP_Text>("Message");
-            _useButton ??= FindButton("UseButton");
-            _useButton ??= FindButton("YesButton");
-        }
-
         private bool ValidateRequiredReferences()
         {
             var missingReferences = new List<string>();
             if (_closeOnSelfClick == null)
-                missingReferences.Add(nameof(CloseOnSelfClick));
+                missingReferences.Add(nameof(_closeOnSelfClick));
             if (_backgroundImage == null)
-                missingReferences.Add("Background Image");
-            else if (!_backgroundImage.raycastTarget)
-                missingReferences.Add("Background Image の Raycast Target");
+                missingReferences.Add(nameof(_backgroundImage));
             if (_dialogRoot == null)
-                missingReferences.Add("Dialog Root");
-            else
-            {
-                var dialogGraphic = _dialogRoot.GetComponent<Graphic>();
-                if (dialogGraphic == null)
-                    missingReferences.Add("Dialog Root の Graphic");
-                else if (!dialogGraphic.raycastTarget)
-                    missingReferences.Add("Dialog Root の Raycast Target");
-            }
+                missingReferences.Add(nameof(_dialogRoot));
             if (_itemIconImage == null)
-                missingReferences.Add("Item Icon Image");
+                missingReferences.Add(nameof(_itemIconImage));
             if (_itemNameText == null)
-                missingReferences.Add("Item Name Text");
+                missingReferences.Add(nameof(_itemNameText));
             if (_itemEffectText == null)
-                missingReferences.Add("Effect Text");
+                missingReferences.Add(nameof(_itemEffectText));
             if (_useButton == null)
-                missingReferences.Add("Use Button");
+                missingReferences.Add(nameof(_useButton));
 
-            if (missingReferences.Count == 0)
-                return true;
+            if (missingReferences.Count > 0)
+            {
+                WarnMissingReferencesOnce(missingReferences);
+                return false;
+            }
 
-            WarnMissingReferencesOnce(missingReferences);
-            return false;
+            return ValidateRaycastConfiguration();
         }
 
         private void WarnMissingReferencesOnce(IReadOnlyCollection<string> missingReferences)
@@ -157,7 +129,38 @@ namespace CreativeAI.UI.InventoryUI
 
             _hasWarnedMissingReferences = true;
             Debug.LogWarning(
-                $"{nameof(ItemUseDialogPanel)} '{name}' の必須参照が不足しています: {string.Join(", ", missingReferences)}。PrefabまたはScene上で設定してください。",
+                $"{nameof(ItemUseDialogPanel)} '{name}' Missing references: {string.Join(", ", missingReferences)}。Inspectorで必須参照を設定してください。",
+                this
+            );
+        }
+
+        private bool ValidateRaycastConfiguration()
+        {
+            var invalidSettings = new List<string>();
+            if (!_backgroundImage.raycastTarget)
+                invalidSettings.Add("_backgroundImage.raycastTarget");
+
+            var dialogGraphic = _dialogRoot.GetComponent<Graphic>();
+            if (dialogGraphic == null)
+                invalidSettings.Add("_dialogRoot.Graphic");
+            else if (!dialogGraphic.raycastTarget)
+                invalidSettings.Add("_dialogRoot.Graphic.raycastTarget");
+
+            if (invalidSettings.Count == 0)
+                return true;
+
+            WarnInvalidConfigurationOnce(invalidSettings);
+            return false;
+        }
+
+        private void WarnInvalidConfigurationOnce(IReadOnlyCollection<string> invalidSettings)
+        {
+            if (_hasWarnedInvalidConfiguration)
+                return;
+
+            _hasWarnedInvalidConfiguration = true;
+            Debug.LogWarning(
+                $"{nameof(ItemUseDialogPanel)} '{name}' の必須設定が不正です: {string.Join(", ", invalidSettings)}。PrefabまたはScene上で設定してください。",
                 this
             );
         }
@@ -182,7 +185,6 @@ namespace CreativeAI.UI.InventoryUI
             var item = stack.Data;
             string itemName = GetItemName(stack);
             string effectText = GetEffectText(item);
-            string message = $"{itemName}\u3092\u4f7f\u7528\u3057\u307e\u3059\u304b\uff1f";
 
             if (_itemIconImage != null)
             {
@@ -192,7 +194,6 @@ namespace CreativeAI.UI.InventoryUI
 
             SetText(_itemNameText, itemName);
             SetText(_itemEffectText, effectText);
-            SetText(_messageText, message);
         }
 
         private static void SetText(TMP_Text tmpText, string text)
@@ -219,6 +220,27 @@ namespace CreativeAI.UI.InventoryUI
             return string.Empty;
         }
 
+#if UNITY_EDITOR
+        private void Reset() => AutoAssignReferences();
+
+        [ContextMenu("Auto Assign References")]
+        private void AutoAssignReferences()
+        {
+            _backgroundImage ??= FindComponentInChildren<Image>("Background");
+            _backgroundImage ??= GetComponent<Image>();
+            _closeOnSelfClick ??= GetComponent<CloseOnSelfClick>();
+            if (_closeOnSelfClick == null && _backgroundImage != null)
+                _closeOnSelfClick = _backgroundImage.GetComponent<CloseOnSelfClick>();
+            _dialogRoot ??= FindChild("DialogRoot") as RectTransform;
+            _dialogRoot ??= FindChild("ItemUseDialog") as RectTransform;
+            _itemIconImage ??= FindComponentInChildren<Image>("ItemIcon");
+            _itemNameText ??= FindComponentInChildren<TMP_Text>("ItemName");
+            _itemEffectText ??= FindComponentInChildren<TMP_Text>("EffectText");
+            _itemEffectText ??= FindComponentInChildren<TMP_Text>("ItemEffect");
+            _useButton ??= FindButton("UseButton");
+            _useButton ??= FindButton("YesButton");
+        }
+
         private Button FindButton(string objectName)
         {
             var child = FindChild(objectName);
@@ -242,5 +264,6 @@ namespace CreativeAI.UI.InventoryUI
 
             return null;
         }
+#endif
     }
 }

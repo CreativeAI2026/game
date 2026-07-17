@@ -13,10 +13,8 @@ namespace CreativeAI.UI
         [Serializable]
         public struct TabEntry
         {
-            public Sprite icon;
-            public string label;
+            public TabDefinition definition;
             public GameObject view;
-            public bool enabled;
         }
 
         [SerializeField]
@@ -45,9 +43,12 @@ namespace CreativeAI.UI
         private int _currentIndex = -1;
         private bool _initialized;
         public int CurrentIndex => _currentIndex;
+        public TabDefinition CurrentDefinition => GetDefinitionForButtonIndex(_currentIndex);
+        public GameObject CurrentView => GetViewForButtonIndex(_currentIndex);
         public int EntryCount => _tabEntries?.Count ?? 0;
 
-        public event Action<int> OnTabSelected;
+        public event Action<int, TabDefinition> OnTabDefinitionSelected;
+        public event Action<int, TabDefinition, GameObject> OnSelectionChanged;
 
         private void Start()
         {
@@ -70,15 +71,12 @@ namespace CreativeAI.UI
             for (int entryIndex = 0; entryIndex < _tabEntries.Count; entryIndex++)
             {
                 var entry = _tabEntries[entryIndex];
-                if (!entry.enabled)
-                    continue;
-
                 var btn = Instantiate(_tabButtonPrefab, transform, false);
                 if (btn == null || btn.Button == null)
                     continue;
 
                 btn.SetSelectionGroup(selectionGroup);
-                btn.Setup(entry.icon, entry.label);
+                btn.Bind(entry.definition);
                 int captured = _buttons.Count;
                 btn.Button.onClick.AddListener(() => SelectTab(captured));
                 _buttons.Add(btn);
@@ -125,8 +123,10 @@ namespace CreativeAI.UI
             _currentIndex = index;
             ApplySelection(index);
 
-            // Keep the existing public contract: subscribers receive the enabled button index.
-            OnTabSelected?.Invoke(index);
+            TabDefinition definition = GetDefinitionForButtonIndex(index);
+            GameObject view = GetViewForButtonIndex(index);
+            OnTabDefinitionSelected?.Invoke(index, definition);
+            OnSelectionChanged?.Invoke(index, definition, view);
         }
 
         private void ApplySelection(int buttonIndex)
@@ -206,11 +206,23 @@ namespace CreativeAI.UI
             }
         }
 
-        public bool IsEnabled(int entryIndex)
+        public TabDefinition GetDefinitionForEntry(int entryIndex)
         {
-            if (entryIndex < 0 || entryIndex >= _tabEntries.Count)
-                return false;
-            return _tabEntries[entryIndex].enabled;
+            if (_tabEntries == null || entryIndex < 0 || entryIndex >= _tabEntries.Count)
+                return null;
+
+            return _tabEntries[entryIndex].definition;
+        }
+
+        public TabDefinition GetDefinitionForButtonIndex(int buttonIndex)
+        {
+            if (buttonIndex < 0 || _tabEntries == null)
+                return null;
+
+            if (buttonIndex < _buttonToEntryIndices.Count)
+                return GetDefinitionForEntry(_buttonToEntryIndices[buttonIndex]);
+
+            return GetDefinitionForEntry(buttonIndex);
         }
 
         public GameObject GetView(int entryIndex)
@@ -220,34 +232,15 @@ namespace CreativeAI.UI
             return _tabEntries[entryIndex].view;
         }
 
-        public int FindEntryIndexByView(GameObject view)
+        public GameObject GetViewForButtonIndex(int buttonIndex)
         {
-            if (view == null)
-                return -1;
+            if (buttonIndex < 0 || _tabEntries == null)
+                return null;
 
-            for (int i = 0; i < _tabEntries.Count; i++)
-            {
-                if (_tabEntries[i].view == view)
-                    return i;
-            }
+            if (buttonIndex < _buttonToEntryIndices.Count)
+                return GetView(_buttonToEntryIndices[buttonIndex]);
 
-            return -1;
-        }
-
-        public int AddTabEntry(Sprite icon, string label, GameObject view, bool enabled = true)
-        {
-            _tabEntries ??= new List<TabEntry>();
-            _tabEntries.Add(
-                new TabEntry
-                {
-                    icon = icon,
-                    label = label,
-                    view = view,
-                    enabled = enabled,
-                }
-            );
-
-            return _tabEntries.Count - 1;
+            return GetView(buttonIndex);
         }
     }
 }

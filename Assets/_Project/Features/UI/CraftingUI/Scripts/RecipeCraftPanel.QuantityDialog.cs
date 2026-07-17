@@ -1,38 +1,49 @@
 using CreativeAI.Gameplay;
+using CreativeAI.UI.Common;
 using UnityEngine;
 
 namespace CreativeAI.UI.CraftingUI
 {
     public partial class RecipeCraftPanel
     {
-        private void ResolveQuantityDialogReferences()
+        private bool ValidateQuantityDialogReferences()
         {
-            _quantityDialogPanel ??= FindGameObjectIn(transform, "CQD-Panel");
-            _quantityDialog ??= FindQuantityDialog();
-            _quantityDialogController ??=
-                _quantityDialog != null
-                    ? _quantityDialog.GetComponent<CraftQuantityDialog>()
-                    : GetComponentInChildren<CraftQuantityDialog>(true);
-
+            bool valid = true;
             if (_quantityDialogPanel == null)
-                WarnMissingReferenceOnce(ref _warnedMissingQuantityDialogPanel, "CQD-Panel");
+            {
+                WarnMissingReferenceOnce(
+                    ref _warnedMissingQuantityDialogPanel,
+                    nameof(_quantityDialogPanel)
+                );
+                valid = false;
+            }
             if (_quantityDialog == null)
-                WarnMissingReferenceOnce(ref _warnedMissingQuantityDialog, "CraftQuantityDialog");
+            {
+                WarnMissingReferenceOnce(ref _warnedMissingQuantityDialog, nameof(_quantityDialog));
+                valid = false;
+            }
             if (_quantityDialogController == null)
+            {
                 WarnMissingReferenceOnce(
                     ref _warnedMissingQuantityDialogController,
-                    nameof(CraftQuantityDialog)
+                    nameof(_quantityDialogController)
                 );
+                valid = false;
+            }
+
+            return valid;
         }
 
         private void BindDialog()
         {
-            ResolveQuantityDialogReferences();
+            ValidateQuantityDialogReferences();
         }
 
         private void OpenQuantityDialog()
         {
-            ResolveAllReferences();
+            if (!ValidateQuantityDialogReferences())
+                return;
+
             int max = GetMaximumCraftable();
             if (_selectedRecipe == null)
                 return;
@@ -47,7 +58,7 @@ namespace CreativeAI.UI.CraftingUI
             {
                 WarnMissingReferenceOnce(
                     ref _warnedMissingQuantityDialogController,
-                    nameof(CraftQuantityDialog)
+                    nameof(_quantityDialogController)
                 );
                 return;
             }
@@ -87,14 +98,21 @@ namespace CreativeAI.UI.CraftingUI
             return InventoryManager.Instance?.GetMaximumCraftable(_selectedRecipe) ?? 0;
         }
 
-        private GameObject FindQuantityDialog()
+#if UNITY_EDITOR
+        [ContextMenu("Auto Assign Quantity Dialog References")]
+        private void AutoAssignQuantityDialogReferences()
         {
-            var dialogTransform =
-                _quantityDialogPanel != null
-                    ? FindIn(_quantityDialogPanel.transform, "CraftQuantityDialog")
-                    : Find("CraftQuantityDialog");
+            _quantityDialogPanel ??= UIChildFinder.FindGameObject(transform, "CQD-Panel");
+            if (_quantityDialogPanel != null)
+            {
+                _quantityDialog ??= UIChildFinder.FindGameObject(
+                    _quantityDialogPanel.transform,
+                    "CraftQuantityDialog"
+                );
+            }
 
-            return dialogTransform != null ? dialogTransform.gameObject : null;
+            _quantityDialogController ??= _quantityDialog?.GetComponent<CraftQuantityDialog>();
         }
+#endif
     }
 }

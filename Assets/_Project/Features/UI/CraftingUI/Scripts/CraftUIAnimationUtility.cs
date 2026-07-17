@@ -70,10 +70,16 @@ namespace CreativeAI.UI.CraftingUI
             });
         }
 
-        public static void PlayResultOut(GameObject resultPanel)
+        public static void PlayResultOut(GameObject resultPanel, System.Action onComplete = null)
         {
-            if (resultPanel == null || !resultPanel.activeSelf)
+            if (resultPanel == null)
                 return;
+
+            if (!resultPanel.activeSelf)
+            {
+                onComplete?.Invoke();
+                return;
+            }
 
             var rect = resultPanel.transform as RectTransform;
             var canvasGroup = resultPanel.GetComponent<CanvasGroup>();
@@ -87,7 +93,7 @@ namespace CreativeAI.UI.CraftingUI
             rect?.DOKill();
             canvasGroup.DOKill();
             canvasGroup.interactable = false;
-            canvasGroup.blocksRaycasts = true;
+            canvasGroup.blocksRaycasts = false;
 
             var sequence = DOTween.Sequence().SetTarget(resultPanel).SetUpdate(true);
             if (rect != null)
@@ -98,7 +104,16 @@ namespace CreativeAI.UI.CraftingUI
                 );
             }
             sequence.Join(canvasGroup.DOFade(0f, FadeDuration));
-            sequence.OnComplete(() => resultPanel.SetActive(false));
+            sequence.OnComplete(() =>
+            {
+                resultPanel.SetActive(false);
+                if (rect != null)
+                    rect.localScale = Vector3.one;
+                canvasGroup.alpha = 1f;
+                canvasGroup.interactable = true;
+                canvasGroup.blocksRaycasts = true;
+                onComplete?.Invoke();
+            });
         }
 
         public static void HideResultImmediately(GameObject resultPanel)

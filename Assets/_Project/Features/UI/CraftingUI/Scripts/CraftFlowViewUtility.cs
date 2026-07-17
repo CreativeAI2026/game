@@ -63,7 +63,7 @@ namespace CreativeAI.UI.CraftingUI
                 loadingGear.gameObject.SetActive(true);
             }
             if (resultPanel != null)
-                resultPanel.SetActive(false);
+                CraftUIAnimationUtility.HideResultImmediately(resultPanel);
         }
 
         public static void HideLoadingGear(RectTransform loadingGear)

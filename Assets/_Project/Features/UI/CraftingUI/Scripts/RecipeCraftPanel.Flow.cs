@@ -2,7 +2,6 @@ using System.Collections;
 using System.Linq;
 using CreativeAI.Gameplay;
 using CreativeAI.UI.Common;
-using CreativeAI.UI.InventoryUI;
 using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
@@ -11,8 +10,6 @@ namespace CreativeAI.UI.CraftingUI
 {
     public partial class RecipeCraftPanel
     {
-        private void ResolveCraftFlowReferences() { }
-
         private void StartCraft()
         {
             if (_isCrafting || _selectedRecipe == null)
@@ -79,14 +76,8 @@ namespace CreativeAI.UI.CraftingUI
 
         private void CloseResult()
         {
-            _craftPanel?.HideResult();
-            HideWarningImmediately();
-
             SelectRecipeSlot(_slots.FirstOrDefault(slot => slot?.Recipe == _selectedRecipe));
             RebuildMaterialRows();
-
-            var inventory = GetCraftFlowRoot()?.GetComponentInChildren<Inventory>(true);
-            inventory?.RefreshCurrentTab();
         }
 
         private void StopCraftRoutine()

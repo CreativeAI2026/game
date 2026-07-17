@@ -45,6 +45,12 @@ namespace CreativeAI.UI.CraftingUI
         private Coroutine _craftRoutine;
         private Coroutine _initialSelectionRoutine;
         private bool _warnedMissingCraftButton;
+        private bool _warnedMissingCraftPanel;
+        private bool _warnedMissingInventory;
+        private bool _warnedMissingSlotsRoot;
+        private bool _warnedMissingDetailPanel;
+        private bool _warnedMissingMaterialSlots;
+        private bool _warnedInvalidTabDefinition;
 
         private CraftRecipeDB RecipeDB => _craftPanel != null ? _craftPanel.RecipeDB : null;
 
@@ -55,10 +61,12 @@ namespace CreativeAI.UI.CraftingUI
 
         private void OnEnable()
         {
-            Initialize();
+            if (!Initialize())
+                return;
+
+            Subscribe();
             _inventory?.ResetViewState();
             ResetSlots();
-            Subscribe();
             SelectFirstSlotIfNeeded();
             RestartInitialSelectionRoutine();
             ResetCraftFlow();
@@ -71,6 +79,11 @@ namespace CreativeAI.UI.CraftingUI
             StopInitialSelectionRoutine();
         }
 
+        private void OnDestroy()
+        {
+            Unsubscribe();
+        }
+
         private void Update()
         {
             if (_isCrafting)
@@ -79,27 +92,49 @@ namespace CreativeAI.UI.CraftingUI
             UpdateMaterialSlotKeyboardNavigation();
         }
 
-        private void Initialize()
+        private bool Initialize()
         {
-            ResolveCraftPanelReference();
-            _inventory ??= GetComponentInChildren<Inventory>(true);
-            _inventory?.SetSelectFirstSlotOnRefresh(false);
-            _inventory?.SetReleaseSelectionOnOutsideClick(false);
-            _detailPanel ??= FindDetailPanel();
-            ResolveCraftButtonReference();
-            InitializeSlots();
-            BindCraftFlow();
-        }
+            bool valid = true;
+            valid &= ValidateRequiredReference(
+                _craftPanel,
+                ref _warnedMissingCraftPanel,
+                nameof(_craftPanel)
+            );
+            valid &= ValidateRequiredReference(
+                _inventory,
+                ref _warnedMissingInventory,
+                nameof(_inventory)
+            );
+            valid &= ValidateRequiredReference(
+                _slotsRoot,
+                ref _warnedMissingSlotsRoot,
+                nameof(_slotsRoot)
+            );
+            valid &= ValidateRequiredReference(
+                _detailPanel,
+                ref _warnedMissingDetailPanel,
+                nameof(_detailPanel)
+            );
+            valid &= ValidateRequiredReference(
+                _craftButton,
+                ref _warnedMissingCraftButton,
+                nameof(_craftButton)
+            );
+            if (!valid)
+                return false;
 
-        private void ResolveCraftPanelReference()
-        {
-            _craftPanel ??= GetComponentInParent<CraftPanel>(true);
-        }
-
-        private void ResolveCraftButtonReference()
-        {
-            _craftButton ??= FindDescendant("CraftButton")?.GetComponent<Button>();
+            _inventory.SetSelectFirstSlotOnRefresh(false);
+            _inventory.SetReleaseSelectionOnOutsideClick(false);
             UIButtonHoverScaleUtility.ApplyTo(_craftButton);
+            InitializeSlots();
+            if (_slots.Count == 0)
+            {
+                WarnMissingReferenceOnce(ref _warnedMissingMaterialSlots, nameof(MaterialSlot));
+                return false;
+            }
+
+            BindCraftFlow();
+            return true;
         }
 
         private void BindCraftFlow()
@@ -117,9 +152,6 @@ namespace CreativeAI.UI.CraftingUI
 
         private void InitializeSlots()
         {
-            if (_slotsRoot == null)
-                _slotsRoot = FindDescendant("MaterialSlotsRoot");
-
             if (_slotsRoot == null)
                 return;
 
@@ -159,15 +191,77 @@ namespace CreativeAI.UI.CraftingUI
                 return;
 
             _inventory.OnSlotDoubleClicked += OnInventorySlotDoubleClicked;
+            _inventory.DisplayRefreshRequested += OnInventoryDisplayRefreshRequested;
+            _inventory.ItemsRequested += OnInventoryItemsRequested;
+            if (InventoryManager.Instance != null)
+            {
+                InventoryManager.Instance.InventoryChanged -= OnInventoryChanged;
+                InventoryManager.Instance.InventoryChanged += OnInventoryChanged;
+            }
             _isSubscribed = true;
         }
 
         private void Unsubscribe()
         {
             if (_inventory != null && _isSubscribed)
+            {
                 _inventory.OnSlotDoubleClicked -= OnInventorySlotDoubleClicked;
+                _inventory.DisplayRefreshRequested -= OnInventoryDisplayRefreshRequested;
+                _inventory.ItemsRequested -= OnInventoryItemsRequested;
+            }
+
+            if (InventoryManager.Instance != null)
+                InventoryManager.Instance.InventoryChanged -= OnInventoryChanged;
 
             _isSubscribed = false;
+        }
+
+        private void OnInventoryChanged()
+        {
+            _inventory?.RefreshCurrentTab();
+        }
+
+        private void OnInventoryDisplayRefreshRequested(
+            TabDefinition definition,
+            int tabIndex,
+            Inventory.ScrollRefreshMode scrollMode
+        )
+        {
+            if (_inventory == null)
+                return;
+
+            if (definition is InventoryTabDefinition inventoryDefinition)
+            {
+                _inventory.RequestItems(inventoryDefinition.Category, scrollMode);
+                return;
+            }
+
+            WarnInvalidTabDefinitionOnce(tabIndex);
+            _inventory.SetItems(null, scrollMode);
+        }
+
+        private void OnInventoryItemsRequested(
+            ItemCategory category,
+            Inventory.ScrollRefreshMode scrollMode
+        )
+        {
+            if (_inventory == null)
+                return;
+
+            var items = InventoryManager.Instance?.GetItemsByCategory(category);
+            _inventory.SetItems(items, scrollMode);
+        }
+
+        private void WarnInvalidTabDefinitionOnce(int tabIndex)
+        {
+            if (_warnedInvalidTabDefinition)
+                return;
+
+            _warnedInvalidTabDefinition = true;
+            Debug.LogWarning(
+                $"{nameof(FreeCraftPanelController)} '{name}' cannot resolve Inventory tab index {tabIndex}. Assign an {nameof(InventoryTabDefinition)} to every Inventory TabEntry.",
+                this
+            );
         }
 
         private void SelectFirstSlotIfNeeded()
@@ -567,8 +661,6 @@ namespace CreativeAI.UI.CraftingUI
 
         private void CloseResult()
         {
-            _craftPanel?.HideResult();
-            _craftPanel?.HideWarning();
             ResetSlots();
             SelectFirstSlotIfNeeded();
         }
@@ -620,20 +712,17 @@ namespace CreativeAI.UI.CraftingUI
             SelectSlot(_slots[nextIndex]);
         }
 
-        private ItemDetailPanel FindDetailPanel()
+        private bool ValidateRequiredReference(
+            Object reference,
+            ref bool warned,
+            string referenceName
+        )
         {
-            foreach (var panel in GetComponentsInChildren<ItemDetailPanel>(true))
-            {
-                if (panel.GetComponentInParent<Inventory>(true) == null)
-                    return panel;
-            }
+            if (reference != null)
+                return true;
 
-            return GetComponentInChildren<ItemDetailPanel>(true);
-        }
-
-        private Transform FindDescendant(string objectName)
-        {
-            return UIChildFinder.Find(transform, objectName);
+            WarnMissingReferenceOnce(ref warned, referenceName);
+            return false;
         }
 
         private void WarnMissingReferenceOnce(ref bool flag, string referenceName)
@@ -647,5 +736,22 @@ namespace CreativeAI.UI.CraftingUI
             );
             flag = true;
         }
+
+#if UNITY_EDITOR
+        [ContextMenu("Auto Assign References")]
+        private void AutoAssignReferences()
+        {
+            _craftPanel ??= GetComponentInParent<CraftPanel>(true);
+            _inventory ??= GetComponentInChildren<Inventory>(true);
+            _slotsRoot ??= UIChildFinder.Find(transform, "MaterialSlotsRoot");
+            _craftButton ??= UIChildFinder.FindButton(transform, "CraftButton");
+
+            if (_detailPanel == null)
+            {
+                _detailPanel = GetComponentsInChildren<ItemDetailPanel>(true)
+                    .FirstOrDefault(panel => panel.GetComponentInParent<Inventory>(true) == null);
+            }
+        }
+#endif
     }
 }

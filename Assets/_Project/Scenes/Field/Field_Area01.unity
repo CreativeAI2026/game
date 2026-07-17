@@ -16007,6 +16007,7 @@ MonoBehaviour:
   _animationDuration: 0.22
   _startScale: 0.82
   _dialogCanvasGroup: {fileID: 2006218635}
+  _outsideClickCatcher: {fileID: 1399045767}
 --- !u!225 &2006218635
 CanvasGroup:
   m_ObjectHideFlags: 0

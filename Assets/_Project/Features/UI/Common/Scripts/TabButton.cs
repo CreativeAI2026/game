@@ -1,6 +1,5 @@
 using CreativeAI.UI.InventoryUI;
 using DG.Tweening;
-using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
 
@@ -87,14 +86,16 @@ namespace CreativeAI.UI
             _hoverScale.SetReleaseLockOnOutsideClick(false);
         }
 
-        public void Setup(Sprite icon, string label)
+        private void SetIcon(Sprite icon)
         {
             if (_icon != null)
                 _icon.sprite = icon;
         }
 
-        public void SetActive(bool isActive, float duration) =>
-            SetActive(isActive, duration, true, true);
+        public void Bind(TabDefinition definition)
+        {
+            SetIcon(definition != null ? definition.Icon : null);
+        }
 
         public void SetActive(
             bool isActive,

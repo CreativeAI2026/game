@@ -10,7 +10,7 @@ namespace CreativeAI.UI.InventoryUI
     {
         public void SelectSlot(ItemSlot slot)
         {
-            if (slot == null)
+            if (slot == null || !_visibleSlots.Contains(slot) || !slot.gameObject.activeSelf)
                 return;
 
             if (_currentSelectedSlot != null && _currentSelectedSlot != slot)
@@ -26,6 +26,9 @@ namespace CreativeAI.UI.InventoryUI
 
         public void SelectSlotByClick(ItemSlot slot)
         {
+            if (slot == null || !_visibleSlots.Contains(slot) || !slot.gameObject.activeSelf)
+                return;
+
             CreativeAI.UI.SlotKeyboardFocus.Claim(this);
             SelectSlot(slot);
             OnSlotClicked?.Invoke(slot.Stack);
@@ -33,6 +36,9 @@ namespace CreativeAI.UI.InventoryUI
 
         public void SelectSlotByDoubleClick(ItemSlot slot)
         {
+            if (slot == null || !_visibleSlots.Contains(slot) || !slot.gameObject.activeSelf)
+                return;
+
             CreativeAI.UI.SlotKeyboardFocus.Claim(this);
             SelectSlot(slot);
             OnSlotDoubleClicked?.Invoke(slot.Stack);
@@ -47,7 +53,7 @@ namespace CreativeAI.UI.InventoryUI
 
         public void UpdateItemEquippedState(ItemStack stack, bool isEquipped, bool keepSelected)
         {
-            if (stack == null || _slotsRoot == null)
+            if (stack == null)
                 return;
 
             var slot = FindVisibleSlot(stack);
@@ -89,13 +95,10 @@ namespace CreativeAI.UI.InventoryUI
             ClearSelection();
             _detailPanel?.Clear();
 
-            if (_useFixedCategory)
-                RefreshCurrentTab();
-            else
-                _tabGroup?.ResetToFirstTab();
+            _tabGroup?.ResetToFirstTab();
 
-            if (!_useFixedCategory && _tabGroup == null)
-                RefreshCurrentTab();
+            if (_tabGroup == null)
+                RefreshCurrentTab(ScrollRefreshMode.ScrollToTop);
         }
 
         public void SetCraftAssignedItems(IEnumerable<ItemData> items)
@@ -135,15 +138,13 @@ namespace CreativeAI.UI.InventoryUI
 
         private void RefreshCraftAssignedSlots()
         {
-            if (_slotsRoot == null)
-                return;
-
-            foreach (var slot in _slotsRoot.GetComponentsInChildren<ItemSlot>(true))
+            foreach (var slot in _visibleSlots)
                 slot.SetCraftAssigned(IsCraftAssigned(slot.Stack));
         }
 
         public void ResetToTop()
         {
+            KillScrollTween();
             if (_slotsRoot is RectTransform contentRect)
             {
                 var scroll = contentRect.GetComponentInParent<ScrollRect>();
@@ -151,8 +152,8 @@ namespace CreativeAI.UI.InventoryUI
                     scroll.verticalNormalizedPosition = 1f;
             }
 
-            if (_slotsRoot != null && _slotsRoot.childCount > 0)
-                SelectSlot(_slotsRoot.GetChild(0).GetComponent<ItemSlot>());
+            if (_visibleSlots.Count > 0)
+                SelectSlot(_visibleSlots[0]);
         }
 
         private void DisableNavigationOnce()
