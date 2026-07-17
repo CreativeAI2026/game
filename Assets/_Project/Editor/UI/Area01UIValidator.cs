@@ -78,14 +78,14 @@ namespace CreativeAI.EditorTools.UI
                 return;
             }
 
-            var inventories = FindAll<Inventory>(scene);
+            var inventories = FindAll<InventoryView>(scene);
             var panelControllers = FindAll<InventoryPanelController>(scene);
             var freeCraftControllers = FindAll<FreeCraftPanelController>(scene);
             var equipmentControllers = FindAll<EquipmentViewController>(scene);
             var recipeCraftPanels = FindAll<RecipeCraftPanel>(scene);
             var tabGroups = FindAll<TabGroup>(scene);
 
-            ValidateCount(inventories, ExpectedInventoryCount, nameof(Inventory), report);
+            ValidateCount(inventories, ExpectedInventoryCount, nameof(InventoryView), report);
             ValidateCount(panelControllers, 1, nameof(InventoryPanelController), report);
             ValidateCount(freeCraftControllers, 1, nameof(FreeCraftPanelController), report);
             ValidateCount(equipmentControllers, 2, nameof(EquipmentViewController), report);
@@ -114,7 +114,7 @@ namespace CreativeAI.EditorTools.UI
             void AddProvider(MonoBehaviour controller, string fieldName, string providerName)
             {
                 var serializedController = new SerializedObject(controller);
-                var inventory = GetReference<Inventory>(serializedController, fieldName);
+                var inventory = GetReference<InventoryView>(serializedController, fieldName);
                 if (
                     inventory == null
                     || !providers.TryGetValue(inventory, out var inventoryProviders)
@@ -139,7 +139,7 @@ namespace CreativeAI.EditorTools.UI
             void AddEquipmentProvider(EquipmentViewController controller)
             {
                 var serializedController = new SerializedObject(controller);
-                var inventory = GetReference<Inventory>(serializedController, "_inventory");
+                var inventory = GetReference<InventoryView>(serializedController, "_inventory");
                 var categoryProperty = serializedController.FindProperty("_inventoryCategory");
                 if (
                     inventory == null
@@ -160,7 +160,7 @@ namespace CreativeAI.EditorTools.UI
 
         private static void ValidateViewSwitchTabGroups(
             IEnumerable<TabGroup> tabGroups,
-            IEnumerable<Inventory> inventories,
+            IEnumerable<InventoryView> inventories,
             IEnumerable<RecipeCraftPanel> recipeCraftPanels,
             UIValidationReport report
         )
@@ -260,7 +260,7 @@ namespace CreativeAI.EditorTools.UI
 
         private static void ValidateProviderHierarchy(
             MonoBehaviour controller,
-            Inventory inventory,
+            InventoryView inventory,
             string providerName,
             UIValidationReport report
         )
@@ -289,7 +289,7 @@ namespace CreativeAI.EditorTools.UI
         }
 
         private static void ValidateTabProvider(
-            Inventory inventory,
+            InventoryView inventory,
             IReadOnlyList<ItemCategory> expectedCategories,
             UIValidationReport report
         )
@@ -397,7 +397,7 @@ namespace CreativeAI.EditorTools.UI
         }
 
         private static void ValidateSingleProvider(
-            Inventory inventory,
+            InventoryView inventory,
             IReadOnlyCollection<string> providers,
             UIValidationReport report
         )

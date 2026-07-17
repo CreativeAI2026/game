@@ -8,7 +8,7 @@ namespace CreativeAI.UI.InventoryUI
     public partial class ItemSlot : BaseItemSlot, IPointerClickHandler
     {
         private ItemStack _itemStack;
-        private Inventory _controller;
+        private InventoryView _controller;
 
         [SerializeField]
         private RectTransform _visualRootRect;
@@ -38,7 +38,7 @@ namespace CreativeAI.UI.InventoryUI
         {
             ResolveViewReferences();
             base.Awake();
-            _controller = GetComponentInParent<Inventory>();
+            _controller = GetComponentInParent<InventoryView>();
             ConfigureVisualRootHover();
             RefreshSelectionVisuals();
         }

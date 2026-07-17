@@ -2,10 +2,17 @@ using System.Collections;
 using System.Collections.Generic;
 using CreativeAI.Gameplay;
 using UnityEngine;
+using UnityEngine.Scripting.APIUpdating;
 
 namespace CreativeAI.UI.InventoryUI
 {
-    public partial class Inventory : MonoBehaviour
+    [MovedFrom(
+        true,
+        sourceNamespace: "CreativeAI.UI.InventoryUI",
+        sourceAssembly: "CreativeAI.UI",
+        sourceClassName: "Inventory"
+    )]
+    public partial class InventoryView : MonoBehaviour
     {
         public enum ScrollRefreshMode
         {
@@ -178,8 +185,8 @@ namespace CreativeAI.UI.InventoryUI
             if (!_hasWarnedMissingItemsProvider)
             {
                 Debug.LogWarning(
-                    $"Inventory '{name}' has no ItemsRequested subscriber for category '{category}'. "
-                        + "Connect an Inventory data provider controller to this Inventory.",
+                    $"{nameof(InventoryView)} '{name}' has no ItemsRequested subscriber for category '{category}'. "
+                        + $"Connect an Inventory data provider controller to this {nameof(InventoryView)}.",
                     this
                 );
                 _hasWarnedMissingItemsProvider = true;
@@ -195,7 +202,7 @@ namespace CreativeAI.UI.InventoryUI
 
             _hasWarnedMissingDisplayProvider = true;
             Debug.LogWarning(
-                $"{nameof(Inventory)} '{UIHierarchyPathUtility.GetPath(transform)}' has no display provider. Connect a controller that handles {nameof(DisplayRefreshRequested)}.",
+                $"{nameof(InventoryView)} '{UIHierarchyPathUtility.GetPath(transform)}' has no display provider. Connect a controller that handles {nameof(DisplayRefreshRequested)}.",
                 this
             );
         }
@@ -233,7 +240,7 @@ namespace CreativeAI.UI.InventoryUI
 
             _hasWarnedMissingDetailPanel = true;
             Debug.LogWarning(
-                $"{nameof(Inventory)} '{name}' の必須参照 '{nameof(_detailPanel)}' が未設定です。アイテム詳細表示をスキップします。Inspectorで設定してください。",
+                $"{nameof(InventoryView)} '{name}' の必須参照 '{nameof(_detailPanel)}' が未設定です。アイテム詳細表示をスキップします。Inspectorで設定してください。",
                 this
             );
         }

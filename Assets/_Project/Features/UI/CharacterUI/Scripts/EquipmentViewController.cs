@@ -20,7 +20,7 @@ namespace CreativeAI.UI.CharacterUI
 
         [Header("Inventory")]
         [SerializeField]
-        private Inventory _inventory;
+        private InventoryView _inventory;
 
         [SerializeField]
         private ItemCategory _inventoryCategory = ItemCategory.Equipment;
@@ -227,7 +227,7 @@ namespace CreativeAI.UI.CharacterUI
         private void AutoAssignReferences()
         {
             _detailPanel ??= GetComponentInChildren<ItemDetailPanel>(true);
-            _inventory ??= GetComponentInChildren<Inventory>(true);
+            _inventory ??= GetComponentInChildren<InventoryView>(true);
         }
 #endif
     }

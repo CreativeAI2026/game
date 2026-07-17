@@ -6,7 +6,7 @@ using UnityEngine.UI;
 
 namespace CreativeAI.UI.InventoryUI
 {
-    public partial class Inventory
+    public partial class InventoryView
     {
         private Tween _scrollTween;
 

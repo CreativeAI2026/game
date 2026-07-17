@@ -22,7 +22,8 @@ namespace CreativeAI.UI.CraftingUI
             _materialList ??= CreativeAI.UI.UIChildFinder.Find(transform, "MaterialList");
             _detailPanel ??= GetComponentsInChildren<CreativeAI.UI.ItemDetailPanel>(true)
                 .FirstOrDefault(panel =>
-                    panel.GetComponentInParent<CreativeAI.UI.InventoryUI.Inventory>(true) == null
+                    panel.GetComponentInParent<CreativeAI.UI.InventoryUI.InventoryView>(true)
+                    == null
                 );
         }
 #endif

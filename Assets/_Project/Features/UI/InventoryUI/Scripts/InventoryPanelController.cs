@@ -7,7 +7,7 @@ namespace CreativeAI.UI.InventoryUI
     public class InventoryPanelController : UIPanelStub
     {
         [SerializeField]
-        private Inventory _inventory;
+        private InventoryView _inventory;
 
         [SerializeField]
         private ItemUseDialogPanel _itemUseDialogPanel;
@@ -89,7 +89,7 @@ namespace CreativeAI.UI.InventoryUI
         private void OnInventoryDisplayRefreshRequested(
             TabDefinition definition,
             int tabIndex,
-            Inventory.ScrollRefreshMode scrollMode
+            InventoryView.ScrollRefreshMode scrollMode
         )
         {
             if (_inventory == null)
@@ -107,7 +107,7 @@ namespace CreativeAI.UI.InventoryUI
 
         private void OnInventoryItemsRequested(
             ItemCategory category,
-            Inventory.ScrollRefreshMode scrollMode
+            InventoryView.ScrollRefreshMode scrollMode
         )
         {
             if (_inventory == null)
@@ -181,7 +181,7 @@ namespace CreativeAI.UI.InventoryUI
         [ContextMenu("Auto Assign References")]
         private void AutoAssignReferences()
         {
-            _inventory ??= GetComponentInChildren<Inventory>(true);
+            _inventory ??= GetComponentInChildren<InventoryView>(true);
             _itemUseDialogPanel ??= GetComponentInChildren<ItemUseDialogPanel>(true);
         }
 #endif

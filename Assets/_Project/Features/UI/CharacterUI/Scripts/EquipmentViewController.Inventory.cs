@@ -49,7 +49,7 @@ namespace CreativeAI.UI.CharacterUI
         private void OnInventoryDisplayRefreshRequested(
             TabDefinition _definition,
             int _tabIndex,
-            Inventory.ScrollRefreshMode scrollMode
+            InventoryView.ScrollRefreshMode scrollMode
         )
         {
             _inventory?.RequestItems(_inventoryCategory, scrollMode);
@@ -57,7 +57,7 @@ namespace CreativeAI.UI.CharacterUI
 
         private void OnInventoryItemsRequested(
             ItemCategory category,
-            Inventory.ScrollRefreshMode scrollMode
+            InventoryView.ScrollRefreshMode scrollMode
         )
         {
             if (_inventory == null || category != _inventoryCategory)

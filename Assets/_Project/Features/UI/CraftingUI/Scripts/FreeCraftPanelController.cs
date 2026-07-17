@@ -19,7 +19,7 @@ namespace CreativeAI.UI.CraftingUI
         private CraftPanel _craftPanel;
 
         [SerializeField]
-        private Inventory _inventory;
+        private InventoryView _inventory;
 
         [SerializeField]
         private Transform _slotsRoot;
@@ -224,7 +224,7 @@ namespace CreativeAI.UI.CraftingUI
         private void OnInventoryDisplayRefreshRequested(
             TabDefinition definition,
             int tabIndex,
-            Inventory.ScrollRefreshMode scrollMode
+            InventoryView.ScrollRefreshMode scrollMode
         )
         {
             if (_inventory == null)
@@ -242,7 +242,7 @@ namespace CreativeAI.UI.CraftingUI
 
         private void OnInventoryItemsRequested(
             ItemCategory category,
-            Inventory.ScrollRefreshMode scrollMode
+            InventoryView.ScrollRefreshMode scrollMode
         )
         {
             if (_inventory == null)
@@ -754,14 +754,16 @@ namespace CreativeAI.UI.CraftingUI
         private void AutoAssignReferences()
         {
             _craftPanel ??= GetComponentInParent<CraftPanel>(true);
-            _inventory ??= GetComponentInChildren<Inventory>(true);
+            _inventory ??= GetComponentInChildren<InventoryView>(true);
             _slotsRoot ??= UIChildFinder.Find(transform, "MaterialSlotsRoot");
             _craftButton ??= UIChildFinder.FindButton(transform, "CraftButton");
 
             if (_detailPanel == null)
             {
                 _detailPanel = GetComponentsInChildren<ItemDetailPanel>(true)
-                    .FirstOrDefault(panel => panel.GetComponentInParent<Inventory>(true) == null);
+                    .FirstOrDefault(panel =>
+                        panel.GetComponentInParent<InventoryView>(true) == null
+                    );
             }
         }
 #endif

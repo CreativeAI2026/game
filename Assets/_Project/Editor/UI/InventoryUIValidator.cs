@@ -64,11 +64,11 @@ namespace CreativeAI.EditorTools.UI
             var panelControllers = FindAll<InventoryPanelController>(scene);
             var freeCraftControllers = FindAll<FreeCraftPanelController>(scene);
             var equipmentControllers = FindAll<EquipmentViewController>(scene);
-            var inventories = FindAll<Inventory>(scene);
+            var inventories = FindAll<InventoryView>(scene);
             var itemUseDialogs = FindAll<ItemUseDialogPanel>(scene);
 
             ValidatePresence(panelControllers, nameof(InventoryPanelController), report);
-            ValidatePresence(inventories, nameof(Inventory), report);
+            ValidatePresence(inventories, nameof(InventoryView), report);
             ValidatePresence(itemUseDialogs, nameof(ItemUseDialogPanel), report);
 
             foreach (var panelController in panelControllers)
@@ -88,7 +88,7 @@ namespace CreativeAI.EditorTools.UI
         }
 
         private static void ValidateInventoryDataProviders(
-            Inventory[] inventories,
+            InventoryView[] inventories,
             InventoryPanelController[] panelControllers,
             FreeCraftPanelController[] freeCraftControllers,
             EquipmentViewController[] equipmentControllers,
@@ -142,7 +142,7 @@ namespace CreativeAI.EditorTools.UI
             void AddProvider(MonoBehaviour controller, string fieldName, string providerName)
             {
                 var serializedController = new SerializedObject(controller);
-                var inventory = GetReference<Inventory>(serializedController, fieldName);
+                var inventory = GetReference<InventoryView>(serializedController, fieldName);
                 if (
                     inventory != null
                     && providers.TryGetValue(inventory, out var inventoryProviders)
@@ -161,7 +161,7 @@ namespace CreativeAI.EditorTools.UI
             ValidateNoMissingScripts(panel.gameObject, report);
         }
 
-        private static void ValidateInventory(Inventory inventory, UIValidationReport report)
+        private static void ValidateInventory(InventoryView inventory, UIValidationReport report)
         {
             string[] requiredFields = { "_detailPanel", "_slotsRoot", "_slotPrefab" };
             ValidateRequiredReferences(inventory, requiredFields, report);
@@ -175,7 +175,7 @@ namespace CreativeAI.EditorTools.UI
         }
 
         private static void ValidateSlotsRoot(
-            Inventory inventory,
+            InventoryView inventory,
             Transform slotsRoot,
             UIValidationReport report
         )
@@ -251,7 +251,7 @@ namespace CreativeAI.EditorTools.UI
         }
 
         private static void ValidateItemSlotPrefab(
-            Inventory inventory,
+            InventoryView inventory,
             ItemSlot slotPrefab,
             UIValidationReport report
         )
@@ -297,7 +297,7 @@ namespace CreativeAI.EditorTools.UI
 
         private static void ValidatePrefabComponent<T>(
             GameObject prefabRoot,
-            Inventory inventory,
+            InventoryView inventory,
             UIValidationReport report
         )
             where T : Component
