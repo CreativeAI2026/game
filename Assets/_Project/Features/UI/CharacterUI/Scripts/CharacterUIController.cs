@@ -20,7 +20,7 @@ namespace CreativeAI.UI.CharacterUI
                 controller?.EnsureInitialized();
 
             if (_tabGroup != null)
-                _tabGroup.OnTabSelected += OnTabSelected;
+                _tabGroup.OnSelectionChanged += OnSelectionChanged;
 
             _initialized = true;
         }
@@ -40,7 +40,7 @@ namespace CreativeAI.UI.CharacterUI
         private void OnDestroy()
         {
             if (_tabGroup != null)
-                _tabGroup.OnTabSelected -= OnTabSelected;
+                _tabGroup.OnSelectionChanged -= OnSelectionChanged;
         }
 
         private IEnumerator ResetAfterOpen()
@@ -54,20 +54,26 @@ namespace CreativeAI.UI.CharacterUI
                 controller?.ResetViewState();
         }
 
-        private void OnTabSelected(int index)
+        private void OnSelectionChanged(
+            int _index,
+            TabDefinition _definition,
+            GameObject selectedView
+        )
         {
             foreach (var controller in _equipmentViewControllers)
             {
                 if (controller == null)
                     continue;
 
-                if (!controller.gameObject.activeInHierarchy)
+                bool belongsToSelectedView =
+                    selectedView != null
+                    && (
+                        controller.transform == selectedView.transform
+                        || controller.transform.IsChildOf(selectedView.transform)
+                    );
+                if (!belongsToSelectedView)
                     controller.OnExit();
-            }
-
-            foreach (var controller in _equipmentViewControllers)
-            {
-                if (controller != null && controller.gameObject.activeInHierarchy)
+                else
                     controller.OnEnter();
             }
         }

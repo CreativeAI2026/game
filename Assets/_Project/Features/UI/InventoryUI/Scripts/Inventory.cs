@@ -64,7 +64,7 @@ namespace CreativeAI.UI.InventoryUI
             WarnMissingReferencesOnce();
 
             if (_tabGroup != null)
-                _tabGroup.OnTabDefinitionSelected += OnTabSelected;
+                _tabGroup.OnTabDefinitionSelected += OnTabDefinitionSelected;
         }
 
         private void Start()
@@ -95,7 +95,7 @@ namespace CreativeAI.UI.InventoryUI
             RestoreNavigation();
 
             if (_tabGroup != null)
-                _tabGroup.OnTabDefinitionSelected -= OnTabSelected;
+                _tabGroup.OnTabDefinitionSelected -= OnTabDefinitionSelected;
         }
 
         public void RefreshCurrentTab() => RefreshCurrentTab(ScrollRefreshMode.KeepPosition);
@@ -109,13 +109,11 @@ namespace CreativeAI.UI.InventoryUI
         private void RefreshCurrentTab(ScrollRefreshMode scrollMode)
         {
             int tabIndex = _tabGroup != null ? Mathf.Max(0, _tabGroup.CurrentIndex) : 0;
-            if (
-                TryRequestDisplayRefresh(
-                    _tabGroup?.GetDefinitionForButtonIndex(tabIndex),
-                    tabIndex,
-                    scrollMode
-                )
-            )
+            TabDefinition definition = _tabGroup?.CurrentDefinition;
+            if (definition == null && _tabGroup != null)
+                definition = _tabGroup.GetDefinitionForButtonIndex(tabIndex);
+
+            if (TryRequestDisplayRefresh(definition, tabIndex, scrollMode))
                 return;
 
             WarnMissingDisplayProviderOnce();
@@ -147,7 +145,7 @@ namespace CreativeAI.UI.InventoryUI
             _resetRoutine = null;
         }
 
-        private void OnTabSelected(int index, TabDefinition definition)
+        private void OnTabDefinitionSelected(int index, TabDefinition definition)
         {
             if (!TryRequestDisplayRefresh(definition, index, ScrollRefreshMode.ScrollToTop))
             {

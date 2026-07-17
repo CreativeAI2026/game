@@ -82,6 +82,7 @@ namespace CreativeAI.EditorTools.UI
             var panelControllers = FindAll<InventoryPanelController>(scene);
             var freeCraftControllers = FindAll<FreeCraftPanelController>(scene);
             var equipmentControllers = FindAll<EquipmentViewController>(scene);
+            var recipeCraftPanels = FindAll<RecipeCraftPanel>(scene);
             var tabGroups = FindAll<TabGroup>(scene);
 
             ValidateCount(inventories, ExpectedInventoryCount, nameof(Inventory), report);
@@ -89,6 +90,7 @@ namespace CreativeAI.EditorTools.UI
             ValidateCount(freeCraftControllers, 1, nameof(FreeCraftPanelController), report);
             ValidateCount(equipmentControllers, 2, nameof(EquipmentViewController), report);
             ValidateAllTabDefinitions(tabGroups, report);
+            ValidateViewSwitchTabGroups(tabGroups, inventories, recipeCraftPanels, report);
 
             var providers = inventories.ToDictionary(
                 inventory => inventory,
@@ -153,6 +155,50 @@ namespace CreativeAI.EditorTools.UI
                     $"{nameof(EquipmentViewController)} ({category})",
                     report
                 );
+            }
+        }
+
+        private static void ValidateViewSwitchTabGroups(
+            IEnumerable<TabGroup> tabGroups,
+            IEnumerable<Inventory> inventories,
+            IEnumerable<RecipeCraftPanel> recipeCraftPanels,
+            UIValidationReport report
+        )
+        {
+            var categoryTabGroups = new HashSet<TabGroup>();
+            foreach (var inventory in inventories)
+            {
+                var serializedInventory = new SerializedObject(inventory);
+                var tabGroup = GetReference<TabGroup>(serializedInventory, "_tabGroup");
+                if (tabGroup != null)
+                    categoryTabGroups.Add(tabGroup);
+            }
+
+            foreach (var recipePanel in recipeCraftPanels)
+            {
+                var serializedPanel = new SerializedObject(recipePanel);
+                var tabGroup = GetReference<TabGroup>(serializedPanel, "_categoryTabGroup");
+                if (tabGroup != null)
+                    categoryTabGroups.Add(tabGroup);
+            }
+
+            foreach (var tabGroup in tabGroups)
+            {
+                if (categoryTabGroups.Contains(tabGroup))
+                    continue;
+
+                for (int i = 0; i < tabGroup.EntryCount; i++)
+                {
+                    if (tabGroup.GetView(i) != null)
+                        continue;
+
+                    report.Error(
+                        UIHierarchyPathUtility.GetPath(tabGroup.transform),
+                        $"TabEntry[{i}].view",
+                        "View切替用TabGroupにはEntry.viewを設定してください。カテゴリ通知専用TabGroupだけview未設定を許容します。",
+                        tabGroup
+                    );
+                }
             }
         }
 

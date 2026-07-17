@@ -4,8 +4,10 @@ using System.Linq;
 using CreativeAI.UI;
 using CreativeAI.UI.CraftingUI;
 using CreativeAI.UI.InventoryUI;
+using TMPro;
 using UnityEditor;
 using UnityEngine;
+using UnityEngine.UI;
 
 namespace CreativeAI.EditorTools.UI
 {
@@ -30,6 +32,22 @@ namespace CreativeAI.EditorTools.UI
             typeof(RecipeSlot),
             typeof(MaterialSlot),
             typeof(EquipmentSlot),
+        };
+
+        private static readonly HashSet<string> NonRaycastDecorationNames = new(
+            StringComparer.OrdinalIgnoreCase
+        )
+        {
+            "Icon",
+            "Frame",
+            "SelectedFrame",
+            "CountBadge",
+            "CountText",
+            "EquippedMarker",
+            "CraftAssignedMarker",
+            "EquippedDimOverlay",
+            "EmptyText",
+            "SlotLabel",
         };
 
         [MenuItem("Tools/CreativeAI/UI/Validate Slot Prefabs")]
@@ -147,7 +165,46 @@ namespace CreativeAI.EditorTools.UI
             foreach (var expectedType in expectedTypes)
                 ValidateSingleComponent(root, expectedType, report);
 
+            if (path == ItemLikeSlotBasePath)
+            {
+                ValidateForbiddenComponent(
+                    root,
+                    typeof(SlotCountBadgeView),
+                    report,
+                    "ItemLikeSlotBaseにItemSlot専用のCountBadgeを置かないでください。"
+                );
+                ValidateForbiddenComponent(
+                    root,
+                    typeof(SlotMarkerView),
+                    report,
+                    "ItemLikeSlotBaseにItemSlot専用のMarkerを置かないでください。"
+                );
+            }
+            else if (path == HolderSlotBasePath)
+            {
+                ValidateForbiddenComponent(
+                    root,
+                    typeof(SlotCountBadgeView),
+                    report,
+                    "HolderSlotBaseにVariant専用のCountBadgeを置かないでください。"
+                );
+                ValidateForbiddenComponent(
+                    root,
+                    typeof(SlotMarkerView),
+                    report,
+                    "HolderSlotBaseにItemSlot専用のMarkerを置かないでください。"
+                );
+                ValidateForbiddenComponent(
+                    root,
+                    typeof(SlotSelectionView),
+                    report,
+                    "HolderSlotBaseにItemLikeSlot用のSelectionを置かないでください。"
+                );
+            }
+
             ValidateViewReferences(root, report);
+            ValidateDecorationRaycasts(root, report);
+            ValidateCountBadgeLayout(root, report);
             report.Ok(root.name, "Base Prefab構成", "派生専用Componentの混入はありません。", root);
         }
 
@@ -178,6 +235,135 @@ namespace CreativeAI.EditorTools.UI
 
             ValidateViewReferences(root, report);
             ValidateSlotControllerReferences(root, report);
+            ValidateDecorationRaycasts(root, report);
+            ValidateCountBadgeLayout(root, report);
+        }
+
+        private static void ValidateDecorationRaycasts(GameObject root, UIValidationReport report)
+        {
+            foreach (var graphic in root.GetComponentsInChildren<Graphic>(true))
+            {
+                if (!NonRaycastDecorationNames.Contains(graphic.gameObject.name))
+                    continue;
+
+                string hierarchyPath = GetPrefabHierarchyPath(root, graphic.transform);
+                if (graphic.raycastTarget)
+                {
+                    report.Error(
+                        $"{root.name} / {hierarchyPath}",
+                        $"{graphic.GetType().Name}.raycastTarget",
+                        $"装飾Graphic '{graphic.gameObject.name}' のRaycast TargetをOFFにしてください。",
+                        graphic
+                    );
+                }
+                else
+                {
+                    report.Ok(
+                        $"{root.name} / {hierarchyPath}",
+                        $"{graphic.GetType().Name}.raycastTarget",
+                        "Raycast TargetはOFFです。",
+                        graphic
+                    );
+                }
+            }
+        }
+
+        private static void ValidateCountBadgeLayout(GameObject root, UIValidationReport report)
+        {
+            foreach (var badgeView in root.GetComponentsInChildren<SlotCountBadgeView>(true))
+            {
+                var serializedView = new SerializedObject(badgeView);
+                var container =
+                    serializedView.FindProperty("_container")?.objectReferenceValue
+                    as RectTransform;
+                var countText =
+                    serializedView.FindProperty("_countText")?.objectReferenceValue as TMP_Text;
+
+                if (container == null || countText == null)
+                    continue;
+
+                string badgePath = GetPrefabHierarchyPath(root, container);
+                if (container.GetComponent<ContentSizeFitter>() != null)
+                {
+                    report.Error(
+                        $"{root.name} / {badgePath}",
+                        nameof(ContentSizeFitter),
+                        "CountBadgeはSlotCountBadgeViewがサイズ制御するためContentSizeFitterを外してください。",
+                        container
+                    );
+                }
+
+                RectTransform countRect = countText.rectTransform;
+                string countPath = GetPrefabHierarchyPath(root, countRect);
+                if (!countRect.IsChildOf(container))
+                {
+                    report.Error(
+                        $"{root.name} / {countPath}",
+                        "_countText",
+                        "CountTextをCountBadge配下に配置してください。",
+                        countText
+                    );
+                }
+
+                bool stretches =
+                    Approximately(countRect.anchorMin, Vector2.zero)
+                    && Approximately(countRect.anchorMax, Vector2.one);
+                if (!stretches)
+                {
+                    report.Error(
+                        $"{root.name} / {countPath}",
+                        nameof(RectTransform),
+                        "CountTextのAnchor Minを(0,0)、Anchor Maxを(1,1)にしてStretchさせてください。",
+                        countRect
+                    );
+                }
+
+                if (
+                    countText.horizontalAlignment != HorizontalAlignmentOptions.Center
+                    || countText.verticalAlignment != VerticalAlignmentOptions.Geometry
+                )
+                {
+                    report.Error(
+                        $"{root.name} / {countPath}",
+                        nameof(TMP_Text.alignment),
+                        "CountText alignment must be horizontal Center and vertical Midline.",
+                        countText
+                    );
+                }
+
+                if (countText.textWrappingMode != TextWrappingModes.NoWrap)
+                {
+                    report.Error(
+                        $"{root.name} / {countPath}",
+                        nameof(TMP_Text.textWrappingMode),
+                        "CountTextのWrappingをOFFにしてください。",
+                        countText
+                    );
+                }
+            }
+        }
+
+        private static bool Approximately(Vector2 left, Vector2 right)
+        {
+            return Mathf.Approximately(left.x, right.x) && Mathf.Approximately(left.y, right.y);
+        }
+
+        private static string GetPrefabHierarchyPath(GameObject root, Transform target)
+        {
+            if (target == null)
+                return "<null>";
+
+            var names = new Stack<string>();
+            for (
+                Transform current = target;
+                current != null;
+                current = current == root.transform ? null : current.parent
+            )
+            {
+                names.Push(current.name);
+            }
+
+            return string.Join("/", names);
         }
 
         private static GameObject LoadPrefab(string path, UIValidationReport report)

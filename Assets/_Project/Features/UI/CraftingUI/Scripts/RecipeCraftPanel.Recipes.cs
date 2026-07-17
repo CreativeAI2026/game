@@ -49,9 +49,7 @@ namespace CreativeAI.UI.CraftingUI
             if (_categoryTabGroup == null || _categoryTabGroup.CurrentIndex < 0)
                 return false;
 
-            var definition = _categoryTabGroup.GetDefinitionForButtonIndex(
-                _categoryTabGroup.CurrentIndex
-            );
+            var definition = _categoryTabGroup.CurrentDefinition;
             if (definition is InventoryTabDefinition inventoryDefinition)
             {
                 category = inventoryDefinition.Category;

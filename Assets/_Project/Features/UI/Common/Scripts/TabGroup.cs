@@ -43,10 +43,12 @@ namespace CreativeAI.UI
         private int _currentIndex = -1;
         private bool _initialized;
         public int CurrentIndex => _currentIndex;
+        public TabDefinition CurrentDefinition => GetDefinitionForButtonIndex(_currentIndex);
+        public GameObject CurrentView => GetViewForButtonIndex(_currentIndex);
         public int EntryCount => _tabEntries?.Count ?? 0;
 
-        public event Action<int> OnTabSelected;
         public event Action<int, TabDefinition> OnTabDefinitionSelected;
+        public event Action<int, TabDefinition, GameObject> OnSelectionChanged;
 
         private void Start()
         {
@@ -121,8 +123,10 @@ namespace CreativeAI.UI
             _currentIndex = index;
             ApplySelection(index);
 
-            OnTabSelected?.Invoke(index);
-            OnTabDefinitionSelected?.Invoke(index, GetDefinitionForButtonIndex(index));
+            TabDefinition definition = GetDefinitionForButtonIndex(index);
+            GameObject view = GetViewForButtonIndex(index);
+            OnTabDefinitionSelected?.Invoke(index, definition);
+            OnSelectionChanged?.Invoke(index, definition, view);
         }
 
         private void ApplySelection(int buttonIndex)
@@ -226,6 +230,17 @@ namespace CreativeAI.UI
             if (entryIndex < 0 || entryIndex >= _tabEntries.Count)
                 return null;
             return _tabEntries[entryIndex].view;
+        }
+
+        public GameObject GetViewForButtonIndex(int buttonIndex)
+        {
+            if (buttonIndex < 0 || _tabEntries == null)
+                return null;
+
+            if (buttonIndex < _buttonToEntryIndices.Count)
+                return GetView(_buttonToEntryIndices[buttonIndex]);
+
+            return GetView(buttonIndex);
         }
     }
 }
