@@ -16,11 +16,25 @@ namespace CreativeAI.Core.EventSystem
         [SerializeField]
         private string _playerTag = "Player";
 
-        // IEventPlayer を実装する MonoBehaviour を割り当てる(EventPlayer は次段で実装)。
+        [Tooltip(
+            "battle ステップを含むイベント用。トリガー位置に出す敵 Prefab(Project の Prefab)。"
+        )]
+        [SerializeField]
+        private GameObject _enemy;
+
+        [Tooltip("敵の出現位置(任意)。未設定ならこのトリガーの位置・向きに出す。")]
+        [SerializeField]
+        private Transform _spawnPoint;
+
+        // IEventPlayer を実装する MonoBehaviour を割り当てる(任意)。EventPlayer は常駐化したので
+        // 未割当なら EventPlayerService.Current にフォールバックする(per-field 配線は不要)。
         [SerializeField]
         private MonoBehaviour _eventPlayer;
 
-        private IEventPlayer Player => _eventPlayer as IEventPlayer;
+        // 明示配線があればそれを、無ければ常駐 EventPlayer(seam)を使う。破棄済み参照は Unity null で弾く。
+        private IEventPlayer Player =>
+            (_eventPlayer != null ? _eventPlayer as IEventPlayer : null)
+            ?? EventPlayerService.Current;
 
         private void OnTriggerEnter(Collider other)
         {
@@ -48,12 +62,14 @@ namespace CreativeAI.Core.EventSystem
             if (player == null)
             {
                 Debug.LogWarning(
-                    $"[EventTrigger] '{name}': IEventPlayer 未割り当てのため発火をスキップ (event={_event.Id})."
+                    $"[EventTrigger] '{name}': IEventPlayer が見つからず発火をスキップ (event={_event.Id})。"
+                        + " 常駐 EventPlayer(SessionBootstrap)が未生成か、_eventPlayer が未割当です。"
                 );
                 return;
             }
 
-            player.Play(_event);
+            var spawn = _spawnPoint != null ? _spawnPoint : transform;
+            player.Play(_event, new BattleSetup(_enemy, spawn.position, spawn.rotation));
         }
     }
 }

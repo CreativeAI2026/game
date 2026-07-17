@@ -15,6 +15,12 @@ namespace CreativeAI.Gameplay
         public List<FlagEntry> flags = new();
         public List<ItemEntry> items = new();
 
+        /// <summary>
+        /// 解禁(発見)済みレシピのキー(= 結果アイテムの id)。実体は RecipeBookManager(セッション常駐)。
+        /// 旧セーブに無ければ空=解禁なしで復元される(showInRecipeCraft のレシピは常に表示)。
+        /// </summary>
+        public List<int> revealedRecipes = new();
+
         // プレイヤー状態(spec §6 図: 現在HP・座標を保存 → 死亡時は直近セーブから再開)。
         // hasPlayerState=false の場合(リグ未実装・旧セーブ)は復元をスキップし、既定スポーン/満タンで開始する。
         public bool hasPlayerState;
@@ -30,6 +36,12 @@ namespace CreativeAI.Gameplay
 
         /// <summary>保存時点の現在HP。実体は担当班の PlayerStatus(ISaveableActor)から取得する。</summary>
         public float currentHp;
+
+        /// <summary>
+        /// 選択中の武器 index(spec §6: プレイヤーリグは選択武器も保存)。実体は WeaponManager(IWeaponSaveState)。
+        /// 旧セーブは既定 0(先頭=剣)で復元される。
+        /// </summary>
+        public int selectedWeaponIndex;
     }
 
     [Serializable]
@@ -47,5 +59,15 @@ namespace CreativeAI.Gameplay
         public int count;
         public bool equipped;
         public List<RolledStat> rolledStats;
+
+        /// <summary>
+        /// このスタックが戦闘食材スロットにセットされているか。旧セーブは既定 false(未セット)で復元される。
+        /// bool にしているのは、JsonUtility が欠落フィールドに初期化子(-1 等)を反映しない場合でも
+        /// 既定 false で安全に「未セット」と判定するため(slot=0 との誤判定を避ける)。
+        /// </summary>
+        public bool inBattleFood;
+
+        /// <summary>戦闘食材スロット番号(0..2)。<see cref="inBattleFood"/> が true のときのみ有効。</summary>
+        public int battleFoodSlot;
     }
 }

@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using CreativeAI.Crafting;
 
 namespace CreativeAI.Gameplay
 {
@@ -64,7 +65,7 @@ namespace CreativeAI.Gameplay
                     return false;
             }
 
-            _inventoryService.AddItem(recipe.resultItem, quantity);
+            GrantResult(recipe, quantity);
             return true;
         }
 
@@ -88,8 +89,32 @@ namespace CreativeAI.Gameplay
                     return false;
             }
 
-            _inventoryService.AddItem(recipe.resultItem, 1);
+            GrantResult(recipe, 1);
             return true;
+        }
+
+        /// <summary>
+        /// 結果アイテムを付与する。装備品は「端末で個体差ロール」した個体を quantity 個ぶん作る
+        /// (documents/CraftingArchitecture.md「装備品は実行時に式でロール」)。食材など非装備品は
+        /// 固定ルールなのでそのまま数量ぶん追加する。単発 TryCraft の一部=確定でありプレビュー/再ロールは無い。
+        /// </summary>
+        private void GrantResult(CraftRecipeData recipe, int quantity)
+        {
+            if (recipe.resultItem is EquipmentData)
+            {
+                var a = recipe.material1 as EquipmentData;
+                var b = recipe.material2 as EquipmentData;
+                var rng = new SystemRandomSource();
+                for (int i = 0; i < quantity; i++)
+                {
+                    var rolled = CraftStatBridge.RollEquipment(a, b, rng);
+                    _inventoryService.AddInstance(recipe.resultItem, rolled);
+                }
+            }
+            else
+            {
+                _inventoryService.AddItem(recipe.resultItem, quantity);
+            }
         }
 
         private bool TryResolveMaterialStacks(

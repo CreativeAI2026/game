@@ -42,20 +42,16 @@ namespace CreativeAI.Scenario.Editor
         };
 
         /// <summary>
-        /// enemyKey / itemKey を弾くための有効キー集合。null のフィールドは「未提供」= 警告どまり。
-        /// エディタ側(EventImporterMenu)が EnemyData / ItemData から構築して渡す。
+        /// itemKey を弾くための有効キー集合。null なら「未提供」= 警告どまり。
+        /// エディタ側(EventImporterMenu)が ItemData から構築して渡す。
+        /// (敵は events.json に書かず EventTrigger に配線するため enemyKey の照合は持たない。)
         /// </summary>
         public sealed class ImportCatalog
         {
-            public IReadOnlyCollection<string> EnemyKeys { get; }
             public IReadOnlyCollection<string> ItemKeys { get; }
 
-            public ImportCatalog(
-                IReadOnlyCollection<string> enemyKeys,
-                IReadOnlyCollection<string> itemKeys
-            )
+            public ImportCatalog(IReadOnlyCollection<string> itemKeys)
             {
-                EnemyKeys = enemyKeys;
                 ItemKeys = itemKeys;
             }
         }
@@ -108,7 +104,7 @@ namespace CreativeAI.Scenario.Editor
         /// 不正はすべて Report.Diagnostics に積む。JSON 自体が壊れている場合のみ Events は空になる。
         /// </summary>
         /// <param name="catalog">
-        /// enemyKey / itemKey の有効集合。null(または各集合が null)なら該当キーは警告どまり。
+        /// itemKey の有効集合。null(または集合が null)なら itemKey は警告どまり。
         /// </param>
         public static Report Parse(string json, ImportCatalog catalog = null)
         {
@@ -181,13 +177,11 @@ namespace CreativeAI.Scenario.Editor
             var conditions = new List<EventCondition>();
             if (ev["conditions"] is not JArray condArray)
             {
-                report.Error(id, "conditions がありません(必須。空配列は可)。");
+                report.Error(id, "conditions がありません(必須)。");
                 ok = false;
             }
             else
             {
-                if (condArray.Count == 0)
-                    report.Warn(id, "conditions が空です。このイベントは常に発火します。");
                 for (int c = 0; c < condArray.Count; c++)
                 {
                     var cond = ParseCondition(condArray[c] as JObject, id, c, report);
@@ -196,6 +190,18 @@ namespace CreativeAI.Scenario.Editor
                     else
                         conditions.Add(cond);
                 }
+            }
+
+            // progress 条件を必ず1つ含む(進行度==でちょうど1回だけ発火する前提。
+            // documents/CharactersAndEvents.md「progress を必ず1つ含む」)。
+            var progressValues = conditions
+                .Where(c => c.Type == ConditionType.Progress)
+                .Select(c => c.ProgressValue)
+                .ToList();
+            if (progressValues.Count == 0)
+            {
+                report.Error(id, "conditions に progress 条件が必須です(1つ以上)。");
+                ok = false;
             }
 
             // --- steps ---
@@ -227,22 +233,36 @@ namespace CreativeAI.Scenario.Editor
                 ok &= ValidateBattlePlacement(kinds, id, report);
             }
 
-            // --- nextProgress(任意) ---
+            // --- nextProgress(必須・progress の value より大きい) ---
+            // 進行度==で発火 → 終了時に nextProgress へ進めて value と一致しなくなる。
+            // これで「どのイベントもちょうど1回だけ発火する」を保証する
+            // (documents/CharactersAndEvents.md「nextProgress 必須で progress の value より大」)。
             int? nextProgress = null;
-            if (ev.TryGetValue("nextProgress", out var np))
+            if (!ev.TryGetValue("nextProgress", out var np))
             {
-                if (np.Type == JTokenType.Integer)
-                    nextProgress = np.Value<int>();
-                else
-                    report.Error(id, "nextProgress は整数で指定してください。");
+                report.Error(id, "nextProgress が必須です。");
+                ok = false;
             }
-
-            // --- startBgm(任意・現状未対応) ---
-            if (ev["startBgm"] != null)
-                report.Warn(
-                    id,
-                    "startBgm は EventDefinition 未対応(音響班待ち)のため無視されます。"
-                );
+            else if (np.Type != JTokenType.Integer)
+            {
+                report.Error(id, "nextProgress は整数で指定してください。");
+                ok = false;
+            }
+            else
+            {
+                nextProgress = np.Value<int>();
+                foreach (var pv in progressValues)
+                {
+                    if (nextProgress.Value <= pv)
+                    {
+                        report.Error(
+                            id,
+                            $"nextProgress ({nextProgress}) は progress の value ({pv}) より大きくしてください。"
+                        );
+                        ok = false;
+                    }
+                }
+            }
 
             if (ok)
                 report.Events.Add(
@@ -400,31 +420,17 @@ namespace CreativeAI.Scenario.Editor
                 case "battle":
                 {
                     kind = StepKind.Battle;
-                    var enemyKey = (step["enemyKey"] as JValue)?.Value as string;
-                    if (string.IsNullOrEmpty(enemyKey))
+                    // 敵は JSON に書かない。シーンの EventTrigger の Enemy スロットに Prefab を配線する
+                    // (documents/CharactersAndEvents.md / EventImplementation.md)。
+                    if (step["enemyKey"] != null)
                     {
-                        report.Error(id, $"steps[{i}] battle は enemyKey が必須。");
+                        report.Error(
+                            id,
+                            $"steps[{i}] battle に enemyKey は書けません(敵は EventTrigger に配線)。"
+                        );
                         return null;
                     }
-                    if (catalog?.EnemyKeys != null)
-                    {
-                        if (!catalog.EnemyKeys.Contains(enemyKey))
-                        {
-                            report.Error(
-                                id,
-                                $"steps[{i}] battle の enemyKey '{enemyKey}' が EnemyData カタログに存在しません。"
-                            );
-                            return null;
-                        }
-                    }
-                    else
-                    {
-                        report.Warn(
-                            id,
-                            $"steps[{i}] battle の enemyKey '{enemyKey}' は未検証(EnemyData カタログ未提供)。"
-                        );
-                    }
-                    return EventStep.Battle(enemyKey);
+                    return EventStep.Battle();
                 }
 
                 default:
@@ -438,6 +444,7 @@ namespace CreativeAI.Scenario.Editor
 
         /// <summary>
         /// battle 配置制約(CharactersAndEvents.md): 先頭・末尾は line。battle は会話の途中のみ。
+        /// かつ 1イベントにつき battle は最大1つ。
         /// kind が解析できなかったステップ(null)は既に別途エラー済みなのでここでは無視する。
         /// </summary>
         private static bool ValidateBattlePlacement(StepKind?[] kinds, string id, Report report)
@@ -446,14 +453,27 @@ namespace CreativeAI.Scenario.Editor
                 return true;
 
             bool ok = true;
-            if (kinds[0] is StepKind first && first != StepKind.Line)
+            int battleCount = kinds.Count(k => k == StepKind.Battle);
+
+            // 先頭・末尾 line は「battle が単独・末尾にならない」ための battle 制約
+            // (documents/CharactersAndEvents.md)。battle を含まないイベントには適用しない。
+            if (battleCount > 0)
             {
-                report.Error(id, "steps の先頭は line である必要があります(battle 配置制約)。");
-                ok = false;
+                if (kinds[0] is StepKind first && first != StepKind.Line)
+                {
+                    report.Error(id, "steps の先頭は line である必要があります(battle 配置制約)。");
+                    ok = false;
+                }
+                if (kinds[^1] is StepKind last && last != StepKind.Line)
+                {
+                    report.Error(id, "steps の末尾は line である必要があります(battle 配置制約)。");
+                    ok = false;
+                }
             }
-            if (kinds[^1] is StepKind last && last != StepKind.Line)
+
+            if (battleCount > 1)
             {
-                report.Error(id, "steps の末尾は line である必要があります(battle 配置制約)。");
+                report.Error(id, $"battle は1イベントにつき最大1つです(現在 {battleCount} 個)。");
                 ok = false;
             }
             return ok;

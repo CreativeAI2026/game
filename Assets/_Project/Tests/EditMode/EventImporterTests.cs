@@ -15,13 +15,14 @@ namespace CreativeAI.Tests.EditMode
         [Test]
         public void Parse_ValidEvent_BuildsDefinitionWithSteps()
         {
+            // battle は敵を書かず { "kind": "battle" } のみ(敵は EventTrigger に配線)。
             const string json =
                 @"{ ""events"": [ {
                     ""id"": ""cave_encounter"",
                     ""conditions"": [ { ""type"": ""progress"", ""value"": 5 } ],
                     ""steps"": [
                         { ""kind"": ""line"", ""speaker"": ""主人公"", ""portrait"": ""hero_surprised"", ""text"": ""…誰だ?"" },
-                        { ""kind"": ""battle"", ""enemyKey"": ""wolf_boss"" },
+                        { ""kind"": ""battle"" },
                         { ""kind"": ""choice"", ""flag"": ""girl_choice"", ""options"": [
                             { ""text"": ""一緒に行く"", ""value"": ""together"" },
                             { ""text"": ""ひとりで行く"", ""value"": ""alone"" }
@@ -40,7 +41,6 @@ namespace CreativeAI.Tests.EditMode
             Assert.AreEqual("cave_encounter", def.Id);
             Assert.AreEqual(4, def.Steps.Count);
             Assert.AreEqual(StepKind.Battle, def.Steps[1].Kind);
-            Assert.AreEqual("wolf_boss", def.Steps[1].EnemyKey);
             Assert.AreEqual("girl_choice", def.Steps[2].FlagKey);
             Assert.AreEqual(2, def.Steps[2].Options.Count);
             Assert.IsTrue(def.HasNextProgress);
@@ -48,19 +48,107 @@ namespace CreativeAI.Tests.EditMode
         }
 
         [Test]
-        public void Parse_OmittedNextProgress_HasNextProgressFalse()
+        public void Parse_OmittedNextProgress_IsError()
         {
+            // nextProgress は必須(省略はエラー)。
             const string json =
                 @"{ ""events"": [ {
                     ""id"": ""girl_reunion"",
-                    ""conditions"": [ { ""type"": ""flag"", ""key"": ""girl_choice"", ""value"": ""together"" } ],
-                    ""steps"": [ { ""kind"": ""line"", ""speaker"": ""少女"", ""portrait"": ""girl_smile"", ""text"": ""ここまで来られたね。"" } ]
+                    ""conditions"": [ { ""type"": ""progress"", ""value"": 8 } ],
+                    ""steps"": [ { ""kind"": ""line"", ""speaker"": ""少女"", ""portrait"": ""girl_smile"", ""text"": ""来られたね。"" } ]
                 } ] }";
 
             var report = EventImporter.Parse(json);
 
-            Assert.IsFalse(report.HasErrors, string.Join("\n", report.Diagnostics));
-            Assert.IsFalse(report.Events[0].HasNextProgress); // 省略 → 進めない
+            Assert.IsTrue(report.HasErrors);
+            Assert.AreEqual(0, report.Events.Count);
+            Assert.IsTrue(report.Diagnostics.Any(d => d.Message.Contains("nextProgress")));
+        }
+
+        [Test]
+        public void Parse_NextProgressNotGreaterThanProgress_IsError()
+        {
+            // nextProgress は progress の value より大きくなければならない(== 発火 → 進めて二度と一致しない)。
+            const string json =
+                @"{ ""events"": [ {
+                    ""id"": ""no_advance"",
+                    ""conditions"": [ { ""type"": ""progress"", ""value"": 5 } ],
+                    ""steps"": [ { ""kind"": ""line"", ""portrait"": ""hero_normal"", ""text"": ""a"" } ],
+                    ""nextProgress"": 5
+                } ] }";
+
+            var report = EventImporter.Parse(json);
+
+            Assert.IsTrue(report.HasErrors);
+            Assert.AreEqual(0, report.Events.Count);
+            Assert.IsTrue(report.Diagnostics.Any(d => d.Message.Contains("nextProgress")));
+        }
+
+        [Test]
+        public void Parse_MissingProgressCondition_IsError()
+        {
+            // progress 条件を必ず1つ含む(flag だけは不可)。
+            const string json =
+                @"{ ""events"": [ {
+                    ""id"": ""flag_only"",
+                    ""conditions"": [ { ""type"": ""flag"", ""key"": ""k"", ""value"": ""v"" } ],
+                    ""steps"": [ { ""kind"": ""line"", ""portrait"": ""hero_normal"", ""text"": ""a"" } ],
+                    ""nextProgress"": 1
+                } ] }";
+
+            var report = EventImporter.Parse(json);
+
+            Assert.IsTrue(report.HasErrors);
+            Assert.AreEqual(0, report.Events.Count);
+            Assert.IsTrue(report.Diagnostics.Any(d => d.Message.Contains("progress")));
+        }
+
+        [Test]
+        public void Parse_BattleWithEnemyKey_IsError()
+        {
+            // 敵は JSON に書けない(EventTrigger に配線)。
+            const string json =
+                @"{ ""events"": [ {
+                    ""id"": ""enemy_in_json"",
+                    ""conditions"": [ { ""type"": ""progress"", ""value"": 1 } ],
+                    ""steps"": [
+                        { ""kind"": ""line"", ""portrait"": ""hero_normal"", ""text"": ""来い"" },
+                        { ""kind"": ""battle"", ""enemyKey"": ""wolf_boss"" },
+                        { ""kind"": ""line"", ""portrait"": ""hero_normal"", ""text"": ""終わり"" }
+                    ],
+                    ""nextProgress"": 2
+                } ] }";
+
+            var report = EventImporter.Parse(json);
+
+            Assert.IsTrue(report.HasErrors);
+            Assert.AreEqual(0, report.Events.Count);
+            Assert.IsTrue(report.Diagnostics.Any(d => d.Message.Contains("enemyKey")));
+        }
+
+        [Test]
+        public void Parse_MultipleBattles_IsError()
+        {
+            // battle は1イベントにつき最大1つ。
+            const string json =
+                @"{ ""events"": [ {
+                    ""id"": ""two_battles"",
+                    ""conditions"": [ { ""type"": ""progress"", ""value"": 1 } ],
+                    ""steps"": [
+                        { ""kind"": ""line"", ""portrait"": ""hero_normal"", ""text"": ""a"" },
+                        { ""kind"": ""battle"" },
+                        { ""kind"": ""line"", ""portrait"": ""hero_normal"", ""text"": ""b"" },
+                        { ""kind"": ""battle"" },
+                        { ""kind"": ""line"", ""portrait"": ""hero_normal"", ""text"": ""c"" }
+                    ],
+                    ""nextProgress"": 2
+                } ] }";
+
+            var report = EventImporter.Parse(json);
+
+            Assert.IsTrue(report.HasErrors);
+            Assert.AreEqual(0, report.Events.Count);
+            Assert.IsTrue(report.Diagnostics.Any(d => d.Message.Contains("battle")));
         }
 
         [Test]
@@ -69,8 +157,9 @@ namespace CreativeAI.Tests.EditMode
             const string json =
                 @"{ ""events"": [ {
                     ""id"": ""typo"",
-                    ""conditions"": [],
-                    ""steps"": [ { ""kind"": ""line"", ""portrait"": ""hero_smirk"", ""text"": ""!"" } ]
+                    ""conditions"": [ { ""type"": ""progress"", ""value"": 0 } ],
+                    ""steps"": [ { ""kind"": ""line"", ""portrait"": ""hero_smirk"", ""text"": ""!"" } ],
+                    ""nextProgress"": 1
                 } ] }";
 
             var report = EventImporter.Parse(json);
@@ -86,11 +175,12 @@ namespace CreativeAI.Tests.EditMode
             const string json =
                 @"{ ""events"": [ {
                     ""id"": ""bad_battle"",
-                    ""conditions"": [],
+                    ""conditions"": [ { ""type"": ""progress"", ""value"": 0 } ],
                     ""steps"": [
-                        { ""kind"": ""battle"", ""enemyKey"": ""wolf_boss"" },
+                        { ""kind"": ""battle"" },
                         { ""kind"": ""line"", ""portrait"": ""hero_normal"", ""text"": ""終わり"" }
-                    ]
+                    ],
+                    ""nextProgress"": 1
                 } ] }";
 
             var report = EventImporter.Parse(json);
@@ -104,8 +194,8 @@ namespace CreativeAI.Tests.EditMode
         {
             const string json =
                 @"{ ""events"": [
-                    { ""id"": ""dup"", ""conditions"": [], ""steps"": [ { ""kind"": ""line"", ""text"": ""a"" } ] },
-                    { ""id"": ""dup"", ""conditions"": [], ""steps"": [ { ""kind"": ""line"", ""text"": ""b"" } ] }
+                    { ""id"": ""dup"", ""conditions"": [ { ""type"": ""progress"", ""value"": 0 } ], ""steps"": [ { ""kind"": ""line"", ""text"": ""a"" } ], ""nextProgress"": 1 },
+                    { ""id"": ""dup"", ""conditions"": [ { ""type"": ""progress"", ""value"": 0 } ], ""steps"": [ { ""kind"": ""line"", ""text"": ""b"" } ], ""nextProgress"": 1 }
                 ] }";
 
             var report = EventImporter.Parse(json);
@@ -119,8 +209,9 @@ namespace CreativeAI.Tests.EditMode
         {
             const string json =
                 @"{ ""events"": [ {
-                    ""id"": ""x"", ""conditions"": [],
-                    ""steps"": [ { ""kind"": ""sing"", ""text"": ""la"" } ]
+                    ""id"": ""x"", ""conditions"": [ { ""type"": ""progress"", ""value"": 0 } ],
+                    ""steps"": [ { ""kind"": ""sing"", ""text"": ""la"" } ],
+                    ""nextProgress"": 1
                 } ] }";
 
             var report = EventImporter.Parse(json);
@@ -130,66 +221,39 @@ namespace CreativeAI.Tests.EditMode
         }
 
         [Test]
-        public void Parse_EnemyAndItemKeys_ProduceWarningsNotErrors()
+        public void Parse_ItemKey_WithoutCatalog_ProducesWarningNotError()
         {
-            // enemyKey / itemKey はカタログ未整備のため「未検証」警告どまり(エラーにしない)。
+            // itemKey はカタログ未提供なら「未検証」警告どまり(エラーにしない)。
             const string json =
                 @"{ ""events"": [ {
-                    ""id"": ""warns"", ""conditions"": [],
+                    ""id"": ""warns"", ""conditions"": [ { ""type"": ""progress"", ""value"": 0 } ],
                     ""steps"": [
-                        { ""kind"": ""line"", ""portrait"": ""hero_normal"", ""text"": ""行くぞ"" },
-                        { ""kind"": ""battle"", ""enemyKey"": ""wolf_boss"" },
-                        { ""kind"": ""giveItem"", ""itemKey"": ""old_key"" },
-                        { ""kind"": ""line"", ""portrait"": ""hero_normal"", ""text"": ""終わり"" }
-                    ]
+                        { ""kind"": ""line"", ""portrait"": ""hero_normal"", ""text"": ""どうぞ"" },
+                        { ""kind"": ""giveItem"", ""itemKey"": ""old_key"" }
+                    ],
+                    ""nextProgress"": 1
                 } ] }";
 
             var report = EventImporter.Parse(json);
 
             Assert.IsFalse(report.HasErrors, string.Join("\n", report.Diagnostics));
             Assert.AreEqual(1, report.Events.Count);
-            Assert.GreaterOrEqual(report.WarningCount, 2);
+            Assert.GreaterOrEqual(report.WarningCount, 1);
         }
 
         [Test]
-        public void Parse_UnknownEnemyKey_WithCatalog_IsError()
+        public void Parse_KnownItemKey_WithCatalog_Ok()
         {
             const string json =
                 @"{ ""events"": [ {
-                    ""id"": ""bad_enemy"", ""conditions"": [],
+                    ""id"": ""ok_item"", ""conditions"": [ { ""type"": ""progress"", ""value"": 0 } ],
                     ""steps"": [
-                        { ""kind"": ""line"", ""portrait"": ""hero_normal"", ""text"": ""来い"" },
-                        { ""kind"": ""battle"", ""enemyKey"": ""dragon"" },
-                        { ""kind"": ""line"", ""portrait"": ""hero_normal"", ""text"": ""終わり"" }
-                    ]
+                        { ""kind"": ""line"", ""portrait"": ""hero_normal"", ""text"": ""どうぞ"" },
+                        { ""kind"": ""giveItem"", ""itemKey"": ""old_key"" }
+                    ],
+                    ""nextProgress"": 1
                 } ] }";
-            var catalog = new EventImporter.ImportCatalog(
-                new HashSet<string> { "wolf_boss" },
-                null
-            );
-
-            var report = EventImporter.Parse(json, catalog);
-
-            Assert.IsTrue(report.HasErrors);
-            Assert.IsTrue(report.Diagnostics.Any(d => d.Message.Contains("dragon")));
-        }
-
-        [Test]
-        public void Parse_KnownEnemyKey_WithCatalog_Ok()
-        {
-            const string json =
-                @"{ ""events"": [ {
-                    ""id"": ""ok_enemy"", ""conditions"": [],
-                    ""steps"": [
-                        { ""kind"": ""line"", ""portrait"": ""hero_normal"", ""text"": ""来い"" },
-                        { ""kind"": ""battle"", ""enemyKey"": ""wolf_boss"" },
-                        { ""kind"": ""line"", ""portrait"": ""hero_normal"", ""text"": ""終わり"" }
-                    ]
-                } ] }";
-            var catalog = new EventImporter.ImportCatalog(
-                new HashSet<string> { "wolf_boss" },
-                new HashSet<string> { "old_key" }
-            );
+            var catalog = new EventImporter.ImportCatalog(new HashSet<string> { "old_key" });
 
             var report = EventImporter.Parse(json, catalog);
 
@@ -202,13 +266,14 @@ namespace CreativeAI.Tests.EditMode
         {
             const string json =
                 @"{ ""events"": [ {
-                    ""id"": ""bad_item"", ""conditions"": [],
+                    ""id"": ""bad_item"", ""conditions"": [ { ""type"": ""progress"", ""value"": 0 } ],
                     ""steps"": [
                         { ""kind"": ""line"", ""portrait"": ""hero_normal"", ""text"": ""どうぞ"" },
                         { ""kind"": ""giveItem"", ""itemKey"": ""nonexistent"" }
-                    ]
+                    ],
+                    ""nextProgress"": 1
                 } ] }";
-            var catalog = new EventImporter.ImportCatalog(null, new HashSet<string> { "old_key" });
+            var catalog = new EventImporter.ImportCatalog(new HashSet<string> { "old_key" });
 
             var report = EventImporter.Parse(json, catalog);
 
@@ -230,8 +295,8 @@ namespace CreativeAI.Tests.EditMode
         {
             const string json =
                 @"{ ""events"": [
-                    { ""conditions"": [], ""steps"": [ { ""kind"": ""line"", ""text"": ""a"" } ] },
-                    { ""id"": ""no_steps"", ""conditions"": [] }
+                    { ""conditions"": [ { ""type"": ""progress"", ""value"": 0 } ], ""steps"": [ { ""kind"": ""line"", ""text"": ""a"" } ], ""nextProgress"": 1 },
+                    { ""id"": ""no_steps"", ""conditions"": [ { ""type"": ""progress"", ""value"": 0 } ], ""nextProgress"": 1 }
                 ] }";
 
             var report = EventImporter.Parse(json);

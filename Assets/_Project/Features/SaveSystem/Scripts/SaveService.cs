@@ -34,10 +34,12 @@ namespace CreativeAI.Gameplay
             var inv = InventoryManager.Instance;
             if (inv != null)
             {
+                var battleFoodSlots = inv.GetBattleFoodSlots();
                 foreach (var stack in inv.GetAllItems())
                 {
                     if (stack?.Data == null)
                         continue;
+                    int battleSlot = IndexOfBattleFoodSlot(battleFoodSlots, stack);
                     data.items.Add(
                         new ItemEntry
                         {
@@ -48,10 +50,16 @@ namespace CreativeAI.Gameplay
                                 stack.RolledStats != null
                                     ? new List<RolledStat>(stack.RolledStats)
                                     : null,
+                            inBattleFood = battleSlot >= 0,
+                            battleFoodSlot = battleSlot >= 0 ? battleSlot : 0,
                         }
                     );
                 }
             }
+
+            var book = RecipeBookManager.Instance;
+            if (book != null)
+                data.revealedRecipes = new List<int>(book.CaptureRevealed());
 
             CapturePlayer(data);
 
@@ -76,6 +84,11 @@ namespace CreativeAI.Gameplay
             // 現在HPの実体は担当班の実装(ISaveableActor)から取る。窓口が無ければ座標だけ保存。
             var actor = player.GetComponentInChildren<ISaveableActor>();
             data.currentHp = actor != null ? actor.CaptureHp() : 0f;
+
+            // 選択武器も保存(spec §6)。窓口(WeaponManager)が無ければ既定 0。
+            var weapon = player.GetComponentInChildren<IWeaponSaveState>();
+            data.selectedWeaponIndex = weapon != null ? weapon.CaptureSelectedWeaponIndex() : 0;
+
             data.hasPlayerState = true;
         }
 
@@ -115,6 +128,8 @@ namespace CreativeAI.Gameplay
                     RestoreItems(inv, db, data.items);
             }
 
+            RecipeBookManager.Instance?.RestoreRevealed(data.revealedRecipes);
+
             Debug.Log($"[SaveService] 復元しました: {FilePath}");
             return data;
         }
@@ -137,6 +152,10 @@ namespace CreativeAI.Gameplay
                 Quaternion.Euler(0f, data.rotationY, 0f)
             );
 
+            // 武器を先に復元して最終ステータス(最大HP等)を確定させてから HP をクランプする。
+            var weapon = player.GetComponentInChildren<IWeaponSaveState>();
+            weapon?.RestoreSelectedWeaponIndex(data.selectedWeaponIndex);
+
             var actor = player.GetComponentInChildren<ISaveableActor>();
             actor?.RestoreHp(data.currentHp);
         }
@@ -154,24 +173,34 @@ namespace CreativeAI.Gameplay
                     continue;
                 }
 
+                ItemStack stack;
                 if (e.rolledStats != null && e.rolledStats.Count > 0)
                 {
-                    var stack = inv.AddInstance(itemData, e.rolledStats);
+                    stack = inv.AddInstance(itemData, e.rolledStats);
                     if (stack != null)
                         stack.IsEquipped = e.equipped;
                 }
                 else
                 {
                     inv.AddItem(itemData, e.count);
-                    if (e.equipped)
-                    {
-                        var restored = inv.GetAllItems()
-                            .Find(s => s.Data == itemData && !s.IsInstance);
-                        if (restored != null)
-                            restored.IsEquipped = true;
-                    }
+                    stack = inv.GetAllItems().Find(s => s.Data == itemData && !s.IsInstance);
+                    if (stack != null && e.equipped)
+                        stack.IsEquipped = true;
                 }
+
+                // 戦闘食材スロットの復元(食材のみ・SetBattleFood 側で食材/在庫を検証)。
+                if (stack != null && e.inBattleFood)
+                    inv.SetBattleFood(e.battleFoodSlot, stack);
             }
+        }
+
+        /// <summary>stack が入っている戦闘食材スロット番号を返す。未セットは -1。</summary>
+        private static int IndexOfBattleFoodSlot(IReadOnlyList<ItemStack> slots, ItemStack stack)
+        {
+            for (int i = 0; i < slots.Count; i++)
+                if (slots[i] == stack)
+                    return i;
+            return -1;
         }
     }
 }

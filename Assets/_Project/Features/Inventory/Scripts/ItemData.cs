@@ -39,7 +39,7 @@ namespace CreativeAI.Gameplay
                 ItemCategory.Weapon => "武器",
                 ItemCategory.Equipment => "装備品",
                 ItemCategory.Food => "食材",
-                ItemCategory.Important => "重要",
+                ItemCategory.Important => "大事なもの",
                 _ => "",
             };
     }
@@ -114,6 +114,7 @@ namespace CreativeAI.Gameplay
     public static class ItemStatTextFormatter
     {
         private const string HpLabel = "HP";
+        private const string HealLabel = "HP回復";
         private const string AttackLabel = "ATK";
         private const string DefenseLabel = "DEF";
         private const string MoveSpeedLabel = "MOVE";
@@ -132,7 +133,11 @@ namespace CreativeAI.Gameplay
 
             if (item is FoodData food)
             {
-                AddFlat(lines, HpLabel, food.healAmount);
+                // 食材はHP即時回復のみ。回復量は最大HPに対する割合(合成前20%/合成後50%)。
+                int percent = Mathf.RoundToInt(food.HealFraction * 100f);
+                lines.Add(
+                    FormatLine(HealLabel, percent.ToString(CultureInfo.InvariantCulture), true)
+                );
                 return string.Join("\n", lines);
             }
 

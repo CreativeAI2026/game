@@ -1,5 +1,6 @@
 #if UNITY_EDITOR
 using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using CreativeAI.Core.EventSystem;
@@ -19,7 +20,6 @@ namespace CreativeAI.Scenario.Editor
     {
         private const string DefaultSource = "Assets/_Project/Features/Scenario/events.json";
         private const string OutputDir = "Assets/_Project/Features/Scenario/Data/Dialogues";
-        private const string EnemyDataDir = "Assets/_Project/Features/Enemy/Data";
         private const string ItemDataDir = "Assets/_Project/Features/Inventory/Data";
 
         [MenuItem("Tools/CreativeAI/Import Events")]
@@ -93,20 +93,13 @@ namespace CreativeAI.Scenario.Editor
         }
 
         /// <summary>
-        /// EnemyData(id=enemyKey)と ItemData(key)から有効キー集合を作る。
-        /// アセットが1つも無いカテゴリは null(=未検証・警告どまり)にし、作成前に全 battle/giveItem を
-        /// 弾かないようにする。1つでもあれば、その集合で存在検証(未一致はエラー)。
+        /// ItemData(key)から有効キー集合を作る(giveItem の itemKey 照合用)。
+        /// アセットが1つも無ければ null(=未検証・警告どまり)にし、作成前に全 giveItem を弾かない。
+        /// 1つでもあれば、その集合で存在検証(未一致はエラー)。
+        /// 敵は events.json に書かず EventTrigger に配線するため、ここでは照合しない。
         /// </summary>
         private static EventImporter.ImportCatalog BuildCatalog()
         {
-            var enemyKeys = AssetDatabase
-                .FindAssets("t:EnemyData", new[] { EnemyDataDir })
-                .Select(AssetDatabase.GUIDToAssetPath)
-                .Select(AssetDatabase.LoadAssetAtPath<EnemyData>)
-                .Where(e => e != null && !string.IsNullOrEmpty(e.Id))
-                .Select(e => e.Id)
-                .ToHashSet(StringComparer.Ordinal);
-
             var itemKeys = AssetDatabase
                 .FindAssets("t:ItemData", new[] { ItemDataDir })
                 .Select(AssetDatabase.GUIDToAssetPath)
@@ -115,10 +108,7 @@ namespace CreativeAI.Scenario.Editor
                 .Select(i => i.key)
                 .ToHashSet(StringComparer.Ordinal);
 
-            return new EventImporter.ImportCatalog(
-                enemyKeys.Count > 0 ? enemyKeys : null,
-                itemKeys.Count > 0 ? itemKeys : null
-            );
+            return new EventImporter.ImportCatalog(itemKeys.Count > 0 ? itemKeys : null);
         }
 
         /// <summary>Assets 相対フォルダを親から順に作成する。</summary>

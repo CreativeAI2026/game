@@ -1,4 +1,5 @@
 using CreativeAI.Core;
+using CreativeAI.Core.EventSystem;
 using CreativeAI.Core.SceneManagement;
 using CreativeAI.Gameplay;
 using UnityEngine;
@@ -19,6 +20,9 @@ namespace CreativeAI.UI.TitleUI
 
         [SerializeField]
         private GameStarter _gameStarter; // Title に置く GameStarter(PlayerRig 生成)。未割当なら生成スキップ
+
+        [SerializeField]
+        private GameObject _uiRootPrefab; // セッション常駐の UI レイヤー(UIRoot Prefab)。未割当なら UI は出ない
 
         private void Awake()
         {
@@ -95,10 +99,13 @@ namespace CreativeAI.UI.TitleUI
                 return false;
             }
 
-            SessionBootstrap.EnsureSession(); // ① マネージャ(ProgressManager / GameModeManager)
+            SessionBootstrap.EnsureSession(); // ① マネージャ(ProgressManager / GameModeManager / EventPlayer)
             InventoryManager.EnsureResident(); // ② 所持品(Core は Gameplay を参照できないためここで生成)
+            RecipeBookManager.EnsureResident(); // ②' レシピ解禁状態(セッション常駐・セーブ対象。Inventory と同じ層でここで生成)
+            UIRoot.EnsureResident(_uiRootPrefab); // ③ UI レイヤー(Core→UI 循環回避のため Inventory と同様ここで生成。GameModeManager 生成後=HudIconBar が購読できる)
+            BattleRunnerService.Current ??= new BattleRunner(); // ④ 戦闘実行(状態なしの plain class。battle ステップの seam に登録)
             if (_gameStarter != null)
-                _gameStarter.EnsurePlayer(); // ③ プレイヤーリグ
+                _gameStarter.EnsurePlayer(); // ⑤ プレイヤーリグ
             return true;
         }
     }
