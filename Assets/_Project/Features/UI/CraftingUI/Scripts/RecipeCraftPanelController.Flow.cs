@@ -8,7 +8,7 @@ using UnityEngine.UI;
 
 namespace CreativeAI.UI.CraftingUI
 {
-    public partial class RecipeCraftPanel
+    public partial class RecipeCraftPanelController
     {
         private void StartCraft()
         {
@@ -52,7 +52,7 @@ namespace CreativeAI.UI.CraftingUI
             HideWarningImmediately();
             _craftPanel?.ShowLoading();
 
-            yield return new WaitForSecondsRealtime(_testCraftDuration);
+            yield return new WaitForSecondsRealtime(_craftPanel.CraftFlowDurationSeconds);
 
             bool crafted =
                 recipe != null && (InventoryManager.Instance?.TryCraft(recipe, quantity) ?? false);
@@ -83,7 +83,7 @@ namespace CreativeAI.UI.CraftingUI
 
         private void CloseResult()
         {
-            SelectRecipeSlot(_slots.FirstOrDefault(slot => slot?.Recipe == _selectedRecipe));
+            SelectRecipe(_selectedRecipe);
             RebuildMaterialRows();
         }
 

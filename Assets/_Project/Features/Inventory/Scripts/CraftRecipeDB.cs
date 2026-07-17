@@ -40,11 +40,17 @@ namespace CreativeAI.Gameplay
         public bool RevealRecipe(ItemData materialA, ItemData materialB, out CraftRecipeData recipe)
         {
             recipe = FindRecipe(materialA, materialB);
-            if (recipe == null)
+            return RevealRecipe(recipe);
+        }
+
+        public bool RevealRecipe(CraftRecipeData recipe)
+        {
+            if (recipe == null || !_recipes.Contains(recipe))
                 return false;
 
             bool wasHidden = !recipe.showInRecipeCraft && !IsRecipeRevealed(recipe);
-            bool newlyRevealed = RecipeBookManager.Instance?.Reveal(recipe) ?? false;
+            var recipeBook = RecipeBookManager.Instance;
+            bool newlyRevealed = recipeBook?.Reveal(recipe) ?? false;
             if (wasHidden && newlyRevealed)
                 RecipeRevealed?.Invoke(recipe);
 

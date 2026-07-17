@@ -2,7 +2,7 @@ using UnityEngine.InputSystem;
 
 namespace CreativeAI.UI.CraftingUI
 {
-    public partial class RecipeCraftPanel
+    public partial class RecipeCraftPanelController
     {
         private void UpdateQuantityDialogKeyboardControls()
         {

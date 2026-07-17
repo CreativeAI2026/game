@@ -4,34 +4,20 @@ using UnityEngine;
 
 namespace CreativeAI.UI.CraftingUI
 {
-    public partial class RecipeCraftPanel
+    public partial class RecipeCraftPanelController
     {
         private bool ValidateQuantityDialogReferences()
         {
-            bool valid = true;
-            if (_quantityDialogPanel == null)
-            {
-                WarnMissingReferenceOnce(
-                    ref _warnedMissingQuantityDialogPanel,
-                    nameof(_quantityDialogPanel)
-                );
-                valid = false;
-            }
-            if (_quantityDialog == null)
-            {
-                WarnMissingReferenceOnce(ref _warnedMissingQuantityDialog, nameof(_quantityDialog));
-                valid = false;
-            }
             if (_quantityDialogController == null)
             {
                 WarnMissingReferenceOnce(
                     ref _warnedMissingQuantityDialogController,
                     nameof(_quantityDialogController)
                 );
-                valid = false;
+                return false;
             }
 
-            return valid;
+            return true;
         }
 
         private void BindDialog()
@@ -102,16 +88,7 @@ namespace CreativeAI.UI.CraftingUI
         [ContextMenu("Auto Assign Quantity Dialog References")]
         private void AutoAssignQuantityDialogReferences()
         {
-            _quantityDialogPanel ??= UIChildFinder.FindGameObject(transform, "CQD-Panel");
-            if (_quantityDialogPanel != null)
-            {
-                _quantityDialog ??= UIChildFinder.FindGameObject(
-                    _quantityDialogPanel.transform,
-                    "CraftQuantityDialog"
-                );
-            }
-
-            _quantityDialogController ??= _quantityDialog?.GetComponent<CraftQuantityDialog>();
+            _quantityDialogController ??= GetComponentInChildren<CraftQuantityDialog>(true);
         }
 #endif
     }

@@ -82,7 +82,7 @@ namespace CreativeAI.EditorTools.UI
             var panelControllers = FindAll<InventoryPanelController>(scene);
             var freeCraftControllers = FindAll<FreeCraftPanelController>(scene);
             var equipmentControllers = FindAll<EquipmentViewController>(scene);
-            var recipeCraftPanels = FindAll<RecipeCraftPanel>(scene);
+            var recipeCraftPanels = FindAll<RecipeCraftPanelController>(scene);
             var tabGroups = FindAll<TabGroup>(scene);
 
             ValidateCount(inventories, ExpectedInventoryCount, nameof(InventoryView), report);
@@ -161,7 +161,7 @@ namespace CreativeAI.EditorTools.UI
         private static void ValidateViewSwitchTabGroups(
             IEnumerable<TabGroup> tabGroups,
             IEnumerable<InventoryView> inventories,
-            IEnumerable<RecipeCraftPanel> recipeCraftPanels,
+            IEnumerable<RecipeCraftPanelController> recipeCraftPanels,
             UIValidationReport report
         )
         {

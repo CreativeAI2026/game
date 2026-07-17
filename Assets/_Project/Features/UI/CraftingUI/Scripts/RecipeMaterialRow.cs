@@ -17,6 +17,11 @@ namespace CreativeAI.UI.CraftingUI
 
         public void Show(ItemData material)
         {
+            Show(material, 1);
+        }
+
+        public void Show(ItemData material, int requiredQuantity)
+        {
             FindReferences();
             if (material == null)
             {
@@ -40,7 +45,7 @@ namespace CreativeAI.UI.CraftingUI
 
             if (_text != null)
             {
-                const int required = 1;
+                int required = Mathf.Max(1, requiredQuantity);
                 int owned = InventoryManager.Instance?.GetItemCount(material) ?? 0;
                 _text.text = $"{material.itemName}  {owned} / {required}";
                 _text.color = owned >= required ? Color.white : new Color(0.9f, 0.25f, 0.25f);

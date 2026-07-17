@@ -16,7 +16,7 @@ namespace CreativeAI.UI.CraftingUI
         private const string EmptyMaterialLabel = "\uFF08\u672A\u9078\u629E\uFF09";
 
         [SerializeField]
-        private CraftPanel _craftPanel;
+        private CraftPanelController _craftPanel;
 
         [SerializeField]
         private InventoryView _inventory;
@@ -30,9 +30,6 @@ namespace CreativeAI.UI.CraftingUI
         [Header("Craft Flow")]
         [SerializeField]
         private Button _craftButton;
-
-        [SerializeField]
-        private float _testCraftDuration = 5f;
 
         [SerializeField]
         private float _gearRotationSpeed = 180f;
@@ -51,6 +48,7 @@ namespace CreativeAI.UI.CraftingUI
         private bool _warnedMissingDetailPanel;
         private bool _warnedMissingMaterialSlots;
         private bool _warnedInvalidTabDefinition;
+        private bool _warnedMissingRecipeBookManager;
 
         private CraftRecipeDB RecipeDB => _craftPanel != null ? _craftPanel.RecipeDB : null;
 
@@ -386,7 +384,7 @@ namespace CreativeAI.UI.CraftingUI
 
             if (stack.IsEquipped)
             {
-                _craftPanel?.ShowEquippedMaterialWarning();
+                _craftPanel?.ShowWarning(CraftWarningKind.EquippedMaterial);
                 return;
             }
 
@@ -419,7 +417,7 @@ namespace CreativeAI.UI.CraftingUI
 
             if (stack.IsEquipped)
             {
-                _craftPanel?.ShowEquippedMaterialWarning();
+                _craftPanel?.ShowWarning(CraftWarningKind.EquippedMaterial);
                 return false;
             }
 
@@ -431,7 +429,7 @@ namespace CreativeAI.UI.CraftingUI
 
             if (HasCategoryMismatchWithAssignedMaterials(stack.Data))
             {
-                _craftPanel?.ShowCategoryMismatchWarning();
+                _craftPanel?.ShowWarning(CraftWarningKind.CategoryMismatch);
                 return false;
             }
 
@@ -537,11 +535,11 @@ namespace CreativeAI.UI.CraftingUI
             if (_isCrafting || canCraft)
                 _craftPanel?.HideWarning();
             else if (hasEquippedMaterial)
-                _craftPanel?.ShowEquippedMaterialWarning();
+                _craftPanel?.ShowWarning(CraftWarningKind.EquippedMaterial);
             else if (!hasEnoughMaterials)
                 _craftPanel?.HideWarning();
             else if (hasCategoryMismatch)
-                _craftPanel?.ShowCategoryMismatchWarning();
+                _craftPanel?.ShowWarning(CraftWarningKind.CategoryMismatch);
         }
 
         private void StartCraft()
@@ -552,9 +550,9 @@ namespace CreativeAI.UI.CraftingUI
             if (!CanCraft())
             {
                 if (HasEquippedMaterial())
-                    _craftPanel?.ShowEquippedMaterialWarning();
+                    _craftPanel?.ShowWarning(CraftWarningKind.EquippedMaterial);
                 else if (HasCategoryMismatch())
-                    _craftPanel?.ShowCategoryMismatchWarning();
+                    _craftPanel?.ShowWarning(CraftWarningKind.CategoryMismatch);
 
                 return;
             }
@@ -615,7 +613,7 @@ namespace CreativeAI.UI.CraftingUI
 
             _craftPanel?.ShowLoading();
 
-            yield return new WaitForSecondsRealtime(_testCraftDuration);
+            yield return new WaitForSecondsRealtime(_craftPanel.CraftFlowDurationSeconds);
 
             bool crafted =
                 _lastCraftedRecipe != null
@@ -628,11 +626,16 @@ namespace CreativeAI.UI.CraftingUI
                     ?? false
                 );
             if (crafted)
-                RecipeDB?.RevealRecipe(
-                    _lastCraftedRecipe.material1,
-                    _lastCraftedRecipe.material2,
-                    out _
-                );
+            {
+                if (RecipeBookManager.Instance == null)
+                {
+                    WarnMissingRecipeBookManagerOnce(_lastCraftedRecipe);
+                }
+                else
+                {
+                    RecipeDB?.RevealRecipe(_lastCraftedRecipe);
+                }
+            }
 
             CraftFlowViewUtility.CompleteCraftRoutine(ref _craftRoutine, ref _isCrafting);
 
@@ -664,6 +667,18 @@ namespace CreativeAI.UI.CraftingUI
                 return null;
 
             return RecipeDB.FindRecipe(selectedItems[0], selectedItems[1]);
+        }
+
+        private void WarnMissingRecipeBookManagerOnce(CraftRecipeData recipe)
+        {
+            if (_warnedMissingRecipeBookManager)
+                return;
+
+            _warnedMissingRecipeBookManager = true;
+            Debug.LogWarning(
+                $"[RecipeDiscovery] {UIHierarchyPathUtility.GetPath(transform)} cannot reveal recipe '{recipe?.name ?? "<null>"}' because {nameof(RecipeBookManager)}.{nameof(RecipeBookManager.Instance)} is null. Start through the session bootstrap before entering Field_Area01.",
+                this
+            );
         }
 
         private ItemStack GetMaterialStack(int index)
@@ -753,7 +768,7 @@ namespace CreativeAI.UI.CraftingUI
         [ContextMenu("Auto Assign References")]
         private void AutoAssignReferences()
         {
-            _craftPanel ??= GetComponentInParent<CraftPanel>(true);
+            _craftPanel ??= GetComponentInParent<CraftPanelController>(true);
             _inventory ??= GetComponentInChildren<InventoryView>(true);
             _slotsRoot ??= UIChildFinder.Find(transform, "MaterialSlotsRoot");
             _craftButton ??= UIChildFinder.FindButton(transform, "CraftButton");

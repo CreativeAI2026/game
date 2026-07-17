@@ -3,15 +3,21 @@ using System.Collections.Generic;
 using CreativeAI.Gameplay;
 using CreativeAI.UI.InventoryUI;
 using UnityEngine;
+using UnityEngine.Scripting.APIUpdating;
 using UnityEngine.Serialization;
 using UnityEngine.UI;
 
 namespace CreativeAI.UI.CraftingUI
 {
-    public partial class RecipeCraftPanel : MonoBehaviour
+    [MovedFrom(
+        true,
+        sourceNamespace: "CreativeAI.UI.CraftingUI",
+        sourceAssembly: "CreativeAI.UI",
+        sourceClassName: "RecipeCraftPanel"
+    )]
+    public partial class RecipeCraftPanelController : MonoBehaviour
     {
         private const string NoRecipeLabel = "\uFF08\u30EC\u30B7\u30D4\u4E0D\u6240\u6301\uFF09";
-        private const float _testCraftDuration = 5f;
         private const float _gearRotationSpeed = 180f;
         private const float _dialogAnimationDuration = 0.22f;
         private const float _dialogStartScale = 0.82f;
@@ -21,18 +27,11 @@ namespace CreativeAI.UI.CraftingUI
         private CraftRecipeDB _recipeDB;
 
         [SerializeField]
-        private CraftPanel _craftPanel;
-
-        [Header("Prefabs / Templates")]
-        [SerializeField]
-        private GameObject _recipeSlotPrefab;
+        private CraftPanelController _craftPanel;
 
         [Header("Main UI Roots")]
         [SerializeField]
-        private Transform _recipeList;
-
-        [SerializeField]
-        private Transform _recipeContent;
+        private RecipeListView _recipeListView;
 
         [Header("Recipe Tabs")]
         [FormerlySerializedAs("_recipeTabGroup")]
@@ -43,35 +42,20 @@ namespace CreativeAI.UI.CraftingUI
         private ItemDetailPanel _detailPanel;
 
         [SerializeField]
-        private Transform _materialList;
+        private RecipeMaterialListView _materialListView;
 
-        [Header("Quantity Dialog Roots")]
-        [SerializeField]
-        private GameObject _quantityDialogPanel;
-
-        [SerializeField]
-        private GameObject _quantityDialog;
-
+        [Header("Quantity Dialog")]
         [SerializeField]
         private CraftQuantityDialog _quantityDialogController;
 
-        private readonly List<RecipeSlot> _slots = new();
-        private readonly List<RecipeSlot> _generatedRecipeSlots = new();
-
-        [SerializeField]
-        private List<RecipeMaterialRow> _materialRows = new();
         private readonly HashSet<string> _warnedMissingRequiredReferences = new();
-        private CraftRecipeDB _subscribedRecipeDB;
+        private RecipeBookManager _subscribedRecipeBook;
         private CraftRecipeData _selectedRecipe;
         private CraftRecipeData _craftedRecipeForResult;
         private int _craftedQuantityForResult = 1;
         private int _quantity = 1;
         private bool _isCrafting;
         private bool _warnedMissingRecipeDB;
-        private bool _warnedMissingRecipeSlotPrefab;
-        private bool _warnedMissingMaterialRows;
-        private bool _warnedMissingQuantityDialogPanel;
-        private bool _warnedMissingQuantityDialog;
         private bool _warnedMissingQuantityDialogController;
         private bool _warnedMissingCategoryTabGroup;
         private bool _warnedInvalidCategoryTab;
@@ -84,9 +68,10 @@ namespace CreativeAI.UI.CraftingUI
                 return;
 
             BindCategoryTabs();
+            BindRecipeListView();
             PrepareInitialHiddenTemplates();
             ValidateSetup();
-            SubscribeRecipeDBChanges();
+            SubscribeRecipeBookChanges();
             BindDialog();
             ResetView();
         }
@@ -105,7 +90,7 @@ namespace CreativeAI.UI.CraftingUI
         private void OnDisable()
         {
             StopCraftRoutine();
-            UnsubscribeRecipeDBChanges();
+            UnsubscribeRecipeBookChanges();
 
             if (_initializeRoutine != null)
             {
@@ -122,7 +107,8 @@ namespace CreativeAI.UI.CraftingUI
         private void OnDestroy()
         {
             UnbindCategoryTabs();
-            UnsubscribeRecipeDBChanges();
+            UnbindRecipeListView();
+            UnsubscribeRecipeBookChanges();
         }
 
         private void Update()
@@ -133,7 +119,7 @@ namespace CreativeAI.UI.CraftingUI
             UpdateQuantityDialogKeyboardControls();
         }
 
-        private CraftPanel GetCraftPanel() => _craftPanel;
+        private CraftPanelController GetCraftPanel() => _craftPanel;
 
         private IEnumerator InitializeViewRoutine()
         {
@@ -145,15 +131,14 @@ namespace CreativeAI.UI.CraftingUI
                 yield break;
             }
             ValidateSetup();
-            SubscribeRecipeDBChanges();
+            SubscribeRecipeBookChanges();
             BuildRecipeList();
             BindDialog();
             ResetView();
 
             yield return null;
 
-            foreach (var slot in _slots)
-                slot?.RefreshDisplay();
+            _recipeListView?.RefreshSlots();
 
             SelectInitialRecipe();
             ForceRebuildLayouts();
@@ -164,11 +149,9 @@ namespace CreativeAI.UI.CraftingUI
         {
             Canvas.ForceUpdateCanvases();
 
-            if (_recipeContent is RectTransform contentRect)
-                LayoutRebuilder.ForceRebuildLayoutImmediate(contentRect);
+            _recipeListView?.RebuildLayout();
 
-            if (_materialList is RectTransform materialRect)
-                LayoutRebuilder.ForceRebuildLayoutImmediate(materialRect);
+            _materialListView?.RebuildLayout();
         }
 
         private void ResetView()
@@ -176,8 +159,7 @@ namespace CreativeAI.UI.CraftingUI
             _selectedRecipe = null;
             _quantity = 1;
 
-            foreach (var slot in _slots)
-                slot?.SetSelected(false);
+            _recipeListView?.SelectRecipe(null);
 
             _detailPanel?.Clear();
             RebuildMaterialRows();
@@ -192,21 +174,21 @@ namespace CreativeAI.UI.CraftingUI
             if (_recipeDB == null && !_warnedMissingRecipeDB)
             {
                 Debug.LogError(
-                    $"{nameof(RecipeCraftPanel)} on {name}: CraftRecipeDB が未設定です。CraftPanel と同じ CraftRecipeDB を Inspector から指定してください。",
+                    $"{nameof(RecipeCraftPanelController)} on {name}: CraftRecipeDB が未設定です。CraftPanelController と同じ CraftRecipeDB を Inspector から指定してください。",
                     this
                 );
                 _warnedMissingRecipeDB = true;
             }
 
-            if (_recipeContent == null)
+            if (_recipeListView == null)
                 Debug.LogWarning(
-                    $"{nameof(RecipeCraftPanel)} on {name}: RecipeContent が見つかりません。",
+                    $"{nameof(RecipeCraftPanelController)} on {name}: RecipeListView が見つかりません。",
                     this
                 );
 
-            if (_materialList == null)
+            if (_materialListView == null)
                 Debug.LogWarning(
-                    $"{nameof(RecipeCraftPanel)} on {name}: MaterialList が見つかりません。",
+                    $"{nameof(RecipeCraftPanelController)} on {name}: MaterialList が見つかりません。",
                     this
                 );
 
@@ -222,23 +204,24 @@ namespace CreativeAI.UI.CraftingUI
             bool valid = true;
             valid &= ValidateRequiredReference(_recipeDB, nameof(_recipeDB));
             valid &= ValidateRequiredReference(_craftPanel, nameof(_craftPanel));
-            valid &= ValidateRequiredReference(_recipeSlotPrefab, nameof(_recipeSlotPrefab));
-            valid &= ValidateRequiredReference(_recipeList, nameof(_recipeList));
-            valid &= ValidateRequiredReference(_recipeContent, nameof(_recipeContent));
+            valid &= ValidateRequiredReference(_recipeListView, nameof(_recipeListView));
+            if (_recipeListView != null && !_recipeListView.HasRequiredReferences)
+            {
+                ValidateRequiredReference(null, $"{nameof(_recipeListView)} references");
+                valid = false;
+            }
             valid &= ValidateRequiredReference(_categoryTabGroup, nameof(_categoryTabGroup));
             valid &= ValidateRequiredReference(_detailPanel, nameof(_detailPanel));
-            valid &= ValidateRequiredReference(_materialList, nameof(_materialList));
-            valid &= ValidateRequiredReference(_quantityDialogPanel, nameof(_quantityDialogPanel));
-            valid &= ValidateRequiredReference(_quantityDialog, nameof(_quantityDialog));
+            valid &= ValidateRequiredReference(_materialListView, nameof(_materialListView));
+            if (_materialListView != null && !_materialListView.HasRequiredReferences)
+            {
+                ValidateRequiredReference(null, $"{nameof(_materialListView)}._rows");
+                valid = false;
+            }
             valid &= ValidateRequiredReference(
                 _quantityDialogController,
                 nameof(_quantityDialogController)
             );
-            if (_materialRows.Count == 0 || _materialRows.Exists(row => row == null))
-            {
-                ValidateRequiredReference(null, nameof(_materialRows));
-                valid = false;
-            }
             return valid;
         }
 
@@ -250,7 +233,7 @@ namespace CreativeAI.UI.CraftingUI
             if (_warnedMissingRequiredReferences.Add(fieldName))
             {
                 Debug.LogWarning(
-                    $"{nameof(RecipeCraftPanel)} '{UIHierarchyPathUtility.GetPath(transform)}' requires Inspector reference '{fieldName}'. RecipeCraft initialization was stopped.",
+                    $"{nameof(RecipeCraftPanelController)} '{UIHierarchyPathUtility.GetPath(transform)}' requires Inspector reference '{fieldName}'. RecipeCraft initialization was stopped.",
                     this
                 );
             }
@@ -264,7 +247,7 @@ namespace CreativeAI.UI.CraftingUI
                 return;
 
             Debug.LogWarning(
-                $"{nameof(RecipeCraftPanel)} on {name}: 必須参照 '{referenceName}' が未設定です。Inspectorで設定してください。該当UI処理を中止します。",
+                $"{nameof(RecipeCraftPanelController)} on {name}: 必須参照 '{referenceName}' が未設定です。Inspectorで設定してください。該当UI処理を中止します。",
                 this
             );
             flag = true;

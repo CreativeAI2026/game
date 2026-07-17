@@ -4,22 +4,17 @@ using System.Linq;
 
 namespace CreativeAI.UI.CraftingUI
 {
-    public partial class RecipeCraftPanel
+    public partial class RecipeCraftPanelController
     {
 #if UNITY_EDITOR
         [UnityEngine.ContextMenu("Auto Assign Main References")]
         private void AutoAssignMainReferences()
         {
-            _craftPanel ??= GetComponentInParent<CraftPanel>(true);
-            _recipeList ??= CreativeAI.UI.UIChildFinder.Find(transform, "RecipeList");
-            if (_recipeContent == null && _recipeList != null)
-            {
-                var scrollRect = _recipeList.GetComponent<UnityEngine.UI.ScrollRect>();
-                _recipeContent = scrollRect != null ? scrollRect.content : null;
-            }
+            _craftPanel ??= GetComponentInParent<CraftPanelController>(true);
+            _recipeListView ??= GetComponentInChildren<RecipeListView>(true);
 
             _categoryTabGroup ??= GetComponentInChildren<CreativeAI.UI.TabGroup>(true);
-            _materialList ??= CreativeAI.UI.UIChildFinder.Find(transform, "MaterialList");
+            _materialListView ??= GetComponentInChildren<RecipeMaterialListView>(true);
             _detailPanel ??= GetComponentsInChildren<CreativeAI.UI.ItemDetailPanel>(true)
                 .FirstOrDefault(panel =>
                     panel.GetComponentInParent<CreativeAI.UI.InventoryUI.InventoryView>(true)

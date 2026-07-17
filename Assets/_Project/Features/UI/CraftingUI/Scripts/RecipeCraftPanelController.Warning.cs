@@ -1,15 +1,15 @@
 namespace CreativeAI.UI.CraftingUI
 {
-    public partial class RecipeCraftPanel
+    public partial class RecipeCraftPanelController
     {
         private void PlayMissingMaterialsWarning()
         {
-            GetCraftPanel()?.ShowMissingMaterialsWarning();
+            GetCraftPanel()?.ShowWarning(CraftWarningKind.MissingMaterials);
         }
 
         private void PlayEquippedMaterialWarning()
         {
-            GetCraftPanel()?.ShowEquippedMaterialWarning();
+            GetCraftPanel()?.ShowWarning(CraftWarningKind.EquippedMaterial);
         }
 
         private void PlayQuickFoodMaterialWarning()

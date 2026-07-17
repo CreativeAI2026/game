@@ -67,15 +67,15 @@ namespace CreativeAI.EditorTools.UI
                 return;
             }
 
-            var craftPanels = FindAll<CraftPanel>(scene);
+            var craftPanels = FindAll<CraftPanelController>(scene);
             var freeCraftPanels = FindAll<FreeCraftPanelController>(scene);
             var quantityDialogs = FindAll<CraftQuantityDialog>(scene);
-            var recipeCraftPanels = FindAll<RecipeCraftPanel>(scene);
+            var recipeCraftPanels = FindAll<RecipeCraftPanelController>(scene);
 
-            ValidateExpectedCount(craftPanels, nameof(CraftPanel), report);
+            ValidateExpectedCount(craftPanels, nameof(CraftPanelController), report);
             ValidateExpectedCount(freeCraftPanels, nameof(FreeCraftPanelController), report);
             ValidateExpectedCount(quantityDialogs, nameof(CraftQuantityDialog), report);
-            ValidateExpectedCount(recipeCraftPanels, nameof(RecipeCraftPanel), report);
+            ValidateExpectedCount(recipeCraftPanels, nameof(RecipeCraftPanelController), report);
 
             foreach (var craftPanel in craftPanels)
                 ValidateCraftPanel(craftPanel, report);
@@ -136,55 +136,193 @@ namespace CreativeAI.EditorTools.UI
             }
         }
 
-        private static void ValidateCraftPanel(CraftPanel panel, UIValidationReport report)
+        private static void ValidateCraftPanel(
+            CraftPanelController panel,
+            UIValidationReport report
+        )
         {
             string[] requiredFields =
             {
                 "_recipeDB",
-                "_loadingPanel",
-                "_loadingGear",
-                "_resultPanel",
-                "_resultPanelBackground",
-                "_resultPanelTitle",
-                "_resultItemImage",
-                "_resultItemName",
+                "_loadingOverlayView",
+                "_resultPanelView",
+                "_warningToastView",
                 "_closeButton",
-                "_closeButtonButton",
-                "_warningText",
-                "_warningCanvasGroup",
             };
             ValidateRequiredReferences(panel, requiredFields, report);
 
             var serializedObject = new SerializedObject(panel);
-            var warningText = GetReference<TMP_Text>(serializedObject, "_warningText");
-            var warningCanvasGroup = GetReference<CanvasGroup>(
+            var resultView = GetReference<CraftResultPanelView>(
                 serializedObject,
-                "_warningCanvasGroup"
+                "_resultPanelView"
             );
-            if (
-                warningText != null
-                && warningCanvasGroup != null
-                && warningText.gameObject != warningCanvasGroup.gameObject
-            )
+            var warningView = GetReference<CraftWarningToastView>(
+                serializedObject,
+                "_warningToastView"
+            );
+            var loadingView = GetReference<CraftLoadingOverlayView>(
+                serializedObject,
+                "_loadingOverlayView"
+            );
+
+            if (resultView != null)
+                ValidateResultPanelView(resultView, report);
+            if (warningView != null)
+                ValidateWarningToastView(warningView, report);
+            if (loadingView != null)
+                ValidateLoadingOverlayView(loadingView, report);
+        }
+
+        private static void ValidateResultPanelView(
+            CraftResultPanelView view,
+            UIValidationReport report
+        )
+        {
+            string[] requiredFields =
+            {
+                "_canvasGroup",
+                "_closeOnSelfClick",
+                "_background",
+                "_title",
+                "_itemImage",
+                "_itemName",
+            };
+            ValidateRequiredReferences(view, requiredFields, report);
+
+            var serializedView = new SerializedObject(view);
+            var canvasGroup = GetReference<CanvasGroup>(serializedView, "_canvasGroup");
+            var closeOnSelfClick = GetReference<CloseOnSelfClick>(
+                serializedView,
+                "_closeOnSelfClick"
+            );
+            var background = GetReference<Graphic>(serializedView, "_background");
+
+            if (canvasGroup != null && canvasGroup.gameObject != view.gameObject)
             {
                 report.Error(
-                    panel.name,
-                    "_warningCanvasGroup",
-                    "_warningTextと同じGameObjectのCanvasGroupを設定してください。",
-                    panel
+                    view.name,
+                    "_canvasGroup",
+                    "CraftResultPanelViewと同じGameObjectのCanvasGroupを設定してください。",
+                    view
+                );
+            }
+
+            if (closeOnSelfClick != null && closeOnSelfClick.gameObject != view.gameObject)
+            {
+                report.Error(
+                    view.name,
+                    "_closeOnSelfClick",
+                    "CraftResultPanelViewと同じGameObjectのCloseOnSelfClickを設定してください。",
+                    view
+                );
+            }
+
+            ValidateResultPanel(view.gameObject, report);
+            if (background != null)
+                ValidateRaycastGraphic(background.gameObject, "ResultPanel背景", report);
+        }
+
+        private static void ValidateWarningToastView(
+            CraftWarningToastView view,
+            UIValidationReport report
+        )
+        {
+            string[] requiredFields = { "_text", "_canvasGroup", "_rectTransform" };
+            ValidateRequiredReferences(view, requiredFields, report);
+
+            var serializedView = new SerializedObject(view);
+            var warningText = GetReference<TMP_Text>(serializedView, "_text");
+            var warningCanvasGroup = GetReference<CanvasGroup>(serializedView, "_canvasGroup");
+            var warningRect = GetReference<RectTransform>(serializedView, "_rectTransform");
+            ValidateWarningMessage(serializedView, view, "_categoryMismatchMessage", report);
+            ValidateWarningMessage(serializedView, view, "_equippedMaterialMessage", report);
+            ValidateWarningMessage(serializedView, view, "_missingMaterialsMessage", report);
+
+            if (warningText != null && warningText.gameObject != view.gameObject)
+            {
+                report.Error(
+                    view.name,
+                    "_text",
+                    "CraftWarningToastViewと同じGameObjectのTMP_Textを設定してください。",
+                    view
+                );
+            }
+
+            if (warningCanvasGroup != null && warningCanvasGroup.gameObject != view.gameObject)
+            {
+                report.Error(
+                    view.name,
+                    "_canvasGroup",
+                    "CraftWarningToastViewと同じGameObjectのCanvasGroupを設定してください。",
+                    view
+                );
+            }
+
+            if (warningRect != null && warningRect.gameObject != view.gameObject)
+            {
+                report.Error(
+                    view.name,
+                    "_rectTransform",
+                    "CraftWarningToastView自身のRectTransformを設定してください。",
+                    view
                 );
             }
 
             ValidateWarningText(warningText, report);
+        }
 
-            var resultPanel = GetReference<GameObject>(serializedObject, "_resultPanel");
-            var resultPanelBackground = GetReference<GameObject>(
-                serializedObject,
-                "_resultPanelBackground"
-            );
-            ValidateResultPanel(resultPanel, report);
-            if (resultPanelBackground != null)
-                ValidateRaycastGraphic(resultPanelBackground, "ResultPanel背景", report);
+        private static void ValidateWarningMessage(
+            SerializedObject serializedView,
+            CraftWarningToastView view,
+            string fieldName,
+            UIValidationReport report
+        )
+        {
+            var property = serializedView.FindProperty(fieldName);
+            string path = UIHierarchyPathUtility.GetPath(view.transform);
+            if (property == null)
+            {
+                report.Error(
+                    path,
+                    fieldName,
+                    "Warning文言のSerializeFieldが見つかりません。",
+                    view
+                );
+            }
+            else if (string.IsNullOrWhiteSpace(property.stringValue))
+            {
+                report.Warning(
+                    path,
+                    fieldName,
+                    "Warning文言が空です。CraftWarningToastViewで文言を設定してください。",
+                    view
+                );
+            }
+            else
+            {
+                report.Ok(path, fieldName, "Warning文言が設定されています。", view);
+            }
+        }
+
+        private static void ValidateLoadingOverlayView(
+            CraftLoadingOverlayView view,
+            UIValidationReport report
+        )
+        {
+            string[] requiredFields = { "_root", "_gear" };
+            ValidateRequiredReferences(view, requiredFields, report);
+
+            var serializedView = new SerializedObject(view);
+            var root = GetReference<GameObject>(serializedView, "_root");
+            if (root != null && root != view.gameObject)
+            {
+                report.Error(
+                    view.name,
+                    "_root",
+                    "CraftLoadingOverlayViewをLoadingPanel rootへ付け、_rootに同じGameObjectを設定してください。",
+                    view
+                );
+            }
         }
 
         private static void ValidateWarningText(TMP_Text warningText, UIValidationReport report)
@@ -414,7 +552,7 @@ namespace CreativeAI.EditorTools.UI
         }
 
         private static void ValidateRecipeCraftPanel(
-            RecipeCraftPanel panel,
+            RecipeCraftPanelController panel,
             UIValidationReport report
         )
         {
@@ -422,26 +560,72 @@ namespace CreativeAI.EditorTools.UI
             {
                 "_recipeDB",
                 "_craftPanel",
-                "_recipeSlotPrefab",
-                "_recipeList",
-                "_recipeContent",
+                "_recipeListView",
                 "_categoryTabGroup",
                 "_detailPanel",
-                "_materialList",
-                "_quantityDialogPanel",
-                "_quantityDialog",
+                "_materialListView",
                 "_quantityDialogController",
             };
             ValidateRequiredReferences(panel, requiredFields, report);
 
-            var materialRows = new SerializedObject(panel).FindProperty("_materialRows");
+            var serializedPanel = new SerializedObject(panel);
+            var materialListView = GetReference<RecipeMaterialListView>(
+                serializedPanel,
+                "_materialListView"
+            );
+            if (materialListView != null)
+                ValidateRecipeMaterialListView(materialListView, report);
+
+            ValidateRecipeCategoryTabGroup(panel, serializedPanel, report);
+            var recipeListView = GetReference<RecipeListView>(serializedPanel, "_recipeListView");
+            if (recipeListView != null)
+                ValidateRecipeListView(recipeListView, report);
+        }
+
+        private static void ValidateRecipeListView(RecipeListView view, UIValidationReport report)
+        {
+            string[] requiredFields = { "_content", "_slotPrefab" };
+            ValidateRequiredReferences(view, requiredFields, report);
+
+            var serializedView = new SerializedObject(view);
+            var recipeSlotPrefab = GetReference<GameObject>(serializedView, "_slotPrefab");
+            if (recipeSlotPrefab == null)
+                return;
+
+            string path = AssetDatabase.GetAssetPath(recipeSlotPrefab);
+            if (path != RecipeSlotPath || recipeSlotPrefab.GetComponent<RecipeSlot>() == null)
+            {
+                report.Error(
+                    UIHierarchyPathUtility.GetPath(view.transform),
+                    "_slotPrefab",
+                    $"'{RecipeSlotPath}' のRecipeSlot Variantを設定してください。現在: '{path}'",
+                    view
+                );
+            }
+            else
+            {
+                report.Ok(
+                    UIHierarchyPathUtility.GetPath(view.transform),
+                    "_slotPrefab",
+                    "正しいRecipeSlot Variantを参照しています。",
+                    view
+                );
+            }
+        }
+
+        private static void ValidateRecipeMaterialListView(
+            RecipeMaterialListView view,
+            UIValidationReport report
+        )
+        {
+            var materialRows = new SerializedObject(view).FindProperty("_rows");
             if (materialRows == null || materialRows.arraySize == 0)
             {
                 report.Error(
-                    UIHierarchyPathUtility.GetPath(panel.transform),
-                    "_materialRows",
-                    "RecipeCraftで使用するRecipeMaterialRowをInspectorで設定してください。",
-                    panel
+                    UIHierarchyPathUtility.GetPath(view.transform),
+                    "_rows",
+                    "RecipeMaterialListViewで使用するRecipeMaterialRowをInspectorで設定してください。",
+                    view
                 );
             }
             else
@@ -452,43 +636,17 @@ namespace CreativeAI.EditorTools.UI
                         continue;
 
                     report.Error(
-                        UIHierarchyPathUtility.GetPath(panel.transform),
-                        $"_materialRows[{i}]",
+                        UIHierarchyPathUtility.GetPath(view.transform),
+                        $"_rows[{i}]",
                         "RecipeMaterialRow参照を設定してください。",
-                        panel
+                        view
                     );
                 }
-            }
-
-            var serializedPanel = new SerializedObject(panel);
-            ValidateRecipeCategoryTabGroup(panel, serializedPanel, report);
-            var recipeSlotPrefab = GetReference<GameObject>(serializedPanel, "_recipeSlotPrefab");
-            if (recipeSlotPrefab == null)
-                return;
-
-            string path = AssetDatabase.GetAssetPath(recipeSlotPrefab);
-            if (path != RecipeSlotPath || recipeSlotPrefab.GetComponent<RecipeSlot>() == null)
-            {
-                report.Error(
-                    panel.name,
-                    "_recipeSlotPrefab",
-                    $"'{RecipeSlotPath}' のRecipeSlot Variantを設定してください。現在: '{path}'",
-                    panel
-                );
-            }
-            else
-            {
-                report.Ok(
-                    panel.name,
-                    "_recipeSlotPrefab",
-                    "正しいRecipeSlot Variantを参照しています。",
-                    panel
-                );
             }
         }
 
         private static void ValidateRecipeCategoryTabGroup(
-            RecipeCraftPanel panel,
+            RecipeCraftPanelController panel,
             SerializedObject serializedPanel,
             UIValidationReport report
         )
