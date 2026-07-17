@@ -70,16 +70,10 @@ namespace CreativeAI.UI.CraftingUI
         private Coroutine _warningRoutine;
 
         private CloseOnSelfClick _resultCloseOnSelfClick;
+        private System.Action _resultClosedAction;
         private readonly HashSet<string> _warnedMissingReferences = new();
 
-        public CraftRecipeDB RecipeDB
-        {
-            get
-            {
-                _recipeDB ??= Resources.Load<CraftRecipeDB>("Crafting/CraftRecipeDB");
-                return _recipeDB;
-            }
-        }
+        public CraftRecipeDB RecipeDB => _recipeDB;
 
         private void Awake()
         {
@@ -99,7 +93,6 @@ namespace CreativeAI.UI.CraftingUI
 
         private void Initialize()
         {
-            _recipeDB ??= Resources.Load<CraftRecipeDB>("Crafting/CraftRecipeDB");
             ValidateCraftFlowReferences();
             ResolveWarningReferences();
             BindCraftFlow();

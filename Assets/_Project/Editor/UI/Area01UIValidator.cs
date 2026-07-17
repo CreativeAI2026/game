@@ -106,6 +106,8 @@ namespace CreativeAI.EditorTools.UI
                 ValidateSingleProvider(inventory, providers[inventory], report);
 
             ValidateEquipmentCategories(equipmentControllers, report);
+            foreach (var controller in equipmentControllers)
+                ValidateEquipmentReferences(controller, report);
 
             void AddProvider(MonoBehaviour controller, string fieldName, string providerName)
             {
@@ -150,6 +152,40 @@ namespace CreativeAI.EditorTools.UI
                     inventory,
                     $"{nameof(EquipmentViewController)} ({category})",
                     report
+                );
+            }
+        }
+
+        private static void ValidateEquipmentReferences(
+            EquipmentViewController controller,
+            UIValidationReport report
+        )
+        {
+            var serializedController = new SerializedObject(controller);
+            string path = UIHierarchyPathUtility.GetPath(controller.transform);
+            foreach (
+                string fieldName in new[] { "_inventory", "_detailPanel", "_equipmentSlotsRoot" }
+            )
+            {
+                var property = serializedController.FindProperty(fieldName);
+                if (property?.objectReferenceValue != null)
+                    continue;
+
+                report.Error(
+                    path,
+                    fieldName,
+                    "Runtime fallbackはありません。Inspectorで必須参照を設定してください。",
+                    controller
+                );
+            }
+
+            if (serializedController.FindProperty("_inventoryCategory") == null)
+            {
+                report.Error(
+                    path,
+                    "_inventoryCategory",
+                    "Inventoryカテゴリ設定が見つかりません。",
+                    controller
                 );
             }
         }

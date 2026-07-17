@@ -33,6 +33,8 @@ namespace CreativeAI.UI.CharacterUI
         private ItemStack _selectedInventoryStack;
         private bool _initialized;
         private bool _subscribedToInventoryChanged;
+        private bool _warnedMissingInventory;
+        private bool _warnedMissingDetailPanel;
 
         private bool HasSlots => _slots.Count > 0;
 
@@ -43,7 +45,10 @@ namespace CreativeAI.UI.CharacterUI
 
         private void Awake()
         {
-            ResolveReferences();
+            if (!ValidateRequiredReferences())
+                return;
+
+            ResolveConfiguredComponents();
             BindInventoryItemsRequested();
             ConfigureInventory();
         }
@@ -58,7 +63,10 @@ namespace CreativeAI.UI.CharacterUI
             if (_initialized)
                 return;
 
-            ResolveReferences();
+            if (!ValidateRequiredReferences())
+                return;
+
+            ResolveConfiguredComponents();
             BindInventoryItemsRequested();
             ConfigureInventory();
             InitializeSlots();
@@ -75,6 +83,9 @@ namespace CreativeAI.UI.CharacterUI
 
         private void OnEnable()
         {
+            if (!ValidateRequiredReferences())
+                return;
+
             BindInventoryItemsRequested();
 
             if (_initialized)
@@ -101,7 +112,10 @@ namespace CreativeAI.UI.CharacterUI
         {
             _inventoryCategory = inventoryCategory;
             _emptyLabel = emptyLabel;
-            ResolveReferences();
+            if (!ValidateRequiredReferences())
+                return;
+
+            ResolveConfiguredComponents();
             BindInventoryItemsRequested();
             ConfigureInventory();
         }
@@ -148,13 +162,39 @@ namespace CreativeAI.UI.CharacterUI
             RefreshDetailFromCurrentSlot();
         }
 
-        private void ResolveReferences()
+        private void ResolveConfiguredComponents()
         {
-            _detailPanel ??= GetComponentInChildren<ItemDetailPanel>(true);
-            _inventory ??= GetComponentInChildren<Inventory>(true);
-
             if (_triangleLayout == null && _equipmentSlotsRoot != null)
                 _triangleLayout = _equipmentSlotsRoot.GetComponent<TriangleLayout>();
+        }
+
+        private bool ValidateRequiredReferences()
+        {
+            bool valid = true;
+            if (_inventory == null)
+            {
+                WarnMissingReferenceOnce(ref _warnedMissingInventory, nameof(_inventory));
+                valid = false;
+            }
+            if (_detailPanel == null)
+            {
+                WarnMissingReferenceOnce(ref _warnedMissingDetailPanel, nameof(_detailPanel));
+                valid = false;
+            }
+
+            return valid;
+        }
+
+        private void WarnMissingReferenceOnce(ref bool warned, string fieldName)
+        {
+            if (warned)
+                return;
+
+            warned = true;
+            Debug.LogWarning(
+                $"{nameof(EquipmentViewController)} '{CreativeAI.UI.UIHierarchyPathUtility.GetPath(transform)}' requires Inspector reference '{fieldName}'. Initialization was stopped.",
+                this
+            );
         }
 
         private void ConfigureInventory()
@@ -181,5 +221,14 @@ namespace CreativeAI.UI.CharacterUI
             foreach (var slot in _slots)
                 slot?.SetInputLocked(locked);
         }
+
+#if UNITY_EDITOR
+        [ContextMenu("Auto Assign References")]
+        private void AutoAssignReferences()
+        {
+            _detailPanel ??= GetComponentInChildren<ItemDetailPanel>(true);
+            _inventory ??= GetComponentInChildren<Inventory>(true);
+        }
+#endif
     }
 }

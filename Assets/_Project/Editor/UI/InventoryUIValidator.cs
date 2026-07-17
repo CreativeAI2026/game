@@ -489,7 +489,7 @@ namespace CreativeAI.EditorTools.UI
                 if (property == null)
                 {
                     report.Error(
-                        owner.name,
+                        UIHierarchyPathUtility.GetPath(owner.transform),
                         fieldName,
                         "SerializeFieldが見つかりません。Validatorの定義を更新してください。",
                         owner
@@ -498,7 +498,7 @@ namespace CreativeAI.EditorTools.UI
                 else if (property.objectReferenceValue == null)
                 {
                     report.Error(
-                        owner.name,
+                        UIHierarchyPathUtility.GetPath(owner.transform),
                         fieldName,
                         "Inspectorで必須参照を設定してください。",
                         owner
@@ -507,7 +507,7 @@ namespace CreativeAI.EditorTools.UI
                 else
                 {
                     report.Ok(
-                        owner.name,
+                        UIHierarchyPathUtility.GetPath(owner.transform),
                         fieldName,
                         $"{property.objectReferenceValue.name}を参照しています。",
                         owner

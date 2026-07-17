@@ -41,7 +41,6 @@ namespace CreativeAI.UI.CraftingUI
 
         private void OpenQuantityDialog()
         {
-            ResolveAllReferences();
             if (!ValidateQuantityDialogReferences())
                 return;
 

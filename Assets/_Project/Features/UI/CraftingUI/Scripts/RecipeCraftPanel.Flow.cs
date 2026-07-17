@@ -10,8 +10,6 @@ namespace CreativeAI.UI.CraftingUI
 {
     public partial class RecipeCraftPanel
     {
-        private void ResolveCraftFlowReferences() { }
-
         private void StartCraft()
         {
             if (_isCrafting || _selectedRecipe == null)
@@ -78,9 +76,6 @@ namespace CreativeAI.UI.CraftingUI
 
         private void CloseResult()
         {
-            _craftPanel?.HideResult();
-            HideWarningImmediately();
-
             SelectRecipeSlot(_slots.FirstOrDefault(slot => slot?.Recipe == _selectedRecipe));
             RebuildMaterialRows();
         }

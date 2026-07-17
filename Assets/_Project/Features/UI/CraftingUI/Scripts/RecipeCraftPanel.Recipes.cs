@@ -11,7 +11,6 @@ namespace CreativeAI.UI.CraftingUI
     {
         private void BindCategoryTabs()
         {
-            ResolveMainReferences();
             if (_categoryTabGroup == null)
                 return;
 
@@ -84,7 +83,6 @@ namespace CreativeAI.UI.CraftingUI
 
         private void BuildRecipeList()
         {
-            ResolveMainReferences();
             if (_recipeContent == null)
                 return;
 
@@ -271,7 +269,6 @@ namespace CreativeAI.UI.CraftingUI
 
         private IEnumerable<CraftRecipeData> GetVisibleRecipes()
         {
-            ResolveRecipeDB();
             if (_recipeDB != null)
                 return _recipeDB.VisibleRecipes.Where(IsRecipeInCurrentTab);
 
@@ -347,7 +344,6 @@ namespace CreativeAI.UI.CraftingUI
 
         private void RebuildMaterialRows()
         {
-            ResolveMainReferences();
             CacheMaterialRows();
 
             if (_materialList == null)
@@ -402,16 +398,10 @@ namespace CreativeAI.UI.CraftingUI
 
         private void CacheMaterialRows()
         {
-            _materialRows.Clear();
-
-            if (_materialList == null)
-                return;
-
-            _materialRows.AddRange(
-                _materialList
-                    .GetComponentsInChildren<RecipeMaterialRow>(true)
-                    .Where(row => row != null)
-                    .OrderBy(row => row.transform.GetSiblingIndex())
+            _materialRows.RemoveAll(row => row == null);
+            _materialRows.Sort(
+                (left, right) =>
+                    left.transform.GetSiblingIndex().CompareTo(right.transform.GetSiblingIndex())
             );
         }
 
@@ -439,7 +429,6 @@ namespace CreativeAI.UI.CraftingUI
 
         private void SubscribeRecipeDBChanges()
         {
-            ResolveRecipeDB();
             if (_subscribedRecipeDB == _recipeDB)
                 return;
 
@@ -466,7 +455,6 @@ namespace CreativeAI.UI.CraftingUI
             if (!isActiveAndEnabled)
                 return;
 
-            ResolveAllReferences();
             BuildRecipeList();
             SelectRecipeSlot(
                 _slots.FirstOrDefault(slot => slot != null && slot.Recipe == recipe)

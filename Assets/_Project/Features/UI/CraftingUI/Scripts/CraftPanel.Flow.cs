@@ -57,6 +57,12 @@ namespace CreativeAI.UI.CraftingUI
                 _resultPanel,
                 HideSharedResult
             );
+
+            if (_closeButtonButton != null)
+            {
+                _closeButtonButton.onClick.RemoveListener(HideSharedResult);
+                _closeButtonButton.onClick.AddListener(HideSharedResult);
+            }
         }
 
         public void ShowLoading()
@@ -86,6 +92,8 @@ namespace CreativeAI.UI.CraftingUI
                 return;
 
             CraftFlowViewUtility.HidePanels(_loadingPanel, _resultPanel);
+            _resultClosedAction = null;
+            ClearResultContent();
         }
 
         public void RotateLoadingGear(float speed)
@@ -101,6 +109,7 @@ namespace CreativeAI.UI.CraftingUI
             if (!ValidateResultReferences())
                 return;
 
+            _resultClosedAction = closeAction;
             HideWarning();
             CraftFlowViewUtility.ShowResultPanel(
                 _resultPanel,
@@ -108,22 +117,39 @@ namespace CreativeAI.UI.CraftingUI
                 _resultItemName,
                 resultItem,
                 count,
-                closeAction
+                HideSharedResult
             );
         }
 
-        public void HideResult()
-        {
-            if (!ValidateRequiredReference(_resultPanel, nameof(_resultPanel)))
-                return;
-
-            CraftUIAnimationUtility.PlayResultOut(_resultPanel);
-        }
+        public void HideResult() => HideSharedResult();
 
         private void HideSharedResult()
         {
-            HideResult();
+            System.Action closedAction = _resultClosedAction;
+            _resultClosedAction = null;
+
+            CraftUIAnimationUtility.PlayResultOut(
+                _resultPanel,
+                () =>
+                {
+                    ClearResultContent();
+                    closedAction?.Invoke();
+                }
+            );
             HideWarning();
+        }
+
+        private void ClearResultContent()
+        {
+            if (_resultItemImage != null)
+            {
+                _resultItemImage.sprite = null;
+                _resultItemImage.color = Color.clear;
+                _resultItemImage.gameObject.SetActive(false);
+            }
+
+            if (_resultItemName != null)
+                _resultItemName.text = string.Empty;
         }
 
         private void ResetSharedFlow()

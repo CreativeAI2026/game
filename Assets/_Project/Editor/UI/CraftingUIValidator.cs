@@ -101,6 +101,39 @@ namespace CreativeAI.EditorTools.UI
                 "_craftButton",
             };
             ValidateRequiredReferences(panel, requiredFields, report);
+
+            var serializedPanel = new SerializedObject(panel);
+            var slotsRoot = GetReference<Transform>(serializedPanel, "_slotsRoot");
+            if (slotsRoot == null)
+                return;
+
+            int materialSlotCount = 0;
+            for (int i = 0; i < slotsRoot.childCount; i++)
+            {
+                var child = slotsRoot.GetChild(i);
+                if (child.GetComponent<MaterialSlot>() != null)
+                {
+                    materialSlotCount++;
+                    continue;
+                }
+
+                report.Error(
+                    UIHierarchyPathUtility.GetPath(child),
+                    nameof(MaterialSlot),
+                    "MaterialSlotsRoot直下の要素にはMaterialSlotが必要です。",
+                    child
+                );
+            }
+
+            if (materialSlotCount == 0)
+            {
+                report.Error(
+                    UIHierarchyPathUtility.GetPath(slotsRoot),
+                    nameof(MaterialSlot),
+                    "FreeCraftには1個以上のMaterialSlotが必要です。",
+                    slotsRoot
+                );
+            }
         }
 
         private static void ValidateCraftPanel(CraftPanel panel, UIValidationReport report)
@@ -145,7 +178,13 @@ namespace CreativeAI.EditorTools.UI
             ValidateWarningText(warningText, report);
 
             var resultPanel = GetReference<GameObject>(serializedObject, "_resultPanel");
+            var resultPanelBackground = GetReference<GameObject>(
+                serializedObject,
+                "_resultPanelBackground"
+            );
             ValidateResultPanel(resultPanel, report);
+            if (resultPanelBackground != null)
+                ValidateRaycastGraphic(resultPanelBackground, "ResultPanel背景", report);
         }
 
         private static void ValidateWarningText(TMP_Text warningText, UIValidationReport report)
@@ -232,6 +271,16 @@ namespace CreativeAI.EditorTools.UI
             if (resultPanel == null)
                 return;
 
+            if (resultPanel.GetComponent<CanvasGroup>() == null)
+            {
+                report.Error(
+                    resultPanel.name,
+                    nameof(CanvasGroup),
+                    "ResultPanelには表示・非表示Tween用のCanvasGroupが必要です。",
+                    resultPanel
+                );
+            }
+
             var catchers = resultPanel.GetComponents<CloseOnSelfClick>();
             if (catchers.Length != 1)
             {
@@ -246,12 +295,12 @@ namespace CreativeAI.EditorTools.UI
 
             var serializedCatcher = new SerializedObject(catchers[0]);
             var target = GetReference<GameObject>(serializedCatcher, "_targetToHide");
-            if (target != resultPanel)
+            if (target != null)
             {
                 report.Error(
                     resultPanel.name,
                     "Target To Hide",
-                    "ResultPanel自身を設定してください。",
+                    "ResultPanelはHideSharedResult()経由で閉じるため、CloseOnSelfClick.TargetToHideは使用しないでください。",
                     catchers[0]
                 );
             }
@@ -260,7 +309,7 @@ namespace CreativeAI.EditorTools.UI
                 report.Ok(
                     resultPanel.name,
                     "Target To Hide",
-                    "ResultPanel自身を閉じる構成です。",
+                    "Noneです。Runtime actionからHideSharedResult()を使用します。",
                     catchers[0]
                 );
             }
@@ -384,6 +433,32 @@ namespace CreativeAI.EditorTools.UI
                 "_quantityDialogController",
             };
             ValidateRequiredReferences(panel, requiredFields, report);
+
+            var materialRows = new SerializedObject(panel).FindProperty("_materialRows");
+            if (materialRows == null || materialRows.arraySize == 0)
+            {
+                report.Error(
+                    UIHierarchyPathUtility.GetPath(panel.transform),
+                    "_materialRows",
+                    "RecipeCraftで使用するRecipeMaterialRowをInspectorで設定してください。",
+                    panel
+                );
+            }
+            else
+            {
+                for (int i = 0; i < materialRows.arraySize; i++)
+                {
+                    if (materialRows.GetArrayElementAtIndex(i).objectReferenceValue != null)
+                        continue;
+
+                    report.Error(
+                        UIHierarchyPathUtility.GetPath(panel.transform),
+                        $"_materialRows[{i}]",
+                        "RecipeMaterialRow参照を設定してください。",
+                        panel
+                    );
+                }
+            }
 
             var serializedPanel = new SerializedObject(panel);
             ValidateRecipeCategoryTabGroup(panel, serializedPanel, report);
@@ -529,7 +604,7 @@ namespace CreativeAI.EditorTools.UI
                 if (property == null)
                 {
                     report.Error(
-                        owner.name,
+                        UIHierarchyPathUtility.GetPath(owner.transform),
                         fieldName,
                         "SerializeFieldが見つかりません。Validatorの定義を更新してください。",
                         owner
@@ -538,7 +613,7 @@ namespace CreativeAI.EditorTools.UI
                 else if (property.objectReferenceValue == null)
                 {
                     report.Error(
-                        owner.name,
+                        UIHierarchyPathUtility.GetPath(owner.transform),
                         fieldName,
                         "Inspectorで必須参照を設定してください。",
                         owner
@@ -547,7 +622,7 @@ namespace CreativeAI.EditorTools.UI
                 else
                 {
                     report.Ok(
-                        owner.name,
+                        UIHierarchyPathUtility.GetPath(owner.transform),
                         fieldName,
                         $"{property.objectReferenceValue.name} を参照しています。",
                         owner
