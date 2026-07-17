@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using CreativeAI.Gameplay;
 using CreativeAI.UI.InventoryUI;
 using UnityEngine;
+using UnityEngine.Serialization;
 using UnityEngine.UI;
 
 namespace CreativeAI.UI.CraftingUI
@@ -34,15 +35,9 @@ namespace CreativeAI.UI.CraftingUI
         private Transform _recipeContent;
 
         [Header("Recipe Tabs")]
+        [FormerlySerializedAs("_recipeTabGroup")]
         [SerializeField]
-        private TabGroup _recipeTabGroup;
-
-        [SerializeField]
-        private List<ItemCategory> _recipeCategories = new()
-        {
-            ItemCategory.Equipment,
-            ItemCategory.Food,
-        };
+        private TabGroup _categoryTabGroup;
 
         [SerializeField]
         private ItemDetailPanel _detailPanel;
@@ -63,7 +58,6 @@ namespace CreativeAI.UI.CraftingUI
         private readonly List<RecipeSlot> _slots = new();
         private readonly List<RecipeSlot> _generatedRecipeSlots = new();
         private readonly List<RecipeMaterialRow> _materialRows = new();
-        private readonly List<ItemCategory> _activeRecipeCategories = new();
         private CraftRecipeDB _subscribedRecipeDB;
         private CraftRecipeData _selectedRecipe;
         private CraftRecipeData _craftedRecipeForResult;
@@ -76,13 +70,15 @@ namespace CreativeAI.UI.CraftingUI
         private bool _warnedMissingQuantityDialogPanel;
         private bool _warnedMissingQuantityDialog;
         private bool _warnedMissingQuantityDialogController;
+        private bool _warnedMissingCategoryTabGroup;
+        private bool _warnedInvalidCategoryTab;
         private Coroutine _craftRoutine;
         private Coroutine _initializeRoutine;
 
         private void Awake()
         {
             ResolveAllReferences();
-            BindRecipeTabs();
+            BindCategoryTabs();
             PrepareInitialHiddenTemplates();
             ValidateSetup();
             SubscribeRecipeDBChanges();
@@ -117,7 +113,7 @@ namespace CreativeAI.UI.CraftingUI
 
         private void OnDestroy()
         {
-            UnbindRecipeTabs();
+            UnbindCategoryTabs();
             UnsubscribeRecipeDBChanges();
         }
 
@@ -155,7 +151,7 @@ namespace CreativeAI.UI.CraftingUI
         {
             _recipeList ??= Find("RecipeList");
             _recipeContent ??= FindRecipeContent();
-            _recipeTabGroup ??= GetComponentInChildren<TabGroup>(true);
+            _categoryTabGroup ??= GetComponentInChildren<TabGroup>(true);
             _detailPanel ??= FindDetailPanel();
             _materialList ??= Find("MaterialList");
         }
@@ -235,6 +231,12 @@ namespace CreativeAI.UI.CraftingUI
                 Debug.LogWarning(
                     $"{nameof(RecipeCraftPanel)} on {name}: MaterialList が見つかりません。",
                     this
+                );
+
+            if (_categoryTabGroup == null)
+                WarnMissingReferenceOnce(
+                    ref _warnedMissingCategoryTabGroup,
+                    nameof(_categoryTabGroup)
                 );
         }
 

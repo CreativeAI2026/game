@@ -1,8 +1,12 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using CreativeAI.Gameplay;
+using CreativeAI.UI;
 using CreativeAI.UI.Common;
 using CreativeAI.UI.CraftingUI;
+using CreativeAI.UI.InventoryUI;
+using TMPro;
 using UnityEditor;
 using UnityEditor.SceneManagement;
 using UnityEngine;
@@ -119,7 +123,7 @@ namespace CreativeAI.EditorTools.UI
             ValidateRequiredReferences(panel, requiredFields, report);
 
             var serializedObject = new SerializedObject(panel);
-            var warningText = GetReference<Component>(serializedObject, "_warningText");
+            var warningText = GetReference<TMP_Text>(serializedObject, "_warningText");
             var warningCanvasGroup = GetReference<CanvasGroup>(
                 serializedObject,
                 "_warningCanvasGroup"
@@ -138,8 +142,89 @@ namespace CreativeAI.EditorTools.UI
                 );
             }
 
+            ValidateWarningText(warningText, report);
+
             var resultPanel = GetReference<GameObject>(serializedObject, "_resultPanel");
             ValidateResultPanel(resultPanel, report);
+        }
+
+        private static void ValidateWarningText(TMP_Text warningText, UIValidationReport report)
+        {
+            if (warningText == null)
+                return;
+
+            if (warningText.rectTransform == null)
+            {
+                report.Error(
+                    warningText.name,
+                    nameof(RectTransform),
+                    "Warning TextからRectTransformを取得できません。TMP_Text参照を確認してください。",
+                    warningText
+                );
+            }
+
+            if (warningText.GetComponent<CanvasGroup>() == null)
+            {
+                report.Error(
+                    warningText.name,
+                    nameof(CanvasGroup),
+                    "WarningTextにはフェード制御用のCanvasGroupが必要です。",
+                    warningText
+                );
+            }
+
+            if (warningText.raycastTarget)
+            {
+                report.Error(
+                    warningText.name,
+                    "Raycast Target",
+                    "一時通知のWarningTextはRaycast TargetをOFFにしてください。",
+                    warningText
+                );
+            }
+
+            for (
+                Transform parent = warningText.transform.parent;
+                parent != null;
+                parent = parent.parent
+            )
+            {
+                if (parent.GetComponent<LayoutGroup>() != null)
+                {
+                    report.Error(
+                        warningText.name,
+                        "Hierarchy",
+                        $"WarningTextをLayoutGroup '{parent.name}' の配下に置かないでください。",
+                        warningText
+                    );
+                    break;
+                }
+
+                if (parent.GetComponent<ScrollRect>() != null)
+                {
+                    report.Error(
+                        warningText.name,
+                        "Hierarchy",
+                        $"WarningTextをScrollRect '{parent.name}' の配下に置かないでください。",
+                        warningText
+                    );
+                    break;
+                }
+
+                if (
+                    parent.name.Contains("SlotRoot", StringComparison.OrdinalIgnoreCase)
+                    || parent.name.Equals("Content", StringComparison.OrdinalIgnoreCase)
+                )
+                {
+                    report.Error(
+                        warningText.name,
+                        "Hierarchy",
+                        $"WarningTextを通常コンテンツ用Root '{parent.name}' の配下に置かないでください。",
+                        warningText
+                    );
+                    break;
+                }
+            }
         }
 
         private static void ValidateResultPanel(GameObject resultPanel, UIValidationReport report)
@@ -291,7 +376,7 @@ namespace CreativeAI.EditorTools.UI
                 "_recipeSlotPrefab",
                 "_recipeList",
                 "_recipeContent",
-                "_recipeTabGroup",
+                "_categoryTabGroup",
                 "_detailPanel",
                 "_materialList",
                 "_quantityDialogPanel",
@@ -301,6 +386,7 @@ namespace CreativeAI.EditorTools.UI
             ValidateRequiredReferences(panel, requiredFields, report);
 
             var serializedPanel = new SerializedObject(panel);
+            ValidateRecipeCategoryTabGroup(panel, serializedPanel, report);
             var recipeSlotPrefab = GetReference<GameObject>(serializedPanel, "_recipeSlotPrefab");
             if (recipeSlotPrefab == null)
                 return;
@@ -322,6 +408,79 @@ namespace CreativeAI.EditorTools.UI
                     "_recipeSlotPrefab",
                     "正しいRecipeSlot Variantを参照しています。",
                     panel
+                );
+            }
+        }
+
+        private static void ValidateRecipeCategoryTabGroup(
+            RecipeCraftPanel panel,
+            SerializedObject serializedPanel,
+            UIValidationReport report
+        )
+        {
+            var tabGroup = GetReference<TabGroup>(serializedPanel, "_categoryTabGroup");
+            if (tabGroup == null)
+                return;
+
+            ItemCategory[] expectedCategories = { ItemCategory.Equipment, ItemCategory.Food };
+            var actualCategories = new List<ItemCategory>();
+            bool referencesRecipeCraftView = false;
+
+            for (int i = 0; i < tabGroup.EntryCount; i++)
+            {
+                var view = tabGroup.GetView(i);
+                if (
+                    view != null
+                    && (
+                        panel.transform == view.transform
+                        || panel.transform.IsChildOf(view.transform)
+                    )
+                )
+                {
+                    referencesRecipeCraftView = true;
+                }
+
+                var definition = tabGroup.GetDefinitionForEntry(i);
+                if (definition is not InventoryTabDefinition inventoryDefinition)
+                {
+                    report.Error(
+                        tabGroup.name,
+                        $"TabEntry[{i}].definition",
+                        $"Recipe category tabには{nameof(InventoryTabDefinition)}を設定してください。",
+                        tabGroup
+                    );
+                    continue;
+                }
+
+                actualCategories.Add(inventoryDefinition.Category);
+            }
+
+            if (referencesRecipeCraftView)
+            {
+                report.Error(
+                    panel.name,
+                    "_categoryTabGroup",
+                    "FreeCraft / RecipeCraft画面切替用TabGroupをカテゴリ用として参照しています。RecipeCraftPanel内のカテゴリTabGroupを設定してください。",
+                    panel
+                );
+            }
+
+            if (!actualCategories.SequenceEqual(expectedCategories))
+            {
+                report.Error(
+                    tabGroup.name,
+                    "Recipe category order",
+                    $"カテゴリを次の順に設定してください: {string.Join(" / ", expectedCategories)}",
+                    tabGroup
+                );
+            }
+            else
+            {
+                report.Ok(
+                    tabGroup.name,
+                    "Recipe category order",
+                    $"カテゴリ順が正しいです: {string.Join(" / ", actualCategories)}",
+                    tabGroup
                 );
             }
         }

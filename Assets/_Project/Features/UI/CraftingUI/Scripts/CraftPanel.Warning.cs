@@ -5,6 +5,12 @@ namespace CreativeAI.UI.CraftingUI
 {
     public partial class CraftPanel
     {
+        private const float WarningShakeDistance = 12f;
+        private const float WarningShakeDuration = 0.6f;
+        private const float WarningShakeFrequency = 5f;
+        private Vector3 _warningTextBaseScale;
+        private bool _hasWarningTextBaseScale;
+
         public void ShowMissingMaterialsWarning()
         {
             ShowWarning(_missingMaterialsMessage);
@@ -22,6 +28,9 @@ namespace CreativeAI.UI.CraftingUI
 
         public void HideWarning()
         {
+            if (_warningText != null)
+                CaptureWarningBaseScale(_warningText.rectTransform);
+
             StopWarningAnimation();
 
             if (_warningText == null)
@@ -40,7 +49,12 @@ namespace CreativeAI.UI.CraftingUI
             if (!ResolveWarningReferences())
                 return;
 
+            RectTransform warningTextRect = _warningText.rectTransform;
+            CaptureWarningBaseScale(warningTextRect);
             StopWarningAnimation();
+
+            _warningTextBasePosition = warningTextRect.anchoredPosition;
+            _hasWarningTextBasePosition = true;
 
             _warningText.text = message;
             _warningText.gameObject.SetActive(true);
@@ -54,15 +68,13 @@ namespace CreativeAI.UI.CraftingUI
 
         private IEnumerator PlayWarningAnimationRoutine()
         {
-            const float shakeDuration = 0.28f;
-            const float shakeFrequency = 14f;
             float elapsed = 0f;
-            while (elapsed < shakeDuration)
+            while (elapsed < WarningShakeDuration)
             {
-                float progress = Mathf.Clamp01(elapsed / shakeDuration);
+                float progress = Mathf.Clamp01(elapsed / WarningShakeDuration);
                 float damping = 1f - progress;
                 float offset =
-                    Mathf.Sin(progress * Mathf.PI * shakeFrequency)
+                    Mathf.Sin(elapsed * Mathf.PI * 2f * WarningShakeFrequency)
                     * WarningShakeDistance
                     * damping;
                 SetWarningOffset(offset);
@@ -101,20 +113,38 @@ namespace CreativeAI.UI.CraftingUI
 
         private void SetWarningOffset(float offsetX)
         {
-            if (_warningTextRect == null)
+            RectTransform warningTextRect =
+                _warningText != null ? _warningText.rectTransform : null;
+            if (warningTextRect == null)
                 return;
 
             Vector2 basePosition = _hasWarningTextBasePosition
                 ? _warningTextBasePosition
-                : _warningTextRect.anchoredPosition;
-            _warningTextRect.anchoredPosition = basePosition + Vector2.right * offsetX;
+                : warningTextRect.anchoredPosition;
+            warningTextRect.anchoredPosition = new Vector2(
+                basePosition.x + offsetX,
+                basePosition.y
+            );
         }
 
         private void ResetWarningTransform()
         {
             SetWarningOffset(0f);
-            if (_warningTextRect != null)
-                _warningTextRect.localScale = Vector3.one;
+            RectTransform warningTextRect =
+                _warningText != null ? _warningText.rectTransform : null;
+            if (warningTextRect != null)
+                warningTextRect.localScale = _hasWarningTextBaseScale
+                    ? _warningTextBaseScale
+                    : Vector3.one;
+        }
+
+        private void CaptureWarningBaseScale(RectTransform warningTextRect)
+        {
+            if (_hasWarningTextBaseScale || warningTextRect == null)
+                return;
+
+            _warningTextBaseScale = warningTextRect.localScale;
+            _hasWarningTextBaseScale = true;
         }
     }
 }

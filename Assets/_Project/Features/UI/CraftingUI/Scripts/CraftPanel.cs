@@ -11,7 +11,6 @@ namespace CreativeAI.UI.CraftingUI
     public partial class CraftPanel : MonoBehaviour
     {
         private const string EmptyMaterialLabel = "\uFF08\u672A\u9078\u629E\uFF09";
-        private const float WarningShakeDistance = 8f;
         private const float WarningFadeDelay = 0.8f;
         private const float WarningFadeDuration = 0.6f;
 
@@ -66,7 +65,6 @@ namespace CreativeAI.UI.CraftingUI
         private string _missingMaterialsMessage =
             "\u7D20\u6750\u304C\u8DB3\u308A\u307E\u305B\u3093\uFF01";
 
-        private RectTransform _warningTextRect;
         private Vector2 _warningTextBasePosition;
         private bool _hasWarningTextBasePosition;
         private Coroutine _warningRoutine;
@@ -112,10 +110,10 @@ namespace CreativeAI.UI.CraftingUI
             if (!ValidateRequiredReference(_warningText, nameof(_warningText)))
                 return false;
 
-            _warningTextRect ??= _warningText.rectTransform;
-            if (!_hasWarningTextBasePosition && _warningTextRect != null)
+            RectTransform warningTextRect = _warningText.rectTransform;
+            if (!_hasWarningTextBasePosition && warningTextRect != null)
             {
-                _warningTextBasePosition = _warningTextRect.anchoredPosition;
+                _warningTextBasePosition = warningTextRect.anchoredPosition;
                 _hasWarningTextBasePosition = true;
             }
 

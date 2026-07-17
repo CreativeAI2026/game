@@ -197,7 +197,7 @@ namespace CreativeAI.UI.InventoryUI
 
             _hasWarnedMissingDisplayProvider = true;
             Debug.LogWarning(
-                $"{nameof(Inventory)} '{name}' has no display provider. Connect a controller that handles {nameof(DisplayRefreshRequested)}.",
+                $"{nameof(Inventory)} '{UIHierarchyPathUtility.GetPath(transform)}' has no display provider. Connect a controller that handles {nameof(DisplayRefreshRequested)}.",
                 this
             );
         }
