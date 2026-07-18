@@ -45,12 +45,12 @@ namespace CreativeAI.Gameplay
             var inv = InventoryManager.Instance;
             if (inv != null)
             {
-                var battleFoodSlots = inv.GetBattleFoodSlots();
+                var quickFoodSlots = inv.GetQuickFoodSlots();
                 foreach (var stack in inv.GetAllItems())
                 {
                     if (stack?.Data == null)
                         continue;
-                    int battleSlot = IndexOfBattleFoodSlot(battleFoodSlots, stack);
+                    int quickSlot = IndexOfQuickFoodSlot(quickFoodSlots, stack);
                     data.items.Add(
                         new ItemEntry
                         {
@@ -61,8 +61,8 @@ namespace CreativeAI.Gameplay
                                 stack.RolledStats != null
                                     ? new List<RolledStat>(stack.RolledStats)
                                     : null,
-                            inBattleFood = battleSlot >= 0,
-                            battleFoodSlot = battleSlot >= 0 ? battleSlot : 0,
+                            inQuickFood = quickSlot >= 0,
+                            quickFoodSlot = quickSlot >= 0 ? quickSlot : 0,
                         }
                     );
                 }
@@ -220,14 +220,14 @@ namespace CreativeAI.Gameplay
                         stack.IsEquipped = true;
                 }
 
-                // 戦闘食材スロットの復元(食材のみ・SetBattleFood 側で食材/在庫を検証)。
-                if (stack != null && e.inBattleFood)
-                    inv.SetBattleFood(e.battleFoodSlot, stack);
+                // 即時使用食材スロットの復元(食材のみ・SetQuickFood 側で食材/在庫を検証)。
+                if (stack != null && e.inQuickFood)
+                    inv.SetQuickFood(e.quickFoodSlot, stack);
             }
         }
 
-        /// <summary>stack が入っている戦闘食材スロット番号を返す。未セットは -1。</summary>
-        private static int IndexOfBattleFoodSlot(IReadOnlyList<ItemStack> slots, ItemStack stack)
+        /// <summary>stack が入っている即時使用食材スロット番号を返す。未セットは -1。</summary>
+        private static int IndexOfQuickFoodSlot(IReadOnlyList<ItemStack> slots, ItemStack stack)
         {
             for (int i = 0; i < slots.Count; i++)
                 if (slots[i] == stack)

@@ -61,13 +61,13 @@ namespace CreativeAI.Gameplay
         public List<RolledStat> rolledStats;
 
         /// <summary>
-        /// このスタックが戦闘食材スロットにセットされているか。旧セーブは既定 false(未セット)で復元される。
+        /// このスタックが即時使用食材スロットにセットされているか。旧セーブは既定 false(未セット)で復元される。
         /// bool にしているのは、JsonUtility が欠落フィールドに初期化子(-1 等)を反映しない場合でも
         /// 既定 false で安全に「未セット」と判定するため(slot=0 との誤判定を避ける)。
         /// </summary>
-        public bool inBattleFood;
+        public bool inQuickFood;
 
-        /// <summary>戦闘食材スロット番号(0..2)。<see cref="inBattleFood"/> が true のときのみ有効。</summary>
-        public int battleFoodSlot;
+        /// <summary>即時使用食材スロット番号(0..2)。<see cref="inQuickFood"/> が true のときのみ有効。</summary>
+        public int quickFoodSlot;
     }
 }
