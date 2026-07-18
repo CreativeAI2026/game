@@ -13,10 +13,9 @@ namespace CreativeAI.UI
     )]
     public class ResidentBootstrapConfig : ScriptableObject
     {
-        [Tooltip("セッション常駐の UI レイヤー(UIRoot Prefab)")]
+        [Tooltip(
+            "セッション常駐の UI レイヤー(UIRoot Prefab)。会話UI・即時食材使用UI も UIRoot が子として束ねる(§6)"
+        )]
         public GameObject uiRootPrefab;
-
-        [Tooltip("セッション常駐の会話UI(ConversationView Prefab)")]
-        public GameObject conversationViewPrefab;
     }
 }

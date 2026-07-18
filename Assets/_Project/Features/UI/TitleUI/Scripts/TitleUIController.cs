@@ -2,7 +2,6 @@ using CreativeAI.Core;
 using CreativeAI.Core.EventSystem;
 using CreativeAI.Core.SceneManagement;
 using CreativeAI.Gameplay;
-using CreativeAI.UI.ConversationUI;
 using UnityEngine;
 using UnityEngine.UI;
 
@@ -23,10 +22,7 @@ namespace CreativeAI.UI.TitleUI
         private GameStarter _gameStarter; // Title に置く GameStarter(PlayerRig 生成)。未割当なら生成スキップ
 
         [SerializeField]
-        private GameObject _uiRootPrefab; // セッション常駐の UI レイヤー(UIRoot Prefab)。未割当なら UI は出ない
-
-        [SerializeField]
-        private GameObject _conversationViewPrefab; // セッション常駐の会話UI(ConversationView Prefab)。未割当なら会話は表示されない
+        private GameObject _uiRootPrefab; // セッション常駐の UI レイヤー(UIRoot Prefab)。会話UI・即時食材使用UI も UIRoot が束ねる(§6)。未割当なら UI は出ない
 
         private void Awake()
         {
@@ -106,8 +102,7 @@ namespace CreativeAI.UI.TitleUI
             SessionBootstrap.EnsureSession(); // ① マネージャ(ProgressManager / GameModeManager / EventPlayer)
             InventoryManager.EnsureResident(); // ② 所持品(Core は Gameplay を参照できないためここで生成)
             RecipeBookManager.EnsureResident(); // ②' レシピ解禁状態(セッション常駐・セーブ対象。Inventory と同じ層でここで生成)
-            UIRoot.EnsureResident(_uiRootPrefab); // ③ UI レイヤー(Core→UI 循環回避のため Inventory と同様ここで生成。GameModeManager 生成後=HudIconBar が購読できる)
-            ConversationView.EnsureResident(_conversationViewPrefab); // ③' 会話UI(UIRoot と同じ常駐生成。Awake で DialogueViewService に自己登録し EventPlayer の seam を満たす)
+            UIRoot.EnsureResident(_uiRootPrefab); // ③ UI レイヤー(会話UI・即時食材使用UI を子として同梱=§6。GameModeManager 生成後=HudIconBar 購読可・InventoryManager 生成後=QuickFood 枠購読可・ConversationView が DialogueViewService seam に自己登録)
             BattleRunnerService.Current ??= new BattleRunner(); // ④ 戦闘実行(状態なしの plain class。battle ステップの seam に登録)
             if (_gameStarter != null)
                 _gameStarter.EnsurePlayer(); // ⑤ プレイヤーリグ

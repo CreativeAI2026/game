@@ -1,7 +1,6 @@
 using CreativeAI.Core;
 using CreativeAI.Core.EventSystem;
 using CreativeAI.Gameplay;
-using CreativeAI.UI.ConversationUI;
 using UnityEngine;
 
 namespace CreativeAI.UI
@@ -42,9 +41,8 @@ namespace CreativeAI.UI
             var inventory = InventoryManager.EnsureResident();
             // ②' レシピ解禁状態
             RecipeBookManager.EnsureResident();
-            // ③ UI レイヤー / ③' 会話UI(Prefab は集約設定から)
+            // ③ UI レイヤー(会話UI・即時食材使用UI を子として同梱=§6)
             UIRoot.EnsureResident(config != null ? config.uiRootPrefab : null);
-            ConversationView.EnsureResident(config != null ? config.conversationViewPrefab : null);
             // ④ 戦闘実行
             BattleRunnerService.Current ??= new BattleRunner();
 
