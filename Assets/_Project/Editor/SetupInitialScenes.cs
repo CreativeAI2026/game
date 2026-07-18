@@ -24,7 +24,7 @@ namespace CreativeAI.EditorTools
 {
     /// <summary>
     /// 01_Title / Field_Area00(スカフォールド)の2シーンを生成し、Build Settings に登録する(Title 先頭)。
-    /// 手作りの Field_Area01+ は上書きしない。
+    /// 手作りの本番フィールド は上書きしない。
     /// - アプリ常駐(SceneController + ロードオーバーレイ / EventSystem)は Title が生成する(Boot シーンは廃止)。
     /// - セッション常駐の UI レイヤー(UIRoot)は Title で Prefab 化し、TitleUIController が「はじめる」で生成する。
     ///   HUD(HP) / 右上アイコンバー(HudIconBar) / 即時食材使用UI / 武器切替UI / 各パネル / 会話UI を
@@ -39,7 +39,7 @@ namespace CreativeAI.EditorTools
         private const string UIRootPrefabPath =
             "Assets/_Project/Features/UI/Root/Prefabs/UIRoot.prefab";
 
-        // 生成器はスカフォールド用の Field_Area00 を作る。手作りの Field_Area01+ は上書きしない。
+        // 生成器はスカフォールド用の Field_Area00 を作る。手作りの本番フィールド は上書きしない。
         private const string FieldPath = "Assets/_Project/Scenes/Field/Field_Area00.unity";
         private const string TitleBgPath = "Assets/_Project/Art/UI/Backgrounds/bg_title_main.png";
         private const string CharacterBgPath =
@@ -78,7 +78,7 @@ namespace CreativeAI.EditorTools
             EditorSceneManager.OpenScene(TitlePath);
 
             const string summary =
-                "完了しました。\n\n- 01_Title / Field_Area00(スカフォールド) を生成\n- Title にアプリ常駐(SceneController + ロードオーバーレイ + EventSystem)を配置\n- セッション常駐の UI レイヤー UIRoot を Prefab 化し TitleUIController に配線\n  (HUD / HudIconBar / 即時食材使用UI / 武器切替UI / Character・Inventory・Save パネル / 会話UI)\n- Field_Area00 は 3D 世界のみ(UI は置かない)\n- 手作りの Field_Area01+ は上書きしていません\n- Build Settings に登録(Title を先頭)\n- 01_Title を開きました\n\nそのまま Play してください。";
+                "完了しました。\n\n- 01_Title / Field_Area00(スカフォールド) を生成\n- Title にアプリ常駐(SceneController + ロードオーバーレイ + EventSystem)を配置\n- セッション常駐の UI レイヤー UIRoot を Prefab 化し TitleUIController に配線\n  (HUD / HudIconBar / 即時食材使用UI / 武器切替UI / Character・Inventory・Save パネル / 会話UI)\n- Field_Area00 は 3D 世界のみ(UI は置かない)\n- 手作りの本番フィールド は上書きしていません\n- Build Settings に登録(Title を先頭)\n- 01_Title を開きました\n\nそのまま Play してください。";
             if (Application.isBatchMode)
                 Debug.Log("[SetupInitialScenes] " + summary);
             else
@@ -194,7 +194,7 @@ namespace CreativeAI.EditorTools
             var titleController = canvasGo.AddComponent<TitleUIController>();
             SetRef(titleController, "_tapToStartButton", button);
             SetRef(titleController, "_gameStarter", starter);
-            // 生成器の Title はスカフォールド用 Field_Area00 へ遷移(本番 Field_Area01 に依存しない)。
+            // 生成器の Title はスカフォールド用 Field_Area00 へ遷移(本番フィールドに依存しない)。
             SetStr(titleController, "_nextSceneName", SceneNames.FieldArea00);
 
             // セッション常駐の UI レイヤーを Prefab 化して TitleUIController に配線する
