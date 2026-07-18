@@ -390,6 +390,12 @@ namespace CreativeAI.UI.CraftingUI
                 return;
             }
 
+            if (InventoryManager.Instance != null && InventoryManager.Instance.IsInQuickFood(stack))
+            {
+                _craftPanel?.ShowQuickFoodMaterialWarning();
+                return;
+            }
+
             if (ClearAssignedMaterialSlot(stack.Data))
                 return;
 
@@ -414,6 +420,12 @@ namespace CreativeAI.UI.CraftingUI
             if (stack.IsEquipped)
             {
                 _craftPanel?.ShowEquippedMaterialWarning();
+                return false;
+            }
+
+            if (InventoryManager.Instance != null && InventoryManager.Instance.IsInQuickFood(stack))
+            {
+                _craftPanel?.ShowQuickFoodMaterialWarning();
                 return false;
             }
 

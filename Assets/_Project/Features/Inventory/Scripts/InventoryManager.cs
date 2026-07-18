@@ -280,6 +280,26 @@ namespace CreativeAI.Gameplay
             return materials != null && materials.Any(IsItemEquipped);
         }
 
+        /// <summary>stack が即時使用食材スロットにセットされているか(調合の素材から除外・警告に使う)。</summary>
+        public bool IsInQuickFood(ItemStack stack) => InventoryService.IsInQuickFood(stack);
+
+        /// <summary>data の在庫スタックのいずれかが即時使用食材にセットされているか。</summary>
+        public bool IsItemInQuickFood(ItemData data)
+        {
+            if (data == null)
+                return false;
+            foreach (var slot in InventoryService.GetQuickFoodSlots())
+                if (slot != null && slot.Data == data)
+                    return true;
+            return false;
+        }
+
+        /// <summary>materials のいずれかが即時使用食材にセットされているか(レシピ調合の可否判定用)。</summary>
+        public bool HasQuickFoodMaterial(IEnumerable<ItemData> materials)
+        {
+            return materials != null && materials.Any(IsItemInQuickFood);
+        }
+
         public List<ItemStack> GetItemsByCategory(ItemCategory category)
         {
             return InventoryService.GetItemsByCategory(category);
