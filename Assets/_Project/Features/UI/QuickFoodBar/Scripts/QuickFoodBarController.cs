@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using CreativeAI.Core;
 using CreativeAI.Core.EventSystem;
 using CreativeAI.Gameplay;
 using UnityEngine;
@@ -46,8 +47,13 @@ namespace CreativeAI.UI.QuickFoodBar
 
         private void ApplyVisibility()
         {
-            bool hide =
-                (_router != null && _router.IsAnyPanelOpen) || EventPlaybackService.IsPlaying;
+            // 会話(line/choice)中は使用不可なので隠す。ただし戦闘中は常時表示(spec §5/§2.2)。
+            // battle ステップも EventPlaybackService.IsPlaying の内側で走るため、モードで戦闘を除外する。
+            bool inBattle =
+                GameModeManager.Instance != null
+                && GameModeManager.Instance.CurrentMode == GameMode.Battle;
+            bool inDialogue = EventPlaybackService.IsPlaying && !inBattle;
+            bool hide = (_router != null && _router.IsAnyPanelOpen) || inDialogue;
             if (_canvas != null)
                 _canvas.enabled = !hide;
             if (_raycaster != null)
