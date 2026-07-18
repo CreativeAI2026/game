@@ -3052,7 +3052,7 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 7087888286818420599}
-  - component: {fileID: 2722252713406802481}
+  - component: {fileID: 201440868889466552}
   m_Layer: 0
   m_Name: ConsumableView
   m_TagString: Untagged
@@ -3082,7 +3082,7 @@ RectTransform:
   m_AnchoredPosition: {x: 0, y: 0}
   m_SizeDelta: {x: 0, y: 0}
   m_Pivot: {x: 0.5, y: 0.5}
---- !u!114 &2722252713406802481
+--- !u!114 &201440868889466552
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -3091,14 +3091,13 @@ MonoBehaviour:
   m_GameObject: {fileID: 7108378590998126939}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: cd96c7cdb53b55343a01d43b528a9b6f, type: 3}
+  m_Script: {fileID: 11500000, guid: 1d3327756d11e4353bce2d67092f82bf, type: 3}
   m_Name: 
-  m_EditorClassIdentifier: CreativeAI.UI::CreativeAI.UI.CharacterUI.EquipmentViewController
-  _equipmentSlotsRoot: {fileID: 2846925275989630103}
+  m_EditorClassIdentifier: CreativeAI.UI::CreativeAI.UI.CharacterUI.QuickFoodViewController
+  _slotsRoot: {fileID: 2846925275989630103}
   _detailPanel: {fileID: 3301868781284841772}
   _inventory: {fileID: 7912776159859112869}
-  _inventoryCategory: 2
-  _emptyLabel: "\uFF08\u672A\u9078\u629E\uFF09"
+  _emptyLabel: "\uFF08\u672A\u30BB\u30C3\u30C8\uFF09"
 --- !u!1 &7512037374365901359
 GameObject:
   m_ObjectHideFlags: 0

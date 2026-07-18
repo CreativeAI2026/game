@@ -35,6 +35,18 @@ namespace CreativeAI.UI
 
         private readonly Dictionary<UiId, GameObject> _panels = new();
 
+        /// <summary>いずれかのパネル(キャラ/インベ/セーブ/調合)が表示中か。常駐の即時食材使用UI等の出し分けに使う。</summary>
+        public bool IsAnyPanelOpen
+        {
+            get
+            {
+                foreach (var kv in _panels)
+                    if (kv.Value != null && kv.Value.activeSelf)
+                        return true;
+                return false;
+            }
+        }
+
         private void Awake()
         {
             Register(UiId.Character, _characterUI);

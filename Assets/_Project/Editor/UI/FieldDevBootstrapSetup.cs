@@ -18,8 +18,6 @@ namespace CreativeAI.EditorTools.UI
         private const string ConfigPath = "Assets/_Project/Resources/ResidentBootstrapConfig.asset";
         private const string UIRootPrefab =
             "Assets/_Project/Features/UI/Root/Prefabs/UIRoot.prefab";
-        private const string ConversationPrefab =
-            "Assets/_Project/Features/UI/ConversationUI/Prefabs/ConversationView.prefab";
         private const string Area01 = "Assets/_Project/Scenes/Field/Field_Area01.unity";
 
         [MenuItem("Tools/CreativeAI/UI/Create Resident Bootstrap Config")]
@@ -31,9 +29,6 @@ namespace CreativeAI.EditorTools.UI
                 cfg = ScriptableObject.CreateInstance<ResidentBootstrapConfig>();
 
             cfg.uiRootPrefab = AssetDatabase.LoadAssetAtPath<GameObject>(UIRootPrefab);
-            cfg.conversationViewPrefab = AssetDatabase.LoadAssetAtPath<GameObject>(
-                ConversationPrefab
-            );
 
             if (isNew)
                 AssetDatabase.CreateAsset(cfg, ConfigPath);
@@ -42,7 +37,7 @@ namespace CreativeAI.EditorTools.UI
             AssetDatabase.SaveAssets();
 
             Debug.Log(
-                $"[BootstrapConfig] 保存: {ConfigPath} (uiRoot={(cfg.uiRootPrefab != null)}, conversation={(cfg.conversationViewPrefab != null)})"
+                $"[BootstrapConfig] 保存: {ConfigPath} (uiRoot={(cfg.uiRootPrefab != null)})"
             );
         }
 

@@ -42,17 +42,23 @@ namespace CreativeAI.Tests.EditMode
         }
 
         [Test]
-        public void AddItem_SameData_StacksIntoOne()
+        public void AddFood_SameData_StacksIntoOne()
         {
-            var apple = MakeItem(1);
+            // 食材はカテゴリのルールで必ずスタックする(FoodData.MaxStack)。同じ食材を足すと1枠に集約される。
+            var apple = MakeFood(1);
+            Assert.GreaterOrEqual(
+                apple.MaxStack,
+                5,
+                "食材はスタック可能であること(FoodData ルール)"
+            );
 
             _inv.AddItem(apple, 3);
             _inv.AddItem(apple, 2);
 
             var all = _inv.GetAllItems();
-            Assert.AreEqual(1, all.Count);
-            Assert.AreEqual(5, all[0].Count);
-            Assert.IsFalse(all[0].IsInstance);
+            Assert.AreEqual(1, all.Count); // りんご5個 = 1スタック
+            Assert.AreEqual(5, all[0].Count); // 中身は 3+2=5 個
+            Assert.IsFalse(all[0].IsInstance); // 個体差ロールなしの通常スタック
         }
 
         [Test]
@@ -127,7 +133,7 @@ namespace CreativeAI.Tests.EditMode
         }
 
         [Test]
-        public void SetBattleFood_SetsSlot_AndRejectsNonFood()
+        public void SetQuickFood_SetsSlot_AndRejectsNonFood()
         {
             var apple = MakeFood(1);
             var gear = MakeItem(20, ItemCategory.Equipment);
@@ -136,27 +142,27 @@ namespace CreativeAI.Tests.EditMode
             var appleStack = _inv.GetAllItems().Find(s => s.Data == apple);
             var gearStack = _inv.GetAllItems().Find(s => s.Data == gear);
 
-            Assert.IsTrue(_inv.SetBattleFood(0, appleStack));
-            Assert.IsFalse(_inv.SetBattleFood(1, gearStack)); // 食材以外は不可
-            Assert.IsFalse(_inv.SetBattleFood(9, appleStack)); // 範囲外は不可
+            Assert.IsTrue(_inv.SetQuickFood(0, appleStack));
+            Assert.IsFalse(_inv.SetQuickFood(1, gearStack)); // 食材以外は不可
+            Assert.IsFalse(_inv.SetQuickFood(9, appleStack)); // 範囲外は不可
 
-            var slots = _inv.GetBattleFoodSlots();
+            var slots = _inv.GetQuickFoodSlots();
             Assert.AreEqual(3, slots.Count);
             Assert.AreSame(appleStack, slots[0]);
             Assert.IsNull(slots[1]);
         }
 
         [Test]
-        public void SetBattleFood_SameStackTwice_MovesInsteadOfDuplicating()
+        public void SetQuickFood_SameStackTwice_MovesInsteadOfDuplicating()
         {
             var apple = MakeFood(1);
             _inv.AddItem(apple, 5);
             var appleStack = _inv.GetAllItems().Find(s => s.Data == apple);
 
-            _inv.SetBattleFood(0, appleStack);
-            _inv.SetBattleFood(2, appleStack); // 別スロットへ移動(重複しない)
+            _inv.SetQuickFood(0, appleStack);
+            _inv.SetQuickFood(2, appleStack); // 別スロットへ移動(重複しない)
 
-            var slots = _inv.GetBattleFoodSlots();
+            var slots = _inv.GetQuickFoodSlots();
             Assert.IsNull(slots[0]);
             Assert.AreSame(appleStack, slots[2]);
         }
@@ -167,27 +173,27 @@ namespace CreativeAI.Tests.EditMode
             var apple = MakeFood(1);
             _inv.AddItem(apple, 1);
             var appleStack = _inv.GetAllItems().Find(s => s.Data == apple);
-            _inv.SetBattleFood(0, appleStack);
+            _inv.SetQuickFood(0, appleStack);
 
             _inv.RemoveItem(apple, 1); // 使い切り → スタックが在庫から消える
 
-            Assert.IsNull(_inv.GetBattleFoodSlots()[0]); // スロットも自動でクリア
+            Assert.IsNull(_inv.GetQuickFoodSlots()[0]); // スロットも自動でクリア
         }
 
         [Test]
-        public void Clear_AlsoClearsBattleFoodSlots()
+        public void Clear_AlsoClearsQuickFoodSlots()
         {
             var apple = MakeFood(1);
             _inv.AddItem(apple, 1);
-            _inv.SetBattleFood(0, _inv.GetAllItems().Find(s => s.Data == apple));
+            _inv.SetQuickFood(0, _inv.GetAllItems().Find(s => s.Data == apple));
 
             _inv.Clear();
 
-            Assert.IsNull(_inv.GetBattleFoodSlots()[0]);
+            Assert.IsNull(_inv.GetQuickFoodSlots()[0]);
         }
 
         [Test]
-        public void SaveData_JsonRoundTrip_PreservesBattleFoodSlot()
+        public void SaveData_JsonRoundTrip_PreservesQuickFoodSlot()
         {
             var data = new SaveData();
             data.items.Add(
@@ -195,26 +201,26 @@ namespace CreativeAI.Tests.EditMode
                 {
                     itemId = 1,
                     count = 2,
-                    inBattleFood = true,
-                    battleFoodSlot = 2,
+                    inQuickFood = true,
+                    quickFoodSlot = 2,
                 }
             );
 
             var back = JsonUtility.FromJson<SaveData>(JsonUtility.ToJson(data));
 
-            Assert.IsTrue(back.items[0].inBattleFood);
-            Assert.AreEqual(2, back.items[0].battleFoodSlot);
+            Assert.IsTrue(back.items[0].inQuickFood);
+            Assert.AreEqual(2, back.items[0].quickFoodSlot);
         }
 
         [Test]
-        public void SaveData_LegacyEntry_DefaultsToNotInBattleFood()
+        public void SaveData_LegacyEntry_DefaultsToNotInQuickFood()
         {
-            // inBattleFood を持たない旧 JSON。既定 false(未セット)で復元され、slot=0 と誤判定しない。
+            // inQuickFood を持たない旧 JSON。既定 false(未セット)で復元され、slot=0 と誤判定しない。
             var back = JsonUtility.FromJson<SaveData>(
                 "{\"items\":[{\"itemId\":1,\"count\":2,\"equipped\":false}]}"
             );
 
-            Assert.IsFalse(back.items[0].inBattleFood);
+            Assert.IsFalse(back.items[0].inQuickFood);
         }
 
         [Test]

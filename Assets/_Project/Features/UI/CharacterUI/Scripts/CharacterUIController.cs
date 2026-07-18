@@ -9,15 +9,15 @@ namespace CreativeAI.UI.CharacterUI
         [Header("Tabs"), SerializeField]
         private TabGroup _tabGroup;
 
-        private readonly List<EquipmentViewController> _equipmentViewControllers = new();
+        private readonly List<ICharacterTabView> _tabViews = new();
         private bool _initialized;
         private bool _resetOnNextEnable;
 
         private void Start()
         {
-            CollectEquipmentViews();
-            foreach (var controller in _equipmentViewControllers)
-                controller?.EnsureInitialized();
+            CollectTabViews();
+            foreach (var view in _tabViews)
+                view?.EnsureInitialized();
 
             if (_tabGroup != null)
                 _tabGroup.OnSelectionChanged += OnSelectionChanged;
@@ -50,8 +50,8 @@ namespace CreativeAI.UI.CharacterUI
             _resetOnNextEnable = false;
             _tabGroup?.ResetToFirstTab();
 
-            foreach (var controller in _equipmentViewControllers)
-                controller?.ResetViewState();
+            foreach (var view in _tabViews)
+                view?.ResetViewState();
         }
 
         private void OnSelectionChanged(
@@ -60,27 +60,27 @@ namespace CreativeAI.UI.CharacterUI
             GameObject selectedView
         )
         {
-            foreach (var controller in _equipmentViewControllers)
+            foreach (var view in _tabViews)
             {
-                if (controller == null)
+                if (view is not Component component)
                     continue;
 
                 bool belongsToSelectedView =
                     selectedView != null
                     && (
-                        controller.transform == selectedView.transform
-                        || controller.transform.IsChildOf(selectedView.transform)
+                        component.transform == selectedView.transform
+                        || component.transform.IsChildOf(selectedView.transform)
                     );
                 if (!belongsToSelectedView)
-                    controller.OnExit();
+                    view.OnExit();
                 else
-                    controller.OnEnter();
+                    view.OnEnter();
             }
         }
 
-        private void CollectEquipmentViews()
+        private void CollectTabViews()
         {
-            _equipmentViewControllers.Clear();
+            _tabViews.Clear();
             if (_tabGroup == null)
                 return;
 
@@ -90,12 +90,10 @@ namespace CreativeAI.UI.CharacterUI
                 if (view == null)
                     continue;
 
-                foreach (
-                    var controller in view.GetComponentsInChildren<EquipmentViewController>(true)
-                )
+                foreach (var tabView in view.GetComponentsInChildren<ICharacterTabView>(true))
                 {
-                    if (controller != null && !_equipmentViewControllers.Contains(controller))
-                        _equipmentViewControllers.Add(controller);
+                    if (tabView != null && !_tabViews.Contains(tabView))
+                        _tabViews.Add(tabView);
                 }
             }
         }

@@ -13,8 +13,8 @@ namespace CreativeAI.UI.ConversationUI
     /// <summary>
     /// 会話UIの実体。<see cref="IDialogueView"/> を実装し、生成時に <see cref="DialogueViewService.Current"/>
     /// へ自身を登録する(EventPlayer は常駐生成で drag 配線できないため seam 経由で受け取る、IDialogueView 参照)。
-    /// UIRoot と同じく Title フローで <see cref="EnsureResident"/> により Prefab から1回だけ常駐生成し、
-    /// DontDestroyOnLoad でエリア遷移をまたいで持続する。状態は保存しない。
+    /// 仕様§6のとおり <see cref="UIRoot"/> が束ねる UI レイヤーの一部で、UIRoot Prefab の子として同梱される
+    /// (常駐・単一化・DontDestroyOnLoad は UIRoot が担うため、このコンポーネント自身は自己生成も DDOL もしない)。状態は保存しない。
     /// 会話中でないときはウィンドウを隠す(再生時 Awake で alpha=0)。編集時は Awake が走らないため
     /// Prefab の見た目(立ち絵+ウィンドウ+ダミー文)がそのままプレビューになる。
     /// documents/Specification.md「常駐アーキテクチャ」/ UIImplementation.md 参照。
@@ -105,40 +105,14 @@ namespace CreativeAI.UI.ConversationUI
         private GameObject _weaponBackdropObject; // ShowWeaponGet の背後パネル
         private RenderTexture _weaponRt;
 
-        /// <summary>
-        /// 会話UIレイヤーを Prefab から1回だけ常駐生成する。既に在ればそれを返す。
-        /// Core→UI 循環を避けるため Title フロー(UI 層)から呼ぶ(UIRoot と同じ理由)。
-        /// Prefab 未割当なら警告して null(会話は表示されないがゲームは進む)。
-        /// </summary>
-        public static ConversationView EnsureResident(GameObject conversationViewPrefab)
-        {
-            if (Instance != null)
-                return Instance;
-
-            if (conversationViewPrefab == null)
-            {
-                Debug.LogWarning(
-                    "[ConversationView] conversationViewPrefab が未割当です。"
-                        + "ConversationView Prefab を Title の TitleUIController にドラッグしてください。"
-                );
-                return null;
-            }
-
-            var go = Instantiate(conversationViewPrefab);
-            go.name = conversationViewPrefab.name; // "(Clone)" を避ける
-            return go.GetComponent<ConversationView>();
-        }
-
         private void Awake()
         {
             if (Instance != null && Instance != this)
             {
-                Destroy(gameObject); // タイトル復帰などでの二重生成をガード(冪等)
+                Destroy(gameObject); // 二重生成ガード(冪等)。単一化は UIRoot が担うため通常起きない
                 return;
             }
             Instance = this;
-            if (Application.isPlaying)
-                DontDestroyOnLoad(gameObject);
 
             DialogueViewService.Current = this; // EventPlayer が参照する seam へ自身を登録
             HideImmediate(); // 会話開始まで隠す(編集時は Awake が走らずプレビューが見える)
