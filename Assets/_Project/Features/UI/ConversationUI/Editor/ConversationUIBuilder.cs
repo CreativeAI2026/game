@@ -11,9 +11,9 @@ using UnityEngine.UI;
 namespace CreativeAI.UI.ConversationUI.Editor
 {
     /// <summary>
-    /// 会話UIの Prefab と確認用シーン Field_Area05 を一括生成する Editor ツール。
+    /// 会話UIの Prefab と確認用シーン UI_ConversationPreview を一括生成する Editor ツール。
     /// 立ち絵/ウィンドウ画像を Sprite として import し、ConversationView.prefab を組み立て、
-    /// Area05 シーンにその実体 + プレビュー駆動役を配置する。手書き YAML を避け Unity に正しく
+    /// UI_ConversationPreview シーンにその実体 + プレビュー駆動役を配置する。手書き YAML を避け Unity に正しく
     /// シリアライズさせるための道具(メニューからも実行可)。
     /// </summary>
     public static class ConversationUIBuilder
@@ -24,9 +24,9 @@ namespace CreativeAI.UI.ConversationUI.Editor
             "Assets/_Project/Art/UI/Fonts/NotoSansJP-VariableFont_wght SDF.asset";
         private const string PrefabPath =
             "Assets/_Project/Features/UI/ConversationUI/Prefabs/ConversationView.prefab";
-        private const string ScenePath = "Assets/_Project/Scenes/Field/Field_Area05.unity";
+        private const string ScenePath = "Assets/_Project/Scenes/UI/UI_ConversationPreview.unity";
 
-        [MenuItem("Tools/CreativeAI/Build Conversation UI (Area05)")]
+        [MenuItem("Tools/CreativeAI/Build Conversation UI")]
         public static void BuildAll()
         {
             ImportAsSprite(WindowPng);

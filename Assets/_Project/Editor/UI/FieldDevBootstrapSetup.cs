@@ -10,7 +10,7 @@ namespace CreativeAI.EditorTools.UI
     /// dev-bootstrap 導入ツール。
     /// ① Create Config: 常駐 Prefab 参照(UIRoot / ConversationView)を集約した ResidentBootstrapConfig を
     ///    Resources に作る。
-    /// ② Field Surgery: Field_Area01 から自前の常駐コピー(Canvas=HUD/パネル一式・InventoryManager)を撤去し、
+    /// ② Field Surgery: UI_Sandbox から自前の常駐コピー(Canvas=HUD/パネル一式・InventoryManager)を撤去し、
     ///    FieldDevBootstrap を1つ置く。以降そのシーンは直接 Play で常駐UIを生成する。
     /// </summary>
     public static class FieldDevBootstrapSetup
@@ -18,7 +18,7 @@ namespace CreativeAI.EditorTools.UI
         private const string ConfigPath = "Assets/_Project/Resources/ResidentBootstrapConfig.asset";
         private const string UIRootPrefab =
             "Assets/_Project/Features/UI/Root/Prefabs/UIRoot.prefab";
-        private const string Area01 = "Assets/_Project/Scenes/Field/Field_Area01.unity";
+        private const string Area01 = "Assets/_Project/Scenes/UI/UI_Sandbox.unity";
 
         [MenuItem("Tools/CreativeAI/UI/Create Resident Bootstrap Config")]
         public static void CreateConfig()

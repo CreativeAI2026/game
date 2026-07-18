@@ -8,14 +8,14 @@ using UnityEngine.SceneManagement;
 namespace CreativeAI.EditorTools.UI
 {
     /// <summary>
-    /// Field_Area01 に素組みされている各UIパネルを Prefab 化(単一ソース化)し、
+    /// UI_Sandbox に素組みされている各UIパネルを Prefab 化(単一ソース化)し、
     /// 常駐 UIRoot.prefab に載せて Title フローから使える状態にする Editor ツール。
     /// 手書き YAML を避け、Unity の Prefab システムに正しくシリアライズさせるための道具。
     /// 会話UI(ConversationView)と同じ「Prefab化 → 常駐に載せる」方式を他パネルへ広げる。
     ///
     /// 使い方(必ずこの順に):
-    ///   ① [1. Extract] … Field_Area01/Canvas/Panels 配下の4パネルを Prefab 化する。
-    ///        実行後、Field_Area01 側のパネルは Prefab インスタンスに変わる(＝単一ソース化)。
+    ///   ① [1. Extract] … UI_Sandbox/Canvas/Panels 配下の4パネルを Prefab 化する。
+    ///        実行後、UI_Sandbox 側のパネルは Prefab インスタンスに変わる(＝単一ソース化)。
     ///   ② 目視 + [Tools/CreativeAI/UI/Validate Area01 UI] で配線が保たれているか確認。
     ///   ③ [2. Wire Into UIRoot] … 常駐3パネル(Character/Inventory/Save)を UIRoot.prefab の
     ///        受け皿 Canvas に載せ替え、UiRouter を再配線する。CraftPanel は調合場所でのみ開く
@@ -24,10 +24,10 @@ namespace CreativeAI.EditorTools.UI
     /// </summary>
     public static class Area01UIPrefabExtractor
     {
-        private const string ScenePath = "Assets/_Project/Scenes/Field/Field_Area01.unity";
+        private const string ScenePath = "Assets/_Project/Scenes/UI/UI_Sandbox.unity";
         private const string UIRootPath = "Assets/_Project/Features/UI/Root/Prefabs/UIRoot.prefab";
 
-        /// <summary>Field_Area01/Canvas/Panels 配下の素組みパネル → 出力先/常駐の受け皿。</summary>
+        /// <summary>UI_Sandbox/Canvas/Panels 配下の素組みパネル → 出力先/常駐の受け皿。</summary>
         private struct PanelTarget
         {
             public string SceneName; // Panels 配下の GameObject 名(一意)
@@ -89,7 +89,7 @@ namespace CreativeAI.EditorTools.UI
                 if (panels == null)
                 {
                     Debug.LogError(
-                        "[Extract] Field_Area01 に Canvas/Panels が見つかりません。シーン構造が変わっていないか確認してください。"
+                        "[Extract] UI_Sandbox に Canvas/Panels が見つかりません。シーン構造が変わっていないか確認してください。"
                     );
                     return;
                 }
@@ -233,7 +233,7 @@ namespace CreativeAI.EditorTools.UI
             return scene;
         }
 
-        /// <summary>Field_Area01 の Canvas/Panels を返す(見つからなければ深さ優先で "Panels" を探す)。</summary>
+        /// <summary>UI_Sandbox の Canvas/Panels を返す(見つからなければ深さ優先で "Panels" を探す)。</summary>
         private static Transform FindPanelsRoot(Scene scene)
         {
             foreach (GameObject go in scene.GetRootGameObjects())

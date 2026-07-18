@@ -16,7 +16,7 @@ namespace CreativeAI.EditorTools.UI
 {
     public static class InventoryUIValidator
     {
-        private const string FieldArea01Path = "Assets/_Project/Scenes/Field/Field_Area01.unity";
+        private const string FieldArea01Path = "Assets/_Project/Scenes/UI/UI_Sandbox.unity";
         private const string ItemSlotPath =
             "Assets/_Project/Features/UI/InventoryUI/Prefabs/ItemSlot.prefab";
 

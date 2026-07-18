@@ -16,7 +16,7 @@ namespace CreativeAI.UI.TitleUI
         private Button _continueButton; // 「続きから」(セーブ復元)。未割当なら続きから導線は無効
 
         [SerializeField]
-        private string _nextSceneName = SceneNames.FieldArea01;
+        private string _nextSceneName = SceneNames.FieldArea00;
 
         [SerializeField]
         private GameStarter _gameStarter; // Title に置く GameStarter(PlayerRig 生成)。未割当なら生成スキップ

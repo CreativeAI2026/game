@@ -6,7 +6,7 @@ using UnityEngine;
 namespace CreativeAI.UI
 {
     /// <summary>
-    /// フィールドの開発シーン(Field_Area01 等 UI 開発用)を Title を経由せず直接 Play したときに、
+    /// UI 確認/開発用シーン(Scenes/UI 配下・旧 Field_Area01 等)を Title を経由せず直接 Play したときに、
     /// 常駐システム(マネージャ / Inventory / UIRoot / 会話UI)を Title と同じ手順で生成する開発用ブートストラップ。
     ///
     /// Title 経由なら常駐は既に在るので何もしない(冪等)。これにより Field シーン側に常駐のコピー
