@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using System.IO;
+using CreativeAI.Core;
 using CreativeAI.Core.EventSystem;
 using UnityEngine;
 using UnityEngine.SceneManagement;
@@ -21,6 +22,16 @@ namespace CreativeAI.Gameplay
         /// <summary>現在の進行度・フラグ・所持品をディスクへ全書きする。</summary>
         public static void Save()
         {
+            // セーブ可能なのは「フィールド移動中」だけ(戦闘モード中・会話イベント再生中は不可。spec §0)。
+            // 入口(HudIconBar)側でもボタンを塞いでいるが、別経路からの呼び出しに備えた多重防御。
+            if (!CanSaveNow(out string blockedReason))
+            {
+                Debug.LogWarning(
+                    $"[SaveService] セーブを中断しました({blockedReason})。フィールド移動中のみセーブ可能です(spec §0)。"
+                );
+                return;
+            }
+
             var data = new SaveData();
 
             var pm = ProgressManager.Instance;
@@ -65,6 +76,27 @@ namespace CreativeAI.Gameplay
 
             File.WriteAllText(FilePath, JsonUtility.ToJson(data, true));
             Debug.Log($"[SaveService] 保存しました: {FilePath}");
+        }
+
+        /// <summary>
+        /// 現在セーブしてよいか(spec §0: フィールド移動中のみ)。戦闘モード中・会話イベント再生中は false。
+        /// マネージャ未生成(タイトル直後など)は Field 扱いで許可する。
+        /// </summary>
+        private static bool CanSaveNow(out string blockedReason)
+        {
+            var mode = GameModeManager.Instance;
+            if (mode != null && mode.CurrentMode != GameMode.Field)
+            {
+                blockedReason = "戦闘モード中";
+                return false;
+            }
+            if (EventPlaybackService.IsPlaying)
+            {
+                blockedReason = "会話イベント再生中";
+                return false;
+            }
+            blockedReason = null;
+            return true;
         }
 
         /// <summary>tag=Player のリグ root から座標・向き・現在HP・現在シーンを取り込む。リグ未生成なら hasPlayerState=false。</summary>

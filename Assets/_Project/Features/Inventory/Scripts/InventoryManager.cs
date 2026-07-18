@@ -92,6 +92,22 @@ namespace CreativeAI.Gameplay
             EquipmentChanged?.Invoke();
         }
 
+        private bool _testItemsSeeded;
+
+        /// <summary>
+        /// 開発シーン(<c>FieldDevBootstrap</c>)用: テスト品を積み初期装備する。既に積んでいれば何もしない。
+        /// 本番 Title フローでは呼ばない(所持品はまっさらで始まる)。
+        /// </summary>
+        public void SeedTestItems()
+        {
+            if (_testItemsSeeded)
+                return;
+            _testItemsSeeded = true;
+            AddTestItems();
+            EquipInitialTestItems();
+            EquipmentChanged?.Invoke();
+        }
+
         public void AddItem(ItemData data, int count = 1)
         {
             InventoryService.AddItem(data, count);
