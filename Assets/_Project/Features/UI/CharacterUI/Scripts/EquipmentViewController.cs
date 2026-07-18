@@ -6,7 +6,7 @@ using UnityEngine;
 
 namespace CreativeAI.UI.CharacterUI
 {
-    public partial class EquipmentViewController : MonoBehaviour
+    public partial class EquipmentViewController : MonoBehaviour, ICharacterTabView
     {
         private TriangleLayout _triangleLayout;
 
