@@ -26,7 +26,12 @@ namespace CreativeAI.UI.InventoryUI
 
         public void SelectSlotByClick(ItemSlot slot)
         {
-            if (slot == null || !_visibleSlots.Contains(slot) || !slot.gameObject.activeSelf)
+            if (
+                !_interactionEnabled
+                || slot == null
+                || !_visibleSlots.Contains(slot)
+                || !slot.gameObject.activeSelf
+            )
                 return;
 
             CreativeAI.UI.SlotKeyboardFocus.Claim(this);
@@ -36,7 +41,12 @@ namespace CreativeAI.UI.InventoryUI
 
         public void SelectSlotByDoubleClick(ItemSlot slot)
         {
-            if (slot == null || !_visibleSlots.Contains(slot) || !slot.gameObject.activeSelf)
+            if (
+                !_interactionEnabled
+                || slot == null
+                || !_visibleSlots.Contains(slot)
+                || !slot.gameObject.activeSelf
+            )
                 return;
 
             CreativeAI.UI.SlotKeyboardFocus.Claim(this);

@@ -40,9 +40,13 @@ namespace CreativeAI.UI.CraftingUI
         private float _craftFlowDurationSeconds = 1f;
 
         private readonly HashSet<string> _warnedMissingReferences = new();
+        private bool _isCraftFlowRunning;
 
         public CraftRecipeDB RecipeDB => _recipeDB;
         public float CraftFlowDurationSeconds => Mathf.Max(0f, _craftFlowDurationSeconds);
+        public bool IsCraftFlowRunning => _isCraftFlowRunning;
+
+        public event System.Action<bool> CraftInteractionChanged;
 
 #if UNITY_EDITOR
         private void Reset() => AutoAssignReferences();
@@ -70,6 +74,7 @@ namespace CreativeAI.UI.CraftingUI
 
         private void OnDisable()
         {
+            CancelCraftFlow();
             HideWarning();
         }
 

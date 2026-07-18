@@ -45,8 +45,13 @@ namespace CreativeAI.UI.CraftingUI
 
         private void OnCategoryTabSelected(int _index, TabDefinition _definition)
         {
-            if (!isActiveAndEnabled)
+            if (!isActiveAndEnabled || IsCraftInteractionLocked)
                 return;
+
+            if (_definition is InventoryTabDefinition inventoryDefinition)
+                _selectionState.SelectCategory(inventoryDefinition.Category);
+            else
+                _selectionState.ClearCategory();
 
             BuildRecipeList();
             SelectInitialRecipe(true);
@@ -64,6 +69,12 @@ namespace CreativeAI.UI.CraftingUI
 
         private bool TryGetCurrentCategory(out ItemCategory category)
         {
+            if (_selectionState.HasCategory)
+            {
+                category = _selectionState.Category;
+                return true;
+            }
+
             category = default;
             if (_categoryTabGroup == null || _categoryTabGroup.CurrentIndex < 0)
                 return false;
@@ -72,9 +83,11 @@ namespace CreativeAI.UI.CraftingUI
             if (definition is InventoryTabDefinition inventoryDefinition)
             {
                 category = inventoryDefinition.Category;
+                _selectionState.SelectCategory(category);
                 return true;
             }
 
+            _selectionState.ClearCategory();
             WarnInvalidCategoryTabOnce(definition);
             return false;
         }
@@ -94,7 +107,7 @@ namespace CreativeAI.UI.CraftingUI
         private void PrepareInitialHiddenTemplates()
         {
             _recipeListView?.Clear();
-            _materialListView?.Clear();
+            _materialRowsView?.Clear();
         }
 
         private void BuildRecipeList()
@@ -111,11 +124,17 @@ namespace CreativeAI.UI.CraftingUI
 
         private void OnRecipeClicked(CraftRecipeData recipe)
         {
+            if (IsCraftInteractionLocked)
+                return;
+
             SelectRecipe(recipe);
         }
 
         private void OnRecipeDoubleClicked(CraftRecipeData recipe)
         {
+            if (IsCraftInteractionLocked)
+                return;
+
             SelectRecipe(recipe);
 
             if (HasEquippedRecipeMaterial())
@@ -144,10 +163,10 @@ namespace CreativeAI.UI.CraftingUI
 
         private void SelectRecipe(CraftRecipeData recipe)
         {
-            _selectedRecipe = recipe;
+            _selectionState.SelectRecipe(recipe);
             _recipeListView?.SelectRecipe(recipe);
-            _detailPanel?.Show(_selectedRecipe?.resultItem, NoRecipeLabel);
-            RebuildMaterialRows();
+            _detailPanel?.Show(_selectionState.Recipe?.resultItem, NoRecipeLabel);
+            RefreshMaterialRows();
         }
 
         private void SelectInitialRecipe(bool forceEmptyLabelRefresh = false)
@@ -159,24 +178,29 @@ namespace CreativeAI.UI.CraftingUI
                 return;
             }
 
-            _selectedRecipe = null;
+            _selectionState.SelectRecipe(null);
             _recipeListView?.SelectRecipe(null);
             _detailPanel?.Show(null, NoRecipeLabel, forceEmptyLabelRefresh);
-            RebuildMaterialRows();
+            RefreshMaterialRows();
         }
 
-        private void RebuildMaterialRows()
+        private void RefreshMaterialRows()
         {
-            if (_materialListView == null)
+            if (_materialRowsView == null)
                 return;
 
             if (!CanShowSelectedRecipeMaterials())
             {
-                _materialListView.Clear();
+                _materialRowsView.Clear();
                 return;
             }
 
-            _materialListView.ShowMaterials(_selectedRecipe, _quantity);
+            var rows = _availabilityCalculator.BuildMaterialRows(
+                _selectionState.Recipe,
+                _selectionState.Quantity,
+                GetInventorySnapshot()
+            );
+            _materialRowsView.ShowRows(rows);
         }
 
         private void SubscribeRecipeBookChanges()
@@ -214,29 +238,28 @@ namespace CreativeAI.UI.CraftingUI
 
         private bool HasEquippedRecipeMaterial()
         {
-            return _selectedRecipe != null
-                && GetMaximumCraftable() <= 0
-                && (
-                    InventoryManager.Instance?.HasEquippedMaterial(_selectedRecipe.Materials)
-                    ?? false
-                );
+            return _availabilityCalculator.HasEquippedMaterial(
+                _selectionState.Recipe,
+                GetInventorySnapshot()
+            );
         }
 
         private bool HasQuickFoodRecipeMaterial()
         {
-            return _selectedRecipe != null
-                && GetMaximumCraftable() <= 0
-                && (
-                    InventoryManager.Instance?.HasQuickFoodMaterial(_selectedRecipe.Materials)
-                    ?? false
-                );
+            return _availabilityCalculator.HasQuickFoodMaterial(
+                _selectionState.Recipe,
+                1,
+                GetInventorySnapshot(),
+                GetQuickFoodSnapshot()
+            );
         }
 
         private bool CanShowSelectedRecipeMaterials()
         {
-            return _selectedRecipe != null
-                && _selectedRecipe.resultItem != null
-                && (_recipeDB?.IsVisible(_selectedRecipe) ?? false);
+            var recipe = _selectionState.Recipe;
+            return recipe != null
+                && recipe.resultItem != null
+                && (_recipeDB?.IsVisible(recipe) ?? false);
         }
     }
 }

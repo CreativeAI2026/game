@@ -12,35 +12,54 @@ namespace CreativeAI.UI.CraftingUI
     {
         private void StartCraft()
         {
-            if (_isCrafting || _selectedRecipe == null)
+            var recipe = _selectionState.Recipe;
+            int quantity = _selectionState.Quantity;
+            if (IsCraftInteractionLocked || recipe == null)
                 return;
 
-            if (HasEquippedRecipeMaterial())
+            var inventorySnapshot = GetInventorySnapshot();
+            if (_availabilityCalculator.HasEquippedMaterial(recipe, inventorySnapshot))
             {
-                RebuildMaterialRows();
+                RefreshMaterialRows();
                 PlayEquippedMaterialWarning();
                 return;
             }
 
-            if (HasQuickFoodRecipeMaterial())
+            var quickFoodSnapshot = GetQuickFoodSnapshot();
+            if (
+                _availabilityCalculator.HasQuickFoodMaterial(
+                    recipe,
+                    quantity,
+                    inventorySnapshot,
+                    quickFoodSnapshot
+                )
+            )
             {
-                RebuildMaterialRows();
+                RefreshMaterialRows();
                 PlayQuickFoodMaterialWarning();
                 return;
             }
 
-            if (!(InventoryManager.Instance?.CanCraft(_selectedRecipe, _quantity) ?? false))
+            if (
+                !_availabilityCalculator.CanCraft(
+                    recipe,
+                    quantity,
+                    inventorySnapshot,
+                    quickFoodSnapshot
+                )
+            )
             {
-                RebuildMaterialRows();
+                RefreshMaterialRows();
                 PlayMissingMaterialsWarning();
                 return;
             }
 
-            _craftedRecipeForResult = _selectedRecipe;
-            _craftedQuantityForResult = _quantity;
+            _craftedRecipeForResult = recipe;
+            _craftedQuantityForResult = quantity;
 
             CloseQuantityDialog();
             HideWarningImmediately();
+            _ownsCraftFlow = true;
             _craftRoutine = StartCoroutine(
                 CraftRoutine(_craftedRecipeForResult, _craftedQuantityForResult)
             );
@@ -49,42 +68,32 @@ namespace CreativeAI.UI.CraftingUI
         private IEnumerator CraftRoutine(CraftRecipeData recipe, int quantity)
         {
             _isCrafting = true;
-            HideWarningImmediately();
-            _craftPanel?.ShowLoading();
-
-            yield return new WaitForSecondsRealtime(_craftPanel.CraftFlowDurationSeconds);
-
-            bool crafted =
-                recipe != null && (InventoryManager.Instance?.TryCraft(recipe, quantity) ?? false);
-            CraftFlowViewUtility.CompleteCraftRoutine(ref _craftRoutine, ref _isCrafting);
-            _craftPanel?.HideLoading();
-
-            if (!crafted)
+            try
             {
-                _craftPanel?.HideLoadingAndResult();
-                RebuildMaterialRows();
-                PlayMissingMaterialsWarning();
-                yield break;
+                yield return _craftPanel.RunCraftFlow(
+                    () =>
+                        recipe != null
+                        && (InventoryManager.Instance?.TryCraft(recipe, quantity) ?? false),
+                    recipe?.resultItem,
+                    Mathf.Max(1, _craftedQuantityForResult),
+                    CloseResult,
+                    PlayMissingMaterialsWarning
+                );
             }
-
-            ShowResultPanel();
-            RebuildMaterialRows();
-        }
-
-        private void ShowResultPanel()
-        {
-            HideWarningImmediately();
-            _craftPanel?.ShowResult(
-                _craftedRecipeForResult?.resultItem ?? _selectedRecipe?.resultItem,
-                Mathf.Max(1, _craftedQuantityForResult),
-                CloseResult
-            );
+            finally
+            {
+                CraftFlowViewUtility.CompleteCraftRoutine(ref _craftRoutine, ref _isCrafting);
+                if (!_craftPanel.IsCraftFlowRunning)
+                    _ownsCraftFlow = false;
+                RefreshMaterialRows();
+            }
         }
 
         private void CloseResult()
         {
-            SelectRecipe(_selectedRecipe);
-            RebuildMaterialRows();
+            _ownsCraftFlow = false;
+            SelectRecipe(_selectionState.Recipe);
+            RefreshMaterialRows();
         }
 
         private void StopCraftRoutine()

@@ -42,19 +42,23 @@ namespace CreativeAI.UI.CraftingUI
         private ItemDetailPanel _detailPanel;
 
         [SerializeField]
-        private RecipeMaterialListView _materialListView;
+        [FormerlySerializedAs("_materialListView")]
+        [FormerlySerializedAs("_materialList")]
+        private RecipeCraftMaterialRowsView _materialRowsView;
 
         [Header("Quantity Dialog")]
         [SerializeField]
         private CraftQuantityDialog _quantityDialogController;
 
         private readonly HashSet<string> _warnedMissingRequiredReferences = new();
+        private readonly RecipeCraftSelectionState _selectionState = new();
+        private readonly RecipeCraftAvailabilityCalculator _availabilityCalculator = new();
         private RecipeBookManager _subscribedRecipeBook;
-        private CraftRecipeData _selectedRecipe;
+        private InventoryManager _subscribedInventoryManager;
         private CraftRecipeData _craftedRecipeForResult;
         private int _craftedQuantityForResult = 1;
-        private int _quantity = 1;
         private bool _isCrafting;
+        private bool _ownsCraftFlow;
         private bool _warnedMissingRecipeDB;
         private bool _warnedMissingQuantityDialogController;
         private bool _warnedMissingCategoryTabGroup;
@@ -81,6 +85,8 @@ namespace CreativeAI.UI.CraftingUI
             if (!HasRequiredReferences())
                 return;
 
+            SubscribeCraftInteraction();
+            SubscribeInventoryChanges();
             if (_initializeRoutine != null)
                 StopCoroutine(_initializeRoutine);
 
@@ -89,7 +95,13 @@ namespace CreativeAI.UI.CraftingUI
 
         private void OnDisable()
         {
+            UnsubscribeCraftInteraction();
+            UnsubscribeInventoryChanges();
             StopCraftRoutine();
+            if (_ownsCraftFlow)
+                _craftPanel?.CancelCraftFlow();
+            _ownsCraftFlow = false;
+            SetCraftInteractionEnabled(true);
             UnsubscribeRecipeBookChanges();
 
             if (_initializeRoutine != null)
@@ -106,8 +118,11 @@ namespace CreativeAI.UI.CraftingUI
 
         private void OnDestroy()
         {
+            UnsubscribeCraftInteraction();
+            UnsubscribeInventoryChanges();
             UnbindCategoryTabs();
             UnbindRecipeListView();
+            UnbindDialog();
             UnsubscribeRecipeBookChanges();
         }
 
@@ -115,11 +130,96 @@ namespace CreativeAI.UI.CraftingUI
         {
             if (_isCrafting)
                 _craftPanel?.RotateLoadingGear(_gearRotationSpeed);
-
-            UpdateQuantityDialogKeyboardControls();
         }
 
-        private CraftPanelController GetCraftPanel() => _craftPanel;
+        private bool IsCraftInteractionLocked =>
+            _isCrafting || (_craftPanel?.IsCraftFlowRunning ?? false);
+
+        private void SubscribeCraftInteraction()
+        {
+            if (_craftPanel == null)
+                return;
+
+            _craftPanel.CraftInteractionChanged -= SetCraftInteractionEnabled;
+            _craftPanel.CraftInteractionChanged += SetCraftInteractionEnabled;
+            SetCraftInteractionEnabled(!_craftPanel.IsCraftFlowRunning);
+        }
+
+        private void UnsubscribeCraftInteraction()
+        {
+            if (_craftPanel != null)
+                _craftPanel.CraftInteractionChanged -= SetCraftInteractionEnabled;
+        }
+
+        private void SetCraftInteractionEnabled(bool enabled)
+        {
+            _recipeListView?.SetInteractionEnabled(enabled);
+            _categoryTabGroup?.SetInteractionEnabled(enabled);
+            _quantityDialogController?.SetInteractionEnabled(enabled);
+        }
+
+        private void SubscribeInventoryChanges()
+        {
+            var inventoryManager = InventoryManager.Instance;
+            if (_subscribedInventoryManager == inventoryManager)
+                return;
+
+            UnsubscribeInventoryChanges();
+            if (inventoryManager == null)
+                return;
+
+            inventoryManager.InventoryChanged += OnInventoryChanged;
+            _subscribedInventoryManager = inventoryManager;
+        }
+
+        private void UnsubscribeInventoryChanges()
+        {
+            if (_subscribedInventoryManager == null)
+                return;
+
+            _subscribedInventoryManager.InventoryChanged -= OnInventoryChanged;
+            _subscribedInventoryManager = null;
+        }
+
+        private IReadOnlyList<ItemStack> GetInventorySnapshot()
+        {
+            return _subscribedInventoryManager != null
+                ? _subscribedInventoryManager.GetAllItems()
+                : System.Array.Empty<ItemStack>();
+        }
+
+        private IReadOnlyList<ItemStack> GetQuickFoodSnapshot()
+        {
+            return _subscribedInventoryManager != null
+                ? _subscribedInventoryManager.GetQuickFoodSlots()
+                : System.Array.Empty<ItemStack>();
+        }
+
+        private void OnInventoryChanged()
+        {
+            if (isActiveAndEnabled)
+                RefreshMaterialRows();
+        }
+
+        private void PlayMissingMaterialsWarning()
+        {
+            _craftPanel?.ShowWarning(CraftWarningKind.MissingMaterials);
+        }
+
+        private void PlayEquippedMaterialWarning()
+        {
+            _craftPanel?.ShowWarning(CraftWarningKind.EquippedMaterial);
+        }
+
+        private void PlayQuickFoodMaterialWarning()
+        {
+            _craftPanel?.ShowWarning(CraftWarningKind.QuickFoodMaterial);
+        }
+
+        private void HideWarningImmediately()
+        {
+            _craftPanel?.HideWarning();
+        }
 
         private IEnumerator InitializeViewRoutine()
         {
@@ -151,18 +251,17 @@ namespace CreativeAI.UI.CraftingUI
 
             _recipeListView?.RebuildLayout();
 
-            _materialListView?.RebuildLayout();
+            _materialRowsView?.RebuildLayout();
         }
 
         private void ResetView()
         {
-            _selectedRecipe = null;
-            _quantity = 1;
+            _selectionState.Reset();
 
             _recipeListView?.SelectRecipe(null);
 
             _detailPanel?.Clear();
-            RebuildMaterialRows();
+            RefreshMaterialRows();
             HideWarningImmediately();
             CloseQuantityDialogImmediately();
 
@@ -186,7 +285,7 @@ namespace CreativeAI.UI.CraftingUI
                     this
                 );
 
-            if (_materialListView == null)
+            if (_materialRowsView == null)
                 Debug.LogWarning(
                     $"{nameof(RecipeCraftPanelController)} on {name}: MaterialList が見つかりません。",
                     this
@@ -212,10 +311,10 @@ namespace CreativeAI.UI.CraftingUI
             }
             valid &= ValidateRequiredReference(_categoryTabGroup, nameof(_categoryTabGroup));
             valid &= ValidateRequiredReference(_detailPanel, nameof(_detailPanel));
-            valid &= ValidateRequiredReference(_materialListView, nameof(_materialListView));
-            if (_materialListView != null && !_materialListView.HasRequiredReferences)
+            valid &= ValidateRequiredReference(_materialRowsView, nameof(_materialRowsView));
+            if (_materialRowsView != null && !_materialRowsView.HasRequiredReferences)
             {
-                ValidateRequiredReference(null, $"{nameof(_materialListView)}._rows");
+                ValidateRequiredReference(null, $"{nameof(_materialRowsView)}._rows");
                 valid = false;
             }
             valid &= ValidateRequiredReference(

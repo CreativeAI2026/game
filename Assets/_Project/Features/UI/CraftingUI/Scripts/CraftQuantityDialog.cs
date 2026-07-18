@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using CreativeAI.UI.Common;
 using TMPro;
 using UnityEngine;
+using UnityEngine.InputSystem;
 using UnityEngine.UI;
 
 namespace CreativeAI.UI.CraftingUI
@@ -65,9 +66,31 @@ namespace CreativeAI.UI.CraftingUI
         private int _min = 1;
         private int _max = 1;
         private int _quantity = 1;
+        private bool _acceptsInput;
+        private bool _interactionEnabled = true;
         private bool _warnedMissingRequiredReferences;
 
         public bool IsOpen => _dialogRoot != null && _dialogRoot.activeInHierarchy;
+        public event Action<int> QuantityChanged;
+
+        public void SetInteractionEnabled(bool enabled)
+        {
+            _interactionEnabled = enabled;
+            _acceptsInput = enabled && IsOpen;
+
+            if (_minButton != null)
+                _minButton.interactable = enabled;
+            if (_minusButton != null)
+                _minusButton.interactable = enabled;
+            if (_plusButton != null)
+                _plusButton.interactable = enabled;
+            if (_maxButton != null)
+                _maxButton.interactable = enabled;
+            if (_inputField != null)
+                _inputField.interactable = enabled;
+
+            RefreshQuantity(false);
+        }
 
         private void Awake()
         {
@@ -85,11 +108,13 @@ namespace CreativeAI.UI.CraftingUI
             if (!HasRequiredReferences())
                 return;
 
+            _acceptsInput = IsOpen;
             BindOutsideClick();
         }
 
         private void OnDisable()
         {
+            _acceptsInput = false;
             _outsideClickCatcher?.ClearClickAction(Hide);
         }
 
@@ -107,6 +132,9 @@ namespace CreativeAI.UI.CraftingUI
             Action<int> onConfirmed
         )
         {
+            if (!_interactionEnabled)
+                return;
+
             InitializeDerivedReferences();
             if (!HasRequiredReferences())
                 return;
@@ -117,6 +145,7 @@ namespace CreativeAI.UI.CraftingUI
             _min = Mathf.Max(1, min);
             _max = Mathf.Max(_min, max);
             _onConfirmed = onConfirmed;
+            _acceptsInput = true;
 
             RefreshItem(icon, itemName);
             SetQuantity(initial);
@@ -133,6 +162,7 @@ namespace CreativeAI.UI.CraftingUI
 
         public void Hide()
         {
+            _acceptsInput = false;
             InitializeDerivedReferences();
             if (!HasRequiredReferences())
                 return;
@@ -149,6 +179,7 @@ namespace CreativeAI.UI.CraftingUI
 
         public void HideImmediate()
         {
+            _acceptsInput = false;
             InitializeDerivedReferences();
             if (!HasRequiredReferences())
                 return;
@@ -159,11 +190,17 @@ namespace CreativeAI.UI.CraftingUI
 
         public void SetQuantity(int value)
         {
+            if (!_interactionEnabled)
+                return;
+
             SetQuantity(value, false);
         }
 
         public void Increment()
         {
+            if (!_interactionEnabled)
+                return;
+
             if (_quantity >= _max)
             {
                 PlayLimitWarning();
@@ -175,6 +212,9 @@ namespace CreativeAI.UI.CraftingUI
 
         public void Decrement()
         {
+            if (!_interactionEnabled)
+                return;
+
             if (_quantity <= _min)
             {
                 PlayLimitWarning();
@@ -186,6 +226,9 @@ namespace CreativeAI.UI.CraftingUI
 
         public void SetMin()
         {
+            if (!_interactionEnabled)
+                return;
+
             if (_quantity <= _min)
             {
                 PlayLimitWarning();
@@ -197,6 +240,9 @@ namespace CreativeAI.UI.CraftingUI
 
         public void SetMax()
         {
+            if (!_interactionEnabled)
+                return;
+
             if (_quantity >= _max)
             {
                 PlayLimitWarning();
@@ -204,6 +250,25 @@ namespace CreativeAI.UI.CraftingUI
             }
 
             SetQuantity(_max, true);
+        }
+
+        private void Update()
+        {
+            if (!_acceptsInput || !IsOpen)
+                return;
+
+            var keyboard = Keyboard.current;
+            if (keyboard == null)
+                return;
+
+            if (keyboard.leftArrowKey.wasPressedThisFrame)
+                Decrement();
+            else if (keyboard.rightArrowKey.wasPressedThisFrame)
+                Increment();
+            else if (keyboard.upArrowKey.wasPressedThisFrame)
+                SetMax();
+            else if (keyboard.downArrowKey.wasPressedThisFrame)
+                SetMin();
         }
 
         private void InitializeDerivedReferences()
@@ -305,18 +370,27 @@ namespace CreativeAI.UI.CraftingUI
 
         private void Confirm()
         {
+            if (!_interactionEnabled)
+                return;
+
             _onConfirmed?.Invoke(_quantity);
         }
 
         private void OnInputEndEdit(string value)
         {
+            if (!_interactionEnabled)
+                return;
+
             SetQuantity(int.TryParse(value, out int parsed) ? parsed : _min);
         }
 
         private void SetQuantity(int value, bool playBump)
         {
+            int previousQuantity = _quantity;
             _quantity = Mathf.Clamp(value, _min, _max);
             RefreshQuantity(playBump);
+            if (_quantity != previousQuantity)
+                QuantityChanged?.Invoke(_quantity);
         }
 
         private void RefreshItem(Sprite icon, string itemName)
@@ -340,7 +414,7 @@ namespace CreativeAI.UI.CraftingUI
                 _inputField.SetTextWithoutNotify(_quantity.ToString());
 
             if (_craftButton != null)
-                _craftButton.interactable = _max >= _min;
+                _craftButton.interactable = _interactionEnabled && _max >= _min;
 
             if (playBump)
                 PlayQuantityBump();

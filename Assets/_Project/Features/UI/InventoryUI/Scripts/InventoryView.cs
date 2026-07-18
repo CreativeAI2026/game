@@ -49,6 +49,7 @@ namespace CreativeAI.UI.InventoryUI
         public event System.Action<ItemCategory, ScrollRefreshMode> ItemsRequested;
 
         private bool _navigationDisabled;
+        private bool _interactionEnabled = true;
         private bool _previousSendNavigationEvents;
         private bool _started;
         private Coroutine _resetRoutine;
@@ -65,6 +66,13 @@ namespace CreativeAI.UI.InventoryUI
 
         public void SetSelectFirstSlotOnRefresh(bool selectFirst) =>
             _selectFirstSlotOnRefresh = selectFirst;
+
+        public void SetInteractionEnabled(bool enabled)
+        {
+            _interactionEnabled = enabled;
+            if (!enabled)
+                CreativeAI.UI.SlotKeyboardFocus.Release(this);
+        }
 
         private void Awake()
         {

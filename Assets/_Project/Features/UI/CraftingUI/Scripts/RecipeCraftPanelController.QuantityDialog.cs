@@ -22,16 +22,30 @@ namespace CreativeAI.UI.CraftingUI
 
         private void BindDialog()
         {
-            ValidateQuantityDialogReferences();
+            if (!ValidateQuantityDialogReferences())
+                return;
+
+            _quantityDialogController.QuantityChanged -= OnQuantityChanged;
+            _quantityDialogController.QuantityChanged += OnQuantityChanged;
+        }
+
+        private void UnbindDialog()
+        {
+            if (_quantityDialogController != null)
+                _quantityDialogController.QuantityChanged -= OnQuantityChanged;
         }
 
         private void OpenQuantityDialog()
         {
+            if (IsCraftInteractionLocked)
+                return;
+
             if (!ValidateQuantityDialogReferences())
                 return;
 
             int max = GetMaximumCraftable();
-            if (_selectedRecipe == null)
+            var recipe = _selectionState.Recipe;
+            if (recipe == null)
                 return;
 
             if (max <= 0)
@@ -40,22 +54,15 @@ namespace CreativeAI.UI.CraftingUI
                 return;
             }
 
-            if (_quantityDialogController == null)
-            {
-                WarnMissingReferenceOnce(
-                    ref _warnedMissingQuantityDialogController,
-                    nameof(_quantityDialogController)
-                );
-                return;
-            }
-
-            _quantity = Mathf.Clamp(_quantity, 1, Mathf.Max(1, max));
+            _selectionState.SetQuantity(
+                Mathf.Clamp(_selectionState.Quantity, 1, Mathf.Max(1, max))
+            );
             _quantityDialogController.Show(
-                _selectedRecipe.resultItem?.icon,
-                _selectedRecipe.resultItem?.itemName,
+                recipe.resultItem?.icon,
+                recipe.resultItem?.itemName,
                 1,
                 max,
-                _quantity,
+                _selectionState.Quantity,
                 OnQuantityConfirmed
             );
         }
@@ -72,16 +79,26 @@ namespace CreativeAI.UI.CraftingUI
 
         private void OnQuantityConfirmed(int quantity)
         {
-            _quantity = quantity;
+            if (IsCraftInteractionLocked)
+                return;
+
+            _selectionState.SetQuantity(quantity);
             StartCraft();
+        }
+
+        private void OnQuantityChanged(int quantity)
+        {
+            _selectionState.SetQuantity(quantity);
+            RefreshMaterialRows();
         }
 
         private int GetMaximumCraftable()
         {
-            if (_selectedRecipe == null)
-                return 0;
-
-            return InventoryManager.Instance?.GetMaximumCraftable(_selectedRecipe) ?? 0;
+            return _availabilityCalculator.GetMaximumCraftable(
+                _selectionState.Recipe,
+                GetInventorySnapshot(),
+                GetQuickFoodSnapshot()
+            );
         }
 
 #if UNITY_EDITOR

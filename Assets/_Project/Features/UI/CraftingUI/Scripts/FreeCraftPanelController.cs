@@ -1,5 +1,4 @@
 using System.Collections;
-using System.Collections.Generic;
 using System.Linq;
 using CreativeAI.Gameplay;
 using CreativeAI.UI.Common;
@@ -22,7 +21,7 @@ namespace CreativeAI.UI.CraftingUI
         private InventoryView _inventory;
 
         [SerializeField]
-        private Transform _slotsRoot;
+        private FreeCraftMaterialSlotsView _materialSlotsView;
 
         [SerializeField]
         private ItemDetailPanel _detailPanel;
@@ -34,19 +33,21 @@ namespace CreativeAI.UI.CraftingUI
         [SerializeField]
         private float _gearRotationSpeed = 180f;
 
-        private readonly List<MaterialSlot> _slots = new();
-        private MaterialSlot _selectedSlot;
+        private readonly FreeCraftMaterialAssignmentState _materialAssignmentState = new();
+        private FreeCraftRecipeResolver _recipeResolver;
+        private InventoryManager _subscribedInventoryManager;
+        private int _selectedMaterialSlotIndex = -1;
         private bool _isSubscribed;
         private bool _isCrafting;
-        private CraftRecipeData _lastCraftedRecipe;
+        private bool _ownsCraftFlow;
         private Coroutine _craftRoutine;
         private Coroutine _initialSelectionRoutine;
         private bool _warnedMissingCraftButton;
         private bool _warnedMissingCraftPanel;
         private bool _warnedMissingInventory;
-        private bool _warnedMissingSlotsRoot;
+        private bool _warnedMissingMaterialSlotsView;
         private bool _warnedMissingDetailPanel;
-        private bool _warnedMissingMaterialSlots;
+        private bool _warnedMissingRecipeDatabase;
         private bool _warnedInvalidTabDefinition;
         private bool _warnedMissingRecipeBookManager;
 
@@ -54,13 +55,17 @@ namespace CreativeAI.UI.CraftingUI
 
         private void Awake()
         {
-            Initialize();
+            if (!Initialize())
+                enabled = false;
         }
 
         private void OnEnable()
         {
             if (!Initialize())
+            {
+                enabled = false;
                 return;
+            }
 
             Subscribe();
             _inventory?.ResetViewState();
@@ -74,7 +79,12 @@ namespace CreativeAI.UI.CraftingUI
         {
             Unsubscribe();
             StopCraftRoutine();
+            if (_ownsCraftFlow)
+                _craftPanel?.CancelCraftFlow();
+            _ownsCraftFlow = false;
+            SetCraftInteractionEnabled(true);
             StopInitialSelectionRoutine();
+            ResetMaterialAssignments(true);
         }
 
         private void OnDestroy()
@@ -104,9 +114,9 @@ namespace CreativeAI.UI.CraftingUI
                 nameof(_inventory)
             );
             valid &= ValidateRequiredReference(
-                _slotsRoot,
-                ref _warnedMissingSlotsRoot,
-                nameof(_slotsRoot)
+                _materialSlotsView,
+                ref _warnedMissingMaterialSlotsView,
+                nameof(_materialSlotsView)
             );
             valid &= ValidateRequiredReference(
                 _detailPanel,
@@ -118,16 +128,28 @@ namespace CreativeAI.UI.CraftingUI
                 ref _warnedMissingCraftButton,
                 nameof(_craftButton)
             );
+            valid &= ValidateRequiredReference(
+                RecipeDB,
+                ref _warnedMissingRecipeDatabase,
+                nameof(CraftPanelController.RecipeDB)
+            );
             if (!valid)
                 return false;
 
+            _recipeResolver ??= new FreeCraftRecipeResolver(RecipeDB);
             _inventory.SetSelectFirstSlotOnRefresh(false);
             _inventory.SetReleaseSelectionOnOutsideClick(false);
             UIButtonHoverScaleUtility.ApplyTo(_craftButton);
-            InitializeSlots();
-            if (_slots.Count == 0)
+            if (
+                !_materialSlotsView.HasRequiredReferences
+                || _materialSlotsView.SlotCount
+                    != FreeCraftMaterialAssignmentState.RequiredSlotCount
+            )
             {
-                WarnMissingReferenceOnce(ref _warnedMissingMaterialSlots, nameof(MaterialSlot));
+                WarnMissingReferenceOnce(
+                    ref _warnedMissingMaterialSlotsView,
+                    $"{nameof(_materialSlotsView)} slots"
+                );
                 return false;
             }
 
@@ -148,41 +170,6 @@ namespace CreativeAI.UI.CraftingUI
             }
         }
 
-        private void InitializeSlots()
-        {
-            if (_slotsRoot == null)
-                return;
-
-            UnbindMaterialSlots();
-            _slots.Clear();
-            _selectedSlot = null;
-
-            for (int i = 0; i < _slotsRoot.childCount; i++)
-            {
-                var slotObject = _slotsRoot.GetChild(i).gameObject;
-                var slot = slotObject.GetComponent<MaterialSlot>();
-                if (slot == null)
-                    continue;
-
-                slot.NormalizeVisualState();
-                slot.Clicked += OnMaterialSlotClicked;
-                slot.DoubleClicked += OnMaterialSlotDoubleClicked;
-                _slots.Add(slot);
-            }
-        }
-
-        private void UnbindMaterialSlots()
-        {
-            foreach (var slot in _slots)
-            {
-                if (slot == null)
-                    continue;
-
-                slot.Clicked -= OnMaterialSlotClicked;
-                slot.DoubleClicked -= OnMaterialSlotDoubleClicked;
-            }
-        }
-
         private void Subscribe()
         {
             if (_inventory == null || _isSubscribed)
@@ -191,10 +178,18 @@ namespace CreativeAI.UI.CraftingUI
             _inventory.OnSlotDoubleClicked += OnInventorySlotDoubleClicked;
             _inventory.DisplayRefreshRequested += OnInventoryDisplayRefreshRequested;
             _inventory.ItemsRequested += OnInventoryItemsRequested;
-            if (InventoryManager.Instance != null)
+            _materialSlotsView.SlotClicked -= OnMaterialSlotClicked;
+            _materialSlotsView.SlotDoubleClicked -= OnMaterialSlotDoubleClicked;
+            _materialSlotsView.SlotClicked += OnMaterialSlotClicked;
+            _materialSlotsView.SlotDoubleClicked += OnMaterialSlotDoubleClicked;
+            _craftPanel.CraftInteractionChanged -= SetCraftInteractionEnabled;
+            _craftPanel.CraftInteractionChanged += SetCraftInteractionEnabled;
+            SetCraftInteractionEnabled(!_craftPanel.IsCraftFlowRunning);
+            _subscribedInventoryManager = InventoryManager.Instance;
+            if (_subscribedInventoryManager != null)
             {
-                InventoryManager.Instance.InventoryChanged -= OnInventoryChanged;
-                InventoryManager.Instance.InventoryChanged += OnInventoryChanged;
+                _subscribedInventoryManager.InventoryChanged -= OnInventoryChanged;
+                _subscribedInventoryManager.InventoryChanged += OnInventoryChanged;
             }
             _isSubscribed = true;
         }
@@ -208,8 +203,20 @@ namespace CreativeAI.UI.CraftingUI
                 _inventory.ItemsRequested -= OnInventoryItemsRequested;
             }
 
-            if (InventoryManager.Instance != null)
-                InventoryManager.Instance.InventoryChanged -= OnInventoryChanged;
+            if (_materialSlotsView != null)
+            {
+                _materialSlotsView.SlotClicked -= OnMaterialSlotClicked;
+                _materialSlotsView.SlotDoubleClicked -= OnMaterialSlotDoubleClicked;
+            }
+
+            if (_craftPanel != null)
+                _craftPanel.CraftInteractionChanged -= SetCraftInteractionEnabled;
+
+            if (_subscribedInventoryManager != null)
+            {
+                _subscribedInventoryManager.InventoryChanged -= OnInventoryChanged;
+                _subscribedInventoryManager = null;
+            }
 
             _isSubscribed = false;
         }
@@ -264,8 +271,8 @@ namespace CreativeAI.UI.CraftingUI
 
         private void SelectFirstSlotIfNeeded()
         {
-            if (_selectedSlot == null && _slots.Count > 0)
-                SelectSlot(_slots[0]);
+            if (_selectedMaterialSlotIndex < 0 && _materialSlotsView.SlotCount > 0)
+                SelectSlot(0);
 
             ClaimMaterialSlotFocus();
         }
@@ -274,8 +281,8 @@ namespace CreativeAI.UI.CraftingUI
         {
             yield return null;
 
-            if (_slots.Count > 0)
-                SelectSlot(_slots[0]);
+            if (_materialSlotsView.SlotCount > 0)
+                SelectSlot(0);
 
             ClaimMaterialSlotFocus();
 
@@ -299,79 +306,92 @@ namespace CreativeAI.UI.CraftingUI
 
         private void ResetSlots()
         {
-            _selectedSlot = null;
-
-            foreach (var slot in _slots)
-            {
-                slot.Clear();
-                slot.SetSelected(false);
-            }
-
-            SyncInventoryAssignedColors();
+            ResetMaterialAssignments(true);
             _inventory?.ResetViewState();
             RefreshDetailFromSelectedCraftSlot();
             UpdateCraftButton();
         }
 
-        private void SelectSlot(MaterialSlot selectedSlot)
+        private void ResetMaterialAssignments(bool resetSelection)
         {
-            if (selectedSlot == null)
+            _materialAssignmentState.ClearAll();
+            _materialSlotsView?.ResetAll();
+            if (resetSelection)
+                _selectedMaterialSlotIndex = -1;
+
+            SyncInventoryAssignedColors();
+        }
+
+        private void SelectSlot(int selectedIndex)
+        {
+            if (!_materialSlotsView.IsValidIndex(selectedIndex))
                 return;
 
-            var previousSlot = _selectedSlot;
-            previousSlot?.SetSelected(false);
+            int previousIndex = _selectedMaterialSlotIndex;
+            ItemData previousItem = GetAssignedItem(previousIndex);
+            _selectedMaterialSlotIndex = selectedIndex;
+            _materialSlotsView.SetSelectedIndex(selectedIndex);
 
-            foreach (var slot in _slots)
-                if (slot != null && slot != previousSlot && slot != selectedSlot)
-                    slot.SetSelected(false);
-
-            _selectedSlot = selectedSlot;
-            selectedSlot.SetSelected(true);
-
-            if (selectedSlot.Stack != null)
-                _inventory?.SelectItem(selectedSlot.Stack);
+            var selectedStack = _materialAssignmentState.GetStack(selectedIndex);
+            if (selectedStack != null)
+                _inventory?.SelectItem(selectedStack);
             else
                 _inventory?.ClearSelection();
 
             bool changedBetweenEmptySlots =
-                previousSlot != null
-                && previousSlot != selectedSlot
-                && previousSlot.Item == null
-                && selectedSlot.Item == null;
-            _detailPanel?.Show(selectedSlot.Item, EmptyMaterialLabel, changedBetweenEmptySlots);
+                previousIndex >= 0
+                && previousIndex != selectedIndex
+                && previousItem == null
+                && GetAssignedItem(selectedIndex) == null;
+            _detailPanel?.Show(
+                GetAssignedItem(selectedIndex),
+                EmptyMaterialLabel,
+                changedBetweenEmptySlots
+            );
         }
 
-        private void OnMaterialSlotClicked(MaterialSlot slot)
+        private void OnMaterialSlotClicked(int slotIndex)
         {
+            if (IsCraftInteractionLocked)
+                return;
+
             CreativeAI.UI.SlotKeyboardFocus.Claim(this);
-            SelectSlot(slot);
+            SelectSlot(slotIndex);
         }
 
-        private void OnMaterialSlotDoubleClicked(MaterialSlot slot)
+        private void OnMaterialSlotDoubleClicked(int slotIndex)
         {
+            if (IsCraftInteractionLocked)
+                return;
+
             CreativeAI.UI.SlotKeyboardFocus.Claim(this);
-            ClearSlot(slot);
+            ClearSlot(slotIndex);
         }
 
         private void ClaimMaterialSlotFocus()
         {
-            if (_selectedSlot != null)
+            if (_selectedMaterialSlotIndex >= 0)
                 CreativeAI.UI.SlotKeyboardFocus.Claim(this);
         }
 
-        private void ClearSlot(MaterialSlot slot)
+        private void ClearSlot(int slotIndex)
         {
-            if (slot == null)
+            if (!_materialSlotsView.IsValidIndex(slotIndex))
                 return;
 
-            SelectSlot(slot);
+            SelectSlot(slotIndex);
+            _materialAssignmentState.ClearStack(slotIndex);
 
-            slot.ClearMaterialAnimated(() =>
-            {
-                SyncInventoryAssignedColors();
-                RefreshDetailFromSelectedCraftSlot();
-                UpdateCraftButton();
-            });
+            _materialSlotsView.ClearMaterial(
+                slotIndex,
+                true,
+                () =>
+                {
+                    SyncInventoryAssignedColors();
+                    RefreshDetailFromSelectedCraftSlot();
+                    UpdateCraftButton();
+                }
+            );
 
             _inventory?.ClearSelection();
             _detailPanel?.Clear();
@@ -379,7 +399,10 @@ namespace CreativeAI.UI.CraftingUI
 
         private void OnInventorySlotDoubleClicked(ItemStack stack)
         {
-            if (_selectedSlot == null || stack?.Data == null || stack.Count <= 0)
+            if (IsCraftInteractionLocked)
+                return;
+
+            if (_selectedMaterialSlotIndex < 0 || stack?.Data == null || stack.Count <= 0)
                 return;
 
             if (stack.IsEquipped)
@@ -400,9 +423,10 @@ namespace CreativeAI.UI.CraftingUI
             if (!CanAssignMaterial(stack))
                 return;
 
-            ClearMaterialFromOtherSlots(stack.Data, _selectedSlot);
+            ClearMaterialFromOtherSlots(stack.Data, _selectedMaterialSlotIndex);
 
-            _selectedSlot.SetMaterialAnimated(stack);
+            _materialAssignmentState.SetStack(_selectedMaterialSlotIndex, stack);
+            _materialSlotsView.SetMaterial(_selectedMaterialSlotIndex, stack, true);
             SyncInventoryAssignedColors();
             _detailPanel?.Show(stack.Data);
             SelectNextEmptyCraftSlot();
@@ -441,12 +465,13 @@ namespace CreativeAI.UI.CraftingUI
             if (item == null)
                 return false;
 
-            foreach (var slot in _slots)
+            for (int i = 0; i < _materialSlotsView.SlotCount; i++)
             {
-                if (slot == null || slot == _selectedSlot || slot.Stack?.Data == null)
+                var assignedStack = _materialAssignmentState.GetStack(i);
+                if (i == _selectedMaterialSlotIndex || assignedStack?.Data == null)
                     continue;
 
-                if (slot.Stack.Data.category != item.category)
+                if (assignedStack.Data.category != item.category)
                     return true;
             }
 
@@ -455,19 +480,24 @@ namespace CreativeAI.UI.CraftingUI
 
         private bool ClearAssignedMaterialSlot(ItemData item)
         {
-            var assignedSlot = _slots.FirstOrDefault(slot => slot.Item == item);
-            if (assignedSlot == null)
+            int assignedIndex = FindAssignedMaterialIndex(item);
+            if (assignedIndex < 0)
                 return false;
 
-            SelectSlot(assignedSlot);
+            SelectSlot(assignedIndex);
+            _materialAssignmentState.ClearStack(assignedIndex);
 
-            assignedSlot.ClearMaterialAnimated(() =>
-            {
-                SyncInventoryAssignedColors();
-                _inventory?.ClearSelection();
-                RefreshDetailFromSelectedCraftSlot();
-                UpdateCraftButton();
-            });
+            _materialSlotsView.ClearMaterial(
+                assignedIndex,
+                true,
+                () =>
+                {
+                    SyncInventoryAssignedColors();
+                    _inventory?.ClearSelection();
+                    RefreshDetailFromSelectedCraftSlot();
+                    UpdateCraftButton();
+                }
+            );
 
             _inventory?.ClearSelection();
             _detailPanel?.Clear();
@@ -475,49 +505,66 @@ namespace CreativeAI.UI.CraftingUI
             return true;
         }
 
+        private int FindAssignedMaterialIndex(ItemData item)
+        {
+            if (item == null)
+                return -1;
+
+            for (int i = 0; i < _materialAssignmentState.SlotCount; i++)
+            {
+                if (_materialAssignmentState.GetStack(i)?.Data == item)
+                    return i;
+            }
+
+            return -1;
+        }
+
+        private ItemData GetAssignedItem(int index)
+        {
+            return _materialAssignmentState.IsValidIndex(index)
+                ? _materialAssignmentState.GetStack(index)?.Data
+                : null;
+        }
+
         private void SelectNextEmptyCraftSlot()
         {
-            if (_selectedSlot == null || _slots.Count <= 1)
+            if (_selectedMaterialSlotIndex < 0 || _materialSlotsView.SlotCount <= 1)
                 return;
 
-            int selectedIndex = _slots.IndexOf(_selectedSlot);
-            if (selectedIndex < 0)
-                return;
-
-            for (int offset = 1; offset < _slots.Count; offset++)
+            for (int offset = 1; offset < _materialSlotsView.SlotCount; offset++)
             {
-                int slotIndex = (selectedIndex + offset) % _slots.Count;
-                if (_slots[slotIndex].Item != null)
+                int slotIndex =
+                    (_selectedMaterialSlotIndex + offset) % _materialSlotsView.SlotCount;
+                if (_materialAssignmentState.HasStack(slotIndex))
                     continue;
 
-                SelectSlot(_slots[slotIndex]);
+                SelectSlot(slotIndex);
                 return;
             }
         }
 
         private void SyncInventoryAssignedColors()
         {
-            _inventory?.SetCraftAssignedStacks(
-                _slots.Where(slot => slot.Stack != null).Select(slot => slot.Stack)
-            );
+            _inventory?.SetCraftAssignedStacks(_materialAssignmentState.GetAssignedStacks());
         }
 
         private void RefreshDetailFromSelectedCraftSlot()
         {
-            if (_detailPanel == null || _selectedSlot == null)
+            if (_detailPanel == null || _selectedMaterialSlotIndex < 0)
                 return;
 
-            _detailPanel.Show(_selectedSlot.Item, EmptyMaterialLabel);
+            _detailPanel.Show(GetAssignedItem(_selectedMaterialSlotIndex), EmptyMaterialLabel);
         }
 
-        private void ClearMaterialFromOtherSlots(ItemData item, MaterialSlot destinationSlot)
+        private void ClearMaterialFromOtherSlots(ItemData item, int destinationIndex)
         {
-            foreach (var slot in _slots)
+            for (int i = 0; i < _materialSlotsView.SlotCount; i++)
             {
-                if (slot == destinationSlot || slot.Item != item)
+                if (i == destinationIndex || GetAssignedItem(i) != item)
                     continue;
 
-                slot.ClearMaterialAnimated();
+                _materialAssignmentState.ClearStack(i);
+                _materialSlotsView.ClearMaterial(i, true);
             }
         }
 
@@ -526,13 +573,12 @@ namespace CreativeAI.UI.CraftingUI
             bool hasEnoughMaterials = HasEnoughMaterials();
             bool hasCategoryMismatch = HasCategoryMismatch();
             bool hasEquippedMaterial = HasEquippedMaterial();
-            bool hasRecipe = FindSelectedRecipe() != null;
-            bool canCraft = hasRecipe && CanCraft();
+            bool canCraft = TryCreateCraftRequest(out var request) && CanCraft(request);
 
             if (_craftButton != null)
-                _craftButton.interactable = !_isCrafting && canCraft;
+                _craftButton.interactable = !IsCraftInteractionLocked && canCraft;
 
-            if (_isCrafting || canCraft)
+            if (IsCraftInteractionLocked || canCraft)
                 _craftPanel?.HideWarning();
             else if (hasEquippedMaterial)
                 _craftPanel?.ShowWarning(CraftWarningKind.EquippedMaterial);
@@ -544,10 +590,10 @@ namespace CreativeAI.UI.CraftingUI
 
         private void StartCraft()
         {
-            if (_isCrafting)
+            if (_isCrafting || IsCraftInteractionLocked)
                 return;
 
-            if (!CanCraft())
+            if (!TryCreateCraftRequest(out var request) || !CanCraft(request))
             {
                 if (HasEquippedMaterial())
                     _craftPanel?.ShowWarning(CraftWarningKind.EquippedMaterial);
@@ -558,33 +604,31 @@ namespace CreativeAI.UI.CraftingUI
             }
 
             StopCraftRoutine();
-            _craftRoutine = StartCoroutine(CraftRoutine());
+            _ownsCraftFlow = true;
+            _craftRoutine = StartCoroutine(CraftRoutine(request));
         }
 
-        private bool CanCraft()
+        private bool CanCraft(FreeCraftRequest request)
         {
-            var recipe = FindSelectedRecipe();
-            return recipe != null
-                && (
-                    InventoryManager.Instance?.CanCraft(
-                        recipe,
-                        GetMaterialStack(0),
-                        GetMaterialStack(1)
-                    )
-                    ?? false
-                );
+            return InventoryManager.Instance?.CanCraft(
+                    request.Recipe,
+                    request.FirstMaterial,
+                    request.SecondMaterial
+                ) ?? false;
         }
 
         private bool HasEnoughMaterials()
         {
-            return _slots.Count(slot => slot.Stack != null) >= 2;
+            return _materialAssignmentState.GetAssignedStacks().Count
+                >= FreeCraftMaterialAssignmentState.RequiredSlotCount;
         }
 
         private bool HasCategoryMismatch()
         {
-            var selectedItems = _slots
-                .Where(slot => slot.Stack?.Data != null)
-                .Select(slot => slot.Stack.Data)
+            var selectedItems = _materialAssignmentState
+                .GetAssignedStacks()
+                .Where(stack => stack?.Data != null)
+                .Select(stack => stack.Data)
                 .Take(2)
                 .ToList();
 
@@ -596,77 +640,66 @@ namespace CreativeAI.UI.CraftingUI
 
         private bool HasEquippedMaterial()
         {
-            return _slots
-                .Where(slot => slot.Stack != null)
-                .Select(slot => slot.Stack)
-                .Take(2)
+            return _materialAssignmentState
+                .GetAssignedStacks()
+                .Take(FreeCraftMaterialAssignmentState.RequiredSlotCount)
                 .Any(stack => stack.IsEquipped);
         }
 
-        private IEnumerator CraftRoutine()
+        private IEnumerator CraftRoutine(FreeCraftRequest request)
         {
             _isCrafting = true;
-            _lastCraftedRecipe = FindSelectedRecipe();
-            UpdateCraftButton();
-
-            _craftPanel?.HideWarning();
-
-            _craftPanel?.ShowLoading();
-
-            yield return new WaitForSecondsRealtime(_craftPanel.CraftFlowDurationSeconds);
-
-            bool crafted =
-                _lastCraftedRecipe != null
-                && (
-                    InventoryManager.Instance?.TryCraft(
-                        _lastCraftedRecipe,
-                        GetMaterialStack(0),
-                        GetMaterialStack(1)
-                    )
-                    ?? false
-                );
-            if (crafted)
+            try
             {
-                if (RecipeBookManager.Instance == null)
-                {
-                    WarnMissingRecipeBookManagerOnce(_lastCraftedRecipe);
-                }
-                else
-                {
-                    RecipeDB?.RevealRecipe(_lastCraftedRecipe);
-                }
-            }
-
-            CraftFlowViewUtility.CompleteCraftRoutine(ref _craftRoutine, ref _isCrafting);
-
-            _craftPanel?.HideLoading();
-            if (!crafted)
-            {
-                _craftPanel?.HideLoadingAndResult();
                 UpdateCraftButton();
-                yield break;
+                yield return _craftPanel.RunCraftFlow(
+                    () => TryExecuteFreeCraft(request),
+                    request.Recipe.resultItem,
+                    1,
+                    CloseResult
+                );
             }
-
-            _craftPanel?.ShowResult(_lastCraftedRecipe?.resultItem, 1, CloseResult);
-
-            UpdateCraftButton();
+            finally
+            {
+                CraftFlowViewUtility.CompleteCraftRoutine(ref _craftRoutine, ref _isCrafting);
+                if (!_craftPanel.IsCraftFlowRunning)
+                    _ownsCraftFlow = false;
+                UpdateCraftButton();
+            }
         }
 
-        private CraftRecipeData FindSelectedRecipe()
+        private bool TryExecuteFreeCraft(FreeCraftRequest request)
         {
-            if (RecipeDB == null)
-                return null;
+            bool crafted =
+                InventoryManager.Instance?.TryCraft(
+                    request.Recipe,
+                    request.FirstMaterial,
+                    request.SecondMaterial
+                ) ?? false;
+            if (!crafted)
+                return false;
 
-            var selectedItems = _slots
-                .Where(slot => slot.Stack?.Data != null)
-                .Select(slot => slot.Stack.Data)
-                .Take(2)
-                .ToList();
+            if (RecipeBookManager.Instance == null)
+                WarnMissingRecipeBookManagerOnce(request.Recipe);
+            else
+                RecipeDB?.RevealRecipe(request.Recipe);
 
-            if (selectedItems.Count < 2)
-                return null;
+            return true;
+        }
 
-            return RecipeDB.FindRecipe(selectedItems[0], selectedItems[1]);
+        private bool TryCreateCraftRequest(out FreeCraftRequest request)
+        {
+            request = default;
+            if (_recipeResolver == null)
+                return false;
+
+            var assignedStacks = _materialAssignmentState.GetAssignedStacks();
+            var resolution = _recipeResolver.Resolve(assignedStacks);
+            if (!resolution.Succeeded)
+                return false;
+
+            request = new FreeCraftRequest(resolution.Recipe, assignedStacks[0], assignedStacks[1]);
+            return true;
         }
 
         private void WarnMissingRecipeBookManagerOnce(CraftRecipeData recipe)
@@ -681,13 +714,9 @@ namespace CreativeAI.UI.CraftingUI
             );
         }
 
-        private ItemStack GetMaterialStack(int index)
-        {
-            return index >= 0 && index < _slots.Count ? _slots[index].Stack : null;
-        }
-
         private void CloseResult()
         {
+            _ownsCraftFlow = false;
             ResetSlots();
             SelectFirstSlotIfNeeded();
         }
@@ -695,7 +724,6 @@ namespace CreativeAI.UI.CraftingUI
         private void ResetCraftFlow()
         {
             StopCraftRoutine();
-            _lastCraftedRecipe = null;
 
             _craftPanel?.HideLoadingAndResult();
             _craftPanel?.HideWarning();
@@ -711,8 +739,9 @@ namespace CreativeAI.UI.CraftingUI
         {
             if (
                 !isActiveAndEnabled
-                || _selectedSlot == null
-                || _slots.Count <= 0
+                || IsCraftInteractionLocked
+                || _selectedMaterialSlotIndex < 0
+                || _materialSlotsView.SlotCount <= 0
                 || !CreativeAI.UI.SlotKeyboardFocus.IsFocused(this)
             )
             {
@@ -731,12 +760,19 @@ namespace CreativeAI.UI.CraftingUI
 
         private void SelectMaterialSlotByOffset(int offset)
         {
-            int currentIndex = _slots.IndexOf(_selectedSlot);
-            if (currentIndex < 0)
-                return;
+            int nextIndex =
+                (_selectedMaterialSlotIndex + offset + _materialSlotsView.SlotCount)
+                % _materialSlotsView.SlotCount;
+            SelectSlot(nextIndex);
+        }
 
-            int nextIndex = (currentIndex + offset + _slots.Count) % _slots.Count;
-            SelectSlot(_slots[nextIndex]);
+        private bool IsCraftInteractionLocked =>
+            _isCrafting || (_craftPanel?.IsCraftFlowRunning ?? false);
+
+        private void SetCraftInteractionEnabled(bool enabled)
+        {
+            _inventory?.SetInteractionEnabled(enabled);
+            UpdateCraftButton();
         }
 
         private bool ValidateRequiredReference(
@@ -765,12 +801,14 @@ namespace CreativeAI.UI.CraftingUI
         }
 
 #if UNITY_EDITOR
+        private void Reset() => AutoAssignReferences();
+
         [ContextMenu("Auto Assign References")]
         private void AutoAssignReferences()
         {
             _craftPanel ??= GetComponentInParent<CraftPanelController>(true);
             _inventory ??= GetComponentInChildren<InventoryView>(true);
-            _slotsRoot ??= UIChildFinder.Find(transform, "MaterialSlotsRoot");
+            _materialSlotsView ??= GetComponentInChildren<FreeCraftMaterialSlotsView>(true);
             _craftButton ??= UIChildFinder.FindButton(transform, "CraftButton");
 
             if (_detailPanel == null)

@@ -16,6 +16,7 @@ namespace CreativeAI.UI.CraftingUI
         private GameObject _slotPrefab;
 
         private readonly List<RecipeSlot> _slots = new();
+        private bool _interactionEnabled = true;
 
         public event Action<CraftRecipeData> RecipeClicked;
         public event Action<CraftRecipeData> RecipeDoubleClicked;
@@ -27,6 +28,11 @@ namespace CreativeAI.UI.CraftingUI
             _content != null
             && _slotPrefab != null
             && _slotPrefab.GetComponent<RecipeSlot>() != null;
+
+        public void SetInteractionEnabled(bool enabled)
+        {
+            _interactionEnabled = enabled;
+        }
 
 #if UNITY_EDITOR
         private void Reset() => AutoAssignReferences();
@@ -125,11 +131,17 @@ namespace CreativeAI.UI.CraftingUI
 
         private void OnSlotClicked(RecipeSlot slot)
         {
+            if (!_interactionEnabled)
+                return;
+
             RecipeClicked?.Invoke(slot?.Recipe);
         }
 
         private void OnSlotDoubleClicked(RecipeSlot slot)
         {
+            if (!_interactionEnabled)
+                return;
+
             RecipeDoubleClicked?.Invoke(slot?.Recipe);
         }
     }

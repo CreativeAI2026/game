@@ -14,7 +14,7 @@ namespace CreativeAI.UI.CraftingUI
             _recipeListView ??= GetComponentInChildren<RecipeListView>(true);
 
             _categoryTabGroup ??= GetComponentInChildren<CreativeAI.UI.TabGroup>(true);
-            _materialListView ??= GetComponentInChildren<RecipeMaterialListView>(true);
+            _materialRowsView ??= GetComponentInChildren<RecipeCraftMaterialRowsView>(true);
             _detailPanel ??= GetComponentsInChildren<CreativeAI.UI.ItemDetailPanel>(true)
                 .FirstOrDefault(panel =>
                     panel.GetComponentInParent<CreativeAI.UI.InventoryUI.InventoryView>(true)

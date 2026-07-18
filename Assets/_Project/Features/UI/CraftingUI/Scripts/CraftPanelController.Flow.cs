@@ -1,3 +1,5 @@
+using System;
+using System.Collections;
 using CreativeAI.Gameplay;
 using CreativeAI.UI.Common;
 using UnityEngine;
@@ -27,6 +29,69 @@ namespace CreativeAI.UI.CraftingUI
                 _closeButton.onClick.RemoveListener(HideSharedResult);
                 _closeButton.onClick.AddListener(HideSharedResult);
             }
+        }
+
+        public IEnumerator RunCraftFlow(
+            Func<bool> craftAction,
+            ItemData resultItem,
+            int resultCount,
+            Action onResultClosed,
+            Action onFailed = null
+        )
+        {
+            if (craftAction == null || _isCraftFlowRunning || !ValidateCraftFlowReferences())
+                yield break;
+
+            bool awaitingResultClose = false;
+            try
+            {
+                SetCraftFlowRunning(true);
+                HideWarning();
+                ShowLoading();
+                yield return new WaitForSecondsRealtime(CraftFlowDurationSeconds);
+
+                bool crafted = craftAction();
+                HideLoading();
+
+                if (!crafted)
+                {
+                    HideLoadingAndResult();
+                    onFailed?.Invoke();
+                    yield break;
+                }
+
+                bool resultClosed = false;
+                void CompleteResult()
+                {
+                    if (resultClosed)
+                        return;
+
+                    resultClosed = true;
+                    try
+                    {
+                        onResultClosed?.Invoke();
+                    }
+                    finally
+                    {
+                        SetCraftFlowRunning(false);
+                    }
+                }
+
+                ShowResult(resultItem, resultCount, CompleteResult);
+                awaitingResultClose = true;
+            }
+            finally
+            {
+                HideLoading();
+                if (!awaitingResultClose)
+                    SetCraftFlowRunning(false);
+            }
+        }
+
+        public void CancelCraftFlow()
+        {
+            HideLoadingAndResult();
+            SetCraftFlowRunning(false);
         }
 
         public void ShowLoading()
@@ -87,8 +152,31 @@ namespace CreativeAI.UI.CraftingUI
 
         private void ResetSharedFlow()
         {
-            HideLoadingAndResult();
+            CancelCraftFlow();
             HideWarning();
+        }
+
+        private void SetCraftFlowRunning(bool running)
+        {
+            if (_isCraftFlowRunning == running)
+                return;
+
+            _isCraftFlowRunning = running;
+            var callbacks = CraftInteractionChanged?.GetInvocationList();
+            if (callbacks == null)
+                return;
+
+            foreach (var callback in callbacks)
+            {
+                try
+                {
+                    ((Action<bool>)callback).Invoke(!running);
+                }
+                catch (Exception exception)
+                {
+                    Debug.LogException(exception, this);
+                }
+            }
         }
     }
 }

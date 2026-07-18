@@ -15,14 +15,10 @@ namespace CreativeAI.UI.CraftingUI
             FindReferences();
         }
 
-        public void Show(ItemData material)
-        {
-            Show(material, 1);
-        }
-
-        public void Show(ItemData material, int requiredQuantity)
+        public void Show(RecipeCraftMaterialRowData data)
         {
             FindReferences();
+            var material = data.Item;
             if (material == null)
             {
                 if (_icon != null)
@@ -45,10 +41,8 @@ namespace CreativeAI.UI.CraftingUI
 
             if (_text != null)
             {
-                int required = Mathf.Max(1, requiredQuantity);
-                int owned = InventoryManager.Instance?.GetItemCount(material) ?? 0;
-                _text.text = $"{material.itemName}  {owned} / {required}";
-                _text.color = owned >= required ? Color.white : new Color(0.9f, 0.25f, 0.25f);
+                _text.text = $"{material.itemName}  {data.AvailableCount} / {data.RequiredCount}";
+                _text.color = data.IsSufficient ? Color.white : new Color(0.9f, 0.25f, 0.25f);
             }
         }
 

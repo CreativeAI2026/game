@@ -42,6 +42,7 @@ namespace CreativeAI.UI
         private readonly List<int> _buttonToEntryIndices = new();
         private int _currentIndex = -1;
         private bool _initialized;
+        private bool _interactionEnabled = true;
         public int CurrentIndex => _currentIndex;
         public TabDefinition CurrentDefinition => GetDefinitionForButtonIndex(_currentIndex);
         public GameObject CurrentView => GetViewForButtonIndex(_currentIndex);
@@ -79,6 +80,7 @@ namespace CreativeAI.UI
                 btn.Bind(entry.definition);
                 int captured = _buttons.Count;
                 btn.Button.onClick.AddListener(() => SelectTab(captured));
+                btn.Button.interactable = _interactionEnabled;
                 _buttons.Add(btn);
                 _buttonToEntryIndices.Add(entryIndex);
             }
@@ -111,6 +113,9 @@ namespace CreativeAI.UI
 
         public void SelectTab(int index)
         {
+            if (!_interactionEnabled)
+                return;
+
             if (index < 0 || index >= _buttons.Count || index >= _buttonToEntryIndices.Count)
                 return;
 
@@ -241,6 +246,16 @@ namespace CreativeAI.UI
                 return GetView(_buttonToEntryIndices[buttonIndex]);
 
             return GetView(buttonIndex);
+        }
+
+        public void SetInteractionEnabled(bool enabled)
+        {
+            _interactionEnabled = enabled;
+            foreach (var button in _buttons)
+            {
+                if (button?.Button != null)
+                    button.Button.interactable = enabled;
+            }
         }
     }
 }

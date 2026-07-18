@@ -10,6 +10,7 @@ namespace CreativeAI.UI.InventoryUI
         {
             if (
                 !isActiveAndEnabled
+                || !_interactionEnabled
                 || _currentSelectedSlot == null
                 || !CreativeAI.UI.SlotKeyboardFocus.IsFocused(this)
             )
