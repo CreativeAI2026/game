@@ -20,6 +20,11 @@ namespace CreativeAI.Gameplay
         /// <summary>使用時に回復する最大HPに対する割合(合成前 0.2 / 合成後 0.5)。</summary>
         public float HealFraction => _craftedResult ? PostCraftHealFraction : PreCraftHealFraction;
 
+        /// <summary>食材は必ずスタックできる(同じ食材は1枠にまとめる)。個々のアセット設定に依らずカテゴリのルールで保証。</summary>
+        public const int FoodStackCap = 99;
+
+        public override int MaxStack => Mathf.Max(FoodStackCap, base.MaxStack);
+
         private void OnEnable() => category = ItemCategory.Food;
     }
 }

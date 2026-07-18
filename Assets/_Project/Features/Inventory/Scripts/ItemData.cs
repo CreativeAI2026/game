@@ -28,7 +28,8 @@ namespace CreativeAI.Gameplay
         [SerializeField, Min(1)]
         private int _maxStack = 1;
 
-        public int MaxStack => Mathf.Max(1, _maxStack);
+        /// <summary>1スタックに積める上限。既定は1(装備品・大事なもの=積まない)。カテゴリで積めるものは派生でルール化する。</summary>
+        public virtual int MaxStack => Mathf.Max(1, _maxStack);
     }
 
     public static class ItemCategoryExtensions
