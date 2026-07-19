@@ -52,6 +52,9 @@ namespace CreativeAI.Core.EventSystem
         private MonoBehaviour _itemGiver; // IItemGiver 実装。未設定なら ItemGiverService.Current(= InventoryManager)にフォールバック
 
         [SerializeField]
+        private MonoBehaviour _weaponGiver; // IWeaponGiver 実装。未設定なら WeaponGiverService.Current(= WeaponManager)にフォールバック。未実装なら giveWeapon はスキップ
+
+        [SerializeField]
         private MonoBehaviour _battleRunner; // IBattleRunner 実装。未設定なら BattleRunnerService.Current(= BattleRunner)にフォールバック
 
         [SerializeField]
@@ -59,12 +62,15 @@ namespace CreativeAI.Core.EventSystem
 
         private IDialogueView _view;
         private IItemGiver _items;
+        private IWeaponGiver _weapons;
         private IBattleRunner _battle;
 
         private IDialogueView View =>
             _view ??= (_dialogueView as IDialogueView) ?? DialogueViewService.Current;
         private IItemGiver Items =>
             _items ??= (_itemGiver as IItemGiver) ?? ItemGiverService.Current;
+        private IWeaponGiver Weapons =>
+            _weapons ??= (_weaponGiver as IWeaponGiver) ?? WeaponGiverService.Current;
         private IBattleRunner BattleRunner =>
             _battle ??= (_battleRunner as IBattleRunner) ?? BattleRunnerService.Current;
         private ProgressManager Progress =>
@@ -78,7 +84,8 @@ namespace CreativeAI.Core.EventSystem
             IDialogueView view,
             IItemGiver items,
             IBattleRunner battle = null,
-            GameModeManager gameMode = null
+            GameModeManager gameMode = null,
+            IWeaponGiver weapons = null
         )
         {
             _progress = progress;
@@ -86,6 +93,7 @@ namespace CreativeAI.Core.EventSystem
             _items = items;
             _battle = battle;
             _gameMode = gameMode;
+            _weapons = weapons;
         }
 
         public void Play(EventDefinition ev, BattleSetup battle = default)
@@ -137,6 +145,16 @@ namespace CreativeAI.Core.EventSystem
 
                         case StepKind.GiveItem:
                             Items?.Give(step.ItemKey);
+                            break;
+
+                        case StepKind.GiveWeapon:
+                            if (Weapons == null)
+                                Debug.LogWarning(
+                                    $"[EventPlayer] IWeaponGiver 未実装 (event={ev.Id}). giveWeapon '{step.WeaponKey}' をスキップ。"
+                                        + " プレイヤーリグの WeaponManager が IWeaponGiver を実装するまで武器は渡されません。"
+                                );
+                            else
+                                Weapons.GiveWeapon(step.WeaponKey);
                             break;
 
                         case StepKind.Battle:

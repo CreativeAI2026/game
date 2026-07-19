@@ -42,6 +42,19 @@ namespace CreativeAI.Scenario.Editor
         };
 
         /// <summary>
+        /// giveWeapon の weaponKey として許される値。武器は剣/弓/鎌の3種で固定なので
+        /// item カタログではなくこの集合で照合する(ScenarioReference.md「武器カタログ」)。
+        /// </summary>
+        public static readonly IReadOnlyCollection<string> WeaponKeys = new HashSet<string>(
+            StringComparer.Ordinal
+        )
+        {
+            "sword",
+            "bow",
+            "scythe",
+        };
+
+        /// <summary>
         /// itemKey を弾くための有効キー集合。null なら「未提供」= 警告どまり。
         /// エディタ側(EventImporterMenu)が ItemData から構築して渡す。
         /// (敵は events.json に書かず EventTrigger に配線するため enemyKey の照合は持たない。)
@@ -417,6 +430,27 @@ namespace CreativeAI.Scenario.Editor
                     return EventStep.GiveItem(itemKey);
                 }
 
+                case "giveWeapon":
+                {
+                    kind = StepKind.GiveWeapon;
+                    var weaponKey = (step["weaponKey"] as JValue)?.Value as string;
+                    if (string.IsNullOrEmpty(weaponKey))
+                    {
+                        report.Error(id, $"steps[{i}] giveWeapon は weaponKey が必須。");
+                        return null;
+                    }
+                    // 武器は剣/弓/鎌の3種で固定(ScenarioReference.md)。それ以外は打ち間違いとして弾く。
+                    if (!WeaponKeys.Contains(weaponKey))
+                    {
+                        report.Error(
+                            id,
+                            $"steps[{i}] giveWeapon の weaponKey '{weaponKey}' は不正(sword / bow / scythe のみ)。"
+                        );
+                        return null;
+                    }
+                    return EventStep.GiveWeapon(weaponKey);
+                }
+
                 case "battle":
                 {
                     kind = StepKind.Battle;
@@ -436,7 +470,7 @@ namespace CreativeAI.Scenario.Editor
                 default:
                     report.Error(
                         id,
-                        $"steps[{i}] の kind '{kindStr}' は不正(line / choice / giveItem / battle のみ)。"
+                        $"steps[{i}] の kind '{kindStr}' は不正(line / choice / giveItem / giveWeapon / battle のみ)。"
                     );
                     return null;
             }

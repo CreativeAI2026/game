@@ -48,6 +48,69 @@ namespace CreativeAI.Tests.EditMode
         }
 
         [Test]
+        public void Parse_GiveWeapon_ValidKey_BuildsStep()
+        {
+            const string json =
+                @"{ ""events"": [ {
+                    ""id"": ""girl_gift"",
+                    ""conditions"": [ { ""type"": ""progress"", ""value"": 5 } ],
+                    ""steps"": [
+                        { ""kind"": ""line"", ""speaker"": ""少女"", ""portrait"": ""girl_resolve"", ""text"": ""身を守って。"" },
+                        { ""kind"": ""giveWeapon"", ""weaponKey"": ""scythe"" },
+                        { ""kind"": ""line"", ""speaker"": ""主人公"", ""portrait"": ""hero_normal"", ""text"": ""ありがとう。"" }
+                    ],
+                    ""nextProgress"": 6
+                } ] }";
+
+            var report = EventImporter.Parse(json);
+
+            Assert.IsFalse(report.HasErrors, string.Join("\n", report.Diagnostics));
+            var def = report.Events[0];
+            Assert.AreEqual(StepKind.GiveWeapon, def.Steps[1].Kind);
+            Assert.AreEqual("scythe", def.Steps[1].WeaponKey);
+        }
+
+        [Test]
+        public void Parse_GiveWeapon_InvalidKey_IsError()
+        {
+            const string json =
+                @"{ ""events"": [ {
+                    ""id"": ""bad_weapon"", ""conditions"": [ { ""type"": ""progress"", ""value"": 0 } ],
+                    ""steps"": [
+                        { ""kind"": ""line"", ""speaker"": ""x"", ""portrait"": ""hero_normal"", ""text"": ""a"" },
+                        { ""kind"": ""giveWeapon"", ""weaponKey"": ""axe"" },
+                        { ""kind"": ""line"", ""speaker"": ""x"", ""portrait"": ""hero_normal"", ""text"": ""b"" }
+                    ],
+                    ""nextProgress"": 1
+                } ] }";
+
+            var report = EventImporter.Parse(json);
+
+            Assert.IsTrue(report.HasErrors);
+            Assert.IsTrue(report.Diagnostics.Any(d => d.Message.Contains("axe")));
+        }
+
+        [Test]
+        public void Parse_GiveWeapon_MissingKey_IsError()
+        {
+            const string json =
+                @"{ ""events"": [ {
+                    ""id"": ""no_weapon_key"", ""conditions"": [ { ""type"": ""progress"", ""value"": 0 } ],
+                    ""steps"": [
+                        { ""kind"": ""line"", ""speaker"": ""x"", ""portrait"": ""hero_normal"", ""text"": ""a"" },
+                        { ""kind"": ""giveWeapon"" },
+                        { ""kind"": ""line"", ""speaker"": ""x"", ""portrait"": ""hero_normal"", ""text"": ""b"" }
+                    ],
+                    ""nextProgress"": 1
+                } ] }";
+
+            var report = EventImporter.Parse(json);
+
+            Assert.IsTrue(report.HasErrors);
+            Assert.IsTrue(report.Diagnostics.Any(d => d.Message.Contains("weaponKey")));
+        }
+
+        [Test]
         public void Parse_OmittedNextProgress_IsError()
         {
             // nextProgress は必須(省略はエラー)。
