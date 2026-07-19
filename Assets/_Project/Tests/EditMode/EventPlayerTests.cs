@@ -59,6 +59,13 @@ namespace CreativeAI.Tests.EditMode
             public void Give(string itemKey) => Given.Add(itemKey);
         }
 
+        private sealed class FakeWeaponGiver : IWeaponGiver
+        {
+            public readonly List<string> Given = new();
+
+            public void GiveWeapon(string weaponKey) => Given.Add(weaponKey);
+        }
+
         private sealed class FakeBattleRunner : IBattleRunner
         {
             public readonly List<GameObject> Fought = new();
@@ -122,6 +129,30 @@ namespace CreativeAI.Tests.EditMode
             CollectionAssert.AreEqual(new[] { "…誰だ?", "…そうか。" }, _view.Lines);
             CollectionAssert.AreEqual(new[] { "old_key" }, _items.Given);
             Assert.AreEqual("together", _pm.GetFlag("girl_choice"));
+            Assert.AreEqual(6, _pm.Progress);
+        }
+
+        [Test]
+        public void PlayRoutine_GiveWeaponStep_RoutesToWeaponGiver()
+        {
+            var weapons = new FakeWeaponGiver();
+            _player.Inject(_pm, _view, _items, weapons: weapons);
+
+            var ev = EventDefinition.Create(
+                "girl_gift",
+                new[] { EventCondition.Progress(0) },
+                new[]
+                {
+                    EventStep.Line("はかなげ少女", "girl_resolve", "これで、身を守って。"),
+                    EventStep.GiveWeapon("scythe"),
+                    EventStep.Line("主人公", "hero_normal", "…ありがとう。"),
+                },
+                nextProgress: 6
+            );
+
+            Drive(_player.PlayRoutine(ev));
+
+            CollectionAssert.AreEqual(new[] { "scythe" }, weapons.Given);
             Assert.AreEqual(6, _pm.Progress);
         }
 
