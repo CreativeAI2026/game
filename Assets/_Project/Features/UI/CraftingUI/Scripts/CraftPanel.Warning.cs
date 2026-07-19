@@ -21,6 +21,16 @@ namespace CreativeAI.UI.CraftingUI
             ShowWarning(_equippedMaterialMessage);
         }
 
+        public void ShowQuickFoodMaterialWarning()
+        {
+            // 後付け SerializeField は既存 Prefab では既定(空)で読まれるため、空ならコード側の既定文言を使う。
+            ShowWarning(
+                string.IsNullOrEmpty(_quickFoodMaterialMessage)
+                    ? "即時使用にセット中のアイテムは素材にできません"
+                    : _quickFoodMaterialMessage
+            );
+        }
+
         public void ShowCategoryMismatchWarning()
         {
             ShowWarning(_categoryMismatchMessage);

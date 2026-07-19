@@ -256,7 +256,7 @@ namespace CreativeAI.Tests.EditMode
             var data = new SaveData
             {
                 hasPlayerState = true,
-                sceneName = "Field_Area02",
+                sceneName = "Field_Area03",
                 posX = 1.5f,
                 posY = 2.5f,
                 posZ = -3.5f,
@@ -267,7 +267,7 @@ namespace CreativeAI.Tests.EditMode
             var back = JsonUtility.FromJson<SaveData>(JsonUtility.ToJson(data));
 
             Assert.IsTrue(back.hasPlayerState);
-            Assert.AreEqual("Field_Area02", back.sceneName);
+            Assert.AreEqual("Field_Area03", back.sceneName);
             Assert.AreEqual(1.5f, back.posX);
             Assert.AreEqual(2.5f, back.posY);
             Assert.AreEqual(-3.5f, back.posZ);

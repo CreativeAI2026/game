@@ -62,6 +62,10 @@ namespace CreativeAI.UI.CraftingUI
             "\u88C5\u5099\u4E2D\u306E\u30A2\u30A4\u30C6\u30E0\u306F\u7D20\u6750\u306B\u3067\u304D\u307E\u305B\u3093";
 
         [SerializeField]
+        private string _quickFoodMaterialMessage =
+            "\u5373\u6642\u4F7F\u7528\u306B\u30BB\u30C3\u30C8\u4E2D\u306E\u30A2\u30A4\u30C6\u30E0\u306F\u7D20\u6750\u306B\u3067\u304D\u307E\u305B\u3093";
+
+        [SerializeField]
         private string _missingMaterialsMessage =
             "\u7D20\u6750\u304C\u8DB3\u308A\u307E\u305B\u3093\uFF01";
 

@@ -15,7 +15,7 @@ namespace CreativeAI.EditorTools.UI
 {
     public static class Area01UIValidator
     {
-        private const string FieldArea01Path = "Assets/_Project/Scenes/Field/Field_Area01.unity";
+        private const string FieldArea01Path = "Assets/_Project/Scenes/UI/UI_Sandbox.unity";
         private const int ExpectedInventoryCount = 4;
 
         [MenuItem("Tools/CreativeAI/UI/Validate Area01 UI")]
@@ -72,7 +72,7 @@ namespace CreativeAI.EditorTools.UI
                 report.Error(
                     FieldArea01Path,
                     "Scene",
-                    "Field_Area01だけを検査対象として読み込んでください。",
+                    "UI_Sandboxだけを検査対象として読み込んでください。",
                     null
                 );
                 return;

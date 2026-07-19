@@ -158,9 +158,15 @@ namespace CreativeAI.Gameplay
             return consumptions.Count > 0;
         }
 
-        private static bool CanUseAsMaterial(ItemStack stack, ItemData requiredItem, int count)
+        private bool CanUseAsMaterial(ItemStack stack, ItemData requiredItem, int count)
         {
-            if (stack == null || stack.Data != requiredItem || stack.Count <= 0 || stack.IsEquipped)
+            if (
+                stack == null
+                || stack.Data != requiredItem
+                || stack.Count <= 0
+                || stack.IsEquipped
+                || _inventoryService.IsInQuickFood(stack)
+            )
                 return false;
 
             return stack.Count >= count;
@@ -186,9 +192,13 @@ namespace CreativeAI.Gameplay
             return recipe.MatchesMaterials(materialA.Data, materialB.Data);
         }
 
-        private static bool CanUseAsSelectedMaterial(ItemStack stack)
+        private bool CanUseAsSelectedMaterial(ItemStack stack)
         {
-            return stack != null && stack.Data != null && stack.Count > 0 && !stack.IsEquipped;
+            return stack != null
+                && stack.Data != null
+                && stack.Count > 0
+                && !stack.IsEquipped
+                && !_inventoryService.IsInQuickFood(stack);
         }
 
         private static bool TryGetValidMaterials(

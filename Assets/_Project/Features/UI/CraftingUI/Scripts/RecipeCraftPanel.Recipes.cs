@@ -289,6 +289,13 @@ namespace CreativeAI.UI.CraftingUI
                 return;
             }
 
+            if (HasQuickFoodRecipeMaterial())
+            {
+                CloseQuantityDialogImmediately();
+                PlayQuickFoodMaterialWarning();
+                return;
+            }
+
             if (GetMaximumCraftable() <= 0)
             {
                 CloseQuantityDialogImmediately();
@@ -469,6 +476,16 @@ namespace CreativeAI.UI.CraftingUI
                 && GetMaximumCraftable() <= 0
                 && (
                     InventoryManager.Instance?.HasEquippedMaterial(_selectedRecipe.Materials)
+                    ?? false
+                );
+        }
+
+        private bool HasQuickFoodRecipeMaterial()
+        {
+            return _selectedRecipe != null
+                && GetMaximumCraftable() <= 0
+                && (
+                    InventoryManager.Instance?.HasQuickFoodMaterial(_selectedRecipe.Materials)
                     ?? false
                 );
         }

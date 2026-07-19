@@ -186,6 +186,18 @@ namespace CreativeAI.Gameplay
         public IReadOnlyList<ItemStack> GetQuickFoodSlots() =>
             (ItemStack[])_storage.QuickFoodSlots.Clone();
 
+        /// <summary>stack が即時使用食材スロットにセットされているか(調合の素材から除外する判定に使う)。</summary>
+        public bool IsInQuickFood(ItemStack stack)
+        {
+            if (stack == null)
+                return false;
+            var slots = _storage.QuickFoodSlots;
+            for (int i = 0; i < slots.Length; i++)
+                if (slots[i] == stack)
+                    return true;
+            return false;
+        }
+
         /// <summary>
         /// スロット slot に食材スタックをセットする。食材(FoodData)かつ在庫にあるスタックのみ受け付ける。
         /// 同じスタックが別スロットにあれば移動(重複セットを防ぐ)。範囲外や非食材は false。

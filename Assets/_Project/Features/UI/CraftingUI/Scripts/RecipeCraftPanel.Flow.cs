@@ -22,6 +22,13 @@ namespace CreativeAI.UI.CraftingUI
                 return;
             }
 
+            if (HasQuickFoodRecipeMaterial())
+            {
+                RebuildMaterialRows();
+                PlayQuickFoodMaterialWarning();
+                return;
+            }
+
             if (!(InventoryManager.Instance?.CanCraft(_selectedRecipe, _quantity) ?? false))
             {
                 RebuildMaterialRows();

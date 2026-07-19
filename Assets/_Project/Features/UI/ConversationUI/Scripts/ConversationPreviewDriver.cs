@@ -6,9 +6,9 @@ using UnityEngine;
 namespace CreativeAI.UI.ConversationUI
 {
     /// <summary>
-    /// Field_Area05(会話UIの確認用シーン)専用のプレビュー駆動役。EventPlayer / セッション常駐を
+    /// UI_ConversationPreview(会話UIの確認用シーン)専用のプレビュー駆動役。EventPlayer / セッション常駐を
     /// 立ち上げずに、シーン内の <see cref="ConversationView"/> を直接叩いてサンプル会話を再生する。
-    /// Prefab には含めず Area05 シーンにだけ置く(本番フローは EventPlayer が seam 経由で叩く)。
+    /// Prefab には含めず UI_ConversationPreview シーンにだけ置く(本番フローは EventPlayer が seam 経由で叩く)。
     /// 会話の終盤で「りんごを渡す」一幕(<see cref="ConversationView.ShowItemGet"/> でダミー画像を表示)も再生する。
     /// </summary>
     public sealed class ConversationPreviewDriver : MonoBehaviour

@@ -5119,6 +5119,14 @@ PrefabInstance:
       propertyPath: _tabEntries.Array.data[2].label
       value: "\u6B66\u5668"
       objectReference: {fileID: 0}
+    - target: {fileID: 5720426296105040775, guid: 0e1b651be5367e048830972d8401da9c, type: 3}
+      propertyPath: _tabEntries.Array.data[0].definition
+      value: 
+      objectReference: {fileID: 11400000, guid: 72b479d96be07754aa3f194c7870d097, type: 2}
+    - target: {fileID: 5720426296105040775, guid: 0e1b651be5367e048830972d8401da9c, type: 3}
+      propertyPath: _tabEntries.Array.data[1].definition
+      value: 
+      objectReference: {fileID: 11400000, guid: 4485649022a2f32478dab41989873421, type: 2}
     - target: {fileID: 7330529793145299999, guid: 0e1b651be5367e048830972d8401da9c, type: 3}
       propertyPath: m_Pivot.x
       value: 0.5
@@ -5650,6 +5658,10 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 3588606375571989205, guid: 853b20c2a69656e4ea515365b53e5f31, type: 3}
       propertyPath: m_HorizontalFit
+      value: 2
+      objectReference: {fileID: 0}
+    - target: {fileID: 4378624457368349205, guid: 853b20c2a69656e4ea515365b53e5f31, type: 3}
+      propertyPath: _tabEntries.Array.size
       value: 2
       objectReference: {fileID: 0}
     - target: {fileID: 4378624457368349205, guid: 853b20c2a69656e4ea515365b53e5f31, type: 3}
@@ -6226,6 +6238,14 @@ PrefabInstance:
       propertyPath: _tabEntries.Array.data[1].enabled
       value: 1
       objectReference: {fileID: 0}
+    - target: {fileID: 5720426296105040775, guid: 0e1b651be5367e048830972d8401da9c, type: 3}
+      propertyPath: _tabEntries.Array.data[0].definition
+      value: 
+      objectReference: {fileID: 11400000, guid: 08338810f971ee3479156566baa1dcbd, type: 2}
+    - target: {fileID: 5720426296105040775, guid: 0e1b651be5367e048830972d8401da9c, type: 3}
+      propertyPath: _tabEntries.Array.data[1].definition
+      value: 
+      objectReference: {fileID: 11400000, guid: 759ff90b2d9108d45b0447a483d5aa9d, type: 2}
     - target: {fileID: 6910600594442410550, guid: 0e1b651be5367e048830972d8401da9c, type: 3}
       propertyPath: m_ChildControlWidth
       value: 1
