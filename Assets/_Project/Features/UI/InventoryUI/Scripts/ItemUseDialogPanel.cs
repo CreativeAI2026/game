@@ -167,15 +167,19 @@ namespace CreativeAI.UI.InventoryUI
 
         private void BindButtons()
         {
-            if (_useButton == null)
-                return;
+            _closeOnSelfClick?.SetClickAction(Hide);
 
-            _useButton.onClick.RemoveListener(UseCurrentItem);
-            _useButton.onClick.AddListener(UseCurrentItem);
+            if (_useButton != null)
+            {
+                _useButton.onClick.RemoveListener(UseCurrentItem);
+                _useButton.onClick.AddListener(UseCurrentItem);
+            }
         }
 
         private void UnbindButtons()
         {
+            _closeOnSelfClick?.ClearClickAction(Hide);
+
             if (_useButton != null)
                 _useButton.onClick.RemoveListener(UseCurrentItem);
         }
