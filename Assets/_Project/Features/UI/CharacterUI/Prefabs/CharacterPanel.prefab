@@ -1947,13 +1947,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: CreativeAI.UI::CreativeAI.UI.TabGroup
   _tabButtonPrefab: {fileID: 5510271927287150368, guid: b32822d6fbda1a44e978805497b93af1, type: 3}
   _tabEntries:
-  - definition: {fileID: 0}
-    view: {fileID: 0}
-  - definition: {fileID: 0}
-    view: {fileID: 0}
-  - definition: {fileID: 0}
-    view: {fileID: 0}
-  - definition: {fileID: 0}
+  - definition: {fileID: 11400000, guid: 4485649022a2f32478dab41989873421, type: 2}
     view: {fileID: 0}
   _animDuration: 0.2
   _autoSelectFirstTabOnStart: 1
