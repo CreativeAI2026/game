@@ -321,6 +321,7 @@ GameObject:
   - component: {fileID: 1020649989930511621}
   - component: {fileID: 5322217746520182949}
   - component: {fileID: 5221701354436022777}
+  - component: {fileID: 5897349478809216693}
   m_Layer: 0
   m_Name: LoadingPanel
   m_TagString: Untagged
@@ -386,6 +387,21 @@ MonoBehaviour:
   m_FillOrigin: 0
   m_UseSpriteMesh: 0
   m_PixelsPerUnitMultiplier: 1
+--- !u!114 &5897349478809216693
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1281329666210572062}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 738cfa69551a4b1498be7b31f94fee82, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: CreativeAI.UI::CreativeAI.UI.CraftingUI.CraftLoadingOverlayView
+  _root: {fileID: 1281329666210572062}
+  _gear: {fileID: 8245406914348534858}
+  _canvasGroup: {fileID: 0}
 --- !u!1 &1612494563717844655
 GameObject:
   m_ObjectHideFlags: 0
@@ -650,20 +666,11 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: CreativeAI.UI::CreativeAI.UI.CraftingUI.CraftPanel
   _recipeDB: {fileID: 11400000, guid: aa34528df09845938528196f495e75a2, type: 2}
-  _loadingPanel: {fileID: 1281329666210572062}
-  _loadingGear: {fileID: 8245406914348534858}
-  _resultPanel: {fileID: 3656578647915436742}
-  _resultPanelBackground: {fileID: 7553470586091694455}
-  _resultPanelTitle: {fileID: 2164028304597918378}
-  _resultItemImage: {fileID: 5576877558549197356}
-  _resultItemName: {fileID: 463740685441635451}
+  _loadingOverlayView: {fileID: 5897349478809216693}
+  _resultPanelView: {fileID: 1455056500396689333}
+  _warningToastView: {fileID: 4943298344776607878}
   _closeButton: {fileID: 7388374553853712138}
-  _closeButtonButton: {fileID: 246671415180141159}
-  _warningText: {fileID: 8080171631830962832}
-  _warningCanvasGroup: {fileID: 1736925671051000495}
-  _categoryMismatchMessage: "\u540C\u3058\u30AB\u30C6\u30B4\u30EA\u30FC\u306E\u7D20\u6750\u3092\u9078\u629E\u3057\u3066\u304F\u3060\u3055\u3044"
-  _equippedMaterialMessage: "\u88C5\u5099\u4E2D\u306E\u30A2\u30A4\u30C6\u30E0\u306F\u7D20\u6750\u306B\u3067\u304D\u307E\u305B\u3093"
-  _missingMaterialsMessage: "\u7D20\u6750\u304C\u8DB3\u308A\u307E\u305B\u3093\uFF01"
+  _craftFlowDurationSeconds: 1
 --- !u!1 &1833137740223892930
 GameObject:
   m_ObjectHideFlags: 0
@@ -1679,16 +1686,11 @@ MonoBehaviour:
   m_EditorClassIdentifier: CreativeAI.UI::CreativeAI.UI.CraftingUI.RecipeCraftPanel
   _recipeDB: {fileID: 11400000, guid: aa34528df09845938528196f495e75a2, type: 2}
   _craftPanel: {fileID: 4404804298159787586}
-  _recipeSlotPrefab: {fileID: 9148123179847676784, guid: f5fc101f7b5a1e941a16b9f77dd1ab01, type: 3}
-  _recipeList: {fileID: 2668464307747644880}
-  _recipeContent: {fileID: 6592985489390064457}
+  _recipeListView: {fileID: 3798765119303767455}
   _categoryTabGroup: {fileID: 5493723450625728912}
   _detailPanel: {fileID: 5221937701570271365}
-  _materialList: {fileID: 5684417433840312567}
-  _quantityDialogPanel: {fileID: 614689646131528025}
-  _quantityDialog: {fileID: 1896292905585251388}
+  _materialRowsView: {fileID: 4791274264009621748}
   _quantityDialogController: {fileID: 1512044141033756622}
-  _materialRows: []
 --- !u!1 &3257220345059575553
 GameObject:
   m_ObjectHideFlags: 0
@@ -1874,6 +1876,7 @@ GameObject:
   - component: {fileID: 2816905454735917050}
   - component: {fileID: 800009269622910115}
   - component: {fileID: 3904025704835203233}
+  - component: {fileID: 1455056500396689333}
   m_Layer: 0
   m_Name: ResultPanel
   m_TagString: Untagged
@@ -1953,7 +1956,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: cfa7afeed0127c444abf422b3bf98117, type: 3}
   m_Name: 
   m_EditorClassIdentifier: CreativeAI.UI::CreativeAI.UI.Common.CloseOnSelfClick
-  _targetToHide: {fileID: 3656578647915436742}
+  _targetToHide: {fileID: 0}
   _onSelfClick:
     m_PersistentCalls:
       m_Calls: []
@@ -1969,6 +1972,24 @@ CanvasGroup:
   m_Interactable: 1
   m_BlocksRaycasts: 1
   m_IgnoreParentGroups: 0
+--- !u!114 &1455056500396689333
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 3656578647915436742}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: e043171122404c6fb66bb36531a46110, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: CreativeAI.UI::CreativeAI.UI.CraftingUI.CraftResultPanelView
+  _canvasGroup: {fileID: 3904025704835203233}
+  _closeOnSelfClick: {fileID: 800009269622910115}
+  _background: {fileID: 4126083393637194938}
+  _title: {fileID: 2164028304597918378}
+  _itemImage: {fileID: 5576877558549197356}
+  _itemName: {fileID: 463740685441635451}
 --- !u!1 &4311140758117318957
 GameObject:
   m_ObjectHideFlags: 0
@@ -3344,6 +3365,7 @@ GameObject:
   - component: {fileID: 7475155705112056794}
   - component: {fileID: 621524135872643826}
   - component: {fileID: 1550186285658059231}
+  - component: {fileID: 4791274264009621748}
   m_Layer: 0
   m_Name: MaterialList
   m_TagString: Untagged
@@ -3456,6 +3478,21 @@ MonoBehaviour:
   m_FlexibleWidth: 1
   m_FlexibleHeight: -1
   m_LayoutPriority: 1
+--- !u!114 &4791274264009621748
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 6627123727548652224}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 9bc0ec7084644b1e922a526d7a940c07, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: CreativeAI.UI::CreativeAI.UI.CraftingUI.RecipeCraftMaterialRowsView
+  _rows:
+  - {fileID: 2970309070457674906}
+  - {fileID: 2224286772029860721}
 --- !u!1 &6729085473047966476
 GameObject:
   m_ObjectHideFlags: 0
@@ -3744,6 +3781,7 @@ GameObject:
   - component: {fileID: 5069301008849277228}
   - component: {fileID: 1736925671051000495}
   - component: {fileID: 8080171631830962832}
+  - component: {fileID: 4943298344776607878}
   m_Layer: 0
   m_Name: WarningText
   m_TagString: Untagged
@@ -3882,6 +3920,25 @@ MonoBehaviour:
   m_hasFontAssetChanged: 0
   m_baseMaterial: {fileID: 0}
   m_maskOffset: {x: 0, y: 0, z: 0, w: 0}
+--- !u!114 &4943298344776607878
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 6799747815524460129}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 27150b24d5ba40b691eb09a75ae4881c, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: CreativeAI.UI::CreativeAI.UI.CraftingUI.CraftWarningToastView
+  _text: {fileID: 8080171631830962832}
+  _canvasGroup: {fileID: 1736925671051000495}
+  _rectTransform: {fileID: 6787102329637347090}
+  _categoryMismatchMessage: "\u540C\u3058\u30AB\u30C6\u30B4\u30EA\u30FC\u306E\u7D20\u6750\u3092\u9078\u629E\u3057\u3066\u304F\u3060\u3055\u3044"
+  _equippedMaterialMessage: "\u88C5\u5099\u4E2D\u306E\u30A2\u30A4\u30C6\u30E0\u306F\u7D20\u6750\u306B\u3067\u304D\u307E\u305B\u3093"
+  _missingMaterialsMessage: "\u7D20\u6750\u304C\u8DB3\u308A\u307E\u305B\u3093\uFF01"
+  _quickFoodMaterialMessage: "\u5373\u6642\u4F7F\u7528\u306B\u30BB\u30C3\u30C8\u4E2D\u306E\u30A2\u30A4\u30C6\u30E0\u306F\u7D20\u6750\u306B\u3067\u304D\u307E\u305B\u3093"
 --- !u!1 &7237458225055437961
 GameObject:
   m_ObjectHideFlags: 0
@@ -4233,10 +4290,9 @@ MonoBehaviour:
   m_EditorClassIdentifier: CreativeAI.UI::CreativeAI.UI.CraftingUI.FreeCraftPanelController
   _craftPanel: {fileID: 4404804298159787586}
   _inventory: {fileID: 5682205800677061742}
-  _slotsRoot: {fileID: 2739074980521223605}
+  _materialSlotsView: {fileID: 697282438014667}
   _detailPanel: {fileID: 6202020493594733779}
   _craftButton: {fileID: 8846606533785269421}
-  _testCraftDuration: 5
   _gearRotationSpeed: 180
 --- !u!1 &8004398988080290402
 GameObject:
@@ -4389,6 +4445,7 @@ GameObject:
   - component: {fileID: 7236634343539695719}
   - component: {fileID: 8223134619689502574}
   - component: {fileID: 5994244786309863301}
+  - component: {fileID: 3798765119303767455}
   m_Layer: 0
   m_Name: RecipeList
   m_TagString: Untagged
@@ -4515,6 +4572,20 @@ MonoBehaviour:
   _direction: 0
   _duration: 0.35
   _ease: 9
+--- !u!114 &3798765119303767455
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 8211226307058499859}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: f30fb962b3844e50b6f70f3dceff7f74, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: CreativeAI.UI::CreativeAI.UI.CraftingUI.RecipeListView
+  _content: {fileID: 6592985489390064457}
+  _slotPrefab: {fileID: 9148123179847676784, guid: f5fc101f7b5a1e941a16b9f77dd1ab01, type: 3}
 --- !u!1 &8638804423674813300
 GameObject:
   m_ObjectHideFlags: 0
@@ -4727,6 +4798,7 @@ GameObject:
   - component: {fileID: 2739074980521223605}
   - component: {fileID: 2354603156654486956}
   - component: {fileID: 4353293879640397453}
+  - component: {fileID: 697282438014667}
   m_Layer: 0
   m_Name: MaterialSlotsRoot
   m_TagString: Untagged
@@ -4796,6 +4868,21 @@ MonoBehaviour:
   _direction: 3
   _duration: 0.35
   _ease: 9
+--- !u!114 &697282438014667
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 8821477816709493634}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 46ec462ec3b74f5baf90297df174cc76, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: CreativeAI.UI::CreativeAI.UI.CraftingUI.FreeCraftMaterialSlotsView
+  _slots:
+  - {fileID: 7020491087159445534}
+  - {fileID: 9140154035952992696}
 --- !u!1 &8898966349712364198
 GameObject:
   m_ObjectHideFlags: 0
@@ -5330,6 +5417,17 @@ RectTransform:
   m_CorrespondingSourceObject: {fileID: 92254038468645233, guid: 61d426d88242bf0409eaa00439daf70d, type: 3}
   m_PrefabInstance: {fileID: 297986883446012665}
   m_PrefabAsset: {fileID: 0}
+--- !u!114 &9140154035952992696 stripped
+MonoBehaviour:
+  m_CorrespondingSourceObject: {fileID: 8861660021248932673, guid: 61d426d88242bf0409eaa00439daf70d, type: 3}
+  m_PrefabInstance: {fileID: 297986883446012665}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 57e65f411b70488fb00f871e76b26da5, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: CreativeAI.UI::CreativeAI.UI.CraftingUI.MaterialSlot
 --- !u!1001 &331455239251626477
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -5495,6 +5593,17 @@ PrefabInstance:
     m_AddedGameObjects: []
     m_AddedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: 8e67c323406ada64788541de45a972e0, type: 3}
+--- !u!114 &2224286772029860721 stripped
+MonoBehaviour:
+  m_CorrespondingSourceObject: {fileID: 1893712793043575452, guid: 8e67c323406ada64788541de45a972e0, type: 3}
+  m_PrefabInstance: {fileID: 331455239251626477}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 59a1ee3d0f5c445ca45827e8f77a32d4, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: CreativeAI.UI::CreativeAI.UI.CraftingUI.RecipeMaterialRow
 --- !u!224 &8039724185912369860 stripped
 RectTransform:
   m_CorrespondingSourceObject: {fileID: 7713336051986950953, guid: 8e67c323406ada64788541de45a972e0, type: 3}
@@ -5914,6 +6023,17 @@ RectTransform:
   m_CorrespondingSourceObject: {fileID: 92254038468645233, guid: 61d426d88242bf0409eaa00439daf70d, type: 3}
   m_PrefabInstance: {fileID: 1988123336072098655}
   m_PrefabAsset: {fileID: 0}
+--- !u!114 &7020491087159445534 stripped
+MonoBehaviour:
+  m_CorrespondingSourceObject: {fileID: 8861660021248932673, guid: 61d426d88242bf0409eaa00439daf70d, type: 3}
+  m_PrefabInstance: {fileID: 1988123336072098655}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 57e65f411b70488fb00f871e76b26da5, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: CreativeAI.UI::CreativeAI.UI.CraftingUI.MaterialSlot
 --- !u!1001 &2432325985617085719
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -6177,6 +6297,17 @@ PrefabInstance:
     m_AddedGameObjects: []
     m_AddedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: 8e67c323406ada64788541de45a972e0, type: 3}
+--- !u!114 &2970309070457674906 stripped
+MonoBehaviour:
+  m_CorrespondingSourceObject: {fileID: 1893712793043575452, guid: 8e67c323406ada64788541de45a972e0, type: 3}
+  m_PrefabInstance: {fileID: 3710818332224110086}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 59a1ee3d0f5c445ca45827e8f77a32d4, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: CreativeAI.UI::CreativeAI.UI.CraftingUI.RecipeMaterialRow
 --- !u!224 &6373789575853954351 stripped
 RectTransform:
   m_CorrespondingSourceObject: {fileID: 7713336051986950953, guid: 8e67c323406ada64788541de45a972e0, type: 3}
