@@ -15,7 +15,11 @@ namespace CreativeAI.EditorTools.UI
 {
     public static class Area01UIValidator
     {
+        private const string UIRootPrefabPath =
+            "Assets/_Project/Features/UI/Root/Prefabs/UIRoot.prefab";
         private const string FieldArea01Path = "Assets/_Project/Scenes/UI/UI_Sandbox.unity";
+        private const string ResidentBootstrapConfigPath =
+            "Assets/_Project/Resources/ResidentBootstrapConfig.asset";
         private const int ExpectedInventoryCount = 4;
 
         [MenuItem("Tools/CreativeAI/UI/Validate Area01 UI")]
@@ -36,15 +40,23 @@ namespace CreativeAI.EditorTools.UI
         private static void ValidateArea01Connections()
         {
             var report = new UIValidationReport("Area01 UI Connections");
-            Scene scene = SceneManager.GetSceneByPath(FieldArea01Path);
-            bool openedForValidation = !scene.IsValid() || !scene.isLoaded;
+            GameObject root = null;
+            Scene fieldScene = default;
+            bool openedFieldScene = false;
 
             try
             {
-                if (openedForValidation)
-                    scene = EditorSceneManager.OpenScene(FieldArea01Path, OpenSceneMode.Additive);
+                root = PrefabUtility.LoadPrefabContents(UIRootPrefabPath);
+                ValidateScene(root.scene, report);
 
-                ValidateScene(scene, report);
+                fieldScene = SceneManager.GetSceneByPath(FieldArea01Path);
+                openedFieldScene = !fieldScene.IsValid() || !fieldScene.isLoaded;
+                if (openedFieldScene)
+                    fieldScene = EditorSceneManager.OpenScene(
+                        FieldArea01Path,
+                        OpenSceneMode.Additive
+                    );
+                ValidateFieldScene(fieldScene, report);
             }
             catch (Exception exception)
             {
@@ -58,8 +70,10 @@ namespace CreativeAI.EditorTools.UI
             }
             finally
             {
-                if (openedForValidation && scene.IsValid() && scene.isLoaded)
-                    EditorSceneManager.CloseScene(scene, true);
+                if (root != null)
+                    PrefabUtility.UnloadPrefabContents(root);
+                if (openedFieldScene && fieldScene.IsValid() && fieldScene.isLoaded)
+                    EditorSceneManager.CloseScene(fieldScene, true);
             }
 
             report.Complete();
@@ -67,12 +81,12 @@ namespace CreativeAI.EditorTools.UI
 
         private static void ValidateScene(Scene scene, UIValidationReport report)
         {
-            if (!scene.IsValid() || !scene.isLoaded || scene.path != FieldArea01Path)
+            if (!scene.IsValid() || !scene.isLoaded)
             {
                 report.Error(
                     FieldArea01Path,
                     "Scene",
-                    "UI_Sandboxだけを検査対象として読み込んでください。",
+                    "Resident UIRoot Prefabを検査対象として読み込めませんでした。",
                     null
                 );
                 return;
@@ -82,15 +96,28 @@ namespace CreativeAI.EditorTools.UI
             var panelControllers = FindAll<InventoryPanelController>(scene);
             var freeCraftControllers = FindAll<FreeCraftPanelController>(scene);
             var equipmentControllers = FindAll<EquipmentViewController>(scene);
+            var quickFoodControllers = FindAll<QuickFoodViewController>(scene);
+            var weaponTabControllers = FindAll<WeaponTabViewController>(scene);
+            var characterControllers = FindAll<CharacterUIController>(scene);
             var recipeCraftPanels = FindAll<RecipeCraftPanelController>(scene);
             var tabGroups = FindAll<TabGroup>(scene);
 
             ValidateCount(inventories, ExpectedInventoryCount, nameof(InventoryView), report);
             ValidateCount(panelControllers, 1, nameof(InventoryPanelController), report);
             ValidateCount(freeCraftControllers, 1, nameof(FreeCraftPanelController), report);
-            ValidateCount(equipmentControllers, 2, nameof(EquipmentViewController), report);
+            ValidateCount(equipmentControllers, 1, nameof(EquipmentViewController), report);
+            ValidateCount(quickFoodControllers, 1, nameof(QuickFoodViewController), report);
+            ValidateCount(characterControllers, 1, nameof(CharacterUIController), report);
             ValidateAllTabDefinitions(tabGroups, report);
-            ValidateViewSwitchTabGroups(tabGroups, inventories, recipeCraftPanels, report);
+            ValidateViewSwitchTabGroups(
+                tabGroups,
+                inventories,
+                recipeCraftPanels,
+                weaponTabControllers,
+                report
+            );
+            foreach (var controller in characterControllers)
+                ValidateCharacterTabContract(controller, report);
 
             var providers = inventories.ToDictionary(
                 inventory => inventory,
@@ -103,6 +130,8 @@ namespace CreativeAI.EditorTools.UI
                 AddProvider(controller, "_inventory", nameof(FreeCraftPanelController));
             foreach (var controller in equipmentControllers)
                 AddEquipmentProvider(controller);
+            foreach (var controller in quickFoodControllers)
+                AddQuickFoodProvider(controller);
 
             foreach (var inventory in inventories)
                 ValidateSingleProvider(inventory, providers[inventory], report);
@@ -110,6 +139,8 @@ namespace CreativeAI.EditorTools.UI
             ValidateEquipmentCategories(equipmentControllers, report);
             foreach (var controller in equipmentControllers)
                 ValidateEquipmentReferences(controller, report);
+            foreach (var controller in quickFoodControllers)
+                ValidateQuickFoodReferences(controller, report);
 
             void AddProvider(MonoBehaviour controller, string fieldName, string providerName)
             {
@@ -156,16 +187,37 @@ namespace CreativeAI.EditorTools.UI
                     report
                 );
             }
+
+            void AddQuickFoodProvider(QuickFoodViewController controller)
+            {
+                var serializedController = new SerializedObject(controller);
+                var inventory = GetReference<InventoryView>(serializedController, "_inventory");
+                if (
+                    inventory == null
+                    || !providers.TryGetValue(inventory, out var inventoryProviders)
+                )
+                    return;
+
+                inventoryProviders.Add($"{nameof(QuickFoodViewController)} ({ItemCategory.Food})");
+                ValidateProviderHierarchy(
+                    controller,
+                    inventory,
+                    $"{nameof(QuickFoodViewController)} ({ItemCategory.Food})",
+                    report
+                );
+            }
         }
 
         private static void ValidateViewSwitchTabGroups(
             IEnumerable<TabGroup> tabGroups,
             IEnumerable<InventoryView> inventories,
             IEnumerable<RecipeCraftPanelController> recipeCraftPanels,
+            IEnumerable<WeaponTabViewController> weaponTabControllers,
             UIValidationReport report
         )
         {
             var categoryTabGroups = new HashSet<TabGroup>();
+            var indexOnlyTabGroups = new HashSet<TabGroup>();
             foreach (var inventory in inventories)
             {
                 var serializedInventory = new SerializedObject(inventory);
@@ -182,9 +234,20 @@ namespace CreativeAI.EditorTools.UI
                     categoryTabGroups.Add(tabGroup);
             }
 
+            foreach (var weaponController in weaponTabControllers)
+            {
+                var serializedController = new SerializedObject(weaponController);
+                var tabGroup = GetReference<TabGroup>(serializedController, "_tabGroup");
+                if (tabGroup != null)
+                {
+                    indexOnlyTabGroups.Add(tabGroup);
+                    ValidateWeaponTabContract(tabGroup, report);
+                }
+            }
+
             foreach (var tabGroup in tabGroups)
             {
-                if (categoryTabGroups.Contains(tabGroup))
+                if (categoryTabGroups.Contains(tabGroup) || indexOnlyTabGroups.Contains(tabGroup))
                     continue;
 
                 for (int i = 0; i < tabGroup.EntryCount; i++)
@@ -199,6 +262,47 @@ namespace CreativeAI.EditorTools.UI
                         tabGroup
                     );
                 }
+            }
+        }
+
+        private static void ValidateWeaponTabContract(TabGroup tabGroup, UIValidationReport report)
+        {
+            string[] expectedDefinitions =
+            {
+                "SwordTabDefinition",
+                "BowTabDefinition",
+                "KamaTabDefinition",
+            };
+            if (tabGroup.EntryCount != expectedDefinitions.Length)
+            {
+                report.Error(
+                    UIHierarchyPathUtility.GetPath(tabGroup.transform),
+                    "TabEntry count",
+                    $"Weapon Tabは{expectedDefinitions.Length} Entry必要です。現在: {tabGroup.EntryCount}",
+                    tabGroup
+                );
+                return;
+            }
+
+            for (int i = 0; i < expectedDefinitions.Length; i++)
+            {
+                var definition = tabGroup.GetDefinitionForEntry(i);
+                if (
+                    definition != null
+                    && string.Equals(
+                        definition.name,
+                        expectedDefinitions[i],
+                        StringComparison.Ordinal
+                    )
+                )
+                    continue;
+
+                report.Error(
+                    UIHierarchyPathUtility.GetPath(tabGroup.transform),
+                    $"TabEntry[{i}].definition",
+                    $"{expectedDefinitions[i]}を設定してください。",
+                    tabGroup
+                );
             }
         }
 
@@ -231,6 +335,28 @@ namespace CreativeAI.EditorTools.UI
                     path,
                     "_inventoryCategory",
                     "Inventoryカテゴリ設定が見つかりません。",
+                    controller
+                );
+            }
+        }
+
+        private static void ValidateQuickFoodReferences(
+            QuickFoodViewController controller,
+            UIValidationReport report
+        )
+        {
+            var serializedController = new SerializedObject(controller);
+            string path = UIHierarchyPathUtility.GetPath(controller.transform);
+            foreach (string fieldName in new[] { "_inventory", "_detailPanel" })
+            {
+                var property = serializedController.FindProperty(fieldName);
+                if (property?.objectReferenceValue != null)
+                    continue;
+
+                report.Error(
+                    path,
+                    fieldName,
+                    "Runtime fallbackはありません。Inspectorで必須参照を設定してください。",
                     controller
                 );
             }
@@ -366,7 +492,6 @@ namespace CreativeAI.EditorTools.UI
                 .ToArray();
 
             ValidateCategoryCount(categories, ItemCategory.Equipment, report);
-            ValidateCategoryCount(categories, ItemCategory.Food, report);
         }
 
         private static void ValidateCategoryCount(
@@ -420,6 +545,160 @@ namespace CreativeAI.EditorTools.UI
                         ? "供給元Controllerがありません。対応するControllerの_inventoryを設定してください。"
                         : $"供給元が重複しています: {string.Join(", ", providers)}",
                     inventory
+                );
+            }
+        }
+
+        private static void ValidateCharacterTabContract(
+            CharacterUIController controller,
+            UIValidationReport report
+        )
+        {
+            var serializedController = new SerializedObject(controller);
+            var tabGroup = GetReference<TabGroup>(serializedController, "_tabGroup");
+            string path = UIHierarchyPathUtility.GetPath(controller.transform);
+            if (tabGroup == null)
+            {
+                report.Error(
+                    path,
+                    "_tabGroup",
+                    "親Character TabGroupを設定してください。",
+                    controller
+                );
+                return;
+            }
+
+            string[] expectedDefinitions =
+            {
+                "StatsTabDefinition",
+                "WeaponTabDefinition",
+                "EquipTabDefinition",
+                "ConsumableDefinition",
+            };
+            string[] expectedViews =
+            {
+                "StatsView",
+                "WeaponView",
+                "EquipmentView",
+                "ConsumableView",
+            };
+
+            if (tabGroup.EntryCount != expectedDefinitions.Length)
+            {
+                report.Error(
+                    UIHierarchyPathUtility.GetPath(tabGroup.transform),
+                    "TabEntry count",
+                    $"Character Tabは{expectedDefinitions.Length} Entry必要です。現在: {tabGroup.EntryCount}",
+                    tabGroup
+                );
+                return;
+            }
+
+            for (int i = 0; i < expectedDefinitions.Length; i++)
+            {
+                var definition = tabGroup.GetDefinitionForEntry(i);
+                var view = tabGroup.GetView(i);
+                if (
+                    definition == null
+                    || !string.Equals(
+                        definition.name,
+                        expectedDefinitions[i],
+                        StringComparison.Ordinal
+                    )
+                )
+                {
+                    report.Error(
+                        UIHierarchyPathUtility.GetPath(tabGroup.transform),
+                        $"TabEntry[{i}].definition",
+                        $"{expectedDefinitions[i]}を設定してください。",
+                        tabGroup
+                    );
+                }
+
+                if (
+                    view == null
+                    || !string.Equals(view.name, expectedViews[i], StringComparison.Ordinal)
+                )
+                {
+                    report.Error(
+                        UIHierarchyPathUtility.GetPath(tabGroup.transform),
+                        $"TabEntry[{i}].view",
+                        $"{expectedViews[i]}を設定してください。",
+                        tabGroup
+                    );
+                    continue;
+                }
+
+                bool requiresLifecycleView = i >= 2;
+                int lifecycleViewCount = view.GetComponentsInChildren<ICharacterTabView>(
+                    true
+                ).Length;
+                if (requiresLifecycleView && lifecycleViewCount == 0)
+                {
+                    report.Error(
+                        UIHierarchyPathUtility.GetPath(view.transform),
+                        nameof(ICharacterTabView),
+                        "Equipment/Consumable ViewにはCharacter tab lifecycle実装が必要です。",
+                        view
+                    );
+                }
+            }
+        }
+
+        private static void ValidateFieldScene(Scene scene, UIValidationReport report)
+        {
+            if (
+                !scene.IsValid()
+                || !scene.isLoaded
+                || !string.Equals(scene.path, FieldArea01Path, StringComparison.Ordinal)
+            )
+            {
+                report.Error(
+                    FieldArea01Path,
+                    "Scene",
+                    "Area01開発Sceneを検査対象として読み込めませんでした。",
+                    null
+                );
+                return;
+            }
+
+            var bootstraps = FindAll<FieldDevBootstrap>(scene);
+            ValidateCount(bootstraps, 1, nameof(FieldDevBootstrap), report);
+
+            var sceneRoots = FindAll<UIRoot>(scene);
+            ValidateCount(sceneRoots, 0, nameof(UIRoot), report);
+
+            var config = AssetDatabase.LoadAssetAtPath<ResidentBootstrapConfig>(
+                ResidentBootstrapConfigPath
+            );
+            if (config == null)
+            {
+                report.Error(
+                    ResidentBootstrapConfigPath,
+                    nameof(ResidentBootstrapConfig),
+                    "ResidentBootstrapConfig Assetが見つかりません。",
+                    null
+                );
+                return;
+            }
+
+            string configuredPrefabPath = AssetDatabase.GetAssetPath(config.uiRootPrefab);
+            if (configuredPrefabPath == UIRootPrefabPath)
+            {
+                report.Ok(
+                    ResidentBootstrapConfigPath,
+                    "uiRootPrefab",
+                    "Resident UIRoot Prefabを参照しています。",
+                    config
+                );
+            }
+            else
+            {
+                report.Error(
+                    ResidentBootstrapConfigPath,
+                    "uiRootPrefab",
+                    $"'{UIRootPrefabPath}'を設定してください。現在: '{configuredPrefabPath}'",
+                    config
                 );
             }
         }

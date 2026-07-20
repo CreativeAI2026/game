@@ -17,7 +17,8 @@ namespace CreativeAI.EditorTools.UI
 {
     public static class CraftingUIValidator
     {
-        private const string FieldArea01Path = "Assets/_Project/Scenes/UI/UI_Sandbox.unity";
+        private const string FieldArea01Path =
+            "Assets/_Project/Features/UI/Root/Prefabs/UIRoot.prefab";
         private const string RecipeSlotPath =
             "Assets/_Project/Features/UI/CraftingUI/Prefabs/RecipeSlot.prefab";
 
@@ -25,14 +26,13 @@ namespace CreativeAI.EditorTools.UI
         public static void ValidateFromMenu()
         {
             var report = new UIValidationReport("Crafting UI");
-            Scene scene = SceneManager.GetSceneByPath(FieldArea01Path);
-            bool openedForValidation = !scene.IsValid() || !scene.isLoaded;
+            GameObject root = null;
+            Scene scene = default;
 
             try
             {
-                if (openedForValidation)
-                    scene = EditorSceneManager.OpenScene(FieldArea01Path, OpenSceneMode.Additive);
-
+                root = PrefabUtility.LoadPrefabContents(FieldArea01Path);
+                scene = root.scene;
                 ValidateScene(scene, report);
             }
             catch (Exception exception)
@@ -47,8 +47,8 @@ namespace CreativeAI.EditorTools.UI
             }
             finally
             {
-                if (openedForValidation && scene.IsValid() && scene.isLoaded)
-                    EditorSceneManager.CloseScene(scene, true);
+                if (root != null)
+                    PrefabUtility.UnloadPrefabContents(root);
             }
 
             report.Complete();
