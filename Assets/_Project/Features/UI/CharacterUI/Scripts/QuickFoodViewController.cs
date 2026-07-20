@@ -26,7 +26,7 @@ namespace CreativeAI.UI.CharacterUI
 
         [Header("Food Inventory (所持食材リスト)")]
         [SerializeField]
-        private Inventory _inventory;
+        private InventoryView _inventory;
 
         [SerializeField]
         private string _emptyLabel = "（未セット）";
@@ -105,7 +105,7 @@ namespace CreativeAI.UI.CharacterUI
         {
             EnsureInitialized();
             RefreshSlotsFromData();
-            _inventory?.RequestItems(Category, Inventory.ScrollRefreshMode.KeepPosition);
+            _inventory?.RequestItems(Category, InventoryView.ScrollRefreshMode.KeepPosition);
             SelectSlot(0);
         }
 
@@ -249,10 +249,13 @@ namespace CreativeAI.UI.CharacterUI
         private void OnDisplayRefreshRequested(
             TabDefinition _definition,
             int _tabIndex,
-            Inventory.ScrollRefreshMode scrollMode
+            InventoryView.ScrollRefreshMode scrollMode
         ) => _inventory?.RequestItems(Category, scrollMode);
 
-        private void OnItemsRequested(ItemCategory category, Inventory.ScrollRefreshMode scrollMode)
+        private void OnItemsRequested(
+            ItemCategory category,
+            InventoryView.ScrollRefreshMode scrollMode
+        )
         {
             if (_inventory == null || category != Category)
                 return;
