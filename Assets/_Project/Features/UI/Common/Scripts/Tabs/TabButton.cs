@@ -40,12 +40,12 @@ namespace CreativeAI.UI
             {
                 _hoverScale.SetTarget(target);
                 _hasVisualHoverTarget = true;
-                _hoverScale.SetBounceEnabled(true);
+                _hoverScale.SetBounceAllowed(true);
             }
             else
             {
                 _hasVisualHoverTarget = false;
-                _hoverScale.SetBounceEnabled(false);
+                _hoverScale.SetBounceAllowed(false);
                 _hoverScale.enabled = false;
                 WarnMissingVisualHoverTargetOnce();
                 return;
@@ -87,6 +87,15 @@ namespace CreativeAI.UI
             _hoverScale.SetReleaseLockOnOutsideClick(false);
         }
 
+        public void ConfigureHoverEffects(bool enableHoverScale, bool enableBounce)
+        {
+            if (_hoverScale == null)
+                return;
+
+            _hoverScale.SetHoverScaleEnabled(enableHoverScale);
+            _hoverScale.SetBounceEnabled(enableBounce);
+        }
+
         private void SetIcon(Sprite icon)
         {
             if (_icon != null)
@@ -115,7 +124,7 @@ namespace CreativeAI.UI
                     .SetEase(Ease.OutQuad);
             }
 
-            _hoverScale?.SetBounceEnabled(_hasVisualHoverTarget && allowSelectedBounce);
+            _hoverScale?.SetBounceAllowed(_hasVisualHoverTarget && allowSelectedBounce);
 
             if (_hoverScale == null || !_hasVisualHoverTarget)
                 return;

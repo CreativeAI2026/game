@@ -33,20 +33,8 @@ namespace CreativeAI.UI.InventoryUI
             _currentTween = null;
             StopBounce();
 
-            if (_targetRect != null)
-                _targetRect.localScale = _baseLocalScale;
-
-            for (int i = 0; i < _linkedTargets.Count; i++)
-            {
-                var linkedTarget = _linkedTargets[i];
-                if (linkedTarget != null)
-                {
-                    linkedTarget.localScale =
-                        i < _linkedTargetBaseLocalScales.Count
-                            ? _linkedTargetBaseLocalScales[i]
-                            : linkedTarget.localScale;
-                }
-            }
+            if (_hoverScaleEnabled)
+                RestoreBaseScale();
         }
 
         private void LockSelection()

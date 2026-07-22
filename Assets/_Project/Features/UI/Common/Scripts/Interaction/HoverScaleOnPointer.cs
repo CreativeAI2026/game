@@ -27,6 +27,9 @@ namespace CreativeAI.UI.InventoryUI
         [SerializeField]
         private float _animationDuration = 0.2f;
 
+        [SerializeField]
+        private bool _hoverScaleEnabled = true;
+
         [Header("Selected Bounce")]
         [SerializeField]
         private bool _bounceEnabled = true;
@@ -37,6 +40,7 @@ namespace CreativeAI.UI.InventoryUI
         [SerializeField]
         private float _bounceDuration = 0.8f;
 
+        [SerializeField]
         private RectTransform _targetRect;
         private RectTransform _bounceTarget;
         private readonly List<RectTransform> _linkedTargets = new();
@@ -49,6 +53,11 @@ namespace CreativeAI.UI.InventoryUI
         private Vector3 _baseLocalScale = Vector3.one;
         private Vector2 _bounceTargetBaseAnchoredPosition;
         private bool _isLocked;
+        private bool _bounceAllowed = true;
+
+        public bool HoverScaleEnabled => _hoverScaleEnabled;
+        public bool BounceEnabled => _bounceEnabled;
+        public RectTransform Target => _targetRect;
 
         private void Awake()
         {
@@ -78,12 +87,30 @@ namespace CreativeAI.UI.InventoryUI
 
         public void SetHoverScale(float scale) => _hoverScale = Mathf.Max(1f, scale);
 
+        public void SetHoverScaleEnabled(bool enabled)
+        {
+            _hoverScaleEnabled = enabled;
+            if (_hoverScaleEnabled)
+                return;
+
+            _currentTween?.Kill();
+            _currentTween = null;
+            RestoreBaseScale();
+        }
+
         public void SetLockEnabled(bool enabled) => _lockEnabled = enabled;
 
         public void SetBounceEnabled(bool enabled)
         {
             _bounceEnabled = enabled;
             if (!_bounceEnabled)
+                StopBounce();
+        }
+
+        public void SetBounceAllowed(bool allowed)
+        {
+            _bounceAllowed = allowed;
+            if (!_bounceAllowed)
                 StopBounce();
         }
 
@@ -127,7 +154,7 @@ namespace CreativeAI.UI.InventoryUI
 
         private void StartScale(float scaleMultiplier)
         {
-            if (_targetRect == null)
+            if (!_hoverScaleEnabled || _targetRect == null)
                 return;
 
             _currentTween?.Kill();
@@ -157,6 +184,24 @@ namespace CreativeAI.UI.InventoryUI
             }
 
             _currentTween = sequence.OnComplete(() => _currentTween = null);
+        }
+
+        private void RestoreBaseScale()
+        {
+            if (_targetRect != null)
+                _targetRect.localScale = _baseLocalScale;
+
+            for (int i = 0; i < _linkedTargets.Count; i++)
+            {
+                var linkedTarget = _linkedTargets[i];
+                if (linkedTarget == null)
+                    continue;
+
+                linkedTarget.localScale =
+                    i < _linkedTargetBaseLocalScales.Count
+                        ? _linkedTargetBaseLocalScales[i]
+                        : linkedTarget.localScale;
+            }
         }
 
         private void CacheBasePosition()

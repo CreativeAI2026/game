@@ -10,6 +10,7 @@ namespace CreativeAI.UI.InventoryUI
         {
             if (
                 !_bounceEnabled
+                || !_bounceAllowed
                 || _targetRect == null
                 || _bounceHeight <= 0f
                 || _bounceDuration <= 0f
