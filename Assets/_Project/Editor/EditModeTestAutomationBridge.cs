@@ -15,13 +15,18 @@ namespace CreativeAI.EditorTools
         private const string RequestPath = "Temp/TestAutomation/run-editmode.request";
         private const string ResultsPath = "Temp/TestAutomation/editmode-results.xml";
         private const string SummaryPath = "Temp/TestAutomation/editmode-summary.json";
+        private const string RefreshRequestPath = "Temp/TestAutomation/refresh.request";
+        private const string RefreshSummaryPath = "Temp/TestAutomation/refresh-summary.json";
         private const string RunningSessionKey =
             "CreativeAI.EditModeTestAutomationBridge.IsRunning";
+        private const string RefreshingSessionKey =
+            "CreativeAI.EditModeTestAutomationBridge.IsRefreshing";
         private const double PollIntervalSeconds = 0.25d;
 
         private static TestRunnerApi _testRunnerApi;
         private static TestCallbacks _callbacks;
         private static bool _running;
+        private static bool _refreshing;
         private static double _nextPollTime;
 
         static EditModeTestAutomationBridge()
@@ -31,15 +36,20 @@ namespace CreativeAI.EditorTools
 
             if (SessionState.GetBool(RunningSessionKey, false))
                 ReattachToActiveRun();
+
+            if (SessionState.GetBool(RefreshingSessionKey, false))
+                CompleteRefresh();
         }
 
         private static void Update()
         {
-            if (_running || EditorApplication.timeSinceStartup < _nextPollTime)
+            if (_running || _refreshing || EditorApplication.timeSinceStartup < _nextPollTime)
                 return;
 
             _nextPollTime = EditorApplication.timeSinceStartup + PollIntervalSeconds;
-            if (!File.Exists(RequestPath))
+            bool testRequested = File.Exists(RequestPath);
+            bool refreshRequested = File.Exists(RefreshRequestPath);
+            if (!testRequested && !refreshRequested)
                 return;
 
             if (
@@ -50,7 +60,63 @@ namespace CreativeAI.EditorTools
             )
                 return;
 
-            StartRun();
+            if (refreshRequested)
+                StartRefresh();
+            else
+                StartRun();
+        }
+
+        private static void StartRefresh()
+        {
+            _refreshing = true;
+            SessionState.SetBool(RefreshingSessionKey, true);
+            try
+            {
+                PrepareOutputDirectory();
+                DeleteIfExists(RefreshSummaryPath);
+                AssetDatabase.Refresh();
+                CompleteRefresh();
+            }
+            catch (Exception exception)
+            {
+                WriteRefreshSummary("failed", exception.ToString());
+                CleanupRefresh();
+            }
+        }
+
+        private static void CompleteRefresh()
+        {
+            WriteRefreshSummary("passed", string.Empty);
+            CleanupRefresh();
+        }
+
+        private static void WriteRefreshSummary(string status, string message)
+        {
+            try
+            {
+                PrepareOutputDirectory();
+                string temporaryPath = RefreshSummaryPath + ".tmp";
+                File.WriteAllText(
+                    temporaryPath,
+                    JsonUtility.ToJson(
+                        new RefreshSummary { status = status, message = message },
+                        true
+                    )
+                );
+                DeleteIfExists(RefreshSummaryPath);
+                File.Move(temporaryPath, RefreshSummaryPath);
+            }
+            catch (Exception exception)
+            {
+                Debug.LogException(exception);
+            }
+        }
+
+        private static void CleanupRefresh()
+        {
+            _refreshing = false;
+            SessionState.SetBool(RefreshingSessionKey, false);
+            DeleteIfExists(RefreshRequestPath);
         }
 
         private static void StartRun()
@@ -245,6 +311,13 @@ namespace CreativeAI.EditorTools
             public int skipped;
             public double duration;
             public List<string> failedTestNames = new();
+        }
+
+        [Serializable]
+        private sealed class RefreshSummary
+        {
+            public string status;
+            public string message;
         }
     }
 }
