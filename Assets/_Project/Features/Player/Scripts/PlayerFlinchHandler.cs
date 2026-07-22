@@ -47,7 +47,7 @@ namespace CreativeAI.Gameplay
             if (_playerController == null)
                 return;
 
-            if (_playerController.IsFlinching)
+            if (_playerController.IsFlinching || _playerController.IsGrabbed)
                 return;
 
             if (_flinchCoroutine != null)

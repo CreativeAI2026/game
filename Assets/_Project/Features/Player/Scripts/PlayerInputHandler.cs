@@ -1,3 +1,4 @@
+using System;
 using UnityEngine;
 using UnityEngine.InputSystem;
 
@@ -67,9 +68,20 @@ namespace CreativeAI.Gameplay
             SprintInput(value.isPressed);
         }
 
+        /// <summary>
+        /// subActionが新たに「押された」瞬間（trueへの変化）にのみ発火するイベント。
+        /// PanicDetectorが購読し、剣の防御連打の頻度を計測するために使用する。
+        /// </summary>
+        public event Action OnSubActionPressed;
+
         public void OnSubAction(InputValue value)
         {
-            SubActionInput(value.isPressed);
+            bool pressed = value.isPressed;
+            if (pressed && !subAction)
+            {
+                OnSubActionPressed?.Invoke();
+            }
+            SubActionInput(pressed);
         }
 
         public void OnAttack(InputValue value)

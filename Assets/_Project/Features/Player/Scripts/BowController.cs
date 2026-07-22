@@ -1,6 +1,7 @@
 using System;
 using UnityEngine;
 using UnityEngine.UI;
+using Random = UnityEngine.Random;
 
 namespace CreativeAI.Gameplay
 {
@@ -96,6 +97,20 @@ namespace CreativeAI.Gameplay
         [SerializeField]
         private float _rotationSpeed = 15f;
 
+        [Header("SE設定")]
+        [Tooltip("弦を引く音")]
+        [SerializeField]
+        private AudioClip _drawSound;
+        public AudioClip DrawSound => _drawSound;
+
+        [Tooltip("矢が発射される音")]
+        [SerializeField]
+        private AudioClip _shootSound;
+        public AudioClip ShootSound => _shootSound;
+
+        private AudioSource _audioSource;
+        public AudioSource ASource => _audioSource;
+
         // BowStates.cs の各ステートクラスから直接アクセスするため、publicにしている
         [HideInInspector]
         public PlayerInputHandler _input;
@@ -133,6 +148,7 @@ namespace CreativeAI.Gameplay
             _animator = GetComponentInParent<Animator>();
             _playerController = GetComponentInParent<PlayerController>();
             _weaponManager = GetComponentInParent<WeaponManager>();
+            _audioSource = GetComponent<AudioSource>();
 
             if (_bowRootTransform == null)
                 _bowRootTransform = transform;
@@ -222,9 +238,21 @@ namespace CreativeAI.Gameplay
             if (spawnParent == null)
                 return;
 
-            _nockedArrow = Instantiate(_arrowPrefab, spawnParent);
-            _nockedArrow.transform.localPosition = Vector3.zero;
-            _nockedArrow.transform.localRotation = Quaternion.identity;
+            // ArrowPoolが存在すればプールから取得し、なければInstantiateにフォールバック
+            if (ArrowPool.Instance != null)
+            {
+                ArrowProjectile pooledArrow = ArrowPool.Instance.Get();
+                pooledArrow.transform.SetParent(spawnParent);
+                pooledArrow.transform.localPosition = Vector3.zero;
+                pooledArrow.transform.localRotation = Quaternion.identity;
+                _nockedArrow = pooledArrow.gameObject;
+            }
+            else
+            {
+                _nockedArrow = Instantiate(_arrowPrefab, spawnParent);
+                _nockedArrow.transform.localPosition = Vector3.zero;
+                _nockedArrow.transform.localRotation = Quaternion.identity;
+            }
         }
 
         public void MoveArrowToNock()
@@ -273,7 +301,16 @@ namespace CreativeAI.Gameplay
         {
             if (_nockedArrow != null)
             {
-                Destroy(_nockedArrow);
+                // ArrowProjectileがあればプールへ返却、なければDestroyにフォールバック
+                ArrowProjectile proj = _nockedArrow.GetComponent<ArrowProjectile>();
+                if (proj != null)
+                {
+                    proj.ReturnToPool();
+                }
+                else
+                {
+                    Destroy(_nockedArrow);
+                }
                 _nockedArrow = null;
             }
             _isArrowAtNock = false;
