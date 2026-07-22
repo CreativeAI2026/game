@@ -54,7 +54,7 @@ namespace CreativeAI.UI
                 .rectTransform.DOScale(Vector3.one, duration)
                 .SetEase(Ease.OutBack)
                 .SetUpdate(true);
-            _image.DOFade(1f, duration * 0.65f).SetUpdate(true);
+            DOTween.To(() => _image.color.a, SetAlpha, 1f, duration * 0.65f).SetUpdate(true);
         }
 
         public bool PlayHide(float duration, Action onComplete)
@@ -69,7 +69,7 @@ namespace CreativeAI.UI
                 .Join(
                     _image.rectTransform.DOScale(Vector3.one * 0.35f, duration).SetEase(Ease.InBack)
                 )
-                .Join(_image.DOFade(0f, duration))
+                .Join(DOTween.To(() => _image.color.a, SetAlpha, 0f, duration))
                 .OnComplete(() => onComplete?.Invoke());
             return true;
         }

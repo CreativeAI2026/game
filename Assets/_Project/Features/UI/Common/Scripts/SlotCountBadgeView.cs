@@ -147,7 +147,14 @@ namespace CreativeAI.UI
             _countText.rectTransform.DOKill();
             _countTextCanvasGroup.DOKill();
             _countText.rectTransform.DOScale(Vector3.one * 0.35f, duration).SetUpdate(true);
-            _countTextCanvasGroup.DOFade(0f, duration).SetUpdate(true);
+            DOTween
+                .To(
+                    () => _countTextCanvasGroup.alpha,
+                    value => _countTextCanvasGroup.alpha = value,
+                    0f,
+                    duration
+                )
+                .SetUpdate(true);
         }
 
         public void KillTween()

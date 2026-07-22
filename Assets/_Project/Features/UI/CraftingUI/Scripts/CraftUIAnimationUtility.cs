@@ -62,7 +62,14 @@ namespace CreativeAI.UI.CraftingUI
                 sequence.Join(
                     rect.DOScale(Vector3.one, ResultAnimationDuration).SetEase(Ease.OutBack)
                 );
-            sequence.Join(canvasGroup.DOFade(1f, FadeDuration));
+            sequence.Join(
+                DOTween.To(
+                    () => canvasGroup.alpha,
+                    value => canvasGroup.alpha = value,
+                    1f,
+                    FadeDuration
+                )
+            );
             sequence.OnComplete(() =>
             {
                 canvasGroup.interactable = true;
@@ -103,7 +110,14 @@ namespace CreativeAI.UI.CraftingUI
                         .SetEase(Ease.InBack)
                 );
             }
-            sequence.Join(canvasGroup.DOFade(0f, FadeDuration));
+            sequence.Join(
+                DOTween.To(
+                    () => canvasGroup.alpha,
+                    value => canvasGroup.alpha = value,
+                    0f,
+                    FadeDuration
+                )
+            );
             sequence.OnComplete(() =>
             {
                 resultPanel.SetActive(false);
@@ -163,11 +177,20 @@ namespace CreativeAI.UI.CraftingUI
             rect.anchoredPosition = basePosition + Vector2.right * RowSlideDistance;
             canvasGroup.alpha = 0f;
 
-            rect.DOAnchorPos(basePosition, 0.18f)
+            DOTween
+                .To(
+                    () => rect.anchoredPosition,
+                    value => rect.anchoredPosition = value,
+                    basePosition,
+                    0.18f
+                )
                 .SetEase(Ease.OutQuad)
                 .SetDelay(delay)
                 .SetUpdate(true);
-            canvasGroup.DOFade(1f, FadeDuration).SetDelay(delay).SetUpdate(true);
+            DOTween
+                .To(() => canvasGroup.alpha, value => canvasGroup.alpha = value, 1f, FadeDuration)
+                .SetDelay(delay)
+                .SetUpdate(true);
         }
 
         public static void PlayBump(RectTransform target)

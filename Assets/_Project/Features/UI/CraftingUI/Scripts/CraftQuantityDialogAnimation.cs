@@ -38,7 +38,16 @@ namespace CreativeAI.UI.CraftingUI
             if (dialogRect != null)
                 sequence.Join(dialogRect.DOScale(Vector3.one, duration).SetEase(Ease.OutBack));
             if (canvasGroup != null)
-                sequence.Join(canvasGroup.DOFade(1f, duration * 0.75f));
+            {
+                sequence.Join(
+                    DOTween.To(
+                        () => canvasGroup.alpha,
+                        value => canvasGroup.alpha = value,
+                        1f,
+                        duration * 0.75f
+                    )
+                );
+            }
 
             sequence.OnComplete(() =>
             {
@@ -80,7 +89,16 @@ namespace CreativeAI.UI.CraftingUI
                 );
             }
             if (canvasGroup != null)
-                sequence.Join(canvasGroup.DOFade(0f, duration * 0.75f));
+            {
+                sequence.Join(
+                    DOTween.To(
+                        () => canvasGroup.alpha,
+                        value => canvasGroup.alpha = value,
+                        0f,
+                        duration * 0.75f
+                    )
+                );
+            }
 
             sequence.OnComplete(() =>
             {
