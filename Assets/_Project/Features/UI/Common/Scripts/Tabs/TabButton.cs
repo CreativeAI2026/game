@@ -14,7 +14,8 @@ namespace CreativeAI.UI
         [SerializeField]
         private RectTransform _visualTarget;
 
-        public Button Button { get; private set; }
+        private Button _button;
+        public Button Button => _button ??= GetComponent<Button>();
         private HoverScaleOnPointer _hoverScale;
         private bool _hasVisualHoverTarget;
         private bool _hasWarnedMissingVisualHoverTarget;
@@ -24,7 +25,7 @@ namespace CreativeAI.UI
 
         private void Awake()
         {
-            Button = GetComponent<Button>();
+            _button = GetComponent<Button>();
             _hoverScale = GetComponent<HoverScaleOnPointer>();
             ConfigureHoverScaleTarget();
         }
