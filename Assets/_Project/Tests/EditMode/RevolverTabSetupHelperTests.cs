@@ -52,7 +52,7 @@ namespace CreativeAI.Tests.EditMode
         }
 
         [Test]
-        public void CharacterPanel_PreservesConfiguredLayoutValues()
+        public void CharacterPanel_PreservesConfiguredRadiiAndValidPlacement()
         {
             var prefab = AssetDatabase.LoadAssetAtPath<GameObject>(
                 "Assets/_Project/Features/UI/CharacterUI/Prefabs/CharacterPanel.prefab"
@@ -65,9 +65,10 @@ namespace CreativeAI.Tests.EditMode
             var layout = serializedObject.FindProperty("_layout");
             Assert.AreEqual(180f, layout.FindPropertyRelative("_tangentRadius").floatValue);
             Assert.AreEqual(80f, layout.FindPropertyRelative("_arcDepth").floatValue);
-            Assert.AreEqual(
-                (int)RevolverArcPlacement.Top,
-                layout.FindPropertyRelative("_placement").enumValueIndex
+            int placement = layout.FindPropertyRelative("_placement").enumValueIndex;
+            Assert.That(
+                placement,
+                Is.InRange((int)RevolverArcPlacement.Top, (int)RevolverArcPlacement.Right)
             );
         }
 

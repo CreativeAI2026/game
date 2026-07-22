@@ -1,5 +1,6 @@
 using CreativeAI.UI;
 using NUnit.Framework;
+using UnityEngine.EventSystems;
 
 namespace CreativeAI.Tests.EditMode
 {
@@ -48,6 +49,74 @@ namespace CreativeAI.Tests.EditMode
         )
         {
             Assert.AreEqual(expected, RevolverTabIndexUtility.ShortestStep(from, to, count));
+        }
+
+        [TestCase(RevolverArcPlacement.Top)]
+        [TestCase(RevolverArcPlacement.Bottom)]
+        public void HorizontalPlacements_ResolveOnlyLeftAndRight(RevolverArcPlacement placement)
+        {
+            AssertStep(placement, false, MoveDirection.Left, -1);
+            AssertStep(placement, false, MoveDirection.Right, 1);
+            AssertInvalid(placement, MoveDirection.Up);
+            AssertInvalid(placement, MoveDirection.Down);
+        }
+
+        [TestCase(RevolverArcPlacement.Left)]
+        [TestCase(RevolverArcPlacement.Right)]
+        public void VerticalPlacements_ResolveOnlyUpAndDown(RevolverArcPlacement placement)
+        {
+            AssertStep(placement, false, MoveDirection.Up, -1);
+            AssertStep(placement, false, MoveDirection.Down, 1);
+            AssertInvalid(placement, MoveDirection.Left);
+            AssertInvalid(placement, MoveDirection.Right);
+        }
+
+        [TestCase(RevolverArcPlacement.Top, MoveDirection.Left, 1)]
+        [TestCase(RevolverArcPlacement.Top, MoveDirection.Right, -1)]
+        [TestCase(RevolverArcPlacement.Bottom, MoveDirection.Left, 1)]
+        [TestCase(RevolverArcPlacement.Bottom, MoveDirection.Right, -1)]
+        [TestCase(RevolverArcPlacement.Left, MoveDirection.Up, 1)]
+        [TestCase(RevolverArcPlacement.Left, MoveDirection.Down, -1)]
+        [TestCase(RevolverArcPlacement.Right, MoveDirection.Up, 1)]
+        [TestCase(RevolverArcPlacement.Right, MoveDirection.Down, -1)]
+        public void ReverseOrder_FlipsResolvedStep(
+            RevolverArcPlacement placement,
+            MoveDirection direction,
+            int expectedStep
+        )
+        {
+            AssertStep(placement, true, direction, expectedStep);
+        }
+
+        private static void AssertStep(
+            RevolverArcPlacement placement,
+            bool reverseOrder,
+            MoveDirection direction,
+            int expected
+        )
+        {
+            Assert.IsTrue(
+                RevolverTabNavigationUtility.TryResolveNavigationStep(
+                    placement,
+                    reverseOrder,
+                    direction,
+                    out int step
+                )
+            );
+            Assert.AreEqual(expected, step);
+        }
+
+        private static void AssertInvalid(RevolverArcPlacement placement, MoveDirection direction)
+        {
+            Assert.IsFalse(
+                RevolverTabNavigationUtility.TryResolveNavigationStep(
+                    placement,
+                    false,
+                    direction,
+                    out int step
+                )
+            );
+            Assert.AreEqual(0, step);
         }
     }
 }

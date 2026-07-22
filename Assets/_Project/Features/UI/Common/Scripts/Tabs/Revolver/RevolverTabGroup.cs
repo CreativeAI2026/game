@@ -154,13 +154,21 @@ namespace CreativeAI.UI
             if (eventData == null || !_interactionEnabled || IsAnimating)
                 return;
 
-            bool vertical =
-                _layout.Placement == RevolverArcPlacement.Left
-                || _layout.Placement == RevolverArcPlacement.Right;
-            if (eventData.moveDir == (vertical ? MoveDirection.Up : MoveDirection.Left))
-                SelectPrevious();
-            else if (eventData.moveDir == (vertical ? MoveDirection.Down : MoveDirection.Right))
+            if (
+                !RevolverTabNavigationUtility.TryResolveNavigationStep(
+                    _layout.Placement,
+                    _layout.ReverseOrder,
+                    eventData.moveDir,
+                    out int step
+                )
+            )
+                return;
+
+            if (step > 0)
                 SelectNext();
+            else
+                SelectPrevious();
+            eventData.Use();
         }
 
         public void OnSubmit(BaseEventData eventData)

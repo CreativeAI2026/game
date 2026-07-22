@@ -138,10 +138,10 @@ namespace CreativeAI.Tests.EditMode
             try
             {
                 _group.OnMove(
-                    new AxisEventData(eventSystemObject.GetComponent<EventSystem>())
-                    {
-                        moveDir = MoveDirection.Down,
-                    }
+                    CreateMoveEvent(
+                        eventSystemObject.GetComponent<EventSystem>(),
+                        MoveDirection.Down
+                    )
                 );
                 Assert.AreEqual(2, _group.SelectedIndex);
             }
@@ -149,6 +149,101 @@ namespace CreativeAI.Tests.EditMode
             {
                 Object.DestroyImmediate(eventSystemObject);
             }
+        }
+
+        [Test]
+        public void MoveInput_ReverseOrderStillMovesInPressedScreenDirection()
+        {
+            SetField(
+                "_layout",
+                new RevolverTabLayoutSettings
+                {
+                    Placement = RevolverArcPlacement.Top,
+                    ReverseOrder = true,
+                }
+            );
+            _group.Build();
+            var eventSystemObject = new GameObject("EventSystem", typeof(EventSystem));
+            try
+            {
+                var move = CreateMoveEvent(
+                    eventSystemObject.GetComponent<EventSystem>(),
+                    MoveDirection.Right
+                );
+                _group.OnMove(move);
+
+                Assert.AreEqual(0, _group.SelectedIndex);
+                Assert.IsTrue(move.used);
+            }
+            finally
+            {
+                Object.DestroyImmediate(eventSystemObject);
+            }
+        }
+
+        [Test]
+        public void MoveInput_InvalidAxisIsNotConsumed()
+        {
+            _group.Build();
+            var eventSystemObject = new GameObject("EventSystem", typeof(EventSystem));
+            try
+            {
+                var move = CreateMoveEvent(
+                    eventSystemObject.GetComponent<EventSystem>(),
+                    MoveDirection.Up
+                );
+                _group.OnMove(move);
+
+                Assert.AreEqual(1, _group.SelectedIndex);
+                Assert.IsFalse(move.used);
+            }
+            finally
+            {
+                Object.DestroyImmediate(eventSystemObject);
+            }
+        }
+
+        [Test]
+        public void MoveInput_DuringTweenIsNotConsumed()
+        {
+            SetField("_moveDuration", 1f);
+            _group.Build();
+            _group.SelectNext();
+            Assert.IsTrue(_group.IsAnimating);
+            var eventSystemObject = new GameObject("EventSystem", typeof(EventSystem));
+            try
+            {
+                var move = CreateMoveEvent(
+                    eventSystemObject.GetComponent<EventSystem>(),
+                    MoveDirection.Right
+                );
+                _group.OnMove(move);
+
+                Assert.IsFalse(move.used);
+            }
+            finally
+            {
+                Object.DestroyImmediate(eventSystemObject);
+            }
+        }
+
+        [Test]
+        public void MoveInput_CountZeroOrOneDoesNotThrow()
+        {
+            var eventSystemObject = new GameObject("EventSystem", typeof(EventSystem));
+            var eventSystem = eventSystemObject.GetComponent<EventSystem>();
+            SetField("_entries", new List<RevolverTabEntry>());
+            Assert.DoesNotThrow(() =>
+                _group.OnMove(CreateMoveEvent(eventSystem, MoveDirection.Right))
+            );
+
+            SetField("_entries", new List<RevolverTabEntry> { new(_definitions[0]) });
+            Assert.IsTrue(_group.Build());
+            Assert.DoesNotThrow(() =>
+                _group.OnMove(CreateMoveEvent(eventSystem, MoveDirection.Right))
+            );
+            Assert.AreEqual(0, _group.SelectedIndex);
+            Object.DestroyImmediate(eventSystemObject);
         }
 
         [Test]
@@ -181,5 +276,10 @@ namespace CreativeAI.Tests.EditMode
             Assert.IsNotNull(field, fieldName);
             field.SetValue(target, value);
         }
+
+        private static AxisEventData CreateMoveEvent(
+            EventSystem eventSystem,
+            MoveDirection direction
+        ) => new(eventSystem) { moveDir = direction };
     }
 }

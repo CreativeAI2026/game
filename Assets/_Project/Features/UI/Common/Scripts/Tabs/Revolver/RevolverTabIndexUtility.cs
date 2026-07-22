@@ -1,4 +1,5 @@
 using UnityEngine;
+using UnityEngine.EventSystems;
 
 namespace CreativeAI.UI
 {
@@ -38,6 +39,34 @@ namespace CreativeAI.UI
             int forward = WrapIndex(to - from, count);
             int halfCount = count / 2;
             return forward > halfCount ? forward - count : forward;
+        }
+    }
+
+    public static class RevolverTabNavigationUtility
+    {
+        public static bool TryResolveNavigationStep(
+            RevolverArcPlacement placement,
+            bool reverseOrder,
+            MoveDirection moveDirection,
+            out int step
+        )
+        {
+            bool vertical =
+                placement == RevolverArcPlacement.Left || placement == RevolverArcPlacement.Right;
+            MoveDirection negativeDirection = vertical ? MoveDirection.Up : MoveDirection.Left;
+            MoveDirection positiveDirection = vertical ? MoveDirection.Down : MoveDirection.Right;
+
+            if (moveDirection == negativeDirection)
+                step = reverseOrder ? 1 : -1;
+            else if (moveDirection == positiveDirection)
+                step = reverseOrder ? -1 : 1;
+            else
+            {
+                step = 0;
+                return false;
+            }
+
+            return true;
         }
     }
 }
