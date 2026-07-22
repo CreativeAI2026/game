@@ -40,7 +40,7 @@ namespace CreativeAI.UI
                     return FailBuild($"Entry {i} Item View has no configured TabButton.");
                 }
 
-                item.Bind(_entries[i].Definition, i, HandleItemClicked);
+                item.Bind(_entries[i].Definition, i, HandleItemClicked, OnMove, OnSubmit);
                 _items.Add(item);
             }
 

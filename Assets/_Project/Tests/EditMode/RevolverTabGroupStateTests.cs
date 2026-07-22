@@ -90,6 +90,77 @@ namespace CreativeAI.Tests.EditMode
         }
 
         [Test]
+        public void Build_FiresInitialSelectionOnceAndFocusesSelectedItem()
+        {
+            int eventCount = 0;
+            _group.SelectionChanged += (_, _, _) => eventCount++;
+            var eventSystemObject = CreateActiveEventSystem();
+            try
+            {
+                _group.Build();
+
+                Assert.AreEqual(1, eventCount);
+                var selected = EventSystem.current.currentSelectedGameObject;
+                Assert.IsNotNull(selected);
+                Assert.AreEqual(1, selected.GetComponent<RevolverTabItemView>().DataIndex);
+            }
+            finally
+            {
+                Object.DestroyImmediate(eventSystemObject);
+            }
+        }
+
+        [Test]
+        public void FocusedItem_ForwardsMoveToGroupWithoutSelectableNavigation()
+        {
+            var eventSystemObject = CreateActiveEventSystem();
+            try
+            {
+                _group.Build();
+                var selected = EventSystem.current.currentSelectedGameObject;
+                var item = selected.GetComponent<RevolverTabItemView>();
+                Assert.AreEqual(Navigation.Mode.None, item.Button.navigation.mode);
+                var move = CreateMoveEvent(EventSystem.current, MoveDirection.Right);
+
+                ExecuteEvents.Execute(selected, move, ExecuteEvents.moveHandler);
+
+                Assert.AreEqual(2, _group.SelectedIndex);
+                Assert.IsTrue(move.used);
+                Assert.AreEqual(
+                    2,
+                    EventSystem
+                        .current.currentSelectedGameObject.GetComponent<RevolverTabItemView>()
+                        .DataIndex
+                );
+            }
+            finally
+            {
+                Object.DestroyImmediate(eventSystemObject);
+            }
+        }
+
+        [Test]
+        public void FocusedItem_InvalidAxisDoesNotConsumeOrChangeSelection()
+        {
+            var eventSystemObject = CreateActiveEventSystem();
+            try
+            {
+                _group.Build();
+                var selected = EventSystem.current.currentSelectedGameObject;
+                var move = CreateMoveEvent(EventSystem.current, MoveDirection.Up);
+
+                ExecuteEvents.Execute(selected, move, ExecuteEvents.moveHandler);
+
+                Assert.AreEqual(1, _group.SelectedIndex);
+                Assert.IsFalse(move.used);
+            }
+            finally
+            {
+                Object.DestroyImmediate(eventSystemObject);
+            }
+        }
+
+        [Test]
         public void ImmediateSelect_ChangesSelectionAndFiresOnce()
         {
             _group.Build();
@@ -281,5 +352,22 @@ namespace CreativeAI.Tests.EditMode
             EventSystem eventSystem,
             MoveDirection direction
         ) => new(eventSystem) { moveDir = direction };
+
+        private static GameObject CreateActiveEventSystem()
+        {
+            var gameObject = new GameObject(
+                "EventSystem",
+                typeof(EventSystem),
+                typeof(StandaloneInputModule)
+            );
+            var eventSystem = gameObject.GetComponent<EventSystem>();
+            var onEnable = typeof(EventSystem).GetMethod(
+                "OnEnable",
+                BindingFlags.Instance | BindingFlags.NonPublic
+            );
+            onEnable?.Invoke(eventSystem, null);
+            EventSystem.current = eventSystem;
+            return gameObject;
+        }
     }
 }

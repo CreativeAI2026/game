@@ -1,10 +1,12 @@
 using System;
 using UnityEngine;
+using UnityEngine.EventSystems;
+using UnityEngine.UI;
 
 namespace CreativeAI.UI
 {
     [RequireComponent(typeof(RectTransform), typeof(CanvasGroup))]
-    public sealed class RevolverTabItemView : MonoBehaviour
+    public sealed class RevolverTabItemView : MonoBehaviour, IMoveHandler, ISubmitHandler
     {
         [SerializeField]
         private TabButton _tabButton;
@@ -12,13 +14,15 @@ namespace CreativeAI.UI
         private RectTransform _rectTransform;
         private CanvasGroup _canvasGroup;
         private Action<int> _clicked;
+        private Action<AxisEventData> _moved;
+        private Action<BaseEventData> _submitted;
 
         public int DataIndex { get; private set; } = -1;
         public TabDefinition Definition { get; private set; }
         public RectTransform RectTransform => _rectTransform;
         public CanvasGroup CanvasGroup => _canvasGroup;
         public TabButton TabButton => _tabButton;
-        public UnityEngine.UI.Button Button => _tabButton != null ? _tabButton.Button : null;
+        public Button Button => _tabButton != null ? _tabButton.Button : null;
         public bool IsConfigured => _tabButton != null && _tabButton.Button != null;
 
         private void Awake()
@@ -28,15 +32,33 @@ namespace CreativeAI.UI
 
         public void Bind(TabDefinition definition, int dataIndex, Action<int> clicked)
         {
+            Bind(definition, dataIndex, clicked, null, null);
+        }
+
+        public void Bind(
+            TabDefinition definition,
+            int dataIndex,
+            Action<int> clicked,
+            Action<AxisEventData> moved,
+            Action<BaseEventData> submitted
+        )
+        {
             Unbind();
             CacheComponents();
             Definition = definition;
             DataIndex = dataIndex;
             _clicked = clicked;
+            _moved = moved;
+            _submitted = submitted;
 
             _tabButton?.Bind(definition);
             if (Button != null)
+            {
+                var navigation = Button.navigation;
+                navigation.mode = Navigation.Mode.None;
+                Button.navigation = navigation;
                 Button.onClick.AddListener(NotifyClicked);
+            }
         }
 
         public void Unbind()
@@ -44,6 +66,8 @@ namespace CreativeAI.UI
             if (Button != null)
                 Button.onClick.RemoveListener(NotifyClicked);
             _clicked = null;
+            _moved = null;
+            _submitted = null;
             Definition = null;
             DataIndex = -1;
         }
@@ -75,6 +99,16 @@ namespace CreativeAI.UI
         {
             if (DataIndex >= 0)
                 _clicked?.Invoke(DataIndex);
+        }
+
+        public void OnMove(AxisEventData eventData)
+        {
+            _moved?.Invoke(eventData);
+        }
+
+        public void OnSubmit(BaseEventData eventData)
+        {
+            _submitted?.Invoke(eventData);
         }
 
         private void OnDestroy()

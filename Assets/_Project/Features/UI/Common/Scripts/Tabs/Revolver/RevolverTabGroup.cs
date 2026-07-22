@@ -71,7 +71,10 @@ namespace CreativeAI.UI
         private void OnEnable()
         {
             if (_built)
+            {
                 RefreshLayout();
+                FocusSelectedItem();
+            }
         }
 
         private void OnDisable()
@@ -198,12 +201,15 @@ namespace CreativeAI.UI
 
             if (changed)
                 SelectionChanged?.Invoke(_selectedIndex, CurrentDefinition, CurrentView);
+            FocusSelectedItem();
         }
 
         private void HandleItemClicked(int dataIndex)
         {
             if (!_interactionEnabled || IsAnimating)
                 return;
+
+            FocusItem(dataIndex);
 
             if (dataIndex == _selectedIndex)
             {
@@ -214,6 +220,26 @@ namespace CreativeAI.UI
 
             if (_clickSelect)
                 Select(dataIndex);
+        }
+
+        private void FocusSelectedItem()
+        {
+            FocusItem(_selectedIndex);
+        }
+
+        private void FocusItem(int index)
+        {
+            if (
+                !isActiveAndEnabled
+                || !gameObject.activeInHierarchy
+                || EventSystem.current == null
+                || index < 0
+                || index >= _items.Count
+                || _items[index] == null
+            )
+                return;
+
+            EventSystem.current.SetSelectedGameObject(_items[index].gameObject);
         }
     }
 }

@@ -33,10 +33,20 @@ namespace CreativeAI.UI.CharacterUI
         private void OnEnable()
         {
             if (_revolverTabGroup != null)
+            {
                 _revolverTabGroup.SelectionChanged += OnTabSelected;
+                if (_revolverTabGroup.CurrentIndex >= 0)
+                    Show(_revolverTabGroup.CurrentIndex);
+            }
             else if (_tabGroup != null)
+            {
                 _tabGroup.OnSelectionChanged += OnTabSelected;
-            Show(GetCurrentIndex());
+                Show(Mathf.Max(0, _tabGroup.CurrentIndex));
+            }
+            else
+            {
+                Show(0);
+            }
         }
 
         private void OnDisable()
@@ -58,13 +68,6 @@ namespace CreativeAI.UI.CharacterUI
                 _weaponName.text = Weapons[index].name;
             if (_weaponStats != null)
                 _weaponStats.text = Weapons[index].stats;
-        }
-
-        private int GetCurrentIndex()
-        {
-            if (_revolverTabGroup != null)
-                return Mathf.Max(0, _revolverTabGroup.CurrentIndex);
-            return _tabGroup != null ? Mathf.Max(0, _tabGroup.CurrentIndex) : 0;
         }
     }
 }
