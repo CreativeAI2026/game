@@ -154,9 +154,12 @@ namespace CreativeAI.UI
             if (eventData == null || !_interactionEnabled || IsAnimating)
                 return;
 
-            if (eventData.moveDir == MoveDirection.Left)
+            bool vertical =
+                _layout.Placement == RevolverArcPlacement.Left
+                || _layout.Placement == RevolverArcPlacement.Right;
+            if (eventData.moveDir == (vertical ? MoveDirection.Up : MoveDirection.Left))
                 SelectPrevious();
-            else if (eventData.moveDir == MoveDirection.Right)
+            else if (eventData.moveDir == (vertical ? MoveDirection.Down : MoveDirection.Right))
                 SelectNext();
         }
 

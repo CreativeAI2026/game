@@ -608,10 +608,11 @@ MonoBehaviour:
   _initialIndex: 0
   _layout:
     _visibleItemCount: 3
-    _horizontalRadius: 180
-    _verticalRadius: 80
+    _tangentRadius: 180
+    _arcDepth: 80
     _maxAngle: 60
-    _arcDirection: 0
+    _placement: 0
+    _reverseOrder: 0
     _selectedScale: 1.2
     _edgeScale: 0.6
     _scaleCurve:

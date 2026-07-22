@@ -246,12 +246,43 @@ namespace CreativeAI.EditorTools.UI
                 return false;
 
             var serializedObject = new SerializedObject(group);
+            var layout = serializedObject.FindProperty("_layout");
+            int placement = layout.FindPropertyRelative("_placement").enumValueIndex;
             bool valid =
                 serializedObject.FindProperty("_itemRoot").objectReferenceValue != null
-                && serializedObject.FindProperty("_itemPrefab").objectReferenceValue != null;
+                && serializedObject.FindProperty("_itemPrefab").objectReferenceValue != null
+                && placement >= (int)RevolverArcPlacement.Top
+                && placement <= (int)RevolverArcPlacement.Right
+                && layout.FindPropertyRelative("_tangentRadius").floatValue >= 0f
+                && layout.FindPropertyRelative("_arcDepth").floatValue >= 0f;
             if (!valid && logWarnings)
                 Debug.LogWarning("Revolver Tab Group configuration is incomplete.", group);
             return valid;
+        }
+
+        public static bool ApplyPlacementToRoot(RevolverTabGroup group)
+        {
+            if (group == null || group.transform is not RectTransform root)
+                return false;
+
+            var serializedObject = new SerializedObject(group);
+            var layout = serializedObject.FindProperty("_layout");
+            var placement = (RevolverArcPlacement)
+                layout.FindPropertyRelative("_placement").enumValueIndex;
+            Vector2 anchor = placement switch
+            {
+                RevolverArcPlacement.Top => new Vector2(0.5f, 1f),
+                RevolverArcPlacement.Bottom => new Vector2(0.5f, 0f),
+                RevolverArcPlacement.Left => new Vector2(0f, 0.5f),
+                _ => new Vector2(1f, 0.5f),
+            };
+
+            Undo.RecordObject(root, "Apply Revolver Arc Placement");
+            root.anchorMin = anchor;
+            root.anchorMax = anchor;
+            root.pivot = anchor;
+            EditorUtility.SetDirty(root);
+            return true;
         }
 
         private static void ProcessRequest()
@@ -375,9 +406,11 @@ namespace CreativeAI.EditorTools.UI
 
             var layout = serializedObject.FindProperty("_layout");
             layout.FindPropertyRelative("_visibleItemCount").intValue = 3;
-            layout.FindPropertyRelative("_horizontalRadius").floatValue = 180f;
-            layout.FindPropertyRelative("_verticalRadius").floatValue = 80f;
+            layout.FindPropertyRelative("_tangentRadius").floatValue = 180f;
+            layout.FindPropertyRelative("_arcDepth").floatValue = 80f;
             layout.FindPropertyRelative("_maxAngle").floatValue = 60f;
+            layout.FindPropertyRelative("_placement").enumValueIndex = (int)
+                RevolverArcPlacement.Top;
             layout.FindPropertyRelative("_selectedScale").floatValue = 1.2f;
             layout.FindPropertyRelative("_edgeScale").floatValue = 0.6f;
             serializedObject.ApplyModifiedPropertiesWithoutUndo();
@@ -453,6 +486,18 @@ namespace CreativeAI.EditorTools.UI
             public int errors;
             public int warnings;
             public System.Collections.Generic.List<string> messages = new();
+        }
+    }
+
+    [CustomEditor(typeof(RevolverTabGroup))]
+    internal sealed class RevolverTabGroupEditor : Editor
+    {
+        public override void OnInspectorGUI()
+        {
+            DrawDefaultInspector();
+            EditorGUILayout.Space();
+            if (GUILayout.Button("Apply Placement To Root"))
+                RevolverTabSetupHelper.ApplyPlacementToRoot((RevolverTabGroup)target);
         }
     }
 }

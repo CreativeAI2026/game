@@ -3,6 +3,7 @@ using System.Reflection;
 using CreativeAI.UI;
 using NUnit.Framework;
 using UnityEngine;
+using UnityEngine.EventSystems;
 using UnityEngine.UI;
 
 namespace CreativeAI.Tests.EditMode
@@ -125,6 +126,29 @@ namespace CreativeAI.Tests.EditMode
             _group.SubmitSelected();
 
             Assert.AreEqual(1, submittedIndex);
+        }
+
+        [Test]
+        public void MoveInput_UsesVerticalAxisForSidePlacements()
+        {
+            var layout = new RevolverTabLayoutSettings { Placement = RevolverArcPlacement.Left };
+            SetField("_layout", layout);
+            _group.Build();
+            var eventSystemObject = new GameObject("EventSystem", typeof(EventSystem));
+            try
+            {
+                _group.OnMove(
+                    new AxisEventData(eventSystemObject.GetComponent<EventSystem>())
+                    {
+                        moveDir = MoveDirection.Down,
+                    }
+                );
+                Assert.AreEqual(2, _group.SelectedIndex);
+            }
+            finally
+            {
+                Object.DestroyImmediate(eventSystemObject);
+            }
         }
 
         [Test]

@@ -43,11 +43,12 @@ namespace CreativeAI.UI
             bool isVisible = absoluteDistance <= visibleRadius + Mathf.Epsilon;
             float normalizedDistance = Mathf.Clamp01(absoluteDistance / visibleRadius);
             float angle = relativePosition / visibleRadius * settings.MaxAngle * Mathf.Deg2Rad;
-            float direction = settings.ArcDirection == RevolverTabArcDirection.Up ? 1f : -1f;
-            var position = new Vector2(
-                Mathf.Sin(angle) * settings.HorizontalRadius,
-                (Mathf.Cos(angle) - 1f) * settings.VerticalRadius * direction
-            );
+            GetBasis(settings.Placement, out Vector2 tangent, out Vector2 inward);
+            if (settings.ReverseOrder)
+                tangent = -tangent;
+            float tangentOffset = Mathf.Sin(angle) * settings.TangentRadius;
+            float inwardOffset = (1f - Mathf.Cos(angle)) * settings.ArcDepth;
+            Vector2 position = tangent * tangentOffset + inward * inwardOffset;
 
             float scaleT = EvaluateCurve(settings.ScaleCurve, normalizedDistance);
             float alphaT = EvaluateCurve(settings.AlphaCurve, normalizedDistance);
@@ -70,6 +71,33 @@ namespace CreativeAI.UI
         {
             float evaluated = curve != null ? curve.Evaluate(value) : value;
             return Mathf.Clamp01(Sanitize(evaluated));
+        }
+
+        private static void GetBasis(
+            RevolverArcPlacement placement,
+            out Vector2 tangent,
+            out Vector2 inward
+        )
+        {
+            switch (placement)
+            {
+                case RevolverArcPlacement.Top:
+                    tangent = Vector2.right;
+                    inward = Vector2.up;
+                    break;
+                case RevolverArcPlacement.Bottom:
+                    tangent = Vector2.right;
+                    inward = Vector2.down;
+                    break;
+                case RevolverArcPlacement.Left:
+                    tangent = Vector2.down;
+                    inward = Vector2.left;
+                    break;
+                default:
+                    tangent = Vector2.down;
+                    inward = Vector2.right;
+                    break;
+            }
         }
 
         private static float Sanitize(float value) =>

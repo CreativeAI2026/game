@@ -1,12 +1,22 @@
 using System;
 using UnityEngine;
+using UnityEngine.Serialization;
 
 namespace CreativeAI.UI
 {
+    [Obsolete("Use RevolverArcPlacement instead.")]
     public enum RevolverTabArcDirection
     {
         Up,
         Down,
+    }
+
+    public enum RevolverArcPlacement
+    {
+        Top,
+        Bottom,
+        Left,
+        Right,
     }
 
     [Serializable]
@@ -15,17 +25,22 @@ namespace CreativeAI.UI
         [SerializeField, Min(1)]
         private int _visibleItemCount = 5;
 
+        [FormerlySerializedAs("_horizontalRadius")]
         [SerializeField, Min(0f)]
-        private float _horizontalRadius = 300f;
+        private float _tangentRadius = 300f;
 
+        [FormerlySerializedAs("_verticalRadius")]
         [SerializeField, Min(0f)]
-        private float _verticalRadius = 120f;
+        private float _arcDepth = 120f;
 
         [SerializeField, Range(0f, 180f)]
         private float _maxAngle = 90f;
 
         [SerializeField]
-        private RevolverTabArcDirection _arcDirection = RevolverTabArcDirection.Up;
+        private RevolverArcPlacement _placement = RevolverArcPlacement.Bottom;
+
+        [SerializeField]
+        private bool _reverseOrder;
 
         [SerializeField, Min(0f)]
         private float _selectedScale = 1.2f;
@@ -51,16 +66,30 @@ namespace CreativeAI.UI
             set => _visibleItemCount = Mathf.Max(1, value);
         }
 
-        public float HorizontalRadius
+        public float TangentRadius
         {
-            get => _horizontalRadius;
-            set => _horizontalRadius = Mathf.Max(0f, value);
+            get => _tangentRadius;
+            set => _tangentRadius = Mathf.Max(0f, value);
         }
 
+        [Obsolete("Use TangentRadius instead.")]
+        public float HorizontalRadius
+        {
+            get => TangentRadius;
+            set => TangentRadius = value;
+        }
+
+        public float ArcDepth
+        {
+            get => _arcDepth;
+            set => _arcDepth = Mathf.Max(0f, value);
+        }
+
+        [Obsolete("Use ArcDepth instead.")]
         public float VerticalRadius
         {
-            get => _verticalRadius;
-            set => _verticalRadius = Mathf.Max(0f, value);
+            get => ArcDepth;
+            set => ArcDepth = value;
         }
 
         public float MaxAngle
@@ -69,10 +98,30 @@ namespace CreativeAI.UI
             set => _maxAngle = Mathf.Clamp(value, 0f, 180f);
         }
 
+        public RevolverArcPlacement Placement
+        {
+            get => _placement;
+            set => _placement = value;
+        }
+
+        [Obsolete("Use Placement instead.")]
         public RevolverTabArcDirection ArcDirection
         {
-            get => _arcDirection;
-            set => _arcDirection = value;
+            get =>
+                Placement == RevolverArcPlacement.Top
+                    ? RevolverTabArcDirection.Up
+                    : RevolverTabArcDirection.Down;
+            set =>
+                Placement =
+                    value == RevolverTabArcDirection.Up
+                        ? RevolverArcPlacement.Top
+                        : RevolverArcPlacement.Bottom;
+        }
+
+        public bool ReverseOrder
+        {
+            get => _reverseOrder;
+            set => _reverseOrder = value;
         }
 
         public float SelectedScale
