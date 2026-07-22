@@ -3,23 +3,18 @@ using System.Collections.Generic;
 using CreativeAI.Gameplay;
 using CreativeAI.UI.InventoryUI;
 using UnityEngine;
-using UnityEngine.Events;
-using UnityEngine.UI;
 
 namespace CreativeAI.UI.CharacterUI
 {
-    public partial class EquipmentViewController : MonoBehaviour
+    public partial class EquipmentViewController : MonoBehaviour, ICharacterTabView
     {
-        private static readonly Color SlotFrameSelected = new(1f, 0.78f, 0.15f, 0.9f);
-        private static readonly Color SlotFrameNormal = new(1f, 1f, 1f, 0.15f);
-
         private TriangleLayout _triangleLayout;
 
-        [Header("Equipment Slots")]
+        [Header("Equipment Slots Root")]
         [SerializeField]
-        private Transform _equipmentSlotsContainer;
+        private Transform _equipmentSlotsRoot;
 
-        [Header("Detail")]
+        [Header("Detail Panel")]
         [SerializeField]
         private ItemDetailPanel _detailPanel;
 
@@ -34,10 +29,12 @@ namespace CreativeAI.UI.CharacterUI
         private string _emptyLabel = "\uFF08\u672A\u88C5\u5099\uFF09";
 
         private readonly List<EquipmentSlot> _slots = new();
-        private readonly Dictionary<Button, UnityAction> _slotButtonActions = new();
         private int _currentSlotIndex;
         private ItemStack _selectedInventoryStack;
         private bool _initialized;
+        private bool _subscribedToInventoryChanged;
+        private bool _warnedMissingInventory;
+        private bool _warnedMissingDetailPanel;
 
         private bool HasSlots => _slots.Count > 0;
 
@@ -48,7 +45,11 @@ namespace CreativeAI.UI.CharacterUI
 
         private void Awake()
         {
-            ResolveReferences();
+            if (!ValidateRequiredReferences())
+                return;
+
+            ResolveConfiguredComponents();
+            BindInventoryItemsRequested();
             ConfigureInventory();
         }
 
@@ -62,11 +63,16 @@ namespace CreativeAI.UI.CharacterUI
             if (_initialized)
                 return;
 
-            ResolveReferences();
+            if (!ValidateRequiredReferences())
+                return;
+
+            ResolveConfiguredComponents();
+            BindInventoryItemsRequested();
             ConfigureInventory();
             InitializeSlots();
             EquipInitialTestItems();
             BindInventoryEvents();
+            BindInventoryChangedEvent();
 
             RefreshSlotLayout();
             SelectEquipmentSlot(0);
@@ -75,10 +81,29 @@ namespace CreativeAI.UI.CharacterUI
             BindTriangleLayoutEvents();
         }
 
+        private void OnEnable()
+        {
+            if (!ValidateRequiredReferences())
+                return;
+
+            BindInventoryItemsRequested();
+
+            if (_initialized)
+                BindInventoryChangedEvent();
+        }
+
+        private void OnDisable()
+        {
+            UnbindInventoryItemsRequested();
+            UnbindInventoryChangedEvent();
+        }
+
         private void OnDestroy()
         {
             UnbindSlots();
             UnbindInventoryEvents();
+            UnbindInventoryItemsRequested();
+            UnbindInventoryChangedEvent();
             if (_triangleLayout != null)
                 _triangleLayout.AnimationStateChanged -= SetSlotsInputLocked;
         }
@@ -87,7 +112,11 @@ namespace CreativeAI.UI.CharacterUI
         {
             _inventoryCategory = inventoryCategory;
             _emptyLabel = emptyLabel;
-            ResolveReferences();
+            if (!ValidateRequiredReferences())
+                return;
+
+            ResolveConfiguredComponents();
+            BindInventoryItemsRequested();
             ConfigureInventory();
         }
 
@@ -133,19 +162,44 @@ namespace CreativeAI.UI.CharacterUI
             RefreshDetailFromCurrentSlot();
         }
 
-        private void ResolveReferences()
+        private void ResolveConfiguredComponents()
         {
-            _detailPanel ??= GetComponentInChildren<ItemDetailPanel>(true);
-            _inventory ??= GetComponentInChildren<Inventory>(true);
+            if (_triangleLayout == null && _equipmentSlotsRoot != null)
+                _triangleLayout = _equipmentSlotsRoot.GetComponent<TriangleLayout>();
+        }
 
-            if (_triangleLayout == null && _equipmentSlotsContainer != null)
-                _triangleLayout = _equipmentSlotsContainer.GetComponent<TriangleLayout>();
+        private bool ValidateRequiredReferences()
+        {
+            bool valid = true;
+            if (_inventory == null)
+            {
+                WarnMissingReferenceOnce(ref _warnedMissingInventory, nameof(_inventory));
+                valid = false;
+            }
+            if (_detailPanel == null)
+            {
+                WarnMissingReferenceOnce(ref _warnedMissingDetailPanel, nameof(_detailPanel));
+                valid = false;
+            }
+
+            return valid;
+        }
+
+        private void WarnMissingReferenceOnce(ref bool warned, string fieldName)
+        {
+            if (warned)
+                return;
+
+            warned = true;
+            Debug.LogWarning(
+                $"{nameof(EquipmentViewController)} '{CreativeAI.UI.UIHierarchyPathUtility.GetPath(transform)}' requires Inspector reference '{fieldName}'. Initialization was stopped.",
+                this
+            );
         }
 
         private void ConfigureInventory()
         {
             _inventory?.SetSelectFirstSlotOnRefresh(false);
-            _inventory?.SetFixedCategory(_inventoryCategory);
         }
 
         private bool IsSlotInputLocked()
@@ -167,5 +221,14 @@ namespace CreativeAI.UI.CharacterUI
             foreach (var slot in _slots)
                 slot?.SetInputLocked(locked);
         }
+
+#if UNITY_EDITOR
+        [ContextMenu("Auto Assign References")]
+        private void AutoAssignReferences()
+        {
+            _detailPanel ??= GetComponentInChildren<ItemDetailPanel>(true);
+            _inventory ??= GetComponentInChildren<Inventory>(true);
+        }
+#endif
     }
 }

@@ -8,6 +8,7 @@
         "DOTween.Modules",
         "Unity.TextMeshPro",
         "Unity.InputSystem",
+        "Unity.RenderPipelines.Universal.Runtime",
         "UniTask",
         "UniTask.DOTween"
     ],

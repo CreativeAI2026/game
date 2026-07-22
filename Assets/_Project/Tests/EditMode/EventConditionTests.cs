@@ -9,13 +9,13 @@ namespace CreativeAI.Tests.EditMode
         private static readonly Func<string, string> NoFlags = _ => string.Empty;
 
         [Test]
-        public void Progress_Met_WhenAtOrAboveThreshold()
+        public void Progress_Met_OnlyWhenExactlyEqual()
         {
             var c = EventCondition.Progress(5);
 
             Assert.IsFalse(c.IsMet(4, NoFlags));
-            Assert.IsTrue(c.IsMet(5, NoFlags)); // >= (以上)
-            Assert.IsTrue(c.IsMet(6, NoFlags));
+            Assert.IsTrue(c.IsMet(5, NoFlags)); // == (ちょうど一致)
+            Assert.IsFalse(c.IsMet(6, NoFlags)); // 進行度が進むと二度と発火しない
         }
 
         [Test]

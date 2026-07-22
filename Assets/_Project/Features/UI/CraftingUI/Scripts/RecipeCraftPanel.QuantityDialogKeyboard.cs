@@ -6,7 +6,11 @@ namespace CreativeAI.UI.CraftingUI
     {
         private void UpdateQuantityDialogKeyboardControls()
         {
-            if (_quantityDialog == null || !_quantityDialog.activeInHierarchy || _isCrafting)
+            if (
+                _quantityDialogController == null
+                || !_quantityDialogController.IsOpen
+                || _isCrafting
+            )
                 return;
 
             var keyboard = Keyboard.current;
@@ -14,13 +18,13 @@ namespace CreativeAI.UI.CraftingUI
                 return;
 
             if (keyboard.leftArrowKey.wasPressedThisFrame)
-                Decrease();
+                _quantityDialogController.Decrement();
             else if (keyboard.rightArrowKey.wasPressedThisFrame)
-                Increase();
+                _quantityDialogController.Increment();
             else if (keyboard.upArrowKey.wasPressedThisFrame)
-                SetMaximum();
+                _quantityDialogController.SetMax();
             else if (keyboard.downArrowKey.wasPressedThisFrame)
-                SetMinimum();
+                _quantityDialogController.SetMin();
         }
     }
 }

@@ -4,12 +4,44 @@ using UnityEngine;
 namespace CreativeAI.Core.EventSystem
 {
     /// <summary>
-    /// EventTrigger に発火を託され、1本の会話イベントを頭から順に再生し切る指揮役(非常駐)。
+    /// EventTrigger に発火を託され、1本の会話イベントを頭から順に再生し切る指揮役。
+    /// Title フローで EnsureResident により常駐生成され、EventPlayerService.Current に自身を登録する
+    /// (非常駐の EventTrigger はこの seam 経由で受け取るため、per-field 配線は不要)。
     /// 各ステップで会話UI(IDialogueView) / Inventory(IItemGiver) / ProgressManager を叩き、
-    /// 終了時に進行度を進める。documents/StoryProgressionSystem.md 参照。
+    /// 終了時に進行度を進める。documents/Specification.md §4, §6, EventImplementation.md 参照。
     /// </summary>
     public sealed class EventPlayer : MonoBehaviour, IEventPlayer
     {
+        public static EventPlayer Instance { get; private set; }
+
+        /// <summary>セッション常駐生成の入口。既に在ればそれを返す(SessionBootstrap から呼ぶ)。</summary>
+        public static EventPlayer EnsureResident()
+        {
+            if (Instance != null)
+                return Instance;
+            return new GameObject(nameof(EventPlayer)).AddComponent<EventPlayer>();
+        }
+
+        private void Awake()
+        {
+            if (Instance != null && Instance != this)
+            {
+                Destroy(gameObject);
+                return;
+            }
+            Instance = this;
+            DontDestroyOnLoad(gameObject);
+            EventPlayerService.Current = this; // EventTrigger の発火先 seam に自身を登録
+        }
+
+        private void OnDestroy()
+        {
+            if (Instance == this)
+                Instance = null;
+            if (ReferenceEquals(EventPlayerService.Current, this))
+                EventPlayerService.Current = null;
+        }
+
         [SerializeField]
         private ProgressManager _progress; // 未設定なら ProgressManager.Instance にフォールバック
 
@@ -17,21 +49,30 @@ namespace CreativeAI.Core.EventSystem
         private MonoBehaviour _dialogueView; // IDialogueView を実装する MonoBehaviour(UI 側)
 
         [SerializeField]
-        private MonoBehaviour _itemGiver; // IItemGiver を実装する MonoBehaviour(Gameplay 側)
+        private MonoBehaviour _itemGiver; // IItemGiver 実装。未設定なら ItemGiverService.Current(= InventoryManager)にフォールバック
 
         [SerializeField]
-        private MonoBehaviour _battleRunner; // IBattleRunner を実装する MonoBehaviour(戦闘班)
+        private MonoBehaviour _weaponGiver; // IWeaponGiver 実装。未設定なら WeaponGiverService.Current(= WeaponManager)にフォールバック。未実装なら giveWeapon はスキップ
+
+        [SerializeField]
+        private MonoBehaviour _battleRunner; // IBattleRunner 実装。未設定なら BattleRunnerService.Current(= BattleRunner)にフォールバック
 
         [SerializeField]
         private GameModeManager _gameMode; // 未設定なら GameModeManager.Instance にフォールバック
 
         private IDialogueView _view;
         private IItemGiver _items;
+        private IWeaponGiver _weapons;
         private IBattleRunner _battle;
 
-        private IDialogueView View => _view ??= _dialogueView as IDialogueView;
-        private IItemGiver Items => _items ??= _itemGiver as IItemGiver;
-        private IBattleRunner BattleRunner => _battle ??= _battleRunner as IBattleRunner;
+        private IDialogueView View =>
+            _view ??= (_dialogueView as IDialogueView) ?? DialogueViewService.Current;
+        private IItemGiver Items =>
+            _items ??= (_itemGiver as IItemGiver) ?? ItemGiverService.Current;
+        private IWeaponGiver Weapons =>
+            _weapons ??= (_weaponGiver as IWeaponGiver) ?? WeaponGiverService.Current;
+        private IBattleRunner BattleRunner =>
+            _battle ??= (_battleRunner as IBattleRunner) ?? BattleRunnerService.Current;
         private ProgressManager Progress =>
             _progress != null ? _progress : ProgressManager.Instance;
         private GameModeManager GameModes =>
@@ -43,7 +84,8 @@ namespace CreativeAI.Core.EventSystem
             IDialogueView view,
             IItemGiver items,
             IBattleRunner battle = null,
-            GameModeManager gameMode = null
+            GameModeManager gameMode = null,
+            IWeaponGiver weapons = null
         )
         {
             _progress = progress;
@@ -51,20 +93,22 @@ namespace CreativeAI.Core.EventSystem
             _items = items;
             _battle = battle;
             _gameMode = gameMode;
+            _weapons = weapons;
         }
 
-        public void Play(EventDefinition ev)
+        public void Play(EventDefinition ev, BattleSetup battle = default)
         {
             if (ev == null)
                 return;
-            StartCoroutine(PlayRoutine(ev));
+            StartCoroutine(PlayRoutine(ev, battle));
         }
 
         /// <summary>
         /// 会話ステップを順に再生し、終了時に AdvanceTo する本体。
+        /// battle ステップは <paramref name="battle"/>(トリガーが配線した敵)を使う。
         /// テストは fake を注入し、この IEnumerator を駆動して検証する。
         /// </summary>
-        public IEnumerator PlayRoutine(EventDefinition ev)
+        public IEnumerator PlayRoutine(EventDefinition ev, BattleSetup battle = default)
         {
             if (ev == null)
                 yield break;
@@ -74,46 +118,71 @@ namespace CreativeAI.Core.EventSystem
                     $"[EventPlayer] IDialogueView 未設定 (event={ev.Id}). 会話は表示されません。"
                 );
 
-            foreach (var step in ev.Steps)
+            // 会話イベント中は操作不能。右上ナビ(セーブ/インベ入口)を隠すため再生中フラグを立てる
+            // (documents/Specification.md §2.2, §5)。中断されても finally で必ず戻す。
+            EventPlaybackService.SetPlaying(true);
+            try
             {
-                if (step == null)
-                    continue;
-
-                switch (step.Kind)
+                foreach (var step in ev.Steps)
                 {
-                    case StepKind.Line:
-                        if (View != null)
-                            yield return View.ShowLine(step.Speaker, step.Portrait, step.Text);
-                        break;
+                    if (step == null)
+                        continue;
 
-                    case StepKind.Choice:
-                        string picked = null;
-                        if (View != null)
-                            yield return View.ShowChoice(step.Options, v => picked = v);
-                        if (!string.IsNullOrEmpty(picked))
-                            Progress?.SetFlag(step.FlagKey, picked);
-                        break;
+                    switch (step.Kind)
+                    {
+                        case StepKind.Line:
+                            if (View != null)
+                                yield return View.ShowLine(step.Speaker, step.Portrait, step.Text);
+                            break;
 
-                    case StepKind.GiveItem:
-                        Items?.Give(step.ItemKey);
-                        break;
+                        case StepKind.Choice:
+                            string picked = null;
+                            if (View != null)
+                                yield return View.ShowChoice(step.Options, v => picked = v);
+                            if (!string.IsNullOrEmpty(picked))
+                                Progress?.SetFlag(step.FlagKey, picked);
+                            break;
 
-                    case StepKind.Battle:
-                        var mode = GameModes;
-                        mode?.EnterBattle();
-                        if (BattleRunner != null)
-                            yield return BattleRunner.Run(step.EnemyKey);
-                        else
-                            Debug.LogWarning(
-                                $"[EventPlayer] IBattleRunner 未設定 (enemy={step.EnemyKey}). 戦闘をスキップ。"
-                            );
-                        mode?.ExitBattle();
-                        break;
+                        case StepKind.GiveItem:
+                            Items?.Give(step.ItemKey);
+                            break;
+
+                        case StepKind.GiveWeapon:
+                            if (Weapons == null)
+                                Debug.LogWarning(
+                                    $"[EventPlayer] IWeaponGiver 未実装 (event={ev.Id}). giveWeapon '{step.WeaponKey}' をスキップ。"
+                                        + " プレイヤーリグの WeaponManager が IWeaponGiver を実装するまで武器は渡されません。"
+                                );
+                            else
+                                Weapons.GiveWeapon(step.WeaponKey);
+                            break;
+
+                        case StepKind.Battle:
+                            var mode = GameModes;
+                            mode?.EnterBattle();
+                            if (BattleRunner == null)
+                                Debug.LogWarning(
+                                    $"[EventPlayer] IBattleRunner 未設定 (event={ev.Id}). 戦闘をスキップ。"
+                                );
+                            else if (!battle.HasEnemy)
+                                Debug.LogWarning(
+                                    $"[EventPlayer] battle ステップに敵 Prefab が未配線 (event={ev.Id})."
+                                        + " EventTrigger の Enemy スロットにアサインしてください。戦闘をスキップ。"
+                                );
+                            else
+                                yield return BattleRunner.Run(battle);
+                            mode?.ExitBattle();
+                            break;
+                    }
                 }
-            }
 
-            if (ev.HasNextProgress)
-                Progress?.AdvanceTo(ev.NextProgress);
+                if (ev.HasNextProgress)
+                    Progress?.AdvanceTo(ev.NextProgress);
+            }
+            finally
+            {
+                EventPlaybackService.SetPlaying(false);
+            }
         }
     }
 }

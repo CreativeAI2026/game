@@ -12,7 +12,7 @@ namespace CreativeAI.Core
     /// <summary>
     /// 現在のゲームモード(Field / Battle)を1つだけ保持する常駐 SSOT。状態を持つだけで、
     /// 各システムはこれを読む/購読して自分で自制する。書き込み(EnterBattle/ExitBattle)を
-    /// 叩くのは進行側(EventPlayer)のみ。documents/GameMode.md 参照。
+    /// 叩くのは進行側(EventPlayer)のみ。documents/Specification.md §6 参照。
     /// </summary>
     [DefaultExecutionOrder(-100)]
     public sealed class GameModeManager : MonoBehaviour

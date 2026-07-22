@@ -10,7 +10,10 @@ namespace CreativeAI.UI.CraftingUI
         private const float PopDuration = 0.18f;
         private const float FadeDuration = 0.16f;
         private const float RowSlideDistance = 18f;
+        private const float ResultAnimationDuration = 0.22f;
+        private const float ResultHiddenScale = 0.9f;
         private static readonly Dictionary<TMP_Text, Color> TextBaseColors = new();
+        private static readonly HashSet<GameObject> WarnedMissingCanvasGroups = new();
 
         public static void PlayPopIn(GameObject target, float delay = 0f)
         {
@@ -37,20 +40,104 @@ namespace CreativeAI.UI.CraftingUI
             var rect = resultPanel.transform as RectTransform;
             var canvasGroup = resultPanel.GetComponent<CanvasGroup>();
             if (canvasGroup == null)
-                canvasGroup = resultPanel.AddComponent<CanvasGroup>();
+            {
+                WarnMissingCanvasGroupOnce(resultPanel, "ResultPanel");
+                return;
+            }
 
+            DOTween.Kill(resultPanel);
             rect?.DOKill();
             canvasGroup.DOKill();
 
             if (rect != null)
-                rect.localScale = Vector3.one * 0.9f;
+                rect.localScale = Vector3.one * ResultHiddenScale;
             canvasGroup.alpha = 0f;
+            canvasGroup.interactable = false;
+            canvasGroup.blocksRaycasts = true;
 
             resultPanel.SetActive(true);
 
+            var sequence = DOTween.Sequence().SetTarget(resultPanel).SetUpdate(true);
             if (rect != null)
-                rect.DOScale(Vector3.one, 0.22f).SetEase(Ease.OutBack).SetUpdate(true);
-            canvasGroup.DOFade(1f, FadeDuration).SetUpdate(true);
+                sequence.Join(
+                    rect.DOScale(Vector3.one, ResultAnimationDuration).SetEase(Ease.OutBack)
+                );
+            sequence.Join(canvasGroup.DOFade(1f, FadeDuration));
+            sequence.OnComplete(() =>
+            {
+                canvasGroup.interactable = true;
+                canvasGroup.blocksRaycasts = true;
+            });
+        }
+
+        public static void PlayResultOut(GameObject resultPanel, System.Action onComplete = null)
+        {
+            if (resultPanel == null)
+                return;
+
+            if (!resultPanel.activeSelf)
+            {
+                onComplete?.Invoke();
+                return;
+            }
+
+            var rect = resultPanel.transform as RectTransform;
+            var canvasGroup = resultPanel.GetComponent<CanvasGroup>();
+            if (canvasGroup == null)
+            {
+                WarnMissingCanvasGroupOnce(resultPanel, "ResultPanel");
+                return;
+            }
+
+            DOTween.Kill(resultPanel);
+            rect?.DOKill();
+            canvasGroup.DOKill();
+            canvasGroup.interactable = false;
+            canvasGroup.blocksRaycasts = false;
+
+            var sequence = DOTween.Sequence().SetTarget(resultPanel).SetUpdate(true);
+            if (rect != null)
+            {
+                sequence.Join(
+                    rect.DOScale(Vector3.one * ResultHiddenScale, ResultAnimationDuration)
+                        .SetEase(Ease.InBack)
+                );
+            }
+            sequence.Join(canvasGroup.DOFade(0f, FadeDuration));
+            sequence.OnComplete(() =>
+            {
+                resultPanel.SetActive(false);
+                if (rect != null)
+                    rect.localScale = Vector3.one;
+                canvasGroup.alpha = 1f;
+                canvasGroup.interactable = true;
+                canvasGroup.blocksRaycasts = true;
+                onComplete?.Invoke();
+            });
+        }
+
+        public static void HideResultImmediately(GameObject resultPanel)
+        {
+            if (resultPanel == null)
+                return;
+
+            DOTween.Kill(resultPanel);
+            if (resultPanel.transform is RectTransform rect)
+            {
+                rect.DOKill();
+                rect.localScale = Vector3.one;
+            }
+
+            var canvasGroup = resultPanel.GetComponent<CanvasGroup>();
+            if (canvasGroup != null)
+            {
+                canvasGroup.DOKill();
+                canvasGroup.alpha = 1f;
+                canvasGroup.interactable = true;
+                canvasGroup.blocksRaycasts = true;
+            }
+
+            resultPanel.SetActive(false);
         }
 
         public static void PlayRowIn(GameObject rowObject, int index)
@@ -61,7 +148,10 @@ namespace CreativeAI.UI.CraftingUI
             var rect = rowObject.transform as RectTransform;
             var canvasGroup = rowObject.GetComponent<CanvasGroup>();
             if (canvasGroup == null)
-                canvasGroup = rowObject.AddComponent<CanvasGroup>();
+            {
+                WarnMissingCanvasGroupOnce(rowObject, "MaterialRow");
+                return;
+            }
 
             if (rect == null)
                 return;
@@ -109,6 +199,17 @@ namespace CreativeAI.UI.CraftingUI
                 .SetEase(Ease.OutQuad)
                 .SetUpdate(true);
             PlayBump(text.rectTransform);
+        }
+
+        private static void WarnMissingCanvasGroupOnce(GameObject target, string uiName)
+        {
+            if (target == null || !WarnedMissingCanvasGroups.Add(target))
+                return;
+
+            Debug.LogWarning(
+                $"{nameof(CraftUIAnimationUtility)}: {uiName} '{target.name}' に {nameof(CanvasGroup)} がありません。PrefabまたはScene上で追加してください。",
+                target
+            );
         }
     }
 }
