@@ -10,6 +10,6 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: d8ffb44db9f14197bba77b238675d550, type: 3}
-  m_Name: KamaTabDefinition
+  m_Name: SickleTabDefinition
   m_EditorClassIdentifier: CreativeAI.UI::CreativeAI.UI.TabDefinition
-  _icon: {fileID: 0}
+  _icon: {fileID: 21300000, guid: 4aa94c1736f3c9741934d4d15bb4974a, type: 3}
