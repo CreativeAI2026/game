@@ -13,7 +13,7 @@ MonoBehaviour:
   m_Name: TestPlayer
   m_EditorClassIdentifier: CreativeAI.Gameplay::CreativeAI.Gameplay.PlayerParameterData
   characterName: TestPlayer
-  baseMaxLife: 5000
+  baseMaxLife: 250
   baseAttackPower: 100
   baseDefense: 10
   baseCriticalChance: 5

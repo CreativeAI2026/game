@@ -1,4 +1,3 @@
-using System;
 using CreativeAI.Gameplay;
 using TMPro;
 using UnityEngine;
@@ -9,31 +8,6 @@ namespace CreativeAI.UI.CraftingUI
 {
     public static class CraftQuantityDialogUtility
     {
-        public static CanvasGroup PrepareDialog(GameObject dialog)
-        {
-            if (dialog == null)
-                return null;
-
-            var canvasGroup = dialog.GetComponent<CanvasGroup>();
-            if (canvasGroup == null)
-                canvasGroup = dialog.AddComponent<CanvasGroup>();
-
-            EnsureRaycastImage(dialog);
-
-            if (dialog.GetComponent<DialogClickBlocker>() == null)
-                dialog.AddComponent<DialogClickBlocker>();
-
-            return canvasGroup;
-        }
-
-        public static ResultPanelClickCatcher PrepareBackground(
-            GameObject panel,
-            Action closeAction
-        )
-        {
-            return CraftFlowViewUtility.PrepareClickCatcher(panel, closeAction);
-        }
-
         public static void BindButton(Button button, UnityAction action)
         {
             if (button == null)
@@ -84,18 +58,6 @@ namespace CreativeAI.UI.CraftingUI
                 dialog.SetActive(false);
             if (panel != null)
                 panel.SetActive(false);
-        }
-
-        private static void EnsureRaycastImage(GameObject target)
-        {
-            var image = target.GetComponent<Image>();
-            if (image == null)
-            {
-                image = target.AddComponent<Image>();
-                image.color = Color.clear;
-            }
-
-            image.raycastTarget = true;
         }
     }
 }

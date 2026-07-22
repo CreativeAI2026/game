@@ -121,7 +121,7 @@ MonoBehaviour:
   m_HandleRect: {fileID: 8960198872923450052}
   m_Direction: 0
   m_Value: 0
-  m_Size: 0.9999999
+  m_Size: 1
   m_NumberOfSteps: 0
   m_OnValueChanged:
     m_PersistentCalls:
@@ -538,10 +538,10 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 2464942745726559799}
+  - component: {fileID: 5317380575716178114}
   - component: {fileID: 3610524472748664864}
   - component: {fileID: 6977745788893325408}
   - component: {fileID: 3188993108388684054}
-  - component: {fileID: 5317380575716178114}
   m_Layer: 0
   m_Name: Inventory
   m_TagString: Untagged
@@ -572,6 +572,24 @@ RectTransform:
   m_AnchoredPosition: {x: -900, y: 350}
   m_SizeDelta: {x: 1280, y: 900}
   m_Pivot: {x: 0, y: 1}
+--- !u!114 &5317380575716178114
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 5728153888824458638}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: b57ffb11dce336840814da10a55a32a8, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: CreativeAI.UI::CreativeAI.UI.InventoryUI.Inventory
+  _selectFirstSlotOnRefresh: 1
+  _tabGroup: {fileID: 4378624457368349205}
+  _slotsRoot: {fileID: 5159119507101400855}
+  _slotPrefab: {fileID: 8503969120120068041, guid: d7323666996b6284eb6795e2847b1f44, type: 3}
+  _detailPanel: {fileID: 0}
+  _showOnlyBaseItems: 0
 --- !u!222 &3610524472748664864
 CanvasRenderer:
   m_ObjectHideFlags: 0
@@ -640,26 +658,6 @@ MonoBehaviour:
   m_OnValueChanged:
     m_PersistentCalls:
       m_Calls: []
---- !u!114 &5317380575716178114
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 5728153888824458638}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: b57ffb11dce336840814da10a55a32a8, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: CreativeAI.UI::CreativeAI.UI.InventoryUI.Inventory
-  _selectFirstSlotOnRefresh: 1
-  _tabGroup: {fileID: 4378624457368349205}
-  _categories: 00000000010000000200000003000000
-  _useFixedCategory: 0
-  _fixedCategory: 0
-  _slotsRoot: {fileID: 5159119507101400855}
-  _slotPrefab: {fileID: -7344806846162860178, guid: 3c72782d0de89764c91460e686b2d7fb, type: 3}
-  _detailPanel: {fileID: 0}
 --- !u!1 &8703762488179202051
 GameObject:
   m_ObjectHideFlags: 0
@@ -785,7 +783,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 5720426296105040775, guid: 0e1b651be5367e048830972d8401da9c, type: 3}
       propertyPath: _tabEntries.Array.size
-      value: 4
+      value: 3
       objectReference: {fileID: 0}
     - target: {fileID: 5720426296105040775, guid: 0e1b651be5367e048830972d8401da9c, type: 3}
       propertyPath: _tabEntries.Array.data[0].icon
@@ -851,6 +849,18 @@ PrefabInstance:
       propertyPath: _tabEntries.Array.data[3].enabled
       value: 1
       objectReference: {fileID: 0}
+    - target: {fileID: 5720426296105040775, guid: 0e1b651be5367e048830972d8401da9c, type: 3}
+      propertyPath: _tabEntries.Array.data[0].definition
+      value: 
+      objectReference: {fileID: 11400000, guid: 72b479d96be07754aa3f194c7870d097, type: 2}
+    - target: {fileID: 5720426296105040775, guid: 0e1b651be5367e048830972d8401da9c, type: 3}
+      propertyPath: _tabEntries.Array.data[1].definition
+      value: 
+      objectReference: {fileID: 11400000, guid: 4485649022a2f32478dab41989873421, type: 2}
+    - target: {fileID: 5720426296105040775, guid: 0e1b651be5367e048830972d8401da9c, type: 3}
+      propertyPath: _tabEntries.Array.data[2].definition
+      value: 
+      objectReference: {fileID: 11400000, guid: a66c97c6c72648c4aa18580995ab5eee, type: 2}
     - target: {fileID: 7330529793145299999, guid: 0e1b651be5367e048830972d8401da9c, type: 3}
       propertyPath: m_Pivot.x
       value: 0.5

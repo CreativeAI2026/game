@@ -9,6 +9,7 @@ namespace CreativeAI.Core.EventSystem
         Line,
         Choice,
         GiveItem,
+        GiveWeapon,
         Battle,
     }
 
@@ -64,7 +65,7 @@ namespace CreativeAI.Core.EventSystem
         private string _itemKey; // giveItem
 
         [SerializeField]
-        private string _enemyKey; // battle
+        private string _weaponKey; // giveWeapon(剣/弓/鎌 = sword/bow/scythe。ScenarioReference.md の武器カタログ)
 
         public EventStep() { }
 
@@ -88,8 +89,19 @@ namespace CreativeAI.Core.EventSystem
         public static EventStep GiveItem(string itemKey) =>
             new() { _kind = StepKind.GiveItem, _itemKey = itemKey };
 
-        public static EventStep Battle(string enemyKey) =>
-            new() { _kind = StepKind.Battle, _enemyKey = enemyKey };
+        /// <summary>
+        /// 武器を渡すステップ。weaponKey は剣/弓/鎌(sword/bow/scythe)のいずれか。
+        /// 実体はプレイヤーリグの WeaponManager(IWeaponGiver seam)で入手処理する
+        /// (ScenarioReference.md「武器カタログ」, EventImplementation.md)。
+        /// </summary>
+        public static EventStep GiveWeapon(string weaponKey) =>
+            new() { _kind = StepKind.GiveWeapon, _weaponKey = weaponKey };
+
+        /// <summary>
+        /// 戦闘ステップ。敵は JSON に書かず、シーンの EventTrigger の Enemy スロットに Prefab を配線する
+        /// (documents/CharactersAndEvents.md「battle は { "kind": "battle" } のみ」, EventImplementation.md)。
+        /// </summary>
+        public static EventStep Battle() => new() { _kind = StepKind.Battle };
 
         public StepKind Kind => _kind;
         public string Speaker => _speaker;
@@ -98,6 +110,6 @@ namespace CreativeAI.Core.EventSystem
         public string FlagKey => _flagKey;
         public IReadOnlyList<ChoiceOption> Options => _options;
         public string ItemKey => _itemKey;
-        public string EnemyKey => _enemyKey;
+        public string WeaponKey => _weaponKey;
     }
 }

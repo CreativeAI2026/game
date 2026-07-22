@@ -1,0 +1,21 @@
+{
+    "name": "CreativeAI.UI.ConversationUI.Editor",
+    "rootNamespace": "CreativeAI.UI.ConversationUI.Editor",
+    "references": [
+        "CreativeAI.UI",
+        "CreativeAI.Core",
+        "Unity.TextMeshPro",
+        "Unity.InputSystem"
+    ],
+    "includePlatforms": [
+        "Editor"
+    ],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": true,
+    "defineConstraints": [],
+    "versionDefines": [],
+    "noEngineReferences": false
+}

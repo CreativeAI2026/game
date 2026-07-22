@@ -3,8 +3,10 @@ using UnityEngine;
 
 namespace CreativeAI.Gameplay
 {
-    // 敵のステータスを管理するスクリプト。すべての敵にこれを適用する。
-    // 敵のベースパラメータ（体力、攻撃力、防御力）は、EnemyParameterData ScriptableObject で定義する。
+    /// <summary>
+    /// 全敵共通のステータス管理。ベースパラメータはEnemyParameterData ScriptableObjectで定義し、
+    /// ランタイムではバフ・デバフによる変動分を加算する設計。
+    /// </summary>
     public class EnemyStatus : MonoBehaviour, IDamageable
     {
         [SerializeField]
@@ -16,7 +18,7 @@ namespace CreativeAI.Gameplay
         private float _nextFlinchTime = 0f;
         public event Action OnFlinchTriggered;
         public event Action OnAlertTriggered;
-
+        public event Action OnDeathTriggered;
         public float MaxHp => _enemyData.baseMaxLife;
 
         public float CurrentAttackPower
@@ -37,34 +39,28 @@ namespace CreativeAI.Gameplay
             }
         }
 
-        // --- 初期化 ---
-
         void Start()
         {
-            // ゲーム開始時、現在HPを計算済みの最大HPで満タンにする
             _currentHp = MaxHp;
         }
 
-        // --- HP変動処理 ---
-
         public void TakeDamage(float damage, bool isCritical)
         {
-            // 防御力によるダメージ軽減計算（最低でも1ダメージは食らうようにする）
+            // プレイヤーの攻撃が完全に無効化され、進行不能やフィードバック喪失に陥るのを防ぐための保証値
             float finalDamage = Mathf.Max(1f, damage - CurrentDefense);
 
             _currentHp -= finalDamage;
 
-            // ダメージを受けたら常に発見イベントを発火（未発見状態かどうかはコントローラ側で判断）
+            // StatusクラスがAIの現在の状態（未発見等）に依存するのを防ぎ、状態管理の責務をコントローラ側に集約するため、イベントは無条件で発火させる
             OnAlertTriggered?.Invoke();
 
-            // 現在のゲーム内時刻 (Time.time) が、次に怯む許可時刻を過ぎているかチェック
+            // 連続攻撃によるハメ状態（永続的な怯み）を防止し、反撃の機会を確保するためのスーパーアーマー設計
             if (Time.time >= _nextFlinchTime)
             {
                 if (isCritical || finalDamage >= _enemyData.flinchDamageThreshold)
                 {
                     OnFlinchTriggered?.Invoke();
 
-                    // 現在の時刻にクールダウンを足して、次回のアラーム時刻をセットする
                     _nextFlinchTime = Time.time + _enemyData.flinchCooldownTime;
                     Debug.Log(
                         $"{_enemyData.characterName}が怯んだ！ {_enemyData.flinchCooldownTime}秒間スーパーアーマーになります。"
@@ -83,16 +79,13 @@ namespace CreativeAI.Gameplay
 
         public void Heal(float amount)
         {
-            // 回復処理。最大HPを超えないように Mathf.Min で制限する
             _currentHp = Mathf.Min(_currentHp + amount, MaxHp);
             Debug.Log(
                 $"{_enemyData.characterName}は {amount} 回復した！ 残りHP: {_currentHp}/{MaxHp}"
             );
         }
 
-        /// <summary>
-        /// バフ、デバフが切れた時など、パラメータが変動したタイミングで外部から呼ばれる
-        /// </summary>
+        // バフ・デバフの適用タイミングで外部から呼び出し、パラメータ再計算のフックとする
         public void OnStatusChanged()
         {
             // TODO : 攻撃力、防御力などの変動処理。
@@ -100,8 +93,9 @@ namespace CreativeAI.Gameplay
 
         private void Die()
         {
+            OnDeathTriggered?.Invoke();
             Debug.Log($"{_enemyData.characterName}は死んだ");
-            // ゲームオーバー処理やアニメーション再生など
+            Destroy(gameObject, 5.0f);
         }
     }
 }

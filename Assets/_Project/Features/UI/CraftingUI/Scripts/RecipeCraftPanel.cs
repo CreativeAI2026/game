@@ -2,8 +2,8 @@ using System.Collections;
 using System.Collections.Generic;
 using CreativeAI.Gameplay;
 using CreativeAI.UI.InventoryUI;
-using TMPro;
 using UnityEngine;
+using UnityEngine.Serialization;
 using UnityEngine.UI;
 
 namespace CreativeAI.UI.CraftingUI
@@ -35,15 +35,9 @@ namespace CreativeAI.UI.CraftingUI
         private Transform _recipeContent;
 
         [Header("Recipe Tabs")]
+        [FormerlySerializedAs("_recipeTabGroup")]
         [SerializeField]
-        private TabGroup _recipeTabGroup;
-
-        [SerializeField]
-        private List<ItemCategory> _recipeCategories = new()
-        {
-            ItemCategory.Equipment,
-            ItemCategory.Food,
-        };
+        private TabGroup _categoryTabGroup;
 
         [SerializeField]
         private ItemDetailPanel _detailPanel;
@@ -58,38 +52,15 @@ namespace CreativeAI.UI.CraftingUI
         [SerializeField]
         private GameObject _quantityDialog;
 
-        [Header("Craft Flow Roots")]
         [SerializeField]
-        private GameObject _loadingPanel;
-
-        [SerializeField]
-        private GameObject _resultPanel;
-
-        [SerializeField]
-        private GameObject _closeButton;
-
-        private RectTransform _quantityDialogRect;
-        private CanvasGroup _quantityDialogCanvasGroup;
-        private Image _dialogItemImage;
-        private TMP_Text _dialogItemName;
-        private TMP_Text _dialogCounts;
-        private TMP_InputField _quantityInput;
-        private Button _minButton;
-        private Button _minusButton;
-        private Button _plusButton;
-        private Button _maxButton;
-        private Button _cancelButton;
-        private Button _dialogCraftButton;
-
-        private RectTransform _loadingGear;
-        private Image _resultItemImage;
-        private TMP_Text _resultItemName;
-        private ResultPanelClickCatcher _resultClickCatcher;
-        private ResultPanelClickCatcher _quantityDialogPanelClickCatcher;
+        private CraftQuantityDialog _quantityDialogController;
 
         private readonly List<RecipeSlot> _slots = new();
-        private readonly List<RecipeMaterialRow> _materialRows = new();
-        private readonly List<ItemCategory> _activeRecipeCategories = new();
+        private readonly List<RecipeSlot> _generatedRecipeSlots = new();
+
+        [SerializeField]
+        private List<RecipeMaterialRow> _materialRows = new();
+        private readonly HashSet<string> _warnedMissingRequiredReferences = new();
         private CraftRecipeDB _subscribedRecipeDB;
         private CraftRecipeData _selectedRecipe;
         private CraftRecipeData _craftedRecipeForResult;
@@ -99,13 +70,20 @@ namespace CreativeAI.UI.CraftingUI
         private bool _warnedMissingRecipeDB;
         private bool _warnedMissingRecipeSlotPrefab;
         private bool _warnedMissingMaterialRows;
+        private bool _warnedMissingQuantityDialogPanel;
+        private bool _warnedMissingQuantityDialog;
+        private bool _warnedMissingQuantityDialogController;
+        private bool _warnedMissingCategoryTabGroup;
+        private bool _warnedInvalidCategoryTab;
         private Coroutine _craftRoutine;
         private Coroutine _initializeRoutine;
 
         private void Awake()
         {
-            ResolveAllReferences();
-            BindRecipeTabs();
+            if (!HasRequiredReferences())
+                return;
+
+            BindCategoryTabs();
             PrepareInitialHiddenTemplates();
             ValidateSetup();
             SubscribeRecipeDBChanges();
@@ -115,6 +93,9 @@ namespace CreativeAI.UI.CraftingUI
 
         private void OnEnable()
         {
+            if (!HasRequiredReferences())
+                return;
+
             if (_initializeRoutine != null)
                 StopCoroutine(_initializeRoutine);
 
@@ -135,70 +116,34 @@ namespace CreativeAI.UI.CraftingUI
             _isCrafting = false;
             HideWarningImmediately();
             CloseQuantityDialogImmediately();
-            if (_resultPanel != null)
-                _resultPanel.SetActive(false);
-            if (_loadingPanel != null)
-                _loadingPanel.SetActive(false);
-            SetCloseButtonVisible(true);
+            _craftPanel?.HideLoadingAndResult();
         }
 
         private void OnDestroy()
         {
-            UnbindRecipeTabs();
+            UnbindCategoryTabs();
             UnsubscribeRecipeDBChanges();
         }
 
         private void Update()
         {
-            if (_isCrafting && _loadingGear != null)
-                _loadingGear.Rotate(0f, 0f, -_gearRotationSpeed * Time.unscaledDeltaTime);
+            if (_isCrafting)
+                _craftPanel?.RotateLoadingGear(_gearRotationSpeed);
 
             UpdateQuantityDialogKeyboardControls();
         }
 
-        private void ResolveAllReferences()
-        {
-            ResolveCraftPanelReference();
-            ResolveRecipeDB();
-            ResolveMainReferences();
-            ResolveQuantityDialogReferences();
-            ResolveCraftFlowReferences();
-        }
-
-        private void ResolveCraftPanelReference()
-        {
-            _craftPanel ??= GetComponentInParent<CraftPanel>(true);
-        }
-
-        private void ResolveRecipeDB()
-        {
-            if (_recipeDB != null)
-                return;
-
-            ResolveCraftPanelReference();
-            _recipeDB = _craftPanel != null ? _craftPanel.RecipeDB : null;
-        }
-
-        private void ResolveMainReferences()
-        {
-            _recipeList ??= Find("RecipeList");
-            _recipeContent ??= FindRecipeContent();
-            _recipeTabGroup ??= GetComponentInChildren<TabGroup>(true);
-            _detailPanel ??= FindDetailPanel();
-            _materialList ??= Find("MaterialList");
-        }
-
-        private CraftPanel GetCraftPanel()
-        {
-            ResolveCraftPanelReference();
-            return _craftPanel;
-        }
+        private CraftPanel GetCraftPanel() => _craftPanel;
 
         private IEnumerator InitializeViewRoutine()
         {
             yield return null;
 
-            ResolveAllReferences();
+            if (!HasRequiredReferences())
+            {
+                _initializeRoutine = null;
+                yield break;
+            }
             ValidateSetup();
             SubscribeRecipeDBChanges();
             BuildRecipeList();
@@ -239,20 +184,7 @@ namespace CreativeAI.UI.CraftingUI
             HideWarningImmediately();
             CloseQuantityDialogImmediately();
 
-            if (_resultPanel != null)
-                _resultPanel.SetActive(false);
-            if (_loadingPanel != null)
-                _loadingPanel.SetActive(false);
-
-            SetCloseButtonVisible(true);
-        }
-
-        private void SetCloseButtonVisible(bool visible)
-        {
-            if (_closeButton == null)
-                ResolveCraftFlowReferences();
-
-            CraftFlowViewUtility.SetCloseButtonVisible(_closeButton, visible);
+            _craftPanel?.HideLoadingAndResult();
         }
 
         private void ValidateSetup()
@@ -277,6 +209,65 @@ namespace CreativeAI.UI.CraftingUI
                     $"{nameof(RecipeCraftPanel)} on {name}: MaterialList が見つかりません。",
                     this
                 );
+
+            if (_categoryTabGroup == null)
+                WarnMissingReferenceOnce(
+                    ref _warnedMissingCategoryTabGroup,
+                    nameof(_categoryTabGroup)
+                );
+        }
+
+        private bool HasRequiredReferences()
+        {
+            bool valid = true;
+            valid &= ValidateRequiredReference(_recipeDB, nameof(_recipeDB));
+            valid &= ValidateRequiredReference(_craftPanel, nameof(_craftPanel));
+            valid &= ValidateRequiredReference(_recipeSlotPrefab, nameof(_recipeSlotPrefab));
+            valid &= ValidateRequiredReference(_recipeList, nameof(_recipeList));
+            valid &= ValidateRequiredReference(_recipeContent, nameof(_recipeContent));
+            valid &= ValidateRequiredReference(_categoryTabGroup, nameof(_categoryTabGroup));
+            valid &= ValidateRequiredReference(_detailPanel, nameof(_detailPanel));
+            valid &= ValidateRequiredReference(_materialList, nameof(_materialList));
+            valid &= ValidateRequiredReference(_quantityDialogPanel, nameof(_quantityDialogPanel));
+            valid &= ValidateRequiredReference(_quantityDialog, nameof(_quantityDialog));
+            valid &= ValidateRequiredReference(
+                _quantityDialogController,
+                nameof(_quantityDialogController)
+            );
+            if (_materialRows.Count == 0 || _materialRows.Exists(row => row == null))
+            {
+                ValidateRequiredReference(null, nameof(_materialRows));
+                valid = false;
+            }
+            return valid;
+        }
+
+        private bool ValidateRequiredReference(Object reference, string fieldName)
+        {
+            if (reference != null)
+                return true;
+
+            if (_warnedMissingRequiredReferences.Add(fieldName))
+            {
+                Debug.LogWarning(
+                    $"{nameof(RecipeCraftPanel)} '{UIHierarchyPathUtility.GetPath(transform)}' requires Inspector reference '{fieldName}'. RecipeCraft initialization was stopped.",
+                    this
+                );
+            }
+
+            return false;
+        }
+
+        private void WarnMissingReferenceOnce(ref bool flag, string referenceName)
+        {
+            if (flag)
+                return;
+
+            Debug.LogWarning(
+                $"{nameof(RecipeCraftPanel)} on {name}: 必須参照 '{referenceName}' が未設定です。Inspectorで設定してください。該当UI処理を中止します。",
+                this
+            );
+            flag = true;
         }
     }
 }

@@ -65,21 +65,17 @@ namespace CreativeAI.UI.InventoryUI
 
         private bool TryGetCurrentSlotIndex(out int currentIndex, out int slotCount)
         {
-            currentIndex = -1;
-            slotCount = _slotsRoot != null ? _slotsRoot.childCount : 0;
-            if (_slotsRoot == null || _currentSelectedSlot == null || slotCount <= 0)
+            slotCount = _visibleSlots.Count;
+            currentIndex = _visibleSlots.IndexOf(_currentSelectedSlot);
+            if (
+                _currentSelectedSlot == null
+                || currentIndex < 0
+                || slotCount <= 0
+                || !_currentSelectedSlot.gameObject.activeSelf
+            )
                 return false;
 
-            for (int i = 0; i < slotCount; i++)
-            {
-                if (_slotsRoot.GetChild(i).GetComponent<ItemSlot>() != _currentSelectedSlot)
-                    continue;
-
-                currentIndex = i;
-                return true;
-            }
-
-            return false;
+            return true;
         }
 
         private int GetColumnCount()
@@ -93,7 +89,7 @@ namespace CreativeAI.UI.InventoryUI
                 return Mathf.Max(1, grid.constraintCount);
             }
 
-            return Mathf.Max(1, _slotsRoot != null ? _slotsRoot.childCount : 1);
+            return Mathf.Max(1, _visibleSlots.Count);
         }
 
         private int GetBottomIndexInColumn(int column, int columns, int slotCount)
@@ -110,10 +106,10 @@ namespace CreativeAI.UI.InventoryUI
 
         private void SelectSlotAt(int index)
         {
-            if (_slotsRoot == null || index < 0 || index >= _slotsRoot.childCount)
+            if (index < 0 || index >= _visibleSlots.Count)
                 return;
 
-            var slot = _slotsRoot.GetChild(index).GetComponent<ItemSlot>();
+            var slot = _visibleSlots[index];
             if (slot != null && slot.gameObject.activeInHierarchy)
                 SelectSlot(slot);
         }

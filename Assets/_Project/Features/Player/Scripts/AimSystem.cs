@@ -4,9 +4,9 @@ using UnityEngine;
 namespace CreativeAI.Gameplay
 {
     /// <summary>
-    /// エイム中にAim専用カメラの優先度を上げるコンポーネント。
-    /// 弓装備中（weaponIndex == bowWeaponIndex）のみ切り替える。
-    /// 剣の防御（subAction）では切り替わらない。
+    /// 弓エイム時のカメラ切り替えを担当する。
+    /// 剣のsubAction（防御）でもカメラが切り替わるのを防ぐため、
+    /// 武器インデックスが弓の場合にのみエイムカメラを有効化する設計。
     /// </summary>
     public class AimSystem : MonoBehaviour
     {
@@ -35,13 +35,13 @@ namespace CreativeAI.Gameplay
             if (_aimCam == null)
                 return;
 
-            // 弓装備中かつ IsAiming（BowControllerが立てるフラグ）のときだけカメラを切り替える
             bool isBowEquipped =
                 _weaponManager == null || _weaponManager.CurrentWeaponIndex == _bowWeaponIndex;
 
             bool shouldAim =
                 isBowEquipped && _playerController != null && _playerController.IsAiming;
 
+            // 20はデフォルトカメラ(Priority=0)より高い値として設定。Cinemachineは最も高いPriorityのカメラをアクティブにする
             _aimCam.Priority = shouldAim ? 20 : 0;
         }
     }

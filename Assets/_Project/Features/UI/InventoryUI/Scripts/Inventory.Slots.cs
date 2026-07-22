@@ -8,23 +8,29 @@ namespace CreativeAI.UI.InventoryUI
 {
     public partial class Inventory
     {
+        private Tween _scrollTween;
+
         public void SetReleaseSelectionOnOutsideClick(bool release)
         {
             _releaseSelectionOnOutsideClick = release;
 
-            if (_slotsRoot == null)
-                return;
-
-            foreach (var slot in _slotsRoot.GetComponentsInChildren<ItemSlot>(true))
+            foreach (var slot in _visibleSlots)
                 slot.SetReleaseSelectionOnOutsideClick(release);
         }
 
-        private void RefreshSlots(List<ItemStack> items)
+        private void RefreshSlots(List<ItemStack> items, ScrollRefreshMode scrollMode)
         {
+            KillScrollTween();
+            var scrollRect = GetScrollRect();
+            float previousVerticalPosition = scrollRect?.verticalNormalizedPosition ?? 1f;
+            float previousHorizontalPosition = scrollRect?.horizontalNormalizedPosition ?? 0f;
             ClearSlots();
 
             if (_slotsRoot == null || _slotPrefab == null || items == null)
+            {
+                ClearSelectionAfterRefresh();
                 return;
+            }
 
             int index = 0;
             foreach (var stack in items)
@@ -32,33 +38,73 @@ namespace CreativeAI.UI.InventoryUI
                 if (stack == null)
                     continue;
 
-                var slot = CreateSlot(stack, index);
-                slot.SetCraftAssigned(_craftAssignedItems.Contains(stack.Data));
+                CreateSlot(stack, index);
                 index++;
             }
 
             RestoreSelectionAfterRefresh();
-            RebuildLayoutAndScrollToTop();
+            RebuildLayoutAndApplyScroll(
+                scrollRect,
+                scrollMode,
+                previousVerticalPosition,
+                previousHorizontalPosition
+            );
         }
 
         private ItemSlot CreateSlot(ItemStack stack, int index)
         {
-            var slot = Instantiate(_slotPrefab, _slotsRoot, false);
+            var slot = GetSlotFromPool();
+            slot.gameObject.SetActive(true);
+            slot.transform.SetAsLastSibling();
+            slot.transform.DOKill();
             slot.SetReleaseSelectionOnOutsideClick(_releaseSelectionOnOutsideClick);
             slot.SetItem(stack);
+            slot.SetCraftAssigned(IsCraftAssigned(stack));
+            _visibleSlots.Add(slot);
 
-            var rectTransform = slot.GetComponent<RectTransform>();
-            rectTransform.localScale = Vector3.zero;
-            rectTransform.DOScale(Vector3.one, 0.2f).SetEase(Ease.OutBack).SetDelay(0.05f * index);
+            slot.transform.localScale = Vector3.zero;
+            slot.transform.DOScale(Vector3.one, 0.2f).SetEase(Ease.OutBack).SetDelay(0.05f * index);
 
             return slot;
         }
 
+        private ItemSlot GetSlotFromPool()
+        {
+            InitializeSlotPool();
+
+            foreach (var slot in _pooledSlots)
+            {
+                if (slot != null && !_visibleSlots.Contains(slot) && !slot.gameObject.activeSelf)
+                    return slot;
+            }
+
+            var createdSlot = Instantiate(_slotPrefab, _slotsRoot, false);
+            _pooledSlots.Add(createdSlot);
+            return createdSlot;
+        }
+
+        private void InitializeSlotPool()
+        {
+            if (_slotPoolInitialized || _slotsRoot == null)
+                return;
+
+            _slotPoolInitialized = true;
+            for (int i = 0; i < _slotsRoot.childCount; i++)
+            {
+                var slot = _slotsRoot.GetChild(i).GetComponent<ItemSlot>();
+                if (slot == null || _pooledSlots.Contains(slot))
+                    continue;
+
+                _pooledSlots.Add(slot);
+                ReturnSlotToPool(slot);
+            }
+        }
+
         private void RestoreSelectionAfterRefresh()
         {
-            if (_slotsRoot.childCount <= 0)
+            if (_visibleSlots.Count <= 0)
             {
-                _currentSelectedSlot = null;
+                ClearSelectionAfterRefresh();
                 return;
             }
 
@@ -66,17 +112,37 @@ namespace CreativeAI.UI.InventoryUI
             if (selectedSlot != null)
             {
                 _currentSelectedSlot = selectedSlot;
+                _selectedStack = selectedSlot.Stack;
                 selectedSlot.Select();
+                _detailPanel?.Show(selectedSlot.Item);
                 return;
             }
 
             if (_selectFirstSlotOnRefresh)
-                SelectSlot(_slotsRoot.GetChild(0).GetComponent<ItemSlot>());
+                SelectSlot(_visibleSlots[0]);
             else
-                _currentSelectedSlot = null;
+                ClearSelectionAfterRefresh();
         }
 
-        private void RebuildLayoutAndScrollToTop()
+        private void ClearSelectionAfterRefresh()
+        {
+            ClearSelection();
+            _detailPanel?.Clear();
+        }
+
+        private ScrollRect GetScrollRect()
+        {
+            return _slotsRoot is RectTransform contentRect
+                ? contentRect.GetComponentInParent<ScrollRect>()
+                : null;
+        }
+
+        private void RebuildLayoutAndApplyScroll(
+            ScrollRect scrollRect,
+            ScrollRefreshMode scrollMode,
+            float previousVerticalPosition,
+            float previousHorizontalPosition
+        )
         {
             if (_slotsRoot is not RectTransform contentRect)
                 return;
@@ -84,43 +150,65 @@ namespace CreativeAI.UI.InventoryUI
             Canvas.ForceUpdateCanvases();
             LayoutRebuilder.ForceRebuildLayoutImmediate(contentRect);
 
-            var scroll = contentRect.GetComponentInParent<ScrollRect>();
-            if (scroll == null)
+            if (scrollRect == null)
                 return;
 
-            DOTween
+            if (scrollMode == ScrollRefreshMode.KeepPosition)
+            {
+                scrollRect.verticalNormalizedPosition = Mathf.Clamp01(previousVerticalPosition);
+                scrollRect.horizontalNormalizedPosition = Mathf.Clamp01(previousHorizontalPosition);
+                return;
+            }
+
+            _scrollTween = DOTween
                 .To(
-                    () => scroll.verticalNormalizedPosition,
-                    value => scroll.verticalNormalizedPosition = value,
+                    () => scrollRect.verticalNormalizedPosition,
+                    value => scrollRect.verticalNormalizedPosition = value,
                     1f,
                     0.3f
                 )
-                .SetEase(Ease.OutQuint);
+                .SetEase(Ease.OutQuint)
+                .SetTarget(scrollRect)
+                .OnKill(() => _scrollTween = null);
+        }
+
+        private void KillScrollTween()
+        {
+            _scrollTween?.Kill();
+            _scrollTween = null;
         }
 
         private void ClearSlots()
         {
-            if (_slotsRoot == null)
+            InitializeSlotPool();
+
+            foreach (var slot in _visibleSlots)
+                ReturnSlotToPool(slot);
+
+            _visibleSlots.Clear();
+        }
+
+        private static void ReturnSlotToPool(ItemSlot slot)
+        {
+            if (slot == null)
                 return;
 
-            for (int i = _slotsRoot.childCount - 1; i >= 0; i--)
-            {
-                var child = _slotsRoot.GetChild(i);
-                child.DOKill();
-                child.SetParent(null, false);
-                Destroy(child.gameObject);
-            }
+            slot.transform.DOKill();
+            slot.Deselect();
+            slot.SetCraftAssigned(false);
+            slot.SetItem(null);
+            slot.transform.localScale = Vector3.one;
+            slot.gameObject.SetActive(false);
         }
 
         private ItemSlot FindVisibleSlot(ItemStack stack)
         {
-            if (stack == null || _slotsRoot == null)
+            if (stack == null)
                 return null;
 
-            for (int i = 0; i < _slotsRoot.childCount; i++)
+            foreach (var slot in _visibleSlots)
             {
-                var slot = _slotsRoot.GetChild(i).GetComponent<ItemSlot>();
-                if (slot != null && slot.Stack == stack)
+                if (slot != null && slot.gameObject.activeSelf && slot.Stack == stack)
                     return slot;
             }
 

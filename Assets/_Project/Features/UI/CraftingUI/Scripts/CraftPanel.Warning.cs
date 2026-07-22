@@ -1,10 +1,16 @@
-using DG.Tweening;
+using System.Collections;
 using UnityEngine;
 
 namespace CreativeAI.UI.CraftingUI
 {
     public partial class CraftPanel
     {
+        private const float WarningShakeDistance = 12f;
+        private const float WarningShakeDuration = 0.6f;
+        private const float WarningShakeFrequency = 5f;
+        private Vector3 _warningTextBaseScale;
+        private bool _hasWarningTextBaseScale;
+
         public void ShowMissingMaterialsWarning()
         {
             ShowWarning(_missingMaterialsMessage);
@@ -15,131 +21,140 @@ namespace CreativeAI.UI.CraftingUI
             ShowWarning(_equippedMaterialMessage);
         }
 
-        private void ShowNotReadyWarning()
+        public void ShowQuickFoodMaterialWarning()
         {
-            ShowWarning(_notReadyMessage);
+            // 後付け SerializeField は既存 Prefab では既定(空)で読まれるため、空ならコード側の既定文言を使う。
+            ShowWarning(
+                string.IsNullOrEmpty(_quickFoodMaterialMessage)
+                    ? "即時使用にセット中のアイテムは素材にできません"
+                    : _quickFoodMaterialMessage
+            );
         }
 
-        private void ShowCategoryMismatchWarning()
+        public void ShowCategoryMismatchWarning()
         {
             ShowWarning(_categoryMismatchMessage);
         }
 
         public void HideWarning()
         {
+            if (_warningText != null)
+                CaptureWarningBaseScale(_warningText.rectTransform);
+
             StopWarningAnimation();
 
             if (_warningText == null)
                 return;
 
-            _warningText.DOKill();
-            _warningTextRect?.DOKill();
-            _warningTextCanvasGroup?.DOKill();
             ResetWarningTransform();
 
-            if (_warningTextCanvasGroup != null)
-                _warningTextCanvasGroup.alpha = 0f;
+            if (_warningCanvasGroup != null)
+                _warningCanvasGroup.alpha = 0f;
 
             _warningText.gameObject.SetActive(false);
-            _activeWarningMessage = null;
         }
 
         private void ShowWarning(string message)
         {
-            ResolveWarningReferences();
-            if (_warningText == null)
+            if (!ResolveWarningReferences())
                 return;
 
+            RectTransform warningTextRect = _warningText.rectTransform;
+            CaptureWarningBaseScale(warningTextRect);
             StopWarningAnimation();
-            _warningText.DOKill();
-            _warningTextRect?.DOKill();
-            _warningTextCanvasGroup?.DOKill();
 
-            _activeWarningMessage = message;
+            _warningTextBasePosition = warningTextRect.anchoredPosition;
+            _hasWarningTextBasePosition = true;
+
             _warningText.text = message;
             _warningText.gameObject.SetActive(true);
 
             ResetWarningTransform();
 
-            if (_warningTextCanvasGroup != null)
-                _warningTextCanvasGroup.alpha = 1f;
+            _warningCanvasGroup.alpha = 1f;
 
-            PlayWarningAnimation();
+            _warningRoutine = StartCoroutine(PlayWarningAnimationRoutine());
         }
 
-        private void PlayWarningAnimation()
+        private IEnumerator PlayWarningAnimationRoutine()
         {
-            if (_warningTextRect == null)
-                return;
-
-            Vector2 basePosition = GetWarningBasePosition();
-
-            _warningTextRect.anchoredPosition = basePosition;
-
-            _warningSequence = DOTween.Sequence().SetUpdate(true);
-
-            _warningSequence.Append(
-                _warningTextRect.DOPunchAnchorPos(
-                    Vector2.right * WarningShakeDistance,
-                    0.28f,
-                    14,
-                    0.7f
-                )
-            );
-
-            _warningSequence.AppendInterval(WarningFadeDelay);
-
-            if (_warningTextCanvasGroup != null)
-                _warningSequence.Append(_warningTextCanvasGroup.DOFade(0f, WarningFadeDuration));
-
-            _warningSequence.OnComplete(() =>
+            float elapsed = 0f;
+            while (elapsed < WarningShakeDuration)
             {
-                ResetWarningTransform();
+                float progress = Mathf.Clamp01(elapsed / WarningShakeDuration);
+                float damping = 1f - progress;
+                float offset =
+                    Mathf.Sin(elapsed * Mathf.PI * 2f * WarningShakeFrequency)
+                    * WarningShakeDistance
+                    * damping;
+                SetWarningOffset(offset);
 
-                if (_warningText != null)
-                    _warningText.gameObject.SetActive(false);
+                elapsed += Time.unscaledDeltaTime;
+                yield return null;
+            }
 
-                _warningSequence = null;
-                _activeWarningMessage = null;
-            });
+            ResetWarningTransform();
+            yield return new WaitForSecondsRealtime(WarningFadeDelay);
+
+            elapsed = 0f;
+            while (elapsed < WarningFadeDuration)
+            {
+                float progress = Mathf.Clamp01(elapsed / WarningFadeDuration);
+                _warningCanvasGroup.alpha = 1f - progress;
+                elapsed += Time.unscaledDeltaTime;
+                yield return null;
+            }
+
+            _warningCanvasGroup.alpha = 0f;
+            ResetWarningTransform();
+            _warningText.gameObject.SetActive(false);
+            _warningRoutine = null;
         }
 
         private void StopWarningAnimation()
         {
-            if (_warningSequence == null)
+            if (_warningRoutine == null)
                 return;
 
-            _warningSequence.Kill();
-            _warningSequence = null;
+            StopCoroutine(_warningRoutine);
+            _warningRoutine = null;
             ResetWarningTransform();
         }
 
         private void SetWarningOffset(float offsetX)
         {
-            if (_warningTextRect == null)
+            RectTransform warningTextRect =
+                _warningText != null ? _warningText.rectTransform : null;
+            if (warningTextRect == null)
                 return;
 
             Vector2 basePosition = _hasWarningTextBasePosition
                 ? _warningTextBasePosition
-                : _warningTextRect.anchoredPosition;
-            _warningTextRect.anchoredPosition = basePosition + Vector2.right * offsetX;
-        }
-
-        private Vector2 GetWarningBasePosition()
-        {
-            if (_warningTextRect == null)
-                return Vector2.zero;
-
-            return _hasWarningTextBasePosition
-                ? _warningTextBasePosition
-                : _warningTextRect.anchoredPosition;
+                : warningTextRect.anchoredPosition;
+            warningTextRect.anchoredPosition = new Vector2(
+                basePosition.x + offsetX,
+                basePosition.y
+            );
         }
 
         private void ResetWarningTransform()
         {
             SetWarningOffset(0f);
-            if (_warningTextRect != null)
-                _warningTextRect.localScale = Vector3.one;
+            RectTransform warningTextRect =
+                _warningText != null ? _warningText.rectTransform : null;
+            if (warningTextRect != null)
+                warningTextRect.localScale = _hasWarningTextBaseScale
+                    ? _warningTextBaseScale
+                    : Vector3.one;
+        }
+
+        private void CaptureWarningBaseScale(RectTransform warningTextRect)
+        {
+            if (_hasWarningTextBaseScale || warningTextRect == null)
+                return;
+
+            _warningTextBaseScale = warningTextRect.localScale;
+            _hasWarningTextBaseScale = true;
         }
     }
 }

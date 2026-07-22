@@ -1,13 +1,12 @@
 using System;
+using System.Collections.Generic;
 using CreativeAI.Gameplay;
-using TMPro;
 using UnityEngine;
 using UnityEngine.EventSystems;
 using UnityEngine.UI;
 
 namespace CreativeAI.UI.CraftingUI
 {
-    [RequireComponent(typeof(Button))]
     [RequireComponent(typeof(Button), typeof(Image))]
     public class RecipeSlot : BaseItemSlot, IPointerClickHandler
     {
@@ -15,12 +14,22 @@ namespace CreativeAI.UI.CraftingUI
         private const float SelectedBounceHeight = 8f;
 
         [SerializeField]
+        private RectTransform _visualRootRect;
+
+        [SerializeField]
+        private SlotIconView _iconView;
+
+        [SerializeField]
+        private SlotHoverView _hoverView;
+
+        [SerializeField]
+        private SlotSelectionView _selectionView;
+
         private CraftRecipeData _recipe;
+        private readonly HashSet<string> _warnedMissingViews = new();
 
-        private Image _frame;
-
-        private static readonly Color SelectedColor = new Color(1f, 0.78f, 0.15f, 0.9f);
-        private static readonly Color NormalColor = new Color(1f, 1f, 1f, 0.2f);
+        protected override SlotIconView IconView => _iconView;
+        protected override SlotHoverView HoverView => _hoverView;
 
         public CraftRecipeData Recipe => _recipe;
         public event Action<RecipeSlot> Clicked;
@@ -28,11 +37,9 @@ namespace CreativeAI.UI.CraftingUI
 
         protected override void Awake()
         {
+            ResolveViewReferences();
             base.Awake();
-            ResolveReferences();
-
-            ConfigureHoverScale();
-
+            ConfigureHover();
             Refresh();
             SetSelected(false);
         }
@@ -52,11 +59,9 @@ namespace CreativeAI.UI.CraftingUI
 
         public void SetSelected(bool selected)
         {
-            ResolveReferences();
-            ConfigureHoverScale();
-
-            if (_frame != null)
-                _frame.color = selected ? SelectedColor : NormalColor;
+            ResolveViewReferences();
+            ConfigureHover();
+            _selectionView?.SetSelected(selected);
 
             if (selected)
                 Select();
@@ -77,40 +82,56 @@ namespace CreativeAI.UI.CraftingUI
 
         protected override void Refresh()
         {
-            ResolveReferences();
-            bool hasRecipe = _recipe != null && _item != null;
-
-            if (_iconImage != null)
-            {
-                _iconImage.sprite = hasRecipe ? _item.icon : null;
-                _iconImage.color = Color.white;
-                _iconImage.gameObject.SetActive(hasRecipe && _item.icon != null);
-            }
-
-            if (_countText != null)
-            {
-                _countText.text = string.Empty;
-                _countText.gameObject.SetActive(false);
-            }
+            ResolveViewReferences();
+            base.Refresh();
         }
 
-        private void ResolveReferences()
+        private void ConfigureHover()
         {
-            InitializeBase();
-            _frame ??= GetComponent<Image>();
-        }
-
-        private void ConfigureHoverScale()
-        {
-            if (_hoverScale == null)
+            ResolveViewReferences(false);
+            if (_hoverView == null)
                 return;
 
-            _hoverScale.SetGroup("recipe-slots");
-            _hoverScale.SetHoverScale(SelectedSlotScale);
-            _hoverScale.SetBounceHeight(SelectedBounceHeight);
-            _hoverScale.SetReleaseLockOnOutsideClick(false);
-            _hoverScale.SetTarget((RectTransform)transform);
-            _hoverScale.SetBounceTarget(null);
+            _hoverView.Bind();
+            _hoverView.SetGroup("recipe-slots");
+            _hoverView.SetHoverScale(SelectedSlotScale);
+            _hoverView.SetBounceHeight(SelectedBounceHeight);
+            _hoverView.SetReleaseLockOnOutsideClick(false);
+        }
+
+        private void ResolveViewReferences(bool warn = true)
+        {
+            if (!warn)
+                return;
+
+            WarnIfMissing(_visualRootRect, "VisualRoot");
+            WarnIfMissing(_iconView, nameof(SlotIconView));
+            WarnIfMissing(_hoverView, nameof(SlotHoverView));
+            WarnIfMissing(_selectionView, nameof(SlotSelectionView));
+        }
+
+#if UNITY_EDITOR
+        private void Reset() => AutoAssignReferences();
+
+        [ContextMenu("Auto Assign References")]
+        private void AutoAssignReferences()
+        {
+            _visualRootRect ??= transform.Find("VisualRoot") as RectTransform;
+            _iconView ??= GetComponentInChildren<SlotIconView>(true);
+            _hoverView ??= GetComponentInChildren<SlotHoverView>(true);
+            _selectionView ??= GetComponentInChildren<SlotSelectionView>(true);
+        }
+#endif
+
+        private void WarnIfMissing(UnityEngine.Object reference, string referenceName)
+        {
+            if (reference != null || !_warnedMissingViews.Add(referenceName))
+                return;
+
+            Debug.LogWarning(
+                $"{nameof(RecipeSlot)} '{name}' に {referenceName} がないため、該当表示をスキップします。Prefab上で設定してください。",
+                this
+            );
         }
     }
 }
