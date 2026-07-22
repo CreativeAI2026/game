@@ -36,6 +36,15 @@ namespace CreativeAI.Tests.EditMode
                 typeof(TabButton)
             );
             tabButtonObject.transform.SetParent(_prefabObject.transform, false);
+            tabButtonObject.GetComponent<Image>().color = new Color(1f, 1f, 1f, 0f);
+            var iconObject = new GameObject("Icon", typeof(RectTransform), typeof(Image));
+            iconObject.transform.SetParent(tabButtonObject.transform, false);
+            iconObject.GetComponent<Image>().raycastTarget = false;
+            SetPrivateField(
+                tabButtonObject.GetComponent<TabButton>(),
+                "_icon",
+                iconObject.GetComponent<Image>()
+            );
             SetPrivateField(
                 _prefabObject.GetComponent<RevolverTabItemView>(),
                 "_tabButton",
@@ -332,6 +341,84 @@ namespace CreativeAI.Tests.EditMode
 
             Assert.AreEqual(0, firstCount);
             Assert.AreEqual(1, secondCount);
+        }
+
+        [Test]
+        public void ItemBind_UsesVisibleGraphicInsteadOfTransparentButtonTargetForRaycasts()
+        {
+            var item = _prefabObject.GetComponent<RevolverTabItemView>();
+            var target = item.Button.targetGraphic;
+            var icon = item.Button.transform.Find("Icon").GetComponent<Image>();
+
+            item.Bind(_definitions[0], 0, _ => { });
+
+            Assert.IsFalse(target.raycastTarget);
+            Assert.IsTrue(icon.raycastTarget);
+        }
+
+        [Test]
+        public void ApplyLayout_AlphaZeroDisablesInteractionAndRaycasts()
+        {
+            var item = _prefabObject.GetComponent<RevolverTabItemView>();
+            item.Bind(_definitions[0], 0, _ => { });
+
+            item.ApplyLayout(new RevolverTabLayout(Vector2.zero, 1f, 0f, true, true, 0f), true);
+
+            Assert.IsFalse(item.CanvasGroup.blocksRaycasts);
+            Assert.IsFalse(item.CanvasGroup.interactable);
+            Assert.IsFalse(item.Button.interactable);
+        }
+
+        [Test]
+        public void ApplyLayout_OutsideVisibleRangeDisablesInteractionAndRaycasts()
+        {
+            var item = _prefabObject.GetComponent<RevolverTabItemView>();
+            item.Bind(_definitions[0], 0, _ => { });
+
+            item.ApplyLayout(new RevolverTabLayout(Vector2.zero, 1f, 0.5f, false, false, 3f), true);
+
+            Assert.IsFalse(item.CanvasGroup.blocksRaycasts);
+            Assert.IsFalse(item.CanvasGroup.interactable);
+            Assert.IsFalse(item.Button.interactable);
+        }
+
+        [Test]
+        public void ApplyLayout_VisibleItemRemainsClickable()
+        {
+            var item = _prefabObject.GetComponent<RevolverTabItemView>();
+            item.Bind(_definitions[0], 0, _ => { });
+
+            item.ApplyLayout(new RevolverTabLayout(Vector2.zero, 1f, 0.5f, true, true, 0f), true);
+
+            Assert.IsTrue(item.CanvasGroup.blocksRaycasts);
+            Assert.IsTrue(item.CanvasGroup.interactable);
+            Assert.IsTrue(item.Button.interactable);
+        }
+
+        [Test]
+        public void StandaloneTabButtonBind_DoesNotChangeItsRaycastTarget()
+        {
+            var buttonObject = new GameObject(
+                "StandaloneTabButton",
+                typeof(RectTransform),
+                typeof(Image),
+                typeof(Button),
+                typeof(TabButton)
+            );
+            try
+            {
+                var image = buttonObject.GetComponent<Image>();
+                image.color = new Color(1f, 1f, 1f, 0f);
+                image.raycastTarget = true;
+
+                buttonObject.GetComponent<TabButton>().Bind(_definitions[0]);
+
+                Assert.IsTrue(image.raycastTarget);
+            }
+            finally
+            {
+                Object.DestroyImmediate(buttonObject);
+            }
         }
 
         private void SetField(string fieldName, object value)

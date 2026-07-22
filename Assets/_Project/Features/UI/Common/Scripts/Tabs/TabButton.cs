@@ -16,6 +16,7 @@ namespace CreativeAI.UI
 
         private Button _button;
         public Button Button => _button ??= GetComponent<Button>();
+        public Image Icon => _icon;
         private HoverScaleOnPointer _hoverScale;
         private bool _hasVisualHoverTarget;
         private bool _hasWarnedMissingVisualHoverTarget;

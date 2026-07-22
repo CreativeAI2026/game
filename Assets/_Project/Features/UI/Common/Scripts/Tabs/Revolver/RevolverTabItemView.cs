@@ -54,6 +54,7 @@ namespace CreativeAI.UI
             _tabButton?.Bind(definition);
             if (Button != null)
             {
+                ConfigurePointerGraphics();
                 var navigation = Button.navigation;
                 navigation.mode = Navigation.Mode.None;
                 Button.navigation = navigation;
@@ -78,10 +79,15 @@ namespace CreativeAI.UI
             _rectTransform.anchoredPosition = layout.AnchoredPosition;
             _rectTransform.localScale = Vector3.one * layout.Scale;
             _canvasGroup.alpha = layout.Alpha;
-            _canvasGroup.interactable = interactionEnabled && layout.IsInteractable;
-            _canvasGroup.blocksRaycasts = interactionEnabled && layout.IsInteractable;
+            bool canReceivePointer =
+                interactionEnabled
+                && layout.IsVisible
+                && layout.IsInteractable
+                && layout.Alpha > Mathf.Epsilon;
+            _canvasGroup.interactable = canReceivePointer;
+            _canvasGroup.blocksRaycasts = canReceivePointer;
             if (Button != null)
-                Button.interactable = interactionEnabled && layout.IsInteractable;
+                Button.interactable = canReceivePointer;
         }
 
         public void SetSelected(bool selected)
@@ -93,6 +99,17 @@ namespace CreativeAI.UI
         {
             _rectTransform ??= (RectTransform)transform;
             _canvasGroup ??= GetComponent<CanvasGroup>();
+        }
+
+        private void ConfigurePointerGraphics()
+        {
+            Graphic targetGraphic = Button.targetGraphic;
+            if (targetGraphic == null || targetGraphic.color.a > Mathf.Epsilon)
+                return;
+
+            targetGraphic.raycastTarget = false;
+            if (_tabButton.Icon != null && _tabButton.Icon.color.a > Mathf.Epsilon)
+                _tabButton.Icon.raycastTarget = true;
         }
 
         private void NotifyClicked()
