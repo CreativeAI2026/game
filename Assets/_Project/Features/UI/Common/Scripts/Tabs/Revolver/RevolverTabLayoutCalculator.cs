@@ -33,16 +33,33 @@ namespace CreativeAI.UI
     {
         public static RevolverTabLayout Calculate(
             float relativePosition,
-            RevolverTabLayoutSettings settings
+            RevolverTabLayoutSettings settings,
+            float wrapDistance = float.PositiveInfinity
         )
         {
             settings ??= new RevolverTabLayoutSettings();
 
-            float visibleRadius = settings.VisibleRadius;
+            float configuredVisibleEdge = settings.VisibleEdgeDistance;
+            float fadeEnd = settings.FadeEndDistance;
+            if (!float.IsInfinity(wrapDistance))
+                fadeEnd = Mathf.Min(fadeEnd, Mathf.Max(0f, wrapDistance - 0.001f));
+            float visibleEdge = configuredVisibleEdge;
+            if (visibleEdge >= fadeEnd)
+                visibleEdge = Mathf.Max(0f, fadeEnd - Mathf.Min(0.6f, fadeEnd * 0.5f));
             float absoluteDistance = Mathf.Abs(relativePosition);
-            bool isVisible = absoluteDistance <= visibleRadius + Mathf.Epsilon;
-            float normalizedDistance = Mathf.Clamp01(absoluteDistance / visibleRadius);
-            float angle = relativePosition / visibleRadius * settings.MaxAngle * Mathf.Deg2Rad;
+            bool isVisible = absoluteDistance < fadeEnd;
+            bool isInteractable = absoluteDistance <= visibleEdge && isVisible;
+            float normalizedDistance = Mathf.Clamp01(
+                absoluteDistance / Mathf.Max(Mathf.Epsilon, visibleEdge)
+            );
+            float fadeT = Mathf.InverseLerp(visibleEdge, fadeEnd, absoluteDistance);
+            float normalAngle = normalizedDistance * settings.MaxAngle;
+            float exitAngle =
+                settings.MaxAngle + settings.ExitAnglePadding * EvaluateCurve(null, fadeT);
+            float angle =
+                Mathf.Sign(relativePosition)
+                * Mathf.Lerp(normalAngle, exitAngle, fadeT)
+                * Mathf.Deg2Rad;
             GetBasis(settings.Placement, out Vector2 tangent, out Vector2 inward);
             if (settings.ReverseOrder)
                 tangent = -tangent;
@@ -52,17 +69,30 @@ namespace CreativeAI.UI
 
             float scaleT = EvaluateCurve(settings.ScaleCurve, normalizedDistance);
             float alphaT = EvaluateCurve(settings.AlphaCurve, normalizedDistance);
-            float scale = Mathf.Lerp(settings.SelectedScale, settings.EdgeScale, scaleT);
-            float alpha = isVisible
-                ? Mathf.Lerp(settings.SelectedAlpha, settings.EdgeAlpha, alphaT)
-                : 0f;
+            float normalScale = Mathf.Lerp(settings.SelectedScale, settings.EdgeScale, scaleT);
+            float normalAlpha = Mathf.Lerp(settings.SelectedAlpha, settings.EdgeAlpha, alphaT);
+            float scale = Mathf.Lerp(
+                normalScale,
+                settings.HiddenScale,
+                EvaluateCurve(settings.EntryExitScaleCurve, fadeT)
+            );
+            float alpha = Mathf.Lerp(
+                normalAlpha,
+                0f,
+                EvaluateCurve(settings.EntryExitAlphaCurve, fadeT)
+            );
+            if (!isVisible)
+            {
+                scale = settings.HiddenScale;
+                alpha = 0f;
+            }
 
             return new RevolverTabLayout(
                 position,
                 Sanitize(scale),
                 Mathf.Clamp01(Sanitize(alpha)),
                 isVisible,
-                isVisible,
+                isInteractable,
                 relativePosition
             );
         }

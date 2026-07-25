@@ -413,6 +413,10 @@ namespace CreativeAI.EditorTools.UI
                 RevolverArcPlacement.Top;
             layout.FindPropertyRelative("_selectedScale").floatValue = 1.2f;
             layout.FindPropertyRelative("_edgeScale").floatValue = 0.6f;
+            layout.FindPropertyRelative("_visibleEdgeDistance").floatValue = 1f;
+            layout.FindPropertyRelative("_fadeEndDistance").floatValue = 1.6f;
+            layout.FindPropertyRelative("_hiddenScale").floatValue = 0.4f;
+            layout.FindPropertyRelative("_exitAnglePadding").floatValue = 20f;
             serializedObject.ApplyModifiedPropertiesWithoutUndo();
         }
 

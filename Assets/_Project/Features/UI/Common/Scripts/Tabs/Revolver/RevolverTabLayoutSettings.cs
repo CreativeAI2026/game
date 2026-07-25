@@ -60,6 +60,31 @@ namespace CreativeAI.UI
         [SerializeField]
         private AnimationCurve _alphaCurve = AnimationCurve.Linear(0f, 0f, 1f, 1f);
 
+        [Header("Entry / Exit")]
+        [Tooltip(
+            "Distance from the selection at which entry/exit fading starts. A negative value uses Visible Item Count."
+        )]
+        [SerializeField]
+        private float _visibleEdgeDistance = -1f;
+
+        [Tooltip("Distance from the selection at which an item is fully hidden.")]
+        [SerializeField, Min(0f)]
+        private float _fadeEndDistance = 2.6f;
+
+        [Tooltip("Scale used when an item is fully hidden.")]
+        [SerializeField, Min(0f)]
+        private float _hiddenScale = 0.4f;
+
+        [Tooltip("Additional angle travelled after leaving the normal arc.")]
+        [SerializeField, Min(0f)]
+        private float _exitAnglePadding = 20f;
+
+        [SerializeField]
+        private AnimationCurve _entryExitAlphaCurve = AnimationCurve.Linear(0f, 0f, 1f, 1f);
+
+        [SerializeField]
+        private AnimationCurve _entryExitScaleCurve = AnimationCurve.Linear(0f, 0f, 1f, 1f);
+
         public int VisibleItemCount
         {
             get => _visibleItemCount;
@@ -158,6 +183,42 @@ namespace CreativeAI.UI
         {
             get => _alphaCurve;
             set => _alphaCurve = value;
+        }
+
+        public float VisibleEdgeDistance
+        {
+            get => _visibleEdgeDistance >= 0f ? _visibleEdgeDistance : VisibleRadius;
+            set => _visibleEdgeDistance = value < 0f ? -1f : value;
+        }
+
+        public float FadeEndDistance
+        {
+            get => Mathf.Max(VisibleEdgeDistance, _fadeEndDistance);
+            set => _fadeEndDistance = Mathf.Max(0f, value);
+        }
+
+        public float HiddenScale
+        {
+            get => _hiddenScale;
+            set => _hiddenScale = Mathf.Max(0f, value);
+        }
+
+        public float ExitAnglePadding
+        {
+            get => _exitAnglePadding;
+            set => _exitAnglePadding = Mathf.Max(0f, value);
+        }
+
+        public AnimationCurve EntryExitAlphaCurve
+        {
+            get => _entryExitAlphaCurve;
+            set => _entryExitAlphaCurve = value;
+        }
+
+        public AnimationCurve EntryExitScaleCurve
+        {
+            get => _entryExitScaleCurve;
+            set => _entryExitScaleCurve = value;
         }
 
         public float VisibleRadius => Mathf.Max(0.5f, (VisibleItemCount - 1) * 0.5f);

@@ -68,6 +68,7 @@ namespace CreativeAI.UI
                 DestroyGeneratedItem(item);
             }
             _items.Clear();
+            _renderOrder.Clear();
         }
 
         private void DestroyGeneratedItem(RevolverTabItemView item)

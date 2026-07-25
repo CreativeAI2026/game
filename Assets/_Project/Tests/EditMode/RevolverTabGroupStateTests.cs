@@ -396,6 +396,69 @@ namespace CreativeAI.Tests.EditMode
         }
 
         [Test]
+        public void RefreshLayout_DuringMoveFadesOutgoingAndIncomingItemsContinuously()
+        {
+            SetField("_moveDuration", 1f);
+            _group.Build();
+            _group.SelectNext();
+
+            var outgoing = GetItem(0);
+            var incoming = GetItem(3);
+            float outgoingStart = outgoing.CanvasGroup.alpha;
+            float incomingStart = incoming.CanvasGroup.alpha;
+
+            SetField("_selectionPosition", 1.5f);
+            InvokeRefreshLayout();
+
+            Assert.Less(outgoing.CanvasGroup.alpha, outgoingStart);
+            Assert.Greater(incoming.CanvasGroup.alpha, incomingStart);
+            Assert.Greater(outgoing.CanvasGroup.alpha, 0f);
+            Assert.Greater(incoming.CanvasGroup.alpha, 0f);
+            Assert.IsTrue(outgoing.gameObject.activeSelf);
+            Assert.IsTrue(incoming.gameObject.activeSelf);
+        }
+
+        [TestCase(1)]
+        [TestCase(2)]
+        [TestCase(3)]
+        public void SmallCounts_RefreshAcrossFractionalSelectionWithoutExceptionOrActiveToggle(
+            int count
+        )
+        {
+            var entries = new List<RevolverTabEntry>();
+            for (int i = 0; i < count; i++)
+                entries.Add(new RevolverTabEntry(_definitions[i]));
+            SetField("_entries", entries);
+            SetField("_initialIndex", 0);
+            Assert.IsTrue(_group.Build());
+
+            Assert.DoesNotThrow(() =>
+            {
+                SetField("_selectionPosition", 0.49f);
+                InvokeRefreshLayout();
+                SetField("_selectionPosition", 0.51f);
+                InvokeRefreshLayout();
+            });
+
+            for (int i = 0; i < count; i++)
+                Assert.IsTrue(GetItem(i).gameObject.activeSelf);
+        }
+
+        [Test]
+        public void RefreshLayout_FullyTransparentItemDoesNotBlockRaycasts()
+        {
+            _group.Build();
+            var wrappedItem = GetItem(3);
+
+            SetField("_selectionPosition", 1.001f);
+            InvokeRefreshLayout();
+
+            Assert.AreEqual(0f, wrappedItem.CanvasGroup.alpha, 0.0001f);
+            Assert.IsFalse(wrappedItem.CanvasGroup.blocksRaycasts);
+            Assert.IsFalse(wrappedItem.CanvasGroup.interactable);
+        }
+
+        [Test]
         public void StandaloneTabButtonBind_DoesNotChangeItsRaycastTarget()
         {
             var buttonObject = new GameObject(
@@ -433,6 +496,29 @@ namespace CreativeAI.Tests.EditMode
                 .GetField(fieldName, BindingFlags.Instance | BindingFlags.NonPublic);
             Assert.IsNotNull(field, fieldName);
             field.SetValue(target, value);
+        }
+
+        private RevolverTabItemView GetItem(int index)
+        {
+            foreach (Transform child in _rootObject.transform)
+            {
+                var item = child.GetComponent<RevolverTabItemView>();
+                if (item != null && item.DataIndex == index)
+                    return item;
+            }
+
+            Assert.Fail($"Item {index} was not found.");
+            return null;
+        }
+
+        private void InvokeRefreshLayout()
+        {
+            var method = typeof(RevolverTabGroup).GetMethod(
+                "RefreshLayout",
+                BindingFlags.Instance | BindingFlags.NonPublic
+            );
+            Assert.IsNotNull(method);
+            method.Invoke(_group, null);
         }
 
         private static AxisEventData CreateMoveEvent(

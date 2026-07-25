@@ -138,13 +138,72 @@ namespace CreativeAI.Tests.EditMode
         }
 
         [Test]
-        public void OutsideRange_IsTransparentAndNotInteractable()
+        public void FadeRange_ChangesAlphaAndScaleContinuously()
         {
-            var layout = RevolverTabLayoutCalculator.Calculate(2.01f, _settings);
+            _settings.FadeEndDistance = 2.6f;
+            _settings.HiddenScale = 0.3f;
+            var edge = RevolverTabLayoutCalculator.Calculate(2f, _settings);
+            var middle = RevolverTabLayoutCalculator.Calculate(2.3f, _settings);
+            var end = RevolverTabLayoutCalculator.Calculate(2.6f, _settings);
 
-            Assert.IsFalse(layout.IsVisible);
-            Assert.IsFalse(layout.IsInteractable);
-            Assert.AreEqual(0f, layout.Alpha);
+            Assert.Greater(edge.Alpha, middle.Alpha);
+            Assert.Greater(middle.Alpha, end.Alpha);
+            Assert.Greater(edge.Scale, middle.Scale);
+            Assert.Greater(middle.Scale, end.Scale);
+            Assert.AreEqual(0f, end.Alpha);
+            Assert.AreEqual(0.3f, end.Scale, 0.0001f);
+            Assert.IsFalse(middle.IsInteractable);
+            Assert.IsFalse(end.IsVisible);
+        }
+
+        [Test]
+        public void WrappedBoundary_IsFullyHiddenBeforeSideChanges()
+        {
+            var beforeWrap = RevolverTabLayoutCalculator.Calculate(1.499f, _settings, 1.5f);
+            var afterWrap = RevolverTabLayoutCalculator.Calculate(-1.499f, _settings, 1.5f);
+
+            Assert.AreEqual(0f, beforeWrap.Alpha, 0.0001f);
+            Assert.AreEqual(0f, afterWrap.Alpha, 0.0001f);
+            Assert.AreEqual(_settings.HiddenScale, beforeWrap.Scale, 0.0001f);
+            Assert.AreEqual(_settings.HiddenScale, afterWrap.Scale, 0.0001f);
+            Assert.AreNotEqual(
+                Mathf.Sign(beforeWrap.AnchoredPosition.x),
+                Mathf.Sign(afterWrap.AnchoredPosition.x)
+            );
+        }
+
+        [Test]
+        public void VisibleMovement_DoesNotJumpToOppositeSide()
+        {
+            var first = RevolverTabLayoutCalculator.Calculate(1.1f, _settings, 1.5f);
+            var second = RevolverTabLayoutCalculator.Calculate(1.2f, _settings, 1.5f);
+
+            Assert.Greater(first.Alpha, 0f);
+            Assert.Greater(second.Alpha, 0f);
+            Assert.AreEqual(
+                Mathf.Sign(first.AnchoredPosition.x),
+                Mathf.Sign(second.AnchoredPosition.x)
+            );
+            Assert.Less(
+                Vector2.Distance(first.AnchoredPosition, second.AnchoredPosition),
+                _settings.TangentRadius
+            );
+        }
+
+        [TestCase(RevolverArcPlacement.Top)]
+        [TestCase(RevolverArcPlacement.Bottom)]
+        [TestCase(RevolverArcPlacement.Left)]
+        [TestCase(RevolverArcPlacement.Right)]
+        public void EntryExit_WorksForAllPlacementsAndReverseOrder(RevolverArcPlacement placement)
+        {
+            _settings.Placement = placement;
+            _settings.ReverseOrder = true;
+
+            var entering = RevolverTabLayoutCalculator.Calculate(2.5f, _settings);
+            var visible = RevolverTabLayoutCalculator.Calculate(2.25f, _settings);
+
+            Assert.Greater(visible.Alpha, entering.Alpha);
+            Assert.Greater(visible.Scale, entering.Scale);
         }
 
         [Test]

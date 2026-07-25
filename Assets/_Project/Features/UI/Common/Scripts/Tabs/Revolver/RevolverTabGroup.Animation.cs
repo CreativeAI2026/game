@@ -75,15 +75,34 @@ namespace CreativeAI.UI
                     )
                     : item.DataIndex - _selectionPosition;
                 item.ApplyLayout(
-                    RevolverTabLayoutCalculator.Calculate(relativePosition, _layout),
+                    RevolverTabLayoutCalculator.Calculate(
+                        relativePosition,
+                        _layout,
+                        _loop ? EntryCount * 0.5f : float.PositiveInfinity
+                    ),
                     canInteract
                 );
             }
 
-            // Far items are placed first; the closest item is therefore rendered in front.
+            bool renderOrderChanged = _renderOrder.Count != _items.Count;
             for (int rank = 0; rank < _items.Count; rank++)
             {
                 int itemIndex = FindItemAtRenderRank(rank);
+                if (!renderOrderChanged && _renderOrder[rank] != itemIndex)
+                    renderOrderChanged = true;
+                if (rank < _renderOrder.Count)
+                    _renderOrder[rank] = itemIndex;
+                else
+                    _renderOrder.Add(itemIndex);
+            }
+
+            if (!renderOrderChanged)
+                return;
+
+            // Far items are placed first; the closest item is therefore rendered in front.
+            for (int rank = 0; rank < _renderOrder.Count; rank++)
+            {
+                int itemIndex = _renderOrder[rank];
                 if (itemIndex >= 0 && _items[itemIndex] != null)
                     _items[itemIndex].transform.SetAsLastSibling();
             }

@@ -44,6 +44,7 @@ namespace CreativeAI.UI
         private bool _submitOnSelectedClick = true;
 
         private readonly List<RevolverTabItemView> _items = new();
+        private readonly List<int> _renderOrder = new();
         private Tween _selectionTween;
         private float _selectionPosition;
         private int _selectedIndex = -1;
