@@ -44,13 +44,13 @@ namespace CreativeAI.Gameplay
                 switch (r.stat)
                 {
                     case nameof(StatType.AttackPct):
-                        bonus.attack += r.value;
+                        bonus.attackPct += r.value;
                         break;
                     case nameof(StatType.DefensePct):
-                        bonus.defense += r.value;
+                        bonus.defensePct += r.value;
                         break;
                     case nameof(StatType.MaxHpPct):
-                        bonus.maxHp += r.value;
+                        bonus.maxHpPct += r.value;
                         break;
                     case nameof(StatType.CritRate):
                         bonus.criticalChance += r.value;

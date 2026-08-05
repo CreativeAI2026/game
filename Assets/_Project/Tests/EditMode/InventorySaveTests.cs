@@ -125,9 +125,9 @@ namespace CreativeAI.Tests.EditMode
 
             var b = _inv.GetEquippedBonus();
 
-            Assert.AreEqual(10f, b.attack); // gear のみ(武器20・unequipped999 は除外)
-            Assert.AreEqual(5f, b.defense);
-            Assert.AreEqual(100f, b.maxHp); // gear のみ(武器50 は除外)
+            Assert.AreEqual(10f, b.attackPct); // gear のみ(武器20・unequipped999 は除外)
+            Assert.AreEqual(5f, b.defensePct);
+            Assert.AreEqual(100f, b.maxHpPct); // gear のみ(武器50 は除外)
             Assert.AreEqual(3f, b.criticalChance);
             Assert.AreEqual(0.5f, b.criticalDamage);
         }

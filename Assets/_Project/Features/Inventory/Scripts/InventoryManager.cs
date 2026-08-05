@@ -281,9 +281,9 @@ namespace CreativeAI.Gameplay
                 else
                 {
                     // 固定 SO の装備品(素材など未ロール)。
-                    b.attack += e.attack;
-                    b.defense += e.defense;
-                    b.maxHp += e.maxHP;
+                    b.attackPct += e.attack;
+                    b.defensePct += e.defense;
+                    b.maxHpPct += e.maxHP;
                     b.criticalChance += e.criticalRate;
                     b.criticalDamage += e.criticalDamage;
                 }

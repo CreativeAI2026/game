@@ -68,9 +68,9 @@ namespace CreativeAI.Gameplay
                 return b;
             }
 
-            b.attack += w.attack;
-            b.defense += w.defense;
-            b.maxHp += w.maxHP;
+            b.attackPct += w.attack;
+            b.defensePct += w.defense;
+            b.maxHpPct += w.maxHP;
             b.criticalChance += w.criticalRate;
             b.criticalDamage += w.criticalDamage;
             return b;
