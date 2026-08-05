@@ -64,7 +64,8 @@ namespace CreativeAI.Gameplay
             get
             {
                 float buffBonus = 0f;
-                return _playerData.baseMaxLife + _equipment.maxHp + _weapon.maxHp + buffBonus;
+                float pct = _equipment.maxHpPct + _weapon.maxHpPct; // %ポイント合計
+                return _playerData.baseMaxLife * (1f + pct / 100f) + buffBonus;
             }
         }
 
@@ -73,7 +74,8 @@ namespace CreativeAI.Gameplay
             get
             {
                 float buffBonus = 0f;
-                return _playerData.baseAttackPower + _equipment.attack + _weapon.attack + buffBonus;
+                float pct = _equipment.attackPct + _weapon.attackPct; // %ポイント合計
+                return _playerData.baseAttackPower * (1f + pct / 100f) + buffBonus;
             }
         }
 
@@ -82,7 +84,8 @@ namespace CreativeAI.Gameplay
             get
             {
                 float buffBonus = 0f;
-                return _playerData.baseDefense + _equipment.defense + _weapon.defense + buffBonus;
+                float pct = _equipment.defensePct + _weapon.defensePct; // %ポイント合計
+                return _playerData.baseDefense * (1f + pct / 100f) + buffBonus;
             }
         }
 
@@ -203,7 +206,8 @@ namespace CreativeAI.Gameplay
             isCritical = UnityEngine.Random.Range(0f, 100f) <= CurrentCriticalChance;
             if (isCritical)
             {
-                baseDmg += baseDmg * CurrentCriticalDamageRatio;
+                // 会心ダメージは%ポイント(会心率と同スケール)。÷100 して攻撃力へ上乗せする。
+                baseDmg += baseDmg * (CurrentCriticalDamageRatio / 100f);
             }
 
             return baseDmg;
