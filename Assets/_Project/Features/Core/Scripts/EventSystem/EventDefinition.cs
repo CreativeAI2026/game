@@ -6,7 +6,7 @@ namespace CreativeAI.Core.EventSystem
 {
     /// <summary>
     /// 1イベントの定義(条件 + 会話ステップ + 終了時進行度)。
-    /// 書式は documents/CharactersAndEvents.md、進行管理は Specification.md §4。
+    /// 書式は documents/ScenarioReference.md、進行管理は Specification.md §4。
     /// </summary>
     [CreateAssetMenu(menuName = "CreativeAI/Event Definition", fileName = "Event")]
     public sealed class EventDefinition : ScriptableObject

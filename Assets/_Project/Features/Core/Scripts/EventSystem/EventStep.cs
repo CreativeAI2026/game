@@ -37,7 +37,7 @@ namespace CreativeAI.Core.EventSystem
 
     /// <summary>
     /// 会話の1ステップ。kind に応じて使うフィールドが変わる(union 的)。
-    /// スキーマは documents/CharactersAndEvents.md の events.json steps に対応。
+    /// スキーマは documents/ScenarioReference.md の events.json steps に対応。
     /// ファクトリはテスト・将来の Importer が構築に使う。
     /// </summary>
     [Serializable]
@@ -99,7 +99,7 @@ namespace CreativeAI.Core.EventSystem
 
         /// <summary>
         /// 戦闘ステップ。敵は JSON に書かず、シーンの EventTrigger の Enemy スロットに Prefab を配線する
-        /// (documents/CharactersAndEvents.md「battle は { "kind": "battle" } のみ」, EventImplementation.md)。
+        /// (documents/ScenarioReference.md「battle は { "kind": "battle" } のみ」, EventImplementation.md)。
         /// </summary>
         public static EventStep Battle() => new() { _kind = StepKind.Battle };
 
