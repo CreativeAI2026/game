@@ -312,10 +312,22 @@ namespace CreativeAI.Scenario.Editor
                     }
                     return EventCondition.Flag(key, val);
 
+                case "hasItem":
+                    var itemKey = (cond["itemKey"] as JValue)?.Value as string;
+                    if (string.IsNullOrEmpty(itemKey))
+                    {
+                        report.Error(
+                            id,
+                            $"conditions[{i}] hasItem は itemKey(大事なものの key)が必須。"
+                        );
+                        return null;
+                    }
+                    return EventCondition.HasItem(itemKey);
+
                 default:
                     report.Error(
                         id,
-                        $"conditions[{i}] の type '{type}' は不正(progress / flag のみ)。"
+                        $"conditions[{i}] の type '{type}' は不正(progress / flag / hasItem のみ)。"
                     );
                     return null;
             }

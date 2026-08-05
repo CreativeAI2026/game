@@ -34,14 +34,22 @@ namespace CreativeAI.Core.EventSystem
         public bool HasNextProgress => _hasNextProgress;
         public int NextProgress => _nextProgress;
 
-        /// <summary>全条件を満たす(AND)と発火可。条件が空なら常に満たす。</summary>
-        public bool ConditionsMet(int progress, Func<string, string> getFlag)
+        /// <summary>
+        /// 全条件を満たす(AND)と発火可。条件が空なら常に満たす。
+        /// <paramref name="hasItem"/> は hasItem 条件用(itemKey→大事なもの所持か)。未指定なら
+        /// hasItem 条件は不成立扱い(progress/flag のみのイベントは従来どおり)。
+        /// </summary>
+        public bool ConditionsMet(
+            int progress,
+            Func<string, string> getFlag,
+            Func<string, bool> hasItem = null
+        )
         {
             if (_conditions == null)
                 return true;
             foreach (var condition in _conditions)
             {
-                if (condition != null && !condition.IsMet(progress, getFlag))
+                if (condition != null && !condition.IsMet(progress, getFlag, hasItem))
                     return false;
             }
             return true;
