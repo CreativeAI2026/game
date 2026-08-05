@@ -10,7 +10,7 @@ namespace CreativeAI.Gameplay
         public float criticalDamage; // 会心ダメージ
         public float criticalRate; // 会心率
         public int maxHP; // 最大HP
-
-        private void OnEnable() => category = ItemCategory.Weapon;
+        // 武器はインベントリの3カテゴリに属さない(WeaponManager 管理)。category は使用しない。
+        // ItemData を継承するのはアイコン/名前/ステータス表示の基盤を再利用するためだけ。
     }
 }
