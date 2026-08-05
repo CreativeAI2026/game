@@ -41,7 +41,6 @@ namespace CreativeAI.Gameplay
             {
                 if (r == null)
                     continue;
-                // 移動速度%/攻撃速度% は PlayerStatus の対象外(コントローラ側)なので EquipmentBonus には積まない。
                 switch (r.stat)
                 {
                     case nameof(StatType.AttackPct):
@@ -71,8 +70,6 @@ namespace CreativeAI.Gameplay
             return StatVector.Of(
                 (StatType.AttackPct, e.attack),
                 (StatType.DefensePct, e.defense),
-                (StatType.MoveSpeedPct, e.moveSpeed),
-                (StatType.AttackSpeedPct, e.attackSpeed),
                 (StatType.CritDamage, e.criticalDamage),
                 (StatType.CritRate, e.criticalRate),
                 (StatType.MaxHpPct, e.maxHP)

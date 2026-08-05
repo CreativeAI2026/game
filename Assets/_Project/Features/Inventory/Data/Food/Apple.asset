@@ -17,13 +17,11 @@ MonoBehaviour:
   key: apple
   itemName: "\u308A\u3093\u3054"
   category: 2
-  description: "\u745E\u3005\u3057\u304F\u3066\u7518\u9178\u3063\u3071\u3044\u679C\u5B9F\u3002\u3072\u3068\u53E3\u304B\u3058\u308C\u3070\u65C5\u306E\u75B2\u308C\u3082\u548C\u3089\u3050\u3002"
-  effect: "\u52B9\u679C\u3000HP \u3092 50 \u56DE\u5FA9"
+  description:
+  effect: "効果　最大HPの20%を回復"
   _maxStack: 99
   attack: 0
   defense: 0
-  moveSpeed: 0
-  attackSpeed: 0
   criticalDamage: 0
   criticalRate: 0
   healAmount: 50

@@ -14,15 +14,14 @@ MonoBehaviour:
   m_EditorClassIdentifier: CreativeAI.Gameplay::CreativeAI.Gameplay.FoodData
   icon: {fileID: 21300000, guid: 3781383fcbeb35848a9d7684ed36486b, type: 3}
   id: 3002
+  key: banana
   itemName: "\u30D0\u30CA\u30CA"
   category: 2
-  description: "\u3084\u308F\u3089\u304B\u304F\u7518\u3044\u9EC4\u8272\u306E\u679C\u5B9F\u3002\n\u3059\u3050\u306B\u98DF\u3079\u3089\u308C\u3066\u3001\u5C11\u3057\u5143\u6C17\u3092\u53D6\u308A\u623B\u305B\u308B\u3002"
-  effect: "\u52B9\u679C\u3000HP \u3092 40 \u56DE\u5FA9"
+  description:
+  effect: "効果　最大HPの20%を回復"
   _maxStack: 99
   attack: 0
   defense: 0
-  moveSpeed: 0
-  attackSpeed: 0
   criticalDamage: 0
   criticalRate: 0
   healAmount: 40

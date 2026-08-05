@@ -9,8 +9,6 @@ namespace CreativeAI.Crafting
     {
         AttackPct, // 攻撃%
         DefensePct, // 防御%
-        MoveSpeedPct, // 移動速度%
-        AttackSpeedPct, // 攻撃速度%
         CritDamage, // 会心ダメージ
         CritRate, // 会心率
         MaxHpPct, // 最大HP%(装備品・武器)

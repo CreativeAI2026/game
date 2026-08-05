@@ -114,14 +114,12 @@ namespace CreativeAI.Gameplay
 
     public static class ItemStatTextFormatter
     {
-        private const string HpLabel = "HP";
+        private const string HpLabel = "最大HP";
         private const string HealLabel = "HP回復";
-        private const string AttackLabel = "ATK";
-        private const string DefenseLabel = "DEF";
-        private const string MoveSpeedLabel = "MOVE";
-        private const string AttackSpeedLabel = "ATK SPD";
-        private const string CriticalDamageLabel = "CRIT DMG";
-        private const string CriticalRateLabel = "CRIT";
+        private const string AttackLabel = "攻撃";
+        private const string DefenseLabel = "防御";
+        private const string CriticalDamageLabel = "会心ダメージ";
+        private const string CriticalRateLabel = "会心率";
         private const string PositiveColor = "#A7D8FF";
         private const string NegativeColor = "#FF8A8A";
 
@@ -146,8 +144,6 @@ namespace CreativeAI.Gameplay
             {
                 AddPercent(lines, AttackLabel, equipment.attack);
                 AddPercent(lines, DefenseLabel, equipment.defense);
-                AddPercent(lines, MoveSpeedLabel, equipment.moveSpeed);
-                AddPercent(lines, AttackSpeedLabel, equipment.attackSpeed);
                 AddPercent(lines, CriticalDamageLabel, equipment.criticalDamage);
                 AddPercent(lines, CriticalRateLabel, equipment.criticalRate);
                 AddFlat(lines, HpLabel, equipment.maxHP);
@@ -156,8 +152,6 @@ namespace CreativeAI.Gameplay
             {
                 AddPercent(lines, AttackLabel, weapon.attack);
                 AddPercent(lines, DefenseLabel, weapon.defense);
-                AddPercent(lines, MoveSpeedLabel, weapon.moveSpeed);
-                AddPercent(lines, AttackSpeedLabel, weapon.attackSpeed);
                 AddPercent(lines, CriticalDamageLabel, weapon.criticalDamage);
                 AddPercent(lines, CriticalRateLabel, weapon.criticalRate);
                 AddFlat(lines, HpLabel, weapon.maxHP);
