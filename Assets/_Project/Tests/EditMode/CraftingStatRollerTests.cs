@@ -18,7 +18,7 @@ namespace CreativeAI.Tests.EditMode
                 (StatType.DefensePct, 8),
                 (StatType.CritRate, 5)
             );
-            var b = StatVector.Of((StatType.MoveSpeedPct, 6), (StatType.AttackSpeedPct, 4));
+            var b = StatVector.Of((StatType.MaxHpPct, 6), (StatType.CritDamage, 4));
 
             for (int seed = 0; seed < 50; seed++)
             {
@@ -33,8 +33,8 @@ namespace CreativeAI.Tests.EditMode
             // 結果の型は必ず親のいずれかが持つ型(ウェイト上位2)に含まれる
             var roller = NewRoller();
             var a = StatVector.Of((StatType.AttackPct, 10), (StatType.DefensePct, 1));
-            var b = StatVector.Of((StatType.MoveSpeedPct, 1));
-            // ウェイト: Attack=10, Defense=1, Move=1 → 上位2 = {Attack, Defense}
+            var b = StatVector.Of((StatType.CritRate, 1));
+            // ウェイト: Attack=10, Defense=1, CritRate=1 → 上位2 = {Attack, Defense}(同値は型順で Defense 優先)
             var allowed = new[] { StatType.AttackPct, StatType.DefensePct };
 
             for (int seed = 0; seed < 50; seed++)
@@ -81,7 +81,7 @@ namespace CreativeAI.Tests.EditMode
         {
             var roller = NewRoller();
             var a = StatVector.Of((StatType.AttackPct, 60), (StatType.DefensePct, 30));
-            var b = StatVector.Of((StatType.AttackPct, 50), (StatType.MoveSpeedPct, 40));
+            var b = StatVector.Of((StatType.AttackPct, 50), (StatType.MaxHpPct, 40));
 
             for (int seed = 0; seed < 50; seed++)
             {
