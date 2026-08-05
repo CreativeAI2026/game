@@ -55,8 +55,11 @@ namespace CreativeAI.Tests.EditMode
         private sealed class FakeItemGiver : IItemGiver
         {
             public readonly List<string> Given = new();
+            public readonly HashSet<string> Owned = new();
 
             public void Give(string itemKey) => Given.Add(itemKey);
+
+            public bool HasImportantItem(string itemKey) => Owned.Contains(itemKey);
         }
 
         private sealed class FakeWeaponGiver : IWeaponGiver

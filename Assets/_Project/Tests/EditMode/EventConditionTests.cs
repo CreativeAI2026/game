@@ -45,6 +45,33 @@ namespace CreativeAI.Tests.EditMode
         }
 
         [Test]
+        public void HasItem_Met_OnlyWhenOwned()
+        {
+            var c = EventCondition.HasItem("mysterious_key");
+            Func<string, bool> owns = key => key == "mysterious_key";
+
+            Assert.IsTrue(c.IsMet(0, NoFlags, owns));
+            Assert.IsFalse(c.IsMet(0, NoFlags, _ => false)); // 未所持
+            Assert.IsFalse(c.IsMet(0, NoFlags)); // hasItem 未指定なら不成立
+        }
+
+        [Test]
+        public void ConditionsMet_HasItem_AndedWithProgress()
+        {
+            var def = EventDefinition.Create(
+                "locked_door",
+                EventCondition.Progress(10),
+                EventCondition.HasItem("mysterious_key")
+            );
+            Func<string, bool> hasKey = key => key == "mysterious_key";
+
+            Assert.IsTrue(def.ConditionsMet(10, NoFlags, hasKey));
+            Assert.IsFalse(def.ConditionsMet(10, NoFlags, _ => false)); // 鍵なし
+            Assert.IsFalse(def.ConditionsMet(9, NoFlags, hasKey)); // progress 不足
+            Assert.IsFalse(def.ConditionsMet(10, NoFlags)); // hasItem 未供給
+        }
+
+        [Test]
         public void ConditionsMet_EmptyConditions_AlwaysTrue()
         {
             var def = EventDefinition.Create("always");

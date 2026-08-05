@@ -150,6 +150,32 @@ namespace CreativeAI.Gameplay
             AddItem(data, 1);
         }
 
+        /// <summary>
+        /// IItemGiver。hasItem 条件から呼ばれ、itemKey の「大事なもの」を1つ以上持つかを返す。
+        /// itemKey を ItemDB で引き、カテゴリが 大事なもの のときだけ所持数を見る。
+        /// 未登録キー・大事なもの以外(装備品/食材/武器)は対象外で false(警告つき)。
+        /// </summary>
+        public bool HasImportantItem(string itemKey)
+        {
+            var data = ItemDB.Instance != null ? ItemDB.Instance.GetItemByKey(itemKey) : null;
+            if (data == null)
+            {
+                Debug.LogWarning(
+                    $"[InventoryManager] HasImportantItem: itemKey '{itemKey}' が ItemDB に見つかりません。"
+                );
+                return false;
+            }
+            if (data.category != ItemCategory.Important)
+            {
+                Debug.LogWarning(
+                    $"[InventoryManager] HasImportantItem: itemKey '{itemKey}' は大事なものではありません"
+                        + $"(category={data.category})。hasItem 条件は大事なもの専用です。"
+                );
+                return false;
+            }
+            return HasItem(data, 1);
+        }
+
         public void RemoveItem(ItemData data, int count = 1)
         {
             InventoryService.RemoveItem(data, count);
