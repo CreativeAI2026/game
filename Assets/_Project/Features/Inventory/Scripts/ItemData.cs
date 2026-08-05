@@ -6,10 +6,11 @@ namespace CreativeAI.Gameplay
 {
     public enum ItemCategory
     {
-        Weapon,
-        Equipment,
-        Food,
-        Important,
+        // 明示値で既存アセットの serialized category(1/2/3)を保つ。
+        // 武器はインベントリ在庫の対象外(WeaponManager 管理)なので、この3カテゴリに含めない。
+        Equipment = 1,
+        Food = 2,
+        Important = 3,
     }
 
     [CreateAssetMenu(fileName = "ItemData", menuName = "Scriptable Objects/ItemData")]
@@ -37,7 +38,6 @@ namespace CreativeAI.Gameplay
         public static string ToDisplayName(this ItemCategory category) =>
             category switch
             {
-                ItemCategory.Weapon => "武器",
                 ItemCategory.Equipment => "装備品",
                 ItemCategory.Food => "食材",
                 ItemCategory.Important => "大事なもの",
@@ -146,7 +146,7 @@ namespace CreativeAI.Gameplay
                 AddPercent(lines, DefenseLabel, equipment.defense);
                 AddPercent(lines, CriticalDamageLabel, equipment.criticalDamage);
                 AddPercent(lines, CriticalRateLabel, equipment.criticalRate);
-                AddFlat(lines, HpLabel, equipment.maxHP);
+                AddPercent(lines, HpLabel, equipment.maxHP);
             }
             else if (item is WeaponData weapon)
             {
@@ -154,18 +154,10 @@ namespace CreativeAI.Gameplay
                 AddPercent(lines, DefenseLabel, weapon.defense);
                 AddPercent(lines, CriticalDamageLabel, weapon.criticalDamage);
                 AddPercent(lines, CriticalRateLabel, weapon.criticalRate);
-                AddFlat(lines, HpLabel, weapon.maxHP);
+                AddPercent(lines, HpLabel, weapon.maxHP);
             }
 
             return string.Join("\n", lines);
-        }
-
-        private static void AddFlat(List<string> lines, string label, int value)
-        {
-            if (value == 0)
-                return;
-
-            lines.Add(FormatLine(label, value.ToString(CultureInfo.InvariantCulture), false));
         }
 
         private static void AddPercent(List<string> lines, string label, float value)

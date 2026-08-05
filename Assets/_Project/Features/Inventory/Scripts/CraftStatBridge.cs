@@ -5,7 +5,7 @@ namespace CreativeAI.Gameplay
 {
     /// <summary>
     /// 調合ロールエンジン(CreativeAI.Crafting)とインベントリの装備品(EquipmentData / RolledStat)の橋渡し。
-    /// 装備品同士の調合は「端末で個体差ロール」する(documents/CraftingArchitecture.md,
+    /// 装備品同士の調合は「端末で個体差ロール」する(documents/Specification.md §2.3,
     /// CraftingStatAlgorithm.md)。食材は固定ルール(FoodData.HealFraction)なのでここは通さない。
     ///
     /// RolledStat.stat の語彙は <see cref="StatType"/> 名(例 "AttackPct")。GetEquippedBonus はこの語彙で解釈する。

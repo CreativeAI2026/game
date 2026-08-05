@@ -7,7 +7,7 @@ using NUnit.Framework;
 namespace CreativeAI.Tests.EditMode
 {
     /// <summary>
-    /// EventImporter.Parse の検証。CharactersAndEvents.md の events.json 書式に対応。
+    /// EventImporter.Parse の検証。ScenarioReference.md の events.json 書式に対応。
     /// ファイル IO・AssetDatabase を伴わない純粋パーサ部分だけを検証する。
     /// </summary>
     public class EventImporterTests

@@ -353,7 +353,7 @@ namespace CreativeAI.Gameplay
             // 武器はインベントリ管理の対象外(仕様 §2)。ItemDB はフォルダ一括同期で武器も拾うため、ここで除外する。
             var testItems = ItemDB
                 .Instance.Items.Where(item =>
-                    item != null && item.category != ItemCategory.Weapon && HasZeroSecondDigit(item)
+                    item != null && !(item is WeaponData) && HasZeroSecondDigit(item)
                 )
                 .ToList();
             foreach (var item in testItems)

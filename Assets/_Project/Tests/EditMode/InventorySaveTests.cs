@@ -64,7 +64,7 @@ namespace CreativeAI.Tests.EditMode
         [Test]
         public void AddInstance_SameData_DoesNotMerge()
         {
-            var sword = MakeItem(10, ItemCategory.Weapon);
+            var sword = MakeItem(10, ItemCategory.Equipment);
 
             _inv.AddInstance(sword, new List<RolledStat> { new("attackPct", 12f) });
             _inv.AddInstance(sword, new List<RolledStat> { new("attackPct", 30f) });
