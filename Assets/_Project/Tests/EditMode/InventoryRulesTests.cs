@@ -129,6 +129,39 @@ namespace CreativeAI.Tests.EditMode
             Assert.IsFalse(_inv.HasImportantItem("mysterious_ky"), "打ち間違いキーは false");
         }
 
+        // --- §4 / ScenarioReference: giveItem は itemKey で ItemDB を引いて1個渡す ---
+
+        [Test]
+        public void Give_AddsOneItemResolvedByKey()
+        {
+            var apple = ScriptableObject.CreateInstance<FoodData>(); // OnEnable が category=Food
+            apple.id = 910;
+            apple.key = "apple";
+            ItemDB.InjectForTests(new ItemData[] { apple });
+
+            _inv.Give("apple");
+            _inv.Give("apple"); // giveItem は1ステップ1個。並べたぶんだけ増える
+
+            Assert.AreEqual(2, _inv.GetItemCount(apple));
+        }
+
+        [Test]
+        public void Give_UnknownKey_IsIgnored()
+        {
+            var apple = ScriptableObject.CreateInstance<FoodData>();
+            apple.id = 911;
+            apple.key = "apple";
+            ItemDB.InjectForTests(new ItemData[] { apple });
+            UnityEngine.TestTools.LogAssert.Expect(
+                LogType.Warning,
+                new System.Text.RegularExpressions.Regex("appl")
+            );
+
+            _inv.Give("appl"); // 打ち間違い
+
+            Assert.AreEqual(0, _inv.GetAllItems().Count, "未知のキーでは何も追加しない");
+        }
+
         // --- §2.1 食材の回復量は固定(合成前20% / 合成後50%) ---
 
         [Test]
