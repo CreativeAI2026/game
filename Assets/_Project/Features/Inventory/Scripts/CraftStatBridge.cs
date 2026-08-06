@@ -24,9 +24,19 @@ namespace CreativeAI.Gameplay
             EquipmentData a,
             EquipmentData b,
             IRandomSource rng
-        )
+        ) => ToRolledStats(Roller.Roll(ToStatVector(a), ToStatVector(b), rng));
+
+        /// <summary>
+        /// フィールドドロップの装備品1個ぶんの個体ステータスをロールする
+        /// (documents/Specification.md §2.1.1 / CraftingStatAlgorithm.md「ドロップ(拾得)のロール」)。
+        /// シード SO の固定値は「総パワー(強さの目安)」としてだけ使い、どの型に何ポイント付くかは
+        /// 型抽選 + ディリクレ配分で拾った瞬間に決める(同じ場所の同じ装備品でも個体差が出る)。
+        /// </summary>
+        public static IReadOnlyList<RolledStat> RollDrop(EquipmentData seed, IRandomSource rng) =>
+            ToRolledStats(DropStatRoller.Roll(ToStatVector(seed).Power, rng));
+
+        private static IReadOnlyList<RolledStat> ToRolledStats(StatVector rolled)
         {
-            var rolled = Roller.Roll(ToStatVector(a), ToStatVector(b), rng);
             var list = new List<RolledStat>(rolled.Count);
             foreach (var type in rolled.Types)
                 list.Add(new RolledStat(type.ToString(), rolled[type]));

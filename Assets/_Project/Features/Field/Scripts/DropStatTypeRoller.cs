@@ -1,7 +1,8 @@
 using System;
 using System.Collections.Generic;
+using CreativeAI.Crafting;
 
-namespace CreativeAI.Crafting
+namespace CreativeAI.Gameplay
 {
     /// <summary>
     /// フィールドに落ちている装備品(合成前のシード)の付与ステータス「型」を決める
@@ -11,8 +12,8 @@ namespace CreativeAI.Crafting
     /// <see cref="CraftingStatRoller"/> のロールモデルが決める(同 §2.1.1)。
     /// 対象は装備品のみ。食材は固定ルール(HP即時回復)なのでこの抽選を通さない。
     ///
-    /// ドロップ配置そのもの(拾得・エフェクト)は未実装のため、現状この抽選を呼ぶ
-    /// 実行時コードは無い。ドロップ実装時にここを呼ぶこと。
+    /// 呼び出し元は <see cref="DropStatRoller"/>(型 + 量をまとめてロールする)。
+    /// 拾得の入口は <see cref="FieldItemPickup"/>。
     /// </summary>
     public static class DropStatTypeRoller
     {
