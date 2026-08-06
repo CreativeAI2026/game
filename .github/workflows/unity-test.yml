@@ -16,6 +16,11 @@ concurrency:
   group: unity-test-${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: true
 
+# 既定は読み取りのみなので、PR にコメントする権限だけ明示的に足す。
+permissions:
+  contents: read
+  pull-requests: write
+
 jobs:
   test:
     name: Test (${{ matrix.testMode }})
@@ -58,10 +63,29 @@ jobs:
       - name: サマリを出力
         if: always() # 落ちたときこそ何が落ちたか表で見たい
         run: |
-          # ジョブサマリ（ジョブページ上部）とログの両方に出す。
+          # ジョブサマリ（ジョブページ上部）とログの両方に出しつつ、PR コメント用にも残す。
           python3 .github/scripts/test-summary.py \
             "${{ matrix.testMode }} テスト結果" \
-            ${{ matrix.testMode }}-results/*.xml | tee -a "$GITHUB_STEP_SUMMARY"
+            ${{ matrix.testMode }}-results/*.xml | tee summary.md >> "$GITHUB_STEP_SUMMARY"
+          cat summary.md
+
+      # 表を読むのにジョブページを開かせない。PR の会話タブにそのまま貼る。
+      # 同じ testMode のコメントは毎回作らず、マーカーで見つけて上書きする。
+      - name: PR にサマリをコメント
+        if: always() && github.event_name == 'pull_request'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          MARKER: <!-- unity-test-summary:${{ matrix.testMode }} -->
+          PR: ${{ github.event.pull_request.number }}
+        run: |
+          { echo "$MARKER"; cat summary.md; } > comment.md
+          id=$(gh api "repos/${{ github.repository }}/issues/${PR}/comments" --paginate \
+                 --jq ".[] | select(.body | startswith(\"$MARKER\")) | .id" | head -1)
+          if [ -n "$id" ]; then
+            gh api -X PATCH "repos/${{ github.repository }}/issues/comments/${id}" -F body=@comment.md
+          else
+            gh api -X POST "repos/${{ github.repository }}/issues/${PR}/comments" -F body=@comment.md
+          fi
 
       - name: Upload results
         uses: actions/upload-artifact@v4
