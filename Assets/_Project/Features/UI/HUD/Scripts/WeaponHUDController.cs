@@ -6,6 +6,13 @@ using UnityEngine.UI;
 
 namespace CreativeAI.Gameplay
 {
+    /// <summary>
+    /// 武器切替UI(documents/Specification.md §5)。選択中の武器を中央に置くインラインHUD。
+    ///
+    /// 出し分けはモードではなく<b>武器の所持本数</b>: 0本で非表示・1本以上で表示(表示中は移動中・戦闘中とも)。
+    /// GameObject ごと消すと <see cref="WeaponManager"/> の購読が切れて戻れないため、
+    /// HudIconBar と同じく Canvas / GraphicRaycaster の enabled で出し入れする。
+    /// </summary>
     public class WeaponHUDController : MonoBehaviour
     {
         [SerializeField]
@@ -13,6 +20,13 @@ namespace CreativeAI.Gameplay
 
         [SerializeField]
         private float duration = 0.3f;
+
+        [Header("所持本数で出し入れする自分の Canvas(0本=非表示)")]
+        [SerializeField]
+        private Canvas _canvas;
+
+        [SerializeField]
+        private GraphicRaycaster _raycaster;
 
         private int currentIndex = 1; // 最初は中央
         private bool isAnimating = false;
@@ -32,6 +46,11 @@ namespace CreativeAI.Gameplay
             _playerInput = GetComponent<PlayerInput>();
             _input = GetComponent<PlayerInputHandler>();
             _weaponManager = GetComponent<WeaponManager>();
+
+            if (_canvas == null)
+                _canvas = GetComponent<Canvas>();
+            if (_raycaster == null)
+                _raycaster = GetComponent<GraphicRaycaster>();
         }
 
         private void Start()
@@ -48,6 +67,10 @@ namespace CreativeAI.Gameplay
                     panels[i].SetAsLastSibling();
                 }
             }
+
+            // 選択中の武器を中央に据えてから、所持本数で出し入れする(0本なら非表示)。
+            SnapToSelection();
+            ApplyOwnedCount();
         }
 
         private void OnEnable()
@@ -55,7 +78,10 @@ namespace CreativeAI.Gameplay
             if (_weaponManager != null)
             {
                 _weaponManager.OnWeaponSwitched += HandleWeaponSwitched;
+                _weaponManager.OnOwnedCountChanged += HandleOwnedCountChanged;
             }
+            // Start より先に来ても効くように、購読と同時に現状を反映する。
+            ApplyOwnedCount();
         }
 
         private void OnDisable()
@@ -63,12 +89,69 @@ namespace CreativeAI.Gameplay
             if (_weaponManager != null)
             {
                 _weaponManager.OnWeaponSwitched -= HandleWeaponSwitched;
+                _weaponManager.OnOwnedCountChanged -= HandleOwnedCountChanged;
+            }
+        }
+
+        /// <summary>
+        /// 所持本数が変わったとき(giveWeapon / セーブ復元)に出し入れし、選択中の武器を中央へ据え直す。
+        /// </summary>
+        private void HandleOwnedCountChanged(int ownedCount)
+        {
+            SnapToSelection();
+            ApplyVisibility(ownedCount);
+        }
+
+        private void ApplyOwnedCount() =>
+            ApplyVisibility(_weaponManager != null ? _weaponManager.OwnedCount : 0);
+
+        /// <summary>
+        /// 武器0本=非表示 / 1本以上=表示(documents/Specification.md §5。モードでは変えない)。
+        /// GameObject ごと止めると WeaponManager の購読が切れて戻れないため Canvas を無効化するだけにする。
+        /// </summary>
+        private void ApplyVisibility(int ownedCount)
+        {
+            bool show = ownedCount > 0;
+            if (_canvas != null)
+                _canvas.enabled = show;
+            if (_raycaster != null)
+                _raycaster.enabled = show;
+        }
+
+        /// <summary>
+        /// 選択中の武器のパネルを中央へ置き直す(アニメーションなし)。入手直後・セーブ復元直後の初期表示合わせ。
+        /// パネル未配線・アニメーション中は何もしない。
+        /// </summary>
+        private void SnapToSelection()
+        {
+            if (isAnimating || positions == null || panels == null || panels.Count == 0)
+                return;
+
+            int selected = _weaponManager != null ? _weaponManager.CurrentWeaponIndex : -1;
+            if (selected < 0 || selected >= panels.Count)
+                return;
+
+            currentIndex = selected;
+            for (int i = 0; i < panels.Count; i++)
+            {
+                if (panels[i] == null)
+                    continue;
+
+                int targetIndex = (i - currentIndex + 1 + panels.Count) % panels.Count;
+                panels[i].anchoredPosition = positions[targetIndex];
+
+                var image = panels[i].GetComponent<Image>();
+                if (image != null)
+                    image.color = targetIndex == 1 ? lightColor : darkColor;
+                if (targetIndex == 1)
+                    panels[i].SetAsLastSibling();
             }
         }
 
         private void HandleWeaponSwitched(bool isLeftRotation)
         {
-            if (isAnimating)
+            // パネル未配線・Start 前(positions 未初期化)は回すものが無いので何もしない。
+            if (isAnimating || panels == null || panels.Count == 0 || positions == null)
                 return;
             MovePanels(isLeftRotation).Forget();
         }
