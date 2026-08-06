@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using CreativeAI.Crafting;
 
@@ -32,32 +33,42 @@ namespace CreativeAI.Gameplay
             return list;
         }
 
-        /// <summary>ロール済み個体ステータスを装備補正に積み上げる(GetEquippedBonus 用)。</summary>
+        /// <summary>
+        /// ロール済み個体ステータスを装備補正に積み上げる(GetEquippedBonus 用)。
+        /// <see cref="RolledStat.stat"/> は <see cref="StatType"/> 名で照合する。
+        /// 大文字小文字は無視する: 過去のセーブや手書きデータに "attackPct" のような表記が混ざっていても
+        /// 黙って 0 扱い(装備しても補正が乗らない)にならないようにするため。
+        /// 未知の名前は無視する(型が増減しても落ちない)。
+        /// </summary>
         public static void Accumulate(ref EquipmentBonus bonus, IReadOnlyList<RolledStat> rolled)
         {
             if (rolled == null)
                 return;
             foreach (var r in rolled)
             {
-                if (r == null)
+                if (r == null || string.IsNullOrEmpty(r.stat))
                     continue;
-                switch (r.stat)
+                if (!Enum.TryParse<StatType>(r.stat, ignoreCase: true, out var type))
+                    continue;
+
+                switch (type)
                 {
-                    case nameof(StatType.AttackPct):
+                    case StatType.AttackPct:
                         bonus.attackPct += r.value;
                         break;
-                    case nameof(StatType.DefensePct):
+                    case StatType.DefensePct:
                         bonus.defensePct += r.value;
                         break;
-                    case nameof(StatType.MaxHpPct):
+                    case StatType.MaxHpPct:
                         bonus.maxHpPct += r.value;
                         break;
-                    case nameof(StatType.CritRate):
+                    case StatType.CritRate:
                         bonus.criticalChance += r.value;
                         break;
-                    case nameof(StatType.CritDamage):
+                    case StatType.CritDamage:
                         bonus.criticalDamage += r.value;
                         break;
+                    // HealAmount は食材専用(装備補正には乗らない)。
                 }
             }
         }

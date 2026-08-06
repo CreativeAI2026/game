@@ -47,7 +47,9 @@ namespace CreativeAI.Gameplay
 
     /// <summary>
     /// 調合でロールされた個体ステータス1つ(付与ステータスの型 + 値)。
-    /// stat は Specification §1.1「アイテムカテゴリと付与ステータス」の型名(例: "attackPct")。
+    /// stat は Specification §2.1「アイテムカテゴリと付与ステータス」の型名
+    /// = <c>CreativeAI.Crafting.StatType</c> の名前(例: "AttackPct" / "MaxHpPct")。
+    /// 読み取り(CraftStatBridge.Accumulate)は大文字小文字を無視するので旧表記のセーブも効く。
     /// </summary>
     [System.Serializable]
     public sealed class RolledStat
