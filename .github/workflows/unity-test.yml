@@ -50,15 +50,18 @@ jobs:
           unityVersion: 6000.4.5f1
           testMode: ${{ matrix.testMode }}
           artifactsPath: ${{ matrix.testMode }}-results
-          githubToken: ${{ secrets.GITHUB_TOKEN }}
-          checkName: ${{ matrix.testMode }} results
+          # githubToken は渡さない。渡すとチェックランを投稿しようとするが、
+          # このリポジトリの GITHUB_TOKEN には checks:write が無く
+          # 「Resource not accessible by integration」でジョブごと落ちる。
+          # 結果は下の日本語サマリで見る。
 
       - name: サマリを出力
         if: always() # 落ちたときこそ何が落ちたか表で見たい
         run: |
+          # ジョブサマリ（ジョブページ上部）とログの両方に出す。
           python3 .github/scripts/test-summary.py \
             "${{ matrix.testMode }} テスト結果" \
-            ${{ matrix.testMode }}-results/*.xml >> "$GITHUB_STEP_SUMMARY"
+            ${{ matrix.testMode }}-results/*.xml | tee -a "$GITHUB_STEP_SUMMARY"
 
       - name: Upload results
         uses: actions/upload-artifact@v4
