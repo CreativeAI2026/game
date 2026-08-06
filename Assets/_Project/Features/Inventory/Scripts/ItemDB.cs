@@ -13,16 +13,38 @@ namespace CreativeAI.Gameplay
         private const string InventoryDataFolder = "Assets/_Project/Features/Inventory/Data";
 
         private static ItemDB _instance;
+        private static ItemDB _injected;
+
         public static ItemDB Instance
         {
             get
             {
+                // 注入中は Resources ロードも同期もしない(合成カタログが実アセットで潰れるため)。
+                if (_injected != null)
+                    return _injected;
                 _instance ??= Resources.Load<ItemDB>("ItemDB");
 #if UNITY_EDITOR
                 _instance?.SyncFromInventoryDataFolder();
 #endif
                 return _instance;
             }
+        }
+
+        /// <summary>
+        /// テスト専用: <see cref="Instance"/> を合成カタログに差し替える。null を渡すと解除して通常のロードに戻る。
+        /// ItemDB は Resources + Data フォルダ同期で自分を組み立てるため、実アセットに依存せず
+        /// itemKey→ItemData の解決を検証したいテストにはこの注入口が要る。
+        /// </summary>
+        public static void InjectForTests(IReadOnlyList<ItemData> testItems)
+        {
+            if (_injected != null)
+                DestroyImmediate(_injected);
+            _injected = null;
+            if (testItems == null)
+                return;
+
+            _injected = CreateInstance<ItemDB>();
+            _injected.items = testItems.Where(i => i != null).ToList();
         }
 
         [SerializeField, HideInInspector]
@@ -58,6 +80,10 @@ namespace CreativeAI.Gameplay
         [ContextMenu("Sync From Inventory Data Folder")]
         public void SyncFromInventoryDataFolder()
         {
+            // テスト注入インスタンスは実アセットで上書きしない。
+            if (this == _injected)
+                return;
+
             var loadedItems = AssetDatabase
                 .FindAssets("t:ItemData", new[] { InventoryDataFolder })
                 .Select(AssetDatabase.GUIDToAssetPath)

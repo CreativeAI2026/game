@@ -1,7 +1,7 @@
 # 開発フロー（ブランチ → コミット → PR）
 
 変更は必ず **ブランチを切って PR 経由**で `main` に入れる。`main` への直 push は禁止（Branch protection）。
-CI（format / meta / compile）が緑にならないと merge できない。
+CI（format / meta / compile / test）が緑にならないと merge できない。
 
 環境構築がまだの人は先に [EnvironmentSetup.md](./EnvironmentSetup.md) を済ませること。
 
@@ -10,7 +10,7 @@ CI（format / meta / compile）が緑にならないと merge できない。
 ## 全体の流れ
 
 ```
-main を最新化 → ブランチを切る → 実装 → CSharpier 整形 → コミット → push → PR 作成 → CI 緑 → merge
+main を最新化 → ブランチを切る → 実装 → テスト → CSharpier 整形 → コミット → push → PR 作成 → CI 緑 → merge
 ```
 
 ---
@@ -48,14 +48,6 @@ git switch -c feature/<内容>   # 作業用ブランチを作って移動（-c 
 CI（`csharpier check`）は **整形漏れを赤くするだけで自動修正はしない**。
 修正は手元で `format` を走らせる必要がある。
 
-### 推奨：IDE の保存時自動整形
-
-VS Code の CSharpier 拡張で format-on-save を有効にしておけば、保存のたびに整形される
-（設定は [EnvironmentSetup.md](./EnvironmentSetup.md#4-ide-の-csharpier-連携推奨保存時に自動整形) 参照）。
-これが一番ラクで、CI で落ちにくい。
-
-### 手動で整形する場合
-
 push 前にリポジトリルートで実行:
 
 ```bash
@@ -64,6 +56,32 @@ mise exec -- dotnet csharpier format .   # 整形を適用
 ```
 
 整形で差分が出たら、それも含めてコミットする。
+
+---
+
+## 3.5. テストを通す（コミット前に必須）
+
+CI でテストが落ちると merge できない。push 前に手元で通しておく。
+
+`Window > General > Test Runner` を開き、**EditMode** / **PlayMode** の各タブで `Run All`。
+どちらも緑になってから push する。
+
+- ツリーからテスト1件・クラス1つだけ選んで実行できるので、直した箇所だけ素早く回せる。
+- 落ちたテストを選ぶと、下のペインに失敗した行とメッセージが出る。
+- **PlayMode は実行中エディタが再生状態になる**（数秒で終わる）。
+
+コマンドラインからも走らせられるが、その場合は **Unity Editor を閉じる必要がある**
+
+### テストを足すとき
+
+- **EditMode**（`Assets/_Project/Tests/EditMode/`）… 素の C# ロジック、ScriptableObject、
+  純粋サービスなど。速いのでまずここに置けないか考える。
+- **PlayMode**（`Assets/_Project/Tests/PlayMode/`）… `Awake` / `Start` / コルーチン /
+  `Destroy` / 実シーンのロードが要るもの。EditMode ではこれらが走らない。
+
+仕様（`documents/Specification.md` など）に書かれた値やルールを固定するテストには、
+どの条文に対応するかをコメントに残す。**仕様書に無い挙動をテストで固定してしまうと、
+後で直す人の邪魔になる**ので、仕様が決まっていない部分は固定しないこと。
 
 ---
 
@@ -122,14 +140,20 @@ PR を作ると以下が自動で走る:
 | **format** | CSharpier の整形漏れ | `mise exec -- dotnet csharpier format .` → コミット → push |
 | **meta** | `.meta` の欠落・孤児 | 不足 `.meta` を追加 / 孤児 `.meta` を削除してコミット |
 | **compile** | 全 asmdef がコンパイル通るか（GameCI） | エラー箇所を修正してコミット |
+| **Test (editmode)** | EditMode テスト | Test Runner で再現して修正（→ [3.5](#35-テストを通すコミット前に必須)） |
+| **Test (playmode)** | PlayMode テスト | 同上 |
 
 全部緑になるまで修正を push し続ける（PR は自動で更新される）。
+
+テストのジョブは **Summary に日本語の表**を出す。GitHub の Actions タブでジョブを開くと、
+テストクラスごとの 件数 / 成功 / 失敗 / スキップ が並び、落ちたテストは名前とメッセージが載る。
+ログを追わなくても何が落ちたか分かるので、まずそこを見る。
 
 ---
 
 ## 8. merge
 
-- **今回はレビューなし。CI（format / meta / compile）が緑になったら merge してよい。**
+- **今回はレビューなし。CI（format / meta / compile / test）が緑になったら merge してよい。**
 - CI 指摘で落ちたら同じブランチで修正 → push（PR に反映される）。
 - merge 後はブランチを削除してよい。
 

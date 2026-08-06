@@ -344,6 +344,176 @@ namespace CreativeAI.Tests.EditMode
             Assert.IsTrue(report.Diagnostics.Any(d => d.Message.Contains("nonexistent")));
         }
 
+        // --- conditions: hasItem(ScenarioReference.md「hasItem の制約」= 大事なもの限定) ---
+
+        private const string HasItemJsonTemplate =
+            @"{ ""events"": [ {
+                ""id"": ""locked_door"",
+                ""conditions"": [
+                    { ""type"": ""progress"", ""value"": 10 },
+                    { ""type"": ""hasItem"", ""itemKey"": ""{KEY}"" }
+                ],
+                ""steps"": [ { ""kind"": ""line"", ""portrait"": ""hero_normal"", ""text"": ""開きそうだ。"" } ],
+                ""nextProgress"": 11
+            } ] }";
+
+        private static string HasItemJson(string key) => HasItemJsonTemplate.Replace("{KEY}", key);
+
+        private static EventImporter.ImportCatalog KeyItemCatalog(params string[] keyItemKeys) =>
+            new EventImporter.ImportCatalog(
+                new HashSet<string> { "apple", "umbrella", "mysterious_key" },
+                new HashSet<string>(keyItemKeys)
+            );
+
+        [Test]
+        public void Parse_HasItem_KnownKeyItem_BuildsCondition()
+        {
+            var report = EventImporter.Parse(
+                HasItemJson("mysterious_key"),
+                KeyItemCatalog("mysterious_key", "card_key")
+            );
+
+            Assert.IsFalse(report.HasErrors, string.Join("\n", report.Diagnostics));
+            var def = report.Events[0];
+            Assert.AreEqual(2, def.Conditions.Count);
+            Assert.AreEqual(ConditionType.HasItem, def.Conditions[1].Type);
+            Assert.AreEqual("mysterious_key", def.Conditions[1].ItemKey);
+        }
+
+        [Test]
+        public void Parse_HasItem_TypoKey_IsError()
+        {
+            // 打ち間違いを通すと実行時に常に false になりイベントが永久に発火しない。
+            var report = EventImporter.Parse(
+                HasItemJson("mysterious_ky"),
+                KeyItemCatalog("mysterious_key")
+            );
+
+            Assert.IsTrue(report.HasErrors);
+            Assert.AreEqual(0, report.Events.Count);
+            Assert.IsTrue(report.Diagnostics.Any(d => d.Message.Contains("mysterious_ky")));
+        }
+
+        [Test]
+        public void Parse_HasItem_NonKeyItemKey_IsError()
+        {
+            // 装備品/食材の key は hasItem に書けない(大事なもの限定)。
+            // itemKey カタログ(giveItem 用)には存在するが、大事なものカタログには無いケース。
+            var report = EventImporter.Parse(HasItemJson("umbrella"), KeyItemCatalog("card_key"));
+
+            Assert.IsTrue(report.HasErrors);
+            Assert.IsTrue(report.Diagnostics.Any(d => d.Message.Contains("umbrella")));
+        }
+
+        [Test]
+        public void Parse_HasItem_WithoutKeyItemCatalog_ProducesWarningNotError()
+        {
+            // 大事なものアセット未作成の段階で全 hasItem を弾かない(giveItem と同じ方針)。
+            var report = EventImporter.Parse(HasItemJson("mysterious_key"));
+
+            Assert.IsFalse(report.HasErrors, string.Join("\n", report.Diagnostics));
+            Assert.AreEqual(1, report.Events.Count);
+            Assert.GreaterOrEqual(report.WarningCount, 1);
+        }
+
+        [Test]
+        public void Parse_HasItem_MissingItemKey_IsError()
+        {
+            const string json =
+                @"{ ""events"": [ {
+                    ""id"": ""no_item_key"",
+                    ""conditions"": [
+                        { ""type"": ""progress"", ""value"": 1 },
+                        { ""type"": ""hasItem"" }
+                    ],
+                    ""steps"": [ { ""kind"": ""line"", ""portrait"": ""hero_normal"", ""text"": ""a"" } ],
+                    ""nextProgress"": 2
+                } ] }";
+
+            var report = EventImporter.Parse(json, KeyItemCatalog("mysterious_key"));
+
+            Assert.IsTrue(report.HasErrors);
+            Assert.IsTrue(report.Diagnostics.Any(d => d.Message.Contains("itemKey")));
+        }
+
+        [Test]
+        public void Parse_UnknownConditionType_IsError()
+        {
+            const string json =
+                @"{ ""events"": [ {
+                    ""id"": ""bad_cond"",
+                    ""conditions"": [
+                        { ""type"": ""progress"", ""value"": 1 },
+                        { ""type"": ""hasWeapon"", ""weaponKey"": ""sword"" }
+                    ],
+                    ""steps"": [ { ""kind"": ""line"", ""portrait"": ""hero_normal"", ""text"": ""a"" } ],
+                    ""nextProgress"": 2
+                } ] }";
+
+            var report = EventImporter.Parse(json);
+
+            Assert.IsTrue(report.HasErrors);
+            Assert.IsTrue(report.Diagnostics.Any(d => d.Message.Contains("hasWeapon")));
+        }
+
+        // --- steps: choice(ScenarioReference.md「フォーマット」) ---
+
+        [Test]
+        public void Parse_Choice_MissingFlag_IsError()
+        {
+            const string json =
+                @"{ ""events"": [ {
+                    ""id"": ""choice_no_flag"", ""conditions"": [ { ""type"": ""progress"", ""value"": 0 } ],
+                    ""steps"": [
+                        { ""kind"": ""choice"", ""options"": [ { ""text"": ""はい"", ""value"": ""yes"" } ] }
+                    ],
+                    ""nextProgress"": 1
+                } ] }";
+
+            var report = EventImporter.Parse(json);
+
+            Assert.IsTrue(report.HasErrors);
+            Assert.AreEqual(0, report.Events.Count);
+            Assert.IsTrue(report.Diagnostics.Any(d => d.Message.Contains("flag")));
+        }
+
+        [Test]
+        public void Parse_Choice_EmptyOptions_IsError()
+        {
+            const string json =
+                @"{ ""events"": [ {
+                    ""id"": ""choice_no_options"", ""conditions"": [ { ""type"": ""progress"", ""value"": 0 } ],
+                    ""steps"": [ { ""kind"": ""choice"", ""flag"": ""girl_choice"", ""options"": [] } ],
+                    ""nextProgress"": 1
+                } ] }";
+
+            var report = EventImporter.Parse(json);
+
+            Assert.IsTrue(report.HasErrors);
+            Assert.AreEqual(0, report.Events.Count);
+            Assert.IsTrue(report.Diagnostics.Any(d => d.Message.Contains("options")));
+        }
+
+        [Test]
+        public void Parse_Choice_OptionMissingTextOrValue_IsError()
+        {
+            const string json =
+                @"{ ""events"": [ {
+                    ""id"": ""choice_bad_option"", ""conditions"": [ { ""type"": ""progress"", ""value"": 0 } ],
+                    ""steps"": [ { ""kind"": ""choice"", ""flag"": ""girl_choice"", ""options"": [
+                        { ""text"": ""一緒に行く"", ""value"": ""together"" },
+                        { ""text"": ""ひとりで行く"" }
+                    ] } ],
+                    ""nextProgress"": 1
+                } ] }";
+
+            var report = EventImporter.Parse(json);
+
+            Assert.IsTrue(report.HasErrors);
+            Assert.AreEqual(0, report.Events.Count);
+            Assert.IsTrue(report.Diagnostics.Any(d => d.Message.Contains("options[1]")));
+        }
+
         [Test]
         public void Parse_BrokenJson_IsErrorWithNoEvents()
         {

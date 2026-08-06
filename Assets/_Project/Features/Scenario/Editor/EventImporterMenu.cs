@@ -93,22 +93,32 @@ namespace CreativeAI.Scenario.Editor
         }
 
         /// <summary>
-        /// ItemData(key)から有効キー集合を作る(giveItem の itemKey 照合用)。
-        /// アセットが1つも無ければ null(=未検証・警告どまり)にし、作成前に全 giveItem を弾かない。
+        /// ItemData(key)から有効キー集合を作る。
+        /// - giveItem 用: 全カテゴリのキー
+        /// - hasItem 用: 大事なもの(Important)のキーだけ(ScenarioReference.md「hasItem の制約」)
+        /// どちらもアセットが1つも無ければ null(=未検証・警告どまり)にし、作成前に全部を弾かない。
         /// 1つでもあれば、その集合で存在検証(未一致はエラー)。
         /// 敵は events.json に書かず EventTrigger に配線するため、ここでは照合しない。
         /// </summary>
         private static EventImporter.ImportCatalog BuildCatalog()
         {
-            var itemKeys = AssetDatabase
+            var keyed = AssetDatabase
                 .FindAssets("t:ItemData", new[] { ItemDataDir })
                 .Select(AssetDatabase.GUIDToAssetPath)
                 .Select(AssetDatabase.LoadAssetAtPath<ItemData>)
                 .Where(i => i != null && !string.IsNullOrEmpty(i.key))
+                .ToList();
+
+            var itemKeys = keyed.Select(i => i.key).ToHashSet(StringComparer.Ordinal);
+            var keyItemKeys = keyed
+                .Where(i => i.category == ItemCategory.Important)
                 .Select(i => i.key)
                 .ToHashSet(StringComparer.Ordinal);
 
-            return new EventImporter.ImportCatalog(itemKeys.Count > 0 ? itemKeys : null);
+            return new EventImporter.ImportCatalog(
+                itemKeys.Count > 0 ? itemKeys : null,
+                keyItemKeys.Count > 0 ? keyItemKeys : null
+            );
         }
 
         /// <summary>Assets 相対フォルダを親から順に作成する。</summary>
