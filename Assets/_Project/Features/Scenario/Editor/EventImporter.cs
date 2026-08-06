@@ -61,11 +61,22 @@ namespace CreativeAI.Scenario.Editor
         /// </summary>
         public sealed class ImportCatalog
         {
+            /// <summary>giveItem の itemKey 照合用。全カテゴリの ItemData キー。</summary>
             public IReadOnlyCollection<string> ItemKeys { get; }
 
-            public ImportCatalog(IReadOnlyCollection<string> itemKeys)
+            /// <summary>
+            /// hasItem の itemKey 照合用。**大事なもの(Important)のキーだけ**を持つ
+            /// (documents/ScenarioReference.md「hasItem の制約: itemKey は大事なものカタログ」)。
+            /// </summary>
+            public IReadOnlyCollection<string> KeyItemKeys { get; }
+
+            public ImportCatalog(
+                IReadOnlyCollection<string> itemKeys,
+                IReadOnlyCollection<string> keyItemKeys = null
+            )
             {
                 ItemKeys = itemKeys;
+                KeyItemKeys = keyItemKeys;
             }
         }
 
@@ -197,7 +208,7 @@ namespace CreativeAI.Scenario.Editor
             {
                 for (int c = 0; c < condArray.Count; c++)
                 {
-                    var cond = ParseCondition(condArray[c] as JObject, id, c, report);
+                    var cond = ParseCondition(condArray[c] as JObject, id, c, report, catalog);
                     if (cond == null)
                         ok = false;
                     else
@@ -283,7 +294,13 @@ namespace CreativeAI.Scenario.Editor
                 );
         }
 
-        private static EventCondition ParseCondition(JObject cond, string id, int i, Report report)
+        private static EventCondition ParseCondition(
+            JObject cond,
+            string id,
+            int i,
+            Report report,
+            ImportCatalog catalog
+        )
         {
             if (cond == null)
             {
@@ -321,6 +338,28 @@ namespace CreativeAI.Scenario.Editor
                             $"conditions[{i}] hasItem は itemKey(大事なものの key)が必須。"
                         );
                         return null;
+                    }
+                    // hasItem は「大事なもの」専用(ScenarioReference.md「hasItem の制約」)。
+                    // 打ち間違いや装備品/食材の key を書くと実行時は常に false になり
+                    // イベントが永久に発火しないため、取り込み時に弾く。
+                    // giveItem と同じく、カタログ未提供なら警告どまり(アセット未作成時に全滅させない)。
+                    if (catalog?.KeyItemKeys != null)
+                    {
+                        if (!catalog.KeyItemKeys.Contains(itemKey))
+                        {
+                            report.Error(
+                                id,
+                                $"conditions[{i}] hasItem の itemKey '{itemKey}' は大事なものカタログに存在しません。"
+                            );
+                            return null;
+                        }
+                    }
+                    else
+                    {
+                        report.Warn(
+                            id,
+                            $"conditions[{i}] hasItem の itemKey '{itemKey}' は未検証(大事なものカタログ未提供)。"
+                        );
                     }
                     return EventCondition.HasItem(itemKey);
 
