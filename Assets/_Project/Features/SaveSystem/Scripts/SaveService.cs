@@ -117,9 +117,16 @@ namespace CreativeAI.Gameplay
             var actor = player.GetComponentInChildren<ISaveableActor>();
             data.currentHp = actor != null ? actor.CaptureHp() : 0f;
 
-            // 選択武器も保存(spec §6)。窓口(WeaponManager)が無ければ既定 0。
+            // 入手ずみ武器と選択武器を保存(spec §6)。窓口(WeaponManager)が無ければ「0本・未選択」。
             var weapon = player.GetComponentInChildren<IWeaponSaveState>();
-            data.selectedWeaponIndex = weapon != null ? weapon.CaptureSelectedWeaponIndex() : 0;
+            data.selectedWeaponIndex = weapon != null ? weapon.CaptureSelectedWeaponIndex() : -1;
+            data.ownedWeaponKeys.Clear();
+            if (weapon != null)
+            {
+                var owned = weapon.CaptureOwnedWeaponKeys();
+                if (owned != null)
+                    data.ownedWeaponKeys.AddRange(owned);
+            }
 
             data.hasPlayerState = true;
         }
@@ -186,7 +193,7 @@ namespace CreativeAI.Gameplay
 
             // 武器を先に復元して最終ステータス(最大HP等)を確定させてから HP をクランプする。
             var weapon = player.GetComponentInChildren<IWeaponSaveState>();
-            weapon?.RestoreSelectedWeaponIndex(data.selectedWeaponIndex);
+            weapon?.RestoreWeapons(data.ownedWeaponKeys, data.selectedWeaponIndex);
 
             var actor = player.GetComponentInChildren<ISaveableActor>();
             actor?.RestoreHp(data.currentHp);
