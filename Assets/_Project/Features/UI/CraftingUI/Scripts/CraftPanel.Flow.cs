@@ -65,7 +65,7 @@ namespace CreativeAI.UI.CraftingUI
             }
         }
 
-        public void ShowLoading()
+        public virtual void ShowLoading()
         {
             if (!ValidateLoadingReferences())
                 return;
@@ -73,7 +73,7 @@ namespace CreativeAI.UI.CraftingUI
             CraftFlowViewUtility.ShowLoading(_loadingPanel, _loadingGear, _resultPanel);
         }
 
-        public void HideLoading()
+        public virtual void HideLoading()
         {
             if (!ValidateRequiredReference(_loadingPanel, nameof(_loadingPanel)))
                 return;
@@ -84,7 +84,7 @@ namespace CreativeAI.UI.CraftingUI
             CraftFlowViewUtility.HideLoadingPanel(_loadingPanel);
         }
 
-        public void HideLoadingAndResult()
+        public virtual void HideLoadingAndResult()
         {
             if (!ValidateRequiredReference(_loadingPanel, nameof(_loadingPanel)))
                 return;
@@ -104,7 +104,7 @@ namespace CreativeAI.UI.CraftingUI
             _loadingGear.Rotate(0f, 0f, -speed * Time.unscaledDeltaTime);
         }
 
-        public void ShowResult(ItemData resultItem, int count, System.Action closeAction)
+        public virtual void ShowResult(ItemData resultItem, int count, System.Action closeAction)
         {
             if (!ValidateResultReferences())
                 return;

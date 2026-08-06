@@ -11,7 +11,7 @@ namespace CreativeAI.UI.CraftingUI
         private Vector3 _warningTextBaseScale;
         private bool _hasWarningTextBaseScale;
 
-        public void ShowMissingMaterialsWarning()
+        public virtual void ShowMissingMaterialsWarning()
         {
             ShowWarning(_missingMaterialsMessage);
         }
@@ -36,7 +36,7 @@ namespace CreativeAI.UI.CraftingUI
             ShowWarning(_categoryMismatchMessage);
         }
 
-        public void HideWarning()
+        public virtual void HideWarning()
         {
             if (_warningText != null)
                 CaptureWarningBaseScale(_warningText.rectTransform);
