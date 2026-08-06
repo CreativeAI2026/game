@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using CreativeAI.Crafting;
 
@@ -23,41 +24,61 @@ namespace CreativeAI.Gameplay
             EquipmentData a,
             EquipmentData b,
             IRandomSource rng
-        )
+        ) => ToRolledStats(Roller.Roll(ToStatVector(a), ToStatVector(b), rng));
+
+        /// <summary>
+        /// フィールドドロップの装備品1個ぶんの個体ステータスをロールする
+        /// (documents/Specification.md §2.1.1 / CraftingStatAlgorithm.md「ドロップ(拾得)のロール」)。
+        /// シード SO の固定値は「総パワー(強さの目安)」としてだけ使い、どの型に何ポイント付くかは
+        /// 型抽選 + ディリクレ配分で拾った瞬間に決める(同じ場所の同じ装備品でも個体差が出る)。
+        /// </summary>
+        public static IReadOnlyList<RolledStat> RollDrop(EquipmentData seed, IRandomSource rng) =>
+            ToRolledStats(DropStatRoller.Roll(ToStatVector(seed).Power, rng));
+
+        private static IReadOnlyList<RolledStat> ToRolledStats(StatVector rolled)
         {
-            var rolled = Roller.Roll(ToStatVector(a), ToStatVector(b), rng);
             var list = new List<RolledStat>(rolled.Count);
             foreach (var type in rolled.Types)
                 list.Add(new RolledStat(type.ToString(), rolled[type]));
             return list;
         }
 
-        /// <summary>ロール済み個体ステータスを装備補正に積み上げる(GetEquippedBonus 用)。</summary>
+        /// <summary>
+        /// ロール済み個体ステータスを装備補正に積み上げる(GetEquippedBonus 用)。
+        /// <see cref="RolledStat.stat"/> は <see cref="StatType"/> 名で照合する。
+        /// 大文字小文字は無視する: 過去のセーブや手書きデータに "attackPct" のような表記が混ざっていても
+        /// 黙って 0 扱い(装備しても補正が乗らない)にならないようにするため。
+        /// 未知の名前は無視する(型が増減しても落ちない)。
+        /// </summary>
         public static void Accumulate(ref EquipmentBonus bonus, IReadOnlyList<RolledStat> rolled)
         {
             if (rolled == null)
                 return;
             foreach (var r in rolled)
             {
-                if (r == null)
+                if (r == null || string.IsNullOrEmpty(r.stat))
                     continue;
-                switch (r.stat)
+                if (!Enum.TryParse<StatType>(r.stat, ignoreCase: true, out var type))
+                    continue;
+
+                switch (type)
                 {
-                    case nameof(StatType.AttackPct):
+                    case StatType.AttackPct:
                         bonus.attackPct += r.value;
                         break;
-                    case nameof(StatType.DefensePct):
+                    case StatType.DefensePct:
                         bonus.defensePct += r.value;
                         break;
-                    case nameof(StatType.MaxHpPct):
+                    case StatType.MaxHpPct:
                         bonus.maxHpPct += r.value;
                         break;
-                    case nameof(StatType.CritRate):
+                    case StatType.CritRate:
                         bonus.criticalChance += r.value;
                         break;
-                    case nameof(StatType.CritDamage):
+                    case StatType.CritDamage:
                         bonus.criticalDamage += r.value;
                         break;
+                    // HealAmount は食材専用(装備補正には乗らない)。
                 }
             }
         }
