@@ -55,8 +55,11 @@ namespace CreativeAI.Tests.EditMode
         private sealed class FakeItemGiver : IItemGiver
         {
             public readonly List<string> Given = new();
+            public readonly HashSet<string> Owned = new();
 
             public void Give(string itemKey) => Given.Add(itemKey);
+
+            public bool HasImportantItem(string itemKey) => Owned.Contains(itemKey);
         }
 
         private sealed class FakeWeaponGiver : IWeaponGiver
@@ -196,10 +199,14 @@ namespace CreativeAI.Tests.EditMode
         }
 
         [Test]
-        public void PlayRoutine_NoNextProgress_DoesNotAdvance()
+        public void PlayRoutine_NoNextProgress_IsInvalidData_DoesNotAdvance()
         {
+            // 仕様(ScenarioReference.md フィールド表)では nextProgress は全イベント必須で、
+            // Importer が省略を弾く(EventImporterTests.Parse_OmittedNextProgress_IsError)。
+            // ここで固定するのは「万一 nextProgress 無しの定義を渡されても進行度を壊さない」
+            // フォールバック挙動であって、「nextProgress を省略できる」という仕様ではない。
             var ev = EventDefinition.Create(
-                "girl_reunion",
+                "invalid_no_next_progress",
                 new[] { EventCondition.Progress(0) },
                 new[]
                 {

@@ -6,6 +6,7 @@
         "CreativeAI.Core",
         "CreativeAI.Gameplay",
         "CreativeAI.UI",
+        "Unity.TextMeshPro",
         "CreativeAI.Scenario.Editor",
         "UnityEngine.TestRunner",
         "UnityEditor.TestRunner"

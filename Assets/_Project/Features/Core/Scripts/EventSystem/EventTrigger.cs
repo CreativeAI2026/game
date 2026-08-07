@@ -4,7 +4,7 @@ namespace CreativeAI.Core.EventSystem
 {
     /// <summary>
     /// シーン上のトリガーに配置する非常駐コンポーネント。プレイヤー侵入を検知し、
-    /// 条件(progress / flag をすべて AND)を満たせば EventPlayer に発火を託すルーター役。
+    /// 条件(progress / flag / hasItem をすべて AND)を満たせば EventPlayer に発火を託すルーター役。
     /// 自身はイベントの中身を再生しない。documents/Specification.md §4, EventImplementation.md 参照。
     /// </summary>
     [RequireComponent(typeof(Collider))]
@@ -55,7 +55,11 @@ namespace CreativeAI.Core.EventSystem
                 return;
             }
 
-            if (!_event.ConditionsMet(progress.Progress, progress.GetFlag))
+            // hasItem 条件用の所持判定。Inventory は Gameplay 側にあり Core から直接触れないため
+            // ItemGiverService seam 経由(未登録なら所持なし扱い)。giveItem と同じ経路。
+            var giver = ItemGiverService.Current;
+            System.Func<string, bool> hasItem = giver != null ? giver.HasImportantItem : null;
+            if (!_event.ConditionsMet(progress.Progress, progress.GetFlag, hasItem))
                 return;
 
             var player = Player;
