@@ -12,4 +12,4 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: d8ffb44db9f14197bba77b238675d550, type: 3}
   m_Name: WeaponTabDefinition
   m_EditorClassIdentifier: CreativeAI.UI::CreativeAI.UI.TabDefinition
-  _icon: {fileID: 21300000, guid: e43ee6b1ad59024439cf48a0192150d7, type: 3}
+  _icon: {fileID: 21300000, guid: f5d6b84487089254d928e7fc0fb31326, type: 3}

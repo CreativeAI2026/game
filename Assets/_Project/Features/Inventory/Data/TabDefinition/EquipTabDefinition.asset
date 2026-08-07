@@ -12,4 +12,4 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: d8ffb44db9f14197bba77b238675d550, type: 3}
   m_Name: EquipTabDefinition
   m_EditorClassIdentifier: CreativeAI.UI::CreativeAI.UI.TabDefinition
-  _icon: {fileID: 21300000, guid: 3024d7bd112ceff4dad3738b751a937c, type: 3}
+  _icon: {fileID: 21300000, guid: 71686534ed234944da2b6a153c26b7e4, type: 3}

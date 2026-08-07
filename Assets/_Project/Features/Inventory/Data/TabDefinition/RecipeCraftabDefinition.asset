@@ -13,4 +13,4 @@ MonoBehaviour:
   m_Name: RecipeCraftabDefinition
   m_EditorClassIdentifier: CreativeAI.UI::CreativeAI.UI.TabDefinition
   _id: 
-  _icon: {fileID: 21300000, guid: 89db6865f8b8bd74f891ffcb2ce57c9d, type: 3}
+  _icon: {fileID: 21300000, guid: 08bda233f3d43e8419b23d1f022d337a, type: 3}

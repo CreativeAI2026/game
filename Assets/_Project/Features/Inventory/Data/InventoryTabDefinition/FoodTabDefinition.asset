@@ -13,6 +13,6 @@ MonoBehaviour:
   m_Name: FoodTabDefinition
   m_EditorClassIdentifier: CreativeAI.UI::CreativeAI.UI.InventoryUI.InventoryTabDefinition
   _id: 
-  _icon: {fileID: 21300000, guid: 37d39a0eb3cf36d41bd713280c79c487, type: 3}
+  _icon: {fileID: 21300000, guid: 7243fff4591668e42a4fad911cbe190d, type: 3}
   _label: 
   _category: 2

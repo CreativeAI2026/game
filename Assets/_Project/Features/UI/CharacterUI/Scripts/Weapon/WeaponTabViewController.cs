@@ -11,9 +11,6 @@ namespace CreativeAI.UI.CharacterUI
     public class WeaponTabViewController : MonoBehaviour
     {
         [SerializeField]
-        private TabGroup _tabGroup;
-
-        [SerializeField]
         private RevolverTabGroup _revolverTabGroup;
 
         [SerializeField]
@@ -38,11 +35,6 @@ namespace CreativeAI.UI.CharacterUI
                 if (_revolverTabGroup.CurrentIndex >= 0)
                     Show(_revolverTabGroup.CurrentIndex);
             }
-            else if (_tabGroup != null)
-            {
-                _tabGroup.OnSelectionChanged += OnTabSelected;
-                Show(Mathf.Max(0, _tabGroup.CurrentIndex));
-            }
             else
             {
                 Show(0);
@@ -53,8 +45,6 @@ namespace CreativeAI.UI.CharacterUI
         {
             if (_revolverTabGroup != null)
                 _revolverTabGroup.SelectionChanged -= OnTabSelected;
-            else if (_tabGroup != null)
-                _tabGroup.OnSelectionChanged -= OnTabSelected;
         }
 
         private void OnTabSelected(int index, TabDefinition definition, GameObject view) =>
