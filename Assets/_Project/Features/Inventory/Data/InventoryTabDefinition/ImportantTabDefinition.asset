@@ -13,6 +13,6 @@ MonoBehaviour:
   m_Name: ImportantTabDefinition
   m_EditorClassIdentifier: CreativeAI.UI::CreativeAI.UI.InventoryUI.InventoryTabDefinition
   _id: 
-  _icon: {fileID: 21300000, guid: 3815069e16bce474fb0152313970474c, type: 3}
+  _icon: {fileID: 21300000, guid: 43c8b545a28f09645bd89cc937502bb5, type: 3}
   _label: 
   _category: 3

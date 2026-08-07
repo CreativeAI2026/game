@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using UnityEngine;
 
@@ -5,7 +6,7 @@ namespace CreativeAI.Gameplay
 {
     /// <summary>
     /// レシピの解禁(発見)状態だけを持つセッション常駐。自由調合(FreeCraftPanel)で新しい組み合わせを
-    /// 成功させると、そのレシピがここに解禁され、レシピ一覧(RecipeCraftPanel)に並ぶ=再利用できる。
+    /// 成功させると、そのレシピがここに解禁され、レシピ一覧(RecipeCraftPanelController)に並ぶ=再利用できる。
     ///
     /// 解禁状態は「プレイごとの状態」なので、進行度(ProgressManager)や所持品(InventoryManager)とは別概念として
     /// ここに独立させる(=セッション常駐)。新規開始で自動的にまっさら・タイトルに戻ると破棄・続きからは
@@ -13,8 +14,7 @@ namespace CreativeAI.Gameplay
     /// カタログ(CraftRecipeDB)は読み取り専用で、初期解禁(showInRecipeCraft=静的な設計データ)だけを宣言する。
     /// 実行時の解禁状態はこの Manager が唯一保持し、起動/復元時に初期解禁を取り込む。
     ///
-    /// レシピの識別キーは結果アイテムの id(resultItem.id)。Title フローで EnsureResident する
-    /// (Core→Gameplay 循環回避のため InventoryManager と同じ生成場所)。
+    /// レシピの識別キーは結果アイテムの id(resultItem.id)。Scene 読み込み前に自動生成する。
     /// </summary>
     public sealed class RecipeBookManager : MonoBehaviour
     {
@@ -23,7 +23,15 @@ namespace CreativeAI.Gameplay
         // 解禁済みレシピのキー集合(= resultItem.id)。
         private readonly HashSet<int> _revealed = new();
 
-        /// <summary>セッション常駐生成の入口。既に在ればそれを返す(Title フローから呼ぶ)。</summary>
+        public event Action<CraftRecipeData> RecipeRevealed;
+
+        [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.BeforeSceneLoad)]
+        private static void InitializeBeforeSceneLoad()
+        {
+            EnsureResident();
+        }
+
+        /// <summary>セッション常駐生成の入口。既に在ればそれを返す。</summary>
         public static RecipeBookManager EnsureResident()
         {
             if (Instance != null)
@@ -62,8 +70,17 @@ namespace CreativeAI.Gameplay
             TryKey(recipe, out var key) && _revealed.Contains(key);
 
         /// <summary>レシピを解禁する。新規に解禁できたら true(既に解禁済み/無効なら false)。</summary>
-        public bool Reveal(CraftRecipeData recipe) =>
-            TryKey(recipe, out var key) && _revealed.Add(key);
+        public bool Reveal(CraftRecipeData recipe)
+        {
+            if (!TryKey(recipe, out var key))
+                return false;
+
+            if (!_revealed.Add(key))
+                return false;
+
+            RecipeRevealed?.Invoke(recipe);
+            return true;
+        }
 
         /// <summary>
         /// カタログ(CraftRecipeDB)で「初期解禁(常時表示)」と設計されたレシピを解禁集合に取り込む。

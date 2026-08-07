@@ -13,4 +13,4 @@ MonoBehaviour:
   m_Name: FreeCraftTabDefinition
   m_EditorClassIdentifier: CreativeAI.UI::CreativeAI.UI.TabDefinition
   _id: 
-  _icon: {fileID: 21300000, guid: 5a585020de9632147a062758ac05a5fc, type: 3}
+  _icon: {fileID: 21300000, guid: b6019f5ec018e87489691e718948d971, type: 3}
