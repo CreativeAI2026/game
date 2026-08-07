@@ -39,38 +39,12 @@ namespace CreativeAI.Tests.EditMode
         }
 
         [Test]
-        public void MissingRevolver_FallsBackToTabGroupSelection()
+        public void MissingRevolver_ShowsDefaultWeapon()
         {
-            var groupObject = Track(new GameObject("TabGroup"));
-            groupObject.SetActive(false);
-            var group = groupObject.AddComponent<TabGroup>();
-            var buttonObject = Track(
-                new GameObject(
-                    "TabButton",
-                    typeof(RectTransform),
-                    typeof(Image),
-                    typeof(Button),
-                    typeof(TabButton)
-                )
-            );
-            var definition = Track(ScriptableObject.CreateInstance<TabDefinition>());
-            SetField(group, "_tabButtonPrefab", buttonObject.GetComponent<TabButton>());
-            SetField(
-                group,
-                "_tabEntries",
-                new List<TabGroup.TabEntry>
-                {
-                    new() { definition = definition, view = null },
-                }
-            );
-            SetField(group, "_animDuration", 0f);
-
             var controller = CreateController(out var weaponName);
-            SetField(controller, "_tabGroup", group);
             SetText(weaponName, "pending");
+
             InvokePrivate(controller, "OnEnable");
-            groupObject.SetActive(true);
-            InvokePrivate(group, "Start");
 
             Assert.AreNotEqual("pending", GetText(weaponName));
         }
