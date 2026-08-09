@@ -148,6 +148,9 @@ MonoBehaviour:
   _visualTarget: {fileID: 8277293098971955685}
   _selectedBackground: {fileID: 5196584237673690257}
   _selectedUnderline: {fileID: 7158160504706545378}
+  _selectionShowDuration: 0.22
+  _selectionHideDuration: 0.14
+  _selectionStartScale: 0.9
 --- !u!114 &5317085219052221128
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -247,8 +250,8 @@ RectTransform:
   m_GameObject: {fileID: 6994712391886018893}
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
   m_LocalPosition: {x: 0, y: 0, z: 0}
-  m_LocalScale: {x: 1.7, y: 1.1333333, z: 1.1333333}
-  m_ConstrainProportionsScale: 1
+  m_LocalScale: {x: 2, y: 1.5, z: 1}
+  m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 8277293098971955685}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
@@ -362,7 +365,7 @@ MonoBehaviour:
       m_Calls: []
   m_Sprite: {fileID: 0}
   m_Type: 0
-  m_PreserveAspect: 0
+  m_PreserveAspect: 1
   m_FillCenter: 1
   m_FillMethod: 4
   m_FillAmount: 1

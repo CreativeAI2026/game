@@ -121,7 +121,19 @@ namespace CreativeAI.UI
             iconRect.anchorMin = new Vector2(0.5f, 0.5f);
             iconRect.anchorMax = new Vector2(0.5f, 0.5f);
             iconRect.pivot = new Vector2(0.5f, 0.5f);
-            iconRect.anchoredPosition = Vector2.zero;
+
+            var iconParent = iconRect.parent as RectTransform;
+            if (iconParent != null && _fitRect != iconParent)
+            {
+                Vector3 fitCenterWorld = _fitRect.TransformPoint(_fitRect.rect.center);
+                Vector3 fitCenterLocal = iconParent.InverseTransformPoint(fitCenterWorld);
+                iconRect.localPosition = new Vector3(fitCenterLocal.x, fitCenterLocal.y, 0f);
+            }
+            else
+            {
+                iconRect.anchoredPosition = Vector2.zero;
+            }
+
             iconRect.SetSizeWithCurrentAnchors(RectTransform.Axis.Horizontal, iconSize);
             iconRect.SetSizeWithCurrentAnchors(RectTransform.Axis.Vertical, iconSize);
             _image.preserveAspect = true;
