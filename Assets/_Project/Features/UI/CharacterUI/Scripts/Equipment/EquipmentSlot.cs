@@ -11,7 +11,7 @@ namespace CreativeAI.UI
     public class EquipmentSlot : BaseItemSlot, IPointerDownHandler, IPointerClickHandler
     {
         private const float SelectedIconScale = 1.08f;
-        private const float EmptyIconAlpha = 50f / 255f;
+        private const float EmptyIconAlpha = 0f;
 
         [SerializeField]
         private RectTransform _visualRootRect;
@@ -39,6 +39,7 @@ namespace CreativeAI.UI
         protected override SlotIconView IconView => _iconView;
         protected override SlotCountBadgeView CountBadgeView => _countBadgeView;
         protected override SlotHoverView HoverView => _hoverView;
+        protected override SlotFrameView FrameView => _frameView;
 
         public Button Button { get; private set; }
         public event Action<EquipmentSlot> Clicked;
@@ -114,8 +115,6 @@ namespace CreativeAI.UI
         public void SetSelected(bool selected)
         {
             ResolveViewReferences();
-            _frameView?.SetSelected(selected);
-
             if (selected)
                 Select();
             else

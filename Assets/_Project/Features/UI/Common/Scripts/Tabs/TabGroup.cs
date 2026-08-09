@@ -21,6 +21,10 @@ namespace CreativeAI.UI
         private TabButton _tabButtonPrefab;
 
         [SerializeField]
+        [Tooltip("生成したタブの下線を、このRectTransformの下端へ揃えます。")]
+        private RectTransform _underlineAlignmentTarget;
+
+        [SerializeField]
         private List<TabEntry> _tabEntries;
 
         [SerializeField]
@@ -47,6 +51,10 @@ namespace CreativeAI.UI
         public TabDefinition CurrentDefinition => GetDefinitionForButtonIndex(_currentIndex);
         public GameObject CurrentView => GetViewForButtonIndex(_currentIndex);
         public int EntryCount => _tabEntries?.Count ?? 0;
+        public int ButtonCount => _buttons.Count;
+
+        public TabButton GetButton(int index) =>
+            index >= 0 && index < _buttons.Count ? _buttons[index] : null;
 
         public event Action<int, TabDefinition> OnTabDefinitionSelected;
         public event Action<int, TabDefinition, GameObject> OnSelectionChanged;
@@ -78,6 +86,7 @@ namespace CreativeAI.UI
 
                 btn.SetSelectionGroup(selectionGroup);
                 btn.Bind(entry.definition);
+                btn.AlignUnderlineTo(_underlineAlignmentTarget);
                 int captured = _buttons.Count;
                 btn.Button.onClick.AddListener(() => SelectTab(captured));
                 btn.Button.interactable = _interactionEnabled;

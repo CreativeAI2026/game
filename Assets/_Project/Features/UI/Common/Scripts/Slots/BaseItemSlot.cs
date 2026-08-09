@@ -12,6 +12,7 @@ namespace CreativeAI.UI
         protected virtual SlotIconView IconView => null;
         protected virtual SlotCountBadgeView CountBadgeView => null;
         protected virtual SlotHoverView HoverView => null;
+        protected virtual SlotFrameView FrameView => null;
 
         public ItemData Item => _item;
         public int Count => _count;
@@ -37,6 +38,7 @@ namespace CreativeAI.UI
             _count = 0;
             _isSlotSelected = false;
             Refresh();
+            FrameView?.SetSelected(false);
             RefreshSelectionVisuals();
             ResetItemVisuals();
         }
@@ -51,11 +53,13 @@ namespace CreativeAI.UI
         {
             IconView?.SetIcon(_item);
             CountBadgeView?.SetCount(_item, _count);
+            FrameView?.SetContent(_item, _count);
         }
 
         public virtual void Select()
         {
             _isSlotSelected = true;
+            FrameView?.SetSelected(true);
             RefreshSelectionVisuals();
             HoverView?.AcquireLock();
         }
@@ -63,6 +67,7 @@ namespace CreativeAI.UI
         public virtual void Deselect()
         {
             _isSlotSelected = false;
+            FrameView?.SetSelected(false);
             RefreshSelectionVisuals();
             HoverView?.ReleaseLock();
         }

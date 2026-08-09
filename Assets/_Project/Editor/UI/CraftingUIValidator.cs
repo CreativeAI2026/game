@@ -199,6 +199,19 @@ namespace CreativeAI.EditorTools.UI
                         view
                     );
                 }
+
+                if (
+                    slot is GameObject slotObject
+                    && slotObject.GetComponent<MaterialSlot>() == null
+                )
+                {
+                    report.Error(
+                        path,
+                        $"_slots[{i}]",
+                        "設定したPrefabルートにMaterialSlotがありません。",
+                        slotObject
+                    );
+                }
             }
         }
 

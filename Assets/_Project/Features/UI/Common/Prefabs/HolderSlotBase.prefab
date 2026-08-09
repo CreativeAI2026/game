@@ -144,9 +144,11 @@ MonoBehaviour:
   _releaseLockOnOutsideClick: 1
   _hoverScale: 1.2
   _animationDuration: 0.2
+  _hoverScaleEnabled: 1
   _bounceEnabled: 1
   _bounceHeight: 8
   _bounceDuration: 0.8
+  _targetRect: {fileID: 1442605047534505891}
 --- !u!114 &5370372233479919580
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -160,6 +162,8 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: CreativeAI.UI::CreativeAI.UI.SlotIconView
   _image: {fileID: 614009322375137962}
+  _fitRect: {fileID: 1442605047534505891}
+  _fillRatio: 0.9
   _emptyAlpha: 0
 --- !u!114 &3036268094936297519
 MonoBehaviour:
@@ -187,7 +191,8 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: CreativeAI.UI::CreativeAI.UI.SlotHoverView
   _hoverScale: {fileID: 6333946628220933723}
-  _visualRoot: {fileID: 1442605047534505891}
+  _animationTarget: {fileID: 1442605047534505891}
+  _restScale: 1.08
 --- !u!114 &6153161000247279391
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -201,8 +206,11 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: CreativeAI.UI::CreativeAI.UI.SlotFrameView
   _frame: {fileID: 3652968426843074161}
-  _selectedColor: {r: 1, g: 0.78, b: 0.15, a: 0.9}
-  _normalColor: {r: 1, g: 1, b: 1, a: 0.2}
+  _normalSprite: {fileID: 21300000, guid: 71cb07dc6b0b5404c97e103145916d59, type: 3}
+  _selectedSprite: {fileID: 21300000, guid: d3a358727a466c44bb2c6f6accaca079, type: 3}
+  _itemSetSprite: {fileID: 21300000, guid: 249608d43c135ac4b8f69d7dbebbfb98, type: 3}
+  _itemWithCountSprite: {fileID: 21300000, guid: dd6097617ebaade439cb900fefdb6f65, type: 3}
+  _role: 1
 --- !u!1 &2574526879694383168
 GameObject:
   m_ObjectHideFlags: 0
@@ -268,9 +276,7 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_text: '+
-
-'
+  m_text: +
   m_isRightToLeft: 0
   m_fontAsset: {fileID: 11400000, guid: b99b78d9239e217499db95a88bb2a233, type: 2}
   m_sharedMaterial: {fileID: -2611879881441305974, guid: b99b78d9239e217499db95a88bb2a233, type: 2}
@@ -369,7 +375,7 @@ RectTransform:
   m_GameObject: {fileID: 2592686574594045324}
   m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
   m_LocalPosition: {x: 0, y: 0, z: 0}
-  m_LocalScale: {x: 1.1000001, y: 1.1000001, z: 1}
+  m_LocalScale: {x: 1.08, y: 1.08, z: 1}
   m_ConstrainProportionsScale: 1
   m_Children: []
   m_Father: {fileID: 1442605047534505891}
@@ -400,14 +406,14 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: UnityEngine.UI::UnityEngine.UI.Image
   m_Material: {fileID: 0}
-  m_Color: {r: 1, g: 1, b: 1, a: 0.19607843}
+  m_Color: {r: 1, g: 1, b: 1, a: 1}
   m_RaycastTarget: 0
   m_RaycastPadding: {x: 0, y: 0, z: 0, w: 0}
   m_Maskable: 1
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_Sprite: {fileID: 0}
+  m_Sprite: {fileID: 21300000, guid: 249608d43c135ac4b8f69d7dbebbfb98, type: 3}
   m_Type: 0
   m_PreserveAspect: 0
   m_FillCenter: 1

@@ -9,16 +9,19 @@ namespace CreativeAI.UI.CraftingUI
     public sealed class FreeCraftMaterialSlotsView : MonoBehaviour
     {
         [SerializeField]
-        private List<MaterialSlot> _slots = new();
+        private List<GameObject> _slots = new();
+
+        private readonly List<MaterialSlot> _resolvedSlots = new();
 
         public event Action<int> SlotClicked;
         public event Action<int> SlotDoubleClicked;
 
-        public int SlotCount => _slots.Count;
+        public int SlotCount => _resolvedSlots.Count;
         public bool HasRequiredReferences =>
-            _slots.Count > 0
-            && _slots.All(slot => slot != null)
-            && _slots.Distinct().Count() == _slots.Count;
+            _resolvedSlots.Count == _slots.Count
+            && _resolvedSlots.Count > 0
+            && _resolvedSlots.All(slot => slot != null)
+            && _resolvedSlots.Distinct().Count() == _resolvedSlots.Count;
 
 #if UNITY_EDITOR
         private void Reset() => AutoAssignReferences();
@@ -31,12 +34,14 @@ namespace CreativeAI.UI.CraftingUI
 
             _slots = GetComponentsInChildren<MaterialSlot>(true)
                 .OrderBy(slot => slot.transform.GetSiblingIndex())
+                .Select(slot => slot.gameObject)
                 .ToList();
         }
 #endif
 
         private void OnEnable()
         {
+            ResolveConfiguredSlots();
             UnsubscribeSlots();
             SubscribeSlots();
             NormalizeVisualState();
@@ -47,12 +52,12 @@ namespace CreativeAI.UI.CraftingUI
             UnsubscribeSlots();
         }
 
-        public bool IsValidIndex(int index) => index >= 0 && index < _slots.Count;
+        public bool IsValidIndex(int index) => index >= 0 && index < _resolvedSlots.Count;
 
         public void SetSelectedIndex(int index)
         {
-            for (int i = 0; i < _slots.Count; i++)
-                _slots[i]?.SetSelected(i == index);
+            for (int i = 0; i < _resolvedSlots.Count; i++)
+                _resolvedSlots[i]?.SetSelected(i == index);
         }
 
         public void SetMaterial(int index, ItemStack stack, bool animated)
@@ -61,9 +66,9 @@ namespace CreativeAI.UI.CraftingUI
                 return;
 
             if (animated)
-                _slots[index].SetMaterialAnimated(stack);
+                _resolvedSlots[index].SetMaterialAnimated(stack);
             else
-                _slots[index].SetMaterial(stack);
+                _resolvedSlots[index].SetMaterial(stack);
         }
 
         public void ClearMaterial(int index, bool animated, Action onCleared = null)
@@ -73,17 +78,17 @@ namespace CreativeAI.UI.CraftingUI
 
             if (animated)
             {
-                _slots[index].ClearMaterialAnimated(onCleared);
+                _resolvedSlots[index].ClearMaterialAnimated(onCleared);
                 return;
             }
 
-            _slots[index].Clear();
+            _resolvedSlots[index].Clear();
             onCleared?.Invoke();
         }
 
         public void ResetAll()
         {
-            foreach (var slot in _slots)
+            foreach (var slot in _resolvedSlots)
             {
                 if (slot == null)
                     continue;
@@ -95,13 +100,13 @@ namespace CreativeAI.UI.CraftingUI
 
         private void NormalizeVisualState()
         {
-            foreach (var slot in _slots)
+            foreach (var slot in _resolvedSlots)
                 slot?.NormalizeVisualState();
         }
 
         private void SubscribeSlots()
         {
-            foreach (var slot in _slots)
+            foreach (var slot in _resolvedSlots)
             {
                 if (slot == null)
                     continue;
@@ -113,7 +118,7 @@ namespace CreativeAI.UI.CraftingUI
 
         private void UnsubscribeSlots()
         {
-            foreach (var slot in _slots)
+            foreach (var slot in _resolvedSlots)
             {
                 if (slot == null)
                     continue;
@@ -125,16 +130,28 @@ namespace CreativeAI.UI.CraftingUI
 
         private void OnSlotClicked(MaterialSlot slot)
         {
-            int index = _slots.IndexOf(slot);
+            int index = _resolvedSlots.IndexOf(slot);
             if (index >= 0)
                 SlotClicked?.Invoke(index);
         }
 
         private void OnSlotDoubleClicked(MaterialSlot slot)
         {
-            int index = _slots.IndexOf(slot);
+            int index = _resolvedSlots.IndexOf(slot);
             if (index >= 0)
                 SlotDoubleClicked?.Invoke(index);
+        }
+
+        private void ResolveConfiguredSlots()
+        {
+            _resolvedSlots.Clear();
+            foreach (var slotObject in _slots)
+            {
+                if (slotObject != null && slotObject.TryGetComponent(out MaterialSlot slot))
+                    _resolvedSlots.Add(slot);
+                else
+                    _resolvedSlots.Add(null);
+            }
         }
     }
 }

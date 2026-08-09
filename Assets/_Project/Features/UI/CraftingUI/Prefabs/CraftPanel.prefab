@@ -4881,8 +4881,8 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: CreativeAI.UI::CreativeAI.UI.CraftingUI.FreeCraftMaterialSlotsView
   _slots:
-  - {fileID: 7020491087159445534}
-  - {fileID: 9140154035952992696}
+  - {fileID: 900000000000003001}
+  - {fileID: 900000000000003002}
 --- !u!1 &8898966349712364198
 GameObject:
   m_ObjectHideFlags: 0
@@ -5417,17 +5417,11 @@ RectTransform:
   m_CorrespondingSourceObject: {fileID: 92254038468645233, guid: 61d426d88242bf0409eaa00439daf70d, type: 3}
   m_PrefabInstance: {fileID: 297986883446012665}
   m_PrefabAsset: {fileID: 0}
---- !u!114 &9140154035952992696 stripped
-MonoBehaviour:
-  m_CorrespondingSourceObject: {fileID: 8861660021248932673, guid: 61d426d88242bf0409eaa00439daf70d, type: 3}
+--- !u!1 &900000000000003002 stripped
+GameObject:
+  m_CorrespondingSourceObject: {fileID: 8015250189094976658, guid: 61d426d88242bf0409eaa00439daf70d, type: 3}
   m_PrefabInstance: {fileID: 297986883446012665}
   m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 0}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 57e65f411b70488fb00f871e76b26da5, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: CreativeAI.UI::CreativeAI.UI.CraftingUI.MaterialSlot
 --- !u!1001 &331455239251626477
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -6023,17 +6017,11 @@ RectTransform:
   m_CorrespondingSourceObject: {fileID: 92254038468645233, guid: 61d426d88242bf0409eaa00439daf70d, type: 3}
   m_PrefabInstance: {fileID: 1988123336072098655}
   m_PrefabAsset: {fileID: 0}
---- !u!114 &7020491087159445534 stripped
-MonoBehaviour:
-  m_CorrespondingSourceObject: {fileID: 8861660021248932673, guid: 61d426d88242bf0409eaa00439daf70d, type: 3}
+--- !u!1 &900000000000003001 stripped
+GameObject:
+  m_CorrespondingSourceObject: {fileID: 8015250189094976658, guid: 61d426d88242bf0409eaa00439daf70d, type: 3}
   m_PrefabInstance: {fileID: 1988123336072098655}
   m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 0}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 57e65f411b70488fb00f871e76b26da5, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: CreativeAI.UI::CreativeAI.UI.CraftingUI.MaterialSlot
 --- !u!1001 &2432325985617085719
 PrefabInstance:
   m_ObjectHideFlags: 0

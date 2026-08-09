@@ -18,6 +18,7 @@ namespace CreativeAI.UI.InventoryUI
                 return;
 
             StopBounce();
+            RebuildOwningGridLayout();
             CacheBasePosition();
             float direction = GetBounceDirection();
 
@@ -94,7 +95,9 @@ namespace CreativeAI.UI.InventoryUI
             if (!wasBouncing || _targetRect == null)
                 return;
 
-            _targetRect.localPosition = _baseLocalPosition;
+            bool layoutRebuilt = RebuildOwningGridLayout();
+            if (!layoutRebuilt)
+                _targetRect.localPosition = _baseLocalPosition;
             if (_bounceTarget != null)
                 _bounceTarget.anchoredPosition = _bounceTargetBaseAnchoredPosition;
 
@@ -105,6 +108,19 @@ namespace CreativeAI.UI.InventoryUI
 
                 _linkedTargets[i].localPosition = _linkedTargetBaseLocalPositions[i];
             }
+        }
+
+        private bool RebuildOwningGridLayout()
+        {
+            var grid =
+                _targetRect != null ? _targetRect.GetComponentInParent<GridLayoutGroup>() : null;
+            if (grid == null || grid.transform is not RectTransform gridRect)
+                return false;
+
+            Canvas.ForceUpdateCanvases();
+            LayoutRebuilder.ForceRebuildLayoutImmediate(gridRect);
+            _targetRect.ForceUpdateRectTransforms();
+            return _targetRect.parent == grid.transform;
         }
 
         private float GetBounceDirection()

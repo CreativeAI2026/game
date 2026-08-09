@@ -494,7 +494,7 @@ namespace CreativeAI.EditorTools.UI
     }
 
     [CustomEditor(typeof(RevolverTabGroup))]
-    internal sealed class RevolverTabGroupEditor : Editor
+    internal sealed class RevolverTabGroupEditor : UnityEditor.Editor
     {
         public override void OnInspectorGUI()
         {

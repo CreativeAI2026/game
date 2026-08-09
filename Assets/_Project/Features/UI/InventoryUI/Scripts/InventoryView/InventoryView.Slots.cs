@@ -54,6 +54,9 @@ namespace CreativeAI.UI.InventoryUI
         private ItemSlot CreateSlot(ItemStack stack, int index)
         {
             var slot = GetSlotFromPool();
+            if (slot == null)
+                return null;
+
             slot.gameObject.SetActive(true);
             slot.transform.SetAsLastSibling();
             slot.transform.DOKill();
@@ -63,7 +66,10 @@ namespace CreativeAI.UI.InventoryUI
             _visibleSlots.Add(slot);
 
             slot.transform.localScale = Vector3.zero;
-            slot.transform.DOScale(Vector3.one, 0.2f).SetEase(Ease.OutBack).SetDelay(0.05f * index);
+            slot.transform.DOScale(Vector3.one, 0.2f)
+                .SetEase(Ease.OutBack)
+                .SetDelay(0.05f * index)
+                .SetUpdate(true);
 
             return slot;
         }
@@ -78,7 +84,17 @@ namespace CreativeAI.UI.InventoryUI
                     return slot;
             }
 
-            var createdSlot = Instantiate(_slotPrefab, _slotsRoot, false);
+            var createdObject = Instantiate(_slotPrefab, _slotsRoot, false);
+            if (!createdObject.TryGetComponent(out ItemSlot createdSlot))
+            {
+                Debug.LogError(
+                    $"{nameof(InventoryView)} '{name}' のSlot Prefab '{_slotPrefab.name}'に{nameof(ItemSlot)}がありません。Prefabのルートへ追加してください。",
+                    _slotPrefab
+                );
+                Destroy(createdObject);
+                return null;
+            }
+
             _pooledSlots.Add(createdSlot);
             return createdSlot;
         }

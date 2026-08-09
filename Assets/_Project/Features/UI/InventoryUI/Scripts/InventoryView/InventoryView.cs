@@ -34,7 +34,7 @@ namespace CreativeAI.UI.InventoryUI
         private Transform _slotsRoot;
 
         [SerializeField]
-        private ItemSlot _slotPrefab;
+        private GameObject _slotPrefab;
 
         [Header("Detail")]
         [SerializeField]
