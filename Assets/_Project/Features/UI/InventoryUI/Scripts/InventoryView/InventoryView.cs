@@ -23,6 +23,9 @@ namespace CreativeAI.UI.InventoryUI
         [SerializeField]
         private bool _selectFirstSlotOnRefresh = true;
 
+        [SerializeField]
+        private bool _showItemCounts = true;
+
         private bool _releaseSelectionOnOutsideClick = true;
 
         [Header("Tab")]
@@ -34,7 +37,7 @@ namespace CreativeAI.UI.InventoryUI
         private Transform _slotsRoot;
 
         [SerializeField]
-        private ItemSlot _slotPrefab;
+        private GameObject _slotPrefab;
 
         [Header("Detail")]
         [SerializeField]
@@ -66,6 +69,13 @@ namespace CreativeAI.UI.InventoryUI
 
         public void SetSelectFirstSlotOnRefresh(bool selectFirst) =>
             _selectFirstSlotOnRefresh = selectFirst;
+
+        public void SetShowItemCounts(bool show)
+        {
+            _showItemCounts = show;
+            foreach (var slot in _pooledSlots)
+                slot?.SetShowCount(show);
+        }
 
         public void SetInteractionEnabled(bool enabled)
         {

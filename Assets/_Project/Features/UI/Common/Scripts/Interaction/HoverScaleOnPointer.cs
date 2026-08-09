@@ -75,7 +75,11 @@ namespace CreativeAI.UI.InventoryUI
         public void SetTarget(RectTransform target)
         {
             if (_targetRect == target)
+            {
+                CacheBaseScale(true);
+                CacheBasePosition();
                 return;
+            }
 
             StopBounce();
             _targetRect = target;

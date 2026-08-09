@@ -26,11 +26,18 @@ namespace CreativeAI.UI
                     return FailBuild($"Entry {i} has no TabDefinition.");
                 }
 
-                var item = Instantiate(_itemPrefab, _itemRoot, false);
-                if (item == null)
+                var itemObject = Instantiate(_itemPrefab, _itemRoot, false);
+                if (itemObject == null)
                 {
                     ClearGeneratedItems();
                     return FailBuild($"Failed to instantiate Entry {i}.");
+                }
+
+                if (!itemObject.TryGetComponent(out RevolverTabItemView item))
+                {
+                    DestroyGeneratedObject(itemObject);
+                    ClearGeneratedItems();
+                    return FailBuild($"Entry {i} Item Prefab has no RevolverTabItemView.");
                 }
 
                 if (!item.IsConfigured)
@@ -76,10 +83,18 @@ namespace CreativeAI.UI
             if (item == null)
                 return;
 
+            DestroyGeneratedObject(item.gameObject);
+        }
+
+        private void DestroyGeneratedObject(GameObject itemObject)
+        {
+            if (itemObject == null)
+                return;
+
             if (Application.isPlaying)
-                Destroy(item.gameObject);
+                Destroy(itemObject);
             else
-                DestroyImmediate(item.gameObject);
+                DestroyImmediate(itemObject);
         }
 
         private void UnbindItems()

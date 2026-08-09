@@ -58,14 +58,14 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: UnityEngine.UI::UnityEngine.UI.Image
   m_Material: {fileID: 0}
-  m_Color: {r: 0, g: 0, b: 0, a: 0.78431374}
+  m_Color: {r: 0, g: 0, b: 0, a: 0.55}
   m_RaycastTarget: 0
   m_RaycastPadding: {x: 0, y: 0, z: 0, w: 0}
   m_Maskable: 1
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_Sprite: {fileID: 0}
+  m_Sprite: {fileID: 21300000, guid: 71cb07dc6b0b5404c97e103145916d59, type: 3}
   m_Type: 0
   m_PreserveAspect: 0
   m_FillCenter: 1
@@ -531,6 +531,11 @@ RectTransform:
   m_CorrespondingSourceObject: {fileID: 447750045042963376, guid: eb83329e79f51e24d8c2185aaa107fba, type: 3}
   m_PrefabInstance: {fileID: 137362359080129801}
   m_PrefabAsset: {fileID: 0}
+--- !u!224 &978815406877775115 stripped
+RectTransform:
+  m_CorrespondingSourceObject: {fileID: 900000000000000002, guid: eb83329e79f51e24d8c2185aaa107fba, type: 3}
+  m_PrefabInstance: {fileID: 137362359080129801}
+  m_PrefabAsset: {fileID: 0}
 --- !u!1 &1216446043623954188 stripped
 GameObject:
   m_CorrespondingSourceObject: {fileID: 1227703057984881157, guid: eb83329e79f51e24d8c2185aaa107fba, type: 3}
@@ -551,8 +556,8 @@ MonoBehaviour:
   _visualRootRect: {fileID: 567093039207048889}
   _iconView: {fileID: 3823712922015246223}
   _countBadgeView: {fileID: 8998153339034262442}
+  _frameView: {fileID: 5940462487717734784}
   _hoverView: {fileID: 514934595671315431}
-  _selectionView: {fileID: 5940462487717734784}
   _markerView: {fileID: 319342165626893787}
 --- !u!114 &319342165626893787
 MonoBehaviour:
@@ -586,14 +591,15 @@ MonoBehaviour:
   _containerCanvasGroup: {fileID: 5042546225053022483}
   _countTextCanvasGroup: {fileID: 8553543124283959575}
   _backgroundImage: {fileID: 7410469025042987458}
-  _badgeRatio: 0.32
-  _minBadgeHeight: 20
-  _maxBadgeHeight: 34
-  _horizontalPadding: 10
-  _fontRatio: 0.72
-  _minFontSize: 12
-  _maxFontSize: 20
-  _anchoredPosition: {x: -4, y: 4}
+  _frameRect: {fileID: 978815406877775115}
+  _badgeRatio: 0.16
+  _minBadgeHeight: 12
+  _maxBadgeHeight: 24
+  _badgeWidthRatio: 0.2
+  _fontRatio: 0.95
+  _minFontSize: 10
+  _maxFontSize: 26
+  _normalizedPosition: {x: 0.78, y: 0.15}
 --- !u!114 &3823712922015246223 stripped
 MonoBehaviour:
   m_CorrespondingSourceObject: {fileID: 3816955658388976262, guid: eb83329e79f51e24d8c2185aaa107fba, type: 3}
@@ -613,9 +619,9 @@ MonoBehaviour:
   m_GameObject: {fileID: 1216446043623954188}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 0bf3155840774f3bb81e3472e186a20c, type: 3}
+  m_Script: {fileID: 11500000, guid: 2b940f3134d545558a0050d4bbeb739e, type: 3}
   m_Name: 
-  m_EditorClassIdentifier: CreativeAI.UI::CreativeAI.UI.SlotSelectionView
+  m_EditorClassIdentifier: CreativeAI.UI::CreativeAI.UI.SlotFrameView
 --- !u!1001 &6110350298083372917
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -624,37 +630,45 @@ PrefabInstance:
     serializedVersion: 3
     m_TransformParent: {fileID: 567093039207048889}
     m_Modifications:
+    - target: {fileID: 1063407846044945255, guid: 18ef7840f026b7c4eba3db3c3594e3b0, type: 3}
+      propertyPath: m_fontSize
+      value: 22.8
+      objectReference: {fileID: 0}
+    - target: {fileID: 1063407846044945255, guid: 18ef7840f026b7c4eba3db3c3594e3b0, type: 3}
+      propertyPath: m_fontSizeBase
+      value: 22.8
+      objectReference: {fileID: 0}
     - target: {fileID: 2628696519360898407, guid: 18ef7840f026b7c4eba3db3c3594e3b0, type: 3}
       propertyPath: m_Pivot.x
-      value: 1
+      value: 0.5
       objectReference: {fileID: 0}
     - target: {fileID: 2628696519360898407, guid: 18ef7840f026b7c4eba3db3c3594e3b0, type: 3}
       propertyPath: m_Pivot.y
-      value: 0
+      value: 0.5
       objectReference: {fileID: 0}
     - target: {fileID: 2628696519360898407, guid: 18ef7840f026b7c4eba3db3c3594e3b0, type: 3}
       propertyPath: m_AnchorMax.x
-      value: 1
+      value: 0.5
       objectReference: {fileID: 0}
     - target: {fileID: 2628696519360898407, guid: 18ef7840f026b7c4eba3db3c3594e3b0, type: 3}
       propertyPath: m_AnchorMax.y
-      value: 0
+      value: 0.5
       objectReference: {fileID: 0}
     - target: {fileID: 2628696519360898407, guid: 18ef7840f026b7c4eba3db3c3594e3b0, type: 3}
       propertyPath: m_AnchorMin.x
-      value: 1
+      value: 0.5
       objectReference: {fileID: 0}
     - target: {fileID: 2628696519360898407, guid: 18ef7840f026b7c4eba3db3c3594e3b0, type: 3}
       propertyPath: m_AnchorMin.y
-      value: 0
+      value: 0.5
       objectReference: {fileID: 0}
     - target: {fileID: 2628696519360898407, guid: 18ef7840f026b7c4eba3db3c3594e3b0, type: 3}
       propertyPath: m_SizeDelta.x
-      value: 0
+      value: 32
       objectReference: {fileID: 0}
     - target: {fileID: 2628696519360898407, guid: 18ef7840f026b7c4eba3db3c3594e3b0, type: 3}
       propertyPath: m_SizeDelta.y
-      value: 0
+      value: 24
       objectReference: {fileID: 0}
     - target: {fileID: 2628696519360898407, guid: 18ef7840f026b7c4eba3db3c3594e3b0, type: 3}
       propertyPath: m_LocalPosition.x
@@ -686,11 +700,11 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 2628696519360898407, guid: 18ef7840f026b7c4eba3db3c3594e3b0, type: 3}
       propertyPath: m_AnchoredPosition.x
-      value: 0
+      value: 44.799995
       objectReference: {fileID: 0}
     - target: {fileID: 2628696519360898407, guid: 18ef7840f026b7c4eba3db3c3594e3b0, type: 3}
       propertyPath: m_AnchoredPosition.y
-      value: 0
+      value: -56
       objectReference: {fileID: 0}
     - target: {fileID: 2628696519360898407, guid: 18ef7840f026b7c4eba3db3c3594e3b0, type: 3}
       propertyPath: m_LocalEulerAnglesHint.x
@@ -702,6 +716,10 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 2628696519360898407, guid: 18ef7840f026b7c4eba3db3c3594e3b0, type: 3}
       propertyPath: m_LocalEulerAnglesHint.z
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 3610503063675000503, guid: 18ef7840f026b7c4eba3db3c3594e3b0, type: 3}
+      propertyPath: m_Enabled
       value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 3816816213514770851, guid: 18ef7840f026b7c4eba3db3c3594e3b0, type: 3}
@@ -759,7 +777,7 @@ MonoBehaviour:
   m_PrefabInstance: {fileID: 6110350298083372917}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 0}
-  m_Enabled: 1
+  m_Enabled: 0
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: fe87c0e1cc204ed48ad3b37840f39efc, type: 3}
   m_Name: 

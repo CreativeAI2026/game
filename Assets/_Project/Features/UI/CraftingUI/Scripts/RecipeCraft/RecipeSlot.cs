@@ -23,13 +23,14 @@ namespace CreativeAI.UI.CraftingUI
         private SlotHoverView _hoverView;
 
         [SerializeField]
-        private SlotSelectionView _selectionView;
+        private SlotFrameView _frameView;
 
         private CraftRecipeData _recipe;
         private readonly HashSet<string> _warnedMissingViews = new();
 
         protected override SlotIconView IconView => _iconView;
         protected override SlotHoverView HoverView => _hoverView;
+        protected override SlotFrameView FrameView => _frameView;
 
         public CraftRecipeData Recipe => _recipe;
         public event Action<RecipeSlot> Clicked;
@@ -61,8 +62,6 @@ namespace CreativeAI.UI.CraftingUI
         {
             ResolveViewReferences();
             ConfigureHover();
-            _selectionView?.SetSelected(selected);
-
             if (selected)
                 Select();
             else
@@ -107,7 +106,7 @@ namespace CreativeAI.UI.CraftingUI
             WarnIfMissing(_visualRootRect, "VisualRoot");
             WarnIfMissing(_iconView, nameof(SlotIconView));
             WarnIfMissing(_hoverView, nameof(SlotHoverView));
-            WarnIfMissing(_selectionView, nameof(SlotSelectionView));
+            WarnIfMissing(_frameView, nameof(SlotFrameView));
         }
 
 #if UNITY_EDITOR
@@ -119,7 +118,7 @@ namespace CreativeAI.UI.CraftingUI
             _visualRootRect ??= transform.Find("VisualRoot") as RectTransform;
             _iconView ??= GetComponentInChildren<SlotIconView>(true);
             _hoverView ??= GetComponentInChildren<SlotHoverView>(true);
-            _selectionView ??= GetComponentInChildren<SlotSelectionView>(true);
+            _frameView ??= GetComponentInChildren<SlotFrameView>(true);
         }
 #endif
 

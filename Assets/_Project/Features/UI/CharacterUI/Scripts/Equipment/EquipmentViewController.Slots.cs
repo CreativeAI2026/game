@@ -80,6 +80,53 @@ namespace CreativeAI.UI.CharacterUI
             }
         }
 
+        private void InitializeAssignedItems()
+        {
+            if (_assignmentMode == AssignmentMode.QuickConsumable)
+                RefreshQuickConsumableSlots();
+            else
+                EquipInitialTestItems();
+        }
+
+        private void RefreshAssignedSlots()
+        {
+            if (_assignmentMode == AssignmentMode.QuickConsumable)
+                RefreshQuickConsumableSlots();
+        }
+
+        private void RefreshQuickConsumableSlots()
+        {
+            if (!HasSlots)
+                return;
+
+            var assignedItems = InventoryManager.Instance?.GetQuickFoodSlots();
+            for (int i = 0; i < _slots.Count; i++)
+            {
+                var stack =
+                    assignedItems != null && i < assignedItems.Count ? assignedItems[i] : null;
+                if (stack != null)
+                    _slots[i].SetStack(stack);
+                else
+                    _slots[i].Clear();
+            }
+        }
+
+        private void RefreshQuickConsumableCounts()
+        {
+            foreach (var slot in _slots)
+                if (slot?.Stack != null)
+                    slot.UpdateCount();
+        }
+
+        private int FirstEmptySlotIndex()
+        {
+            for (int i = 0; i < _slots.Count; i++)
+                if (_slots[i].Stack == null)
+                    return i;
+
+            return -1;
+        }
+
         private void SelectEquipmentSlot(int index)
         {
             if (index < 0 || index >= _slots.Count)
@@ -117,6 +164,13 @@ namespace CreativeAI.UI.CharacterUI
             CreativeAI.UI.SlotKeyboardFocus.Claim(this);
             SelectEquipmentSlot(slotIndex);
             _selectedInventoryStack = null;
+
+            if (_assignmentMode == AssignmentMode.QuickConsumable)
+            {
+                InventoryManager.Instance?.ClearQuickFood(slotIndex);
+                return;
+            }
+
             UnequipCurrentSlot();
         }
 
@@ -181,6 +235,37 @@ namespace CreativeAI.UI.CharacterUI
                 return;
 
             _detailPanel.Show(CurrentSlot.Item, _emptyLabel);
+        }
+
+        private void BindQuickFoodChangedEvent()
+        {
+            if (
+                _assignmentMode != AssignmentMode.QuickConsumable
+                || _subscribedToQuickFoodChanged
+                || InventoryManager.Instance == null
+            )
+                return;
+
+            InventoryManager.Instance.QuickFoodChanged -= OnQuickFoodChanged;
+            InventoryManager.Instance.QuickFoodChanged += OnQuickFoodChanged;
+            _subscribedToQuickFoodChanged = true;
+        }
+
+        private void UnbindQuickFoodChangedEvent()
+        {
+            if (!_subscribedToQuickFoodChanged)
+                return;
+
+            if (InventoryManager.Instance != null)
+                InventoryManager.Instance.QuickFoodChanged -= OnQuickFoodChanged;
+
+            _subscribedToQuickFoodChanged = false;
+        }
+
+        private void OnQuickFoodChanged()
+        {
+            RefreshQuickConsumableSlots();
+            RefreshDetailFromCurrentSlot();
         }
     }
 }

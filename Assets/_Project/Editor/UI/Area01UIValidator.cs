@@ -105,8 +105,8 @@ namespace CreativeAI.EditorTools.UI
             ValidateCount(inventories, ExpectedInventoryCount, nameof(InventoryView), report);
             ValidateCount(panelControllers, 1, nameof(InventoryPanelController), report);
             ValidateCount(freeCraftControllers, 1, nameof(FreeCraftPanelController), report);
-            ValidateCount(equipmentControllers, 1, nameof(EquipmentViewController), report);
-            ValidateCount(quickFoodControllers, 1, nameof(QuickFoodViewController), report);
+            ValidateCount(equipmentControllers, 2, nameof(EquipmentViewController), report);
+            ValidateCount(quickFoodControllers, 0, nameof(QuickFoodViewController), report);
             ValidateCount(characterControllers, 1, nameof(CharacterUIController), report);
             ValidateAllTabDefinitions(tabGroups, report);
             ValidateViewSwitchTabGroups(
@@ -178,7 +178,7 @@ namespace CreativeAI.EditorTools.UI
                 )
                     return;
 
-                var category = (ItemCategory)categoryProperty.enumValueIndex;
+                var category = (ItemCategory)categoryProperty.intValue;
                 inventoryProviders.Add($"{nameof(EquipmentViewController)} ({category})");
                 ValidateProviderHierarchy(
                     controller,
@@ -487,11 +487,36 @@ namespace CreativeAI.EditorTools.UI
                 {
                     var serializedController = new SerializedObject(controller);
                     return (ItemCategory)
-                        serializedController.FindProperty("_inventoryCategory").enumValueIndex;
+                        serializedController.FindProperty("_inventoryCategory").intValue;
                 })
                 .ToArray();
 
             ValidateCategoryCount(categories, ItemCategory.Equipment, report);
+            ValidateCategoryCount(categories, ItemCategory.Food, report);
+
+            int quickConsumableCount = controllers.Count(controller =>
+            {
+                var serializedController = new SerializedObject(controller);
+                return serializedController.FindProperty("_assignmentMode")?.intValue == 1;
+            });
+            if (quickConsumableCount == 1)
+            {
+                report.Ok(
+                    nameof(EquipmentViewController),
+                    "_assignmentMode",
+                    "QuickConsumable用Controllerが1つあります。",
+                    null
+                );
+            }
+            else
+            {
+                report.Error(
+                    nameof(EquipmentViewController),
+                    "_assignmentMode",
+                    $"QuickConsumable用Controllerは1つ必要です。現在: {quickConsumableCount}個",
+                    null
+                );
+            }
         }
 
         private static void ValidateCategoryCount(

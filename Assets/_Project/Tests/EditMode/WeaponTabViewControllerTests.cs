@@ -79,7 +79,7 @@ namespace CreativeAI.Tests.EditMode
             var definition = Track(ScriptableObject.CreateInstance<TabDefinition>());
             var group = groupObject.AddComponent<RevolverTabGroup>();
             SetField(group, "_entries", new List<RevolverTabEntry> { new(definition) });
-            SetField(group, "_itemPrefab", itemPrefab.GetComponent<RevolverTabItemView>());
+            SetField(group, "_itemPrefab", itemPrefab);
             SetField(group, "_itemRoot", (RectTransform)itemRoot.transform);
             return group;
         }

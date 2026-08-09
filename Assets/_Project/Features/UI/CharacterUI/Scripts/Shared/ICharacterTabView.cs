@@ -3,7 +3,7 @@ namespace CreativeAI.UI.CharacterUI
     /// <summary>
     /// CharacterUI のタブに乗る View の契約。<see cref="CharacterUIController"/> がタブ選択に応じて
     /// これらを呼び分ける(表示に入る View は <see cref="OnEnter"/>、外れる View は <see cref="OnExit"/>)。
-    /// 装備品タブ = <see cref="EquipmentViewController"/> / 即時使用食材タブ = <see cref="QuickFoodViewController"/>
+    /// 装備品タブと即時使用食材タブ = モード設定した <see cref="EquipmentViewController"/>
     /// が実装する。CharacterUIController は具体型ではなくこの契約で View を収集する。
     /// </summary>
     public interface ICharacterTabView

@@ -71,6 +71,26 @@ PrefabInstance:
     serializedVersion: 3
     m_TransformParent: {fileID: 5043569190797307938}
     m_Modifications:
+    - target: {fileID: 2636628728606805784, guid: b32822d6fbda1a44e978805497b93af1, type: 3}
+      propertyPath: m_LocalScale.x
+      value: 0.82
+      objectReference: {fileID: 0}
+    - target: {fileID: 2636628728606805784, guid: b32822d6fbda1a44e978805497b93af1, type: 3}
+      propertyPath: m_LocalScale.y
+      value: 0.82
+      objectReference: {fileID: 0}
+    - target: {fileID: 5166665395911186810, guid: b32822d6fbda1a44e978805497b93af1, type: 3}
+      propertyPath: m_LocalScale.x
+      value: 0.58
+      objectReference: {fileID: 0}
+    - target: {fileID: 5166665395911186810, guid: b32822d6fbda1a44e978805497b93af1, type: 3}
+      propertyPath: m_LocalScale.y
+      value: 0.58
+      objectReference: {fileID: 0}
+    - target: {fileID: 8251821240556840967, guid: b32822d6fbda1a44e978805497b93af1, type: 3}
+      propertyPath: m_IsActive
+      value: 0
+      objectReference: {fileID: 0}
     - target: {fileID: 3638251821614896164, guid: b32822d6fbda1a44e978805497b93af1, type: 3}
       propertyPath: m_Pivot.x
       value: 0.5
@@ -165,6 +185,10 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 5813278075990341649, guid: b32822d6fbda1a44e978805497b93af1, type: 3}
       propertyPath: _hoverScaleEnabled
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 5510271927287150368, guid: b32822d6fbda1a44e978805497b93af1, type: 3}
+      propertyPath: _showSelectedUnderline
       value: 0
       objectReference: {fileID: 0}
     m_RemovedComponents: []

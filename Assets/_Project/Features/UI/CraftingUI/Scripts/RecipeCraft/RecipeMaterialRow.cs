@@ -7,6 +7,12 @@ namespace CreativeAI.UI.CraftingUI
 {
     public class RecipeMaterialRow : MonoBehaviour
     {
+        [SerializeField]
+        private Color _sufficientColor = new Color32(67, 73, 91, 255);
+
+        [SerializeField]
+        private Color _insufficientColor = new Color32(180, 55, 55, 255);
+
         private Image _icon;
         private TMP_Text _text;
 
@@ -42,7 +48,7 @@ namespace CreativeAI.UI.CraftingUI
             if (_text != null)
             {
                 _text.text = $"{material.itemName}  {data.AvailableCount} / {data.RequiredCount}";
-                _text.color = data.IsSufficient ? Color.white : new Color(0.9f, 0.25f, 0.25f);
+                _text.color = data.IsSufficient ? _sufficientColor : _insufficientColor;
             }
         }
 

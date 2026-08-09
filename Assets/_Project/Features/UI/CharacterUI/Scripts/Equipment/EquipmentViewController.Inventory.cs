@@ -91,7 +91,10 @@ namespace CreativeAI.UI.CharacterUI
         private void OnInventoryChanged()
         {
             _inventory?.RefreshCurrentTab();
-            SyncEquipmentSlotsWithInventory();
+            if (_assignmentMode == AssignmentMode.QuickConsumable)
+                RefreshQuickConsumableCounts();
+            else
+                SyncEquipmentSlotsWithInventory();
         }
 
         private void SyncInventorySelection(ItemStack stack)
@@ -113,6 +116,12 @@ namespace CreativeAI.UI.CharacterUI
             if (!IsValidStack(stack) || !HasSlots)
                 return;
 
+            if (_assignmentMode == AssignmentMode.QuickConsumable)
+            {
+                AssignQuickConsumable(stack);
+                return;
+            }
+
             int equippedSlotIndex = _slots.FindIndex(slot => slot.Stack == stack);
             if (stack.IsEquipped || equippedSlotIndex >= 0)
             {
@@ -132,6 +141,19 @@ namespace CreativeAI.UI.CharacterUI
         private bool IsValidStack(ItemStack stack)
         {
             return stack?.Data != null && stack.Data.category == _inventoryCategory;
+        }
+
+        private void AssignQuickConsumable(ItemStack stack)
+        {
+            int targetSlotIndex = FirstEmptySlotIndex();
+            if (targetSlotIndex < 0)
+                targetSlotIndex = _currentSlotIndex;
+
+            if (InventoryManager.Instance?.SetQuickFood(targetSlotIndex, stack) != true)
+                return;
+
+            SelectAndRotateSlot(targetSlotIndex);
+            _detailPanel?.Show(stack.Data);
         }
 
         private void EquipSelectedItem()

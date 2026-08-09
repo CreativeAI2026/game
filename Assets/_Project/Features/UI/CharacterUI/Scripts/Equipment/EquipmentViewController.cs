@@ -8,6 +8,12 @@ namespace CreativeAI.UI.CharacterUI
 {
     public partial class EquipmentViewController : MonoBehaviour, ICharacterTabView
     {
+        private enum AssignmentMode
+        {
+            Equipment,
+            QuickConsumable,
+        }
+
         private TriangleLayout _triangleLayout;
 
         [Header("Equipment Slots Root")]
@@ -26,6 +32,9 @@ namespace CreativeAI.UI.CharacterUI
         private ItemCategory _inventoryCategory = ItemCategory.Equipment;
 
         [SerializeField]
+        private AssignmentMode _assignmentMode = AssignmentMode.Equipment;
+
+        [SerializeField]
         private string _emptyLabel = "\uFF08\u672A\u88C5\u5099\uFF09";
 
         private readonly List<EquipmentSlot> _slots = new();
@@ -33,6 +42,7 @@ namespace CreativeAI.UI.CharacterUI
         private ItemStack _selectedInventoryStack;
         private bool _initialized;
         private bool _subscribedToInventoryChanged;
+        private bool _subscribedToQuickFoodChanged;
         private bool _warnedMissingInventory;
         private bool _warnedMissingDetailPanel;
 
@@ -70,9 +80,10 @@ namespace CreativeAI.UI.CharacterUI
             BindInventoryItemsRequested();
             ConfigureInventory();
             InitializeSlots();
-            EquipInitialTestItems();
+            InitializeAssignedItems();
             BindInventoryEvents();
             BindInventoryChangedEvent();
+            BindQuickFoodChangedEvent();
 
             RefreshSlotLayout();
             SelectEquipmentSlot(0);
@@ -89,13 +100,17 @@ namespace CreativeAI.UI.CharacterUI
             BindInventoryItemsRequested();
 
             if (_initialized)
+            {
                 BindInventoryChangedEvent();
+                BindQuickFoodChangedEvent();
+            }
         }
 
         private void OnDisable()
         {
             UnbindInventoryItemsRequested();
             UnbindInventoryChangedEvent();
+            UnbindQuickFoodChangedEvent();
         }
 
         private void OnDestroy()
@@ -104,6 +119,7 @@ namespace CreativeAI.UI.CharacterUI
             UnbindInventoryEvents();
             UnbindInventoryItemsRequested();
             UnbindInventoryChangedEvent();
+            UnbindQuickFoodChangedEvent();
             if (_triangleLayout != null)
                 _triangleLayout.AnimationStateChanged -= SetSlotsInputLocked;
         }
@@ -127,6 +143,7 @@ namespace CreativeAI.UI.CharacterUI
             if (!HasSlots)
                 return;
 
+            RefreshAssignedSlots();
             SelectEquipmentSlot(GetTopEquipmentSlotIndex());
             CreativeAI.UI.SlotKeyboardFocus.Claim(this);
             _selectedInventoryStack = null;
@@ -200,6 +217,7 @@ namespace CreativeAI.UI.CharacterUI
         private void ConfigureInventory()
         {
             _inventory?.SetSelectFirstSlotOnRefresh(false);
+            _inventory?.SetShowItemCounts(_assignmentMode == AssignmentMode.QuickConsumable);
         }
 
         private bool IsSlotInputLocked()

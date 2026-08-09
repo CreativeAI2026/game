@@ -9,6 +9,7 @@ namespace CreativeAI.UI.InventoryUI
     {
         private ItemStack _itemStack;
         private InventoryView _controller;
+        private bool _showCount = true;
 
         [SerializeField]
         private RectTransform _visualRootRect;
@@ -20,10 +21,10 @@ namespace CreativeAI.UI.InventoryUI
         private SlotCountBadgeView _countBadgeView;
 
         [SerializeField]
-        private SlotHoverView _hoverView;
+        private SlotFrameView _frameView;
 
         [SerializeField]
-        private SlotSelectionView _selectionView;
+        private SlotHoverView _hoverView;
 
         [SerializeField]
         private SlotMarkerView _markerView;
@@ -31,8 +32,9 @@ namespace CreativeAI.UI.InventoryUI
         private readonly HashSet<string> _warnedMissingViews = new();
 
         protected override SlotIconView IconView => _iconView;
-        protected override SlotCountBadgeView CountBadgeView => _countBadgeView;
+        protected override SlotCountBadgeView CountBadgeView => _showCount ? _countBadgeView : null;
         protected override SlotHoverView HoverView => _hoverView;
+        protected override SlotFrameView FrameView => _frameView;
 
         protected override void Awake()
         {
@@ -58,6 +60,17 @@ namespace CreativeAI.UI.InventoryUI
         }
 
         public ItemStack Stack => _itemStack;
+
+        public void SetShowCount(bool show)
+        {
+            _showCount = show;
+            if (show)
+                _countBadgeView?.SetCount(_item, _count);
+            else
+                _countBadgeView?.Hide();
+        }
+
+        public void RefreshCountLayout() => _countBadgeView?.RefreshLayout();
 
         public void SetReleaseSelectionOnOutsideClick(bool release)
         {
@@ -96,8 +109,8 @@ namespace CreativeAI.UI.InventoryUI
             WarnIfMissing(_visualRootRect, "VisualRoot");
             WarnIfMissing(_iconView, nameof(SlotIconView));
             WarnIfMissing(_countBadgeView, nameof(SlotCountBadgeView));
+            WarnIfMissing(_frameView, nameof(SlotFrameView));
             WarnIfMissing(_hoverView, nameof(SlotHoverView));
-            WarnIfMissing(_selectionView, nameof(SlotSelectionView));
             WarnIfMissing(_markerView, nameof(SlotMarkerView));
         }
 
@@ -110,8 +123,8 @@ namespace CreativeAI.UI.InventoryUI
             _visualRootRect ??= transform.Find("VisualRoot") as RectTransform;
             _iconView ??= GetComponentInChildren<SlotIconView>(true);
             _countBadgeView ??= GetComponentInChildren<SlotCountBadgeView>(true);
+            _frameView ??= GetComponentInChildren<SlotFrameView>(true);
             _hoverView ??= GetComponentInChildren<SlotHoverView>(true);
-            _selectionView ??= GetComponentInChildren<SlotSelectionView>(true);
             _markerView ??= GetComponentInChildren<SlotMarkerView>(true);
         }
 #endif

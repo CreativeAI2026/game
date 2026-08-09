@@ -40,6 +40,7 @@ namespace CreativeAI.UI.CraftingUI
 
         protected override SlotIconView IconView => _iconView;
         protected override SlotHoverView HoverView => _hoverView;
+        protected override SlotFrameView FrameView => _frameView;
 
         public event Action<MaterialSlot> Clicked;
         public event Action<MaterialSlot> DoubleClicked;
@@ -90,8 +91,6 @@ namespace CreativeAI.UI.CraftingUI
         {
             ResolveViewReferences();
             _isSelected = selected;
-            _frameView?.SetSelected(selected);
-
             if (selected)
                 Select();
             else
@@ -172,11 +171,6 @@ namespace CreativeAI.UI.CraftingUI
 
                 if (animatedRect != null)
                     animatedRect.localScale = Vector3.one * scale;
-                if (_frameView != null)
-                    _frameView.SetColor(
-                        Color.Lerp(Color.white, _frameView.GetColor(_isSelected), t)
-                    );
-
                 elapsed += Time.unscaledDeltaTime;
                 yield return null;
             }

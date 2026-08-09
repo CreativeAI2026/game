@@ -5,7 +5,7 @@ namespace CreativeAI.UI.InventoryUI
         protected override void RefreshSelectionVisuals()
         {
             ResolveViewReferences();
-            _selectionView?.SetSelected(_isSlotSelected);
+            _frameView?.SetSelected(_isSlotSelected);
         }
     }
 }

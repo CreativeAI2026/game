@@ -11,15 +11,24 @@ namespace CreativeAI.UI
         [SerializeField]
         private Image _image;
 
+        [SerializeField]
+        private RectTransform _fitRect;
+
+        [SerializeField, Range(0.1f, 1f)]
+        private float _fillRatio = 0.9f;
+
         [SerializeField, Range(0f, 1f)]
         private float _emptyAlpha;
 
         private bool _hasWarnedMissingImage;
         private Color _baseColor = Color.white;
         private bool _hasCachedBaseColor;
+        private bool _layoutRefreshPending;
 
         public bool HasRequiredReferences => ResolveImage();
         public bool IsVisible => _image != null && _image.gameObject.activeSelf;
+        public RectTransform FitRect => _fitRect;
+        public RectTransform IconRect => _image != null ? _image.rectTransform : null;
 
         public void SetIcon(ItemData item) => SetIcon(item != null ? item.icon : null);
 
@@ -29,6 +38,7 @@ namespace CreativeAI.UI
                 return;
 
             _image.sprite = sprite;
+            RefreshLayout();
             ApplyVisibility(sprite != null);
         }
 
@@ -93,6 +103,66 @@ namespace CreativeAI.UI
             ApplyVisibility(_image.sprite != null);
         }
 
+        public void RefreshLayout()
+        {
+            if (!ResolveImage())
+                return;
+
+            if (_fitRect == null)
+                return;
+
+            float shortEdge = Mathf.Min(_fitRect.rect.width, _fitRect.rect.height);
+            if (shortEdge <= 0f)
+            {
+                _layoutRefreshPending = true;
+                return;
+            }
+
+            float iconSize = shortEdge * _fillRatio;
+            var iconRect = _image.rectTransform;
+            iconRect.anchorMin = new Vector2(0.5f, 0.5f);
+            iconRect.anchorMax = new Vector2(0.5f, 0.5f);
+            iconRect.pivot = new Vector2(0.5f, 0.5f);
+
+            var iconParent = iconRect.parent as RectTransform;
+            if (iconParent != null && _fitRect != iconParent)
+            {
+                Vector3 fitCenterWorld = _fitRect.TransformPoint(_fitRect.rect.center);
+                Vector3 fitCenterLocal = iconParent.InverseTransformPoint(fitCenterWorld);
+                iconRect.localPosition = new Vector3(fitCenterLocal.x, fitCenterLocal.y, 0f);
+            }
+            else
+            {
+                iconRect.anchoredPosition = Vector2.zero;
+            }
+
+            iconRect.SetSizeWithCurrentAnchors(RectTransform.Axis.Horizontal, iconSize);
+            iconRect.SetSizeWithCurrentAnchors(RectTransform.Axis.Vertical, iconSize);
+            _image.preserveAspect = true;
+            _layoutRefreshPending = false;
+        }
+
+        private void OnEnable()
+        {
+            if (!ResolveImage())
+                return;
+
+            RefreshLayout();
+            ApplyVisibility(_image.sprite != null);
+        }
+
+        private void LateUpdate()
+        {
+            if (_layoutRefreshPending)
+                RefreshLayout();
+        }
+
+        private void OnRectTransformDimensionsChange()
+        {
+            if (isActiveAndEnabled)
+                RefreshLayout();
+        }
+
         private bool ResolveImage()
         {
             if (_image == null)
@@ -121,6 +191,7 @@ namespace CreativeAI.UI
 
             var iconTransform = transform.Find("VisualRoot/Icon") ?? transform.Find("Icon");
             _image = iconTransform != null ? iconTransform.GetComponent<Image>() : null;
+            _fitRect ??= _image != null ? _image.rectTransform.parent as RectTransform : null;
         }
 #endif
 

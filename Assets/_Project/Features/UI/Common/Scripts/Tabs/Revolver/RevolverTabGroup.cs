@@ -14,7 +14,7 @@ namespace CreativeAI.UI
 
         [Header("Build")]
         [SerializeField]
-        private RevolverTabItemView _itemPrefab;
+        private GameObject _itemPrefab;
 
         [SerializeField]
         private RectTransform _itemRoot;

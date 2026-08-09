@@ -13,7 +13,8 @@ export LC_ALL=C   # sort と comm の照合順序を一致させる
 tmp="$(mktemp -d)"
 trap 'rm -rf "$tmp"' EXIT
 
-git ls-files -- 'Assets/' > "$tmp/all"
+# Keep non-ASCII asset names as real paths instead of C-style quoted strings.
+git -c core.quotePath=false ls-files -- 'Assets/' > "$tmp/all"
 
 if [[ ! -s "$tmp/all" ]]; then
   echo "Assets/ 配下に追跡ファイルがありません。スキップします。"

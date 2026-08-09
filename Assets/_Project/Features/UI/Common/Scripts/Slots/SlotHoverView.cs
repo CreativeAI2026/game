@@ -9,7 +9,10 @@ namespace CreativeAI.UI
         private HoverScaleOnPointer _hoverScale;
 
         [SerializeField]
-        private RectTransform _visualRoot;
+        private RectTransform _animationTarget;
+
+        [SerializeField, Min(0.1f)]
+        private float _restScale = 1.08f;
 
         private bool _hasWarnedMissingHoverScale;
         private bool _hasWarnedMissingVisualRoot;
@@ -22,7 +25,7 @@ namespace CreativeAI.UI
                 return;
             }
 
-            if (_visualRoot == null || _visualRoot == transform)
+            if (_animationTarget == null)
             {
                 WarnMissingVisualRootOnce();
                 _hoverScale.SetLockEnabled(false);
@@ -31,7 +34,8 @@ namespace CreativeAI.UI
                 return;
             }
 
-            _hoverScale.SetTarget(_visualRoot);
+            _animationTarget.localScale = Vector3.one * _restScale;
+            _hoverScale.SetTarget(_animationTarget);
             _hoverScale.SetBounceTarget(null);
             _hoverScale.SetLinkedTargets();
         }
@@ -87,7 +91,7 @@ namespace CreativeAI.UI
         private void AutoAssignReferences()
         {
             _hoverScale ??= GetComponent<HoverScaleOnPointer>();
-            _visualRoot ??= transform.Find("VisualRoot") as RectTransform;
+            _animationTarget ??= GetComponent<RectTransform>();
         }
 #endif
 

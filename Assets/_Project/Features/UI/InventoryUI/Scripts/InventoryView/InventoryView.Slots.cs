@@ -8,6 +8,7 @@ namespace CreativeAI.UI.InventoryUI
 {
     public partial class InventoryView
     {
+        private const float InitialSlotScale = 0.82f;
         private Tween _scrollTween;
 
         public void SetReleaseSelectionOnOutsideClick(bool release)
@@ -54,16 +55,24 @@ namespace CreativeAI.UI.InventoryUI
         private ItemSlot CreateSlot(ItemStack stack, int index)
         {
             var slot = GetSlotFromPool();
+            if (slot == null)
+                return null;
+
             slot.gameObject.SetActive(true);
             slot.transform.SetAsLastSibling();
             slot.transform.DOKill();
             slot.SetReleaseSelectionOnOutsideClick(_releaseSelectionOnOutsideClick);
+            slot.SetShowCount(_showItemCounts);
             slot.SetItem(stack);
             slot.SetCraftAssigned(IsCraftAssigned(stack));
             _visibleSlots.Add(slot);
 
-            slot.transform.localScale = Vector3.zero;
-            slot.transform.DOScale(Vector3.one, 0.2f).SetEase(Ease.OutBack).SetDelay(0.05f * index);
+            slot.transform.localScale = Vector3.one * InitialSlotScale;
+            slot.transform.DOScale(Vector3.one, 0.2f)
+                .SetEase(Ease.OutBack)
+                .SetDelay(0.05f * index)
+                .SetUpdate(true)
+                .OnComplete(slot.RefreshCountLayout);
 
             return slot;
         }
@@ -78,7 +87,17 @@ namespace CreativeAI.UI.InventoryUI
                     return slot;
             }
 
-            var createdSlot = Instantiate(_slotPrefab, _slotsRoot, false);
+            var createdObject = Instantiate(_slotPrefab, _slotsRoot, false);
+            if (!createdObject.TryGetComponent(out ItemSlot createdSlot))
+            {
+                Debug.LogError(
+                    $"{nameof(InventoryView)} '{name}' のSlot Prefab '{_slotPrefab.name}'に{nameof(ItemSlot)}がありません。Prefabのルートへ追加してください。",
+                    _slotPrefab
+                );
+                Destroy(createdObject);
+                return null;
+            }
+
             _pooledSlots.Add(createdSlot);
             return createdSlot;
         }
@@ -149,6 +168,9 @@ namespace CreativeAI.UI.InventoryUI
 
             Canvas.ForceUpdateCanvases();
             LayoutRebuilder.ForceRebuildLayoutImmediate(contentRect);
+            Canvas.ForceUpdateCanvases();
+            foreach (var slot in _visibleSlots)
+                slot?.RefreshCountLayout();
 
             if (scrollRect == null)
                 return;

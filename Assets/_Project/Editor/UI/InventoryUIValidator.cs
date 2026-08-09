@@ -173,7 +173,7 @@ namespace CreativeAI.EditorTools.UI
 
             var serializedInventory = new SerializedObject(inventory);
             var slotsRoot = GetReference<Transform>(serializedInventory, "_slotsRoot");
-            var slotPrefab = GetReference<ItemSlot>(serializedInventory, "_slotPrefab");
+            var slotPrefab = GetReference<GameObject>(serializedInventory, "_slotPrefab");
 
             ValidateSlotsRoot(inventory, slotsRoot, report);
             ValidateItemSlotPrefab(inventory, slotPrefab, report);
@@ -257,14 +257,14 @@ namespace CreativeAI.EditorTools.UI
 
         private static void ValidateItemSlotPrefab(
             InventoryView inventory,
-            ItemSlot slotPrefab,
+            GameObject slotPrefab,
             UIValidationReport report
         )
         {
             if (slotPrefab == null)
                 return;
 
-            var root = slotPrefab.gameObject;
+            var root = slotPrefab;
             string path = AssetDatabase.GetAssetPath(root);
             if (path != ItemSlotPath)
             {
