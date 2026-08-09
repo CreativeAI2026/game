@@ -27,6 +27,8 @@ namespace CreativeAI.UI
 
         public bool HasRequiredReferences => ResolveImage();
         public bool IsVisible => _image != null && _image.gameObject.activeSelf;
+        public RectTransform FitRect => _fitRect;
+        public RectTransform IconRect => _image != null ? _image.rectTransform : null;
 
         public void SetIcon(ItemData item) => SetIcon(item != null ? item.icon : null);
 

@@ -129,6 +129,7 @@ MonoBehaviour:
   _startAngleDeg: 135
   _animationDuration: 0.4
   _ease: 16
+  _mirrorCustomFrameOnRight: 1
 --- !u!1001 &31634548324632622
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -267,7 +268,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 5214084194860183356, guid: d1a5ee0d9b2eda344b632dd984841054, type: 3}
       propertyPath: m_AnchoredPosition.x
-      value: 36.5
+      value: -36.5
       objectReference: {fileID: 0}
     - target: {fileID: 5214084194860183356, guid: d1a5ee0d9b2eda344b632dd984841054, type: 3}
       propertyPath: m_AnchoredPosition.y

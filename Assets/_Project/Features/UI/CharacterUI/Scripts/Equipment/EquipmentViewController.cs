@@ -217,6 +217,7 @@ namespace CreativeAI.UI.CharacterUI
         private void ConfigureInventory()
         {
             _inventory?.SetSelectFirstSlotOnRefresh(false);
+            _inventory?.SetShowItemCounts(_assignmentMode == AssignmentMode.QuickConsumable);
         }
 
         private bool IsSlotInputLocked()

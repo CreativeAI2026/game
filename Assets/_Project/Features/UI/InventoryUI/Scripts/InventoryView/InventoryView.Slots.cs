@@ -8,6 +8,7 @@ namespace CreativeAI.UI.InventoryUI
 {
     public partial class InventoryView
     {
+        private const float InitialSlotScale = 0.82f;
         private Tween _scrollTween;
 
         public void SetReleaseSelectionOnOutsideClick(bool release)
@@ -61,15 +62,17 @@ namespace CreativeAI.UI.InventoryUI
             slot.transform.SetAsLastSibling();
             slot.transform.DOKill();
             slot.SetReleaseSelectionOnOutsideClick(_releaseSelectionOnOutsideClick);
+            slot.SetShowCount(_showItemCounts);
             slot.SetItem(stack);
             slot.SetCraftAssigned(IsCraftAssigned(stack));
             _visibleSlots.Add(slot);
 
-            slot.transform.localScale = Vector3.zero;
+            slot.transform.localScale = Vector3.one * InitialSlotScale;
             slot.transform.DOScale(Vector3.one, 0.2f)
                 .SetEase(Ease.OutBack)
                 .SetDelay(0.05f * index)
-                .SetUpdate(true);
+                .SetUpdate(true)
+                .OnComplete(slot.RefreshCountLayout);
 
             return slot;
         }
@@ -165,6 +168,9 @@ namespace CreativeAI.UI.InventoryUI
 
             Canvas.ForceUpdateCanvases();
             LayoutRebuilder.ForceRebuildLayoutImmediate(contentRect);
+            Canvas.ForceUpdateCanvases();
+            foreach (var slot in _visibleSlots)
+                slot?.RefreshCountLayout();
 
             if (scrollRect == null)
                 return;

@@ -20,6 +20,10 @@ namespace CreativeAI.UI
         [SerializeField]
         private Ease _ease = Ease.InOutQuint;
 
+        [SerializeField]
+        [Tooltip("右側へ配置したCustom枠だけを水平反転します。")]
+        private bool _mirrorCustomFrameOnRight;
+
         // 現在の頂点インデックス（0=上, 1=左下, 2=右下）
         // _offsetIndex=0 のとき子[0]が上、子[1]が左下、子[2]が右下
         private int _offsetIndex = 0;
@@ -157,6 +161,7 @@ namespace CreativeAI.UI
                 // 子iは頂点 (i + _offsetIndex) % 3 へ移動
                 int vertexIndex = (i + _offsetIndex) % 3;
                 Vector2 target = GetVertex(vertexIndex);
+                ApplyFrameOrientation(child, target, true);
 
                 if (child is RectTransform rt)
                 {
@@ -210,6 +215,7 @@ namespace CreativeAI.UI
 
                 int vertexIndex = (i + _offsetIndex) % 3;
                 Vector2 pos = GetVertex(vertexIndex);
+                ApplyFrameOrientation(child, pos, false);
 
                 if (child is RectTransform rt)
                     rt.anchoredPosition = pos;
@@ -218,6 +224,35 @@ namespace CreativeAI.UI
 
                 i++;
             }
+        }
+
+        private void ApplyFrameOrientation(Transform slot, Vector2 position, bool animated)
+        {
+            if (!_mirrorCustomFrameOnRight || slot == null)
+                return;
+
+            var frameView = slot.GetComponentInChildren<SlotFrameView>(true);
+            if (frameView == null || frameView.Role != SlotFrameRole.Custom)
+                return;
+
+            var equipmentSlot = slot.GetComponent<EquipmentSlot>();
+            if (equipmentSlot != null)
+            {
+                equipmentSlot.ApplyCustomFrameOrientation(
+                    position.x > 0f,
+                    animated ? _animationDuration : 0f
+                );
+                return;
+            }
+
+            RectTransform frameRect = frameView.FrameRect;
+            if (frameRect == null)
+                return;
+
+            Vector3 scale = frameRect.localScale;
+            float scaleMagnitude = Mathf.Abs(scale.x);
+            scale.x = position.x > 0f ? -scaleMagnitude : scaleMagnitude;
+            frameRect.localScale = scale;
         }
 
 #if UNITY_EDITOR

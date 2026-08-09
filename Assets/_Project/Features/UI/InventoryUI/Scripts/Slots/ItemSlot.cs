@@ -9,6 +9,7 @@ namespace CreativeAI.UI.InventoryUI
     {
         private ItemStack _itemStack;
         private InventoryView _controller;
+        private bool _showCount = true;
 
         [SerializeField]
         private RectTransform _visualRootRect;
@@ -31,7 +32,7 @@ namespace CreativeAI.UI.InventoryUI
         private readonly HashSet<string> _warnedMissingViews = new();
 
         protected override SlotIconView IconView => _iconView;
-        protected override SlotCountBadgeView CountBadgeView => _countBadgeView;
+        protected override SlotCountBadgeView CountBadgeView => _showCount ? _countBadgeView : null;
         protected override SlotHoverView HoverView => _hoverView;
         protected override SlotFrameView FrameView => _frameView;
 
@@ -59,6 +60,17 @@ namespace CreativeAI.UI.InventoryUI
         }
 
         public ItemStack Stack => _itemStack;
+
+        public void SetShowCount(bool show)
+        {
+            _showCount = show;
+            if (show)
+                _countBadgeView?.SetCount(_item, _count);
+            else
+                _countBadgeView?.Hide();
+        }
+
+        public void RefreshCountLayout() => _countBadgeView?.RefreshLayout();
 
         public void SetReleaseSelectionOnOutsideClick(bool release)
         {

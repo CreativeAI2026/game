@@ -62,6 +62,7 @@ namespace CreativeAI.UI
         private Vector2 _normalizedPosition = new(0.78f, 0.15f);
 
         private bool _hasWarnedMissingReferences;
+        private bool _layoutRefreshPending;
 
         public bool HasRequiredReferences => ResolveReferences();
         public bool IsVisible => _container != null && _container.gameObject.activeSelf;
@@ -92,6 +93,7 @@ namespace CreativeAI.UI
             _containerCanvasGroup.alpha = 1f;
             _countTextCanvasGroup.alpha = 1f;
             RefreshLayout();
+            _layoutRefreshPending = true;
             _countText.ForceMeshUpdate();
         }
 
@@ -102,7 +104,10 @@ namespace CreativeAI.UI
 
             float slotShortEdge = Mathf.Min(_frameRect.rect.width, _frameRect.rect.height);
             if (slotShortEdge <= 0f)
+            {
+                _layoutRefreshPending = true;
                 return;
+            }
 
             float badgeHeight = Mathf.Clamp(
                 slotShortEdge * _badgeRatio,
@@ -131,6 +136,16 @@ namespace CreativeAI.UI
             _container.SetSizeWithCurrentAnchors(RectTransform.Axis.Vertical, badgeHeight);
             _container.position = worldPosition;
             _backgroundImage.enabled = false;
+            _layoutRefreshPending = false;
+        }
+
+        private void LateUpdate()
+        {
+            if (_layoutRefreshPending && IsVisible)
+            {
+                Canvas.ForceUpdateCanvases();
+                RefreshLayout();
+            }
         }
 
         private void OnEnable()
@@ -157,6 +172,7 @@ namespace CreativeAI.UI
             _countText.gameObject.SetActive(false);
             _containerCanvasGroup.alpha = 0f;
             _container.gameObject.SetActive(false);
+            _layoutRefreshPending = false;
         }
 
         public void AnimateAppear(float duration)
