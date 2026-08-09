@@ -62,7 +62,7 @@ namespace CreativeAI.Tests.EditMode
             }
 
             SetField("_entries", entries);
-            SetField("_itemPrefab", _prefabObject.GetComponent<RevolverTabItemView>());
+            SetField("_itemPrefab", _prefabObject);
             SetField("_itemRoot", (RectTransform)_rootObject.transform);
             SetField("_initialIndex", 1);
             SetField("_moveDuration", 0f);
