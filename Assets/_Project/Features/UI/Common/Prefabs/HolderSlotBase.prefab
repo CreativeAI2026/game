@@ -279,7 +279,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 2b940f3134d545558a0050d4bbeb739e, type: 3}
   m_Name: 
   m_EditorClassIdentifier: CreativeAI.UI::CreativeAI.UI.SlotFrameView
-  _frame: {fileID: 0}
+  _frame: {fileID: 5462276013442749083}
   _normalSprite: {fileID: 21300000, guid: 71cb07dc6b0b5404c97e103145916d59, type: 3}
   _selectedSprite: {fileID: 21300000, guid: d3a358727a466c44bb2c6f6accaca079, type: 3}
   _itemSetSprite: {fileID: 21300000, guid: 249608d43c135ac4b8f69d7dbebbfb98, type: 3}

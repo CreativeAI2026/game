@@ -8,6 +8,7 @@ namespace CreativeAI.UI
     {
         Item,
         ItemSet,
+        Custom,
     }
 
     public class SlotFrameView : MonoBehaviour
@@ -72,6 +73,8 @@ namespace CreativeAI.UI
 
         public Sprite ResolveSprite()
         {
+            if (_role == SlotFrameRole.Custom)
+                return _frame != null ? _frame.sprite : null;
             if (_role == SlotFrameRole.ItemSet)
                 return _itemSetSprite;
             if (_selected)

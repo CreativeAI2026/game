@@ -41,7 +41,7 @@ namespace CreativeAI.UI.CraftingUI
 
         private void OnEnable()
         {
-            ResolveConfiguredSlots();
+            ResolveSlots();
             UnsubscribeSlots();
             SubscribeSlots();
             NormalizeVisualState();
@@ -142,7 +142,7 @@ namespace CreativeAI.UI.CraftingUI
                 SlotDoubleClicked?.Invoke(index);
         }
 
-        private void ResolveConfiguredSlots()
+        public void ResolveSlots()
         {
             _resolvedSlots.Clear();
             foreach (var slotObject in _slots)

@@ -97,7 +97,7 @@ namespace CreativeAI.EditorTools.UI
                 "_craftPanel",
                 "_inventory",
                 "_materialSlotsView",
-                "_detailPanel",
+                "_craftedItemSlot",
                 "_craftButton",
             };
             ValidateRequiredReferences(panel, requiredFields, report);
@@ -108,14 +108,13 @@ namespace CreativeAI.EditorTools.UI
                 "_materialSlotsView"
             );
             var craftButton = GetReference<Button>(serializedPanel, "_craftButton");
-            var detailPanel = GetReference<ItemDetailPanel>(serializedPanel, "_detailPanel");
+            var craftedItemSlot = GetReference<SlotIconView>(serializedPanel, "_craftedItemSlot");
             var inventory = GetReference<InventoryView>(serializedPanel, "_inventory");
 
             ValidateFreeCraftOwnedReference(panel, materialSlotsView, "_materialSlotsView", report);
             ValidateFreeCraftOwnedReference(panel, inventory, "_inventory", report);
             ValidateFreeCraftOwnedReference(panel, craftButton, "_craftButton", report);
-            ValidateFreeCraftOwnedReference(panel, detailPanel, "_detailPanel", report);
-
+            ValidateFreeCraftOwnedReference(panel, craftedItemSlot, "_craftedItemSlot", report);
             if (materialSlotsView != null)
                 ValidateFreeCraftMaterialSlotsView(materialSlotsView, report);
         }

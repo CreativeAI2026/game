@@ -87,10 +87,16 @@ namespace CreativeAI.UI.CraftingUI
                     continue;
 
                 row.Show(rows[i]);
-                CraftUIAnimationUtility.PlayRowIn(row.gameObject, i);
             }
 
             RebuildLayout();
+
+            for (int i = 0; i < _rows.Count; i++)
+            {
+                var row = _rows[i];
+                if (row != null && row.gameObject.activeSelf)
+                    CraftUIAnimationUtility.PlayRowIn(row.gameObject, i);
+            }
         }
 
         public void Clear()

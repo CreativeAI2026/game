@@ -24,6 +24,9 @@ namespace CreativeAI.UI.CraftingUI
         private FreeCraftMaterialSlotsView _materialSlotsView;
 
         [SerializeField]
+        private SlotIconView _craftedItemSlot;
+
+        [SerializeField]
         private ItemDetailPanel _detailPanel;
 
         [Header("Craft Flow")]
@@ -46,10 +49,11 @@ namespace CreativeAI.UI.CraftingUI
         private bool _warnedMissingCraftPanel;
         private bool _warnedMissingInventory;
         private bool _warnedMissingMaterialSlotsView;
-        private bool _warnedMissingDetailPanel;
+        private bool _warnedMissingCraftedItemSlot;
         private bool _warnedMissingRecipeDatabase;
         private bool _warnedInvalidTabDefinition;
         private bool _warnedMissingRecipeBookManager;
+        private ItemData _previewedCraftedItem;
 
         private CraftRecipeDB RecipeDB => _craftPanel != null ? _craftPanel.RecipeDB : null;
 
@@ -119,9 +123,9 @@ namespace CreativeAI.UI.CraftingUI
                 nameof(_materialSlotsView)
             );
             valid &= ValidateRequiredReference(
-                _detailPanel,
-                ref _warnedMissingDetailPanel,
-                nameof(_detailPanel)
+                _craftedItemSlot,
+                ref _warnedMissingCraftedItemSlot,
+                nameof(_craftedItemSlot)
             );
             valid &= ValidateRequiredReference(
                 _craftButton,
@@ -136,10 +140,12 @@ namespace CreativeAI.UI.CraftingUI
             if (!valid)
                 return false;
 
+            _craftedItemSlot.GetComponent<SlotFrameView>()?.SetRole(SlotFrameRole.ItemSet);
             _recipeResolver ??= new FreeCraftRecipeResolver(RecipeDB);
             _inventory.SetSelectFirstSlotOnRefresh(false);
             _inventory.SetReleaseSelectionOnOutsideClick(false);
             UIButtonHoverScaleUtility.ApplyTo(_craftButton);
+            _materialSlotsView.ResolveSlots();
             if (
                 !_materialSlotsView.HasRequiredReferences
                 || _materialSlotsView.SlotCount
@@ -316,6 +322,8 @@ namespace CreativeAI.UI.CraftingUI
         {
             _materialAssignmentState.ClearAll();
             _materialSlotsView?.ResetAll();
+            _previewedCraftedItem = null;
+            _craftedItemSlot?.Clear();
             if (resetSelection)
                 _selectedMaterialSlotIndex = -1;
 
@@ -575,6 +583,8 @@ namespace CreativeAI.UI.CraftingUI
             bool hasEquippedMaterial = HasEquippedMaterial();
             bool canCraft = TryCreateCraftRequest(out var request) && CanCraft(request);
 
+            RefreshCraftedItemSlot(request.Recipe);
+
             if (_craftButton != null)
                 _craftButton.interactable = !IsCraftInteractionLocked && canCraft;
 
@@ -586,6 +596,16 @@ namespace CreativeAI.UI.CraftingUI
                 _craftPanel?.HideWarning();
             else if (hasCategoryMismatch)
                 _craftPanel?.ShowWarning(CraftWarningKind.CategoryMismatch);
+        }
+
+        private void RefreshCraftedItemSlot(CraftRecipeData recipe)
+        {
+            ItemData resultItem = recipe != null ? recipe.resultItem : null;
+            if (_craftedItemSlot == null || _previewedCraftedItem == resultItem)
+                return;
+
+            _previewedCraftedItem = resultItem;
+            _craftedItemSlot.SetIcon(resultItem);
         }
 
         private void StartCraft()

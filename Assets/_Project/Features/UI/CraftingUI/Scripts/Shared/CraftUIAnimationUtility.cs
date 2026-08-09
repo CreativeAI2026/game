@@ -9,7 +9,6 @@ namespace CreativeAI.UI.CraftingUI
     {
         private const float PopDuration = 0.18f;
         private const float FadeDuration = 0.16f;
-        private const float RowSlideDistance = 18f;
         private const float ResultAnimationDuration = 0.22f;
         private const float ResultHiddenScale = 0.9f;
         private static readonly Dictionary<TMP_Text, Color> TextBaseColors = new();
@@ -145,7 +144,6 @@ namespace CreativeAI.UI.CraftingUI
             if (rowObject == null)
                 return;
 
-            var rect = rowObject.transform as RectTransform;
             var canvasGroup = rowObject.GetComponent<CanvasGroup>();
             if (canvasGroup == null)
             {
@@ -153,20 +151,10 @@ namespace CreativeAI.UI.CraftingUI
                 return;
             }
 
-            if (rect == null)
-                return;
-
             float delay = index * 0.05f;
-            Vector2 basePosition = rect.anchoredPosition;
-            rect.DOKill();
             canvasGroup.DOKill();
-            rect.anchoredPosition = basePosition + Vector2.right * RowSlideDistance;
             canvasGroup.alpha = 0f;
 
-            rect.DOAnchorPos(basePosition, 0.18f)
-                .SetEase(Ease.OutQuad)
-                .SetDelay(delay)
-                .SetUpdate(true);
             canvasGroup.DOFade(1f, FadeDuration).SetDelay(delay).SetUpdate(true);
         }
 

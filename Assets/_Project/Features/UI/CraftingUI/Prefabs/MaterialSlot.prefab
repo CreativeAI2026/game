@@ -12,6 +12,10 @@ PrefabInstance:
       propertyPath: m_Name
       value: MaterialSlot
       objectReference: {fileID: 0}
+    - target: {fileID: 6153161000247279391, guid: bb915f59b401d994cb2c02f9427284e9, type: 3}
+      propertyPath: _role
+      value: 2
+      objectReference: {fileID: 0}
     - target: {fileID: 8297504193761087856, guid: bb915f59b401d994cb2c02f9427284e9, type: 3}
       propertyPath: m_Pivot.x
       value: 0.5
