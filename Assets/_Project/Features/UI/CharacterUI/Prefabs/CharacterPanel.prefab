@@ -228,7 +228,7 @@ MonoBehaviour:
     _view: {fileID: 0}
   - _definition: {fileID: 11400000, guid: b515ad18882014e569d23a6563b214f4, type: 2}
     _view: {fileID: 0}
-  _itemPrefab: {fileID: 3749478848513976166, guid: b19b4e9fd13bc5847a73addca2e27e43, type: 3}
+  _itemPrefab: {fileID: 776126248322256939, guid: b19b4e9fd13bc5847a73addca2e27e43, type: 3}
   _itemRoot: {fileID: 5655084600380723986}
   _initialIndex: 0
   _layout:
@@ -238,8 +238,8 @@ MonoBehaviour:
     _maxAngle: 60
     _placement: 2
     _reverseOrder: 0
-    _selectedScale: 1.2
-    _edgeScale: 0.6
+    _selectedScale: 1.15
+    _edgeScale: 0.7
     _scaleCurve:
       serializedVersion: 2
       m_Curve:
@@ -265,7 +265,7 @@ MonoBehaviour:
       m_PostInfinity: 2
       m_RotationOrder: 4
     _selectedAlpha: 1
-    _edgeAlpha: 0.4
+    _edgeAlpha: 0.58
     _alphaCurve:
       serializedVersion: 2
       m_Curve:

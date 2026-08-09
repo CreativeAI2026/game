@@ -20,6 +20,9 @@ namespace CreativeAI.UI
         [SerializeField]
         private RectTransform _selectedUnderline;
 
+        [SerializeField]
+        private bool _showSelectedUnderline = true;
+
         [Header("Selection Animation")]
         [SerializeField]
         [Min(0f)]
@@ -53,7 +56,7 @@ namespace CreativeAI.UI
             _hoverScale = GetComponent<HoverScaleOnPointer>();
             if (_selectedBackground != null)
                 _selectionBackgroundScale = _selectedBackground.rectTransform.localScale;
-            if (_selectedUnderline != null)
+            if (_showSelectedUnderline && _selectedUnderline != null)
             {
                 _selectedUnderlineImage = _selectedUnderline.GetComponent<Image>();
                 _selectionUnderlineScale = _selectedUnderline.localScale;
@@ -251,7 +254,7 @@ namespace CreativeAI.UI
                     .SetEase(Ease.OutBack);
             }
 
-            if (_selectedUnderline != null)
+            if (_showSelectedUnderline && _selectedUnderline != null)
             {
                 _selectedUnderline.gameObject.SetActive(true);
                 SetAlpha(_selectedUnderlineImage, 0f);
@@ -260,9 +263,7 @@ namespace CreativeAI.UI
                     _selectionUnderlineScale.y,
                     _selectionUnderlineScale.z
                 );
-                _selectedUnderlineImage
-                    ?.DOFade(1f, _selectionShowDuration)
-                    .SetEase(Ease.OutQuad);
+                _selectedUnderlineImage?.DOFade(1f, _selectionShowDuration).SetEase(Ease.OutQuad);
                 _selectedUnderline
                     .DOScaleX(_selectionUnderlineScale.x, _selectionShowDuration)
                     .SetEase(Ease.OutCubic);
