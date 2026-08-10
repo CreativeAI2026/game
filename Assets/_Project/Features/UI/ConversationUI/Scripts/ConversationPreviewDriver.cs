@@ -58,6 +58,17 @@ namespace CreativeAI.UI.ConversationUI
         {
             yield return PlayIntroduction(view);
 
+            yield return Line(
+                view,
+                Protagonist,
+                "これは<wait=0.35><shake><color=#ff9aa8>本当</color></shake>なのか……？"
+            );
+            if (view is ConversationView introductionView)
+                yield return introductionView.PlayPortraitEffect(
+                    DialoguePortraitSide.Left,
+                    ConversationView.PortraitEffect.Jump
+                );
+
             string firstResponse = null;
             yield return Choice(
                 view,
@@ -80,6 +91,12 @@ namespace CreativeAI.UI.ConversationUI
                 Protagonist,
                 "ありがとう。準備は整った――それじゃあ、出発しよう。"
             );
+
+            if (view is ConversationView closingView)
+            {
+                yield return closingView.HideAnimated();
+                yield return new WaitForSecondsRealtime(0.4f);
+            }
         }
 
         private static IEnumerator PlayIntroduction(IDialogueView view)

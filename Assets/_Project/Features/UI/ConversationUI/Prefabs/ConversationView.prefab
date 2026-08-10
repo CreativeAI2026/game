@@ -516,12 +516,20 @@ MonoBehaviour:
   _choiceButtonHeight: 70
   _choiceSpacing: 38
   _choiceBottomMargin: 64
+  _choiceStaggerDelay: 0.06
+  _choiceEnterDuration: 0.16
+  _choiceConfirmDuration: 0.2
   _charInterval: 0.03
+  _textSpeed: 1
   _punctuationDelay: 0.12
   _fastForwardMultiplier: 0.2
+  _typingAudioSource: {fileID: 0}
+  _typingSound: {fileID: 0}
   _windowEnterDuration: 0.2
   _windowEnterOffsetY: -24
   _autoModeIndicator: {fileID: 0}
+  _controlGuide: {fileID: 0}
+  _autoProgressFill: {fileID: 0}
   _autoAdvanceDelay: 1.2
   _autoModeLabel: AUTO
   _historyPanel: {fileID: 0}

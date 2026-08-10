@@ -1,4 +1,6 @@
 using System.Collections.Generic;
+using System.Text;
+using CreativeAI.Core.EventSystem;
 using TMPro;
 using UnityEngine;
 using UnityEngine.EventSystems;
@@ -61,8 +63,13 @@ namespace CreativeAI.UI.ConversationUI
         private GameObject _openButton;
         private RectTransform _content;
         private ScrollRect _scrollRect;
+        private CanvasGroup _panelGroup;
+        private GameObject _latestButton;
+        private Coroutine _panelAnimation;
+        private bool _isOpen;
+        private TMP_InputField _searchField;
 
-        public bool IsOpen => _panel != null && _panel.activeSelf;
+        public bool IsOpen => _isOpen;
         public int EntryCount => _entries.Count;
 
         public void Initialize(TMP_FontAsset font)
@@ -91,6 +98,7 @@ namespace CreativeAI.UI.ConversationUI
             DialoguePortraitSide side
         )
         {
+            bool followLatest = ShouldFollowLatest();
             EnsureView();
             var entry = new HistoryEntry(
                 speaker ?? string.Empty,
@@ -101,7 +109,10 @@ namespace CreativeAI.UI.ConversationUI
             _entries.Add(entry);
             CreateEntryView(entry);
             TrimOldEntries();
-            ScrollToLatest();
+            if (followLatest)
+                ScrollToLatest();
+            else
+                RefreshLatestButton();
         }
 
         public void AddChoiceEntry(string choiceText)
@@ -109,12 +120,36 @@ namespace CreativeAI.UI.ConversationUI
             if (string.IsNullOrWhiteSpace(choiceText))
                 return;
 
+            bool followLatest = ShouldFollowLatest();
             EnsureView();
             var entry = new HistoryEntry(choiceText);
             _entries.Add(entry);
             CreateEntryView(entry);
             TrimOldEntries();
-            ScrollToLatest();
+            if (followLatest)
+                ScrollToLatest();
+            else
+                RefreshLatestButton();
+        }
+
+        public void AddChoiceEntry(IReadOnlyList<ChoiceOption> options, string selectedText)
+        {
+            if (options == null || options.Count == 0)
+            {
+                AddChoiceEntry(selectedText);
+                return;
+            }
+
+            var summary = new StringBuilder();
+            foreach (var option in options)
+            {
+                if (option == null)
+                    continue;
+                if (summary.Length > 0)
+                    summary.AppendLine();
+                summary.Append(option.Text == selectedText ? "✓ " : "・ ").Append(option.Text);
+            }
+            AddChoiceEntry(summary.ToString());
         }
 
         public void SetOpen(bool open)
@@ -123,16 +158,32 @@ namespace CreativeAI.UI.ConversationUI
             if (_panel == null)
                 return;
 
-            _panel.SetActive(open);
+            _isOpen = open;
             if (_openButton != null)
                 _openButton.SetActive(!open);
 
             if (open)
             {
+                bool wasActive = _panel.activeSelf;
+                _panel.SetActive(true);
+                if (!wasActive && _panelGroup != null)
+                    _panelGroup.alpha = 0f;
                 _panel.transform.SetAsLastSibling();
                 ScrollToLatest();
                 EventSystem.current?.SetSelectedGameObject(null);
             }
+
+            if (!Application.isPlaying)
+            {
+                _panel.SetActive(open);
+                if (_panelGroup != null)
+                    _panelGroup.alpha = open ? 1f : 0f;
+                return;
+            }
+
+            if (_panelAnimation != null)
+                StopCoroutine(_panelAnimation);
+            _panelAnimation = StartCoroutine(AnimatePanel(open));
         }
 
         private void EnsureView()
@@ -159,6 +210,7 @@ namespace CreativeAI.UI.ConversationUI
             var backdrop = _panel.AddComponent<Image>();
             backdrop.color = new Color(0f, 0f, 0f, _backdropAlpha);
             backdrop.raycastTarget = true;
+            _panelGroup = _panel.AddComponent<CanvasGroup>();
 
             var title = CreateText("Title", _panel.transform, "DIALOGUE LOG", 30f, FontStyles.Bold);
             Anchor(
@@ -178,6 +230,8 @@ namespace CreativeAI.UI.ConversationUI
                 new Vector2(230f, 52f)
             );
             close.GetComponent<Button>().onClick.AddListener(() => SetOpen(false));
+
+            CreateSearchField(_panel.transform);
 
             var viewportObject = CreateRect("Viewport", _panel.transform);
             var viewport = viewportObject.GetComponent<RectTransform>();
@@ -211,7 +265,101 @@ namespace CreativeAI.UI.ConversationUI
             _scrollRect.vertical = true;
             _scrollRect.movementType = ScrollRect.MovementType.Clamped;
             _scrollRect.scrollSensitivity = 42f;
+            _scrollRect.onValueChanged.AddListener(_ => RefreshLatestButton());
+
+            _latestButton = CreateButton(
+                "LatestButton",
+                _panel.transform,
+                "最新へ戻る",
+                new Vector2(0.5f, 0f),
+                new Vector2(0f, 22f),
+                new Vector2(190f, 48f)
+            );
+            _latestButton.GetComponent<Button>().onClick.AddListener(ScrollToLatest);
+            _latestButton.SetActive(false);
             _panel.SetActive(false);
+        }
+
+        private System.Collections.IEnumerator AnimatePanel(bool opening)
+        {
+            float start = _panelGroup != null ? _panelGroup.alpha : (opening ? 0f : 1f);
+            float target = opening ? 1f : 0f;
+            float elapsed = 0f;
+            const float duration = 0.18f;
+            while (elapsed < duration)
+            {
+                float t = Mathf.SmoothStep(0f, 1f, elapsed / duration);
+                if (_panelGroup != null)
+                    _panelGroup.alpha = Mathf.Lerp(start, target, t);
+                elapsed += Mathf.Max(Time.unscaledDeltaTime, 1f / 60f);
+                yield return null;
+            }
+            if (_panelGroup != null)
+                _panelGroup.alpha = target;
+            if (!opening)
+                _panel.SetActive(false);
+            _panelAnimation = null;
+        }
+
+        private void RefreshLatestButton()
+        {
+            if (_latestButton != null)
+                _latestButton.SetActive(IsOpen && _scrollRect.verticalNormalizedPosition > 0.03f);
+        }
+
+        private bool ShouldFollowLatest() =>
+            !IsOpen || _scrollRect == null || _scrollRect.verticalNormalizedPosition <= 0.03f;
+
+        private void CreateSearchField(Transform parent)
+        {
+            var fieldObject = CreateRect("SearchField", parent);
+            Anchor(
+                fieldObject.GetComponent<RectTransform>(),
+                new Vector2(0f, 1f),
+                new Vector2(30f, -24f),
+                new Vector2(300f, 48f),
+                new Vector2(0f, 1f)
+            );
+            fieldObject.AddComponent<Image>().color = new Color(0.1f, 0.12f, 0.16f, 0.95f);
+            _searchField = fieldObject.AddComponent<TMP_InputField>();
+
+            var text = CreateText(
+                "Text",
+                fieldObject.transform,
+                string.Empty,
+                21f,
+                FontStyles.Normal
+            );
+            Stretch(text.rectTransform);
+            text.margin = new Vector4(14f, 8f, 14f, 8f);
+            var placeholder = CreateText(
+                "Placeholder",
+                fieldObject.transform,
+                "本文・話者名で検索",
+                20f,
+                FontStyles.Normal
+            );
+            Stretch(placeholder.rectTransform);
+            placeholder.margin = new Vector4(14f, 8f, 14f, 8f);
+            placeholder.color = new Color(1f, 1f, 1f, 0.4f);
+            _searchField.textComponent = text;
+            _searchField.placeholder = placeholder;
+            _searchField.onValueChanged.AddListener(ApplyFilter);
+        }
+
+        public void ApplyFilter(string query)
+        {
+            query = query?.Trim() ?? string.Empty;
+            for (int i = 0; i < _entries.Count && i < _content.childCount; i++)
+            {
+                var entry = _entries[i];
+                bool visible =
+                    query.Length == 0
+                    || entry.Speaker.Contains(query, System.StringComparison.OrdinalIgnoreCase)
+                    || entry.Body.Contains(query, System.StringComparison.OrdinalIgnoreCase);
+                _content.GetChild(i).gameObject.SetActive(visible);
+            }
+            LayoutRebuilder.ForceRebuildLayoutImmediate(_content);
         }
 
         private void CreateEntryView(HistoryEntry entry)
@@ -370,6 +518,7 @@ namespace CreativeAI.UI.ConversationUI
             Canvas.ForceUpdateCanvases();
             LayoutRebuilder.ForceRebuildLayoutImmediate(_content);
             _scrollRect.verticalNormalizedPosition = 0f;
+            RefreshLatestButton();
         }
 
         private GameObject CreateButton(

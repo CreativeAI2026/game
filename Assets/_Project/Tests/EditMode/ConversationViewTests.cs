@@ -289,6 +289,27 @@ namespace CreativeAI.Tests.EditMode
         }
 
         [Test]
+        public void ReadHistory_CanBeMarkedQueriedAndCleared()
+        {
+            _view.MarkLineRead("主人公", "protagonist_normal", "既読行");
+            Assert.IsTrue(_view.IsLineRead("主人公", "protagonist_normal", "既読行"));
+
+            _view.ClearReadHistory();
+            Assert.IsFalse(_view.IsLineRead("主人公", "protagonist_normal", "既読行"));
+        }
+
+        [Test]
+        public void SetTextSpeed_UpdatesConfiguredSpeed()
+        {
+            _view.SetTextSpeed(ConversationView.TextSpeed.Fast);
+
+            Assert.AreEqual(
+                ConversationView.TextSpeed.Fast,
+                TestReflection.GetField<ConversationView.TextSpeed>(_view, "_textSpeed")
+            );
+        }
+
+        [Test]
         public void Awake_RegistersItselfToTheDialogueViewSeam()
         {
             // EventPlayer は DialogueViewService 経由で会話UIを見つける(spec §6 の seam)。

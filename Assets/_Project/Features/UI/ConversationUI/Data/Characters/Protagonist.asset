@@ -15,6 +15,7 @@ MonoBehaviour:
   _id: protagonist
   _displayName: 主人公
   _side: 0
+  _themeColor: {r: 0.95, g: 0.62, b: 0.72, a: 1}
   _expressions:
   - PortraitKey: protagonist_normal
     Sprite: {fileID: 21300000, guid: ff43a2005de176c4bb05dba7542a4003, type: 3}

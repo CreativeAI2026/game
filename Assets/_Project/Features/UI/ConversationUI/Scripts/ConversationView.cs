@@ -23,6 +23,7 @@ namespace CreativeAI.UI.ConversationUI
     public sealed class ConversationView : MonoBehaviour, IDialogueView
     {
         public static ConversationView Instance { get; private set; }
+        public event Action<string, string> ExternalPresentationCommandRequested;
 
         public enum ConversationState
         {
@@ -32,6 +33,21 @@ namespace CreativeAI.UI.ConversationUI
             WaitingForAdvance,
             ShowingChoices,
             Exiting,
+        }
+
+        public enum TextSpeed
+        {
+            Slow,
+            Normal,
+            Fast,
+            Instant,
+        }
+
+        public enum PortraitEffect
+        {
+            Shake,
+            Jump,
+            Fade,
         }
 
         public ConversationState State { get; private set; } = ConversationState.Hidden;
@@ -110,6 +126,15 @@ namespace CreativeAI.UI.ConversationUI
         [SerializeField]
         private float _choiceBottomMargin = 64f; // 会話ウィンドウ上端から選択肢までの余白
 
+        [SerializeField]
+        private float _choiceStaggerDelay = 0.06f;
+
+        [SerializeField]
+        private float _choiceEnterDuration = 0.16f;
+
+        [SerializeField]
+        private float _choiceConfirmDuration = 0.2f;
+
         [Header("演出")]
         [SerializeField]
         private float _charInterval = 0.03f; // タイプライターの1文字あたり待ち時間(秒)
@@ -118,8 +143,17 @@ namespace CreativeAI.UI.ConversationUI
         private float _punctuationDelay = 0.12f;
 
         [SerializeField]
+        private TextSpeed _textSpeed = TextSpeed.Normal;
+
+        [SerializeField]
         [Range(0.05f, 1f)]
         private float _fastForwardMultiplier = 0.2f;
+
+        [SerializeField]
+        private AudioSource _typingAudioSource;
+
+        [SerializeField]
+        private AudioClip _typingSound;
 
         [SerializeField]
         private float _windowEnterDuration = 0.2f;
@@ -130,6 +164,12 @@ namespace CreativeAI.UI.ConversationUI
         [Header("オートモード")]
         [SerializeField]
         private TMP_Text _autoModeIndicator;
+
+        [SerializeField]
+        private TMP_Text _controlGuide;
+
+        [SerializeField]
+        private Image _autoProgressFill;
 
         [SerializeField]
         private float _autoAdvanceDelay = 1.2f;
@@ -201,6 +241,12 @@ namespace CreativeAI.UI.ConversationUI
         private bool _rightPortraitShown;
         private Vector2 _windowBasePosition;
         private bool _hasWindowBasePosition;
+        private bool _windowManuallyHidden;
+        private float _autoProgress01;
+        private readonly HashSet<string> _readLineIds = new();
+        private bool _currentLineWasRead;
+        private string _currentLineId;
+        private AudioClip _currentTypingSound;
 
         private void Awake()
         {
@@ -214,6 +260,8 @@ namespace CreativeAI.UI.ConversationUI
             DialogueViewService.Current = this; // EventPlayer が参照する seam へ自身を登録
             EnsurePortraitSlots();
             EnsureAutoModeIndicator();
+            EnsureAutoProgress();
+            EnsureControlGuide();
             RefreshAutoModeIndicator();
             EnsureHistoryPanel();
             HideImmediate(); // 会話開始まで隠す(編集時は Awake が走らずプレビューが見える)
@@ -224,6 +272,23 @@ namespace CreativeAI.UI.ConversationUI
             var keyboard = Keyboard.current;
             if (keyboard != null && keyboard.aKey.wasPressedThisFrame)
                 SetAutoMode(!IsAutoMode);
+            if (
+                keyboard != null
+                && keyboard.hKey.wasPressedThisFrame
+                && State != ConversationState.ShowingChoices
+            )
+                SetWindowHidden(!_windowManuallyHidden);
+            if (keyboard != null && keyboard.tKey.wasPressedThisFrame)
+                SetTextSpeed((TextSpeed)(((int)_textSpeed + 1) % 4));
+
+            if (_autoProgressFill != null)
+                _autoProgressFill.fillAmount = _autoProgress01;
+            if (_autoModeIndicator != null && IsAutoMode)
+            {
+                Color color = _autoModeIndicator.color;
+                color.a = 0.72f + Mathf.Sin(Time.unscaledTime * 3.5f) * 0.18f;
+                _autoModeIndicator.color = color;
+            }
         }
 
         private void OnDestroy()
@@ -240,20 +305,48 @@ namespace CreativeAI.UI.ConversationUI
             State = ConversationState.Entering;
             yield return ShowAnimated();
             SetChoicesActive(false);
-            var resolved = ResolvePortrait(portrait);
+            bool narration = string.IsNullOrEmpty(portrait);
+            var resolved = narration
+                ? new ResolvedPortrait(
+                    null,
+                    null,
+                    DialoguePortraitSide.Left,
+                    string.Empty,
+                    new Color(0.78f, 0.82f, 0.9f, 1f),
+                    null
+                )
+                : ResolvePortrait(portrait);
             yield return SetPortrait(resolved);
+            _currentTypingSound =
+                resolved.TypingSound != null ? resolved.TypingSound : _typingSound;
 
             string displayName = !string.IsNullOrWhiteSpace(speaker)
                 ? speaker
                 : resolved.DisplayName;
+            _currentLineId = $"{displayName}\n{portrait}\n{text}";
+            _currentLineWasRead = _readLineIds.Contains(_currentLineId);
             if (_nameText != null)
+            {
                 _nameText.text = displayName;
+                _nameText.color = resolved.ThemeColor;
+                _nameText.gameObject.SetActive(!narration && !string.IsNullOrEmpty(displayName));
+            }
+            if (_bodyText != null)
+                _bodyText.alignment = narration
+                    ? TextAlignmentOptions.Center
+                    : TextAlignmentOptions.TopLeft;
 
             EnsureHistoryPanel();
-            _historyPanel?.AddEntry(displayName, text, resolved.Icon, resolved.Side);
+            _historyPanel?.AddEntry(
+                displayName,
+                DialogueMarkupParser.Parse(text).Text,
+                resolved.Icon,
+                resolved.Side
+            );
 
             yield return TypeBody(text ?? string.Empty);
             yield return WaitForAdvance();
+            _readLineIds.Add(_currentLineId);
         }
 
         /// <summary>選択肢を提示し、選ばれた値を <paramref name="onSelected"/> で返す。</summary>
@@ -263,6 +356,7 @@ namespace CreativeAI.UI.ConversationUI
         )
         {
             State = ConversationState.ShowingChoices;
+            SetWindowHidden(false);
             StopIndicatorBounce();
 
             ClearSpawnedChoices();
@@ -270,6 +364,7 @@ namespace CreativeAI.UI.ConversationUI
 
             string picked = null;
             string pickedText = null;
+            Button pickedButton = null;
             if (options != null && _choiceButtonTemplate != null && _choiceContainer != null)
             {
                 foreach (var option in options)
@@ -280,6 +375,10 @@ namespace CreativeAI.UI.ConversationUI
                     var value = option.Value;
                     var button = Instantiate(_choiceButtonTemplate, _choiceContainer);
                     button.gameObject.SetActive(true);
+                    var group = button.GetComponent<CanvasGroup>();
+                    if (group == null)
+                        group = button.gameObject.AddComponent<CanvasGroup>();
+                    group.alpha = 0f;
 
                     var label = button.GetComponentInChildren<TMP_Text>(true);
                     if (label != null)
@@ -297,6 +396,7 @@ namespace CreativeAI.UI.ConversationUI
                     {
                         picked = value;
                         pickedText = optionText;
+                        pickedButton = button;
                     });
                     _spawnedChoices.Add(button.gameObject);
                 }
@@ -314,15 +414,17 @@ namespace CreativeAI.UI.ConversationUI
             }
 
             yield return ShowAnimated();
+            yield return AnimateChoicesIn();
             SelectFirstChoice();
 
             while (picked == null)
                 yield return null;
 
+            yield return AnimateChoiceSelection(pickedButton);
             ClearSpawnedChoices();
             SetChoicesActive(false);
             EnsureHistoryPanel();
-            _historyPanel?.AddChoiceEntry(pickedText);
+            _historyPanel?.AddChoiceEntry(options, pickedText);
             onSelected?.Invoke(picked);
             State = ConversationState.Entering;
         }
@@ -379,15 +481,21 @@ namespace CreativeAI.UI.ConversationUI
             if (_bodyText == null)
                 yield break;
 
-            _bodyText.text = text;
+            var parsed = DialogueMarkupParser.Parse(text);
+            _bodyText.text = parsed.Text;
             _bodyText.ForceMeshUpdate();
             int total = _bodyText.textInfo.characterCount;
             _bodyText.maxVisibleCharacters = 0;
 
             int shown = 0;
+            Vector2 bodyBasePosition = _bodyText.rectTransform.anchoredPosition;
             while (shown < total)
             {
-                if (AdvancePressed()) // 途中で送り入力 → 全文を即表示
+                bool skipRead =
+                    _currentLineWasRead
+                    && Keyboard.current != null
+                    && Keyboard.current.sKey.isPressed;
+                if (AdvancePressed() || skipRead || _textSpeed == TextSpeed.Instant)
                 {
                     shown = total;
                     break;
@@ -395,9 +503,18 @@ namespace CreativeAI.UI.ConversationUI
                 shown++;
                 _bodyText.maxVisibleCharacters = shown;
 
-                float delay = Mathf.Max(0f, _charInterval);
+                if (_typingAudioSource != null && _currentTypingSound != null && shown % 2 == 0)
+                    _typingAudioSource.PlayOneShot(_currentTypingSound);
+
+                bool shaking = parsed.IsShaking(shown - 1);
+                _bodyText.rectTransform.anchoredPosition = shaking
+                    ? bodyBasePosition + UnityEngine.Random.insideUnitCircle * 2.5f
+                    : bodyBasePosition;
+
+                float delay = Mathf.Max(0f, _charInterval) * GetTextSpeedMultiplier();
                 if (IsPunctuation(_bodyText.textInfo.characterInfo[shown - 1].character))
                     delay += Mathf.Max(0f, _punctuationDelay);
+                delay += parsed.GetWaitAfter(shown - 1);
                 if (FastForwardHeld())
                     delay *= Mathf.Clamp(_fastForwardMultiplier, 0.05f, 1f);
 
@@ -406,8 +523,18 @@ namespace CreativeAI.UI.ConversationUI
                 else
                     yield return null;
             }
+            _bodyText.rectTransform.anchoredPosition = bodyBasePosition;
             _bodyText.maxVisibleCharacters = total;
         }
+
+        private float GetTextSpeedMultiplier() =>
+            _textSpeed switch
+            {
+                TextSpeed.Slow => 1.6f,
+                TextSpeed.Fast => 0.45f,
+                TextSpeed.Instant => 0f,
+                _ => 1f,
+            };
 
         private static bool IsPunctuation(char character) =>
             character is '。' or '、' or '！' or '？' or '!' or '?' or '…' or '．' or ',';
@@ -431,32 +558,51 @@ namespace CreativeAI.UI.ConversationUI
             StartIndicatorBounce();
             yield return null; // タイプ送出と同フレームの入力を送りと二重に拾わない
             float autoElapsed = 0f;
+            _autoProgress01 = 0f;
             while (true)
             {
                 if (_historyPanel != null && _historyPanel.IsOpen)
                 {
                     autoElapsed = 0f;
+                    _autoProgress01 = 0f;
                     yield return null;
                     continue;
                 }
 
                 if (AdvancePressed())
                     break;
+                if (
+                    _currentLineWasRead
+                    && Keyboard.current != null
+                    && Keyboard.current.sKey.isPressed
+                )
+                    break;
 
                 if (IsAutoMode)
                 {
                     autoElapsed += Time.unscaledDeltaTime;
-                    if (autoElapsed >= Mathf.Max(0.1f, _autoAdvanceDelay))
+                    _autoProgress01 = Mathf.Clamp01(
+                        autoElapsed / Mathf.Max(0.1f, CalculateAutoAdvanceDelay())
+                    );
+                    if (autoElapsed >= Mathf.Max(0.1f, CalculateAutoAdvanceDelay()))
                         break;
                 }
                 else
                 {
                     autoElapsed = 0f;
+                    _autoProgress01 = 0f;
                 }
                 yield return null;
             }
             StopIndicatorBounce();
+            _autoProgress01 = 0f;
             State = ConversationState.Entering;
+        }
+
+        private float CalculateAutoAdvanceDelay()
+        {
+            int length = _bodyText != null ? _bodyText.textInfo.characterCount : 0;
+            return _autoAdvanceDelay + Mathf.Clamp(length * 0.025f, 0f, 2.5f);
         }
 
         public void SetAutoMode(bool enabled)
@@ -467,6 +613,149 @@ namespace CreativeAI.UI.ConversationUI
             IsAutoMode = enabled;
             EnsureAutoModeIndicator();
             RefreshAutoModeIndicator();
+        }
+
+        public void SetWindowHidden(bool hidden)
+        {
+            _windowManuallyHidden = hidden;
+            if (_windowRoot != null)
+                _windowRoot.gameObject.SetActive(!hidden);
+            if (_controlGuide != null)
+                _controlGuide.text = hidden
+                    ? "H: WINDOW  D: LOG  A: AUTO"
+                    : "NEXT / A:AUTO / D:LOG / H:HIDE / T:SPEED / S:SKIP";
+        }
+
+        public void SetTextSpeed(TextSpeed speed)
+        {
+            _textSpeed = speed;
+            if (_controlGuide != null)
+                _controlGuide.text = $"NEXT / A:AUTO / D:LOG / H:HIDE / T:SPEED [{speed}] / S:SKIP";
+        }
+
+        public bool IsLineRead(string speaker, string portrait, string text) =>
+            _readLineIds.Contains($"{speaker}\n{portrait}\n{text}");
+
+        public void MarkLineRead(string speaker, string portrait, string text) =>
+            _readLineIds.Add($"{speaker}\n{portrait}\n{text}");
+
+        public void ClearReadHistory() => _readLineIds.Clear();
+
+        public void SetPortraitVisible(DialoguePortraitSide side, bool visible)
+        {
+            var portrait = side == DialoguePortraitSide.Left ? _portrait : _rightPortrait;
+            if (portrait != null)
+                portrait.enabled = visible && portrait.sprite != null;
+        }
+
+        public IEnumerator PlayPortraitEffect(
+            DialoguePortraitSide side,
+            PortraitEffect effect,
+            float duration = 0.28f
+        )
+        {
+            var portrait = side == DialoguePortraitSide.Left ? _portrait : _rightPortrait;
+            if (portrait == null || !portrait.enabled)
+                yield break;
+
+            var rect = portrait.rectTransform;
+            Vector2 basePosition = rect.anchoredPosition;
+            Color baseColor = portrait.color;
+            float elapsed = 0f;
+            duration = Mathf.Max(0.01f, duration);
+            while (elapsed < duration)
+            {
+                float t = elapsed / duration;
+                switch (effect)
+                {
+                    case PortraitEffect.Shake:
+                        rect.anchoredPosition =
+                            basePosition + Vector2.right * Mathf.Sin(t * Mathf.PI * 8f) * 10f;
+                        break;
+                    case PortraitEffect.Jump:
+                        rect.anchoredPosition =
+                            basePosition + Vector2.up * Mathf.Sin(t * Mathf.PI) * 28f;
+                        break;
+                    case PortraitEffect.Fade:
+                        portrait.color = new Color(
+                            baseColor.r,
+                            baseColor.g,
+                            baseColor.b,
+                            Mathf.Abs(Mathf.Cos(t * Mathf.PI))
+                        );
+                        break;
+                }
+                elapsed += Mathf.Max(Time.unscaledDeltaTime, 1f / 60f);
+                yield return null;
+            }
+            rect.anchoredPosition = basePosition;
+            portrait.color = baseColor;
+        }
+
+        public IEnumerator RunPresentationCommand(string command, string argument = null)
+        {
+            switch (command?.Trim().ToLowerInvariant())
+            {
+                case "window.hide":
+                    SetWindowHidden(true);
+                    break;
+                case "window.show":
+                    SetWindowHidden(false);
+                    break;
+                case "portrait.left.hide":
+                    SetPortraitVisible(DialoguePortraitSide.Left, false);
+                    break;
+                case "portrait.right.hide":
+                    SetPortraitVisible(DialoguePortraitSide.Right, false);
+                    break;
+                case "portrait.left.shake":
+                    yield return PlayPortraitEffect(
+                        DialoguePortraitSide.Left,
+                        PortraitEffect.Shake
+                    );
+                    break;
+                case "portrait.right.shake":
+                    yield return PlayPortraitEffect(
+                        DialoguePortraitSide.Right,
+                        PortraitEffect.Shake
+                    );
+                    break;
+                case "portrait.left.jump":
+                    yield return PlayPortraitEffect(DialoguePortraitSide.Left, PortraitEffect.Jump);
+                    break;
+                case "portrait.right.jump":
+                    yield return PlayPortraitEffect(
+                        DialoguePortraitSide.Right,
+                        PortraitEffect.Jump
+                    );
+                    break;
+                case "wait":
+                    if (
+                        float.TryParse(
+                            argument,
+                            System.Globalization.NumberStyles.Float,
+                            System.Globalization.CultureInfo.InvariantCulture,
+                            out float seconds
+                        )
+                    )
+                        yield return new WaitForSecondsRealtime(Mathf.Clamp(seconds, 0f, 10f));
+                    break;
+                case "conversation.close":
+                    yield return HideAnimated();
+                    break;
+                default:
+                    if (
+                        command != null
+                        && (
+                            command.StartsWith("camera.", StringComparison.OrdinalIgnoreCase)
+                            || command.StartsWith("background.", StringComparison.OrdinalIgnoreCase)
+                        )
+                    )
+                        ExternalPresentationCommandRequested?.Invoke(command, argument);
+                    else
+                        Debug.LogWarning($"[ConversationView] 未対応の演出コマンドです: {command}");
+                    break;
+            }
         }
 
         private static bool AdvancePressed()
@@ -497,19 +786,25 @@ namespace CreativeAI.UI.ConversationUI
                 Sprite sprite,
                 Sprite icon,
                 DialoguePortraitSide side,
-                string displayName
+                string displayName,
+                Color themeColor,
+                AudioClip typingSound
             )
             {
                 Sprite = sprite;
                 Icon = icon;
                 Side = side;
                 DisplayName = displayName ?? string.Empty;
+                ThemeColor = themeColor;
+                TypingSound = typingSound;
             }
 
             public Sprite Sprite { get; }
             public Sprite Icon { get; }
             public DialoguePortraitSide Side { get; }
             public string DisplayName { get; }
+            public Color ThemeColor { get; }
+            public AudioClip TypingSound { get; }
         }
 
         private ResolvedPortrait ResolvePortrait(string key)
@@ -526,7 +821,9 @@ namespace CreativeAI.UI.ConversationUI
                             portrait,
                             icon,
                             character.Side,
-                            character.DisplayName
+                            character.DisplayName,
+                            character.ThemeColor,
+                            character.TypingSound
                         );
                 }
             }
@@ -540,7 +837,9 @@ namespace CreativeAI.UI.ConversationUI
                             entry.Sprite,
                             entry.Sprite,
                             entry.Side,
-                            string.Empty
+                            string.Empty,
+                            new Color(0.75f, 0.9f, 1f, 1f),
+                            null
                         );
                 }
             }
@@ -549,7 +848,9 @@ namespace CreativeAI.UI.ConversationUI
                 _defaultPortrait,
                 _defaultPortrait,
                 _defaultPortraitSide,
-                string.Empty
+                string.Empty,
+                new Color(0.75f, 0.9f, 1f, 1f),
+                null
             );
         }
 
@@ -1007,6 +1308,76 @@ namespace CreativeAI.UI.ConversationUI
                 firstButton.Select();
         }
 
+        private IEnumerator AnimateChoicesIn()
+        {
+            for (int i = 0; i < _spawnedChoices.Count; i++)
+            {
+                var choice = _spawnedChoices[i];
+                if (choice == null)
+                    continue;
+
+                var group = choice.GetComponent<CanvasGroup>();
+                var rect = choice.transform as RectTransform;
+                Vector2 target = rect != null ? rect.anchoredPosition : Vector2.zero;
+                Vector2 start = target + Vector2.up * 18f;
+                float elapsed = 0f;
+                while (elapsed < Mathf.Max(0.01f, _choiceEnterDuration))
+                {
+                    float t = Mathf.SmoothStep(
+                        0f,
+                        1f,
+                        elapsed / Mathf.Max(0.01f, _choiceEnterDuration)
+                    );
+                    if (group != null)
+                        group.alpha = t;
+                    if (rect != null)
+                        rect.anchoredPosition = Vector2.Lerp(start, target, t);
+                    elapsed += Mathf.Max(Time.unscaledDeltaTime, 1f / 60f);
+                    yield return null;
+                }
+                if (group != null)
+                    group.alpha = 1f;
+                if (rect != null)
+                    rect.anchoredPosition = target;
+
+                if (_choiceStaggerDelay > 0f)
+                    yield return new WaitForSecondsRealtime(_choiceStaggerDelay);
+            }
+        }
+
+        private IEnumerator AnimateChoiceSelection(Button selected)
+        {
+            foreach (var choice in _spawnedChoices)
+            {
+                var button = choice != null ? choice.GetComponent<Button>() : null;
+                if (button != null)
+                    button.interactable = false;
+            }
+
+            float elapsed = 0f;
+            float duration = Mathf.Max(0.01f, _choiceConfirmDuration);
+            while (elapsed < duration)
+            {
+                float t = elapsed / duration;
+                foreach (var choice in _spawnedChoices)
+                {
+                    if (choice == null)
+                        continue;
+                    var group = choice.GetComponent<CanvasGroup>();
+                    var button = choice.GetComponent<Button>();
+                    if (group != null)
+                        group.alpha = button == selected ? 1f : Mathf.Lerp(1f, 0.25f, t);
+                    if (button == selected)
+                    {
+                        float scale = 1f + Mathf.Sin(t * Mathf.PI) * 0.04f;
+                        choice.transform.localScale = Vector3.one * scale;
+                    }
+                }
+                elapsed += Mathf.Max(Time.unscaledDeltaTime, 1f / 60f);
+                yield return null;
+            }
+        }
+
         private void EnsureAutoModeIndicator()
         {
             if (_autoModeIndicator != null || _root == null)
@@ -1031,6 +1402,90 @@ namespace CreativeAI.UI.ConversationUI
             _autoModeIndicator.raycastTarget = false;
             if (_nameText != null)
                 _autoModeIndicator.font = _nameText.font;
+
+            var progressObject = new GameObject("AutoProgress", typeof(RectTransform));
+            progressObject.transform.SetParent(_autoModeIndicator.transform, false);
+            var background = progressObject.AddComponent<Image>();
+            background.color = new Color(1f, 1f, 1f, 0.18f);
+            background.raycastTarget = false;
+            var progressRect = progressObject.GetComponent<RectTransform>();
+            progressRect.anchorMin = new Vector2(0.1f, 0f);
+            progressRect.anchorMax = new Vector2(0.9f, 0f);
+            progressRect.pivot = new Vector2(0f, 0.5f);
+            progressRect.anchoredPosition = new Vector2(0f, -4f);
+            progressRect.sizeDelta = new Vector2(0f, 4f);
+
+            var fillObject = new GameObject("Fill", typeof(RectTransform));
+            fillObject.transform.SetParent(progressObject.transform, false);
+            _autoProgressFill = fillObject.AddComponent<Image>();
+            _autoProgressFill.color = new Color(0.5f, 0.85f, 1f, 1f);
+            _autoProgressFill.type = Image.Type.Filled;
+            _autoProgressFill.fillMethod = Image.FillMethod.Horizontal;
+            _autoProgressFill.fillOrigin = 0;
+            _autoProgressFill.raycastTarget = false;
+            var fillRect = fillObject.GetComponent<RectTransform>();
+            fillRect.anchorMin = Vector2.zero;
+            fillRect.anchorMax = Vector2.one;
+            fillRect.offsetMin = Vector2.zero;
+            fillRect.offsetMax = Vector2.zero;
+        }
+
+        private void EnsureControlGuide()
+        {
+            if (_controlGuide != null || _root == null)
+                return;
+
+            var guideObject = new GameObject("ControlGuide", typeof(RectTransform));
+            guideObject.transform.SetParent(_root.transform, false);
+            var rect = guideObject.GetComponent<RectTransform>();
+            rect.anchorMin = Vector2.zero;
+            rect.anchorMax = Vector2.zero;
+            rect.pivot = Vector2.zero;
+            rect.anchoredPosition = new Vector2(26f, 20f);
+            rect.sizeDelta = new Vector2(520f, 38f);
+            _controlGuide = guideObject.AddComponent<TextMeshProUGUI>();
+            _controlGuide.text = "Enter: NEXT  A: AUTO  D: LOG  H: HIDE";
+            _controlGuide.fontSize = 20f;
+            _controlGuide.color = new Color(1f, 1f, 1f, 0.62f);
+            _controlGuide.alignment = TextAlignmentOptions.BottomLeft;
+            _controlGuide.raycastTarget = false;
+            if (_nameText != null)
+                _controlGuide.font = _nameText.font;
+        }
+
+        private void EnsureAutoProgress()
+        {
+            if (_autoProgressFill != null || _autoModeIndicator == null)
+                return;
+
+            var progressObject = new GameObject("AutoProgress", typeof(RectTransform));
+            progressObject.transform.SetParent(_autoModeIndicator.transform, false);
+            var background = progressObject.AddComponent<Image>();
+            background.color = new Color(1f, 1f, 1f, 0.18f);
+            background.raycastTarget = false;
+            var progressRect = progressObject.GetComponent<RectTransform>();
+            progressRect.anchorMin = new Vector2(0.1f, 0f);
+            progressRect.anchorMax = new Vector2(0.9f, 0f);
+            progressRect.pivot = new Vector2(0f, 0.5f);
+            progressRect.anchoredPosition = new Vector2(0f, -4f);
+            progressRect.sizeDelta = new Vector2(0f, 4f);
+
+            var fillObject = new GameObject("Fill", typeof(RectTransform));
+            fillObject.transform.SetParent(progressObject.transform, false);
+            _autoProgressFill = fillObject.AddComponent<Image>();
+            _autoProgressFill.color = new Color(0.5f, 0.85f, 1f, 1f);
+            _autoProgressFill.type = Image.Type.Filled;
+            _autoProgressFill.fillMethod = Image.FillMethod.Horizontal;
+            _autoProgressFill.raycastTarget = false;
+            StretchRect(fillObject.GetComponent<RectTransform>());
+        }
+
+        private static void StretchRect(RectTransform rect)
+        {
+            rect.anchorMin = Vector2.zero;
+            rect.anchorMax = Vector2.one;
+            rect.offsetMin = Vector2.zero;
+            rect.offsetMax = Vector2.zero;
         }
 
         private void EnsureHistoryPanel()
@@ -1090,6 +1545,31 @@ namespace CreativeAI.UI.ConversationUI
             _root.interactable = true;
             if (_windowRoot != null && _hasWindowBasePosition)
                 _windowRoot.anchoredPosition = _windowBasePosition;
+        }
+
+        public IEnumerator HideAnimated(float duration = 0.2f)
+        {
+            State = ConversationState.Exiting;
+            StopIndicatorBounce();
+            if (_root == null)
+            {
+                State = ConversationState.Hidden;
+                yield break;
+            }
+
+            float start = _root.alpha;
+            float elapsed = 0f;
+            duration = Mathf.Max(0.01f, duration);
+            _root.interactable = false;
+            _root.blocksRaycasts = false;
+            while (elapsed < duration)
+            {
+                _root.alpha = Mathf.Lerp(start, 0f, elapsed / duration);
+                elapsed += Mathf.Max(Time.unscaledDeltaTime, 1f / 60f);
+                yield return null;
+            }
+            _root.alpha = 0f;
+            State = ConversationState.Hidden;
         }
 
         private void HideImmediate()

@@ -38,11 +38,19 @@ namespace CreativeAI.UI.ConversationUI
         private DialoguePortraitSide _side;
 
         [SerializeField]
+        private Color _themeColor = new(0.75f, 0.9f, 1f, 1f);
+
+        [SerializeField]
+        private AudioClip _typingSound;
+
+        [SerializeField]
         private Expression[] _expressions = Array.Empty<Expression>();
 
         public string Id => _id;
         public string DisplayName => _displayName;
         public DialoguePortraitSide Side => _side;
+        public Color ThemeColor => _themeColor;
+        public AudioClip TypingSound => _typingSound;
         public IReadOnlyList<Expression> Expressions => _expressions;
 
         public bool TryResolvePortrait(string portraitKey, out Sprite sprite)

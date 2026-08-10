@@ -15,6 +15,7 @@ MonoBehaviour:
   _id: fragile_girl
   _displayName: 儚げな少女
   _side: 1
+  _themeColor: {r: 0.72, g: 0.82, b: 1, a: 1}
   _expressions:
   - PortraitKey: fragile_girl_normal
     Sprite: {fileID: 21300000, guid: 161206e764b711944b593d7adbd93523, type: 3}

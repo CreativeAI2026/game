@@ -15,6 +15,7 @@ MonoBehaviour:
   _id: robot
   _displayName: ロボ
   _side: 1
+  _themeColor: {r: 0.35, g: 0.9, b: 1, a: 1}
   _expressions:
   - PortraitKey: robot_normal
     Sprite: {fileID: 21300000, guid: 62f4360e0d8ceb24381ca11609dc0ab1, type: 3}
