@@ -6,6 +6,7 @@ using CreativeAI.UI.ConversationUI;
 using NUnit.Framework;
 using TMPro;
 using UnityEngine;
+using UnityEngine.TestTools;
 using UnityEngine.UI;
 
 namespace CreativeAI.Tests.EditMode
@@ -164,6 +165,50 @@ namespace CreativeAI.Tests.EditMode
         }
 
         [Test]
+        public void ShowLine_PlacesProtagonistLeftAndOtherCharactersRight()
+        {
+            var protagonist = MakeSprite();
+            var otherCharacter = MakeSprite();
+            TestReflection.SetField(
+                _view,
+                "_portraits",
+                new[]
+                {
+                    new ConversationView.PortraitEntry
+                    {
+                        Key = "protagonist",
+                        Sprite = protagonist,
+                        Side = DialoguePortraitSide.Left,
+                    },
+                    new ConversationView.PortraitEntry
+                    {
+                        Key = "other",
+                        Sprite = otherCharacter,
+                        Side = DialoguePortraitSide.Right,
+                    },
+                }
+            );
+
+            Drive(_view.ShowLine("主人公", "protagonist", "左側"));
+            Assert.AreEqual(0.12f, _portrait.rectTransform.anchorMin.x, 0.001f);
+            Assert.AreEqual(0.12f, _portrait.rectTransform.anchorMax.x, 0.001f);
+            Assert.AreEqual(1.03f, _portrait.rectTransform.localScale.x, 0.001f);
+
+            Drive(_view.ShowLine("相手", "other", "右側"));
+            var rightPortrait = TestReflection.GetField<Image>(_view, "_rightPortrait");
+            Assert.AreEqual(0.88f, rightPortrait.rectTransform.anchorMin.x, 0.001f);
+            Assert.AreEqual(0.88f, rightPortrait.rectTransform.anchorMax.x, 0.001f);
+            Assert.AreEqual(-1.03f, rightPortrait.rectTransform.localScale.x, 0.001f);
+            Assert.AreEqual(0.92f, _portrait.rectTransform.localScale.x, 0.001f);
+            Assert.AreEqual(0.45f, _portrait.color.r, 0.001f);
+
+            Drive(_view.ShowLine("主人公", "protagonist", "もう一度左側"));
+            Assert.AreEqual(1.03f, _portrait.rectTransform.localScale.x, 0.001f);
+            Assert.AreEqual(-0.92f, rightPortrait.rectTransform.localScale.x, 0.001f);
+            Assert.AreEqual(0.45f, rightPortrait.color.r, 0.001f);
+        }
+
+        [Test]
         public void ShowChoice_SpawnsAButtonPerOption()
         {
             var options = new List<ChoiceOption>
@@ -177,6 +222,70 @@ namespace CreativeAI.Tests.EditMode
 
             var spawned = TestReflection.GetField<List<GameObject>>(_view, "_spawnedChoices");
             Assert.AreEqual(2, spawned.Count);
+            Assert.AreEqual(ConversationView.ConversationState.ShowingChoices, _view.State);
+        }
+
+        [Test]
+        public void ShowChoice_NoValidOptions_CompletesSafely()
+        {
+            string picked = "not-called";
+            var routine = _view.ShowChoice(Array.Empty<ChoiceOption>(), value => picked = value);
+
+            LogAssert.Expect(LogType.Warning, "[ConversationView] 表示できる選択肢がありません。");
+            Assert.IsFalse(routine.MoveNext());
+            Assert.IsNull(picked);
+            Assert.AreEqual(ConversationView.ConversationState.Entering, _view.State);
+        }
+
+        [TestCase(2, 178f)]
+        [TestCase(3, 286f)]
+        public void ShowChoice_AdjustsContainerAboveWindow(int choiceCount, float expectedHeight)
+        {
+            var options = new List<ChoiceOption>();
+            for (int i = 0; i < choiceCount; i++)
+                options.Add(new ChoiceOption($"選択肢{i + 1}", $"choice_{i + 1}"));
+
+            var routine = _view.ShowChoice(options, _ => { });
+            routine.MoveNext();
+
+            Assert.AreEqual(565f, _choiceContainer.rect.width, 0.01f);
+            Assert.AreEqual(expectedHeight, _choiceContainer.rect.height, 0.01f);
+            Assert.AreEqual(new Vector2(0.5f, 1f), _choiceContainer.anchorMin);
+            Assert.AreEqual(new Vector2(0.5f, 1f), _choiceContainer.anchorMax);
+            Assert.AreEqual(new Vector2(0.5f, 0f), _choiceContainer.pivot);
+            Assert.AreEqual(new Vector2(0f, 64f), _choiceContainer.anchoredPosition);
+        }
+
+        [Test]
+        public void NextIndicator_BouncesUpAndReturnsToBasePosition()
+        {
+            Assert.AreEqual(
+                0f,
+                (float)TestReflection.Invoke(_view, "CalculateIndicatorBounceOffset", 0f),
+                0.001f
+            );
+            Assert.AreEqual(
+                8f,
+                (float)TestReflection.Invoke(_view, "CalculateIndicatorBounceOffset", 0.3f),
+                0.001f
+            );
+            Assert.AreEqual(
+                0f,
+                (float)TestReflection.Invoke(_view, "CalculateIndicatorBounceOffset", 0.6f),
+                0.001f
+            );
+        }
+
+        [Test]
+        public void SetAutoMode_TogglesModeWithoutAdvancingChoices()
+        {
+            Assert.IsFalse(_view.IsAutoMode);
+
+            _view.SetAutoMode(true);
+            Assert.IsTrue(_view.IsAutoMode);
+
+            _view.SetAutoMode(false);
+            Assert.IsFalse(_view.IsAutoMode);
         }
 
         [Test]
