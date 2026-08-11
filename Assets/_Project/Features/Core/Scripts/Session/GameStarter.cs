@@ -22,13 +22,19 @@ namespace CreativeAI.Core
         /// 未生成ならプレイヤーリグを生成して常駐させ、それを返す。既に居ればそれを返す。
         /// Prefab 未割当なら警告して null(フィールドは読み込めるがプレイヤーは出ない)。
         /// </summary>
-        public GameObject EnsurePlayer()
+        public GameObject EnsurePlayer() => EnsurePlayerRig(_playerRigPrefab, _playerTag);
+
+        /// <summary>
+        /// リグ生成・単一化の本体。Title フロー(このクラス)と、Title を経由しない開発用の直接 Play
+        /// (<c>FieldDevBootstrap</c>)で同じ経路を通すため static にしてある。
+        /// </summary>
+        public static GameObject EnsurePlayerRig(GameObject prefab, string playerTag = "Player")
         {
-            var existing = GameObject.FindWithTag(_playerTag);
+            var existing = GameObject.FindWithTag(playerTag);
             if (existing != null)
                 return existing;
 
-            if (_playerRigPrefab == null)
+            if (prefab == null)
             {
                 Debug.LogWarning(
                     "[GameStarter] playerRigPrefab が未割当です。PlayerRig Prefab を Inspector にドラッグしてください。"
@@ -36,8 +42,8 @@ namespace CreativeAI.Core
                 return null;
             }
 
-            var player = Instantiate(_playerRigPrefab);
-            player.name = _playerRigPrefab.name; // "(Clone)" を避ける
+            var player = Instantiate(prefab);
+            player.name = prefab.name; // "(Clone)" を避ける
             if (Application.isPlaying)
                 DontDestroyOnLoad(player); // 隠しシーンへ移し常駐(EditMode では呼ばない)
             return player;

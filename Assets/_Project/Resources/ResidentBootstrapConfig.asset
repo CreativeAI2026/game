@@ -13,4 +13,4 @@ MonoBehaviour:
   m_Name: ResidentBootstrapConfig
   m_EditorClassIdentifier: CreativeAI.UI::CreativeAI.UI.ResidentBootstrapConfig
   uiRootPrefab: {fileID: 7357621368793443196, guid: d0c8f5a2fab99460a9cbf61536da8406, type: 3}
-  conversationViewPrefab: {fileID: 5021097638024929326, guid: 85cf373cd2cdc4baaa0841c18d6962ce, type: 3}
+  playerRigPrefab: {fileID: 4424343746394782264, guid: bc2e5624b5d5444ceb5acdfda6255a07, type: 3}
