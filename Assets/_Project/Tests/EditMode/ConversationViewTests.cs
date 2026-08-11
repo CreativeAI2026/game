@@ -96,17 +96,22 @@ namespace CreativeAI.Tests.EditMode
             }
         }
 
-        private List<GameObject> SpawnedChoices =>
-            TestReflection.GetField<List<GameObject>>(
-                TestReflection.GetField<object>(_view, "_choicePresenter"),
-                "_spawned"
-            );
+        private List<GameObject> SpawnedChoices
+        {
+            get
+            {
+                var presenter = TestReflection.GetField<object>(_view, "_choicePresenter");
+                return presenter == null
+                    ? null
+                    : TestReflection.GetField<List<GameObject>>(presenter, "_spawned");
+            }
+        }
 
         private void DriveUntilChoicesSpawn(IEnumerator routine)
         {
             var stack = new Stack<IEnumerator>();
             stack.Push(routine);
-            for (int i = 0; i < 500 && stack.Count > 0 && SpawnedChoices.Count == 0; i++)
+            for (int i = 0; i < 500 && stack.Count > 0; i++)
             {
                 var top = stack.Peek();
                 if (top.MoveNext())
@@ -116,6 +121,8 @@ namespace CreativeAI.Tests.EditMode
                 }
                 else
                     stack.Pop();
+                if (SpawnedChoices is { Count: > 0 })
+                    break;
             }
         }
 
@@ -300,6 +307,7 @@ namespace CreativeAI.Tests.EditMode
         [Test]
         public void NextIndicator_BouncesUpAndReturnsToBasePosition()
         {
+            TestReflection.Invoke(_view, "InitializePresenters");
             var chrome = TestReflection.GetField<object>(_view, "_chromePresenter");
             Assert.AreEqual(
                 0f,
