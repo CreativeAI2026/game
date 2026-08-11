@@ -242,6 +242,26 @@ namespace CreativeAI.UI.ConversationUI
             _root.alpha = 0f;
         }
 
+        public IEnumerator HideLineText(float duration)
+        {
+            duration = Mathf.Max(0.01f, duration);
+            float nameStart = _nameGroup != null ? _nameGroup.alpha : 0f;
+            float bodyStart = _bodyGroup != null ? _bodyGroup.alpha : 0f;
+            for (float elapsed = 0f; elapsed < duration; elapsed += FrameDelta())
+            {
+                float t = Mathf.SmoothStep(0f, 1f, elapsed / duration);
+                if (_bodyGroup != null)
+                    _bodyGroup.alpha = Mathf.Lerp(bodyStart, 0f, t);
+                if (_nameGroup != null)
+                    _nameGroup.alpha = Mathf.Lerp(nameStart, 0f, Mathf.Clamp01(t * 1.2f));
+                yield return null;
+            }
+            if (_bodyGroup != null)
+                _bodyGroup.alpha = 0f;
+            if (_nameGroup != null)
+                _nameGroup.alpha = 0f;
+        }
+
         public void HideImmediate()
         {
             StopBounce();

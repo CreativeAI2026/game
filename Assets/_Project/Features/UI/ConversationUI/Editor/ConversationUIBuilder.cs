@@ -47,13 +47,15 @@ namespace CreativeAI.UI.ConversationUI.Editor
                     && prefab.transform.Find("ItemRewardBackdrop") != null
                     && prefab.transform.Find("AUTOAButton") != null
                     && prefab.transform.Find("DialogueHistoryPanel") != null
-                    && prefab.transform.Find("Layout/_System/ConversationArchiveV9") != null
+                    && prefab.transform.Find("Layout/_System/ConversationArchiveV11") != null
+                    && HasPreviewRewardReferences(prefab)
                 )
                     return;
 
                 ImportAsSprite(WindowPng);
                 ImportAsSprite(ContinueButtonPng);
                 ImportAsSprite(ChoiceButtonPng);
+                ImportAsSprite(ItemPreviewPng);
                 BuildPrefab();
                 AssetDatabase.SaveAssets();
                 Debug.Log(
@@ -67,6 +69,9 @@ namespace CreativeAI.UI.ConversationUI.Editor
         private const string ContinueButtonPng =
             ConversationArtPath + "ConversationContinueButton.png";
         private const string ChoiceButtonPng = ConversationArtPath + "ConversationChoiceButton.png";
+        private const string ItemPreviewPng =
+            "Assets/_Project/Art/UI/Items/Food/PreCraft/item_food_apple.png";
+        private const string WeaponPreviewPrefab = "Assets/_Project/Art/Models/Weapons/Katana.glb";
         private const string CharacterArtPath = ConversationArtPath + "Character/";
         private static readonly (string Key, string Path, DialoguePortraitSide Side)[] Portraits =
         {
@@ -135,6 +140,7 @@ namespace CreativeAI.UI.ConversationUI.Editor
             ImportAsSprite(WindowPng);
             ImportAsSprite(ContinueButtonPng);
             ImportAsSprite(ChoiceButtonPng);
+            ImportAsSprite(ItemPreviewPng);
             foreach (var portrait in Portraits)
             {
                 ImportAsSprite(portrait.Path);
@@ -213,9 +219,10 @@ namespace CreativeAI.UI.ConversationUI.Editor
             var rewardLayer = CreateLayer("Rewards", layout.transform);
             var hudLayer = CreateLayer("HUD", layout.transform);
             var controlBar = CreateLayer("Controls", hudLayer.transform);
+            var controlBarGroup = controlBar.AddComponent<CanvasGroup>();
             var historyLayer = CreateLayer("History", layout.transform);
             var systemLayer = CreateLayer("_System", layout.transform);
-            CreateUI("ConversationArchiveV9", systemLayer.transform).SetActive(false);
+            CreateUI("ConversationArchiveV11", systemLayer.transform).SetActive(false);
 
             // --- 立ち絵 ---
             var portrait = CreateUI("Portrait", portraitLayer.transform);
@@ -258,7 +265,7 @@ namespace CreativeAI.UI.ConversationUI.Editor
                 new Vector2(0.5f, 0),
                 new Vector2(0.5f, 0),
                 new Vector2(0.5f, 0),
-                new Vector2(0, 64),
+                new Vector2(0, 70),
                 new Vector2(1301, 283)
             );
 
@@ -356,7 +363,8 @@ namespace CreativeAI.UI.ConversationUI.Editor
                 "AUTO",
                 "A",
                 -564f,
-                104f
+                104f,
+                "会話を自動で送ります"
             );
             var skipControl = CreateDockButton(
                 controlBar.transform,
@@ -364,7 +372,8 @@ namespace CreativeAI.UI.ConversationUI.Editor
                 "SKIP",
                 "S",
                 -452f,
-                104f
+                104f,
+                "既読の会話を高速で進めます"
             );
             var speedControl = CreateDockButton(
                 controlBar.transform,
@@ -372,7 +381,8 @@ namespace CreativeAI.UI.ConversationUI.Editor
                 "SPEED",
                 "T",
                 -324f,
-                136f
+                136f,
+                "文章の表示速度を切り替えます"
             );
             var hideControl = CreateDockButton(
                 controlBar.transform,
@@ -380,7 +390,55 @@ namespace CreativeAI.UI.ConversationUI.Editor
                 "HIDE",
                 "H",
                 -196f,
-                104f
+                104f,
+                "会話ウィンドウを一時的に隠します"
+            );
+            var tooltipPanel = CreateUI("ControlTooltip", hudLayer.transform);
+            var tooltipBackground = tooltipPanel.AddComponent<Image>();
+            tooltipBackground.color = new Color(0.025f, 0.035f, 0.055f, 0.96f);
+            tooltipBackground.raycastTarget = false;
+            var tooltipGroup = tooltipPanel.AddComponent<CanvasGroup>();
+            tooltipGroup.alpha = 0f;
+            tooltipGroup.interactable = false;
+            tooltipGroup.blocksRaycasts = false;
+            SetAnchored(
+                tooltipPanel,
+                new Vector2(1f, 0f),
+                new Vector2(1f, 0f),
+                new Vector2(0.5f, 0f),
+                new Vector2(-324f, 78f),
+                new Vector2(300f, 38f)
+            );
+            var tooltipText = CreateText(
+                "Label",
+                tooltipPanel.transform,
+                font,
+                string.Empty,
+                17f,
+                new Color(0.82f, 0.9f, 1f, 0.94f),
+                TextAlignmentOptions.Center
+            );
+            SetStretch(tooltipText, new Vector2(0.04f, 0f), new Vector2(0.96f, 1f));
+            controlBar
+                .AddComponent<ConversationControlBar>()
+                .Configure(controlBarGroup, tooltipText.GetComponent<TMP_Text>(), tooltipGroup);
+            var speedToast = CreateText(
+                "SpeedToast",
+                hudLayer.transform,
+                font,
+                "TEXT SPEED  x1",
+                18f,
+                new Color(0.72f, 0.88f, 1f, 1f),
+                TextAlignmentOptions.Center
+            );
+            speedToast.AddComponent<CanvasGroup>().alpha = 0f;
+            SetAnchored(
+                speedToast,
+                new Vector2(1f, 0f),
+                new Vector2(1f, 0f),
+                new Vector2(0.5f, 0f),
+                new Vector2(-324f, 66f),
+                new Vector2(210f, 34f)
             );
 
             var itemBackdrop = CreateRewardImage(
@@ -486,6 +544,10 @@ namespace CreativeAI.UI.ConversationUI.Editor
                 choiceContainer.GetComponent<RectTransform>();
             so.FindProperty("_choiceButtonTemplate").objectReferenceValue = button;
             so.FindProperty("_defaultPortrait").objectReferenceValue = portraitSprite;
+            so.FindProperty("_itemGetSprite").objectReferenceValue =
+                AssetDatabase.LoadAssetAtPath<Sprite>(ItemPreviewPng);
+            so.FindProperty("_weaponModelPrefab").objectReferenceValue =
+                AssetDatabase.LoadAssetAtPath<GameObject>(WeaponPreviewPrefab);
             so.FindProperty("_itemRewardImage").objectReferenceValue = itemReward;
             so.FindProperty("_itemRewardBackdrop").objectReferenceValue = itemBackdrop;
             so.FindProperty("_weaponRewardImage").objectReferenceValue = weaponReward;
@@ -496,6 +558,8 @@ namespace CreativeAI.UI.ConversationUI.Editor
             so.FindProperty("_speedControlLabel").objectReferenceValue = speedControl
                 .transform.Find("Label")
                 .GetComponent<TMP_Text>();
+            so.FindProperty("_speedToast").objectReferenceValue =
+                speedToast.GetComponent<TMP_Text>();
             so.FindProperty("_hideControlButton").objectReferenceValue = hideControl;
 
             var characters = so.FindProperty("_characters");
@@ -531,6 +595,16 @@ namespace CreativeAI.UI.ConversationUI.Editor
             var prefab = PrefabUtility.SaveAsPrefabAsset(root, PrefabPath);
             Object.DestroyImmediate(root);
             return prefab;
+        }
+
+        private static bool HasPreviewRewardReferences(GameObject prefab)
+        {
+            var view = prefab != null ? prefab.GetComponent<ConversationView>() : null;
+            if (view == null)
+                return false;
+            var serializedView = new SerializedObject(view);
+            return serializedView.FindProperty("_itemGetSprite").objectReferenceValue != null
+                && serializedView.FindProperty("_weaponModelPrefab").objectReferenceValue != null;
         }
 
         private static void BuildScene(GameObject prefab)
@@ -606,6 +680,7 @@ namespace CreativeAI.UI.ConversationUI.Editor
                 "_skipControlButton",
                 "_speedControlButton",
                 "_speedControlLabel",
+                "_speedToast",
                 "_hideControlButton",
             };
             foreach (string propertyName in requiredReferences)
@@ -645,6 +720,7 @@ namespace CreativeAI.UI.ConversationUI.Editor
                 "_panelGroup",
                 "_latestButton",
                 "_searchField",
+                "_scrollIndicator",
             };
             foreach (string propertyName in requiredReferences)
             {
@@ -684,7 +760,8 @@ namespace CreativeAI.UI.ConversationUI.Editor
             string label,
             string shortcut,
             float x,
-            float width
+            float width,
+            string description
         )
         {
             var target = CreateUI(label + shortcut + "Button", parent);
@@ -695,6 +772,7 @@ namespace CreativeAI.UI.ConversationUI.Editor
             outline.effectDistance = new Vector2(1f, -1f);
             var button = target.AddComponent<Button>();
             button.targetGraphic = image;
+            button.transition = Selectable.Transition.None;
             SetAnchored(
                 target,
                 new Vector2(1f, 0f),
@@ -735,6 +813,22 @@ namespace CreativeAI.UI.ConversationUI.Editor
                 TextAlignmentOptions.Center
             );
             SetStretch(keyLabel, Vector2.zero, Vector2.one);
+            var accent = CreateUI("ActiveAccent", target.transform);
+            var accentImage = accent.AddComponent<Image>();
+            accentImage.color = new Color(0.38f, 0.78f, 1f, 0.96f);
+            accentImage.raycastTarget = false;
+            SetAnchored(
+                accent,
+                new Vector2(0.5f, 0f),
+                new Vector2(0.5f, 0f),
+                new Vector2(0.5f, 0f),
+                Vector2.zero,
+                new Vector2(width - 4f, 2f)
+            );
+            accent.SetActive(false);
+            target
+                .AddComponent<ConversationControlButton>()
+                .Configure(image, keycap.GetComponent<RectTransform>(), accentImage, description);
             return button;
         }
 

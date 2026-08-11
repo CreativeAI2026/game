@@ -16,6 +16,7 @@ MonoBehaviour:
   _displayName: 蓄音機の紳士
   _side: 1
   _themeColor: {r: 0.9, g: 0.72, b: 0.48, a: 1}
+  _portraitOffset: {x: 0, y: -72}
   _expressions:
   - PortraitKey: gramophone_normal
     Sprite: {fileID: 21300000, guid: 0247803260f8cd844ad0ee8e000f24fd, type: 3}

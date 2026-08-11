@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using System.Text;
 using CreativeAI.Core.EventSystem;
@@ -48,8 +49,12 @@ namespace CreativeAI.UI.ConversationUI
         [SerializeField]
         private TMP_InputField _searchField;
 
+        [SerializeField]
+        private Image _scrollIndicator;
+
         public bool IsOpen => _isOpen;
         public int EntryCount => _entries.Count;
+        public event Action Closed;
 
         public void Initialize(TMP_FontAsset font)
         {
@@ -74,7 +79,14 @@ namespace CreativeAI.UI.ConversationUI
                 return;
 
             if (keyboard.dKey.wasPressedThisFrame)
+            {
+                if (
+                    _openButton != null
+                    && _openButton.TryGetComponent<ConversationControlButton>(out var control)
+                )
+                    control.PlayShortcutFeedback();
                 SetOpen(!IsOpen);
+            }
             else if (IsOpen && keyboard.escapeKey.wasPressedThisFrame)
                 SetOpen(false);
         }
@@ -100,6 +112,7 @@ namespace CreativeAI.UI.ConversationUI
             _entries.Add(entry);
             _viewFactory.CreateEntry(_content, entry);
             TrimOldEntries();
+            RefreshCurrentMarker();
             if (followLatest)
                 ScrollToLatest();
             else
@@ -117,6 +130,7 @@ namespace CreativeAI.UI.ConversationUI
             _entries.Add(entry);
             _viewFactory.CreateEntry(_content, entry);
             TrimOldEntries();
+            RefreshCurrentMarker();
             if (followLatest)
                 ScrollToLatest();
             else
@@ -199,6 +213,7 @@ namespace CreativeAI.UI.ConversationUI
             _panelGroup = view.PanelGroup;
             _latestButton = view.LatestButton;
             _searchField = view.SearchField;
+            _scrollIndicator = view.ScrollIndicator;
         }
 
         private void BindViewEvents()
@@ -229,7 +244,11 @@ namespace CreativeAI.UI.ConversationUI
             if (_scrollRect != null)
             {
                 _scrollRect.onValueChanged.RemoveAllListeners();
-                _scrollRect.onValueChanged.AddListener(_ => RefreshLatestButton());
+                _scrollRect.onValueChanged.AddListener(_ =>
+                {
+                    RefreshLatestButton();
+                    RefreshScrollIndicator();
+                });
             }
             if (_searchField != null)
             {
@@ -255,7 +274,10 @@ namespace CreativeAI.UI.ConversationUI
             if (_panelGroup != null)
                 _panelGroup.alpha = target;
             if (!opening)
+            {
                 _panel.SetActive(false);
+                Closed?.Invoke();
+            }
             _panelAnimation = null;
         }
 
@@ -279,8 +301,60 @@ namespace CreativeAI.UI.ConversationUI
                     || entry.Speaker.Contains(query, System.StringComparison.OrdinalIgnoreCase)
                     || entry.Body.Contains(query, System.StringComparison.OrdinalIgnoreCase);
                 _content.GetChild(i).gameObject.SetActive(visible);
+                ApplyEntryHighlight(_content.GetChild(i), entry, query);
             }
             LayoutRebuilder.ForceRebuildLayoutImmediate(_content);
+            RefreshScrollIndicator();
+        }
+
+        private static void ApplyEntryHighlight(
+            Transform container,
+            DialogueHistoryEntry entry,
+            string query
+        )
+        {
+            var choiceToggle = container.GetComponentInChildren<DialogueChoiceHistoryToggle>(true);
+            if (choiceToggle != null)
+            {
+                choiceToggle.SetSearchText(
+                    string.IsNullOrEmpty(query) ? null : Highlight(entry.Body, query)
+                );
+                return;
+            }
+            foreach (var text in container.GetComponentsInChildren<TMP_Text>(true))
+            {
+                if (text.name == "Name")
+                    text.text = Highlight(entry.Speaker, query);
+                else if (text.name is "Body" or "ChoiceText")
+                    text.text = Highlight(entry.Body, query);
+            }
+        }
+
+        private static string Highlight(string source, string query)
+        {
+            source ??= string.Empty;
+            if (string.IsNullOrEmpty(query))
+                return source;
+            int index = source.IndexOf(query, System.StringComparison.OrdinalIgnoreCase);
+            if (index < 0)
+                return source;
+            return source.Substring(0, index)
+                + "<mark=#3A84A880>"
+                + source.Substring(index, query.Length)
+                + "</mark>"
+                + source.Substring(index + query.Length);
+        }
+
+        private void RefreshCurrentMarker()
+        {
+            if (_content == null)
+                return;
+            for (int i = 0; i < _content.childCount; i++)
+            {
+                var marker = _content.GetChild(i).Find("CurrentMarker");
+                if (marker != null)
+                    marker.gameObject.SetActive(i == _content.childCount - 1);
+            }
         }
 
         private void TrimOldEntries()
@@ -301,6 +375,22 @@ namespace CreativeAI.UI.ConversationUI
             LayoutRebuilder.ForceRebuildLayoutImmediate(_content);
             _scrollRect.verticalNormalizedPosition = 0f;
             RefreshLatestButton();
+            RefreshScrollIndicator();
+        }
+
+        private void RefreshScrollIndicator()
+        {
+            if (_scrollIndicator == null || _scrollRect == null || _content == null)
+                return;
+            float viewportHeight = Mathf.Max(1f, _scrollRect.viewport.rect.height);
+            float contentHeight = Mathf.Max(viewportHeight, _content.rect.height);
+            float size = Mathf.Clamp(viewportHeight / contentHeight, 0.08f, 1f);
+            float start = (1f - size) * _scrollRect.verticalNormalizedPosition;
+            var rect = _scrollIndicator.rectTransform;
+            rect.anchorMin = new Vector2(0f, start);
+            rect.anchorMax = new Vector2(1f, start + size);
+            rect.offsetMin = rect.offsetMax = Vector2.zero;
+            _scrollIndicator.gameObject.SetActive(size < 0.995f);
         }
     }
 }

@@ -122,7 +122,7 @@ namespace CreativeAI.UI.ConversationUI
         private float _choiceSpacing = 38f; // 選択肢同士の間隔
 
         [SerializeField]
-        private float _choiceBottomMargin = 64f; // 会話ウィンドウ上端から選択肢までの余白
+        private float _choiceBottomMargin = 70f; // 3択時の会話ウィンドウ上端から選択肢までの余白
 
         [SerializeField]
         private float _choiceStaggerDelay = 0.06f;
@@ -251,6 +251,9 @@ namespace CreativeAI.UI.ConversationUI
         private TMP_Text _speedControlLabel;
 
         [SerializeField]
+        private TMP_Text _speedToast;
+
+        [SerializeField]
         private Button _hideControlButton;
 
         private DialogueChoicePresenter _choicePresenter;
@@ -259,6 +262,8 @@ namespace CreativeAI.UI.ConversationUI
         private ConversationChromePresenter _chromePresenter;
         private readonly DialogueAdvanceController _advanceController = new();
         private DialogueRewardPresenter _rewardPresenter;
+        private Coroutine _speedToastRoutine;
+        private bool _historyEventsBound;
         private bool _windowManuallyHidden;
         private readonly HashSet<string> _readLineIds = new();
         private bool _currentLineWasRead;
@@ -343,15 +348,26 @@ namespace CreativeAI.UI.ConversationUI
         {
             var keyboard = Keyboard.current;
             if (keyboard != null && keyboard.aKey.wasPressedThisFrame)
+            {
+                PlayControlShortcut(_autoControlButton);
                 SetAutoMode(!IsAutoMode);
+            }
+            if (keyboard != null && keyboard.sKey.wasPressedThisFrame)
+                PlayControlShortcut(_skipControlButton);
             if (
                 keyboard != null
                 && keyboard.hKey.wasPressedThisFrame
                 && State != ConversationState.ShowingChoices
             )
+            {
+                PlayControlShortcut(_hideControlButton);
                 SetWindowHidden(!_windowManuallyHidden);
+            }
             if (keyboard != null && keyboard.tKey.wasPressedThisFrame)
+            {
+                PlayControlShortcut(_speedControlButton);
                 SetTextSpeed((TextSpeed)(((int)_textSpeed + 1) % 4));
+            }
 
             if (State == ConversationState.ShowingChoices)
                 _choicePresenter?.HandleKeyboardInput();
@@ -391,7 +407,8 @@ namespace CreativeAI.UI.ConversationUI
                     DialoguePortraitSide.Left,
                     string.Empty,
                     new Color(0.78f, 0.82f, 0.9f, 1f),
-                    null
+                    null,
+                    Vector2.zero
                 )
                 : _portraitPresenter.Resolve(
                     portrait,
@@ -635,10 +652,23 @@ namespace CreativeAI.UI.ConversationUI
 
         private static void SetControlButtonActive(Button button, bool active)
         {
-            if (button != null && button.targetGraphic != null)
+            if (button == null)
+                return;
+            if (button.TryGetComponent<ConversationControlButton>(out var control))
+                control.SetActiveState(active);
+            else if (button.targetGraphic != null)
                 button.targetGraphic.color = active
                     ? new Color(0.16f, 0.42f, 0.62f, 0.96f)
                     : new Color(0.035f, 0.045f, 0.07f, 0.86f);
+        }
+
+        private static void PlayControlShortcut(Button button)
+        {
+            if (
+                button != null
+                && button.TryGetComponent<ConversationControlButton>(out var control)
+            )
+                control.PlayShortcutFeedback();
         }
 
         public void SetWindowHidden(bool hidden)
@@ -655,6 +685,7 @@ namespace CreativeAI.UI.ConversationUI
             InitializePresenters();
             _chromePresenter.SetTextSpeed(speed);
             UpdateSpeedControlLabel();
+            ShowSpeedToast();
         }
 
         private void UpdateSpeedControlLabel()
@@ -668,6 +699,43 @@ namespace CreativeAI.UI.ConversationUI
                 TextSpeed.Instant => "SPEED MAX",
                 _ => "SPEED x1",
             };
+        }
+
+        private void ShowSpeedToast()
+        {
+            if (_speedToast == null || !Application.isPlaying)
+                return;
+            if (_speedToastRoutine != null)
+                StopCoroutine(_speedToastRoutine);
+            _speedToast.text = _textSpeed switch
+            {
+                TextSpeed.Slow => "TEXT SPEED  x0.6",
+                TextSpeed.Fast => "TEXT SPEED  x2",
+                TextSpeed.Instant => "TEXT SPEED  MAX",
+                _ => "TEXT SPEED  x1",
+            };
+            _speedToastRoutine = StartCoroutine(AnimateSpeedToast());
+        }
+
+        private IEnumerator AnimateSpeedToast()
+        {
+            var group = _speedToast.GetComponent<CanvasGroup>();
+            var rect = _speedToast.rectTransform;
+            Vector2 basePosition = rect.anchoredPosition;
+            const float duration = 0.7f;
+            for (float elapsed = 0f; elapsed < duration; elapsed += Time.unscaledDeltaTime)
+            {
+                float normalized = elapsed / duration;
+                group.alpha =
+                    normalized < 0.18f
+                        ? normalized / 0.18f
+                        : 1f - Mathf.InverseLerp(0.62f, 1f, normalized);
+                rect.anchoredPosition = basePosition + Vector2.up * (7f * normalized);
+                yield return null;
+            }
+            group.alpha = 0f;
+            rect.anchoredPosition = basePosition;
+            _speedToastRoutine = null;
         }
 
         public bool IsLineRead(string speaker, string portrait, string text) =>
@@ -796,6 +864,17 @@ namespace CreativeAI.UI.ConversationUI
                 _historyPanel = gameObject.AddComponent<DialogueHistoryPanel>();
 
             _historyPanel.Initialize(_nameText != null ? _nameText.font : null);
+            if (!_historyEventsBound)
+            {
+                _historyPanel.Closed += HandleHistoryClosed;
+                _historyEventsBound = true;
+            }
+        }
+
+        private void HandleHistoryClosed()
+        {
+            if (isActiveAndEnabled)
+                StartCoroutine(_portraitPresenter.PlayReturnFocus());
         }
 
         private IEnumerator ShowAnimated()
@@ -808,7 +887,12 @@ namespace CreativeAI.UI.ConversationUI
         {
             State = ConversationState.Exiting;
             InitializePresenters();
-            yield return _chromePresenter.Hide(duration);
+            float textDuration = Mathf.Max(0.05f, duration * 0.35f);
+            float portraitDuration = Mathf.Max(0.06f, duration * 0.4f);
+            float windowDuration = Mathf.Max(0.07f, duration * 0.45f);
+            yield return _chromePresenter.HideLineText(textDuration);
+            yield return _portraitPresenter.FadeOutAll(portraitDuration);
+            yield return _chromePresenter.Hide(windowDuration);
             _rewardPresenter.HideAll();
             _choicePresenter.Clear();
             _choicePresenter.SetActive(false);

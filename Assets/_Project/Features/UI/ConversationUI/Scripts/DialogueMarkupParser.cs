@@ -75,6 +75,30 @@ namespace CreativeAI.UI.ConversationUI
                     {
                         shakeRanges.Add((shakeStarts.Pop(), visibleIndex));
                     }
+                    else if (tag.Equals("whisper", StringComparison.OrdinalIgnoreCase))
+                    {
+                        output.Append("<size=85%><color=#B7C1D0>");
+                    }
+                    else if (tag.Equals("/whisper", StringComparison.OrdinalIgnoreCase))
+                    {
+                        output.Append("</color></size>");
+                    }
+                    else if (tag.Equals("shout", StringComparison.OrdinalIgnoreCase))
+                    {
+                        output.Append("<size=115%><b>");
+                    }
+                    else if (tag.Equals("/shout", StringComparison.OrdinalIgnoreCase))
+                    {
+                        output.Append("</b></size>");
+                    }
+                    else if (tag.Equals("emphasis", StringComparison.OrdinalIgnoreCase))
+                    {
+                        output.Append("<color=#86D7FF><b>");
+                    }
+                    else if (tag.Equals("/emphasis", StringComparison.OrdinalIgnoreCase))
+                    {
+                        output.Append("</b></color>");
+                    }
                     else
                     {
                         output.Append('<').Append(tag).Append('>');

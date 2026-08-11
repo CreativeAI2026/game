@@ -41,6 +41,10 @@ namespace CreativeAI.UI.ConversationUI
         private Color _themeColor = new(0.75f, 0.9f, 1f, 1f);
 
         [SerializeField]
+        [Tooltip("立ち絵スロット内でのキャラクター固有の表示位置補正")]
+        private Vector2 _portraitOffset;
+
+        [SerializeField]
         private AudioClip _typingSound;
 
         [SerializeField]
@@ -50,6 +54,7 @@ namespace CreativeAI.UI.ConversationUI
         public string DisplayName => _displayName;
         public DialoguePortraitSide Side => _side;
         public Color ThemeColor => _themeColor;
+        public Vector2 PortraitOffset => _portraitOffset;
         public AudioClip TypingSound => _typingSound;
         public IReadOnlyList<Expression> Expressions => _expressions;
 

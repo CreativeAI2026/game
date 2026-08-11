@@ -114,7 +114,7 @@ namespace CreativeAI.UI.ConversationUI
                 view,
                 "？？？",
                 FragileGirlFrightened,
-                "あの……倒れていたあなたを運んだのは、その子です。私は毛布を掛けただけで……。"
+                "<whisper>あの……倒れていたあなたを運んだのは、その子です。私は毛布を掛けただけで……。</whisper>"
             );
             yield return Line(view, Protagonist, "そこに誰かいるのか？　暗くて顔が見えない。");
             if (view is ConversationView revealView)
@@ -131,12 +131,12 @@ namespace CreativeAI.UI.ConversationUI
             yield return Line(
                 view,
                 Gramophone,
-                "そして私は、冷えた客人に一曲添えた。目覚めの旋律としては上出来だったろう？"
+                "そして私は、冷えた客人に<emphasis>一曲</emphasis>添えた。目覚めの旋律としては上出来だったろう？"
             );
             yield return Line(
                 view,
                 Protagonist,
-                "<wait=0.25><shake>蓄音機までしゃべるのか……。</shake>でも、敵意はなさそうだ。"
+                "<wait=0.25><shake><shout>蓄音機までしゃべるのか……。</shout></shake>でも、敵意はなさそうだ。"
             );
             if (view is ConversationView conversationView)
                 yield return conversationView.PlayPortraitEffect(
@@ -177,7 +177,7 @@ namespace CreativeAI.UI.ConversationUI
             yield return Line(
                 view,
                 Robot,
-                "駅から移動可能な経路は三つ。南の村、旧遺跡、北の森です。"
+                "駅から移動可能な経路は<emphasis>三つ</emphasis>。南の村、旧遺跡、北の森です。"
             );
             yield return Line(
                 view,

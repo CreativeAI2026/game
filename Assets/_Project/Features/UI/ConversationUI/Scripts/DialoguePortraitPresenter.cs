@@ -15,7 +15,8 @@ namespace CreativeAI.UI.ConversationUI
                 DialoguePortraitSide side,
                 string displayName,
                 Color themeColor,
-                AudioClip typingSound
+                AudioClip typingSound,
+                Vector2 offset
             )
             {
                 Sprite = sprite;
@@ -24,6 +25,7 @@ namespace CreativeAI.UI.ConversationUI
                 DisplayName = displayName ?? string.Empty;
                 ThemeColor = themeColor;
                 TypingSound = typingSound;
+                Offset = offset;
             }
 
             public Sprite Sprite { get; }
@@ -32,12 +34,19 @@ namespace CreativeAI.UI.ConversationUI
             public string DisplayName { get; }
             public Color ThemeColor { get; }
             public AudioClip TypingSound { get; }
+            public Vector2 Offset { get; }
         }
 
         private Image _left;
         private Image _right;
+        private Image _baseLeft;
+        private Image _baseRight;
         private float _leftAnchorX;
         private float _rightAnchorX;
+        private float _leftBaseTopY;
+        private float _rightBaseTopY;
+        private Vector2 _leftOffset;
+        private Vector2 _rightOffset;
         private float _activeScale;
         private float _inactiveScale;
         private float _inactiveBrightness;
@@ -63,10 +72,22 @@ namespace CreativeAI.UI.ConversationUI
             float focusDuration
         )
         {
+            bool leftChanged = left != _baseLeft;
+            bool rightChanged = right != _baseRight;
             _left = left;
             _right = right;
             _leftAnchorX = leftAnchorX;
             _rightAnchorX = rightAnchorX;
+            if (leftChanged)
+            {
+                _baseLeft = left;
+                _leftBaseTopY = ResolveTopY(left);
+            }
+            if (rightChanged)
+            {
+                _baseRight = right;
+                _rightBaseTopY = right != null ? ResolveTopY(right) : _leftBaseTopY;
+            }
             _activeScale = activeScale;
             _inactiveScale = inactiveScale;
             _inactiveBrightness = inactiveBrightness;
@@ -95,7 +116,8 @@ namespace CreativeAI.UI.ConversationUI
                             character.Side,
                             character.DisplayName,
                             character.ThemeColor,
-                            character.TypingSound
+                            character.TypingSound,
+                            character.PortraitOffset
                         );
             }
             if (!string.IsNullOrEmpty(key) && portraits != null)
@@ -108,7 +130,8 @@ namespace CreativeAI.UI.ConversationUI
                             entry.Side,
                             string.Empty,
                             new Color(0.75f, 0.9f, 1f, 1f),
-                            null
+                            null,
+                            Vector2.zero
                         );
             }
             return new ResolvedPortrait(
@@ -117,7 +140,8 @@ namespace CreativeAI.UI.ConversationUI
                 defaultSide,
                 string.Empty,
                 new Color(0.75f, 0.9f, 1f, 1f),
-                null
+                null,
+                Vector2.zero
             );
         }
 
@@ -141,6 +165,7 @@ namespace CreativeAI.UI.ConversationUI
             bool isNew = !wasShown;
             active.sprite = resolved.Sprite;
             active.enabled = true;
+            SetOffset(resolved.Side, resolved.Offset);
             ApplySide(active, resolved.Side);
             if (resolved.Side == DialoguePortraitSide.Left)
                 _leftShown = true;
@@ -269,6 +294,53 @@ namespace CreativeAI.UI.ConversationUI
             portrait.color = baseColor;
         }
 
+        public IEnumerator PlayReturnFocus(float duration = 0.24f)
+        {
+            var portrait = _activeSide == DialoguePortraitSide.Left ? _left : _right;
+            if (portrait == null || !portrait.enabled)
+                yield break;
+            var rect = portrait.rectTransform;
+            Vector3 baseScale = rect.localScale;
+            duration = Mathf.Max(0.01f, duration);
+            for (float elapsed = 0f; elapsed < duration; elapsed += FrameDelta())
+            {
+                float pulse = 1f + Mathf.Sin((elapsed / duration) * Mathf.PI) * 0.025f;
+                rect.localScale = baseScale * pulse;
+                yield return null;
+            }
+            rect.localScale = baseScale;
+        }
+
+        public IEnumerator FadeOutAll(float duration)
+        {
+            Color leftStart = _left != null ? _left.color : Color.clear;
+            Color rightStart = _right != null ? _right.color : Color.clear;
+            duration = Mathf.Max(0.01f, duration);
+            for (float elapsed = 0f; elapsed < duration; elapsed += FrameDelta())
+            {
+                float alpha = 1f - Mathf.SmoothStep(0f, 1f, elapsed / duration);
+                if (_left != null && _left.enabled)
+                    _left.color = new Color(
+                        leftStart.r,
+                        leftStart.g,
+                        leftStart.b,
+                        leftStart.a * alpha
+                    );
+                if (_right != null && _right.enabled)
+                    _right.color = new Color(
+                        rightStart.r,
+                        rightStart.g,
+                        rightStart.b,
+                        rightStart.a * alpha
+                    );
+                yield return null;
+            }
+            if (_left != null && _left.enabled)
+                _left.color = new Color(leftStart.r, leftStart.g, leftStart.b, 0f);
+            if (_right != null && _right.enabled)
+                _right.color = new Color(rightStart.r, rightStart.g, rightStart.b, 0f);
+        }
+
         public void EnsureSlots()
         {
             if (_left == null)
@@ -332,13 +404,16 @@ namespace CreativeAI.UI.ConversationUI
         {
             var rect = portrait.rectTransform;
             float anchorX = side == DialoguePortraitSide.Left ? _leftAnchorX : _rightAnchorX;
+            float baseTopY = side == DialoguePortraitSide.Left ? _leftBaseTopY : _rightBaseTopY;
+            Vector2 offset = side == DialoguePortraitSide.Left ? _leftOffset : _rightOffset;
             rect.anchorMin = new Vector2(anchorX, rect.anchorMin.y);
             rect.anchorMax = new Vector2(anchorX, rect.anchorMax.y);
-            rect.anchoredPosition = new Vector2(0f, rect.anchoredPosition.y);
+            rect.pivot = new Vector2(rect.pivot.x, 1f);
+            rect.anchoredPosition = new Vector2(offset.x, baseTopY + offset.y);
             SetScale(portrait, side, 1f);
         }
 
-        private static void SetScale(Image portrait, DialoguePortraitSide side, float magnitude)
+        private void SetScale(Image portrait, DialoguePortraitSide side, float magnitude)
         {
             var rect = portrait.rectTransform;
             rect.localScale = new Vector3(
@@ -346,6 +421,22 @@ namespace CreativeAI.UI.ConversationUI
                 magnitude,
                 rect.localScale.z
             );
+        }
+
+        private void SetOffset(DialoguePortraitSide side, Vector2 offset)
+        {
+            if (side == DialoguePortraitSide.Left)
+                _leftOffset = offset;
+            else
+                _rightOffset = offset;
+        }
+
+        private static float ResolveTopY(Image portrait)
+        {
+            if (portrait == null)
+                return 0f;
+            var rect = portrait.rectTransform;
+            return rect.anchoredPosition.y + (1f - rect.pivot.y) * rect.rect.height;
         }
 
         private static DialoguePortraitSide Opposite(DialoguePortraitSide side) =>

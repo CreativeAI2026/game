@@ -219,7 +219,9 @@ namespace CreativeAI.UI.ConversationUI
                 layout.spacing = _spacing;
             _container.anchorMin = _container.anchorMax = new Vector2(0.5f, 1f);
             _container.pivot = new Vector2(0.5f, 0f);
-            _container.anchoredPosition = new Vector2(0f, _bottomMargin);
+            float threeChoiceHeight = 3f * _buttonHeight + 2f * _spacing;
+            float centeredBottom = _bottomMargin + (threeChoiceHeight - height) * 0.5f;
+            _container.anchoredPosition = new Vector2(0f, centeredBottom);
             _container.SetSizeWithCurrentAnchors(RectTransform.Axis.Horizontal, _containerWidth);
             _container.SetSizeWithCurrentAnchors(RectTransform.Axis.Vertical, height);
         }

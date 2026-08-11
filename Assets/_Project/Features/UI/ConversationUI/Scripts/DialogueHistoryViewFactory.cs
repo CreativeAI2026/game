@@ -66,7 +66,8 @@ namespace CreativeAI.UI.ConversationUI
                 ScrollRect scrollRect,
                 CanvasGroup panelGroup,
                 GameObject latestButton,
-                TMP_InputField searchField
+                TMP_InputField searchField,
+                Image scrollIndicator
             )
             {
                 Panel = panel;
@@ -76,6 +77,7 @@ namespace CreativeAI.UI.ConversationUI
                 PanelGroup = panelGroup;
                 LatestButton = latestButton;
                 SearchField = searchField;
+                ScrollIndicator = scrollIndicator;
             }
 
             public GameObject Panel { get; }
@@ -85,6 +87,7 @@ namespace CreativeAI.UI.ConversationUI
             public CanvasGroup PanelGroup { get; }
             public GameObject LatestButton { get; }
             public TMP_InputField SearchField { get; }
+            public Image ScrollIndicator { get; }
         }
 
         private readonly TMP_FontAsset _font;
@@ -159,6 +162,20 @@ namespace CreativeAI.UI.ConversationUI
             viewport.offsetMin = viewport.offsetMax = Vector2.zero;
             viewportObject.AddComponent<RectMask2D>();
 
+            var scrollTrack = CreateRect("ScrollPositionTrack", panel.transform);
+            var trackRect = scrollTrack.GetComponent<RectTransform>();
+            trackRect.anchorMin = new Vector2(0.91f, 0.06f);
+            trackRect.anchorMax = new Vector2(0.91f, 0.92f);
+            trackRect.pivot = new Vector2(0.5f, 0.5f);
+            trackRect.sizeDelta = new Vector2(2f, 0f);
+            trackRect.anchoredPosition = Vector2.zero;
+            scrollTrack.AddComponent<Image>().color = new Color(0.35f, 0.55f, 0.7f, 0.12f);
+            var scrollIndicatorObject = CreateRect("Indicator", scrollTrack.transform);
+            var scrollIndicator = scrollIndicatorObject.AddComponent<Image>();
+            scrollIndicator.color = new Color(0.38f, 0.72f, 0.94f, 0.72f);
+            scrollIndicator.raycastTarget = false;
+            Stretch(scrollIndicator.rectTransform);
+
             var contentObject = CreateRect("Content", viewport);
             var content = contentObject.GetComponent<RectTransform>();
             content.anchorMin = new Vector2(0f, 1f);
@@ -203,7 +220,8 @@ namespace CreativeAI.UI.ConversationUI
                 scrollRect,
                 panelGroup,
                 latestButton,
-                searchField
+                searchField,
+                scrollIndicator
             );
         }
 
@@ -226,6 +244,17 @@ namespace CreativeAI.UI.ConversationUI
                 CreateNarration(container.transform, entry);
             else
                 CreateDialogue(container.transform, entry);
+            var currentMarker = CreateRect("CurrentMarker", container.transform);
+            currentMarker.AddComponent<Image>().color = new Color(0.32f, 0.75f, 1f, 0.92f);
+            var markerLayout = currentMarker.AddComponent<LayoutElement>();
+            markerLayout.ignoreLayout = true;
+            var markerRect = currentMarker.GetComponent<RectTransform>();
+            markerRect.anchorMin = Vector2.zero;
+            markerRect.anchorMax = new Vector2(0f, 1f);
+            markerRect.pivot = new Vector2(0f, 0.5f);
+            markerRect.offsetMin = new Vector2(0f, 1f);
+            markerRect.offsetMax = new Vector2(3f, 10f);
+            currentMarker.SetActive(false);
             CreateSeparator(container.transform);
             return container;
         }
@@ -273,7 +302,10 @@ namespace CreativeAI.UI.ConversationUI
         private void CreateChoice(Transform parent, DialogueHistoryEntry entry)
         {
             var row = CreateRect("ChoiceEntry", parent);
-            row.AddComponent<Image>().color = new Color(0.055f, 0.16f, 0.23f, 0.9f);
+            var rowImage = row.AddComponent<Image>();
+            rowImage.color = new Color(0.055f, 0.16f, 0.23f, 0.9f);
+            var button = row.AddComponent<Button>();
+            button.targetGraphic = rowImage;
             var outline = row.AddComponent<Outline>();
             outline.effectColor = new Color(0.3f, 0.68f, 0.9f, 0.52f);
             outline.effectDistance = new Vector2(2f, -2f);
@@ -296,6 +328,8 @@ namespace CreativeAI.UI.ConversationUI
             body.alignment = TextAlignmentOptions.MidlineLeft;
             body.textWrappingMode = TextWrappingModes.Normal;
             body.gameObject.AddComponent<LayoutElement>().flexibleWidth = 1f;
+            row.AddComponent<DialogueChoiceHistoryToggle>()
+                .Configure(button, body, badge, entry.Body);
         }
 
         private void CreateNarration(Transform parent, DialogueHistoryEntry entry)
@@ -345,7 +379,7 @@ namespace CreativeAI.UI.ConversationUI
             Anchor(
                 target.GetComponent<RectTransform>(),
                 new Vector2(0.1f, 1f),
-                new Vector2(0f, -15f),
+                new Vector2(12f, -15f),
                 new Vector2(256f, 34f),
                 new Vector2(0f, 1f)
             );
@@ -450,6 +484,7 @@ namespace CreativeAI.UI.ConversationUI
             var outline = target.AddComponent<Outline>();
             outline.effectColor = new Color(0.45f, 0.62f, 0.88f, 0.3f);
             outline.effectDistance = new Vector2(1f, -1f);
+            target.GetComponent<Button>().transition = Selectable.Transition.None;
 
             var label = target.GetComponentInChildren<TMP_Text>();
             label.fontSize = 19f;
@@ -471,6 +506,27 @@ namespace CreativeAI.UI.ConversationUI
             var keyLabel = CreateText("Label", key.transform, "D", 14f, FontStyles.Bold);
             keyLabel.alignment = TextAlignmentOptions.Center;
             Stretch(keyLabel.rectTransform);
+
+            var accent = CreateRect("ActiveAccent", target.transform);
+            var accentImage = accent.AddComponent<Image>();
+            accentImage.color = new Color(0.38f, 0.78f, 1f, 0.96f);
+            accentImage.raycastTarget = false;
+            Anchor(
+                accent.GetComponent<RectTransform>(),
+                new Vector2(0.5f, 0f),
+                Vector2.zero,
+                new Vector2(100f, 2f),
+                new Vector2(0.5f, 0f)
+            );
+            accent.SetActive(false);
+            target
+                .AddComponent<ConversationControlButton>()
+                .Configure(
+                    image,
+                    key.GetComponent<RectTransform>(),
+                    accentImage,
+                    "これまでの会話を読み返します"
+                );
         }
 
         private TMP_Text CreateText(
