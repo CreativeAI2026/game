@@ -78,7 +78,14 @@ namespace CreativeAI.Tests.PlayMode
                     .GetField(name, BindingFlags.Instance | BindingFlags.NonPublic)
                     .GetValue(target);
 
-        private List<GameObject> Spawned => GetPrivate<List<GameObject>>(_view, "_spawnedChoices");
+        private List<GameObject> Spawned =>
+            GetPrivate<List<GameObject>>(GetPrivate<object>(_view, "_choicePresenter"), "_spawned");
+
+        private void AdvanceUntilChoicesSpawned(IEnumerator routine)
+        {
+            for (int i = 0; i < 10 && Spawned.Count == 0; i++)
+                Assert.IsTrue(routine.MoveNext(), "選択肢が生成される前にコルーチンが終了した");
+        }
 
         private static List<ChoiceOption> TwoOptions() =>
             new()
@@ -92,7 +99,7 @@ namespace CreativeAI.Tests.PlayMode
         {
             string picked = null;
             var routine = _view.ShowChoice(TwoOptions(), v => picked = v);
-            routine.MoveNext(); // 選択肢を並べて待ちに入る
+            AdvanceUntilChoicesSpawned(routine);
             Assert.AreEqual(2, Spawned.Count);
 
             Spawned[1].GetComponent<Button>().onClick.Invoke(); // 「ひとりで行く」
@@ -108,7 +115,7 @@ namespace CreativeAI.Tests.PlayMode
         {
             string picked = null;
             var routine = _view.ShowChoice(TwoOptions(), v => picked = v);
-            routine.MoveNext();
+            AdvanceUntilChoicesSpawned(routine);
 
             Spawned[0].GetComponent<Button>().onClick.Invoke();
             while (routine.MoveNext())
@@ -134,6 +141,23 @@ namespace CreativeAI.Tests.PlayMode
             while (routine.MoveNext())
                 yield return null;
             Assert.IsTrue(called);
+        }
+
+        [UnityTest]
+        public IEnumerator ShowChoice_AfterEntranceAnimation_ButtonsAreVisible()
+        {
+            string picked = null;
+            _view.StartCoroutine(_view.ShowChoice(TwoOptions(), value => picked = value));
+
+            yield return new WaitForSecondsRealtime(0.45f);
+
+            Assert.AreEqual(2, Spawned.Count);
+            foreach (var choice in Spawned)
+                Assert.Greater(choice.GetComponent<CanvasGroup>().alpha, 0.99f);
+
+            Spawned[0].GetComponent<Button>().onClick.Invoke();
+            yield return new WaitForSecondsRealtime(0.3f);
+            Assert.AreEqual("together", picked);
         }
     }
 }

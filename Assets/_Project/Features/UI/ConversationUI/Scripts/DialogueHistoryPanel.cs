@@ -12,44 +12,6 @@ namespace CreativeAI.UI.ConversationUI
     /// <summary>会話中に表示済みの行を読み返す、画面全体の履歴パネル。</summary>
     public sealed class DialogueHistoryPanel : MonoBehaviour
     {
-        private enum HistoryEntryKind
-        {
-            Dialogue,
-            Choice,
-        }
-
-        private readonly struct HistoryEntry
-        {
-            public HistoryEntry(
-                string speaker,
-                string body,
-                Sprite portrait,
-                DialoguePortraitSide side
-            )
-            {
-                Speaker = speaker;
-                Body = body;
-                Portrait = portrait;
-                Side = side;
-                Kind = HistoryEntryKind.Dialogue;
-            }
-
-            public HistoryEntry(string choiceText)
-            {
-                Speaker = string.Empty;
-                Body = choiceText;
-                Portrait = null;
-                Side = DialoguePortraitSide.Left;
-                Kind = HistoryEntryKind.Choice;
-            }
-
-            public string Speaker { get; }
-            public string Body { get; }
-            public Sprite Portrait { get; }
-            public DialoguePortraitSide Side { get; }
-            public HistoryEntryKind Kind { get; }
-        }
-
         [SerializeField]
         private int _maxEntries = 200;
 
@@ -57,16 +19,33 @@ namespace CreativeAI.UI.ConversationUI
         [Range(0f, 1f)]
         private float _backdropAlpha = 0.78f;
 
-        private readonly List<HistoryEntry> _entries = new();
+        private readonly List<DialogueHistoryEntry> _entries = new();
+        private DialogueHistoryViewFactory _viewFactory;
+
+        [SerializeField]
         private TMP_FontAsset _font;
+
+        [SerializeField]
         private GameObject _panel;
+
+        [SerializeField]
         private GameObject _openButton;
+
+        [SerializeField]
         private RectTransform _content;
+
+        [SerializeField]
         private ScrollRect _scrollRect;
+
+        [SerializeField]
         private CanvasGroup _panelGroup;
+
+        [SerializeField]
         private GameObject _latestButton;
         private Coroutine _panelAnimation;
         private bool _isOpen;
+
+        [SerializeField]
         private TMP_InputField _searchField;
 
         public bool IsOpen => _isOpen;
@@ -77,7 +56,16 @@ namespace CreativeAI.UI.ConversationUI
             if (_font == null)
                 _font = font;
             EnsureView();
+            BindViewEvents();
         }
+
+#if UNITY_EDITOR
+        public void BuildPrefabView(TMP_FontAsset font)
+        {
+            _font = font;
+            EnsureView();
+        }
+#endif
 
         private void Update()
         {
@@ -95,19 +83,22 @@ namespace CreativeAI.UI.ConversationUI
             string speaker,
             string body,
             Sprite portrait,
-            DialoguePortraitSide side
+            DialoguePortraitSide side,
+            bool portraitObscured = false
         )
         {
             bool followLatest = ShouldFollowLatest();
             EnsureView();
-            var entry = new HistoryEntry(
+            var entry = new DialogueHistoryEntry(
                 speaker ?? string.Empty,
                 body ?? string.Empty,
                 portrait,
-                side
+                side,
+                portraitObscured,
+                _entries.Count + 1
             );
             _entries.Add(entry);
-            CreateEntryView(entry);
+            _viewFactory.CreateEntry(_content, entry);
             TrimOldEntries();
             if (followLatest)
                 ScrollToLatest();
@@ -122,9 +113,9 @@ namespace CreativeAI.UI.ConversationUI
 
             bool followLatest = ShouldFollowLatest();
             EnsureView();
-            var entry = new HistoryEntry(choiceText);
+            var entry = new DialogueHistoryEntry(choiceText, _entries.Count + 1);
             _entries.Add(entry);
-            CreateEntryView(entry);
+            _viewFactory.CreateEntry(_content, entry);
             TrimOldEntries();
             if (followLatest)
                 ScrollToLatest();
@@ -188,96 +179,63 @@ namespace CreativeAI.UI.ConversationUI
 
         private void EnsureView()
         {
-            if (_panel != null)
+            _viewFactory ??= new DialogueHistoryViewFactory(_font);
+            if (_panel != null || transform is not RectTransform root)
                 return;
 
-            var root = transform as RectTransform;
-            if (root == null)
-                return;
-
-            _openButton = CreateButton(
-                "DialogueHistoryButton",
+            var view = _viewFactory.Build(
                 root,
-                "LOG  [D]",
-                new Vector2(1f, 0f),
-                new Vector2(-32f, 28f),
-                new Vector2(150f, 54f)
+                _backdropAlpha,
+                () => SetOpen(true),
+                () => SetOpen(false),
+                ScrollToLatest,
+                ApplyFilter,
+                _ => RefreshLatestButton()
             );
-            _openButton.GetComponent<Button>().onClick.AddListener(() => SetOpen(true));
+            _panel = view.Panel;
+            _openButton = view.OpenButton;
+            _content = view.Content;
+            _scrollRect = view.ScrollRect;
+            _panelGroup = view.PanelGroup;
+            _latestButton = view.LatestButton;
+            _searchField = view.SearchField;
+        }
 
-            _panel = CreateRect("DialogueHistoryPanel", root);
-            Stretch(_panel.GetComponent<RectTransform>());
-            var backdrop = _panel.AddComponent<Image>();
-            backdrop.color = new Color(0f, 0f, 0f, _backdropAlpha);
-            backdrop.raycastTarget = true;
-            _panelGroup = _panel.AddComponent<CanvasGroup>();
-
-            var title = CreateText("Title", _panel.transform, "DIALOGUE LOG", 30f, FontStyles.Bold);
-            Anchor(
-                title.rectTransform,
-                new Vector2(0.5f, 1f),
-                new Vector2(0f, -28f),
-                new Vector2(520f, 52f),
-                new Vector2(0.5f, 1f)
-            );
-
-            var close = CreateButton(
-                "CloseButton",
-                _panel.transform,
-                "CLOSE  [D / ESC]",
-                new Vector2(1f, 1f),
-                new Vector2(-30f, -24f),
-                new Vector2(230f, 52f)
-            );
-            close.GetComponent<Button>().onClick.AddListener(() => SetOpen(false));
-
-            CreateSearchField(_panel.transform);
-
-            var viewportObject = CreateRect("Viewport", _panel.transform);
-            var viewport = viewportObject.GetComponent<RectTransform>();
-            viewport.anchorMin = new Vector2(0.12f, 0.08f);
-            viewport.anchorMax = new Vector2(0.88f, 0.9f);
-            viewport.offsetMin = Vector2.zero;
-            viewport.offsetMax = Vector2.zero;
-            viewportObject.AddComponent<RectMask2D>();
-
-            var contentObject = CreateRect("Content", viewport);
-            _content = contentObject.GetComponent<RectTransform>();
-            _content.anchorMin = new Vector2(0f, 1f);
-            _content.anchorMax = new Vector2(1f, 1f);
-            _content.pivot = new Vector2(0.5f, 1f);
-            _content.anchoredPosition = Vector2.zero;
-            _content.sizeDelta = Vector2.zero;
-            var layout = contentObject.AddComponent<VerticalLayoutGroup>();
-            layout.spacing = 18f;
-            layout.padding = new RectOffset(12, 12, 12, 28);
-            layout.childControlWidth = true;
-            layout.childControlHeight = true;
-            layout.childForceExpandWidth = true;
-            layout.childForceExpandHeight = false;
-            var fitter = contentObject.AddComponent<ContentSizeFitter>();
-            fitter.verticalFit = ContentSizeFitter.FitMode.PreferredSize;
-
-            _scrollRect = _panel.AddComponent<ScrollRect>();
-            _scrollRect.viewport = viewport;
-            _scrollRect.content = _content;
-            _scrollRect.horizontal = false;
-            _scrollRect.vertical = true;
-            _scrollRect.movementType = ScrollRect.MovementType.Clamped;
-            _scrollRect.scrollSensitivity = 42f;
-            _scrollRect.onValueChanged.AddListener(_ => RefreshLatestButton());
-
-            _latestButton = CreateButton(
-                "LatestButton",
-                _panel.transform,
-                "最新へ戻る",
-                new Vector2(0.5f, 0f),
-                new Vector2(0f, 22f),
-                new Vector2(190f, 48f)
-            );
-            _latestButton.GetComponent<Button>().onClick.AddListener(ScrollToLatest);
-            _latestButton.SetActive(false);
-            _panel.SetActive(false);
+        private void BindViewEvents()
+        {
+            if (_openButton != null && _openButton.TryGetComponent<Button>(out var openButton))
+            {
+                openButton.onClick.RemoveAllListeners();
+                openButton.onClick.AddListener(() => SetOpen(true));
+            }
+            if (
+                _latestButton != null
+                && _latestButton.TryGetComponent<Button>(out var latestButton)
+            )
+            {
+                latestButton.onClick.RemoveAllListeners();
+                latestButton.onClick.AddListener(ScrollToLatest);
+            }
+            var closeTransform =
+                _panel != null ? _panel.transform.Find("ArchiveHeader/CloseButton") : null;
+            if (
+                closeTransform != null
+                && closeTransform.TryGetComponent<Button>(out var closeButton)
+            )
+            {
+                closeButton.onClick.RemoveAllListeners();
+                closeButton.onClick.AddListener(() => SetOpen(false));
+            }
+            if (_scrollRect != null)
+            {
+                _scrollRect.onValueChanged.RemoveAllListeners();
+                _scrollRect.onValueChanged.AddListener(_ => RefreshLatestButton());
+            }
+            if (_searchField != null)
+            {
+                _searchField.onValueChanged.RemoveAllListeners();
+                _searchField.onValueChanged.AddListener(ApplyFilter);
+            }
         }
 
         private System.Collections.IEnumerator AnimatePanel(bool opening)
@@ -310,43 +268,6 @@ namespace CreativeAI.UI.ConversationUI
         private bool ShouldFollowLatest() =>
             !IsOpen || _scrollRect == null || _scrollRect.verticalNormalizedPosition <= 0.03f;
 
-        private void CreateSearchField(Transform parent)
-        {
-            var fieldObject = CreateRect("SearchField", parent);
-            Anchor(
-                fieldObject.GetComponent<RectTransform>(),
-                new Vector2(0f, 1f),
-                new Vector2(30f, -24f),
-                new Vector2(300f, 48f),
-                new Vector2(0f, 1f)
-            );
-            fieldObject.AddComponent<Image>().color = new Color(0.1f, 0.12f, 0.16f, 0.95f);
-            _searchField = fieldObject.AddComponent<TMP_InputField>();
-
-            var text = CreateText(
-                "Text",
-                fieldObject.transform,
-                string.Empty,
-                21f,
-                FontStyles.Normal
-            );
-            Stretch(text.rectTransform);
-            text.margin = new Vector4(14f, 8f, 14f, 8f);
-            var placeholder = CreateText(
-                "Placeholder",
-                fieldObject.transform,
-                "本文・話者名で検索",
-                20f,
-                FontStyles.Normal
-            );
-            Stretch(placeholder.rectTransform);
-            placeholder.margin = new Vector4(14f, 8f, 14f, 8f);
-            placeholder.color = new Color(1f, 1f, 1f, 0.4f);
-            _searchField.textComponent = text;
-            _searchField.placeholder = placeholder;
-            _searchField.onValueChanged.AddListener(ApplyFilter);
-        }
-
         public void ApplyFilter(string query)
         {
             query = query?.Trim() ?? string.Empty;
@@ -362,111 +283,6 @@ namespace CreativeAI.UI.ConversationUI
             LayoutRebuilder.ForceRebuildLayoutImmediate(_content);
         }
 
-        private void CreateEntryView(HistoryEntry entry)
-        {
-            if (_content == null)
-                return;
-
-            var container = CreateRect("DialogueEntry", _content);
-            var containerLayout = container.AddComponent<VerticalLayoutGroup>();
-            containerLayout.spacing = 10f;
-            containerLayout.childControlHeight = true;
-            containerLayout.childControlWidth = true;
-            containerLayout.childForceExpandHeight = false;
-            containerLayout.childForceExpandWidth = true;
-            var containerFitter = container.AddComponent<ContentSizeFitter>();
-            containerFitter.verticalFit = ContentSizeFitter.FitMode.PreferredSize;
-
-            if (entry.Kind == HistoryEntryKind.Choice)
-            {
-                CreateChoiceEntryView(container.transform, entry.Body);
-                CreateSeparator(container.transform);
-                return;
-            }
-
-            var row = CreateRect("Row", container.transform);
-            var rowLayout = row.AddComponent<HorizontalLayoutGroup>();
-            rowLayout.spacing = 24f;
-            rowLayout.padding = new RectOffset(10, 10, 6, 6);
-            rowLayout.childAlignment = TextAnchor.UpperLeft;
-            rowLayout.childControlWidth = true;
-            rowLayout.childControlHeight = true;
-            rowLayout.childForceExpandWidth = false;
-            rowLayout.childForceExpandHeight = false;
-            var rowFitter = row.AddComponent<ContentSizeFitter>();
-            rowFitter.verticalFit = ContentSizeFitter.FitMode.PreferredSize;
-
-            var icon = CreatePortraitIcon(row.transform, entry.Portrait, entry.Side);
-            var textColumn = CreateRect("Text", row.transform);
-            var textLayout = textColumn.AddComponent<VerticalLayoutGroup>();
-            textLayout.spacing = 6f;
-            textLayout.childControlHeight = true;
-            textLayout.childControlWidth = true;
-            textLayout.childForceExpandHeight = false;
-            textLayout.childForceExpandWidth = true;
-            var textElement = textColumn.AddComponent<LayoutElement>();
-            textElement.flexibleWidth = 1f;
-            var textFitter = textColumn.AddComponent<ContentSizeFitter>();
-            textFitter.verticalFit = ContentSizeFitter.FitMode.PreferredSize;
-
-            var name = CreateText(
-                "Name",
-                textColumn.transform,
-                entry.Speaker,
-                25f,
-                FontStyles.Bold
-            );
-            name.color = new Color(0.75f, 0.9f, 1f, 1f);
-            var body = CreateText("Body", textColumn.transform, entry.Body, 29f, FontStyles.Normal);
-            body.textWrappingMode = TextWrappingModes.Normal;
-
-            if (entry.Side == DialoguePortraitSide.Right)
-            {
-                icon.transform.SetAsLastSibling();
-                rowLayout.childAlignment = TextAnchor.UpperRight;
-            }
-
-            CreateSeparator(container.transform);
-        }
-
-        private void CreateChoiceEntryView(Transform parent, string choiceText)
-        {
-            var row = CreateRect("ChoiceEntry", parent);
-            row.AddComponent<Image>().color = new Color(0.12f, 0.28f, 0.38f, 0.72f);
-            var layout = row.AddComponent<HorizontalLayoutGroup>();
-            layout.spacing = 18f;
-            layout.padding = new RectOffset(22, 22, 14, 14);
-            layout.childAlignment = TextAnchor.MiddleLeft;
-            layout.childControlWidth = true;
-            layout.childControlHeight = true;
-            layout.childForceExpandWidth = false;
-            layout.childForceExpandHeight = false;
-            var fitter = row.AddComponent<ContentSizeFitter>();
-            fitter.verticalFit = ContentSizeFitter.FitMode.PreferredSize;
-
-            var badge = CreateText("ChoiceBadge", row.transform, "選択", 22f, FontStyles.Bold);
-            badge.alignment = TextAlignmentOptions.Center;
-            badge.color = new Color(0.7f, 0.92f, 1f, 1f);
-            var badgeLayout = badge.gameObject.AddComponent<LayoutElement>();
-            badgeLayout.minWidth = 76f;
-            badgeLayout.preferredWidth = 76f;
-
-            var body = CreateText("ChoiceText", row.transform, choiceText, 28f, FontStyles.Bold);
-            body.alignment = TextAlignmentOptions.MidlineLeft;
-            body.textWrappingMode = TextWrappingModes.Normal;
-            var bodyLayout = body.gameObject.AddComponent<LayoutElement>();
-            bodyLayout.flexibleWidth = 1f;
-        }
-
-        private void CreateSeparator(Transform parent)
-        {
-            var separator = CreateRect("Separator", parent);
-            separator.AddComponent<Image>().color = new Color(1f, 1f, 1f, 0.16f);
-            var separatorLayout = separator.AddComponent<LayoutElement>();
-            separatorLayout.minHeight = 1f;
-            separatorLayout.preferredHeight = 1f;
-        }
-
         private void TrimOldEntries()
         {
             while (_entries.Count > Mathf.Max(1, _maxEntries))
@@ -477,40 +293,6 @@ namespace CreativeAI.UI.ConversationUI
             }
         }
 
-        private GameObject CreatePortraitIcon(
-            Transform parent,
-            Sprite portrait,
-            DialoguePortraitSide side
-        )
-        {
-            var maskObject = CreateRect("PortraitIcon", parent);
-            var element = maskObject.AddComponent<LayoutElement>();
-            element.minWidth = 110f;
-            element.preferredWidth = 110f;
-            element.minHeight = 110f;
-            element.preferredHeight = 110f;
-            var background = maskObject.AddComponent<Image>();
-            background.color = new Color(0.12f, 0.12f, 0.15f, 0.95f);
-            maskObject.AddComponent<Mask>().showMaskGraphic = true;
-
-            if (portrait == null)
-                return maskObject;
-
-            var portraitObject = CreateRect("Portrait", maskObject.transform);
-            var image = portraitObject.AddComponent<Image>();
-            image.sprite = portrait;
-            image.preserveAspect = true;
-            image.raycastTarget = false;
-            var rect = portraitObject.GetComponent<RectTransform>();
-            rect.anchorMin = Vector2.zero;
-            rect.anchorMax = Vector2.one;
-            rect.pivot = new Vector2(0.5f, 0.5f);
-            rect.offsetMin = new Vector2(4f, 4f);
-            rect.offsetMax = new Vector2(-4f, -4f);
-            rect.localScale = new Vector3(side == DialoguePortraitSide.Left ? 1f : -1f, 1f, 1f);
-            return maskObject;
-        }
-
         private void ScrollToLatest()
         {
             if (_scrollRect == null)
@@ -519,77 +301,6 @@ namespace CreativeAI.UI.ConversationUI
             LayoutRebuilder.ForceRebuildLayoutImmediate(_content);
             _scrollRect.verticalNormalizedPosition = 0f;
             RefreshLatestButton();
-        }
-
-        private GameObject CreateButton(
-            string name,
-            Transform parent,
-            string label,
-            Vector2 anchor,
-            Vector2 position,
-            Vector2 size
-        )
-        {
-            var buttonObject = CreateRect(name, parent);
-            Anchor(buttonObject.GetComponent<RectTransform>(), anchor, position, size, anchor);
-            var image = buttonObject.AddComponent<Image>();
-            image.color = new Color(0.12f, 0.12f, 0.16f, 0.94f);
-            var button = buttonObject.AddComponent<Button>();
-            button.targetGraphic = image;
-            var text = CreateText("Label", buttonObject.transform, label, 21f, FontStyles.Bold);
-            Stretch(text.rectTransform);
-            return buttonObject;
-        }
-
-        private TMP_Text CreateText(
-            string name,
-            Transform parent,
-            string value,
-            float size,
-            FontStyles style
-        )
-        {
-            var textObject = CreateRect(name, parent);
-            var text = textObject.AddComponent<TextMeshProUGUI>();
-            text.text = value;
-            text.fontSize = size;
-            text.fontStyle = style;
-            text.color = Color.white;
-            text.alignment = TextAlignmentOptions.TopLeft;
-            text.raycastTarget = false;
-            if (_font != null)
-                text.font = _font;
-            return text;
-        }
-
-        private static GameObject CreateRect(string name, Transform parent)
-        {
-            var result = new GameObject(name, typeof(RectTransform));
-            result.transform.SetParent(parent, false);
-            return result;
-        }
-
-        private static void Stretch(RectTransform rect)
-        {
-            rect.anchorMin = Vector2.zero;
-            rect.anchorMax = Vector2.one;
-            rect.offsetMin = Vector2.zero;
-            rect.offsetMax = Vector2.zero;
-        }
-
-        private static void Anchor(
-            RectTransform rect,
-            Vector2 anchor,
-            Vector2 position,
-            Vector2 size,
-            Vector2 pivot
-        )
-        {
-            rect.anchorMin = anchor;
-            rect.anchorMax = anchor;
-            rect.pivot = pivot;
-            rect.anchoredPosition = position;
-            rect.sizeDelta = size;
         }
     }
 }

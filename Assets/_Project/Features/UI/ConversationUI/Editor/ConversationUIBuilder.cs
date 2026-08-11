@@ -1,3 +1,4 @@
+using System;
 using CreativeAI.UI.ConversationUI;
 using TMPro;
 using UnityEditor;
@@ -7,6 +8,7 @@ using UnityEngine.EventSystems;
 using UnityEngine.InputSystem.UI;
 using UnityEngine.SceneManagement;
 using UnityEngine.UI;
+using Object = UnityEngine.Object;
 
 namespace CreativeAI.UI.ConversationUI.Editor
 {
@@ -18,6 +20,48 @@ namespace CreativeAI.UI.ConversationUI.Editor
     /// </summary>
     public static class ConversationUIBuilder
     {
+        [InitializeOnLoadMethod]
+        private static void UpgradePrefabLayoutIfNeeded()
+        {
+            EditorApplication.playModeStateChanged -= HandlePlayModeChanged;
+            EditorApplication.playModeStateChanged += HandlePlayModeChanged;
+            QueuePrefabUpgrade();
+        }
+
+        private static void HandlePlayModeChanged(PlayModeStateChange state)
+        {
+            if (state == PlayModeStateChange.EnteredEditMode)
+                QueuePrefabUpgrade();
+        }
+
+        private static void QueuePrefabUpgrade()
+        {
+            EditorApplication.delayCall += () =>
+            {
+                if (EditorApplication.isPlayingOrWillChangePlaymode)
+                    return;
+                var prefab = AssetDatabase.LoadAssetAtPath<GameObject>(PrefabPath);
+                if (
+                    prefab != null
+                    && prefab.transform.Find("ContextGuide") != null
+                    && prefab.transform.Find("ItemRewardBackdrop") != null
+                    && prefab.transform.Find("AUTOAButton") != null
+                    && prefab.transform.Find("DialogueHistoryPanel") != null
+                    && prefab.transform.Find("Layout/_System/ConversationArchiveV9") != null
+                )
+                    return;
+
+                ImportAsSprite(WindowPng);
+                ImportAsSprite(ContinueButtonPng);
+                ImportAsSprite(ChoiceButtonPng);
+                BuildPrefab();
+                AssetDatabase.SaveAssets();
+                Debug.Log(
+                    "[ConversationUIBuilder] ConversationView Prefab を最新UI構成へ更新しました。"
+                );
+            };
+        }
+
         private const string ConversationArtPath = "Assets/_Project/Art/UI/Conversation/";
         private const string WindowPng = ConversationArtPath + "ConversationWindow.png";
         private const string ContinueButtonPng =
@@ -163,8 +207,18 @@ namespace CreativeAI.UI.ConversationUI.Editor
             scaler.matchWidthOrHeight = 0.5f;
             scaler.referencePixelsPerUnit = 100;
 
+            var layout = CreateLayer("Layout", root.transform);
+            var portraitLayer = CreateLayer("Portraits", layout.transform);
+            var dialogueLayer = CreateLayer("Dialogue", layout.transform);
+            var rewardLayer = CreateLayer("Rewards", layout.transform);
+            var hudLayer = CreateLayer("HUD", layout.transform);
+            var controlBar = CreateLayer("Controls", hudLayer.transform);
+            var historyLayer = CreateLayer("History", layout.transform);
+            var systemLayer = CreateLayer("_System", layout.transform);
+            CreateUI("ConversationArchiveV9", systemLayer.transform).SetActive(false);
+
             // --- 立ち絵 ---
-            var portrait = CreateUI("Portrait", root.transform);
+            var portrait = CreateUI("Portrait", portraitLayer.transform);
             var portraitImg = portrait.AddComponent<Image>();
             portraitImg.sprite = portraitSprite;
             portraitImg.preserveAspect = true;
@@ -178,9 +232,22 @@ namespace CreativeAI.UI.ConversationUI.Editor
                 new Vector2(0, -60),
                 new Vector2(650, 1170)
             );
+            var rightPortrait = Object.Instantiate(portrait, portraitLayer.transform);
+            rightPortrait.name = "PortraitRight";
+            var rightPortraitImage = rightPortrait.GetComponent<Image>();
+            rightPortraitImage.enabled = false;
+            SetAnchored(
+                rightPortrait,
+                new Vector2(0.88f, 0f),
+                new Vector2(0.88f, 0f),
+                new Vector2(0.5f, 0f),
+                new Vector2(0f, -60f),
+                new Vector2(650f, 1170f)
+            );
+            rightPortrait.transform.localScale = new Vector3(-1f, 1f, 1f);
 
             // --- ウィンドウ ---
-            var window = CreateUI("Window", root.transform);
+            var window = CreateUI("Window", dialogueLayer.transform);
             var windowImg = window.AddComponent<Image>();
             windowImg.sprite = windowSprite;
             windowImg.preserveAspect = true;
@@ -215,9 +282,9 @@ namespace CreativeAI.UI.ConversationUI.Editor
                 "ここに会話テキストが表示されます。クリックまたはスペース/Enter/Zキーで送れます。",
                 34,
                 new Color(1f, 1f, 1f, 1f),
-                TextAlignmentOptions.TopLeft
+                TextAlignmentOptions.MidlineLeft
             );
-            SetStretch(bodyText, new Vector2(0.12f, 0.16f), new Vector2(0.95f, 0.72f));
+            SetStretch(bodyText, new Vector2(0.12f, 0.14f), new Vector2(0.95f, 0.64f));
 
             // 送り待ちに小さく上下するインジケーター。正式画像のピクセル比を維持する。
             var nextIndicator = CreateUI("NextIndicator", window.transform);
@@ -236,7 +303,7 @@ namespace CreativeAI.UI.ConversationUI.Editor
 
             var autoModeIndicator = CreateText(
                 "AutoModeIndicator",
-                root.transform,
+                hudLayer.transform,
                 font,
                 "AUTO",
                 28,
@@ -253,6 +320,109 @@ namespace CreativeAI.UI.ConversationUI.Editor
                 new Vector2(180f, 52f)
             );
             autoModeIndicator.SetActive(false);
+
+            var autoProgressTrack = CreateUI("AutoProgressTrack", autoModeIndicator.transform);
+            var autoTrackImage = autoProgressTrack.AddComponent<Image>();
+            autoTrackImage.color = new Color(1f, 1f, 1f, 0.28f);
+            autoTrackImage.raycastTarget = false;
+            SetStretch(autoProgressTrack, new Vector2(0.1f, -0.12f), new Vector2(0.9f, 0f));
+            var autoProgressFill = CreateUI("Fill", autoProgressTrack.transform);
+            var autoFillImage = autoProgressFill.AddComponent<Image>();
+            autoFillImage.color = new Color(0.5f, 0.85f, 1f, 1f);
+            autoFillImage.raycastTarget = false;
+            SetStretch(autoProgressFill, Vector2.zero, Vector2.one);
+
+            var controlGuide = CreateText(
+                "ContextGuide",
+                hudLayer.transform,
+                font,
+                "NEXT   ENTER / SPACE",
+                20,
+                new Color(1f, 1f, 1f, 0.68f),
+                TextAlignmentOptions.BottomLeft
+            );
+            SetAnchored(
+                controlGuide,
+                Vector2.zero,
+                Vector2.zero,
+                Vector2.zero,
+                new Vector2(26f, 20f),
+                new Vector2(520f, 38f)
+            );
+
+            var autoControl = CreateDockButton(
+                controlBar.transform,
+                font,
+                "AUTO",
+                "A",
+                -564f,
+                104f
+            );
+            var skipControl = CreateDockButton(
+                controlBar.transform,
+                font,
+                "SKIP",
+                "S",
+                -452f,
+                104f
+            );
+            var speedControl = CreateDockButton(
+                controlBar.transform,
+                font,
+                "SPEED",
+                "T",
+                -324f,
+                136f
+            );
+            var hideControl = CreateDockButton(
+                controlBar.transform,
+                font,
+                "HIDE",
+                "H",
+                -196f,
+                104f
+            );
+
+            var itemBackdrop = CreateRewardImage(
+                "ItemRewardBackdrop",
+                rewardLayer.transform,
+                new Color(0.025f, 0.035f, 0.055f, 0.88f),
+                new Vector2(406f, 366f)
+            );
+            itemBackdrop.gameObject.AddComponent<Outline>().effectColor = new Color(
+                0.55f,
+                0.72f,
+                1f,
+                0.5f
+            );
+            var itemReward = CreateRewardImage(
+                "ItemRewardImage",
+                rewardLayer.transform,
+                Color.white,
+                new Vector2(256f, 256f)
+            );
+            itemReward.preserveAspect = true;
+            var weaponBackdrop = CreateRewardImage(
+                "WeaponRewardBackdrop",
+                rewardLayer.transform,
+                new Color(0f, 0f, 0f, 0.4f),
+                new Vector2(640f, 360f)
+            );
+            var weaponRewardObject = CreateUI("WeaponRewardImage", rewardLayer.transform);
+            var weaponReward = weaponRewardObject.AddComponent<RawImage>();
+            weaponReward.raycastTarget = false;
+            SetAnchored(
+                weaponRewardObject,
+                new Vector2(0.5f, 0.5f),
+                new Vector2(0.5f, 0.5f),
+                new Vector2(0.5f, 0.5f),
+                new Vector2(0f, 220f),
+                new Vector2(640f, 360f)
+            );
+            itemBackdrop.gameObject.SetActive(false);
+            itemReward.gameObject.SetActive(false);
+            weaponBackdrop.gameObject.SetActive(false);
+            weaponRewardObject.SetActive(false);
 
             // 選択肢コンテナ(通常は非表示)
             var choiceContainer = CreateUI("ChoiceContainer", window.transform);
@@ -301,17 +471,32 @@ namespace CreativeAI.UI.ConversationUI.Editor
             so.FindProperty("_windowRoot").objectReferenceValue =
                 window.GetComponent<RectTransform>();
             so.FindProperty("_portrait").objectReferenceValue = portraitImg;
+            so.FindProperty("_rightPortrait").objectReferenceValue = rightPortraitImage;
             so.FindProperty("_nameText").objectReferenceValue = nameText.GetComponent<TMP_Text>();
             so.FindProperty("_bodyText").objectReferenceValue = bodyText.GetComponent<TMP_Text>();
             so.FindProperty("_nextIndicator").objectReferenceValue = nextIndicator;
             so.FindProperty("_autoModeIndicator").objectReferenceValue =
                 autoModeIndicator.GetComponent<TMP_Text>();
+            so.FindProperty("_controlGuide").objectReferenceValue =
+                controlGuide.GetComponent<TMP_Text>();
+            so.FindProperty("_autoProgressFill").objectReferenceValue = autoFillImage;
             so.FindProperty("_historyPanel").objectReferenceValue =
                 root.GetComponent<DialogueHistoryPanel>();
             so.FindProperty("_choiceContainer").objectReferenceValue =
                 choiceContainer.GetComponent<RectTransform>();
             so.FindProperty("_choiceButtonTemplate").objectReferenceValue = button;
             so.FindProperty("_defaultPortrait").objectReferenceValue = portraitSprite;
+            so.FindProperty("_itemRewardImage").objectReferenceValue = itemReward;
+            so.FindProperty("_itemRewardBackdrop").objectReferenceValue = itemBackdrop;
+            so.FindProperty("_weaponRewardImage").objectReferenceValue = weaponReward;
+            so.FindProperty("_weaponRewardBackdrop").objectReferenceValue = weaponBackdrop;
+            so.FindProperty("_autoControlButton").objectReferenceValue = autoControl;
+            so.FindProperty("_skipControlButton").objectReferenceValue = skipControl;
+            so.FindProperty("_speedControlButton").objectReferenceValue = speedControl;
+            so.FindProperty("_speedControlLabel").objectReferenceValue = speedControl
+                .transform.Find("Label")
+                .GetComponent<TMP_Text>();
+            so.FindProperty("_hideControlButton").objectReferenceValue = hideControl;
 
             var characters = so.FindProperty("_characters");
             characters.arraySize = CharacterDefinitionPaths.Length;
@@ -333,6 +518,13 @@ namespace CreativeAI.UI.ConversationUI.Editor
                 entry.FindPropertyRelative("Side").enumValueIndex = (int)Portraits[i].Side;
             }
             so.ApplyModifiedPropertiesWithoutUndo();
+
+            root.GetComponent<DialogueHistoryPanel>().BuildPrefabView(font);
+            root.transform.Find("DialogueHistoryButton").SetParent(controlBar.transform, false);
+            root.transform.Find("DialogueHistoryPanel").SetParent(historyLayer.transform, false);
+            ValidateRequiredReferences(root.GetComponent<ConversationView>());
+            ValidateHistoryReferences(root.GetComponent<DialogueHistoryPanel>());
+            ValidateNoMissingScripts(root);
 
             // --- Prefab 保存 ---
             System.IO.Directory.CreateDirectory(System.IO.Path.GetDirectoryName(PrefabPath));
@@ -379,6 +571,171 @@ namespace CreativeAI.UI.ConversationUI.Editor
             var go = new GameObject(name, typeof(RectTransform));
             go.transform.SetParent(parent, false);
             return go;
+        }
+
+        private static GameObject CreateLayer(string name, Transform parent)
+        {
+            var layer = CreateUI(name, parent);
+            SetStretch(layer, Vector2.zero, Vector2.one);
+            return layer;
+        }
+
+        private static void ValidateRequiredReferences(ConversationView view)
+        {
+            var serializedView = new SerializedObject(view);
+            string[] requiredReferences =
+            {
+                "_root",
+                "_windowRoot",
+                "_portrait",
+                "_rightPortrait",
+                "_nameText",
+                "_bodyText",
+                "_nextIndicator",
+                "_autoModeIndicator",
+                "_controlGuide",
+                "_autoProgressFill",
+                "_historyPanel",
+                "_choiceContainer",
+                "_choiceButtonTemplate",
+                "_itemRewardImage",
+                "_itemRewardBackdrop",
+                "_weaponRewardImage",
+                "_weaponRewardBackdrop",
+                "_autoControlButton",
+                "_skipControlButton",
+                "_speedControlButton",
+                "_speedControlLabel",
+                "_hideControlButton",
+            };
+            foreach (string propertyName in requiredReferences)
+            {
+                var property = serializedView.FindProperty(propertyName);
+                if (property == null || property.objectReferenceValue == null)
+                    throw new InvalidOperationException(
+                        $"[ConversationUIBuilder] 必須参照 {propertyName} が未設定です。"
+                    );
+            }
+        }
+
+        private static void ValidateNoMissingScripts(GameObject root)
+        {
+            foreach (var target in root.GetComponentsInChildren<Transform>(true))
+            {
+                int missingCount = GameObjectUtility.GetMonoBehavioursWithMissingScriptCount(
+                    target.gameObject
+                );
+                if (missingCount > 0)
+                    throw new InvalidOperationException(
+                        $"[ConversationUIBuilder] {target.name} にMissing Scriptが{missingCount}件あります。"
+                    );
+            }
+        }
+
+        private static void ValidateHistoryReferences(DialogueHistoryPanel history)
+        {
+            var serializedHistory = new SerializedObject(history);
+            string[] requiredReferences =
+            {
+                "_font",
+                "_panel",
+                "_openButton",
+                "_content",
+                "_scrollRect",
+                "_panelGroup",
+                "_latestButton",
+                "_searchField",
+            };
+            foreach (string propertyName in requiredReferences)
+            {
+                var property = serializedHistory.FindProperty(propertyName);
+                if (property == null || property.objectReferenceValue == null)
+                    throw new InvalidOperationException(
+                        $"[ConversationUIBuilder] 履歴UIの必須参照 {propertyName} が未設定です。"
+                    );
+            }
+        }
+
+        private static Image CreateRewardImage(
+            string name,
+            Transform parent,
+            Color color,
+            Vector2 size
+        )
+        {
+            var target = CreateUI(name, parent);
+            var image = target.AddComponent<Image>();
+            image.color = color;
+            image.raycastTarget = false;
+            SetAnchored(
+                target,
+                new Vector2(0.5f, 0.5f),
+                new Vector2(0.5f, 0.5f),
+                new Vector2(0.5f, 0.5f),
+                new Vector2(0f, 220f),
+                size
+            );
+            return image;
+        }
+
+        private static Button CreateDockButton(
+            Transform parent,
+            TMP_FontAsset font,
+            string label,
+            string shortcut,
+            float x,
+            float width
+        )
+        {
+            var target = CreateUI(label + shortcut + "Button", parent);
+            var image = target.AddComponent<Image>();
+            image.color = new Color(0.035f, 0.045f, 0.07f, 0.86f);
+            var outline = target.AddComponent<Outline>();
+            outline.effectColor = new Color(0.45f, 0.62f, 0.88f, 0.3f);
+            outline.effectDistance = new Vector2(1f, -1f);
+            var button = target.AddComponent<Button>();
+            button.targetGraphic = image;
+            SetAnchored(
+                target,
+                new Vector2(1f, 0f),
+                new Vector2(1f, 0f),
+                new Vector2(0.5f, 0.5f),
+                new Vector2(x, 28f),
+                new Vector2(width, 36f)
+            );
+            var text = CreateText(
+                "Label",
+                target.transform,
+                font,
+                label,
+                16f,
+                new Color(0.82f, 0.88f, 0.96f, 0.9f),
+                TextAlignmentOptions.Center
+            );
+            text.GetComponent<TMP_Text>().textWrappingMode = TextWrappingModes.NoWrap;
+            SetStretch(text, new Vector2(0.08f, 0f), new Vector2(0.72f, 1f));
+
+            var keycap = CreateUI("ShortcutKey", target.transform);
+            keycap.AddComponent<Image>().color = new Color(1f, 1f, 1f, 0.08f);
+            SetAnchored(
+                keycap,
+                new Vector2(1f, 0.5f),
+                new Vector2(1f, 0.5f),
+                new Vector2(0.5f, 0.5f),
+                new Vector2(-16f, 0f),
+                new Vector2(22f, 22f)
+            );
+            var keyLabel = CreateText(
+                "Label",
+                keycap.transform,
+                font,
+                shortcut,
+                14f,
+                new Color(0.88f, 0.93f, 1f, 0.94f),
+                TextAlignmentOptions.Center
+            );
+            SetStretch(keyLabel, Vector2.zero, Vector2.one);
+            return button;
         }
 
         private static GameObject CreateText(

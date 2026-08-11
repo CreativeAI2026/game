@@ -58,38 +58,30 @@ namespace CreativeAI.UI.ConversationUI
         {
             yield return PlayIntroduction(view);
 
-            yield return Line(
-                view,
-                Protagonist,
-                "これは<wait=0.35><shake><color=#ff9aa8>本当</color></shake>なのか……？"
-            );
-            if (view is ConversationView introductionView)
-                yield return introductionView.PlayPortraitEffect(
-                    DialoguePortraitSide.Left,
-                    ConversationView.PortraitEffect.Jump
-                );
-
             string firstResponse = null;
             yield return Choice(
                 view,
                 value => firstResponse = value,
-                new ChoiceOption("案内をお願いする", "accept_guidance"),
-                new ChoiceOption("まず事情を聞く", "ask_situation")
+                new ChoiceOption("ここがどこか尋ねる", "ask_situation"),
+                new ChoiceOption("先に出口を教えてもらう", "accept_guidance")
             );
             yield return PlayFirstResponse(view, firstResponse);
 
             string destination = null;
             yield return PlayDestinationChoice(view, value => destination = value);
             yield return PlayDestinationResponse(view, destination);
-            yield return Line(view, Protagonist, "よし、行き先は決まった。準備を始めよう。");
+            yield return Line(view, Protagonist, "分かった。その道を行こう。");
 
             if (view is ConversationView conversationView)
+            {
+                yield return PlayShortSceneTransition(conversationView);
                 yield return PlayGiftSequence(view, conversationView);
+            }
 
             yield return Line(
                 view,
                 Protagonist,
-                "ありがとう。準備は整った――それじゃあ、出発しよう。"
+                "ありがとう。これなら外へ出られそうだ。――行ってくる。"
             );
 
             if (view is ConversationView closingView)
@@ -101,29 +93,56 @@ namespace CreativeAI.UI.ConversationUI
 
         private static IEnumerator PlayIntroduction(IDialogueView view)
         {
-            yield return Line(
+            yield return Narration(
                 view,
-                Protagonist,
-                "見慣れない場所だ……。あの三人に、この辺りのことを聞いてみよう。"
+                "雨音の向こうで、古いレコードが途切れ途切れに鳴っている。"
             );
+            yield return Line(view, Protagonist, "……知らない天井だ。ここは駅舎、なのか？");
             yield return Line(
                 view,
                 Robot,
-                "接近する生命反応を確認。敵意、検出されません。会話を推奨します。"
+                "覚醒を確認。外傷なし。現在地の記憶に欠落があると推定します。"
             );
-            yield return Line(view, Protagonist, "しゃべれるロボなのか。少し驚いたな……。");
+            yield return Line(view, Protagonist, "しゃべった……。君が助けてくれたのか？");
+            yield return Narration(view, "待合室の奥、壊れた照明の下で人影が動いた。");
+            if (view is ConversationView mysteryView)
+            {
+                mysteryView.SetPortraitVisible(DialoguePortraitSide.Right, false);
+                yield return mysteryView.SetPortraitObscured(DialoguePortraitSide.Right, true, 0f);
+            }
+            yield return LineAs(
+                view,
+                "？？？",
+                FragileGirlFrightened,
+                "あの……倒れていたあなたを運んだのは、その子です。私は毛布を掛けただけで……。"
+            );
+            yield return Line(view, Protagonist, "そこに誰かいるのか？　暗くて顔が見えない。");
+            if (view is ConversationView revealView)
+                yield return revealView.SetPortraitObscured(
+                    DialoguePortraitSide.Right,
+                    false,
+                    0.75f
+                );
             yield return Line(
                 view,
-                FragileGirlFrightened,
-                "あの……気をつけてください。蓄音機の方は、少し変わった話し方をするので……。"
+                FragileGirlWorried,
+                "ご、ごめんなさい。明るいところが少し苦手で……。驚かせるつもりはなかったんです。"
             );
-            yield return Line(view, Protagonist, "蓄音機の方……？");
             yield return Line(
                 view,
                 Gramophone,
-                "おや、新しい旅人とは珍しい。まずは一曲……いや、先に道案内が必要かな？"
+                "そして私は、冷えた客人に一曲添えた。目覚めの旋律としては上出来だったろう？"
             );
-            yield return Line(view, Protagonist, "怪しい感じはしない。どう答えよう？");
+            yield return Line(
+                view,
+                Protagonist,
+                "<wait=0.25><shake>蓄音機までしゃべるのか……。</shake>でも、敵意はなさそうだ。"
+            );
+            if (view is ConversationView conversationView)
+                yield return conversationView.PlayPortraitEffect(
+                    DialoguePortraitSide.Left,
+                    ConversationView.PortraitEffect.Jump
+                );
         }
 
         private static IEnumerator PlayFirstResponse(IDialogueView view, string response)
@@ -133,7 +152,7 @@ namespace CreativeAI.UI.ConversationUI
                 yield return Line(
                     view,
                     FragileGirlSmile,
-                    "よかった……。この方、見た目は不思議ですけど、道案内は確かなんです。"
+                    "出口なら、線路沿いの扉から出られます。でも、その先の道が少し危なくて……。"
                 );
                 yield break;
             }
@@ -141,7 +160,12 @@ namespace CreativeAI.UI.ConversationUI
             yield return Line(
                 view,
                 FragileGirlDetermined,
-                "慎重なんですね。それなら私たちが知っていることから説明します。"
+                "ここは使われなくなった北駅です。昨夜の嵐のあと、あなたがホームに倒れていました。"
+            );
+            yield return Line(
+                view,
+                Protagonist,
+                "北駅……。名前を聞いても、やっぱり思い出せないな。"
             );
         }
 
@@ -153,15 +177,19 @@ namespace CreativeAI.UI.ConversationUI
             yield return Line(
                 view,
                 Robot,
-                "目的地候補を三件抽出。村、旧遺跡、北の森。危険度は順に上昇します。"
+                "駅から移動可能な経路は三つ。南の村、旧遺跡、北の森です。"
             );
-            yield return Line(view, Protagonist, "最初の目的地を決めよう。");
+            yield return Line(
+                view,
+                Gramophone,
+                "記憶を探すなら人のいる村、手掛かりを探すなら遺跡。森は近道だが、夜までには抜けたいね。"
+            );
             yield return Choice(
                 view,
                 onSelected,
-                new ChoiceOption("近くの村へ向かう", "village"),
-                new ChoiceOption("旧遺跡を調べる", "ruins"),
-                new ChoiceOption("北の森を抜ける", "forest")
+                new ChoiceOption("南の村で話を聞く", "village"),
+                new ChoiceOption("旧遺跡で手掛かりを探す", "ruins"),
+                new ChoiceOption("北の森を抜けて先を急ぐ", "forest")
             );
         }
 
@@ -173,21 +201,21 @@ namespace CreativeAI.UI.ConversationUI
                     yield return Line(
                         view,
                         FragileGirlWorried,
-                        "村なら私も途中まで一緒に行けます。少し安心しました。"
+                        "村なら、私も分かれ道まで一緒に行けます。知っている人がいるか聞いてみましょう。"
                     );
                     break;
                 case "ruins":
                     yield return Line(
                         view,
                         Robot,
-                        "旧遺跡ルートを設定。瓦礫と旧式警備装置への警戒を推奨します。"
+                        "旧遺跡への経路を設定。瓦礫と、停止していない警備装置に注意してください。"
                     );
                     break;
                 default:
                     yield return Line(
                         view,
                         Gramophone,
-                        "北の森か。風の音がよく響く、実に趣のある道だ。迷わないよう私が案内しよう。"
+                        "北の森か。近道ではあるが霧が深い。分かれ道までは私の音を頼りにするといい。"
                     );
                     break;
             }
@@ -201,21 +229,44 @@ namespace CreativeAI.UI.ConversationUI
             yield return Line(
                 view,
                 FragileGirlSurprised,
-                "出発するなら、これを持っていってください。さっき拾った、きれいなりんごです。"
+                "待ってください。朝に拾ったりんごがあるんです。少し傷がありますけど、食べられますから。"
             );
-            yield return conversationView.ShowItemGet();
-            yield return Line(view, Protagonist, "ありがとう。道中で大事に食べるよ。");
+            yield return conversationView.ShowItemGet(null, "傷のあるりんごを手に入れた。");
+            yield return Line(view, Protagonist, "助かるよ。道中で食べさせてもらう。");
 
             yield return Line(
                 view,
                 Gramophone,
-                "そして護身用に、この刀を。旅の旋律が途切れぬよう、大切に扱ってくれたまえ。"
+                "ホームの倉庫には、古い刀も眠っていた。君の物かは分からないが、丸腰よりはいい。"
             );
-            yield return conversationView.ShowWeaponGet();
+            yield return conversationView.ShowWeaponGet(null, "古い刀を手に入れた。");
+            yield return Line(
+                view,
+                Robot,
+                "携行を確認。危険を検知した場合は、戦闘より退避を優先してください。"
+            );
+        }
+
+        private static IEnumerator PlayShortSceneTransition(ConversationView view)
+        {
+            yield return view.RunPresentationCommand("window.hide");
+            yield return view.RunPresentationCommand("wait", "0.45");
+            yield return view.RunPresentationCommand("window.show");
+            yield return Narration(view, "少女と蓄音機が、ホーム脇の倉庫から旅支度を運んできた。");
         }
 
         private static IEnumerator Line(IDialogueView view, Speaker speaker, string text) =>
             view.ShowLine(null, speaker.Portrait, text);
+
+        private static IEnumerator LineAs(
+            IDialogueView view,
+            string displayName,
+            Speaker speaker,
+            string text
+        ) => view.ShowLine(displayName, speaker.Portrait, text);
+
+        private static IEnumerator Narration(IDialogueView view, string text) =>
+            view.ShowLine(null, null, text);
 
         private static IEnumerator Choice(
             IDialogueView view,

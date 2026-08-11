@@ -209,6 +209,20 @@ namespace CreativeAI.Tests.EditMode
         }
 
         [Test]
+        public void SetPortraitObscured_PersistsUntilReveal()
+        {
+            var sprite = MakeSprite();
+            SetPortraitCatalog(("mystery", sprite));
+            Drive(_view.ShowLine("？？？", "mystery", "……"));
+
+            Drive(_view.SetPortraitObscured(DialoguePortraitSide.Left, true, 0.01f));
+            Assert.Less(_portrait.color.r, 0.1f);
+
+            Drive(_view.SetPortraitObscured(DialoguePortraitSide.Left, false, 0.01f));
+            Assert.Greater(_portrait.color.r, 0.9f);
+        }
+
+        [Test]
         public void ShowChoice_SpawnsAButtonPerOption()
         {
             var options = new List<ChoiceOption>
