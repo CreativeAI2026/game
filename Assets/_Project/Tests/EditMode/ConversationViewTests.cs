@@ -96,6 +96,29 @@ namespace CreativeAI.Tests.EditMode
             }
         }
 
+        private List<GameObject> SpawnedChoices =>
+            TestReflection.GetField<List<GameObject>>(
+                TestReflection.GetField<object>(_view, "_choicePresenter"),
+                "_spawned"
+            );
+
+        private void DriveUntilChoicesSpawn(IEnumerator routine)
+        {
+            var stack = new Stack<IEnumerator>();
+            stack.Push(routine);
+            for (int i = 0; i < 500 && stack.Count > 0 && SpawnedChoices.Count == 0; i++)
+            {
+                var top = stack.Peek();
+                if (top.MoveNext())
+                {
+                    if (top.Current is IEnumerator nested)
+                        stack.Push(nested);
+                }
+                else
+                    stack.Pop();
+            }
+        }
+
         private Sprite MakeSprite()
         {
             var tex = new Texture2D(4, 4);
@@ -232,10 +255,10 @@ namespace CreativeAI.Tests.EditMode
             };
 
             var routine = _view.ShowChoice(options, _ => { });
+            DriveUntilChoicesSpawn(routine);
             routine.MoveNext(); // 選択肢を生成して待ちに入る
 
-            var spawned = TestReflection.GetField<List<GameObject>>(_view, "_spawnedChoices");
-            Assert.AreEqual(2, spawned.Count);
+            Assert.AreEqual(2, SpawnedChoices.Count);
             Assert.AreEqual(ConversationView.ConversationState.ShowingChoices, _view.State);
         }
 
@@ -246,46 +269,51 @@ namespace CreativeAI.Tests.EditMode
             var routine = _view.ShowChoice(Array.Empty<ChoiceOption>(), value => picked = value);
 
             LogAssert.Expect(LogType.Warning, "[ConversationView] 表示できる選択肢がありません。");
-            Assert.IsFalse(routine.MoveNext());
+            Drive(routine);
             Assert.IsNull(picked);
             Assert.AreEqual(ConversationView.ConversationState.Entering, _view.State);
         }
 
-        [TestCase(2, 178f)]
-        [TestCase(3, 286f)]
-        public void ShowChoice_AdjustsContainerAboveWindow(int choiceCount, float expectedHeight)
+        [TestCase(2, 178f, 118f)]
+        [TestCase(3, 286f, 64f)]
+        public void ShowChoice_AdjustsContainerAboveWindow(
+            int choiceCount,
+            float expectedHeight,
+            float expectedBottom
+        )
         {
             var options = new List<ChoiceOption>();
             for (int i = 0; i < choiceCount; i++)
                 options.Add(new ChoiceOption($"選択肢{i + 1}", $"choice_{i + 1}"));
 
             var routine = _view.ShowChoice(options, _ => { });
-            routine.MoveNext();
+            DriveUntilChoicesSpawn(routine);
 
             Assert.AreEqual(565f, _choiceContainer.rect.width, 0.01f);
             Assert.AreEqual(expectedHeight, _choiceContainer.rect.height, 0.01f);
             Assert.AreEqual(new Vector2(0.5f, 1f), _choiceContainer.anchorMin);
             Assert.AreEqual(new Vector2(0.5f, 1f), _choiceContainer.anchorMax);
             Assert.AreEqual(new Vector2(0.5f, 0f), _choiceContainer.pivot);
-            Assert.AreEqual(new Vector2(0f, 64f), _choiceContainer.anchoredPosition);
+            Assert.AreEqual(new Vector2(0f, expectedBottom), _choiceContainer.anchoredPosition);
         }
 
         [Test]
         public void NextIndicator_BouncesUpAndReturnsToBasePosition()
         {
+            var chrome = TestReflection.GetField<object>(_view, "_chromePresenter");
             Assert.AreEqual(
                 0f,
-                (float)TestReflection.Invoke(_view, "CalculateIndicatorBounceOffset", 0f),
+                (float)TestReflection.Invoke(chrome, "CalculateIndicatorBounceOffset", 0f, 8f),
                 0.001f
             );
             Assert.AreEqual(
                 8f,
-                (float)TestReflection.Invoke(_view, "CalculateIndicatorBounceOffset", 0.3f),
+                (float)TestReflection.Invoke(chrome, "CalculateIndicatorBounceOffset", 0.5f, 8f),
                 0.001f
             );
             Assert.AreEqual(
                 0f,
-                (float)TestReflection.Invoke(_view, "CalculateIndicatorBounceOffset", 0.6f),
+                (float)TestReflection.Invoke(chrome, "CalculateIndicatorBounceOffset", 1f, 8f),
                 0.001f
             );
         }

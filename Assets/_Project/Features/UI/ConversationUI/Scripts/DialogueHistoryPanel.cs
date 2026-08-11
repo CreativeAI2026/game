@@ -420,7 +420,13 @@ namespace CreativeAI.UI.ConversationUI
             {
                 _entries.RemoveAt(0);
                 if (_content != null && _content.childCount > 0)
-                    Destroy(_content.GetChild(0).gameObject);
+                {
+                    var oldest = _content.GetChild(0).gameObject;
+                    if (Application.isPlaying)
+                        Destroy(oldest);
+                    else
+                        DestroyImmediate(oldest);
+                }
             }
         }
 
