@@ -6,6 +6,7 @@ using CreativeAI.UI.ConversationUI;
 using NUnit.Framework;
 using TMPro;
 using UnityEngine;
+using UnityEngine.TestTools;
 using UnityEngine.UI;
 
 namespace CreativeAI.Tests.EditMode
@@ -95,6 +96,36 @@ namespace CreativeAI.Tests.EditMode
             }
         }
 
+        private List<GameObject> SpawnedChoices
+        {
+            get
+            {
+                var presenter = TestReflection.GetField<object>(_view, "_choicePresenter");
+                return presenter == null
+                    ? null
+                    : TestReflection.GetField<List<GameObject>>(presenter, "_spawned");
+            }
+        }
+
+        private void DriveUntilChoicesSpawn(IEnumerator routine)
+        {
+            var stack = new Stack<IEnumerator>();
+            stack.Push(routine);
+            for (int i = 0; i < 500 && stack.Count > 0; i++)
+            {
+                var top = stack.Peek();
+                if (top.MoveNext())
+                {
+                    if (top.Current is IEnumerator nested)
+                        stack.Push(nested);
+                }
+                else
+                    stack.Pop();
+                if (SpawnedChoices is { Count: > 0 })
+                    break;
+            }
+        }
+
         private Sprite MakeSprite()
         {
             var tex = new Texture2D(4, 4);
@@ -164,6 +195,64 @@ namespace CreativeAI.Tests.EditMode
         }
 
         [Test]
+        public void ShowLine_PlacesProtagonistLeftAndOtherCharactersRight()
+        {
+            var protagonist = MakeSprite();
+            var otherCharacter = MakeSprite();
+            TestReflection.SetField(
+                _view,
+                "_portraits",
+                new[]
+                {
+                    new ConversationView.PortraitEntry
+                    {
+                        Key = "protagonist",
+                        Sprite = protagonist,
+                        Side = DialoguePortraitSide.Left,
+                    },
+                    new ConversationView.PortraitEntry
+                    {
+                        Key = "other",
+                        Sprite = otherCharacter,
+                        Side = DialoguePortraitSide.Right,
+                    },
+                }
+            );
+
+            Drive(_view.ShowLine("主人公", "protagonist", "左側"));
+            Assert.AreEqual(0.12f, _portrait.rectTransform.anchorMin.x, 0.001f);
+            Assert.AreEqual(0.12f, _portrait.rectTransform.anchorMax.x, 0.001f);
+            Assert.AreEqual(1.03f, _portrait.rectTransform.localScale.x, 0.001f);
+
+            Drive(_view.ShowLine("相手", "other", "右側"));
+            var rightPortrait = TestReflection.GetField<Image>(_view, "_rightPortrait");
+            Assert.AreEqual(0.88f, rightPortrait.rectTransform.anchorMin.x, 0.001f);
+            Assert.AreEqual(0.88f, rightPortrait.rectTransform.anchorMax.x, 0.001f);
+            Assert.AreEqual(-1.03f, rightPortrait.rectTransform.localScale.x, 0.001f);
+            Assert.AreEqual(0.92f, _portrait.rectTransform.localScale.x, 0.001f);
+            Assert.AreEqual(0.45f, _portrait.color.r, 0.001f);
+
+            Drive(_view.ShowLine("主人公", "protagonist", "もう一度左側"));
+            Assert.AreEqual(1.03f, _portrait.rectTransform.localScale.x, 0.001f);
+            Assert.AreEqual(-0.92f, rightPortrait.rectTransform.localScale.x, 0.001f);
+            Assert.AreEqual(0.45f, rightPortrait.color.r, 0.001f);
+        }
+
+        [Test]
+        public void SetPortraitObscured_PersistsUntilReveal()
+        {
+            var sprite = MakeSprite();
+            SetPortraitCatalog(("mystery", sprite));
+            Drive(_view.ShowLine("？？？", "mystery", "……"));
+
+            Drive(_view.SetPortraitObscured(DialoguePortraitSide.Left, true, 0.01f));
+            Assert.Less(_portrait.color.r, 0.1f);
+
+            Drive(_view.SetPortraitObscured(DialoguePortraitSide.Left, false, 0.01f));
+            Assert.Greater(_portrait.color.r, 0.9f);
+        }
+
+        [Test]
         public void ShowChoice_SpawnsAButtonPerOption()
         {
             var options = new List<ChoiceOption>
@@ -173,10 +262,101 @@ namespace CreativeAI.Tests.EditMode
             };
 
             var routine = _view.ShowChoice(options, _ => { });
+            DriveUntilChoicesSpawn(routine);
             routine.MoveNext(); // 選択肢を生成して待ちに入る
 
-            var spawned = TestReflection.GetField<List<GameObject>>(_view, "_spawnedChoices");
-            Assert.AreEqual(2, spawned.Count);
+            Assert.AreEqual(2, SpawnedChoices.Count);
+            Assert.AreEqual(ConversationView.ConversationState.ShowingChoices, _view.State);
+        }
+
+        [Test]
+        public void ShowChoice_NoValidOptions_CompletesSafely()
+        {
+            string picked = "not-called";
+            var routine = _view.ShowChoice(Array.Empty<ChoiceOption>(), value => picked = value);
+
+            LogAssert.Expect(LogType.Warning, "[ConversationView] 表示できる選択肢がありません。");
+            Drive(routine);
+            Assert.IsNull(picked);
+            Assert.AreEqual(ConversationView.ConversationState.Entering, _view.State);
+        }
+
+        [TestCase(2, 178f, 124f)]
+        [TestCase(3, 286f, 70f)]
+        public void ShowChoice_AdjustsContainerAboveWindow(
+            int choiceCount,
+            float expectedHeight,
+            float expectedBottom
+        )
+        {
+            var options = new List<ChoiceOption>();
+            for (int i = 0; i < choiceCount; i++)
+                options.Add(new ChoiceOption($"選択肢{i + 1}", $"choice_{i + 1}"));
+
+            var routine = _view.ShowChoice(options, _ => { });
+            DriveUntilChoicesSpawn(routine);
+
+            Assert.AreEqual(565f, _choiceContainer.rect.width, 0.01f);
+            Assert.AreEqual(expectedHeight, _choiceContainer.rect.height, 0.01f);
+            Assert.AreEqual(new Vector2(0.5f, 1f), _choiceContainer.anchorMin);
+            Assert.AreEqual(new Vector2(0.5f, 1f), _choiceContainer.anchorMax);
+            Assert.AreEqual(new Vector2(0.5f, 0f), _choiceContainer.pivot);
+            Assert.AreEqual(new Vector2(0f, expectedBottom), _choiceContainer.anchoredPosition);
+        }
+
+        [Test]
+        public void NextIndicator_BouncesUpAndReturnsToBasePosition()
+        {
+            TestReflection.Invoke(_view, "InitializePresenters");
+            var chrome = TestReflection.GetField<object>(_view, "_chromePresenter");
+            Assert.AreEqual(
+                0f,
+                (float)TestReflection.Invoke(chrome, "CalculateIndicatorBounceOffset", 0f, 8f),
+                0.001f
+            );
+            Assert.AreEqual(
+                8f,
+                (float)TestReflection.Invoke(chrome, "CalculateIndicatorBounceOffset", 0.5f, 8f),
+                0.001f
+            );
+            Assert.AreEqual(
+                0f,
+                (float)TestReflection.Invoke(chrome, "CalculateIndicatorBounceOffset", 1f, 8f),
+                0.001f
+            );
+        }
+
+        [Test]
+        public void SetAutoMode_TogglesModeWithoutAdvancingChoices()
+        {
+            Assert.IsFalse(_view.IsAutoMode);
+
+            _view.SetAutoMode(true);
+            Assert.IsTrue(_view.IsAutoMode);
+
+            _view.SetAutoMode(false);
+            Assert.IsFalse(_view.IsAutoMode);
+        }
+
+        [Test]
+        public void ReadHistory_CanBeMarkedQueriedAndCleared()
+        {
+            _view.MarkLineRead("主人公", "protagonist_normal", "既読行");
+            Assert.IsTrue(_view.IsLineRead("主人公", "protagonist_normal", "既読行"));
+
+            _view.ClearReadHistory();
+            Assert.IsFalse(_view.IsLineRead("主人公", "protagonist_normal", "既読行"));
+        }
+
+        [Test]
+        public void SetTextSpeed_UpdatesConfiguredSpeed()
+        {
+            _view.SetTextSpeed(ConversationView.TextSpeed.Fast);
+
+            Assert.AreEqual(
+                ConversationView.TextSpeed.Fast,
+                TestReflection.GetField<ConversationView.TextSpeed>(_view, "_textSpeed")
+            );
         }
 
         [Test]
