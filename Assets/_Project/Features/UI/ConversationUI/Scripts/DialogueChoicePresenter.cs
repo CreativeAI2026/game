@@ -54,6 +54,9 @@ namespace CreativeAI.UI.ConversationUI
             _confirmDuration = confirmDuration;
         }
 
+        public bool Uses(RectTransform container, Button template) =>
+            _container == container && _template == template;
+
         public int Spawn(
             IReadOnlyList<ChoiceOption> options,
             ISet<string> selectedValues,

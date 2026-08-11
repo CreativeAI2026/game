@@ -313,17 +313,24 @@ namespace CreativeAI.UI.ConversationUI
                 _windowEnterOffsetY,
                 _autoModeLabel
             );
-            _choicePresenter ??= new DialogueChoicePresenter(
-                _choiceContainer,
-                _choiceButtonTemplate,
-                _choiceContainerWidth,
-                _choiceButtonHeight,
-                _choiceSpacing,
-                _choiceBottomMargin,
-                _choiceStaggerDelay,
-                _choiceEnterDuration,
-                _choiceConfirmDuration
-            );
+            if (
+                _choicePresenter == null
+                || !_choicePresenter.Uses(_choiceContainer, _choiceButtonTemplate)
+            )
+            {
+                _choicePresenter?.Clear();
+                _choicePresenter = new DialogueChoicePresenter(
+                    _choiceContainer,
+                    _choiceButtonTemplate,
+                    _choiceContainerWidth,
+                    _choiceButtonHeight,
+                    _choiceSpacing,
+                    _choiceBottomMargin,
+                    _choiceStaggerDelay,
+                    _choiceEnterDuration,
+                    _choiceConfirmDuration
+                );
+            }
             _rewardPresenter ??= new DialogueRewardPresenter(
                 transform,
                 _itemRewardImage,
