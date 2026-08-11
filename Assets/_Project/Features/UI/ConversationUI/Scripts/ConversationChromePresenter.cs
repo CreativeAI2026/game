@@ -286,7 +286,7 @@ namespace CreativeAI.UI.ConversationUI
             }
         }
 
-        private static float CalculateIndicatorBounceOffset(float phase, float height) =>
+        private float CalculateIndicatorBounceOffset(float phase, float height) =>
             Mathf.Sin(Mathf.Clamp01(phase) * Mathf.PI) * height;
 
         private IEnumerator AnimateLineText(TMP_Text name, TMP_Text body, bool showName)

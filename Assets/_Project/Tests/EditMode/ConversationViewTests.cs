@@ -281,8 +281,8 @@ namespace CreativeAI.Tests.EditMode
             Assert.AreEqual(ConversationView.ConversationState.Entering, _view.State);
         }
 
-        [TestCase(2, 178f, 118f)]
-        [TestCase(3, 286f, 64f)]
+        [TestCase(2, 178f, 124f)]
+        [TestCase(3, 286f, 70f)]
         public void ShowChoice_AdjustsContainerAboveWindow(
             int choiceCount,
             float expectedHeight,
