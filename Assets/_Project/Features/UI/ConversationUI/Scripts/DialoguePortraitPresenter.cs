@@ -220,6 +220,20 @@ namespace CreativeAI.UI.ConversationUI
                 portrait.enabled = visible && portrait.sprite != null;
         }
 
+        public void HideImmediate()
+        {
+            if (_left != null)
+            {
+                _left.enabled = false;
+                _leftShown = false;
+            }
+            if (_right != null)
+            {
+                _right.enabled = false;
+                _rightShown = false;
+            }
+        }
+
         public bool IsObscured(DialoguePortraitSide side) =>
             side == DialoguePortraitSide.Left ? _leftObscured : _rightObscured;
 
@@ -294,23 +308,6 @@ namespace CreativeAI.UI.ConversationUI
             portrait.color = baseColor;
         }
 
-        public IEnumerator PlayReturnFocus(float duration = 0.24f)
-        {
-            var portrait = _activeSide == DialoguePortraitSide.Left ? _left : _right;
-            if (portrait == null || !portrait.enabled)
-                yield break;
-            var rect = portrait.rectTransform;
-            Vector3 baseScale = rect.localScale;
-            duration = Mathf.Max(0.01f, duration);
-            for (float elapsed = 0f; elapsed < duration; elapsed += FrameDelta())
-            {
-                float pulse = 1f + Mathf.Sin((elapsed / duration) * Mathf.PI) * 0.025f;
-                rect.localScale = baseScale * pulse;
-                yield return null;
-            }
-            rect.localScale = baseScale;
-        }
-
         public IEnumerator FadeOutAll(float duration)
         {
             Color leftStart = _left != null ? _left.color : Color.clear;
@@ -352,6 +349,7 @@ namespace CreativeAI.UI.ConversationUI
                 _right.name = "PortraitRight";
                 _right.transform.SetSiblingIndex(_left.transform.GetSiblingIndex() + 1);
                 _right.enabled = false;
+                SetScale(_right, DialoguePortraitSide.Right, 1f);
             }
             ApplySide(_right, DialoguePortraitSide.Right);
         }
@@ -410,7 +408,6 @@ namespace CreativeAI.UI.ConversationUI
             rect.anchorMax = new Vector2(anchorX, rect.anchorMax.y);
             rect.pivot = new Vector2(rect.pivot.x, 1f);
             rect.anchoredPosition = new Vector2(offset.x, baseTopY + offset.y);
-            SetScale(portrait, side, 1f);
         }
 
         private void SetScale(Image portrait, DialoguePortraitSide side, float magnitude)

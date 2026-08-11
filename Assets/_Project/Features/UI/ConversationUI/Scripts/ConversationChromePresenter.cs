@@ -78,12 +78,12 @@ namespace CreativeAI.UI.ConversationUI
             EnsureControlGuide();
         }
 
-        public void Tick(bool autoMode, float progress)
+        public void Tick(bool autoMode, bool progressVisible, float progress)
         {
             if (_autoProgress != null)
             {
                 SetAutoProgress(progress);
-                _autoProgress.gameObject.SetActive(autoMode);
+                _autoProgress.gameObject.SetActive(autoMode && progressVisible);
             }
             if (_autoIndicator == null || !autoMode)
                 return;

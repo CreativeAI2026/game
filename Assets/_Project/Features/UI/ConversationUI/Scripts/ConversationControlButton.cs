@@ -32,6 +32,11 @@ namespace CreativeAI.UI.ConversationUI
         private bool _active;
         private string _description;
         private ConversationControlBar _controlBar;
+        private Graphic[] _contentGraphics;
+        private Color[] _contentBaseColors;
+        private bool _idleDimmed;
+        private bool _colorsCached;
+        private bool _available = true;
 
         public void Configure(
             Image background,
@@ -76,12 +81,17 @@ namespace CreativeAI.UI.ConversationUI
                     _active ? _activeColor
                     : _hovered ? _hoverColor
                     : _normalColor;
+                if (_idleDimmed && !_hovered)
+                    target = Dim(target, 0.64f);
+                if (!_available)
+                    target = Dim(_normalColor, 0.46f);
                 _background.color = Color.Lerp(
                     _background.color,
                     target,
                     1f - Mathf.Exp(-20f * Time.unscaledDeltaTime)
                 );
             }
+            UpdateContentColors();
             if (_keycap != null)
             {
                 Vector2 target =
@@ -99,6 +109,18 @@ namespace CreativeAI.UI.ConversationUI
             _active = active;
             if (_activeAccent != null)
                 _activeAccent.gameObject.SetActive(active);
+        }
+
+        public void SetIdleDimmed(bool dimmed) => _idleDimmed = dimmed;
+
+        public void SetAvailable(bool available)
+        {
+            _available = available;
+            if (!available)
+            {
+                _hovered = false;
+                _pressed = false;
+            }
         }
 
         public void PlayShortcutFeedback()
@@ -133,7 +155,39 @@ namespace CreativeAI.UI.ConversationUI
             _baseScale = transform.localScale;
             if (_keycap != null)
                 _keycapBasePosition = _keycap.anchoredPosition;
+            if (_colorsCached)
+                return;
+            var graphics = GetComponentsInChildren<Graphic>(true);
+            var content = new System.Collections.Generic.List<Graphic>();
+            foreach (var graphic in graphics)
+                if (graphic != null && graphic != _background && graphic != _activeAccent)
+                    content.Add(graphic);
+            _contentGraphics = content.ToArray();
+            _contentBaseColors = new Color[_contentGraphics.Length];
+            for (int i = 0; i < _contentGraphics.Length; i++)
+                _contentBaseColors[i] = _contentGraphics[i].color;
+            _colorsCached = true;
         }
+
+        private void UpdateContentColors()
+        {
+            if (_contentGraphics == null || _contentBaseColors == null)
+                return;
+            float speed = 1f - Mathf.Exp(-14f * Time.unscaledDeltaTime);
+            for (int i = 0; i < _contentGraphics.Length; i++)
+            {
+                if (_contentGraphics[i] == null)
+                    continue;
+                Color target =
+                    !_available ? Dim(_contentBaseColors[i], 0.42f)
+                    : _idleDimmed && !_hovered ? Dim(_contentBaseColors[i], 0.72f)
+                    : _contentBaseColors[i];
+                _contentGraphics[i].color = Color.Lerp(_contentGraphics[i].color, target, speed);
+            }
+        }
+
+        private static Color Dim(Color color, float multiplier) =>
+            new(color.r * multiplier, color.g * multiplier, color.b * multiplier, color.a);
 
         private void ApplyImmediate()
         {

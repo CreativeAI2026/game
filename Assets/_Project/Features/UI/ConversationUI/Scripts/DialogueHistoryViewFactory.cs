@@ -10,6 +10,8 @@ namespace CreativeAI.UI.ConversationUI
         Dialogue,
         Choice,
         Narration,
+        RewardItem,
+        RewardWeapon,
     }
 
     internal readonly struct DialogueHistoryEntry
@@ -42,6 +44,19 @@ namespace CreativeAI.UI.ConversationUI
             Side = DialoguePortraitSide.Left;
             PortraitObscured = false;
             Kind = DialogueHistoryEntryKind.Choice;
+            Sequence = sequence;
+        }
+
+        public DialogueHistoryEntry(string rewardText, bool weapon, int sequence)
+        {
+            Speaker = string.Empty;
+            Body = rewardText;
+            Portrait = null;
+            Side = DialoguePortraitSide.Left;
+            PortraitObscured = false;
+            Kind = weapon
+                ? DialogueHistoryEntryKind.RewardWeapon
+                : DialogueHistoryEntryKind.RewardItem;
             Sequence = sequence;
         }
 
@@ -240,6 +255,11 @@ namespace CreativeAI.UI.ConversationUI
                 .PreferredSize;
             if (entry.Kind == DialogueHistoryEntryKind.Choice)
                 CreateChoice(container.transform, entry);
+            else if (
+                entry.Kind == DialogueHistoryEntryKind.RewardItem
+                || entry.Kind == DialogueHistoryEntryKind.RewardWeapon
+            )
+                CreateReward(container.transform, entry);
             else if (entry.Kind == DialogueHistoryEntryKind.Narration)
                 CreateNarration(container.transform, entry);
             else
@@ -357,6 +377,40 @@ namespace CreativeAI.UI.ConversationUI
             body.gameObject.AddComponent<LayoutElement>().flexibleWidth = 1f;
         }
 
+        private void CreateReward(Transform parent, DialogueHistoryEntry entry)
+        {
+            bool weapon = entry.Kind == DialogueHistoryEntryKind.RewardWeapon;
+            var row = CreateRect("RewardEntry", parent);
+            row.AddComponent<Image>().color = weapon
+                ? new Color(0.14f, 0.105f, 0.045f, 0.88f)
+                : new Color(0.045f, 0.12f, 0.15f, 0.88f);
+            var layout = row.AddComponent<HorizontalLayoutGroup>();
+            layout.spacing = 18f;
+            layout.padding = new RectOffset(18, 18, 13, 13);
+            layout.childAlignment = TextAnchor.MiddleLeft;
+            layout.childControlWidth = layout.childControlHeight = true;
+            layout.childForceExpandWidth = layout.childForceExpandHeight = false;
+            row.AddComponent<ContentSizeFitter>().verticalFit = ContentSizeFitter
+                .FitMode
+                .PreferredSize;
+            CreateRecordNumber(row.transform, entry.Sequence);
+            var badge = CreateText(
+                "RewardBadge",
+                row.transform,
+                weapon ? "WEAPON" : "ITEM",
+                17f,
+                FontStyles.Bold
+            );
+            badge.color = weapon
+                ? new Color(1f, 0.78f, 0.38f, 0.96f)
+                : new Color(0.52f, 0.9f, 1f, 0.96f);
+            var badgeLayout = badge.gameObject.AddComponent<LayoutElement>();
+            badgeLayout.minWidth = badgeLayout.preferredWidth = 76f;
+            var body = CreateText("Body", row.transform, entry.Body, 25f, FontStyles.Bold);
+            body.textWrappingMode = TextWrappingModes.Normal;
+            body.gameObject.AddComponent<LayoutElement>().flexibleWidth = 1f;
+        }
+
         private TMP_Text CreateRecordNumber(Transform parent, int sequence)
         {
             var record = CreateText(
@@ -387,7 +441,8 @@ namespace CreativeAI.UI.ConversationUI
             var field = target.AddComponent<TMP_InputField>();
             var text = CreateText("Text", target.transform, string.Empty, 21f, FontStyles.Normal);
             Stretch(text.rectTransform);
-            text.margin = new Vector4(14f, 8f, 14f, 8f);
+            text.alignment = TextAlignmentOptions.MidlineLeft;
+            text.margin = new Vector4(14f, 0f, 14f, 0f);
             var placeholder = CreateText(
                 "Placeholder",
                 target.transform,
@@ -396,7 +451,8 @@ namespace CreativeAI.UI.ConversationUI
                 FontStyles.Normal
             );
             Stretch(placeholder.rectTransform);
-            placeholder.margin = new Vector4(14f, 8f, 14f, 8f);
+            placeholder.alignment = TextAlignmentOptions.MidlineLeft;
+            placeholder.margin = new Vector4(14f, 0f, 14f, 0f);
             placeholder.color = new Color(1f, 1f, 1f, 0.4f);
             field.textComponent = text;
             field.placeholder = placeholder;
@@ -411,24 +467,34 @@ namespace CreativeAI.UI.ConversationUI
             bool obscured
         )
         {
-            var mask = CreateRect("PortraitIcon", parent);
-            var element = mask.AddComponent<LayoutElement>();
+            var frame = CreateRect("PortraitIcon", parent);
+            var element = frame.AddComponent<LayoutElement>();
             element.minWidth =
                 element.preferredWidth =
                 element.minHeight =
                 element.preferredHeight =
                     76f;
-            mask.AddComponent<Image>().color = obscured
+            frame.AddComponent<Image>().color = obscured
                 ? new Color(0.018f, 0.025f, 0.04f, 1f)
                 : new Color(0.055f, 0.075f, 0.1f, 0.98f);
-            var iconOutline = mask.AddComponent<Outline>();
+            var iconOutline = frame.AddComponent<Outline>();
             iconOutline.effectColor = obscured
                 ? new Color(0.16f, 0.24f, 0.34f, 0.42f)
                 : new Color(0.3f, 0.55f, 0.75f, 0.42f);
             iconOutline.effectDistance = new Vector2(1f, -1f);
-            mask.AddComponent<Mask>().showMaskGraphic = true;
+
+            var mask = CreateRect("PortraitMask", frame.transform);
+            var maskImage = mask.AddComponent<Image>();
+            maskImage.color = Color.white;
+            maskImage.raycastTarget = false;
+            mask.AddComponent<Mask>().showMaskGraphic = false;
+            var maskRect = mask.GetComponent<RectTransform>();
+            maskRect.anchorMin = Vector2.zero;
+            maskRect.anchorMax = Vector2.one;
+            maskRect.offsetMin = new Vector2(3f, 3f);
+            maskRect.offsetMax = new Vector2(-3f, -3f);
             if (portrait == null)
-                return mask;
+                return frame;
             var portraitObject = CreateRect("Portrait", mask.transform);
             var image = portraitObject.AddComponent<Image>();
             image.sprite = portrait;
@@ -439,15 +505,15 @@ namespace CreativeAI.UI.ConversationUI
             rect.anchorMin = Vector2.zero;
             rect.anchorMax = Vector2.one;
             rect.pivot = new Vector2(0.5f, 0.5f);
-            rect.offsetMin = new Vector2(4f, 4f);
-            rect.offsetMax = new Vector2(-4f, -4f);
+            rect.offsetMin = Vector2.zero;
+            rect.offsetMax = Vector2.zero;
             const float iconZoom = 1.25f;
             rect.localScale = new Vector3(
                 (side == DialoguePortraitSide.Left ? 1f : -1f) * iconZoom,
                 iconZoom,
                 1f
             );
-            return mask;
+            return frame;
         }
 
         private void CreateSeparator(Transform parent)
@@ -474,6 +540,7 @@ namespace CreativeAI.UI.ConversationUI
             target.AddComponent<Button>().targetGraphic = image;
             var text = CreateText("Label", target.transform, label, 21f, FontStyles.Bold);
             Stretch(text.rectTransform);
+            text.alignment = TextAlignmentOptions.Center;
             return target;
         }
 
@@ -488,6 +555,7 @@ namespace CreativeAI.UI.ConversationUI
 
             var label = target.GetComponentInChildren<TMP_Text>();
             label.fontSize = 19f;
+            label.fontStyle = FontStyles.Normal;
             label.alignment = TextAlignmentOptions.Center;
             label.rectTransform.offsetMin = new Vector2(8f, 0f);
             label.rectTransform.offsetMax = new Vector2(-30f, 0f);

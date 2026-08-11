@@ -137,6 +137,23 @@ namespace CreativeAI.UI.ConversationUI
                 RefreshLatestButton();
         }
 
+        public void AddRewardEntry(string rewardText, bool weapon)
+        {
+            if (string.IsNullOrWhiteSpace(rewardText))
+                return;
+            bool followLatest = ShouldFollowLatest();
+            EnsureView();
+            var entry = new DialogueHistoryEntry(rewardText, weapon, _entries.Count + 1);
+            _entries.Add(entry);
+            _viewFactory.CreateEntry(_content, entry);
+            TrimOldEntries();
+            RefreshCurrentMarker();
+            if (followLatest)
+                ScrollToLatest();
+            else
+                RefreshLatestButton();
+        }
+
         public void AddChoiceEntry(IReadOnlyList<ChoiceOption> options, string selectedText)
         {
             if (options == null || options.Count == 0)
@@ -194,7 +211,12 @@ namespace CreativeAI.UI.ConversationUI
         private void EnsureView()
         {
             _viewFactory ??= new DialogueHistoryViewFactory(_font);
-            if (_panel != null || transform is not RectTransform root)
+            if (_panel != null)
+            {
+                ApplyLayoutPolish();
+                return;
+            }
+            if (transform is not RectTransform root)
                 return;
 
             var view = _viewFactory.Build(
@@ -214,6 +236,41 @@ namespace CreativeAI.UI.ConversationUI
             _latestButton = view.LatestButton;
             _searchField = view.SearchField;
             _scrollIndicator = view.ScrollIndicator;
+            ApplyLayoutPolish();
+        }
+
+        private void ApplyLayoutPolish()
+        {
+            if (_searchField != null)
+            {
+                AlignSearchText(_searchField.textComponent);
+                AlignSearchText(_searchField.placeholder as TMP_Text);
+            }
+
+            CenterButtonLabel(
+                _panel != null
+                    ? _panel.transform.Find("ArchiveHeader/CloseButton")?.gameObject
+                    : null
+            );
+            CenterButtonLabel(_latestButton);
+        }
+
+        private static void AlignSearchText(TMP_Text text)
+        {
+            if (text == null)
+                return;
+            text.alignment = TextAlignmentOptions.MidlineLeft;
+            text.margin = new Vector4(14f, 0f, 14f, 0f);
+        }
+
+        private static void CenterButtonLabel(GameObject button)
+        {
+            var label = button != null ? button.GetComponentInChildren<TMP_Text>(true) : null;
+            if (label == null)
+                return;
+            label.alignment = TextAlignmentOptions.Center;
+            label.rectTransform.offsetMin = Vector2.zero;
+            label.rectTransform.offsetMax = Vector2.zero;
         }
 
         private void BindViewEvents()

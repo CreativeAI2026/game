@@ -24,6 +24,7 @@ namespace CreativeAI.UI.ConversationUI
         private readonly float _enterDuration;
         private readonly float _confirmDuration;
         private readonly List<GameObject> _spawned = new();
+        private readonly List<float> _spawnedHeights = new();
         private readonly Dictionary<Button, Color> _baseColors = new();
         private int _selectedIndex = -1;
 
@@ -53,7 +54,11 @@ namespace CreativeAI.UI.ConversationUI
             _confirmDuration = confirmDuration;
         }
 
-        public int Spawn(IReadOnlyList<ChoiceOption> options, Action<string, string, Button> picked)
+        public int Spawn(
+            IReadOnlyList<ChoiceOption> options,
+            ISet<string> selectedValues,
+            Action<string, string, Button> picked
+        )
         {
             Clear();
             if (options == null || _template == null || _container == null)
@@ -76,19 +81,29 @@ namespace CreativeAI.UI.ConversationUI
                 group.alpha = 0f;
                 var label = button.GetComponentInChildren<TMP_Text>(true);
                 if (label != null)
+                {
                     label.text = option.Text;
+                    label.textWrappingMode = TextWrappingModes.Normal;
+                    label.enableAutoSizing = true;
+                    label.fontSizeMin = Mathf.Min(label.fontSize, 23f);
+                    label.fontSizeMax = label.fontSize;
+                }
+                float buttonHeight = EstimateButtonHeight(option.Text);
                 var layout = button.GetComponent<LayoutElement>();
                 if (layout != null)
                 {
-                    layout.minHeight = _buttonHeight;
-                    layout.preferredHeight = _buttonHeight;
+                    layout.minHeight = buttonHeight;
+                    layout.preferredHeight = buttonHeight;
                 }
 
                 string value = option.Value;
                 string text = option.Text;
                 button.onClick.AddListener(() => picked(value, text, button));
                 RegisterFocusFeedback(button);
+                if (selectedValues != null && selectedValues.Contains(value))
+                    SetPreviouslySelected(button, label);
                 _spawned.Add(button.gameObject);
+                _spawnedHeights.Add(buttonHeight);
             }
 
             UpdateLayout(_spawned.Count);
@@ -111,6 +126,7 @@ namespace CreativeAI.UI.ConversationUI
                     UnityEngine.Object.Destroy(choice);
                 }
             _spawned.Clear();
+            _spawnedHeights.Clear();
             _baseColors.Clear();
             _selectedIndex = -1;
         }
@@ -213,7 +229,10 @@ namespace CreativeAI.UI.ConversationUI
         {
             if (_container == null || count <= 0)
                 return;
-            float height = count * _buttonHeight + (count - 1) * _spacing;
+            float height = 0f;
+            for (int i = 0; i < _spawnedHeights.Count; i++)
+                height += _spawnedHeights[i];
+            height += (count - 1) * _spacing;
             var layout = _container.GetComponent<VerticalLayoutGroup>();
             if (layout != null)
                 layout.spacing = _spacing;
@@ -221,9 +240,18 @@ namespace CreativeAI.UI.ConversationUI
             _container.pivot = new Vector2(0.5f, 0f);
             float threeChoiceHeight = 3f * _buttonHeight + 2f * _spacing;
             float centeredBottom = _bottomMargin + (threeChoiceHeight - height) * 0.5f;
-            _container.anchoredPosition = new Vector2(0f, centeredBottom);
+            _container.anchoredPosition = new Vector2(0f, Mathf.Max(20f, centeredBottom));
             _container.SetSizeWithCurrentAnchors(RectTransform.Axis.Horizontal, _containerWidth);
             _container.SetSizeWithCurrentAnchors(RectTransform.Axis.Vertical, height);
+        }
+
+        private float EstimateButtonHeight(string text)
+        {
+            if (string.IsNullOrEmpty(text))
+                return _buttonHeight;
+            // Japanese text has few spaces, so character count is a more stable preview heuristic.
+            int visualLines = Mathf.Clamp(Mathf.CeilToInt(text.Length / 19f), 1, 2);
+            return _buttonHeight + (visualLines - 1) * 34f;
         }
 
         private void RegisterFocusFeedback(Button button)
@@ -287,6 +315,26 @@ namespace CreativeAI.UI.ConversationUI
                 && _baseColors.TryGetValue(button, out var color)
             )
                 graphic.color = focused ? color * FocusTint : color;
+        }
+
+        private void SetPreviouslySelected(Button button, TMP_Text label)
+        {
+            if (button.targetGraphic is Graphic graphic)
+            {
+                Color selectedColor = new(
+                    graphic.color.r * 0.5f,
+                    graphic.color.g * 0.5f,
+                    graphic.color.b * 0.5f,
+                    graphic.color.a
+                );
+                graphic.color = selectedColor;
+                _baseColors[button] = selectedColor;
+            }
+            if (label != null)
+            {
+                Color color = label.color;
+                label.color = new Color(color.r * 0.72f, color.g * 0.72f, color.b * 0.72f, 0.78f);
+            }
         }
 
         private int ButtonIndex(Button button)

@@ -22,6 +22,8 @@ namespace CreativeAI.UI.ConversationUI
         private float _tooltipRequestedAt;
         private string _pendingTooltip;
         private RectTransform _tooltipSource;
+        private ConversationControlButton[] _controls;
+        private bool _idleDimmed;
 
         public void Configure(CanvasGroup group, TMP_Text tooltip, CanvasGroup tooltipGroup)
         {
@@ -38,6 +40,7 @@ namespace CreativeAI.UI.ConversationUI
             CacheView();
             _enabledAt = Time.unscaledTime;
             _lastInteractionAt = _enabledAt;
+            SetIdleDimmed(false);
             if (_group != null)
                 _group.alpha = 0f;
             if (_rect != null)
@@ -49,16 +52,9 @@ namespace CreativeAI.UI.ConversationUI
         {
             float intro = Mathf.Clamp01((Time.unscaledTime - _enabledAt) / 0.2f);
             float idle = Time.unscaledTime - _lastInteractionAt;
-            float targetAlpha = idle >= 3.5f ? 0.58f : 1f;
+            SetIdleDimmed(idle >= 3.5f);
             if (_group != null)
-            {
-                float introAlpha = Mathf.SmoothStep(0f, 1f, intro);
-                _group.alpha = Mathf.MoveTowards(
-                    _group.alpha,
-                    targetAlpha * introAlpha,
-                    Time.unscaledDeltaTime * 4.5f
-                );
-            }
+                _group.alpha = Mathf.SmoothStep(0f, 1f, intro);
             if (_rect != null)
                 _rect.anchoredPosition = Vector2.Lerp(
                     _basePosition + Vector2.down * 10f,
@@ -82,6 +78,7 @@ namespace CreativeAI.UI.ConversationUI
         public void NotifyInteraction()
         {
             _lastInteractionAt = Time.unscaledTime;
+            SetIdleDimmed(false);
         }
 
         public void RequestTooltip(string description, RectTransform source)
@@ -105,6 +102,18 @@ namespace CreativeAI.UI.ConversationUI
             _rect = transform as RectTransform;
             if (_rect != null)
                 _basePosition = _rect.anchoredPosition;
+            _controls = GetComponentsInChildren<ConversationControlButton>(true);
+        }
+
+        private void SetIdleDimmed(bool dimmed)
+        {
+            if (_idleDimmed == dimmed && _controls != null)
+                return;
+            _idleDimmed = dimmed;
+            _controls ??= GetComponentsInChildren<ConversationControlButton>(true);
+            foreach (var control in _controls)
+                if (control != null)
+                    control.SetIdleDimmed(dimmed);
         }
 
         private void PositionTooltip()

@@ -263,14 +263,17 @@ namespace CreativeAI.UI.ConversationUI
         private readonly DialogueAdvanceController _advanceController = new();
         private DialogueRewardPresenter _rewardPresenter;
         private Coroutine _speedToastRoutine;
-        private bool _historyEventsBound;
         private bool _windowManuallyHidden;
         private readonly HashSet<string> _readLineIds = new();
+        private readonly HashSet<string> _selectedChoiceValues = new();
         private bool _currentLineWasRead;
         private string _currentLineId;
         private AudioClip _currentTypingSound;
         private bool _skipMode;
         private bool _controlsBound;
+        private bool _rewardPresentationActive;
+        private bool _historyEventsBound;
+        private float _advanceBlockedUntil;
 
         private void Awake()
         {
@@ -285,6 +288,7 @@ namespace CreativeAI.UI.ConversationUI
             InitializePresenters();
             _portraitPresenter.EnsureSlots();
             _rightPortrait = _portraitPresenter.RightPortrait;
+            _portraitPresenter.HideImmediate();
             _chromePresenter.SetAutoMode(IsAutoMode);
             UpdateSpeedControlLabel();
             BindControlButtons();
@@ -309,7 +313,7 @@ namespace CreativeAI.UI.ConversationUI
                 _windowEnterOffsetY,
                 _autoModeLabel
             );
-            _choicePresenter = new DialogueChoicePresenter(
+            _choicePresenter ??= new DialogueChoicePresenter(
                 _choiceContainer,
                 _choiceButtonTemplate,
                 _choiceContainerWidth,
@@ -320,7 +324,7 @@ namespace CreativeAI.UI.ConversationUI
                 _choiceEnterDuration,
                 _choiceConfirmDuration
             );
-            _rewardPresenter = new DialogueRewardPresenter(
+            _rewardPresenter ??= new DialogueRewardPresenter(
                 transform,
                 _itemRewardImage,
                 _itemRewardBackdrop,
@@ -339,40 +343,114 @@ namespace CreativeAI.UI.ConversationUI
                 _portraitFocusDuration
             );
             _chromePresenter.EnsureView();
+            ConfigureTextOverflow();
             _autoModeIndicator = _chromePresenter.AutoIndicator;
             _controlGuide = _chromePresenter.ControlGuide;
             _autoProgressFill = _chromePresenter.AutoProgress;
         }
 
+        private void ConfigureTextOverflow()
+        {
+            if (_nameText != null)
+            {
+                _nameText.enableAutoSizing = true;
+                _nameText.fontSizeMin = 24f;
+                _nameText.fontSizeMax = 36f;
+                _nameText.textWrappingMode = TextWrappingModes.NoWrap;
+            }
+            if (_bodyText != null)
+            {
+                _bodyText.enableAutoSizing = true;
+                _bodyText.fontSizeMin = 24f;
+                _bodyText.fontSizeMax = 34f;
+                _bodyText.textWrappingMode = TextWrappingModes.Normal;
+            }
+        }
+
         private void Update()
         {
             var keyboard = Keyboard.current;
-            if (keyboard != null && keyboard.aKey.wasPressedThisFrame)
+            bool historyOpen = _historyPanel != null && _historyPanel.IsOpen;
+            bool controlsHidden = _windowManuallyHidden || State == ConversationState.Hidden;
+            if (
+                keyboard != null
+                && keyboard.aKey.wasPressedThisFrame
+                && !historyOpen
+                && !controlsHidden
+            )
             {
                 PlayControlShortcut(_autoControlButton);
                 SetAutoMode(!IsAutoMode);
             }
-            if (keyboard != null && keyboard.sKey.wasPressedThisFrame)
+            if (
+                keyboard != null
+                && keyboard.sKey.wasPressedThisFrame
+                && !historyOpen
+                && !controlsHidden
+                && !_rewardPresentationActive
+                && State != ConversationState.ShowingChoices
+            )
                 PlayControlShortcut(_skipControlButton);
             if (
                 keyboard != null
                 && keyboard.hKey.wasPressedThisFrame
                 && State != ConversationState.ShowingChoices
+                && !_rewardPresentationActive
+                && !historyOpen
             )
             {
                 PlayControlShortcut(_hideControlButton);
                 SetWindowHidden(!_windowManuallyHidden);
             }
-            if (keyboard != null && keyboard.tKey.wasPressedThisFrame)
+            if (
+                keyboard != null
+                && keyboard.tKey.wasPressedThisFrame
+                && !historyOpen
+                && !controlsHidden
+            )
             {
                 PlayControlShortcut(_speedControlButton);
                 SetTextSpeed((TextSpeed)(((int)_textSpeed + 1) % 4));
             }
 
-            if (State == ConversationState.ShowingChoices)
+            if (
+                State == ConversationState.ShowingChoices
+                && (_historyPanel == null || !_historyPanel.IsOpen)
+            )
                 _choicePresenter?.HandleKeyboardInput();
 
-            _chromePresenter?.Tick(IsAutoMode, _advanceController.Progress);
+            bool autoProgressVisible =
+                State == ConversationState.WaitingForAdvance
+                && !_windowManuallyHidden
+                && (_historyPanel == null || !_historyPanel.IsOpen);
+            _chromePresenter?.Tick(IsAutoMode, autoProgressVisible, _advanceController.Progress);
+            RefreshControlAvailability();
+        }
+
+        private void RefreshControlAvailability()
+        {
+            bool historyOpen = _historyPanel != null && _historyPanel.IsOpen;
+            bool hidden = _windowManuallyHidden || State == ConversationState.Hidden;
+            bool choices = State == ConversationState.ShowingChoices;
+            SetControlAvailable(_autoControlButton, !historyOpen && !hidden);
+            SetControlAvailable(
+                _skipControlButton,
+                !historyOpen && !hidden && !_rewardPresentationActive && !choices
+            );
+            SetControlAvailable(_speedControlButton, !historyOpen && !hidden);
+            SetControlAvailable(
+                _hideControlButton,
+                !historyOpen && !_rewardPresentationActive && !choices
+            );
+        }
+
+        private static void SetControlAvailable(Button button, bool available)
+        {
+            if (button == null)
+                return;
+            button.interactable = available;
+            if (button.TryGetComponent<ConversationControlButton>(out var control))
+                control.SetAvailable(available);
         }
 
         private void OnDestroy()
@@ -388,13 +466,14 @@ namespace CreativeAI.UI.ConversationUI
         {
             _rewardPresenter?.HideAll();
             _choicePresenter?.Clear();
+            _rewardPresentationActive = false;
         }
 
         /// <summary>1行を立ち絵付きで表示し、タイプライター送出後にプレイヤーの送り入力を待つ。</summary>
         public IEnumerator ShowLine(string speaker, string portrait, string text)
         {
             InitializePresenters();
-            _rewardPresenter.HideAll();
+            CancelRewardPresentation();
             State = ConversationState.Entering;
             _chromePresenter.PrepareLineText(_nameText, _bodyText);
             yield return ShowAnimated();
@@ -469,7 +548,7 @@ namespace CreativeAI.UI.ConversationUI
         )
         {
             InitializePresenters();
-            _rewardPresenter.HideAll();
+            CancelRewardPresentation();
             State = ConversationState.ShowingChoices;
             SetWindowHidden(false);
             _chromePresenter.StopBounce();
@@ -485,6 +564,7 @@ namespace CreativeAI.UI.ConversationUI
             bool hasPicked = false;
             int choiceCount = _choicePresenter.Spawn(
                 options,
+                _selectedChoiceValues,
                 (value, optionText, button) =>
                 {
                     picked = value;
@@ -514,6 +594,9 @@ namespace CreativeAI.UI.ConversationUI
             SetChoicesActive(false);
             EnsureHistoryPanel();
             _historyPanel?.AddChoiceEntry(options, pickedText);
+            if (!string.IsNullOrEmpty(picked))
+                _selectedChoiceValues.Add(picked);
+            BlockAdvanceInput(0.15f);
             onSelected?.Invoke(picked);
             State = ConversationState.Entering;
         }
@@ -527,6 +610,8 @@ namespace CreativeAI.UI.ConversationUI
         public IEnumerator ShowItemGet(Sprite sprite = null, string acquiredMessage = null)
         {
             InitializePresenters();
+            CancelRewardPresentation();
+            _rewardPresentationActive = true;
             State = ConversationState.Entering;
             yield return ShowAnimated();
             SetChoicesActive(false);
@@ -535,12 +620,17 @@ namespace CreativeAI.UI.ConversationUI
                 _itemGetPosition,
                 _itemGetSize
             );
-            yield return _rewardPresenter.AnimateItemIn();
+            yield return ShowRewardEntrance(
+                _rewardPresenter.AnimateItemIn(),
+                acquiredMessage,
+                false
+            );
             yield return WaitForAdvance();
-            yield return _rewardPresenter.AnimateItemOut();
+            yield return ShowRewardExit(_rewardPresenter.AnimateItemOut(), acquiredMessage);
             _rewardPresenter.HideItem();
             if (!string.IsNullOrWhiteSpace(acquiredMessage))
-                yield return ShowLine(null, null, acquiredMessage);
+                _readLineIds.Add(_currentLineId);
+            _rewardPresentationActive = false;
         }
 
         /// <summary>
@@ -556,6 +646,8 @@ namespace CreativeAI.UI.ConversationUI
         )
         {
             InitializePresenters();
+            CancelRewardPresentation();
+            _rewardPresentationActive = true;
             State = ConversationState.Entering;
             yield return ShowAnimated();
             SetChoicesActive(false);
@@ -571,19 +663,73 @@ namespace CreativeAI.UI.ConversationUI
             );
             if (model == null)
             {
-                yield return WaitForAdvance();
+                _rewardPresentationActive = false;
                 yield break;
             }
 
-            yield return _rewardPresenter.AnimateWeaponIn();
-            yield return WaitForAdvance(); // 回転させず静止表示。送り入力まで待つ
-            yield return _rewardPresenter.AnimateWeaponOut();
+            yield return ShowRewardEntrance(
+                _rewardPresenter.AnimateWeaponIn(),
+                acquiredMessage,
+                true
+            );
+            yield return WaitForAdvance(); // AUTO中も表示時間を確保してから次へ進む
+            yield return ShowRewardExit(_rewardPresenter.AnimateWeaponOut(), acquiredMessage);
             _rewardPresenter.HideWeapon();
             if (!string.IsNullOrWhiteSpace(acquiredMessage))
-                yield return ShowLine(null, null, acquiredMessage);
+                _readLineIds.Add(_currentLineId);
+            _rewardPresentationActive = false;
         }
 
         // ---- 内部 ----
+
+        private IEnumerator ShowRewardEntrance(
+            IEnumerator animateIn,
+            string acquiredMessage,
+            bool weapon
+        )
+        {
+            bool hasMessage = !string.IsNullOrWhiteSpace(acquiredMessage);
+            PrepareRewardMessage(hasMessage ? acquiredMessage : string.Empty, weapon);
+            Coroutine rewardEntrance = StartCoroutine(animateIn);
+            if (hasMessage)
+                yield return TypeBody(acquiredMessage);
+            yield return rewardEntrance;
+        }
+
+        private IEnumerator ShowRewardExit(IEnumerator animateOut, string acquiredMessage)
+        {
+            Coroutine textExit = !string.IsNullOrWhiteSpace(acquiredMessage)
+                ? StartCoroutine(_chromePresenter.HideLineText(0.18f))
+                : null;
+            yield return animateOut;
+            if (textExit != null)
+                yield return textExit;
+        }
+
+        private void PrepareRewardMessage(string message, bool weapon)
+        {
+            _chromePresenter.PrepareLineText(_nameText, _bodyText);
+            if (_nameText != null)
+            {
+                _nameText.text = string.Empty;
+                _nameText.gameObject.SetActive(false);
+            }
+            if (_bodyText != null)
+            {
+                _bodyText.text = string.Empty;
+                _bodyText.alignment = TextAlignmentOptions.Center;
+            }
+
+            if (string.IsNullOrWhiteSpace(message))
+                return;
+
+            _currentTypingSound = _typingSound;
+            _currentLineId = $"reward\n\n{message}";
+            _currentLineWasRead = _readLineIds.Contains(_currentLineId);
+            _chromePresenter.PlayLineTextEntrance(_nameText, _bodyText, false);
+            EnsureHistoryPanel();
+            _historyPanel?.AddRewardEntry(DialogueMarkupParser.Parse(message).Text, weapon);
+        }
 
         private IEnumerator TypeBody(string text)
         {
@@ -605,16 +751,16 @@ namespace CreativeAI.UI.ConversationUI
             );
         }
 
-        private IEnumerator WaitForAdvance()
+        private IEnumerator WaitForAdvance(bool allowAuto = true)
         {
             State = ConversationState.WaitingForAdvance;
             _chromePresenter.StartBounce();
             yield return _advanceController.Wait(
                 _bodyText,
                 _currentLineWasRead,
-                () => IsAutoMode && !_windowManuallyHidden,
+                () => allowAuto && IsAutoMode && !_windowManuallyHidden,
                 () => _skipMode,
-                () => _windowManuallyHidden,
+                () => _windowManuallyHidden || Time.unscaledTime < _advanceBlockedUntil,
                 () => _historyPanel != null && _historyPanel.IsOpen,
                 _autoAdvanceDelay
             );
@@ -871,10 +1017,14 @@ namespace CreativeAI.UI.ConversationUI
             }
         }
 
-        private void HandleHistoryClosed()
+        private void HandleHistoryClosed() => BlockAdvanceInput(0.12f);
+
+        private void BlockAdvanceInput(float duration)
         {
-            if (isActiveAndEnabled)
-                StartCoroutine(_portraitPresenter.PlayReturnFocus());
+            _advanceBlockedUntil = Mathf.Max(
+                _advanceBlockedUntil,
+                Time.unscaledTime + Mathf.Max(0f, duration)
+            );
         }
 
         private IEnumerator ShowAnimated()
@@ -896,6 +1046,7 @@ namespace CreativeAI.UI.ConversationUI
             _rewardPresenter.HideAll();
             _choicePresenter.Clear();
             _choicePresenter.SetActive(false);
+            ResetTransientModes();
             State = ConversationState.Hidden;
         }
 
@@ -904,8 +1055,27 @@ namespace CreativeAI.UI.ConversationUI
             State = ConversationState.Exiting;
             _rewardPresenter?.HideAll();
             SetChoicesActive(false);
+            ResetTransientModes();
             _chromePresenter?.HideImmediate();
             State = ConversationState.Hidden;
+        }
+
+        private void ResetTransientModes()
+        {
+            _rewardPresentationActive = false;
+            _skipMode = false;
+            _windowManuallyHidden = false;
+            _advanceBlockedUntil = 0f;
+            SetControlButtonActive(_skipControlButton, false);
+            SetControlButtonActive(_hideControlButton, false);
+            if (_historyPanel != null && _historyPanel.IsOpen)
+                _historyPanel.SetOpen(false);
+        }
+
+        private void CancelRewardPresentation()
+        {
+            _rewardPresenter?.HideAll();
+            _rewardPresentationActive = false;
         }
     }
 }

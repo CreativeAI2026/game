@@ -280,6 +280,11 @@ namespace CreativeAI.UI.ConversationUI.Editor
                 TextAlignmentOptions.Left
             );
             SetStretch(nameText, new Vector2(0.025f, 0.69f), new Vector2(0.38f, 0.97f));
+            var nameLabel = nameText.GetComponent<TMP_Text>();
+            nameLabel.enableAutoSizing = true;
+            nameLabel.fontSizeMin = 24f;
+            nameLabel.fontSizeMax = 36f;
+            nameLabel.textWrappingMode = TextWrappingModes.NoWrap;
 
             // 本文(明るい本体)
             var bodyText = CreateText(
@@ -292,6 +297,11 @@ namespace CreativeAI.UI.ConversationUI.Editor
                 TextAlignmentOptions.MidlineLeft
             );
             SetStretch(bodyText, new Vector2(0.12f, 0.14f), new Vector2(0.95f, 0.64f));
+            var bodyLabel = bodyText.GetComponent<TMP_Text>();
+            bodyLabel.enableAutoSizing = true;
+            bodyLabel.fontSizeMin = 24f;
+            bodyLabel.fontSizeMax = 34f;
+            bodyLabel.textWrappingMode = TextWrappingModes.Normal;
 
             // 送り待ちに小さく上下するインジケーター。正式画像のピクセル比を維持する。
             var nextIndicator = CreateUI("NextIndicator", window.transform);
