@@ -61,6 +61,7 @@ namespace CreativeAI.Tests.PlayMode
             SetPrivate(_view, "_choiceContainer", _choiceContainer);
             SetPrivate(_view, "_charInterval", 0f);
             _viewGo.SetActive(true);
+            _viewGo.GetComponent<CanvasGroup>().alpha = 1f;
         }
 
         [UnityTearDown]
