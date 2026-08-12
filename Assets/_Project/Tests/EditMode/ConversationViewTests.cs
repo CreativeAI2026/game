@@ -273,7 +273,6 @@ namespace CreativeAI.Tests.EditMode
 
             var routine = _view.ShowChoice(options, _ => { });
             DriveUntilChoicesSpawn(routine);
-            routine.MoveNext(); // 選択肢を生成して待ちに入る
 
             Assert.AreEqual(2, SpawnedChoices.Count);
             Assert.AreEqual(ConversationView.ConversationState.ShowingChoices, _view.State);
@@ -285,7 +284,10 @@ namespace CreativeAI.Tests.EditMode
             string picked = "not-called";
             var routine = _view.ShowChoice(Array.Empty<ChoiceOption>(), value => picked = value);
 
-            LogAssert.Expect(LogType.Warning, "[ConversationView] 表示できる選択肢がありません。");
+            LogAssert.Expect(
+                LogType.Warning,
+                "[DialogueChoiceFlow] 表示できる選択肢がありません。"
+            );
             Drive(routine);
             Assert.IsNull(picked);
             Assert.AreEqual(ConversationView.ConversationState.Entering, _view.State);
