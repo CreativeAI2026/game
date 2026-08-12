@@ -4,7 +4,6 @@ using System.Collections.Generic;
 using CreativeAI.Core.EventSystem;
 using TMPro;
 using UnityEngine;
-using UnityEngine.InputSystem;
 using UnityEngine.UI;
 
 namespace CreativeAI.UI.ConversationUI
@@ -260,17 +259,19 @@ namespace CreativeAI.UI.ConversationUI
         private readonly DialogueTextPlayer _textPlayer = new();
         private readonly DialoguePortraitPresenter _portraitPresenter = new();
         private ConversationChromePresenter _chromePresenter;
+        private readonly ConversationControlsPresenter _controlsPresenter = new();
+        private ConversationSpeedPresenter _speedPresenter;
+        private DialoguePresentationCommandRouter _presentationCommandRouter;
         private readonly DialogueAdvanceController _advanceController = new();
         private DialogueRewardPresenter _rewardPresenter;
-        private Coroutine _speedToastRoutine;
+        private DialogueRewardFlow _rewardFlow;
+        private DialogueLineFlow _lineFlow;
+        private DialogueChoiceFlow _choiceFlow;
+        private ConversationInputController _inputController;
         private bool _windowManuallyHidden;
-        private readonly HashSet<string> _readLineIds = new();
-        private readonly HashSet<string> _selectedChoiceValues = new();
-        private bool _currentLineWasRead;
-        private string _currentLineId;
+        private readonly DialogueSessionState _sessionState = new();
         private AudioClip _currentTypingSound;
         private bool _skipMode;
-        private bool _controlsBound;
         private bool _rewardPresentationActive;
         private bool _historyEventsBound;
         private float _advanceBlockedUntil;
@@ -290,7 +291,7 @@ namespace CreativeAI.UI.ConversationUI
             _rightPortrait = _portraitPresenter.RightPortrait;
             _portraitPresenter.HideImmediate();
             _chromePresenter.SetAutoMode(IsAutoMode);
-            UpdateSpeedControlLabel();
+            _speedPresenter.SetSpeed(_textSpeed, false);
             BindControlButtons();
             EnsureHistoryPanel();
             HideImmediate(); // 会話開始まで隠す(編集時は Awake が走らずプレビューが見える)
@@ -299,6 +300,14 @@ namespace CreativeAI.UI.ConversationUI
         private void InitializePresenters()
         {
             _chromePresenter ??= new ConversationChromePresenter(this);
+            _speedPresenter ??= new ConversationSpeedPresenter(this);
+            _speedPresenter.Configure(_speedControlLabel, _speedToast);
+            _controlsPresenter.Configure(
+                _autoControlButton,
+                _skipControlButton,
+                _speedControlButton,
+                _hideControlButton
+            );
             _chromePresenter.Configure(
                 _root,
                 _windowRoot,
@@ -338,6 +347,74 @@ namespace CreativeAI.UI.ConversationUI
                 _weaponRewardImage,
                 _weaponRewardBackdrop
             );
+            _rewardFlow ??= new DialogueRewardFlow(
+                this,
+                _chromePresenter,
+                _nameText,
+                _bodyText,
+                _typingSound,
+                _sessionState,
+                () =>
+                {
+                    EnsureHistoryPanel();
+                    return _historyPanel;
+                },
+                TypeBody,
+                clip => _currentTypingSound = clip
+            );
+            _lineFlow ??= new DialogueLineFlow(
+                _portraitPresenter,
+                _chromePresenter,
+                _nameText,
+                _bodyText,
+                _characters,
+                _portraits,
+                _defaultPortrait,
+                _defaultPortraitSide,
+                _typingSound,
+                _sessionState,
+                () =>
+                {
+                    EnsureHistoryPanel();
+                    return _historyPanel;
+                }
+            );
+            _choiceFlow ??= new DialogueChoiceFlow(
+                _choicePresenter,
+                _chromePresenter,
+                _sessionState,
+                () =>
+                {
+                    EnsureHistoryPanel();
+                    return _historyPanel;
+                },
+                SetChoicesActive,
+                BlockAdvanceInput
+            );
+            _inputController ??= new ConversationInputController(
+                _controlsPresenter,
+                _chromePresenter,
+                _advanceController,
+                () => State,
+                () => _historyPanel != null && _historyPanel.IsOpen,
+                () => _windowManuallyHidden,
+                () => _rewardPresentationActive,
+                () => IsAutoMode,
+                () => _textSpeed,
+                SetAutoMode,
+                SetWindowHidden,
+                SetTextSpeed,
+                () => _choicePresenter?.HandleKeyboardInput()
+            );
+            _presentationCommandRouter ??= new DialoguePresentationCommandRouter(
+                SetWindowHidden,
+                SetPortraitVisible,
+                SetPortraitObscured,
+                PlayPortraitEffect,
+                () => HideAnimated(),
+                (command, argument) =>
+                    ExternalPresentationCommandRequested?.Invoke(command, argument)
+            );
             _portraitPresenter.Configure(
                 _portrait,
                 _rightPortrait,
@@ -376,88 +453,7 @@ namespace CreativeAI.UI.ConversationUI
 
         private void Update()
         {
-            var keyboard = Keyboard.current;
-            bool historyOpen = _historyPanel != null && _historyPanel.IsOpen;
-            bool controlsHidden = _windowManuallyHidden || State == ConversationState.Hidden;
-            if (
-                keyboard != null
-                && keyboard.aKey.wasPressedThisFrame
-                && !historyOpen
-                && !controlsHidden
-            )
-            {
-                PlayControlShortcut(_autoControlButton);
-                SetAutoMode(!IsAutoMode);
-            }
-            if (
-                keyboard != null
-                && keyboard.sKey.wasPressedThisFrame
-                && !historyOpen
-                && !controlsHidden
-                && !_rewardPresentationActive
-                && State != ConversationState.ShowingChoices
-            )
-                PlayControlShortcut(_skipControlButton);
-            if (
-                keyboard != null
-                && keyboard.hKey.wasPressedThisFrame
-                && State != ConversationState.ShowingChoices
-                && !_rewardPresentationActive
-                && !historyOpen
-            )
-            {
-                PlayControlShortcut(_hideControlButton);
-                SetWindowHidden(!_windowManuallyHidden);
-            }
-            if (
-                keyboard != null
-                && keyboard.tKey.wasPressedThisFrame
-                && !historyOpen
-                && !controlsHidden
-            )
-            {
-                PlayControlShortcut(_speedControlButton);
-                SetTextSpeed((TextSpeed)(((int)_textSpeed + 1) % 4));
-            }
-
-            if (
-                State == ConversationState.ShowingChoices
-                && (_historyPanel == null || !_historyPanel.IsOpen)
-            )
-                _choicePresenter?.HandleKeyboardInput();
-
-            bool autoProgressVisible =
-                State == ConversationState.WaitingForAdvance
-                && !_windowManuallyHidden
-                && (_historyPanel == null || !_historyPanel.IsOpen);
-            _chromePresenter?.Tick(IsAutoMode, autoProgressVisible, _advanceController.Progress);
-            RefreshControlAvailability();
-        }
-
-        private void RefreshControlAvailability()
-        {
-            bool historyOpen = _historyPanel != null && _historyPanel.IsOpen;
-            bool hidden = _windowManuallyHidden || State == ConversationState.Hidden;
-            bool choices = State == ConversationState.ShowingChoices;
-            SetControlAvailable(_autoControlButton, !historyOpen && !hidden);
-            SetControlAvailable(
-                _skipControlButton,
-                !historyOpen && !hidden && !_rewardPresentationActive && !choices
-            );
-            SetControlAvailable(_speedControlButton, !historyOpen && !hidden);
-            SetControlAvailable(
-                _hideControlButton,
-                !historyOpen && !_rewardPresentationActive && !choices
-            );
-        }
-
-        private static void SetControlAvailable(Button button, bool available)
-        {
-            if (button == null)
-                return;
-            button.interactable = available;
-            if (button.TryGetComponent<ConversationControlButton>(out var control))
-                control.SetAvailable(available);
+            _inputController?.Tick();
         }
 
         private void OnDestroy()
@@ -471,6 +467,7 @@ namespace CreativeAI.UI.ConversationUI
 
         private void OnDisable()
         {
+            _speedPresenter?.Cancel();
             _rewardPresenter?.HideAll();
             _choicePresenter?.Clear();
             _rewardPresentationActive = false;
@@ -485,67 +482,13 @@ namespace CreativeAI.UI.ConversationUI
             _chromePresenter.PrepareLineText(_nameText, _bodyText);
             yield return ShowAnimated();
             SetChoicesActive(false);
-            bool narration = string.IsNullOrEmpty(portrait);
-            var resolved = narration
-                ? new DialoguePortraitPresenter.ResolvedPortrait(
-                    null,
-                    null,
-                    DialoguePortraitSide.Left,
-                    string.Empty,
-                    new Color(0.78f, 0.82f, 0.9f, 1f),
-                    null,
-                    Vector2.zero
-                )
-                : _portraitPresenter.Resolve(
-                    portrait,
-                    _characters,
-                    _portraits,
-                    _defaultPortrait,
-                    _defaultPortraitSide
-                );
-            yield return _portraitPresenter.Set(resolved);
-            _rightPortrait = _portraitPresenter.RightPortrait;
-            _currentTypingSound =
-                resolved.TypingSound != null ? resolved.TypingSound : _typingSound;
-
-            string displayName = !string.IsNullOrWhiteSpace(speaker)
-                ? speaker
-                : resolved.DisplayName;
-            _currentLineId = $"{displayName}\n{portrait}\n{text}";
-            _currentLineWasRead = _readLineIds.Contains(_currentLineId);
-            if (_nameText != null)
-            {
-                _nameText.text = displayName;
-                _nameText.color = resolved.ThemeColor;
-                _nameText.gameObject.SetActive(!narration && !string.IsNullOrEmpty(displayName));
-            }
-            if (_bodyText != null)
-                _bodyText.alignment = narration
-                    ? TextAlignmentOptions.Center
-                    : TextAlignmentOptions.MidlineLeft;
-            _chromePresenter.PlayLineTextEntrance(
-                _nameText,
-                _bodyText,
-                !narration && !string.IsNullOrEmpty(displayName)
-            );
-
-            EnsureHistoryPanel();
-            bool historyPortraitObscured =
-                !narration
-                && (
-                    _portraitPresenter.IsObscured(resolved.Side) || displayName is "？？？" or "???"
-                );
-            _historyPanel?.AddEntry(
-                displayName,
-                DialogueMarkupParser.Parse(text).Text,
-                resolved.Icon,
-                resolved.Side,
-                historyPortraitObscured
-            );
+            yield return _lineFlow.Prepare(speaker, portrait, text);
+            _rightPortrait = _lineFlow.RightPortrait;
+            _currentTypingSound = _lineFlow.TypingSound;
 
             yield return TypeBody(text ?? string.Empty);
             yield return WaitForAdvance();
-            _readLineIds.Add(_currentLineId);
+            _sessionState.MarkCurrentLineRead();
         }
 
         /// <summary>選択肢を提示し、選ばれた値を <paramref name="onSelected"/> で返す。</summary>
@@ -561,50 +504,7 @@ namespace CreativeAI.UI.ConversationUI
             _chromePresenter.StopBounce();
             yield return ShowAnimated();
 
-            _choicePresenter.Clear();
-            _choicePresenter.SetActive(true);
-            _chromePresenter.SetChoiceGuide(true);
-
-            string picked = null;
-            string pickedText = null;
-            Button pickedButton = null;
-            bool hasPicked = false;
-            int choiceCount = _choicePresenter.Spawn(
-                options,
-                _selectedChoiceValues,
-                (value, optionText, button) =>
-                {
-                    picked = value;
-                    pickedText = optionText;
-                    pickedButton = button;
-                    hasPicked = true;
-                }
-            );
-
-            if (choiceCount == 0)
-            {
-                Debug.LogWarning("[ConversationView] 表示できる選択肢がありません。");
-                SetChoicesActive(false);
-                onSelected?.Invoke(null);
-                State = ConversationState.Entering;
-                yield break;
-            }
-
-            yield return _choicePresenter.AnimateIn();
-            _choicePresenter.SelectFirst();
-
-            while (!hasPicked)
-                yield return null;
-
-            yield return _choicePresenter.AnimateSelection(pickedButton);
-            _choicePresenter.Clear();
-            SetChoicesActive(false);
-            EnsureHistoryPanel();
-            _historyPanel?.AddChoiceEntry(options, pickedText);
-            if (!string.IsNullOrEmpty(picked))
-                _selectedChoiceValues.Add(picked);
-            BlockAdvanceInput(0.15f);
-            onSelected?.Invoke(picked);
+            yield return _choiceFlow.Execute(options, onSelected);
             State = ConversationState.Entering;
         }
 
@@ -627,16 +527,16 @@ namespace CreativeAI.UI.ConversationUI
                 _itemGetPosition,
                 _itemGetSize
             );
-            yield return ShowRewardEntrance(
+            yield return _rewardFlow.Enter(
                 _rewardPresenter.AnimateItemIn(),
                 acquiredMessage,
                 false
             );
             yield return WaitForAdvance();
-            yield return ShowRewardExit(_rewardPresenter.AnimateItemOut(), acquiredMessage);
+            yield return _rewardFlow.Exit(_rewardPresenter.AnimateItemOut(), acquiredMessage);
             _rewardPresenter.HideItem();
             if (!string.IsNullOrWhiteSpace(acquiredMessage))
-                _readLineIds.Add(_currentLineId);
+                _sessionState.MarkCurrentLineRead();
             _rewardPresentationActive = false;
         }
 
@@ -674,69 +574,20 @@ namespace CreativeAI.UI.ConversationUI
                 yield break;
             }
 
-            yield return ShowRewardEntrance(
+            yield return _rewardFlow.Enter(
                 _rewardPresenter.AnimateWeaponIn(),
                 acquiredMessage,
                 true
             );
             yield return WaitForAdvance(); // AUTO中も表示時間を確保してから次へ進む
-            yield return ShowRewardExit(_rewardPresenter.AnimateWeaponOut(), acquiredMessage);
+            yield return _rewardFlow.Exit(_rewardPresenter.AnimateWeaponOut(), acquiredMessage);
             _rewardPresenter.HideWeapon();
             if (!string.IsNullOrWhiteSpace(acquiredMessage))
-                _readLineIds.Add(_currentLineId);
+                _sessionState.MarkCurrentLineRead();
             _rewardPresentationActive = false;
         }
 
         // ---- 内部 ----
-
-        private IEnumerator ShowRewardEntrance(
-            IEnumerator animateIn,
-            string acquiredMessage,
-            bool weapon
-        )
-        {
-            bool hasMessage = !string.IsNullOrWhiteSpace(acquiredMessage);
-            PrepareRewardMessage(hasMessage ? acquiredMessage : string.Empty, weapon);
-            Coroutine rewardEntrance = StartCoroutine(animateIn);
-            if (hasMessage)
-                yield return TypeBody(acquiredMessage);
-            yield return rewardEntrance;
-        }
-
-        private IEnumerator ShowRewardExit(IEnumerator animateOut, string acquiredMessage)
-        {
-            Coroutine textExit = !string.IsNullOrWhiteSpace(acquiredMessage)
-                ? StartCoroutine(_chromePresenter.HideLineText(0.18f))
-                : null;
-            yield return animateOut;
-            if (textExit != null)
-                yield return textExit;
-        }
-
-        private void PrepareRewardMessage(string message, bool weapon)
-        {
-            _chromePresenter.PrepareLineText(_nameText, _bodyText);
-            if (_nameText != null)
-            {
-                _nameText.text = string.Empty;
-                _nameText.gameObject.SetActive(false);
-            }
-            if (_bodyText != null)
-            {
-                _bodyText.text = string.Empty;
-                _bodyText.alignment = TextAlignmentOptions.Center;
-            }
-
-            if (string.IsNullOrWhiteSpace(message))
-                return;
-
-            _currentTypingSound = _typingSound;
-            _currentLineId = $"reward\n\n{message}";
-            _currentLineWasRead = _readLineIds.Contains(_currentLineId);
-            _chromePresenter.PlayLineTextEntrance(_nameText, _bodyText, false);
-            EnsureHistoryPanel();
-            _historyPanel?.AddRewardEntry(DialogueMarkupParser.Parse(message).Text, weapon);
-        }
 
         private IEnumerator TypeBody(string text)
         {
@@ -750,7 +601,7 @@ namespace CreativeAI.UI.ConversationUI
                 _charInterval,
                 _punctuationDelay,
                 _fastForwardMultiplier,
-                _currentLineWasRead,
+                _sessionState.CurrentLineWasRead,
                 _typingAudioSource,
                 _currentTypingSound,
                 () => _skipMode,
@@ -764,7 +615,7 @@ namespace CreativeAI.UI.ConversationUI
             _chromePresenter.StartBounce();
             yield return _advanceController.Wait(
                 _bodyText,
-                _currentLineWasRead,
+                _sessionState.CurrentLineWasRead,
                 () => allowAuto && IsAutoMode && !_windowManuallyHidden,
                 () => _skipMode,
                 () => _windowManuallyHidden || Time.unscaledTime < _advanceBlockedUntil,
@@ -783,45 +634,21 @@ namespace CreativeAI.UI.ConversationUI
             IsAutoMode = enabled;
             InitializePresenters();
             _chromePresenter.SetAutoMode(enabled);
-            SetControlButtonActive(_autoControlButton, enabled);
+            _controlsPresenter.SetAutoActive(enabled);
         }
 
         private void BindControlButtons()
         {
-            if (_controlsBound)
-                return;
-            _controlsBound = true;
-            _autoControlButton?.onClick.AddListener(() => SetAutoMode(!IsAutoMode));
-            _skipControlButton?.onClick.AddListener(() =>
-            {
-                _skipMode = !_skipMode;
-                SetControlButtonActive(_skipControlButton, _skipMode);
-            });
-            _speedControlButton?.onClick.AddListener(() =>
-                SetTextSpeed((TextSpeed)(((int)_textSpeed + 1) % 4))
+            _controlsPresenter.Bind(
+                () => SetAutoMode(!IsAutoMode),
+                () =>
+                {
+                    _skipMode = !_skipMode;
+                    _controlsPresenter.SetSkipActive(_skipMode);
+                },
+                () => SetTextSpeed((TextSpeed)(((int)_textSpeed + 1) % 4)),
+                () => SetWindowHidden(!_windowManuallyHidden)
             );
-            _hideControlButton?.onClick.AddListener(() => SetWindowHidden(!_windowManuallyHidden));
-        }
-
-        private static void SetControlButtonActive(Button button, bool active)
-        {
-            if (button == null)
-                return;
-            if (button.TryGetComponent<ConversationControlButton>(out var control))
-                control.SetActiveState(active);
-            else if (button.targetGraphic != null)
-                button.targetGraphic.color = active
-                    ? new Color(0.16f, 0.42f, 0.62f, 0.96f)
-                    : new Color(0.035f, 0.045f, 0.07f, 0.86f);
-        }
-
-        private static void PlayControlShortcut(Button button)
-        {
-            if (
-                button != null
-                && button.TryGetComponent<ConversationControlButton>(out var control)
-            )
-                control.PlayShortcutFeedback();
         }
 
         public void SetWindowHidden(bool hidden)
@@ -829,7 +656,7 @@ namespace CreativeAI.UI.ConversationUI
             _windowManuallyHidden = hidden;
             InitializePresenters();
             _chromePresenter.SetWindowHidden(hidden);
-            SetControlButtonActive(_hideControlButton, hidden);
+            _controlsPresenter.SetHideActive(hidden);
         }
 
         public void SetTextSpeed(TextSpeed speed)
@@ -837,67 +664,16 @@ namespace CreativeAI.UI.ConversationUI
             _textSpeed = speed;
             InitializePresenters();
             _chromePresenter.SetTextSpeed(speed);
-            UpdateSpeedControlLabel();
-            ShowSpeedToast();
-        }
-
-        private void UpdateSpeedControlLabel()
-        {
-            if (_speedControlLabel == null)
-                return;
-            _speedControlLabel.text = _textSpeed switch
-            {
-                TextSpeed.Slow => "SPEED x0.6",
-                TextSpeed.Fast => "SPEED x2",
-                TextSpeed.Instant => "SPEED MAX",
-                _ => "SPEED x1",
-            };
-        }
-
-        private void ShowSpeedToast()
-        {
-            if (_speedToast == null || !Application.isPlaying)
-                return;
-            if (_speedToastRoutine != null)
-                StopCoroutine(_speedToastRoutine);
-            _speedToast.text = _textSpeed switch
-            {
-                TextSpeed.Slow => "TEXT SPEED  x0.6",
-                TextSpeed.Fast => "TEXT SPEED  x2",
-                TextSpeed.Instant => "TEXT SPEED  MAX",
-                _ => "TEXT SPEED  x1",
-            };
-            _speedToastRoutine = StartCoroutine(AnimateSpeedToast());
-        }
-
-        private IEnumerator AnimateSpeedToast()
-        {
-            var group = _speedToast.GetComponent<CanvasGroup>();
-            var rect = _speedToast.rectTransform;
-            Vector2 basePosition = rect.anchoredPosition;
-            const float duration = 0.7f;
-            for (float elapsed = 0f; elapsed < duration; elapsed += Time.unscaledDeltaTime)
-            {
-                float normalized = elapsed / duration;
-                group.alpha =
-                    normalized < 0.18f
-                        ? normalized / 0.18f
-                        : 1f - Mathf.InverseLerp(0.62f, 1f, normalized);
-                rect.anchoredPosition = basePosition + Vector2.up * (7f * normalized);
-                yield return null;
-            }
-            group.alpha = 0f;
-            rect.anchoredPosition = basePosition;
-            _speedToastRoutine = null;
+            _speedPresenter.SetSpeed(speed, true);
         }
 
         public bool IsLineRead(string speaker, string portrait, string text) =>
-            _readLineIds.Contains($"{speaker}\n{portrait}\n{text}");
+            _sessionState.IsLineRead(speaker, portrait, text);
 
         public void MarkLineRead(string speaker, string portrait, string text) =>
-            _readLineIds.Add($"{speaker}\n{portrait}\n{text}");
+            _sessionState.MarkLineRead(speaker, portrait, text);
 
-        public void ClearReadHistory() => _readLineIds.Clear();
+        public void ClearReadHistory() => _sessionState.ClearReadHistory();
 
         public void SetPortraitVisible(DialoguePortraitSide side, bool visible)
         {
@@ -927,80 +703,8 @@ namespace CreativeAI.UI.ConversationUI
 
         public IEnumerator RunPresentationCommand(string command, string argument = null)
         {
-            switch (command?.Trim().ToLowerInvariant())
-            {
-                case "window.hide":
-                    SetWindowHidden(true);
-                    break;
-                case "window.show":
-                    SetWindowHidden(false);
-                    break;
-                case "portrait.left.hide":
-                    SetPortraitVisible(DialoguePortraitSide.Left, false);
-                    break;
-                case "portrait.right.hide":
-                    SetPortraitVisible(DialoguePortraitSide.Right, false);
-                    break;
-                case "portrait.left.obscure":
-                    yield return SetPortraitObscured(DialoguePortraitSide.Left, true);
-                    break;
-                case "portrait.right.obscure":
-                    yield return SetPortraitObscured(DialoguePortraitSide.Right, true);
-                    break;
-                case "portrait.left.reveal":
-                    yield return SetPortraitObscured(DialoguePortraitSide.Left, false);
-                    break;
-                case "portrait.right.reveal":
-                    yield return SetPortraitObscured(DialoguePortraitSide.Right, false);
-                    break;
-                case "portrait.left.shake":
-                    yield return PlayPortraitEffect(
-                        DialoguePortraitSide.Left,
-                        PortraitEffect.Shake
-                    );
-                    break;
-                case "portrait.right.shake":
-                    yield return PlayPortraitEffect(
-                        DialoguePortraitSide.Right,
-                        PortraitEffect.Shake
-                    );
-                    break;
-                case "portrait.left.jump":
-                    yield return PlayPortraitEffect(DialoguePortraitSide.Left, PortraitEffect.Jump);
-                    break;
-                case "portrait.right.jump":
-                    yield return PlayPortraitEffect(
-                        DialoguePortraitSide.Right,
-                        PortraitEffect.Jump
-                    );
-                    break;
-                case "wait":
-                    if (
-                        float.TryParse(
-                            argument,
-                            System.Globalization.NumberStyles.Float,
-                            System.Globalization.CultureInfo.InvariantCulture,
-                            out float seconds
-                        )
-                    )
-                        yield return new WaitForSecondsRealtime(Mathf.Clamp(seconds, 0f, 10f));
-                    break;
-                case "conversation.close":
-                    yield return HideAnimated();
-                    break;
-                default:
-                    if (
-                        command != null
-                        && (
-                            command.StartsWith("camera.", StringComparison.OrdinalIgnoreCase)
-                            || command.StartsWith("background.", StringComparison.OrdinalIgnoreCase)
-                        )
-                    )
-                        ExternalPresentationCommandRequested?.Invoke(command, argument);
-                    else
-                        Debug.LogWarning($"[ConversationView] 未対応の演出コマンドです: {command}");
-                    break;
-            }
+            InitializePresenters();
+            yield return _presentationCommandRouter.Execute(command, argument);
         }
 
         private void SetChoicesActive(bool active)
@@ -1073,8 +777,8 @@ namespace CreativeAI.UI.ConversationUI
             _skipMode = false;
             _windowManuallyHidden = false;
             _advanceBlockedUntil = 0f;
-            SetControlButtonActive(_skipControlButton, false);
-            SetControlButtonActive(_hideControlButton, false);
+            _controlsPresenter.SetSkipActive(false);
+            _controlsPresenter.SetHideActive(false);
             if (_historyPanel != null && _historyPanel.IsOpen)
                 _historyPanel.SetOpen(false);
         }

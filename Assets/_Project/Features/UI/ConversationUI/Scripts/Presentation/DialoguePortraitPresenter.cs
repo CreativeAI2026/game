@@ -95,56 +95,6 @@ namespace CreativeAI.UI.ConversationUI
             _focusDuration = focusDuration;
         }
 
-        public ResolvedPortrait Resolve(
-            string key,
-            DialogueCharacterDefinition[] characters,
-            ConversationView.PortraitEntry[] portraits,
-            Sprite defaultPortrait,
-            DialoguePortraitSide defaultSide
-        )
-        {
-            if (!string.IsNullOrEmpty(key) && characters != null)
-            {
-                foreach (var character in characters)
-                    if (
-                        character != null
-                        && character.TryResolveVisual(key, out var portrait, out var icon)
-                    )
-                        return new ResolvedPortrait(
-                            portrait,
-                            icon,
-                            character.Side,
-                            character.DisplayName,
-                            character.ThemeColor,
-                            character.TypingSound,
-                            character.PortraitOffset
-                        );
-            }
-            if (!string.IsNullOrEmpty(key) && portraits != null)
-            {
-                foreach (var entry in portraits)
-                    if (entry.Key == key && entry.Sprite != null)
-                        return new ResolvedPortrait(
-                            entry.Sprite,
-                            entry.Sprite,
-                            entry.Side,
-                            string.Empty,
-                            new Color(0.75f, 0.9f, 1f, 1f),
-                            null,
-                            Vector2.zero
-                        );
-            }
-            return new ResolvedPortrait(
-                defaultPortrait,
-                defaultPortrait,
-                defaultSide,
-                string.Empty,
-                new Color(0.75f, 0.9f, 1f, 1f),
-                null,
-                Vector2.zero
-            );
-        }
-
         public IEnumerator Set(ResolvedPortrait resolved)
         {
             if (_left == null)

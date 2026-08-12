@@ -21,6 +21,8 @@ namespace CreativeAI.UI.ConversationUI
         private float _backdropAlpha = 0.78f;
 
         private readonly List<DialogueHistoryEntry> _entries = new();
+        private readonly DialogueHistoryScrollController _scrollController = new();
+        private DialogueHistoryPanelAnimator _panelAnimator;
         private DialogueHistoryViewFactory _viewFactory;
 
         [SerializeField]
@@ -43,7 +45,6 @@ namespace CreativeAI.UI.ConversationUI
 
         [SerializeField]
         private GameObject _latestButton;
-        private Coroutine _panelAnimation;
         private bool _isOpen;
 
         [SerializeField]
@@ -99,24 +100,16 @@ namespace CreativeAI.UI.ConversationUI
             bool portraitObscured = false
         )
         {
-            bool followLatest = ShouldFollowLatest();
-            EnsureView();
-            var entry = new DialogueHistoryEntry(
-                speaker ?? string.Empty,
-                body ?? string.Empty,
-                portrait,
-                side,
-                portraitObscured,
-                _entries.Count + 1
+            AppendEntry(
+                new DialogueHistoryEntry(
+                    speaker ?? string.Empty,
+                    body ?? string.Empty,
+                    portrait,
+                    side,
+                    portraitObscured,
+                    _entries.Count + 1
+                )
             );
-            _entries.Add(entry);
-            _viewFactory.CreateEntry(_content, entry);
-            TrimOldEntries();
-            RefreshCurrentMarker();
-            if (followLatest)
-                ScrollToLatest();
-            else
-                RefreshLatestButton();
         }
 
         public void AddChoiceEntry(string choiceText)
@@ -124,34 +117,28 @@ namespace CreativeAI.UI.ConversationUI
             if (string.IsNullOrWhiteSpace(choiceText))
                 return;
 
-            bool followLatest = ShouldFollowLatest();
-            EnsureView();
-            var entry = new DialogueHistoryEntry(choiceText, _entries.Count + 1);
-            _entries.Add(entry);
-            _viewFactory.CreateEntry(_content, entry);
-            TrimOldEntries();
-            RefreshCurrentMarker();
-            if (followLatest)
-                ScrollToLatest();
-            else
-                RefreshLatestButton();
+            AppendEntry(new DialogueHistoryEntry(choiceText, _entries.Count + 1));
         }
 
         public void AddRewardEntry(string rewardText, bool weapon)
         {
             if (string.IsNullOrWhiteSpace(rewardText))
                 return;
-            bool followLatest = ShouldFollowLatest();
+            AppendEntry(new DialogueHistoryEntry(rewardText, weapon, _entries.Count + 1));
+        }
+
+        private void AppendEntry(DialogueHistoryEntry entry)
+        {
+            bool followLatest = _scrollController.ShouldFollowLatest();
             EnsureView();
-            var entry = new DialogueHistoryEntry(rewardText, weapon, _entries.Count + 1);
             _entries.Add(entry);
             _viewFactory.CreateEntry(_content, entry);
             TrimOldEntries();
             RefreshCurrentMarker();
             if (followLatest)
-                ScrollToLatest();
+                _scrollController.ScrollToLatest();
             else
-                RefreshLatestButton();
+                _scrollController.RefreshLatestButton();
         }
 
         public void AddChoiceEntry(IReadOnlyList<ChoiceOption> options, string selectedText)
@@ -191,7 +178,7 @@ namespace CreativeAI.UI.ConversationUI
                 if (!wasActive && _panelGroup != null)
                     _panelGroup.alpha = 0f;
                 _panel.transform.SetAsLastSibling();
-                ScrollToLatest();
+                _scrollController.ScrollToLatest();
                 EventSystem.current?.SetSelectedGameObject(null);
             }
 
@@ -203,9 +190,7 @@ namespace CreativeAI.UI.ConversationUI
                 return;
             }
 
-            if (_panelAnimation != null)
-                StopCoroutine(_panelAnimation);
-            _panelAnimation = StartCoroutine(AnimatePanel(open));
+            _panelAnimator.Play(open);
         }
 
         private void EnsureView()
@@ -213,6 +198,8 @@ namespace CreativeAI.UI.ConversationUI
             _viewFactory ??= new DialogueHistoryViewFactory(_font);
             if (_panel != null)
             {
+                ConfigurePanelAnimator();
+                ConfigureScrollController();
                 ApplyLayoutPolish();
                 return;
             }
@@ -224,9 +211,9 @@ namespace CreativeAI.UI.ConversationUI
                 _backdropAlpha,
                 () => SetOpen(true),
                 () => SetOpen(false),
-                ScrollToLatest,
+                _scrollController.ScrollToLatest,
                 ApplyFilter,
-                _ => RefreshLatestButton()
+                _ => _scrollController.RefreshLatestButton()
             );
             _panel = view.Panel;
             _openButton = view.OpenButton;
@@ -236,6 +223,8 @@ namespace CreativeAI.UI.ConversationUI
             _latestButton = view.LatestButton;
             _searchField = view.SearchField;
             _scrollIndicator = view.ScrollIndicator;
+            ConfigurePanelAnimator();
+            ConfigureScrollController();
             ApplyLayoutPolish();
         }
 
@@ -286,7 +275,7 @@ namespace CreativeAI.UI.ConversationUI
             )
             {
                 latestButton.onClick.RemoveAllListeners();
-                latestButton.onClick.AddListener(ScrollToLatest);
+                latestButton.onClick.AddListener(_scrollController.ScrollToLatest);
             }
             var closeTransform =
                 _panel != null ? _panel.transform.Find("ArchiveHeader/CloseButton") : null;
@@ -303,8 +292,7 @@ namespace CreativeAI.UI.ConversationUI
                 _scrollRect.onValueChanged.RemoveAllListeners();
                 _scrollRect.onValueChanged.AddListener(_ =>
                 {
-                    RefreshLatestButton();
-                    RefreshScrollIndicator();
+                    _scrollController.Refresh();
                 });
             }
             if (_searchField != null)
@@ -314,54 +302,18 @@ namespace CreativeAI.UI.ConversationUI
             }
         }
 
-        private System.Collections.IEnumerator AnimatePanel(bool opening)
-        {
-            float start = _panelGroup != null ? _panelGroup.alpha : (opening ? 0f : 1f);
-            float target = opening ? 1f : 0f;
-            float elapsed = 0f;
-            const float duration = 0.18f;
-            while (elapsed < duration)
-            {
-                float t = Mathf.SmoothStep(0f, 1f, elapsed / duration);
-                if (_panelGroup != null)
-                    _panelGroup.alpha = Mathf.Lerp(start, target, t);
-                elapsed += Mathf.Max(Time.unscaledDeltaTime, 1f / 60f);
-                yield return null;
-            }
-            if (_panelGroup != null)
-                _panelGroup.alpha = target;
-            if (!opening)
-            {
-                _panel.SetActive(false);
-                Closed?.Invoke();
-            }
-            _panelAnimation = null;
-        }
-
-        private void RefreshLatestButton()
-        {
-            if (_latestButton != null)
-                _latestButton.SetActive(IsOpen && _scrollRect.verticalNormalizedPosition > 0.03f);
-        }
-
-        private bool ShouldFollowLatest() =>
-            !IsOpen || _scrollRect == null || _scrollRect.verticalNormalizedPosition <= 0.03f;
-
         public void ApplyFilter(string query)
         {
             query = query?.Trim() ?? string.Empty;
             for (int i = 0; i < _entries.Count && i < _content.childCount; i++)
             {
                 var entry = _entries[i];
-                bool visible =
-                    query.Length == 0
-                    || entry.Speaker.Contains(query, System.StringComparison.OrdinalIgnoreCase)
-                    || entry.Body.Contains(query, System.StringComparison.OrdinalIgnoreCase);
+                bool visible = DialogueHistorySearch.Matches(entry, query);
                 _content.GetChild(i).gameObject.SetActive(visible);
                 ApplyEntryHighlight(_content.GetChild(i), entry, query);
             }
             LayoutRebuilder.ForceRebuildLayoutImmediate(_content);
-            RefreshScrollIndicator();
+            _scrollController.Refresh();
         }
 
         private static void ApplyEntryHighlight(
@@ -374,32 +326,19 @@ namespace CreativeAI.UI.ConversationUI
             if (choiceToggle != null)
             {
                 choiceToggle.SetSearchText(
-                    string.IsNullOrEmpty(query) ? null : Highlight(entry.Body, query)
+                    string.IsNullOrEmpty(query)
+                        ? null
+                        : DialogueHistorySearch.Highlight(entry.Body, query)
                 );
                 return;
             }
             foreach (var text in container.GetComponentsInChildren<TMP_Text>(true))
             {
                 if (text.name == "Name")
-                    text.text = Highlight(entry.Speaker, query);
+                    text.text = DialogueHistorySearch.Highlight(entry.Speaker, query);
                 else if (text.name is "Body" or "ChoiceText")
-                    text.text = Highlight(entry.Body, query);
+                    text.text = DialogueHistorySearch.Highlight(entry.Body, query);
             }
-        }
-
-        private static string Highlight(string source, string query)
-        {
-            source ??= string.Empty;
-            if (string.IsNullOrEmpty(query))
-                return source;
-            int index = source.IndexOf(query, System.StringComparison.OrdinalIgnoreCase);
-            if (index < 0)
-                return source;
-            return source.Substring(0, index)
-                + "<mark=#3A84A880>"
-                + source.Substring(index, query.Length)
-                + "</mark>"
-                + source.Substring(index + query.Length);
         }
 
         private void RefreshCurrentMarker()
@@ -430,30 +369,21 @@ namespace CreativeAI.UI.ConversationUI
             }
         }
 
-        private void ScrollToLatest()
+        private void ConfigureScrollController()
         {
-            if (_scrollRect == null)
-                return;
-            Canvas.ForceUpdateCanvases();
-            LayoutRebuilder.ForceRebuildLayoutImmediate(_content);
-            _scrollRect.verticalNormalizedPosition = 0f;
-            RefreshLatestButton();
-            RefreshScrollIndicator();
+            _scrollController.Configure(
+                _scrollRect,
+                _content,
+                _latestButton,
+                _scrollIndicator,
+                () => IsOpen
+            );
         }
 
-        private void RefreshScrollIndicator()
+        private void ConfigurePanelAnimator()
         {
-            if (_scrollIndicator == null || _scrollRect == null || _content == null)
-                return;
-            float viewportHeight = Mathf.Max(1f, _scrollRect.viewport.rect.height);
-            float contentHeight = Mathf.Max(viewportHeight, _content.rect.height);
-            float size = Mathf.Clamp(viewportHeight / contentHeight, 0.08f, 1f);
-            float start = (1f - size) * _scrollRect.verticalNormalizedPosition;
-            var rect = _scrollIndicator.rectTransform;
-            rect.anchorMin = new Vector2(0f, start);
-            rect.anchorMax = new Vector2(1f, start + size);
-            rect.offsetMin = rect.offsetMax = Vector2.zero;
-            _scrollIndicator.gameObject.SetActive(size < 0.995f);
+            _panelAnimator ??= new DialogueHistoryPanelAnimator(this);
+            _panelAnimator.Configure(_panel, _panelGroup, () => Closed?.Invoke());
         }
     }
 }
