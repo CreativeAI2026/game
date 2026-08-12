@@ -24,7 +24,11 @@ namespace CreativeAI.Tests.PlayMode
         [SetUp]
         public void SetUp()
         {
-            _viewGo = new GameObject("ConversationView", typeof(RectTransform));
+            _viewGo = new GameObject(
+                "ConversationView",
+                typeof(RectTransform),
+                typeof(CanvasGroup)
+            );
 
             var nameGo = new GameObject("Name", typeof(RectTransform));
             nameGo.transform.SetParent(_viewGo.transform);
@@ -48,6 +52,8 @@ namespace CreativeAI.Tests.PlayMode
             templateGo.SetActive(false);
 
             _view = _viewGo.AddComponent<ConversationView>();
+            SetPrivate(_view, "_root", _viewGo.GetComponent<CanvasGroup>());
+            SetPrivate(_view, "_windowRoot", _viewGo.GetComponent<RectTransform>());
             SetPrivate(_view, "_nameText", nameText);
             SetPrivate(_view, "_bodyText", bodyText);
             SetPrivate(_view, "_choiceButtonTemplate", template);
@@ -81,10 +87,40 @@ namespace CreativeAI.Tests.PlayMode
         private List<GameObject> Spawned =>
             GetPrivate<List<GameObject>>(GetPrivate<object>(_view, "_choicePresenter"), "_spawned");
 
-        private void AdvanceUntilChoicesSpawned(IEnumerator routine)
+        private void AdvanceUntilChoicesSpawned(NestedCoroutineDriver routine)
         {
             for (int i = 0; i < 10 && Spawned.Count == 0; i++)
                 Assert.IsTrue(routine.MoveNext(), "選択肢が生成される前にコルーチンが終了した");
+        }
+
+        private sealed class NestedCoroutineDriver
+        {
+            private readonly Stack<IEnumerator> _stack = new();
+
+            public NestedCoroutineDriver(IEnumerator routine) => _stack.Push(routine);
+
+            public bool MoveNext()
+            {
+                while (_stack.Count > 0)
+                {
+                    var current = _stack.Peek();
+                    if (!current.MoveNext())
+                    {
+                        _stack.Pop();
+                        continue;
+                    }
+
+                    if (current.Current is IEnumerator nested)
+                    {
+                        _stack.Push(nested);
+                        continue;
+                    }
+
+                    return true;
+                }
+
+                return false;
+            }
         }
 
         private static List<ChoiceOption> TwoOptions() =>
@@ -98,7 +134,9 @@ namespace CreativeAI.Tests.PlayMode
         public IEnumerator ShowChoice_ClickingAnOption_ReturnsItsValueAndCleansUp()
         {
             string picked = null;
-            var routine = _view.ShowChoice(TwoOptions(), v => picked = v);
+            var routine = new NestedCoroutineDriver(
+                _view.ShowChoice(TwoOptions(), v => picked = v)
+            );
             AdvanceUntilChoicesSpawned(routine);
             Assert.AreEqual(2, Spawned.Count);
 
@@ -114,7 +152,9 @@ namespace CreativeAI.Tests.PlayMode
         public IEnumerator ShowChoice_FirstOption_ReturnsItsValue()
         {
             string picked = null;
-            var routine = _view.ShowChoice(TwoOptions(), v => picked = v);
+            var routine = new NestedCoroutineDriver(
+                _view.ShowChoice(TwoOptions(), v => picked = v)
+            );
             AdvanceUntilChoicesSpawned(routine);
 
             Spawned[0].GetComponent<Button>().onClick.Invoke();
@@ -128,7 +168,9 @@ namespace CreativeAI.Tests.PlayMode
         public IEnumerator ShowChoice_WaitsUntilSomethingIsPicked()
         {
             bool called = false;
-            var routine = _view.ShowChoice(TwoOptions(), _ => called = true);
+            var routine = new NestedCoroutineDriver(
+                _view.ShowChoice(TwoOptions(), _ => called = true)
+            );
 
             for (int i = 0; i < 5; i++)
             {
