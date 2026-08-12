@@ -29,6 +29,7 @@ namespace CreativeAI.Tests.PlayMode
                 typeof(RectTransform),
                 typeof(CanvasGroup)
             );
+            _viewGo.SetActive(false);
 
             var nameGo = new GameObject("Name", typeof(RectTransform));
             nameGo.transform.SetParent(_viewGo.transform);
@@ -59,6 +60,7 @@ namespace CreativeAI.Tests.PlayMode
             SetPrivate(_view, "_choiceButtonTemplate", template);
             SetPrivate(_view, "_choiceContainer", _choiceContainer);
             SetPrivate(_view, "_charInterval", 0f);
+            _viewGo.SetActive(true);
         }
 
         [UnityTearDown]
