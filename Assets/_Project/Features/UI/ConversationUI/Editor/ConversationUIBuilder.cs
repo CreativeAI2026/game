@@ -29,53 +29,17 @@ namespace CreativeAI.UI.ConversationUI.Editor
             "Assets/_Project/Art/UI/Items/Food/PreCraft/item_food_apple.png";
         private const string WeaponPreviewPrefab = "Assets/_Project/Art/Models/Weapons/Katana.glb";
         private const string CharacterArtPath = ConversationArtPath + "Character/";
-        private static readonly (string Key, string Path, DialoguePortraitSide Side)[] Portraits =
+        private static readonly string[] PortraitPaths =
         {
-            (
-                "protagonist_normal",
-                CharacterArtPath + "Protagonist/Portraits/Protagonist_Normal.png",
-                DialoguePortraitSide.Left
-            ),
-            (
-                "robot_normal",
-                CharacterArtPath + "Robot/Portraits/Robot_Normal.png",
-                DialoguePortraitSide.Right
-            ),
-            (
-                "fragile_girl_normal",
-                CharacterArtPath + "FragileGirl/Portraits/FragileGirl_Normal.png",
-                DialoguePortraitSide.Right
-            ),
-            (
-                "fragile_girl_worried_smile",
-                CharacterArtPath + "FragileGirl/Portraits/FragileGirl_WorriedSmile.png",
-                DialoguePortraitSide.Right
-            ),
-            (
-                "fragile_girl_frightened",
-                CharacterArtPath + "FragileGirl/Portraits/FragileGirl_Frightened.png",
-                DialoguePortraitSide.Right
-            ),
-            (
-                "fragile_girl_smile",
-                CharacterArtPath + "FragileGirl/Portraits/FragileGirl_Smile.png",
-                DialoguePortraitSide.Right
-            ),
-            (
-                "fragile_girl_determined",
-                CharacterArtPath + "FragileGirl/Portraits/FragileGirl_Determined.png",
-                DialoguePortraitSide.Right
-            ),
-            (
-                "fragile_girl_surprised",
-                CharacterArtPath + "FragileGirl/Portraits/FragileGirl_Surprised.png",
-                DialoguePortraitSide.Right
-            ),
-            (
-                "gramophone_normal",
-                CharacterArtPath + "Gramophone/Portraits/Gramophone_Normal.png",
-                DialoguePortraitSide.Right
-            ),
+            CharacterArtPath + "Protagonist/Portraits/Protagonist_Normal.png",
+            CharacterArtPath + "Robot/Portraits/Robot_Normal.png",
+            CharacterArtPath + "FragileGirl/Portraits/FragileGirl_Normal.png",
+            CharacterArtPath + "FragileGirl/Portraits/FragileGirl_WorriedSmile.png",
+            CharacterArtPath + "FragileGirl/Portraits/FragileGirl_Frightened.png",
+            CharacterArtPath + "FragileGirl/Portraits/FragileGirl_Smile.png",
+            CharacterArtPath + "FragileGirl/Portraits/FragileGirl_Determined.png",
+            CharacterArtPath + "FragileGirl/Portraits/FragileGirl_Surprised.png",
+            CharacterArtPath + "Gramophone/Portraits/Gramophone_Normal.png",
         };
         private const string FontPath =
             "Assets/_Project/Art/UI/Fonts/NotoSansJP-VariableFont_wght SDF.asset";
@@ -97,10 +61,10 @@ namespace CreativeAI.UI.ConversationUI.Editor
             ConversationSpriteImporter.ImportAsSprite(ContinueButtonPng);
             ConversationSpriteImporter.ImportAsSprite(ChoiceButtonPng);
             ConversationSpriteImporter.ImportAsSprite(ItemPreviewPng);
-            foreach (var portrait in Portraits)
+            foreach (var portraitPath in PortraitPaths)
             {
-                ConversationSpriteImporter.ImportAsSprite(portrait.Path);
-                ConversationSpriteImporter.ImportAsSprite(GetIconPath(portrait.Path));
+                ConversationSpriteImporter.ImportAsSprite(portraitPath);
+                ConversationSpriteImporter.ImportAsSprite(GetIconPath(portraitPath));
             }
             AssetDatabase.SaveAssets();
             AssetDatabase.Refresh();
@@ -122,10 +86,7 @@ namespace CreativeAI.UI.ConversationUI.Editor
             var windowSprite = AssetDatabase.LoadAssetAtPath<Sprite>(WindowPng);
             var continueButtonSprite = AssetDatabase.LoadAssetAtPath<Sprite>(ContinueButtonPng);
             var choiceButtonSprite = AssetDatabase.LoadAssetAtPath<Sprite>(ChoiceButtonPng);
-            var portraitSprites = new Sprite[Portraits.Length];
-            for (int i = 0; i < Portraits.Length; i++)
-                portraitSprites[i] = AssetDatabase.LoadAssetAtPath<Sprite>(Portraits[i].Path);
-            var portraitSprite = portraitSprites[0];
+            var portraitSprite = AssetDatabase.LoadAssetAtPath<Sprite>(PortraitPaths[0]);
 
             // --- ルート(Canvas + 常駐コンポーネント) ---
             var root = new GameObject(
@@ -518,15 +479,6 @@ namespace CreativeAI.UI.ConversationUI.Editor
                     );
             }
 
-            var portraits = so.FindProperty("_portraits");
-            portraits.arraySize = Portraits.Length;
-            for (int i = 0; i < Portraits.Length; i++)
-            {
-                var entry = portraits.GetArrayElementAtIndex(i);
-                entry.FindPropertyRelative("Key").stringValue = Portraits[i].Key;
-                entry.FindPropertyRelative("Sprite").objectReferenceValue = portraitSprites[i];
-                entry.FindPropertyRelative("Side").enumValueIndex = (int)Portraits[i].Side;
-            }
             so.ApplyModifiedPropertiesWithoutUndo();
 
             root.GetComponent<DialogueHistoryPanel>().BuildPrefabView(font);

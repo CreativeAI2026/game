@@ -14,7 +14,6 @@ namespace CreativeAI.UI.ConversationUI
         private readonly TMP_Text _nameText;
         private readonly TMP_Text _bodyText;
         private readonly DialogueCharacterDefinition[] _characters;
-        private readonly ConversationView.PortraitEntry[] _legacyPortraits;
         private readonly Sprite _defaultPortrait;
         private readonly DialoguePortraitSide _defaultSide;
         private readonly AudioClip _defaultTypingSound;
@@ -27,7 +26,6 @@ namespace CreativeAI.UI.ConversationUI
             TMP_Text nameText,
             TMP_Text bodyText,
             DialogueCharacterDefinition[] characters,
-            ConversationView.PortraitEntry[] legacyPortraits,
             Sprite defaultPortrait,
             DialoguePortraitSide defaultSide,
             AudioClip defaultTypingSound,
@@ -40,7 +38,6 @@ namespace CreativeAI.UI.ConversationUI
             _nameText = nameText;
             _bodyText = bodyText;
             _characters = characters;
-            _legacyPortraits = legacyPortraits;
             _defaultPortrait = defaultPortrait;
             _defaultSide = defaultSide;
             _defaultTypingSound = defaultTypingSound;
@@ -67,7 +64,6 @@ namespace CreativeAI.UI.ConversationUI
                 : DialoguePortraitResolver.Resolve(
                     portrait,
                     _characters,
-                    _legacyPortraits,
                     _defaultPortrait,
                     _defaultSide
                 );

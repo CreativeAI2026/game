@@ -50,15 +50,6 @@ namespace CreativeAI.UI.ConversationUI
         public ConversationState State { get; private set; } = ConversationState.Hidden;
         public bool IsAutoMode { get; private set; }
 
-        /// <summary>portrait キー → 立ち絵スプライトの対応。未登録キーは <see cref="_defaultPortrait"/> にフォールバック。</summary>
-        [Serializable]
-        public struct PortraitEntry
-        {
-            public string Key;
-            public Sprite Sprite;
-            public DialoguePortraitSide Side;
-        }
-
         [Header("ルート表示")]
         [SerializeField]
         private CanvasGroup _root; // ウィンドウ全体の表示/非表示。非会話時は alpha=0
@@ -192,9 +183,6 @@ namespace CreativeAI.UI.ConversationUI
         [SerializeField]
         private DialogueCharacterDefinition[] _characters =
             Array.Empty<DialogueCharacterDefinition>();
-
-        [SerializeField]
-        private PortraitEntry[] _portraits = Array.Empty<PortraitEntry>();
 
         [Header("アイテム受け取り表示")]
         [SerializeField]
@@ -368,7 +356,6 @@ namespace CreativeAI.UI.ConversationUI
                 _nameText,
                 _bodyText,
                 _characters,
-                _portraits,
                 _defaultPortrait,
                 _defaultPortraitSide,
                 _typingSound,

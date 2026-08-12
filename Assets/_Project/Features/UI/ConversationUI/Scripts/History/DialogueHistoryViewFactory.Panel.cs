@@ -30,7 +30,7 @@ namespace CreativeAI.UI.ConversationUI
             var panel = CreateRect("DialogueHistoryPanel", root);
             Stretch(panel.GetComponent<RectTransform>());
             var backdrop = panel.AddComponent<Image>();
-            backdrop.color = new Color(0.01f, 0.014f, 0.024f, 1f);
+            backdrop.color = new Color(0.01f, 0.014f, 0.024f, backdropAlpha);
             backdrop.raycastTarget = true;
             var panelGroup = panel.AddComponent<CanvasGroup>();
 

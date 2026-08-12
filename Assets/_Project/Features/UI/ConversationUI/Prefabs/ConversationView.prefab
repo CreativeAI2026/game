@@ -1091,7 +1091,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: UnityEngine.UI::UnityEngine.UI.Image
   m_Material: {fileID: 0}
-  m_Color: {r: 0.01, g: 0.014, b: 0.024, a: 1}
+  m_Color: {r: 0.01, g: 0.014, b: 0.024, a: 0.78}
   m_RaycastTarget: 1
   m_RaycastPadding: {x: 0, y: 0, z: 0, w: 0}
   m_Maskable: 1
@@ -4045,34 +4045,6 @@ MonoBehaviour:
   - {fileID: 11400000, guid: 2e0c5039e122438d90c8df0413ee129a, type: 2}
   - {fileID: 11400000, guid: 9b96915abedb4f64a30b6fb537c6350e, type: 2}
   - {fileID: 11400000, guid: 93a2c3ad435f47eebda0ce0df6421d30, type: 2}
-  _portraits:
-  - Key: protagonist_normal
-    Sprite: {fileID: 21300000, guid: ff43a2005de176c4bb05dba7542a4003, type: 3}
-    Side: 0
-  - Key: robot_normal
-    Sprite: {fileID: 21300000, guid: 62f4360e0d8ceb24381ca11609dc0ab1, type: 3}
-    Side: 1
-  - Key: fragile_girl_normal
-    Sprite: {fileID: 21300000, guid: 161206e764b711944b593d7adbd93523, type: 3}
-    Side: 1
-  - Key: fragile_girl_worried_smile
-    Sprite: {fileID: 21300000, guid: 8f3d1ce15ab9ae64f999d9509c271fbe, type: 3}
-    Side: 1
-  - Key: fragile_girl_frightened
-    Sprite: {fileID: 21300000, guid: 429ffa16043ee1c46addb17029334d6b, type: 3}
-    Side: 1
-  - Key: fragile_girl_smile
-    Sprite: {fileID: 21300000, guid: ac7e4b77b47dc754893a87896b06bc95, type: 3}
-    Side: 1
-  - Key: fragile_girl_determined
-    Sprite: {fileID: 21300000, guid: 6e3dd75a0f8cdc94ca101f0ae141a3ad, type: 3}
-    Side: 1
-  - Key: fragile_girl_surprised
-    Sprite: {fileID: 21300000, guid: 524a5ebcfcea6cf448dee00a10893d2a, type: 3}
-    Side: 1
-  - Key: gramophone_normal
-    Sprite: {fileID: 21300000, guid: 0247803260f8cd844ad0ee8e000f24fd, type: 3}
-    Side: 1
   _itemGetSprite: {fileID: 21300000, guid: 444e96c3eb88f41788b965b228e9cc8e, type: 3}
   _itemGetSize: {x: 256, y: 256}
   _itemGetPosition: {x: 0, y: 220}

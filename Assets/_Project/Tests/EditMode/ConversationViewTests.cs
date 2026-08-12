@@ -135,12 +135,26 @@ namespace CreativeAI.Tests.EditMode
             return sprite;
         }
 
-        private void SetPortraitCatalog(params (string key, Sprite sprite)[] entries)
+        private void SetPortraitCatalog(
+            DialoguePortraitSide side = DialoguePortraitSide.Left,
+            params (string key, Sprite sprite)[] entries
+        )
         {
-            var list = new List<ConversationView.PortraitEntry>();
+            var definition = ScriptableObject.CreateInstance<DialogueCharacterDefinition>();
+            var expressions = new List<DialogueCharacterDefinition.Expression>();
             foreach (var (key, sprite) in entries)
-                list.Add(new ConversationView.PortraitEntry { Key = key, Sprite = sprite });
-            TestReflection.SetField(_view, "_portraits", list.ToArray());
+                expressions.Add(
+                    new DialogueCharacterDefinition.Expression
+                    {
+                        PortraitKey = key,
+                        Sprite = sprite,
+                        Icon = sprite,
+                    }
+                );
+            TestReflection.SetField(definition, "_side", side);
+            TestReflection.SetField(definition, "_expressions", expressions.ToArray());
+            TestReflection.SetField(_view, "_characters", new[] { definition });
+            _assets.Add(definition);
         }
 
         [Test]
@@ -166,7 +180,7 @@ namespace CreativeAI.Tests.EditMode
         {
             var hero = MakeSprite();
             var girl = MakeSprite();
-            SetPortraitCatalog(("hero_normal", hero), ("girl_fear", girl));
+            SetPortraitCatalog(entries: new[] { ("hero_normal", hero), ("girl_fear", girl) });
 
             Drive(_view.ShowLine("はかなげ少女", "girl_fear", "来ないで……っ"));
 
@@ -177,7 +191,7 @@ namespace CreativeAI.Tests.EditMode
         [Test]
         public void ShowLine_UnknownPortraitKey_HidesThePortraitInsteadOfThrowing()
         {
-            SetPortraitCatalog(("hero_normal", MakeSprite()));
+            SetPortraitCatalog(entries: new[] { ("hero_normal", MakeSprite()) });
 
             Assert.DoesNotThrow(() => Drive(_view.ShowLine("主人公", "hero_smirk", "…")));
 
@@ -187,7 +201,7 @@ namespace CreativeAI.Tests.EditMode
         [Test]
         public void ShowLine_EmptyPortraitKey_HidesThePortrait()
         {
-            SetPortraitCatalog(("hero_normal", MakeSprite()));
+            SetPortraitCatalog(entries: new[] { ("hero_normal", MakeSprite()) });
 
             Drive(_view.ShowLine("ナレーション", "", "……"));
 
@@ -199,24 +213,20 @@ namespace CreativeAI.Tests.EditMode
         {
             var protagonist = MakeSprite();
             var otherCharacter = MakeSprite();
+            SetPortraitCatalog(DialoguePortraitSide.Left, ("protagonist", protagonist));
+            var protagonistDefinition = TestReflection.GetField<DialogueCharacterDefinition[]>(
+                _view,
+                "_characters"
+            )[0];
+            SetPortraitCatalog(DialoguePortraitSide.Right, ("other", otherCharacter));
+            var otherDefinition = TestReflection.GetField<DialogueCharacterDefinition[]>(
+                _view,
+                "_characters"
+            )[0];
             TestReflection.SetField(
                 _view,
-                "_portraits",
-                new[]
-                {
-                    new ConversationView.PortraitEntry
-                    {
-                        Key = "protagonist",
-                        Sprite = protagonist,
-                        Side = DialoguePortraitSide.Left,
-                    },
-                    new ConversationView.PortraitEntry
-                    {
-                        Key = "other",
-                        Sprite = otherCharacter,
-                        Side = DialoguePortraitSide.Right,
-                    },
-                }
+                "_characters",
+                new[] { protagonistDefinition, otherDefinition }
             );
 
             Drive(_view.ShowLine("主人公", "protagonist", "左側"));
@@ -242,7 +252,7 @@ namespace CreativeAI.Tests.EditMode
         public void SetPortraitObscured_PersistsUntilReveal()
         {
             var sprite = MakeSprite();
-            SetPortraitCatalog(("mystery", sprite));
+            SetPortraitCatalog(entries: new[] { ("mystery", sprite) });
             Drive(_view.ShowLine("？？？", "mystery", "……"));
 
             Drive(_view.SetPortraitObscured(DialoguePortraitSide.Left, true, 0.01f));
