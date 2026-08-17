@@ -2,7 +2,11 @@ using UnityEngine;
 
 namespace CreativeAI.Gameplay
 {
-    // プレイヤーが「どの敵を認識しているか」を一元管理するクラス
+    /// <summary>
+    /// プレイヤー周囲の最も近い敵を毎フレーム検出し、一元管理する。
+    /// HeadLookControllerなど複数のシステムが同じターゲットを参照できるよう、
+    /// 索敵ロジックをここに集約している。
+    /// </summary>
     public class PlayerTargetManager : MonoBehaviour
     {
         [Header("設定")]
@@ -15,7 +19,6 @@ namespace CreativeAI.Gameplay
 
         private void Update()
         {
-            // 常に最も近い敵を検索して更新する（パフォーマンスが気になる場合は数フレームに1回に間引いてもOKです）
             FindNearestEnemy();
         }
 

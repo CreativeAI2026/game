@@ -2,6 +2,10 @@ using UnityEngine;
 
 namespace CreativeAI.Gameplay
 {
+    /// <summary>
+    /// 敵種別のバリエーションを定義するための具象クラス。
+    /// 固有の索敵ロジックやインスペクター公開パラメータを管理し、AIの個性を決定づける。
+    /// </summary>
     public class TestEnemyController : EnemyBaseController
     {
         [Header("移動設定")]
@@ -39,6 +43,30 @@ namespace CreativeAI.Gameplay
         [Range(0f, 1f)]
         private float backStepChance = 0.5f;
 
+        [Header("針攻撃設定")]
+        [SerializeField]
+        public GameObject needlePrefab;
+
+        [SerializeField]
+        private float needleAttackDistance = 10f;
+
+        [SerializeField]
+        private float needleAttackCooldown = 15f;
+
+        [SerializeField]
+        private int needleCount = 5;
+
+        [SerializeField]
+        private int needleDamage = 50;
+
+        public float NeedleAttackDistance => needleAttackDistance;
+        public float NeedleAttackCooldown => needleAttackCooldown;
+        public int NeedleCount => needleCount;
+        public int NeedleDamage => needleDamage;
+
+        [HideInInspector]
+        public float NeedleAttackTimer;
+
         [Header("検知設定")]
         [SerializeField]
         private float viewDistance = 10f;
@@ -48,6 +76,7 @@ namespace CreativeAI.Gameplay
 
         [SerializeField]
         private LayerMask obstacleLayer;
+        public LayerMask ObstacleLayer => obstacleLayer;
 
         public float ChaseSpeed => chaseSpeed;
 
@@ -80,12 +109,31 @@ namespace CreativeAI.Gameplay
             ChangeState(new TestEnemyIdleState(this));
         }
 
+        protected override void OnEnable()
+        {
+            base.OnEnable();
+        }
+
+        protected override void OnDisable()
+        {
+            base.OnDisable();
+        }
+
         protected override void Update()
         {
             base.Update();
             UpdateAnimatorParameters();
+
+            if (NeedleAttackTimer > 0)
+            {
+                NeedleAttackTimer -= Time.deltaTime;
+            }
         }
 
+        /// <summary>
+        /// アニメーターのブレンドツリーがキャラクター基準の相対的な移動方向を要求するため、
+        /// NavMeshAgentのワールド速度をローカル座標系に変換して適用する。
+        /// </summary>
         private void UpdateAnimatorParameters()
         {
             if (Animator == null || Agent == null)
@@ -93,13 +141,14 @@ namespace CreativeAI.Gameplay
                 return;
             }
 
-            // エージェントの速度をローカル座標に変換して Animator に渡す
             Vector3 localVelocity = transform.InverseTransformDirection(Agent.velocity);
             Animator.SetFloat("VelocityX", localVelocity.x);
             Animator.SetFloat("VelocityZ", localVelocity.z);
         }
 
-        // プレイヤーの発見ロジック。インスペクターで設定した視界内に入るとtrueを返す
+        /// <summary>
+        /// 壁越しの透視や背後の不自然な感知を防ぎ、プレイヤーのステルス行動を成立させるための視界判定。
+        /// </summary>
         public bool CheckInSight()
         {
             if (Player == null)
@@ -107,7 +156,6 @@ namespace CreativeAI.Gameplay
                 return false;
             }
 
-            // 距離のチェック
             float distanceToPlayer = Vector3.Distance(
                 transform.position,
                 Player.transform.position
@@ -117,21 +165,18 @@ namespace CreativeAI.Gameplay
                 return false;
             }
 
-            // 角度（視野角）のチェック
             Vector3 directionToPlayer = (Player.transform.position - transform.position).normalized;
             float angle = Vector3.Angle(transform.forward, directionToPlayer);
             if (angle > viewAngle)
             {
-                return false; // 視野角より外なら見えない
+                return false;
             }
 
-            // Raycastによる遮蔽物（壁）のチェック
-            // お互いの足元ではなく、カプセルの中心（高さ1m付近）からレイを飛ばす
+            // 地面付近から撃つと地形に遮られるため、キャラクターの胸の高さ（約1m）からレイを飛ばす
             Vector3 rayStart = transform.position + Vector3.up * 1f;
             Vector3 rayTarget = Player.transform.position + Vector3.up * 1f;
             Vector3 rayDirection = rayTarget - rayStart;
 
-            // プレイヤーまでの距離を上限にしてRaycastを飛ばす
             if (
                 Physics.Raycast(
                     rayStart,
@@ -142,11 +187,9 @@ namespace CreativeAI.Gameplay
                 )
             )
             {
-                // もしプレイヤーに届く前に「Obstacleレイヤー」の壁に当たったら、隠れていると判断
                 return false;
             }
 
-            // 壁に当たらずに視界が通っていれば発見！
             return true;
         }
 
@@ -161,13 +204,19 @@ namespace CreativeAI.Gameplay
         {
             base.ForceAlert();
 
-            // 未発見状態（Idle）のときに攻撃を受けたら追跡ステートへ
+            // 既に発見済みの場合はステート遷移しない（現在の行動を中断させないため）
             if (!IsAlerted)
             {
                 IsAlerted = true;
                 Debug.Log("攻撃を受けた！ 発見状態になります。");
                 ChangeState(new TestEnemyChaseState(this));
             }
+        }
+
+        public override void ForceDeath()
+        {
+            base.ForceDeath();
+            ChangeState(new TestEnemyDeathState(this));
         }
 
         private void OnDrawGizmosSelected()

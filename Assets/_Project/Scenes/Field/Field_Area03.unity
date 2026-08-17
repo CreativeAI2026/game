@@ -43429,10 +43429,12 @@ MonoBehaviour:
   m_GameObject: {fileID: 537978971}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 744a93f27617a45a9981f813fe7add7e, type: 3}
+  m_Script: {fileID: 11500000, guid: aed8956f75c44af08a2b05cf6e728772, type: 3}
   m_Name: 
-  m_EditorClassIdentifier: CreativeAI.UI::CreativeAI.UI.Common.UIPanelStub
+  m_EditorClassIdentifier: CreativeAI.UI::CreativeAI.UI.InventoryUI.InventoryPanelController
   _closeButton: {fileID: 359374730}
+  _inventory: {fileID: 0}
+  _itemUseDialogPanel: {fileID: 0}
 --- !u!114 &537978974
 MonoBehaviour:
   m_ObjectHideFlags: 0

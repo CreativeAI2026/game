@@ -14,14 +14,14 @@ MonoBehaviour:
   m_EditorClassIdentifier: CreativeAI.Gameplay::CreativeAI.Gameplay.EquipmentData
   icon: {fileID: 21300000, guid: e246387537dcfa140becd430188a93ac, type: 3}
   id: 2003
-  itemName: "マイク"
+  key: microphone
+  itemName: "\u30DE\u30A4\u30AF"
   category: 1
-  description: "声に力を乗せる小さなマイク。\n勝負どころで気持ちを奮い立たせる。"
   effect: "効果   会心率 +5%"
+  description:
+  _maxStack: 1
   attack: 0
   defense: 0
-  moveSpeed: 0
-  attackSpeed: 0
   criticalDamage: 0
-  criticalRate: 0.05
+  criticalRate: 5
   maxHP: 0

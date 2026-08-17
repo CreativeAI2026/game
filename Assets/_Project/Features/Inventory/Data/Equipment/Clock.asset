@@ -14,14 +14,14 @@ MonoBehaviour:
   m_EditorClassIdentifier: CreativeAI.Gameplay::CreativeAI.Gameplay.EquipmentData
   icon: {fileID: 21300000, guid: 5fdccfaa7a48b4c718541844851a1cf1, type: 3}
   id: 2002
+  key: clock
   itemName: "\u61D0\u4E2D\u6642\u8A08"
   category: 1
-  description: "\u91D1\u8272\u306E\u7E01\u306B\u53E4\u3073\u305F\u30ED\u30FC\u30DE\u6570\u5B57\u3002\\n\u6642\u306E\u6D41\u308C\u3092\u6B63\u78BA\u306B\u523B\u307F\u3001\u6301\u3064\u8005\u306B\u51B7\u9759\u3055\u3092\u4E0E\u3048\u308B\u3002"
-  effect: "\u52B9\u679C   \u653B\u6483\u901F\u5EA6 +5%"
-  attack: 0
+  effect: "効果   攻撃力 +10%"
+  description:
+  _maxStack: 1
+  attack: 10
   defense: 0
-  moveSpeed: 0
-  attackSpeed: 0.05
   criticalDamage: 0
   criticalRate: 0
   maxHP: 0

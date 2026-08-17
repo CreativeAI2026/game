@@ -14,14 +14,14 @@ MonoBehaviour:
   m_EditorClassIdentifier: CreativeAI.Gameplay::CreativeAI.Gameplay.FoodData
   icon: {fileID: 21300000, guid: 0589d4bcaf69ace4cbf94180842083b1, type: 3}
   id: 3003
+  key: grapes
   itemName: "\u3076\u3069\u3046"
   category: 2
-  description: "\u5C0F\u7C92\u3067\u307F\u305A\u307F\u305A\u3057\u3044\u7D2B\u306E\u679C\u5B9F\u3002\n\u7518\u9178\u3063\u3071\u3055\u304C\u53E3\u3044\u3063\u3071\u3044\u306B\u5E83\u304C\u308B\u3002"
-  effect: "\u52B9\u679C\u3000HP \u3092 45 \u56DE\u5FA9"
+  description:
+  effect: "効果　最大HPの20%を回復"
+  _maxStack: 99
   attack: 0
   defense: 0
-  moveSpeed: 0
-  attackSpeed: 0
   criticalDamage: 0
   criticalRate: 0
   healAmount: 45

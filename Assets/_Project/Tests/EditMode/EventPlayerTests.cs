@@ -55,17 +55,27 @@ namespace CreativeAI.Tests.EditMode
         private sealed class FakeItemGiver : IItemGiver
         {
             public readonly List<string> Given = new();
+            public readonly HashSet<string> Owned = new();
 
             public void Give(string itemKey) => Given.Add(itemKey);
+
+            public bool HasImportantItem(string itemKey) => Owned.Contains(itemKey);
+        }
+
+        private sealed class FakeWeaponGiver : IWeaponGiver
+        {
+            public readonly List<string> Given = new();
+
+            public void GiveWeapon(string weaponKey) => Given.Add(weaponKey);
         }
 
         private sealed class FakeBattleRunner : IBattleRunner
         {
-            public readonly List<string> Fought = new();
+            public readonly List<GameObject> Fought = new();
 
-            public IEnumerator Run(string enemyKey)
+            public IEnumerator Run(BattleSetup setup)
             {
-                Fought.Add(enemyKey);
+                Fought.Add(setup.EnemyPrefab);
                 yield break;
             }
         }
@@ -126,6 +136,30 @@ namespace CreativeAI.Tests.EditMode
         }
 
         [Test]
+        public void PlayRoutine_GiveWeaponStep_RoutesToWeaponGiver()
+        {
+            var weapons = new FakeWeaponGiver();
+            _player.Inject(_pm, _view, _items, weapons: weapons);
+
+            var ev = EventDefinition.Create(
+                "girl_gift",
+                new[] { EventCondition.Progress(0) },
+                new[]
+                {
+                    EventStep.Line("はかなげ少女", "girl_resolve", "これで、身を守って。"),
+                    EventStep.GiveWeapon("scythe"),
+                    EventStep.Line("主人公", "hero_normal", "…ありがとう。"),
+                },
+                nextProgress: 6
+            );
+
+            Drive(_player.PlayRoutine(ev));
+
+            CollectionAssert.AreEqual(new[] { "scythe" }, weapons.Given);
+            Assert.AreEqual(6, _pm.Progress);
+        }
+
+        [Test]
         public void PlayRoutine_BattleStep_EntersAndExitsBattle_RunsRunner_ThenContinues()
         {
             var gmmGo = new GameObject("GMM");
@@ -135,35 +169,44 @@ namespace CreativeAI.Tests.EditMode
             var battle = new FakeBattleRunner();
             _player.Inject(_pm, _view, _items, battle, gmm);
 
+            // 敵はトリガーが配線して BattleSetup で渡す(JSON には書かない)。
+            var enemyPrefab = new GameObject("wolf_boss");
+            var setup = new BattleSetup(enemyPrefab, Vector3.zero, Quaternion.identity);
+
             var ev = EventDefinition.Create(
                 "cave_encounter",
                 new[] { EventCondition.Progress(0) },
                 new[]
                 {
                     EventStep.Line("主人公", "hero_surprised", "…誰だ?"),
-                    EventStep.Battle("wolf_boss"),
+                    EventStep.Battle(),
                     EventStep.Line("はかなげ少女", "girl_resolve", "……ありがとう。"),
                 },
                 nextProgress: 6
             );
 
-            Drive(_player.PlayRoutine(ev));
+            Drive(_player.PlayRoutine(ev, setup));
 
-            CollectionAssert.AreEqual(new[] { "wolf_boss" }, battle.Fought);
+            CollectionAssert.AreEqual(new[] { enemyPrefab }, battle.Fought);
             // battle ステップ前後で Battle → Field に遷移
             CollectionAssert.AreEqual(new[] { GameMode.Battle, GameMode.Field }, modeChanges);
             // 戦闘を挟んで会話が続き、最後まで再生される
             CollectionAssert.AreEqual(new[] { "…誰だ?", "……ありがとう。" }, _view.Lines);
             Assert.AreEqual(6, _pm.Progress);
 
+            UnityEngine.Object.DestroyImmediate(enemyPrefab);
             UnityEngine.Object.DestroyImmediate(gmmGo);
         }
 
         [Test]
-        public void PlayRoutine_NoNextProgress_DoesNotAdvance()
+        public void PlayRoutine_NoNextProgress_IsInvalidData_DoesNotAdvance()
         {
+            // 仕様(ScenarioReference.md フィールド表)では nextProgress は全イベント必須で、
+            // Importer が省略を弾く(EventImporterTests.Parse_OmittedNextProgress_IsError)。
+            // ここで固定するのは「万一 nextProgress 無しの定義を渡されても進行度を壊さない」
+            // フォールバック挙動であって、「nextProgress を省略できる」という仕様ではない。
             var ev = EventDefinition.Create(
-                "girl_reunion",
+                "invalid_no_next_progress",
                 new[] { EventCondition.Progress(0) },
                 new[]
                 {

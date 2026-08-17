@@ -1,3 +1,4 @@
+using CreativeAI.Gameplay;
 using CreativeAI.UI.Common;
 using UnityEngine;
 using UnityEngine.UI;
@@ -31,8 +32,7 @@ namespace CreativeAI.UI.SaveDialog
 
         private void OnYes()
         {
-            // TODO: Replace with the real save implementation.
-            Debug.Log("[SaveDialog] Save requested.");
+            SaveService.Save();
             Close();
         }
 

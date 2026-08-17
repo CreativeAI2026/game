@@ -22,7 +22,7 @@ namespace CreativeAI.Gameplay
 
         [Range(0f, 100f)]
         public float baseCriticalChance = 5f; // 会心率の基準値（0% ~ 100%)
-        public float baseCriticalDamageRatio = 2f; // 会心時の、攻撃力への上乗せダメージ率（攻撃力 * この変数）
+        public float baseCriticalDamageRatio = 2f; // 会心時に攻撃力へ上乗せする%(パーセントポイント。RollDamage が ÷100 して適用)。仕様の素の値は0
         public float baseMoveSpeed = 5f; // 移動速度の基準値
         public float baseAttackSpeed = 1f; // 攻撃速度の基準値（2fなら2倍の速度）
     }

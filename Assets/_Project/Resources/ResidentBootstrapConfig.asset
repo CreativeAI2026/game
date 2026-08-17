@@ -1,0 +1,16 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 46171b7104cf04de49012c755d68754f, type: 3}
+  m_Name: ResidentBootstrapConfig
+  m_EditorClassIdentifier: CreativeAI.UI::CreativeAI.UI.ResidentBootstrapConfig
+  uiRootPrefab: {fileID: 7357621368793443196, guid: d0c8f5a2fab99460a9cbf61536da8406, type: 3}
+  playerRigPrefab: {fileID: 4424343746394782264, guid: bc2e5624b5d5444ceb5acdfda6255a07, type: 3}

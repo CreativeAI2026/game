@@ -2,6 +2,11 @@ using UnityEngine;
 
 namespace CreativeAI.Gameplay
 {
+    /// <summary>
+    /// 近接武器の統括コンポーネント。ステートマシン（SwordStates.cs）と連携し、
+    /// 攻撃・ガード・パリィ・ダッシュの状態管理と、
+    /// 敵からの攻撃をガード/パリィで受け流す判定を担当する。
+    /// </summary>
     public class SwordController : MonoBehaviour
     {
         [Header("武器管理")]
@@ -22,13 +27,19 @@ namespace CreativeAI.Gameplay
         [Tooltip("ジャストパリィの受付時間（秒）")]
         public float parryWindowDuration = 0.2f;
 
+        [Header("ガード上限数設定")]
+        [Tooltip("ガードの回数がこの数値以上になったら攻撃を受ける。")]
+        public int guardMaxCount = 3;
+
         [Tooltip("ガード時に剣の角度を変えるためのメッシュの親オブジェクト")]
         public Transform weaponMeshRoot;
 
-        [Tooltip("通常時の剣のローカル角度")]
+        [Tooltip("通常時の剣のローカル角度。今は専用アニメーションが無いので、テスト用のみ使用。")]
         public Vector3 normalSwordRotation = Vector3.zero;
 
-        [Tooltip("ガード時の剣のローカル角度（横に寝かせるなど）")]
+        [Tooltip(
+            "ガード時の剣のローカル角度。今は専用アニメーションが無いので、テスト用のみ使用。（横に寝かせるなど）"
+        )]
         public Vector3 guardSwordRotation = new Vector3(0f, 90f, 45f);
 
         [Header("エフェクト")]
@@ -54,10 +65,8 @@ namespace CreativeAI.Gameplay
         public Transform playerTransform;
         private WeaponManager _weaponManager;
 
-        // ステートマシンの中央管理
         private SwordState _currentState;
 
-        // 状態間で共有するデータ
         [HideInInspector]
         public Transform targetEnemy;
 
@@ -67,12 +76,11 @@ namespace CreativeAI.Gameplay
         [HideInInspector]
         public float lastAttackTime = 0f;
 
-        // パリィ用の内部変数
         [HideInInspector]
         public float parryTimer = 0f;
 
         [HideInInspector]
-        public int guardHitCount = 0; // 連続ガード回数
+        public int guardHitCount = 0;
 
         private void Awake()
         {
@@ -95,7 +103,7 @@ namespace CreativeAI.Gameplay
 
         private void OnDisable()
         {
-            // 他の武器に切り替わった際に剣の攻撃トリガーが残らないように全てリセットする
+            // 他の武器に切り替わった際に攻撃トリガーが残ると誤発動するためリセット
             if (animator != null)
             {
                 animator.ResetTrigger("Slash1");
@@ -104,10 +112,8 @@ namespace CreativeAI.Gameplay
                 animator.ResetTrigger("DashTrigger");
             }
 
-            // 強制終了時のステートクリーンアップ
             _currentState?.Exit();
 
-            // プレイヤーの移動・武器切り替えロックを確実に解除
             if (playerController != null)
             {
                 playerController.CanMove = true;
@@ -115,28 +121,39 @@ namespace CreativeAI.Gameplay
             }
         }
 
+        private bool _prevSubAction = false;
+
         private void Update()
         {
             if (input == null || _weaponManager == null)
                 return;
 
-            // 怯み中は武器ステートマシンを完全停止する
+            // 怯み中は武器ステートマシンを完全停止し、入力を一切処理しない
             if (playerController.IsFlinching)
                 return;
 
-            // 裏で入力を奪うのを防ぐ
+            // 非装備時に裏で入力を消費するのを防ぐ
             if (_weaponManager.CurrentWeaponIndex != weaponIndex)
             {
-                // 自分が非装備状態なら強制的にFreeに戻して一切何もしない
-                if (!(_currentState is SwordStateFree))
+                if (_currentState is not SwordStateFree)
                     ChangeState(new SwordStateFree(this));
                 return;
             }
 
+            // パリィタイマーの更新（ステートに依存せず、ボタンの「押し始め」で受付開始）
+            if (input.subAction && !_prevSubAction)
+            {
+                parryTimer = parryWindowDuration;
+            }
+            else if (parryTimer > 0f)
+            {
+                parryTimer -= Time.deltaTime;
+            }
+            _prevSubAction = input.subAction;
+
             _currentState?.Update();
         }
 
-        // ステートを切り替える関数
         public void ChangeState(SwordState newState)
         {
             _currentState?.Exit();
@@ -144,9 +161,11 @@ namespace CreativeAI.Gameplay
             _currentState?.Enter();
         }
 
-        // ==========================================================
-        // 敵の攻撃スクリプト（Hitbox等）から呼ばれるダメージ受け取り関数
-        // ==========================================================
+        /// <summary>
+        /// 敵の攻撃判定（Hitbox等）から呼ばれ、ガード/パリィ判定を行う。
+        /// ガードまたはパリィが成立した場合はtrueを返し、呼び出し元はダメージを与えない。
+        /// falseの場合は無防備であり、呼び出し元がTakeDamageを行う。
+        /// </summary>
         public bool ReceiveAttack(
             float damage,
             bool isMeleeAttack,
@@ -154,59 +173,51 @@ namespace CreativeAI.Gameplay
             Vector3 hitPoint
         )
         {
-            // 現在のステートがガード中かどうか
-            if (_currentState is SwordStateGuard || _currentState is SwordStateParry)
+            if (_currentState is SwordStateGuard or SwordStateParry)
             {
-                // ① ジャストパリィ判定
-                if (parryTimer > 0f)
+                // ガード入力がされている、またはパリィ受付時間中のみ防御成立
+                if (parryTimer > 0f || input.subAction)
                 {
-                    Debug.Log("🎯 ジャストパリィ成功！ダメージ完全無効！");
-                    // Hitboxが計算した正確なヒット位置にVFXを生成
-                    SpawnParryEffect(hitPoint);
-
-                    // パリィ成功時のカメラシェイク
-                    CameraShakeManager.Instance?.Shake(0.4f);
-
-                    if (isMeleeAttack && attacker != null)
+                    if (parryTimer > 0f)
                     {
-                        var enemyCon = attacker.GetComponentInParent<TestEnemyController>();
-                        if (enemyCon != null)
+                        SpawnParryEffect(hitPoint);
+
+                        CameraShakeManager.Instance?.Shake(0.4f);
+
+                        if (isMeleeAttack && attacker != null)
                         {
-                            // ★ここを FlinchState から ParriedState に変更する
-                            enemyCon.ChangeState(new TestEnemyParriedState(enemyCon));
+                            var enemyCon = attacker.GetComponentInParent<TestEnemyController>();
+                            if (enemyCon != null)
+                            {
+                                enemyCon.ChangeState(new TestEnemyParriedState(enemyCon));
+                            }
                         }
+
+                        ChangeState(new SwordStateParry(this));
+
+                        // 一回のガード入力で一回のパリィのみ受け付けるため、タイマーを0にする
+                        parryTimer = 0f;
+                        return true;
                     }
 
-                    // プレイヤーをパリィ成功（弾き）ステートへ移行
-                    ChangeState(new SwordStateParry(this));
+                    SpawnGuardEffect(hitPoint);
 
-                    // パリィ成功時はタイマーをリセットし、連続パリィを可能にする
-                    parryTimer = parryWindowDuration;
-                    return true; // 攻撃を防いだので true
+                    CameraShakeManager.Instance?.Shake(0.2f);
+
+                    guardHitCount++;
+
+                    // ガード耐久上限を超えたら強制的にガードを崩し、次の攻撃をダメージとして受ける
+                    if (guardHitCount >= guardMaxCount)
+                    {
+                        Debug.Log("ガード上限に達した");
+                        // TODO : 専用アニメーションを追加する。
+                        ChangeState(new SwordStateFree(this));
+                    }
+
+                    return true;
                 }
-
-                // ② 通常ガード判定
-                Debug.Log("🛡️ 通常ガード！");
-                // Hitboxが計算した正確なヒット位置にVFXを生成
-                SpawnGuardEffect(hitPoint);
-
-                // ガード成功時のカメラシェイク
-                CameraShakeManager.Instance?.Shake(0.2f);
-
-                guardHitCount++;
-
-                if (guardHitCount >= 3)
-                {
-                    Debug.Log("💥 ガードブレイク！");
-                    if (animator != null)
-                        animator.SetTrigger("GuardBreak");
-                    ChangeState(new SwordStateFree(this));
-                }
-
-                return true;
             }
 
-            // ③ 無防備（ダメージを受ける。TakeDamage は呼び出し元が行う）
             return false;
         }
 
@@ -214,6 +225,7 @@ namespace CreativeAI.Gameplay
         {
             if (guardEffectPrefab != null)
             {
+                // TODO : ObjectPool導入後、Instantiateをやめる
                 Instantiate(guardEffectPrefab, hitPosition, playerTransform.rotation);
             }
         }
@@ -222,11 +234,11 @@ namespace CreativeAI.Gameplay
         {
             if (parryEffectPrefab != null)
             {
+                // TODO : ObjectPool導入後、Instantiateをやめる
                 Instantiate(parryEffectPrefab, hitPosition, playerTransform.rotation);
             }
         }
 
-        // 索敵メソッド
         public Transform FindNearestEnemy()
         {
             Collider[] hitColliders = Physics.OverlapSphere(
@@ -253,21 +265,18 @@ namespace CreativeAI.Gameplay
         }
 
         /// <summary>
-        /// PlayerFlinchHandler から呼ばれる。現在のステートを安全に終了し、
-        /// SwordStateFree に強制リセットする（Enter() は呼ばない）。
-        /// CanMove / CanChangeWeapon の管理は FlinchHandler 側で行う。
+        /// PlayerFlinchHandler から呼ばれ、現在のステートを安全に終了して初期状態にリセットする。
+        /// Enter() は呼ばない。IsFlinching中はUpdateが動かないため、
+        /// Enter内のCanMove等の設定は怯み終了後にFlinchHandlerが行う。
         /// </summary>
         public void ForceReset()
         {
             _currentState?.Exit();
-            // コンボ・ガード状態を手動リセット
             comboStep = 0;
             guardHitCount = 0;
             parryTimer = 0f;
-            // 剣の角度を元に戻す
             if (weaponMeshRoot != null)
                 weaponMeshRoot.localRotation = Quaternion.Euler(normalSwordRotation);
-            // Enter() は呼ばない（IsFlinching 中は Update も動かないため問題なし）
             _currentState = new SwordStateFree(this);
         }
     }
