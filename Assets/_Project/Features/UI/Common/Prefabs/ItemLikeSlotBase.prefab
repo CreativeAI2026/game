@@ -232,6 +232,9 @@ MonoBehaviour:
   _selectedSprite: {fileID: 21300000, guid: d3a358727a466c44bb2c6f6accaca079, type: 3}
   _itemSetSprite: {fileID: 21300000, guid: 249608d43c135ac4b8f69d7dbebbfb98, type: 3}
   _itemWithCountSprite: {fileID: 21300000, guid: dd6097617ebaade439cb900fefdb6f65, type: 3}
+  _itemSetSelectedSprite: {fileID: 21300000, guid: c48d0a885b575124c829beef89e67ac6, type: 3}
+  _itemWithCountSelectedSprite: {fileID: 21300000, guid: 1209ae75deb5b8449b834770ffa231d6, type: 3}
+  _customSelectedSprite: {fileID: 0}
   _role: 0
 --- !u!1 &900000000000000001
 GameObject:

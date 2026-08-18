@@ -48,6 +48,7 @@ namespace CreativeAI.UI.InventoryUI
 
         public event System.Action<ItemStack> OnSlotClicked;
         public event System.Action<ItemStack> OnSlotDoubleClicked;
+        public event System.Action<ItemStack> OnSlotSubmitted;
         public event System.Action<TabDefinition, int, ScrollRefreshMode> DisplayRefreshRequested;
         public event System.Action<ItemCategory, ScrollRefreshMode> ItemsRequested;
 
@@ -245,11 +246,7 @@ namespace CreativeAI.UI.InventoryUI
             return id.Length >= 2 && id[1] == '0';
         }
 
-        private void WarnMissingReferencesOnce()
-        {
-            if (_detailPanel == null)
-                WarnMissingDetailPanelOnce();
-        }
+        private void WarnMissingReferencesOnce() { }
 
         private void WarnMissingDetailPanelOnce()
         {

@@ -28,6 +28,25 @@ namespace CreativeAI.UI.InventoryUI
                 SelectSlotVertically(-1);
             else if (keyboard.downArrowKey.wasPressedThisFrame)
                 SelectSlotVertically(1);
+            else if (
+                keyboard.enterKey.wasPressedThisFrame
+                || keyboard.numpadEnterKey.wasPressedThisFrame
+                || keyboard.spaceKey.wasPressedThisFrame
+            )
+                SubmitSelectedSlot();
+        }
+
+        public void SubmitSelectedSlot()
+        {
+            if (
+                !_interactionEnabled
+                || _currentSelectedSlot == null
+                || _selectedStack == null
+                || _selectedStack.Count <= 0
+            )
+                return;
+
+            OnSlotSubmitted?.Invoke(_selectedStack);
         }
 
         private void SelectSlotByOffset(int offset)

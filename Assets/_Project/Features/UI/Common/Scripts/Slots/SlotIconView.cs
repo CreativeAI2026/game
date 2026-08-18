@@ -1,8 +1,11 @@
 using System;
+using System.Runtime.CompilerServices;
 using CreativeAI.Gameplay;
 using DG.Tweening;
 using UnityEngine;
 using UnityEngine.UI;
+
+[assembly: InternalsVisibleTo("CreativeAI.Tests.EditMode")]
 
 namespace CreativeAI.UI
 {
@@ -111,35 +114,112 @@ namespace CreativeAI.UI
             if (_fitRect == null)
                 return;
 
-            float shortEdge = Mathf.Min(_fitRect.rect.width, _fitRect.rect.height);
-            if (shortEdge <= 0f)
+            Vector2 fitSize = _fitRect.rect.size;
+            if (fitSize.x <= 0f || fitSize.y <= 0f)
             {
                 _layoutRefreshPending = true;
                 return;
             }
 
-            float iconSize = shortEdge * _fillRatio;
             var iconRect = _image.rectTransform;
             iconRect.anchorMin = new Vector2(0.5f, 0.5f);
             iconRect.anchorMax = new Vector2(0.5f, 0.5f);
             iconRect.pivot = new Vector2(0.5f, 0.5f);
 
+            CalculateVisibleContentLayout(
+                _image.sprite,
+                fitSize * _fillRatio,
+                out Vector2 iconSize,
+                out Vector2 visibleCenterOffset
+            );
+
             var iconParent = iconRect.parent as RectTransform;
-            if (iconParent != null && _fitRect != iconParent)
+            if (iconParent != null)
             {
-                Vector3 fitCenterWorld = _fitRect.TransformPoint(_fitRect.rect.center);
+                Vector3 fitCenterWorld = _fitRect.TransformPoint(
+                    _fitRect.rect.center + visibleCenterOffset
+                );
                 Vector3 fitCenterLocal = iconParent.InverseTransformPoint(fitCenterWorld);
                 iconRect.localPosition = new Vector3(fitCenterLocal.x, fitCenterLocal.y, 0f);
             }
             else
             {
-                iconRect.anchoredPosition = Vector2.zero;
+                iconRect.anchoredPosition = visibleCenterOffset;
             }
 
-            iconRect.SetSizeWithCurrentAnchors(RectTransform.Axis.Horizontal, iconSize);
-            iconRect.SetSizeWithCurrentAnchors(RectTransform.Axis.Vertical, iconSize);
+            iconRect.SetSizeWithCurrentAnchors(RectTransform.Axis.Horizontal, iconSize.x);
+            iconRect.SetSizeWithCurrentAnchors(RectTransform.Axis.Vertical, iconSize.y);
             _image.preserveAspect = true;
             _layoutRefreshPending = false;
+        }
+
+        /// <summary>
+        /// Spriteの透明な余白ではなく、Tight Meshが示す可視領域を基準に表示サイズと中心を求める。
+        /// これにより元画像のキャンバス内で絵が偏っていても、スロット中央へ揃えて表示できる。
+        /// </summary>
+        internal static void CalculateVisibleContentLayout(
+            Sprite sprite,
+            Vector2 targetSize,
+            out Vector2 imageSize,
+            out Vector2 visibleCenterOffset
+        )
+        {
+            imageSize = targetSize;
+            visibleCenterOffset = Vector2.zero;
+            if (sprite == null || targetSize.x <= 0f || targetSize.y <= 0f)
+                return;
+
+            CalculateVisibleContentLayout(
+                sprite.rect,
+                sprite.pivot,
+                sprite.pixelsPerUnit,
+                sprite.vertices,
+                targetSize,
+                out imageSize,
+                out visibleCenterOffset
+            );
+        }
+
+        internal static void CalculateVisibleContentLayout(
+            Rect spriteRect,
+            Vector2 spritePivot,
+            float pixelsPerUnit,
+            Vector2[] vertices,
+            Vector2 targetSize,
+            out Vector2 imageSize,
+            out Vector2 visibleCenterOffset
+        )
+        {
+            imageSize = targetSize;
+            visibleCenterOffset = Vector2.zero;
+            if (
+                vertices == null
+                || vertices.Length == 0
+                || pixelsPerUnit <= 0f
+                || targetSize.x <= 0f
+                || targetSize.y <= 0f
+            )
+                return;
+
+            Vector2 contentMin = vertices[0];
+            Vector2 contentMax = vertices[0];
+            for (int i = 1; i < vertices.Length; i++)
+            {
+                contentMin = Vector2.Min(contentMin, vertices[i]);
+                contentMax = Vector2.Max(contentMax, vertices[i]);
+            }
+
+            Vector2 contentSize = contentMax - contentMin;
+            if (contentSize.x <= Mathf.Epsilon || contentSize.y <= Mathf.Epsilon)
+                return;
+
+            float scale = Mathf.Min(targetSize.x / contentSize.x, targetSize.y / contentSize.y);
+            Vector2 fullSize = spriteRect.size / pixelsPerUnit;
+            Vector2 fullCenter = (spriteRect.size * 0.5f - spritePivot) / pixelsPerUnit;
+            Vector2 contentCenter = (contentMin + contentMax) * 0.5f;
+
+            imageSize = fullSize * scale;
+            visibleCenterOffset = -(contentCenter - fullCenter) * scale;
         }
 
         private void OnEnable()

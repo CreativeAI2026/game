@@ -1,0 +1,27 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: b818dbe116d16c34e98ddf90c996bf13, type: 3}
+  m_Name: FullBodyTightsUmbrella
+  m_EditorClassIdentifier: CreativeAI.Gameplay::CreativeAI.Gameplay.EquipmentData
+  icon: {fileID: 21300000, guid: fd8dea77e5e178d44a2adc6ba1c01c15, type: 3}
+  id: 2130
+  key: full_body_tights_umbrella
+  itemName: "\u5168\u8EAB\u30BF\u30A4\u30C4\u3068\u5098"
+  category: 1
+  effect: 
+  description: 
+  _maxStack: 1
+  attack: 0
+  defense: 0
+  criticalDamage: 0
+  criticalRate: 0
+  maxHP: 0

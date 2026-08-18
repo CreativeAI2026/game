@@ -52,11 +52,13 @@ namespace CreativeAI.UI.CraftingUI
         }
 #endif
 
-        public void ShowRows(IReadOnlyList<RecipeCraftMaterialRowData> rows)
+        public void ShowRows(IReadOnlyList<RecipeCraftMaterialRowData> rows, bool animate = true)
         {
-            ClearRows();
             if (rows == null || rows.Count == 0)
+            {
+                ClearRows();
                 return;
+            }
 
             if (rows.Count > _rows.Count)
             {
@@ -75,6 +77,9 @@ namespace CreativeAI.UI.CraftingUI
             }
 
             gameObject.SetActive(true);
+            if (!animate)
+                return;
+
             for (int i = 0; i < _rows.Count; i++)
             {
                 var row = _rows[i];
