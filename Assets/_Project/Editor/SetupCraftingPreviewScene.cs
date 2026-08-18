@@ -1,6 +1,5 @@
 #if UNITY_EDITOR
 using System.IO;
-using System.Linq;
 using CreativeAI.UI;
 using CreativeAI.UI.CraftingUI;
 using UnityEditor;
@@ -22,9 +21,9 @@ namespace CreativeAI.EditorTools
     ///    <c>UiRouter._craftUI</c> に配線する(= 本番 Title フローからも調合UIが開けるようになる)。
     /// 2) UI_CraftingPreview を生成(Camera + EventSystem + FieldDevBootstrap + CraftPreviewDriver)。
     ///    FieldDevBootstrap が常駐一式(UIRoot 含む)を生成しテスト品をシードするので、実素材で調合を試せる。
-    /// 3) Build Settings に UI_CraftingPreview を追加する。
+    /// 3) UI_CraftingPreview は開発専用として本番 Build Settings には追加しない。
     ///
-    /// 冪等: 再実行しても CraftUI は作り直し・Build Settings も二重登録しない。
+    /// 冪等: 再実行しても CraftUI とプレビューシーンを作り直せる。
     /// </summary>
     public static class SetupCraftingPreviewScene
     {
@@ -43,7 +42,6 @@ namespace CreativeAI.EditorTools
 
             bool integrated = IntegrateCraftUiIntoUIRoot();
             CreateCraftingPreviewScene();
-            RegisterBuildSettings();
 
             AssetDatabase.SaveAssets();
             AssetDatabase.Refresh();
@@ -52,7 +50,7 @@ namespace CreativeAI.EditorTools
                 "完了:\n"
                 + $"- 調合UI(CraftPanel)を UIRoot に組み込み UiRouter._craftUI を配線 (成功={integrated})\n"
                 + $"- {CraftingPreviewScenePath} を生成(FieldDevBootstrap + CraftPreviewDriver)\n"
-                + "- Build Settings に UI_CraftingPreview を追加\n\n"
+                + "- UI_CraftingPreview は本番 Build Settings には追加しません\n\n"
                 + "UI_CraftingPreview を開いて Play すると調合UIが自動で開きます。";
             if (Application.isBatchMode)
                 Debug.Log("[SetupCraftingPreviewScene] " + summary);
@@ -164,15 +162,6 @@ namespace CreativeAI.EditorTools
             EditorSceneManager.SaveScene(scene, CraftingPreviewScenePath);
         }
 
-        /// <summary>UI_CraftingPreview を Build Settings に追加する(既にあれば何もしない)。</summary>
-        private static void RegisterBuildSettings()
-        {
-            var scenes = EditorBuildSettings.scenes.ToList();
-            if (scenes.Any(s => s.path == CraftingPreviewScenePath))
-                return;
-            scenes.Add(new EditorBuildSettingsScene(CraftingPreviewScenePath, true));
-            EditorBuildSettings.scenes = scenes.ToArray();
-        }
     }
 }
 #endif
