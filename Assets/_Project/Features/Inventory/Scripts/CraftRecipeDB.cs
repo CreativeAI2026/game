@@ -20,8 +20,9 @@ namespace CreativeAI.Gameplay
         public event Action<CraftRecipeData> RecipeRevealed;
 
         // 解禁(発見)状態は保持しない。セッション常駐でセーブ対象の RecipeBookManager が唯一の持ち主。
-        // カタログ(この SO)は読み取り専用に徹し、表示判定はそこへ委譲する
-        // (documents/CraftingArchitecture.md「データ形式」/ Specification.md §6)。
+        // カタログ(この SO)は読み取り専用に徹し、表示判定は全て RecipeBookManager へ委譲する。
+        // 初期解禁(showInRecipeCraft)は静的な設計データで、RecipeBookManager が起動時に取り込む
+        // (documents/Specification.md §2.3「データ形式」/ §6)。
         private static bool IsRecipeRevealed(CraftRecipeData recipe) =>
             RecipeBookManager.Instance?.IsRevealed(recipe) ?? false;
 
@@ -40,11 +41,17 @@ namespace CreativeAI.Gameplay
         public bool RevealRecipe(ItemData materialA, ItemData materialB, out CraftRecipeData recipe)
         {
             recipe = FindRecipe(materialA, materialB);
-            if (recipe == null)
+            return RevealRecipe(recipe);
+        }
+
+        public bool RevealRecipe(CraftRecipeData recipe)
+        {
+            if (recipe == null || !_recipes.Contains(recipe))
                 return false;
 
             bool wasHidden = !recipe.showInRecipeCraft && !IsRecipeRevealed(recipe);
-            bool newlyRevealed = RecipeBookManager.Instance?.Reveal(recipe) ?? false;
+            var recipeBook = RecipeBookManager.Instance;
+            bool newlyRevealed = recipeBook?.Reveal(recipe) ?? false;
             if (wasHidden && newlyRevealed)
                 RecipeRevealed?.Invoke(recipe);
 
@@ -53,9 +60,7 @@ namespace CreativeAI.Gameplay
 
         public bool IsVisible(CraftRecipeData recipe)
         {
-            return recipe != null
-                && recipe.resultItem != null
-                && (recipe.showInRecipeCraft || IsRecipeRevealed(recipe));
+            return recipe != null && recipe.resultItem != null && IsRecipeRevealed(recipe);
         }
     }
 }

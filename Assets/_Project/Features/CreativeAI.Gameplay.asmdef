@@ -8,7 +8,6 @@
         "Unity.InputSystem",
         "Unity.Cinemachine",
         "Unity.TextMeshPro",
-        "Unity.Animation.Rigging.Editor",
         "Unity.Animation.Rigging",
         "UniTask"
     ],

@@ -1,0 +1,18 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 7c8e2e11f4ca4aa9a981774de19131f4, type: 3}
+  m_Name: CoffeePeach
+  m_EditorClassIdentifier: CreativeAI.Gameplay::CreativeAI.Gameplay.CraftRecipeData
+  resultItem: {fileID: 11400000, guid: 727a7d7be861ef8468f59c1df6871094, type: 2}
+  material1: {fileID: 11400000, guid: 8b88b3472af442a08c8a69ea59d17c73, type: 2}
+  material2: {fileID: 11400000, guid: 15dd448ceebc42a889c1bcd5eedaa7a8, type: 2}
+  showInRecipeCraft: 0

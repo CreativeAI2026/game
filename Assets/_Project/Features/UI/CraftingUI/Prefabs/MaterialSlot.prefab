@@ -8,9 +8,17 @@ PrefabInstance:
     serializedVersion: 3
     m_TransformParent: {fileID: 0}
     m_Modifications:
+    - target: {fileID: 614009322375137962, guid: bb915f59b401d994cb2c02f9427284e9, type: 3}
+      propertyPath: m_Color.a
+      value: 1
+      objectReference: {fileID: 0}
     - target: {fileID: 2115155814058966163, guid: bb915f59b401d994cb2c02f9427284e9, type: 3}
       propertyPath: m_Name
       value: MaterialSlot
+      objectReference: {fileID: 0}
+    - target: {fileID: 6153161000247279391, guid: bb915f59b401d994cb2c02f9427284e9, type: 3}
+      propertyPath: _role
+      value: 2
       objectReference: {fileID: 0}
     - target: {fileID: 8297504193761087856, guid: bb915f59b401d994cb2c02f9427284e9, type: 3}
       propertyPath: m_Pivot.x
@@ -122,17 +130,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: d3231c44711d4358a8b07ebb474027cf, type: 3}
   m_Name: 
   m_EditorClassIdentifier: CreativeAI.UI::CreativeAI.UI.SlotIconView
---- !u!114 &5941710154187497049 stripped
-MonoBehaviour:
-  m_CorrespondingSourceObject: {fileID: 2311570857423019608, guid: bb915f59b401d994cb2c02f9427284e9, type: 3}
-  m_PrefabInstance: {fileID: 8241983782483476481}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 0}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: f4688fdb7df04437aeb418b961361dc5, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Unity.TextMeshPro::TMPro.TextMeshProUGUI
 --- !u!114 &6360091114299650094 stripped
 MonoBehaviour:
   m_CorrespondingSourceObject: {fileID: 3036268094936297519, guid: bb915f59b401d994cb2c02f9427284e9, type: 3}
@@ -182,4 +179,4 @@ MonoBehaviour:
   _emptyView: {fileID: 6360091114299650094}
   _hoverView: {fileID: 6537169749298898148}
   _frameView: {fileID: 2811657670882492190}
-  _slotLabel: {fileID: 5941710154187497049}
+  _slotLabel: {fileID: 0}

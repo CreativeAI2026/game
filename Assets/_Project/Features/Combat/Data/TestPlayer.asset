@@ -13,10 +13,10 @@ MonoBehaviour:
   m_Name: TestPlayer
   m_EditorClassIdentifier: CreativeAI.Gameplay::CreativeAI.Gameplay.PlayerParameterData
   characterName: TestPlayer
-  baseMaxLife: 250
-  baseAttackPower: 100
-  baseDefense: 10
-  baseCriticalChance: 5
-  baseCriticalDamageRatio: 2
+  baseMaxLife: 1000
+  baseAttackPower: 2000
+  baseDefense: 500
+  baseCriticalChance: 0
+  baseCriticalDamageRatio: 0
   baseMoveSpeed: 5
   baseAttackSpeed: 1

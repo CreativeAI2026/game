@@ -39,9 +39,15 @@ namespace CreativeAI.Gameplay
 
         /// <summary>
         /// 選択中の武器 index(spec §6: プレイヤーリグは選択武器も保存)。実体は WeaponManager(IWeaponSaveState)。
-        /// 旧セーブは既定 0(先頭=剣)で復元される。
+        /// <see cref="ownedWeaponKeys"/> に含まれない値なら所持の先頭へ寄せて復元される。
         /// </summary>
         public int selectedWeaponIndex;
+
+        /// <summary>
+        /// 入手ずみ武器のキー(sword/bow/scythe)。spec §1.1: 主人公は初期0本でイベント入手なので、
+        /// 「どれを持っているか」自体がセーブ対象になる。旧セーブに無ければ空 = 0本で復元される。
+        /// </summary>
+        public List<string> ownedWeaponKeys = new();
     }
 
     [Serializable]

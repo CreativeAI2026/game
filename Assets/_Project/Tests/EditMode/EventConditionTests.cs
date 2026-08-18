@@ -45,9 +45,41 @@ namespace CreativeAI.Tests.EditMode
         }
 
         [Test]
-        public void ConditionsMet_EmptyConditions_AlwaysTrue()
+        public void HasItem_Met_OnlyWhenOwned()
         {
-            var def = EventDefinition.Create("always");
+            var c = EventCondition.HasItem("mysterious_key");
+            Func<string, bool> owns = key => key == "mysterious_key";
+
+            Assert.IsTrue(c.IsMet(0, NoFlags, owns));
+            Assert.IsFalse(c.IsMet(0, NoFlags, _ => false)); // 未所持
+            Assert.IsFalse(c.IsMet(0, NoFlags)); // hasItem 未指定なら不成立
+        }
+
+        [Test]
+        public void ConditionsMet_HasItem_AndedWithProgress()
+        {
+            var def = EventDefinition.Create(
+                "locked_door",
+                EventCondition.Progress(10),
+                EventCondition.HasItem("mysterious_key")
+            );
+            Func<string, bool> hasKey = key => key == "mysterious_key";
+
+            Assert.IsTrue(def.ConditionsMet(10, NoFlags, hasKey));
+            Assert.IsFalse(def.ConditionsMet(10, NoFlags, _ => false)); // 鍵なし
+            Assert.IsFalse(def.ConditionsMet(9, NoFlags, hasKey)); // progress 不足
+            Assert.IsFalse(def.ConditionsMet(10, NoFlags)); // hasItem 未供給
+        }
+
+        [Test]
+        public void ConditionsMet_EmptyConditions_IsInvalidData_FallsBackToTrue()
+        {
+            // 仕様(ScenarioReference.md)では conditions は必須で progress を必ず1つ含むため、
+            // 条件0件のイベントは存在しない。Importer が取り込み時に弾く
+            // (EventImporterTests.Parse_MissingProgressCondition_IsError)。
+            // ここで固定するのは「万一そうなっても例外にせず真を返す」フォールバック挙動であって、
+            // 「条件なしイベントが作れる」という仕様ではない。
+            var def = EventDefinition.Create("invalid_no_conditions");
 
             Assert.IsTrue(def.ConditionsMet(0, NoFlags));
         }

@@ -215,6 +215,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 59a1ee3d0f5c445ca45827e8f77a32d4, type: 3}
   m_Name: 
   m_EditorClassIdentifier: CreativeAI.UI::CreativeAI.UI.CraftingUI.RecipeMaterialRow
+  _sufficientColor: {r: 0.2627451, g: 0.28627452, b: 0.35686275, a: 1}
+  _insufficientColor: {r: 0.7058824, g: 0.21568628, b: 0.21568628, a: 1}
 --- !u!114 &8199865271147785571
 MonoBehaviour:
   m_ObjectHideFlags: 0

@@ -1,0 +1,18 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 7c8e2e11f4ca4aa9a981774de19131f4, type: 3}
+  m_Name: GlassesMicrophone
+  m_EditorClassIdentifier: CreativeAI.Gameplay::CreativeAI.Gameplay.CraftRecipeData
+  resultItem: {fileID: 11400000, guid: a08317b7c51d1b14ba277818405490b1, type: 2}
+  material1: {fileID: 11400000, guid: 446d1c0a90ff4bd29036b7aab7e31237, type: 2}
+  material2: {fileID: 11400000, guid: 194ce770bcb04d7fa9e7e3dae62863b7, type: 2}
+  showInRecipeCraft: 0

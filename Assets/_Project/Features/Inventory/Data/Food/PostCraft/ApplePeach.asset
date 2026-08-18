@@ -1,0 +1,23 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 4c17053f8385ac14f9af901a292ffab6, type: 3}
+  m_Name: ApplePeach
+  m_EditorClassIdentifier: CreativeAI.Gameplay::CreativeAI.Gameplay.FoodData
+  icon: {fileID: 21300000, guid: 8c073040bcf55ff47afd089d730dabae, type: 3}
+  id: 3108
+  key: apple_peach
+  itemName: "\u308A\u3093\u3054\u3068\u6843"
+  category: 2
+  effect: 
+  description: 
+  _maxStack: 1
+  _craftedResult: 1

@@ -13,6 +13,9 @@ namespace CreativeAI.Gameplay
         public ItemData resultItem;
         public ItemData material1;
         public ItemData material2;
+
+        // 初期から解禁(常時表示)かどうかの静的な設計データ。実行時の解禁「状態」ではない
+        // (状態は RecipeBookManager が唯一保持し、起動時にこのフラグを取り込む)。
         public bool showInRecipeCraft;
 
         public IEnumerable<ItemData> Materials =>

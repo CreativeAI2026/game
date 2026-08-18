@@ -95,7 +95,7 @@ namespace CreativeAI.Gameplay
 
         /// <summary>
         /// 結果アイテムを付与する。装備品は「端末で個体差ロール」した個体を quantity 個ぶん作る
-        /// (documents/CraftingArchitecture.md「装備品は実行時に式でロール」)。食材など非装備品は
+        /// (documents/Specification.md §2.3「装備品は実行時に式でロール」)。食材など非装備品は
         /// 固定ルールなのでそのまま数量ぶん追加する。単発 TryCraft の一部=確定でありプレビュー/再ロールは無い。
         /// </summary>
         private void GrantResult(CraftRecipeData recipe, int quantity)
@@ -213,6 +213,18 @@ namespace CreativeAI.Gameplay
 
             materials = recipe.Materials.ToList();
             if (materials.Count != 2 || materials.Any(material => material == null))
+                return false;
+
+            // 調合は「装備品同士 / 食材同士」のみ(武器・大事なもの・カテゴリ跨ぎは不可。
+            // documents/Specification.md §2.3)。UI 非経由の直呼びも弾くためサービス層で明示ガードする。
+            if (materials[0] is WeaponData || materials[1] is WeaponData)
+                return false;
+            if (materials[0].category != materials[1].category)
+                return false;
+            if (
+                materials[0].category != ItemCategory.Equipment
+                && materials[0].category != ItemCategory.Food
+            )
                 return false;
 
             return materials[0] != materials[1];

@@ -12,5 +12,4 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: d8ffb44db9f14197bba77b238675d550, type: 3}
   m_Name: ConsumableDefinition
   m_EditorClassIdentifier: CreativeAI.UI::CreativeAI.UI.TabDefinition
-  _id: 
-  _icon: {fileID: 21300000, guid: 37d39a0eb3cf36d41bd713280c79c487, type: 3}
+  _icon: {fileID: 21300000, guid: 94bf16b5ee2c22d4abed7d5c47cae455, type: 3}

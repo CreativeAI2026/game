@@ -613,8 +613,8 @@ namespace CreativeAI.EditorTools
             tabGroupRt.anchoredPosition = new Vector2(0f, 0f);
             var tabGroup = tabGroupGo.AddComponent<TabGroup>();
 
-            // Inventory.cs
-            var inventory = inventoryGo.AddComponent<Inventory>();
+            // InventoryView.cs
+            var inventory = inventoryGo.AddComponent<InventoryView>();
             SetRef(inventory, "_tabGroup", tabGroup);
             SetRef(inventory, "_slotsRoot", contentRt);
 

@@ -6,10 +6,11 @@ namespace CreativeAI.Gameplay
 {
     public enum ItemCategory
     {
-        Weapon,
-        Equipment,
-        Food,
-        Important,
+        // 明示値で既存アセットの serialized category(1/2/3)を保つ。
+        // 武器はインベントリ在庫の対象外(WeaponManager 管理)なので、この3カテゴリに含めない。
+        Equipment = 1,
+        Food = 2,
+        Important = 3,
     }
 
     [CreateAssetMenu(fileName = "ItemData", menuName = "Scriptable Objects/ItemData")]
@@ -37,7 +38,6 @@ namespace CreativeAI.Gameplay
         public static string ToDisplayName(this ItemCategory category) =>
             category switch
             {
-                ItemCategory.Weapon => "武器",
                 ItemCategory.Equipment => "装備品",
                 ItemCategory.Food => "食材",
                 ItemCategory.Important => "大事なもの",
@@ -47,7 +47,9 @@ namespace CreativeAI.Gameplay
 
     /// <summary>
     /// 調合でロールされた個体ステータス1つ(付与ステータスの型 + 値)。
-    /// stat は Specification §1.1「アイテムカテゴリと付与ステータス」の型名(例: "attackPct")。
+    /// stat は Specification §2.1「アイテムカテゴリと付与ステータス」の型名
+    /// = <c>CreativeAI.Crafting.StatType</c> の名前(例: "AttackPct" / "MaxHpPct")。
+    /// 読み取り(CraftStatBridge.Accumulate)は大文字小文字を無視するので旧表記のセーブも効く。
     /// </summary>
     [System.Serializable]
     public sealed class RolledStat
@@ -114,14 +116,12 @@ namespace CreativeAI.Gameplay
 
     public static class ItemStatTextFormatter
     {
-        private const string HpLabel = "HP";
+        private const string HpLabel = "最大HP";
         private const string HealLabel = "HP回復";
-        private const string AttackLabel = "ATK";
-        private const string DefenseLabel = "DEF";
-        private const string MoveSpeedLabel = "MOVE";
-        private const string AttackSpeedLabel = "ATK SPD";
-        private const string CriticalDamageLabel = "CRIT DMG";
-        private const string CriticalRateLabel = "CRIT";
+        private const string AttackLabel = "攻撃";
+        private const string DefenseLabel = "防御";
+        private const string CriticalDamageLabel = "会心ダメージ";
+        private const string CriticalRateLabel = "会心率";
         private const string PositiveColor = "#A7D8FF";
         private const string NegativeColor = "#FF8A8A";
 
@@ -146,32 +146,20 @@ namespace CreativeAI.Gameplay
             {
                 AddPercent(lines, AttackLabel, equipment.attack);
                 AddPercent(lines, DefenseLabel, equipment.defense);
-                AddPercent(lines, MoveSpeedLabel, equipment.moveSpeed);
-                AddPercent(lines, AttackSpeedLabel, equipment.attackSpeed);
                 AddPercent(lines, CriticalDamageLabel, equipment.criticalDamage);
                 AddPercent(lines, CriticalRateLabel, equipment.criticalRate);
-                AddFlat(lines, HpLabel, equipment.maxHP);
+                AddPercent(lines, HpLabel, equipment.maxHP);
             }
             else if (item is WeaponData weapon)
             {
                 AddPercent(lines, AttackLabel, weapon.attack);
                 AddPercent(lines, DefenseLabel, weapon.defense);
-                AddPercent(lines, MoveSpeedLabel, weapon.moveSpeed);
-                AddPercent(lines, AttackSpeedLabel, weapon.attackSpeed);
                 AddPercent(lines, CriticalDamageLabel, weapon.criticalDamage);
                 AddPercent(lines, CriticalRateLabel, weapon.criticalRate);
-                AddFlat(lines, HpLabel, weapon.maxHP);
+                AddPercent(lines, HpLabel, weapon.maxHP);
             }
 
             return string.Join("\n", lines);
-        }
-
-        private static void AddFlat(List<string> lines, string label, int value)
-        {
-            if (value == 0)
-                return;
-
-            lines.Add(FormatLine(label, value.ToString(CultureInfo.InvariantCulture), false));
         }
 
         private static void AddPercent(List<string> lines, string label, float value)

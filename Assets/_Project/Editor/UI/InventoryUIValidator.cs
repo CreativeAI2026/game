@@ -16,7 +16,8 @@ namespace CreativeAI.EditorTools.UI
 {
     public static class InventoryUIValidator
     {
-        private const string FieldArea01Path = "Assets/_Project/Scenes/UI/UI_Sandbox.unity";
+        private const string FieldArea01Path =
+            "Assets/_Project/Features/UI/Root/Prefabs/UIRoot.prefab";
         private const string ItemSlotPath =
             "Assets/_Project/Features/UI/InventoryUI/Prefabs/ItemSlot.prefab";
 
@@ -24,14 +25,13 @@ namespace CreativeAI.EditorTools.UI
         public static void ValidateFromMenu()
         {
             var report = new UIValidationReport("Inventory UI");
-            Scene scene = SceneManager.GetSceneByPath(FieldArea01Path);
-            bool openedForValidation = !scene.IsValid() || !scene.isLoaded;
+            GameObject root = null;
+            Scene scene = default;
 
             try
             {
-                if (openedForValidation)
-                    scene = EditorSceneManager.OpenScene(FieldArea01Path, OpenSceneMode.Additive);
-
+                root = PrefabUtility.LoadPrefabContents(FieldArea01Path);
+                scene = root.scene;
                 ValidateScene(scene, report);
             }
             catch (Exception exception)
@@ -46,8 +46,8 @@ namespace CreativeAI.EditorTools.UI
             }
             finally
             {
-                if (openedForValidation && scene.IsValid() && scene.isLoaded)
-                    EditorSceneManager.CloseScene(scene, true);
+                if (root != null)
+                    PrefabUtility.UnloadPrefabContents(root);
             }
 
             report.Complete();
@@ -64,11 +64,12 @@ namespace CreativeAI.EditorTools.UI
             var panelControllers = FindAll<InventoryPanelController>(scene);
             var freeCraftControllers = FindAll<FreeCraftPanelController>(scene);
             var equipmentControllers = FindAll<EquipmentViewController>(scene);
-            var inventories = FindAll<Inventory>(scene);
+            var quickFoodControllers = FindAll<QuickFoodViewController>(scene);
+            var inventories = FindAll<InventoryView>(scene);
             var itemUseDialogs = FindAll<ItemUseDialogPanel>(scene);
 
             ValidatePresence(panelControllers, nameof(InventoryPanelController), report);
-            ValidatePresence(inventories, nameof(Inventory), report);
+            ValidatePresence(inventories, nameof(InventoryView), report);
             ValidatePresence(itemUseDialogs, nameof(ItemUseDialogPanel), report);
 
             foreach (var panelController in panelControllers)
@@ -83,15 +84,17 @@ namespace CreativeAI.EditorTools.UI
                 panelControllers,
                 freeCraftControllers,
                 equipmentControllers,
+                quickFoodControllers,
                 report
             );
         }
 
         private static void ValidateInventoryDataProviders(
-            Inventory[] inventories,
+            InventoryView[] inventories,
             InventoryPanelController[] panelControllers,
             FreeCraftPanelController[] freeCraftControllers,
             EquipmentViewController[] equipmentControllers,
+            QuickFoodViewController[] quickFoodControllers,
             UIValidationReport report
         )
         {
@@ -106,6 +109,8 @@ namespace CreativeAI.EditorTools.UI
                 AddProvider(controller, "_inventory", nameof(FreeCraftPanelController));
             foreach (var controller in equipmentControllers)
                 AddProvider(controller, "_inventory", nameof(EquipmentViewController));
+            foreach (var controller in quickFoodControllers)
+                AddProvider(controller, "_inventory", nameof(QuickFoodViewController));
 
             foreach (var inventory in inventories)
             {
@@ -142,7 +147,7 @@ namespace CreativeAI.EditorTools.UI
             void AddProvider(MonoBehaviour controller, string fieldName, string providerName)
             {
                 var serializedController = new SerializedObject(controller);
-                var inventory = GetReference<Inventory>(serializedController, fieldName);
+                var inventory = GetReference<InventoryView>(serializedController, fieldName);
                 if (
                     inventory != null
                     && providers.TryGetValue(inventory, out var inventoryProviders)
@@ -161,21 +166,21 @@ namespace CreativeAI.EditorTools.UI
             ValidateNoMissingScripts(panel.gameObject, report);
         }
 
-        private static void ValidateInventory(Inventory inventory, UIValidationReport report)
+        private static void ValidateInventory(InventoryView inventory, UIValidationReport report)
         {
             string[] requiredFields = { "_detailPanel", "_slotsRoot", "_slotPrefab" };
             ValidateRequiredReferences(inventory, requiredFields, report);
 
             var serializedInventory = new SerializedObject(inventory);
             var slotsRoot = GetReference<Transform>(serializedInventory, "_slotsRoot");
-            var slotPrefab = GetReference<ItemSlot>(serializedInventory, "_slotPrefab");
+            var slotPrefab = GetReference<GameObject>(serializedInventory, "_slotPrefab");
 
             ValidateSlotsRoot(inventory, slotsRoot, report);
             ValidateItemSlotPrefab(inventory, slotPrefab, report);
         }
 
         private static void ValidateSlotsRoot(
-            Inventory inventory,
+            InventoryView inventory,
             Transform slotsRoot,
             UIValidationReport report
         )
@@ -251,15 +256,15 @@ namespace CreativeAI.EditorTools.UI
         }
 
         private static void ValidateItemSlotPrefab(
-            Inventory inventory,
-            ItemSlot slotPrefab,
+            InventoryView inventory,
+            GameObject slotPrefab,
             UIValidationReport report
         )
         {
             if (slotPrefab == null)
                 return;
 
-            var root = slotPrefab.gameObject;
+            var root = slotPrefab;
             string path = AssetDatabase.GetAssetPath(root);
             if (path != ItemSlotPath)
             {
@@ -297,7 +302,7 @@ namespace CreativeAI.EditorTools.UI
 
         private static void ValidatePrefabComponent<T>(
             GameObject prefabRoot,
-            Inventory inventory,
+            InventoryView inventory,
             UIValidationReport report
         )
             where T : Component
@@ -418,38 +423,23 @@ namespace CreativeAI.EditorTools.UI
             var unityEvent = serializedCatcher.FindProperty("_onSelfClick");
             var persistentCalls = unityEvent?.FindPropertyRelative("m_PersistentCalls");
             var calls = persistentCalls?.FindPropertyRelative("m_Calls");
-            if (calls == null || calls.arraySize != 1)
+            if (calls == null || calls.arraySize != 0)
             {
                 report.Error(
                     catcher.name,
                     "On Self Click",
-                    $"ItemUseDialogPanel.Hide()を1件だけ登録してください。現在: {calls?.arraySize ?? 0}件",
+                    $"Persistent Listenerは使用しないでください。現在: {calls?.arraySize ?? 0}件",
                     catcher
                 );
                 return;
             }
 
-            var call = calls.GetArrayElementAtIndex(0);
-            var target = call.FindPropertyRelative("m_Target")?.objectReferenceValue;
-            string methodName = call.FindPropertyRelative("m_MethodName")?.stringValue;
-            if (target != dialog || methodName != nameof(ItemUseDialogPanel.Hide))
-            {
-                report.Error(
-                    catcher.name,
-                    "On Self Click",
-                    "ItemUseDialogPanel.Hide()を登録してください。Target To Hideや別メソッドは使用しないでください。",
-                    catcher
-                );
-            }
-            else
-            {
-                report.Ok(
-                    catcher.name,
-                    "On Self Click",
-                    "ItemUseDialogPanel.Hide()が1件だけ登録されています。",
-                    catcher
-                );
-            }
+            report.Ok(
+                catcher.name,
+                "On Self Click",
+                $"{nameof(ItemUseDialogPanel)}がRuntime actionでHide()を登録する構成です。",
+                dialog
+            );
         }
 
         private static void ValidateNoMissingScripts(GameObject root, UIValidationReport report)

@@ -1,5 +1,6 @@
 using CreativeAI.Core;
 using CreativeAI.Core.EventSystem;
+using CreativeAI.Core.SceneManagement;
 using CreativeAI.Gameplay;
 using UnityEngine;
 
@@ -19,6 +20,17 @@ namespace CreativeAI.UI
         [SerializeField]
         [Tooltip("直接 Play 時に所持品へテスト品を積む(UI開発用)。Title 経由では積まれない。")]
         private bool _seedTestItems = true;
+
+        [SerializeField]
+        [Tooltip(
+            "直接 Play 時にプレイヤーリグも出す。フィールドシーンだけ ON にする"
+                + "(UI 確認シーンでは要らないし、リグのカメラが二重になるので既定 OFF)。"
+        )]
+        private bool _spawnPlayerRig;
+
+        [SerializeField]
+        [Tooltip("リグを出す位置の SpawnPoint ID。本番の Start Spawn / Dest Spawn と同じ仕組み。")]
+        private string _spawnPointId = "start";
 
         private void Awake()
         {
@@ -45,6 +57,17 @@ namespace CreativeAI.UI
             UIRoot.EnsureResident(config != null ? config.uiRootPrefab : null);
             // ④ 戦闘実行
             BattleRunnerService.Current ??= new BattleRunner();
+
+            // ⑤ プレイヤーリグ(Title と同じ GameStarter.EnsurePlayerRig を通し、
+            //    配置も本番と同じ SpawnPoint 経由にする)。
+            if (_spawnPlayerRig)
+            {
+                var player = GameStarter.EnsurePlayerRig(
+                    config != null ? config.playerRigPrefab : null
+                );
+                if (player != null)
+                    SpawnPoint.Place(player, _spawnPointId);
+            }
 
             // 開発用: テスト品を積む(本番 Title フローでは呼ばれない = まっさら)。
             if (_seedTestItems && inventory != null)

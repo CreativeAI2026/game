@@ -11,13 +11,13 @@ namespace CreativeAI.Scenario.Editor
     /// <summary>
     /// 物語班が手書きする events.json を検証し、1イベント = 1つの EventDefinition に変換する
     /// 純粋パーサ(ファイル IO・AssetDatabase を持たない=テスト可能)。
-    /// 書式は documents/CharactersAndEvents.md、手順は documents/EventImplementation.md。
+    /// 書式は documents/ScenarioReference.md、手順は documents/EventImplementation.md。
     /// 実際の .asset 書き出しは EventImporterMenu が担う。
     /// </summary>
     public static class EventImporter
     {
         /// <summary>
-        /// documents/CharactersAndEvents.md「登場人物と立ち絵」のカタログ。
+        /// documents/ScenarioReference.md「登場人物と立ち絵」のカタログ。
         /// line ステップの portrait はこの一覧のいずれかでなければならない(打ち間違い検出)。
         /// キャラ追加・表情追加のたびにここへ足す(現状カタログはドキュメントとこの集合のみ)。
         /// </summary>
@@ -61,11 +61,22 @@ namespace CreativeAI.Scenario.Editor
         /// </summary>
         public sealed class ImportCatalog
         {
+            /// <summary>giveItem の itemKey 照合用。全カテゴリの ItemData キー。</summary>
             public IReadOnlyCollection<string> ItemKeys { get; }
 
-            public ImportCatalog(IReadOnlyCollection<string> itemKeys)
+            /// <summary>
+            /// hasItem の itemKey 照合用。**大事なもの(Important)のキーだけ**を持つ
+            /// (documents/ScenarioReference.md「hasItem の制約: itemKey は大事なものカタログ」)。
+            /// </summary>
+            public IReadOnlyCollection<string> KeyItemKeys { get; }
+
+            public ImportCatalog(
+                IReadOnlyCollection<string> itemKeys,
+                IReadOnlyCollection<string> keyItemKeys = null
+            )
             {
                 ItemKeys = itemKeys;
+                KeyItemKeys = keyItemKeys;
             }
         }
 
@@ -197,7 +208,7 @@ namespace CreativeAI.Scenario.Editor
             {
                 for (int c = 0; c < condArray.Count; c++)
                 {
-                    var cond = ParseCondition(condArray[c] as JObject, id, c, report);
+                    var cond = ParseCondition(condArray[c] as JObject, id, c, report, catalog);
                     if (cond == null)
                         ok = false;
                     else
@@ -206,7 +217,7 @@ namespace CreativeAI.Scenario.Editor
             }
 
             // progress 条件を必ず1つ含む(進行度==でちょうど1回だけ発火する前提。
-            // documents/CharactersAndEvents.md「progress を必ず1つ含む」)。
+            // documents/ScenarioReference.md「progress を必ず1つ含む」)。
             var progressValues = conditions
                 .Where(c => c.Type == ConditionType.Progress)
                 .Select(c => c.ProgressValue)
@@ -249,7 +260,7 @@ namespace CreativeAI.Scenario.Editor
             // --- nextProgress(必須・progress の value より大きい) ---
             // 進行度==で発火 → 終了時に nextProgress へ進めて value と一致しなくなる。
             // これで「どのイベントもちょうど1回だけ発火する」を保証する
-            // (documents/CharactersAndEvents.md「nextProgress 必須で progress の value より大」)。
+            // (documents/ScenarioReference.md「nextProgress 必須で progress の value より大」)。
             int? nextProgress = null;
             if (!ev.TryGetValue("nextProgress", out var np))
             {
@@ -283,7 +294,13 @@ namespace CreativeAI.Scenario.Editor
                 );
         }
 
-        private static EventCondition ParseCondition(JObject cond, string id, int i, Report report)
+        private static EventCondition ParseCondition(
+            JObject cond,
+            string id,
+            int i,
+            Report report,
+            ImportCatalog catalog
+        )
         {
             if (cond == null)
             {
@@ -312,10 +329,44 @@ namespace CreativeAI.Scenario.Editor
                     }
                     return EventCondition.Flag(key, val);
 
+                case "hasItem":
+                    var itemKey = (cond["itemKey"] as JValue)?.Value as string;
+                    if (string.IsNullOrEmpty(itemKey))
+                    {
+                        report.Error(
+                            id,
+                            $"conditions[{i}] hasItem は itemKey(大事なものの key)が必須。"
+                        );
+                        return null;
+                    }
+                    // hasItem は「大事なもの」専用(ScenarioReference.md「hasItem の制約」)。
+                    // 打ち間違いや装備品/食材の key を書くと実行時は常に false になり
+                    // イベントが永久に発火しないため、取り込み時に弾く。
+                    // giveItem と同じく、カタログ未提供なら警告どまり(アセット未作成時に全滅させない)。
+                    if (catalog?.KeyItemKeys != null)
+                    {
+                        if (!catalog.KeyItemKeys.Contains(itemKey))
+                        {
+                            report.Error(
+                                id,
+                                $"conditions[{i}] hasItem の itemKey '{itemKey}' は大事なものカタログに存在しません。"
+                            );
+                            return null;
+                        }
+                    }
+                    else
+                    {
+                        report.Warn(
+                            id,
+                            $"conditions[{i}] hasItem の itemKey '{itemKey}' は未検証(大事なものカタログ未提供)。"
+                        );
+                    }
+                    return EventCondition.HasItem(itemKey);
+
                 default:
                     report.Error(
                         id,
-                        $"conditions[{i}] の type '{type}' は不正(progress / flag のみ)。"
+                        $"conditions[{i}] の type '{type}' は不正(progress / flag / hasItem のみ)。"
                     );
                     return null;
             }
@@ -355,7 +406,7 @@ namespace CreativeAI.Scenario.Editor
                     {
                         report.Error(
                             id,
-                            $"steps[{i}] line の portrait '{portrait}' はカタログに存在しません(CharactersAndEvents.md 参照)。"
+                            $"steps[{i}] line の portrait '{portrait}' はカタログに存在しません(ScenarioReference.md 参照)。"
                         );
                         return null;
                     }
@@ -365,7 +416,7 @@ namespace CreativeAI.Scenario.Editor
                 case "choice":
                 {
                     kind = StepKind.Choice;
-                    // JSON 側のキー名は "flag"(CharactersAndEvents.md)。内部フィールドは flagKey。
+                    // JSON 側のキー名は "flag"(ScenarioReference.md)。内部フィールドは flagKey。
                     var flagKey = (step["flag"] as JValue)?.Value as string;
                     if (string.IsNullOrEmpty(flagKey))
                     {
@@ -455,7 +506,7 @@ namespace CreativeAI.Scenario.Editor
                 {
                     kind = StepKind.Battle;
                     // 敵は JSON に書かない。シーンの EventTrigger の Enemy スロットに Prefab を配線する
-                    // (documents/CharactersAndEvents.md / EventImplementation.md)。
+                    // (documents/ScenarioReference.md / EventImplementation.md)。
                     if (step["enemyKey"] != null)
                     {
                         report.Error(
@@ -477,7 +528,7 @@ namespace CreativeAI.Scenario.Editor
         }
 
         /// <summary>
-        /// battle 配置制約(CharactersAndEvents.md): 先頭・末尾は line。battle は会話の途中のみ。
+        /// battle 配置制約(ScenarioReference.md): 先頭・末尾は line。battle は会話の途中のみ。
         /// かつ 1イベントにつき battle は最大1つ。
         /// kind が解析できなかったステップ(null)は既に別途エラー済みなのでここでは無視する。
         /// </summary>
@@ -490,7 +541,7 @@ namespace CreativeAI.Scenario.Editor
             int battleCount = kinds.Count(k => k == StepKind.Battle);
 
             // 先頭・末尾 line は「battle が単独・末尾にならない」ための battle 制約
-            // (documents/CharactersAndEvents.md)。battle を含まないイベントには適用しない。
+            // (documents/ScenarioReference.md)。battle を含まないイベントには適用しない。
             if (battleCount > 0)
             {
                 if (kinds[0] is StepKind first && first != StepKind.Line)

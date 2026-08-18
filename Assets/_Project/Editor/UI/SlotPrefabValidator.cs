@@ -39,8 +39,8 @@ namespace CreativeAI.EditorTools.UI
         )
         {
             "Icon",
+            "Background",
             "Frame",
-            "SelectedFrame",
             "CountBadge",
             "CountText",
             "EquippedMarker",
@@ -60,7 +60,7 @@ namespace CreativeAI.EditorTools.UI
                 report,
                 typeof(SlotIconView),
                 typeof(SlotHoverView),
-                typeof(SlotSelectionView)
+                typeof(SlotFrameView)
             );
             ValidateBasePrefab(
                 HolderSlotBasePath,
@@ -81,10 +81,10 @@ namespace CreativeAI.EditorTools.UI
                     typeof(SlotIconView),
                     typeof(SlotCountBadgeView),
                     typeof(SlotHoverView),
-                    typeof(SlotSelectionView),
+                    typeof(SlotFrameView),
                     typeof(SlotMarkerView),
                 },
-                new[] { typeof(SlotFrameView), typeof(SlotEmptyView) }
+                new[] { typeof(SlotEmptyView) }
             );
             ValidateVariant(
                 RecipeSlotPath,
@@ -95,15 +95,9 @@ namespace CreativeAI.EditorTools.UI
                     typeof(RecipeSlot),
                     typeof(SlotIconView),
                     typeof(SlotHoverView),
-                    typeof(SlotSelectionView),
-                },
-                new[]
-                {
                     typeof(SlotFrameView),
-                    typeof(SlotEmptyView),
-                    typeof(SlotCountBadgeView),
-                    typeof(SlotMarkerView),
-                }
+                },
+                new[] { typeof(SlotEmptyView), typeof(SlotCountBadgeView), typeof(SlotMarkerView) }
             );
             ValidateVariant(
                 MaterialSlotPath,
@@ -203,6 +197,11 @@ namespace CreativeAI.EditorTools.UI
             }
 
             ValidateViewReferences(root, report);
+            ValidateFrameRole(
+                root,
+                path == HolderSlotBasePath ? SlotFrameRole.ItemSet : SlotFrameRole.Item,
+                report
+            );
             ValidateDecorationRaycasts(root, report);
             ValidateCountBadgeLayout(root, report);
             report.Ok(root.name, "Base Prefab構成", "派生専用Componentの混入はありません。", root);
@@ -494,15 +493,30 @@ namespace CreativeAI.EditorTools.UI
         private static void ValidateViewReferences(GameObject root, UIValidationReport report)
         {
             foreach (var view in root.GetComponentsInChildren<SlotIconView>(true))
-                ValidateLocalReferences(view, root.transform, report, "_image");
+                ValidateLocalReferences(view, root.transform, report, "_image", "_fitRect");
             foreach (var view in root.GetComponentsInChildren<SlotEmptyView>(true))
                 ValidateLocalReferences(view, root.transform, report, "_emptyObject");
             foreach (var view in root.GetComponentsInChildren<SlotHoverView>(true))
-                ValidateLocalReferences(view, root.transform, report, "_hoverScale", "_visualRoot");
+                ValidateLocalReferences(
+                    view,
+                    root.transform,
+                    report,
+                    "_hoverScale",
+                    "_animationTarget"
+                );
             foreach (var view in root.GetComponentsInChildren<SlotFrameView>(true))
-                ValidateLocalReferences(view, root.transform, report, "_frame");
-            foreach (var view in root.GetComponentsInChildren<SlotSelectionView>(true))
-                ValidateLocalReferences(view, root.transform, report, "_selectedFrame");
+                ValidateLocalReferences(
+                    view,
+                    root.transform,
+                    report,
+                    "_frame",
+                    "_normalSprite",
+                    "_selectedSprite",
+                    "_itemSetSprite",
+                    "_itemWithCountSprite",
+                    "_itemSetSelectedSprite",
+                    "_itemWithCountSelectedSprite"
+                );
             foreach (var view in root.GetComponentsInChildren<SlotCountBadgeView>(true))
             {
                 ValidateLocalReferences(
@@ -530,6 +544,24 @@ namespace CreativeAI.EditorTools.UI
             }
         }
 
+        private static void ValidateFrameRole(
+            GameObject root,
+            SlotFrameRole expectedRole,
+            UIValidationReport report
+        )
+        {
+            var frameView = root.GetComponentInChildren<SlotFrameView>(true);
+            if (frameView == null || frameView.Role == expectedRole)
+                return;
+
+            report.Error(
+                root.name,
+                nameof(SlotFrameView),
+                $"SlotFrameView の Role を {expectedRole} に設定してください。",
+                frameView
+            );
+        }
+
         private static void ValidateSlotControllerReferences(
             GameObject root,
             UIValidationReport report
@@ -546,7 +578,7 @@ namespace CreativeAI.EditorTools.UI
                     "_iconView",
                     "_countBadgeView",
                     "_hoverView",
-                    "_selectionView",
+                    "_frameView",
                     "_markerView"
                 );
             }
@@ -561,7 +593,7 @@ namespace CreativeAI.EditorTools.UI
                     "_visualRootRect",
                     "_iconView",
                     "_hoverView",
-                    "_selectionView"
+                    "_frameView"
                 );
             }
 
