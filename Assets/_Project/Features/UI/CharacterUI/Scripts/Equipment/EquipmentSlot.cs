@@ -56,42 +56,17 @@ namespace CreativeAI.UI
             Vector3 frameScale = frameRect.localScale;
             float frameScaleMagnitude = Mathf.Abs(frameScale.x);
             float targetScaleX = mirrored ? -frameScaleMagnitude : frameScaleMagnitude;
-            bool orientationChanged = (frameScale.x < 0f) != mirrored;
-
-            Vector2 contentPosition = Vector2.zero;
-            if (mirrored)
-                contentPosition.x = frameRect.anchoredPosition.x * 2f;
-
-            RectTransform iconArea = _iconView?.FitRect;
-            RectTransform iconRect = _iconView?.IconRect;
-            RectTransform emptyRect = _emptyView?.EmptyRect;
-
             frameRect.DOKill();
-            iconArea?.DOKill();
-            iconRect?.DOKill();
-            emptyRect?.DOKill();
 
-            if (duration > 0f && orientationChanged && Application.isPlaying)
+            if (duration > 0f && Application.isPlaying)
             {
                 frameRect.DOScaleX(targetScaleX, duration).SetEase(Ease.InOutSine);
-                iconArea?.DOAnchorPos(contentPosition, duration).SetEase(Ease.InOutSine);
-                iconRect
-                    ?.DOAnchorPos(contentPosition, duration)
-                    .SetEase(Ease.InOutSine)
-                    .OnComplete(() => _iconView?.RefreshLayout());
-                emptyRect?.DOAnchorPos(contentPosition, duration).SetEase(Ease.InOutSine);
             }
             else
             {
                 frameScale.x = targetScaleX;
                 frameRect.localScale = frameScale;
-                if (iconArea != null)
-                    iconArea.anchoredPosition = contentPosition;
-                if (emptyRect != null)
-                    emptyRect.anchoredPosition = contentPosition;
             }
-
-            _iconView?.RefreshLayout();
         }
 
         public new ItemData Item
