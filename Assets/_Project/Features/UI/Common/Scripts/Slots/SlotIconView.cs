@@ -1,8 +1,11 @@
 using System;
+using System.Runtime.CompilerServices;
 using CreativeAI.Gameplay;
 using DG.Tweening;
 using UnityEngine;
 using UnityEngine.UI;
+
+[assembly: InternalsVisibleTo("CreativeAI.Tests.EditMode")]
 
 namespace CreativeAI.UI
 {
@@ -166,8 +169,36 @@ namespace CreativeAI.UI
             if (sprite == null || targetSize.x <= 0f || targetSize.y <= 0f)
                 return;
 
-            Vector2[] vertices = sprite.vertices;
-            if (vertices == null || vertices.Length == 0 || sprite.pixelsPerUnit <= 0f)
+            CalculateVisibleContentLayout(
+                sprite.rect,
+                sprite.pivot,
+                sprite.pixelsPerUnit,
+                sprite.vertices,
+                targetSize,
+                out imageSize,
+                out visibleCenterOffset
+            );
+        }
+
+        internal static void CalculateVisibleContentLayout(
+            Rect spriteRect,
+            Vector2 spritePivot,
+            float pixelsPerUnit,
+            Vector2[] vertices,
+            Vector2 targetSize,
+            out Vector2 imageSize,
+            out Vector2 visibleCenterOffset
+        )
+        {
+            imageSize = targetSize;
+            visibleCenterOffset = Vector2.zero;
+            if (
+                vertices == null
+                || vertices.Length == 0
+                || pixelsPerUnit <= 0f
+                || targetSize.x <= 0f
+                || targetSize.y <= 0f
+            )
                 return;
 
             Vector2 contentMin = vertices[0];
@@ -183,8 +214,8 @@ namespace CreativeAI.UI
                 return;
 
             float scale = Mathf.Min(targetSize.x / contentSize.x, targetSize.y / contentSize.y);
-            Vector2 fullSize = sprite.rect.size / sprite.pixelsPerUnit;
-            Vector2 fullCenter = (sprite.rect.size * 0.5f - sprite.pivot) / sprite.pixelsPerUnit;
+            Vector2 fullSize = spriteRect.size / pixelsPerUnit;
+            Vector2 fullCenter = (spriteRect.size * 0.5f - spritePivot) / pixelsPerUnit;
             Vector2 contentCenter = (contentMin + contentMax) * 0.5f;
 
             imageSize = fullSize * scale;
