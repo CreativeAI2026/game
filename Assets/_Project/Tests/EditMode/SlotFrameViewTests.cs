@@ -48,7 +48,7 @@ namespace CreativeAI.Tests.EditMode
         [Test]
         public void ItemWithCountAndSelected_UsesCombinedSprite()
         {
-            var item = ScriptableObject.CreateInstance<CreativeAI.Gameplay.ItemData>();
+            var item = ScriptableObject.CreateInstance<CreativeAI.Gameplay.FoodData>();
             try
             {
                 _view.SetContent(item, 2);
