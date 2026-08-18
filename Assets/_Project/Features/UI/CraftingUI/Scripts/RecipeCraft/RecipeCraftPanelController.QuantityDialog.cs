@@ -27,12 +27,17 @@ namespace CreativeAI.UI.CraftingUI
 
             _quantityDialogController.QuantityChanged -= OnQuantityChanged;
             _quantityDialogController.QuantityChanged += OnQuantityChanged;
+            _quantityDialogController.Closed -= OnQuantityDialogClosed;
+            _quantityDialogController.Closed += OnQuantityDialogClosed;
         }
 
         private void UnbindDialog()
         {
             if (_quantityDialogController != null)
+            {
                 _quantityDialogController.QuantityChanged -= OnQuantityChanged;
+                _quantityDialogController.Closed -= OnQuantityDialogClosed;
+            }
         }
 
         private void OpenQuantityDialog()
@@ -57,7 +62,7 @@ namespace CreativeAI.UI.CraftingUI
             _selectionState.SetQuantity(
                 Mathf.Clamp(_selectionState.Quantity, 1, Mathf.Max(1, max))
             );
-            _quantityDialogController.Show(
+            bool opened = _quantityDialogController.Show(
                 recipe.resultItem?.icon,
                 recipe.resultItem?.itemName,
                 1,
@@ -65,6 +70,8 @@ namespace CreativeAI.UI.CraftingUI
                 _selectionState.Quantity,
                 OnQuantityConfirmed
             );
+            if (opened)
+                _recipeListView?.SetInteractionEnabled(false);
         }
 
         private void CloseQuantityDialog()
@@ -89,7 +96,15 @@ namespace CreativeAI.UI.CraftingUI
         private void OnQuantityChanged(int quantity)
         {
             _selectionState.SetQuantity(quantity);
-            RefreshMaterialRows();
+            RefreshMaterialRows(animate: false);
+        }
+
+        private void OnQuantityDialogClosed()
+        {
+            bool canInteract = !IsCraftInteractionLocked;
+            _recipeListView?.SetInteractionEnabled(canInteract);
+            if (canInteract)
+                _recipeListView?.SelectRecipe(_selectionState.Recipe);
         }
 
         private int GetMaximumCraftable()

@@ -36,7 +36,8 @@ namespace CreativeAI.UI.CraftingUI
             ItemData resultItem,
             int resultCount,
             Action onResultClosed,
-            Action onFailed = null
+            Action onFailed = null,
+            bool showNewBadge = false
         )
         {
             if (craftAction == null || _isCraftFlowRunning || !ValidateCraftFlowReferences())
@@ -77,7 +78,7 @@ namespace CreativeAI.UI.CraftingUI
                     }
                 }
 
-                ShowResult(resultItem, resultCount, CompleteResult);
+                ShowResult(resultItem, resultCount, CompleteResult, showNewBadge);
                 awaitingResultClose = true;
             }
             finally
@@ -128,7 +129,12 @@ namespace CreativeAI.UI.CraftingUI
             _loadingOverlayView.RotateGear(speed);
         }
 
-        public void ShowResult(ItemData resultItem, int count, System.Action closeAction)
+        public void ShowResult(
+            ItemData resultItem,
+            int count,
+            System.Action closeAction,
+            bool showNewBadge = false
+        )
         {
             if (!ValidateRequiredReference(_resultPanelView, nameof(_resultPanelView)))
                 return;
@@ -139,7 +145,7 @@ namespace CreativeAI.UI.CraftingUI
                 resultItem == null ? string.Empty
                 : safeCount > 1 ? $"{resultItem.itemName} \u00d7{safeCount}"
                 : resultItem.itemName;
-            _resultPanelView.Show(resultItem?.icon, itemName, closeAction);
+            _resultPanelView.Show(resultItem?.icon, itemName, showNewBadge, closeAction);
         }
 
         public void HideResult() => HideSharedResult();

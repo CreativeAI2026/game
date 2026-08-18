@@ -12,6 +12,7 @@ namespace CreativeAI.Tests.EditMode
         private GameObject _root;
         private GameObject _loadingRoot;
         private CraftPanelController _controller;
+        private CraftResultPanelView _resultView;
 
         [SetUp]
         public void SetUp()
@@ -35,14 +36,14 @@ namespace CreativeAI.Tests.EditMode
                 typeof(CraftResultPanelView)
             );
             resultRoot.transform.SetParent(_root.transform, false);
-            var resultView = resultRoot.GetComponent<CraftResultPanelView>();
+            _resultView = resultRoot.GetComponent<CraftResultPanelView>();
             TestReflection.SetField(
-                resultView,
+                _resultView,
                 "_canvasGroup",
                 resultRoot.GetComponent<CanvasGroup>()
             );
             TestReflection.SetField(
-                resultView,
+                _resultView,
                 "_closeOnSelfClick",
                 resultRoot.GetComponent<CloseOnSelfClick>()
             );
@@ -63,7 +64,7 @@ namespace CreativeAI.Tests.EditMode
             closeButtonRoot.transform.SetParent(controllerRoot.transform, false);
 
             TestReflection.SetField(_controller, "_loadingOverlayView", loadingView);
-            TestReflection.SetField(_controller, "_resultPanelView", resultView);
+            TestReflection.SetField(_controller, "_resultPanelView", _resultView);
             TestReflection.SetField(_controller, "_warningToastView", warningView);
             TestReflection.SetField(
                 _controller,
@@ -141,6 +142,28 @@ namespace CreativeAI.Tests.EditMode
 
             Assert.IsFalse(routine.MoveNext());
             Assert.IsFalse(_controller.IsCraftFlowRunning);
+        }
+
+        [Test]
+        public void RunCraftFlow_FirstCraft_ShowsNewBadgeUntilResultCloses()
+        {
+            IEnumerator routine = _controller.RunCraftFlow(
+                () => true,
+                null,
+                1,
+                null,
+                showNewBadge: true
+            );
+
+            Assert.IsTrue(routine.MoveNext());
+            Assert.IsFalse(routine.MoveNext());
+
+            var badge = TestReflection.GetField<TMPro.TMP_Text>(_resultView, "_newBadge");
+            Assert.IsNotNull(badge);
+            Assert.IsTrue(badge.gameObject.activeSelf);
+
+            _controller.CancelCraftFlow();
+            Assert.IsFalse(badge.gameObject.activeSelf);
         }
     }
 }

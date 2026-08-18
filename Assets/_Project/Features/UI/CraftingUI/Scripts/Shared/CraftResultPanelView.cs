@@ -29,6 +29,7 @@ namespace CreativeAI.UI.CraftingUI
         private TMP_Text _itemName;
 
         private Action _closedAction;
+        private TMP_Text _newBadge;
 
 #if UNITY_EDITOR
         private void Reset() => AutoAssignReferences();
@@ -51,10 +52,13 @@ namespace CreativeAI.UI.CraftingUI
         }
 #endif
 
-        public void Show(Sprite icon, string itemName, Action onClosed)
+        public void Show(Sprite icon, string itemName, Action onClosed) =>
+            Show(icon, itemName, false, onClosed);
+
+        public void Show(Sprite icon, string itemName, bool showNewBadge, Action onClosed)
         {
             _closedAction = onClosed;
-            RefreshContent(icon, itemName);
+            RefreshContent(icon, itemName, showNewBadge);
             _closeOnSelfClick?.SetClickAction(Hide);
             CraftUIAnimationUtility.PlayResultIn(gameObject);
         }
@@ -89,7 +93,7 @@ namespace CreativeAI.UI.CraftingUI
             _closedAction = null;
         }
 
-        private void RefreshContent(Sprite icon, string itemName)
+        private void RefreshContent(Sprite icon, string itemName, bool showNewBadge)
         {
             if (_itemImage != null)
             {
@@ -100,6 +104,8 @@ namespace CreativeAI.UI.CraftingUI
 
             if (_itemName != null)
                 _itemName.text = itemName ?? string.Empty;
+
+            SetNewBadgeVisible(showNewBadge);
         }
 
         private void ClearContent()
@@ -113,6 +119,45 @@ namespace CreativeAI.UI.CraftingUI
 
             if (_itemName != null)
                 _itemName.text = string.Empty;
+
+            SetNewBadgeVisible(false);
+        }
+
+        private void SetNewBadgeVisible(bool visible)
+        {
+            if (!visible && _newBadge == null)
+                return;
+
+            EnsureNewBadge();
+            _newBadge.gameObject.SetActive(visible);
+        }
+
+        private void EnsureNewBadge()
+        {
+            if (_newBadge != null)
+                return;
+
+            var badgeObject = new GameObject(
+                "NewCraftedItemBadge",
+                typeof(RectTransform),
+                typeof(CanvasRenderer)
+            );
+            var badgeRect = (RectTransform)badgeObject.transform;
+            badgeRect.SetParent(transform, false);
+            badgeRect.anchorMin = Vector2.one;
+            badgeRect.anchorMax = Vector2.one;
+            badgeRect.pivot = Vector2.one;
+            badgeRect.anchoredPosition = new Vector2(-36f, -36f);
+            badgeRect.sizeDelta = new Vector2(220f, 70f);
+            badgeRect.SetAsLastSibling();
+
+            _newBadge = badgeObject.AddComponent<TextMeshProUGUI>();
+            _newBadge.text = "NEW!!";
+            _newBadge.alignment = TextAlignmentOptions.TopRight;
+            _newBadge.fontSize = 40f;
+            _newBadge.fontStyle = FontStyles.Bold | FontStyles.Italic;
+            _newBadge.color = new Color(1f, 0.82f, 0.12f, 1f);
+            _newBadge.raycastTarget = false;
         }
     }
 }
