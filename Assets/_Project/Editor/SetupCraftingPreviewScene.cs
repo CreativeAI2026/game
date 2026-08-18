@@ -161,7 +161,6 @@ namespace CreativeAI.EditorTools
             Directory.CreateDirectory(Path.GetDirectoryName(CraftingPreviewScenePath));
             EditorSceneManager.SaveScene(scene, CraftingPreviewScenePath);
         }
-
     }
 }
 #endif

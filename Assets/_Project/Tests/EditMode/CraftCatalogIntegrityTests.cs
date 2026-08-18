@@ -34,7 +34,11 @@ namespace CreativeAI.Tests.EditMode
                 Assert.That(registered.Add(item), Is.True, $"ItemDB内で重複: {item.name}");
             }
 
-            CollectionAssert.AreEquivalent(items, registered, "ItemDBがInventory/Dataと一致しません。");
+            CollectionAssert.AreEquivalent(
+                items,
+                registered,
+                "ItemDBがInventory/Dataと一致しません。"
+            );
         }
 
         [Test]
@@ -53,9 +57,10 @@ namespace CreativeAI.Tests.EditMode
                 Assert.That(recipe.material2, Is.Not.Null, $"{recipe.name}: material2");
                 Assert.That(recipe.material1, Is.Not.SameAs(recipe.material2), recipe.name);
 
-                string pair = string.CompareOrdinal(recipe.material1.key, recipe.material2.key) < 0
-                    ? $"{recipe.material1.key}|{recipe.material2.key}"
-                    : $"{recipe.material2.key}|{recipe.material1.key}";
+                string pair =
+                    string.CompareOrdinal(recipe.material1.key, recipe.material2.key) < 0
+                        ? $"{recipe.material1.key}|{recipe.material2.key}"
+                        : $"{recipe.material2.key}|{recipe.material1.key}";
                 Assert.That(pairs.Add(pair), Is.True, $"素材ペアが重複しています: {pair}");
             }
 
@@ -63,7 +68,11 @@ namespace CreativeAI.Tests.EditMode
                 RecipeDatabasePath
             );
             Assert.That(database, Is.Not.Null, RecipeDatabasePath);
-            CollectionAssert.AreEquivalent(recipes, database.Recipes, "CraftRecipeDBがDataと一致しません。");
+            CollectionAssert.AreEquivalent(
+                recipes,
+                database.Recipes,
+                "CraftRecipeDBがDataと一致しません。"
+            );
         }
 
         private static List<T> LoadAssets<T>(string folder)
@@ -84,9 +93,15 @@ namespace CreativeAI.Tests.EditMode
             var duplicates = items
                 .GroupBy(selector)
                 .Where(group => group.Count() > 1)
-                .Select(group => $"{group.Key}: {string.Join(", ", group.Select(item => item.name))}")
+                .Select(group =>
+                    $"{group.Key}: {string.Join(", ", group.Select(item => item.name))}"
+                )
                 .ToArray();
-            Assert.That(duplicates, Is.Empty, $"{label}が重複しています:\n{string.Join("\n", duplicates)}");
+            Assert.That(
+                duplicates,
+                Is.Empty,
+                $"{label}が重複しています:\n{string.Join("\n", duplicates)}"
+            );
         }
     }
 }
