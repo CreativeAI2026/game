@@ -105,10 +105,13 @@ namespace CreativeAI.Gameplay
         private void UpdateSignalRows()
         {
             // 0: 逃避
+            string flightStatus = _panicDetector.IsFlightDetectionActive
+                ? $"逃避    継続: {_panicDetector.FlightTimer:F1}s"
+                : "逃避    (対象敵なし)";
             UpdateRow(
                 0,
                 _panicDetector.FlightScore,
-                $"逃避    継続: {_panicDetector.FlightTimer:F1}s"
+                flightStatus
             );
 
             // 1: スパム

@@ -93,6 +93,14 @@ namespace CreativeAI.Gameplay
 
         private void OnSoundHeard(SoundEventData data)
         {
+            // 音よりもスポットライトでの視認を最優先する
+            if (boss.CheckInFlashlight())
+            {
+                boss.IsAlerted = true;
+                boss.ChangeState(new TBossChaseState(boss));
+                return;
+            }
+
             // 半径フィルタ：音の届く範囲内かチェック
             float distToSound = Vector3.Distance(boss.transform.position, data.Position);
             if (distToSound > data.Radius)

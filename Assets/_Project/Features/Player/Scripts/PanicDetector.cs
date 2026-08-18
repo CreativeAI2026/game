@@ -38,6 +38,18 @@ namespace CreativeAI.Gameplay
         private Transform _enemyTransform;
 
         [Header("逃避 設定")]
+        [Tooltip("敵が存在しない場合やイベント中に逃避感知を動的に有効/無効にするか")]
+        [SerializeField]
+        private bool _enableFlightDetection = true;
+
+        [Tooltip("敵オブジェクトがHierarchy上で有効（activeInHierarchy）な時のみ逃避とみなすか")]
+        [SerializeField]
+        private bool _requireActiveEnemy = true;
+
+        [Tooltip("敵の参照がInspectorで未設定の場合、Tag 'Enemy' で自動検索するか")]
+        [SerializeField]
+        private bool _autoSearchEnemyByTag = true;
+
         [Tooltip("この秒数以上、敵にカメラを向けず移動し続けたら満点（重み: 20）")]
         [SerializeField]
         private float _flightMaxDuration = 3f;
@@ -109,6 +121,7 @@ namespace CreativeAI.Gameplay
         // 回避失敗
         private float _lastHitTime = -999f;
         private int _hitChainCount = 0;
+        private float _lastHp = -1f;
 
         // 意思崩壊バグ修正用フラグ
         // FireArrow() の直後は IsAiming が false になるが、それはキャンセルではなく発射成功のため除外する
@@ -122,6 +135,12 @@ namespace CreativeAI.Gameplay
 
         /// <summary>逃避継続時間（秒）</summary>
         public float FlightTimer => _flightTimer;
+
+        /// <summary>逃避検知が有効かつ対象の敵が存在しているか</summary>
+        public bool IsFlightDetectionActive =>
+            _enableFlightDetection &&
+            _enemyTransform != null &&
+            (!_requireActiveEnemy || _enemyTransform.gameObject.activeInHierarchy);
 
         /// <summary>スパムの正規化スコア（0〜1）</summary>
         public float SpamScore { get; private set; } = 0f;
@@ -147,8 +166,11 @@ namespace CreativeAI.Gameplay
         /// <summary>弓キャンセル累計回数</summary>
         public int AimCancelCount => _aimCancelCount;
 
-        /// <summary>回避失敗の正規化スコア（0〜1）</summary>
-        public float HitChainScore => Mathf.Clamp01((float)_hitChainCount / _hitChainMaxCount);
+        /// <summary>回避失敗の正規化スコア（0〜1）（2回目以降の連続被弾からカウント増加）</summary>
+        public float HitChainScore =>
+            _hitChainCount <= 1 || _hitChainMaxCount <= 1
+                ? 0f
+                : Mathf.Clamp01((float)(_hitChainCount - 1) / (_hitChainMaxCount - 1));
 
         /// <summary>連続被弾回数</summary>
         public int HitChainCount => _hitChainCount;
@@ -230,13 +252,60 @@ namespace CreativeAI.Gameplay
         }
 
         /// <summary>
+        /// 外部やイベントからターゲットの敵を動的に設定するメソッド
+        /// </summary>
+        public void SetEnemyTarget(Transform enemy)
+        {
+            _enemyTransform = enemy;
+        }
+
+        /// <summary>
+        /// 外部やイベントから逃避判定の有効/無効を切り替えるメソッド
+        /// </summary>
+        public void SetFlightDetectionEnabled(bool enabled)
+        {
+            _enableFlightDetection = enabled;
+            if (!enabled)
+            {
+                _flightTimer = 0f;
+            }
+        }
+
+        /// <summary>
         /// 指標1: 逃避
         /// 敵方向からカメラが大きく離れており、かつプレイヤーが移動中の時間を計測する。
+        /// 敵が存在しない場面や非アクティブな場合は逃避判定を行わない。
         /// </summary>
         private void DetectFlight()
         {
-            if (_inputHandler == null || _playerController == null || _enemyTransform == null)
+            if (!_enableFlightDetection)
+            {
+                _flightTimer = 0f;
                 return;
+            }
+
+            if (_inputHandler == null || _playerController == null)
+                return;
+
+            // 敵参照がない場合に自動検索
+            if (_enemyTransform == null && _autoSearchEnemyByTag)
+            {
+                GameObject enemyObj = GameObject.FindWithTag("Enemy");
+                if (enemyObj != null)
+                {
+                    _enemyTransform = enemyObj.transform;
+                }
+            }
+
+            // 敵が存在しない、または非アクティブな場合は逃避判定を行わない（タイマー減少）
+            if (
+                _enemyTransform == null
+                || (_requireActiveEnemy && !_enemyTransform.gameObject.activeInHierarchy)
+            )
+            {
+                _flightTimer = Mathf.Max(0f, _flightTimer - Time.deltaTime);
+                return;
+            }
 
             bool isMoving = _inputHandler.move.sqrMagnitude > 0.01f;
             if (!isMoving)
@@ -387,10 +456,10 @@ namespace CreativeAI.Gameplay
         ///
         /// 【設計方針】
         /// 「1つの行動を強く繰り返す」こと自体も焦りの強いシグナルであるため、
-        /// 単純な重み付き合計ではなく「最大値主体 + 多様性ボーナス」の式を採用する。
+        ///  単純な重み付き合計ではなく「最大値主体 + 多様性ボーナス」の式を採用する。
         ///
-        ///   PanicScore = max(各指標スコア) × 70  ← 1行動の強度を主軸にする
-        ///              + avg(全指標スコア)  × 30  ← 複数行動の組み合わせでさらに上昇
+        ///  PanicScore = max(各指標スコア) × 70  ← 1行動の強度を主軸にする
+        ///             + avg(全指標スコア) × 30  ← 複数行動の組み合わせでさらに上昇
         ///
         /// 結果:
         ///   1指標だけ 100%  → 約 75〜78 （明確な焦り状態と判定）
@@ -493,6 +562,22 @@ namespace CreativeAI.Gameplay
         /// </summary>
         private void OnPlayerHpChanged(float currentHp, float maxHp)
         {
+            // シーン開始直後の初期化イベントは記録のみで処理終了
+            if (_lastHp < 0f)
+            {
+                _lastHp = currentHp;
+                return;
+            }
+
+            // 回復やHP不変の場合は記録のみで処理終了
+            if (currentHp >= _lastHp)
+            {
+                _lastHp = currentHp;
+                return;
+            }
+
+            // ダメージ受けてHPが減少した場合
+            _lastHp = currentHp;
             float now = Time.time;
 
             // 前回の被弾から一定時間以内なら連続被弾としてカウント
@@ -503,7 +588,7 @@ namespace CreativeAI.Gameplay
             }
             else
             {
-                // チェーンが切れた場合は1からカウントし直す
+                // 単発被弾（連続被弾チェーンの1回目スタート）
                 _hitChainCount = 1;
             }
 
@@ -535,6 +620,7 @@ namespace CreativeAI.Gameplay
             _aimCancelCount = 0;
             _hitChainCount = 0;
             _lastHitTime = -999f;
+            _lastHp = -1f;
             _justFired = false;
             PanicScore = 0f;
             LastDetectedSignal = "なし";

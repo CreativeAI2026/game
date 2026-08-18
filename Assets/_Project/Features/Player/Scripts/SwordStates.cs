@@ -34,8 +34,11 @@ namespace CreativeAI.Gameplay
 
         public override void Enter()
         {
-            ctx.playerController.CanMove = true;
-            ctx.playerController.CanChangeWeapon = true;
+            if (!ctx.playerController.IsGrabbed)
+            {
+                ctx.playerController.CanMove = true;
+                ctx.playerController.CanChangeWeapon = true;
+            }
 
             ctx.comboStep = 0;
             ctx.guardHitCount = 0;

@@ -31,6 +31,9 @@ namespace CreativeAI.Gameplay
 
         public int CurrentWeaponIndex => _currentWeaponIndex;
 
+        /// <summary>登録されている武器の総数。WeaponHUDController がパネル数の決定に使用する。</summary>
+        public int WeaponCount => _weapons != null ? _weapons.Length : 0;
+
         // --- セーブ復元(IWeaponSaveState): 選択武器を保存/復元する(spec §6) ---
 
         public int CaptureSelectedWeaponIndex() => _currentWeaponIndex;

@@ -128,9 +128,13 @@ namespace CreativeAI.Gameplay
             if (input == null || _weaponManager == null)
                 return;
 
-            // 怯み中は武器ステートマシンを完全停止し、入力を一切処理しない
-            if (playerController.IsFlinching)
+            // 怯み中、または掴まれ中は武器ステートマシンを完全停止し、入力を一切処理しない
+            if (playerController.IsFlinching || playerController.IsGrabbed)
+            {
+                if (_currentState is not SwordStateFree)
+                    ChangeState(new SwordStateFree(this));
                 return;
+            }
 
             // 非装備時に裏で入力を消費するのを防ぐ
             if (_weaponManager.CurrentWeaponIndex != weaponIndex)

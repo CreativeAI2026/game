@@ -192,8 +192,13 @@ namespace CreativeAI.Gameplay
             if (_input == null || _playerController == null)
                 return;
 
-            if (_playerController.IsFlinching)
+            if (_playerController.IsFlinching || _playerController.IsGrabbed)
+            {
+                if (_currentState is not StateFree)
+                    ChangeState(new StateFree(this));
+                UpdateBowString(0f);
                 return;
+            }
 
             if (_weaponManager != null && _weaponManager.CurrentWeaponIndex != weaponIndex)
             {

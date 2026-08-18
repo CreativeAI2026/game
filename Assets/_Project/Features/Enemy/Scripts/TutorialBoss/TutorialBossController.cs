@@ -283,26 +283,8 @@ namespace CreativeAI.Gameplay
         /// <param name="rotateSpeed">補間速度（デフォルト5）</param>
         public void RotateFlashlightToward(Vector3 targetWorldPos, float rotateSpeed = 5f)
         {
-            if (flashlightTransform == null)
-            {
-                return;
-            }
-
-            // 縦方向には動かさない。水平成分のみで回転方向を決める。
-            Vector3 dir = targetWorldPos - flashlightTransform.position;
-            dir.y = 0f;
-            if (dir.sqrMagnitude < 0.0001f)
-            {
-                return;
-            }
-            dir.Normalize();
-
-            Quaternion targetRot = Quaternion.LookRotation(dir);
-            flashlightTransform.rotation = Quaternion.Slerp(
-                flashlightTransform.rotation,
-                targetRot,
-                Time.deltaTime * rotateSpeed
-            );
+            // スクリプトで強制的にライトの向きを変えるとアニメーションと競合してバグるため、
+            // 処理を削除し、ライトは常に体の向きに固定されるようにする。
         }
 
         /// <summary>

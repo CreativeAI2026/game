@@ -32,8 +32,11 @@ namespace CreativeAI.Gameplay
 
         public override void Enter()
         {
-            ctx._playerController.IsAiming = false;
-            ctx._playerController.CanChangeWeapon = true;
+            if (!ctx._playerController.IsGrabbed)
+            {
+                ctx._playerController.IsAiming = false;
+                ctx._playerController.CanChangeWeapon = true;
+            }
             ctx._drawProgress = 0f;
             ctx.DestroyArrow();
             ctx.HideCrossHair();
