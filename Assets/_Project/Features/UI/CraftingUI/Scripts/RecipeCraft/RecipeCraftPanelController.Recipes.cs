@@ -184,7 +184,7 @@ namespace CreativeAI.UI.CraftingUI
             RefreshMaterialRows();
         }
 
-        private void RefreshMaterialRows()
+        private void RefreshMaterialRows(bool animate = true)
         {
             if (_materialRowsView == null)
                 return;
@@ -200,7 +200,7 @@ namespace CreativeAI.UI.CraftingUI
                 _selectionState.Quantity,
                 GetInventorySnapshot()
             );
-            _materialRowsView.ShowRows(rows);
+            _materialRowsView.ShowRows(rows, animate);
         }
 
         private void SubscribeRecipeBookChanges()

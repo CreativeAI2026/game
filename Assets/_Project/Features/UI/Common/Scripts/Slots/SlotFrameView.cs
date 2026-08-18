@@ -30,6 +30,15 @@ namespace CreativeAI.UI
         [SerializeField]
         private Sprite _itemWithCountSprite;
 
+        [SerializeField]
+        private Sprite _itemSetSelectedSprite;
+
+        [SerializeField]
+        private Sprite _itemWithCountSelectedSprite;
+
+        [SerializeField]
+        private Sprite _customSelectedSprite;
+
         [Header("Slot Type")]
         [SerializeField]
         private SlotFrameRole _role = SlotFrameRole.Item;
@@ -74,9 +83,15 @@ namespace CreativeAI.UI
         public Sprite ResolveSprite()
         {
             if (_role == SlotFrameRole.Custom)
-                return _frame != null ? _frame.sprite : null;
+                return _selected && _customSelectedSprite != null
+                    ? _customSelectedSprite
+                    : _normalSprite;
             if (_role == SlotFrameRole.ItemSet)
-                return _itemSetSprite;
+                return _selected && _itemSetSelectedSprite != null
+                    ? _itemSetSelectedSprite
+                    : _itemSetSprite;
+            if (_selected && _hasVisibleCount && _itemWithCountSelectedSprite != null)
+                return _itemWithCountSelectedSprite;
             if (_selected)
                 return _selectedSprite;
             if (_hasVisibleCount)
@@ -125,7 +140,7 @@ namespace CreativeAI.UI
 
             _hasWarnedMissingSprite = true;
             Debug.LogWarning(
-                $"{nameof(SlotFrameView)} '{name}' の状態Spriteが不足しています。PrefabのNormal / Selected / ItemSet / ItemWithCountを設定してください。",
+                $"{nameof(SlotFrameView)} '{name}' の状態Spriteが不足しています。Prefabの役割と状態に対応するSpriteを設定してください。",
                 this
             );
         }

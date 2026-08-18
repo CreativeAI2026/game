@@ -513,7 +513,9 @@ namespace CreativeAI.EditorTools.UI
                     "_normalSprite",
                     "_selectedSprite",
                     "_itemSetSprite",
-                    "_itemWithCountSprite"
+                    "_itemWithCountSprite",
+                    "_itemSetSelectedSprite",
+                    "_itemWithCountSelectedSprite"
                 );
             foreach (var view in root.GetComponentsInChildren<SlotCountBadgeView>(true))
             {

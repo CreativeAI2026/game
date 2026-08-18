@@ -69,9 +69,11 @@ namespace CreativeAI.UI.CraftingUI
         private bool _acceptsInput;
         private bool _interactionEnabled = true;
         private bool _warnedMissingRequiredReferences;
+        private int _openedFrame = -1;
 
         public bool IsOpen => _dialogRoot != null && _dialogRoot.activeInHierarchy;
         public event Action<int> QuantityChanged;
+        public event Action Closed;
 
         public void SetInteractionEnabled(bool enabled)
         {
@@ -123,7 +125,7 @@ namespace CreativeAI.UI.CraftingUI
             _outsideClickCatcher?.ClearClickAction(Hide);
         }
 
-        public void Show(
+        public bool Show(
             Sprite icon,
             string itemName,
             int min,
@@ -133,11 +135,11 @@ namespace CreativeAI.UI.CraftingUI
         )
         {
             if (!_interactionEnabled)
-                return;
+                return false;
 
             InitializeDerivedReferences();
             if (!HasRequiredReferences())
-                return;
+                return false;
 
             Bind();
             BindOutsideClick();
@@ -146,6 +148,7 @@ namespace CreativeAI.UI.CraftingUI
             _max = Mathf.Max(_min, max);
             _onConfirmed = onConfirmed;
             _acceptsInput = true;
+            _openedFrame = Time.frameCount;
 
             RefreshItem(icon, itemName);
             SetQuantity(initial);
@@ -158,10 +161,12 @@ namespace CreativeAI.UI.CraftingUI
                 _startScale,
                 _animationDuration
             );
+            return true;
         }
 
         public void Hide()
         {
+            bool wasOpen = IsOpen;
             _acceptsInput = false;
             InitializeDerivedReferences();
             if (!HasRequiredReferences())
@@ -175,10 +180,13 @@ namespace CreativeAI.UI.CraftingUI
                 _startScale,
                 _animationDuration
             );
+            if (wasOpen)
+                Closed?.Invoke();
         }
 
         public void HideImmediate()
         {
+            bool wasOpen = IsOpen;
             _acceptsInput = false;
             InitializeDerivedReferences();
             if (!HasRequiredReferences())
@@ -186,6 +194,8 @@ namespace CreativeAI.UI.CraftingUI
 
             CraftQuantityDialogAnimation.Kill(_dialogRect, _dialogCanvasGroup);
             CraftQuantityDialogUtility.HideImmediately(_panelRoot, _dialogRoot);
+            if (wasOpen)
+                Closed?.Invoke();
         }
 
         public void SetQuantity(int value)
@@ -254,14 +264,22 @@ namespace CreativeAI.UI.CraftingUI
 
         private void Update()
         {
-            if (!_acceptsInput || !IsOpen)
+            if (!_acceptsInput || !IsOpen || Time.frameCount <= _openedFrame)
                 return;
 
             var keyboard = Keyboard.current;
             if (keyboard == null)
                 return;
 
-            if (keyboard.leftArrowKey.wasPressedThisFrame)
+            if (keyboard.escapeKey.wasPressedThisFrame)
+                Hide();
+            else if (
+                keyboard.enterKey.wasPressedThisFrame
+                || keyboard.numpadEnterKey.wasPressedThisFrame
+                || keyboard.spaceKey.wasPressedThisFrame
+            )
+                Confirm();
+            else if (keyboard.leftArrowKey.wasPressedThisFrame)
                 Decrement();
             else if (keyboard.rightArrowKey.wasPressedThisFrame)
                 Increment();
