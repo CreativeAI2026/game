@@ -17,6 +17,7 @@ namespace CreativeAI.EditorTools.Crafting
         private const string RecipeOutputDirectory = "Assets/_Project/Features/Crafting/Data/Food";
         private const string RecipeDatabasePath =
             "Assets/_Project/Resources/Crafting/CraftRecipeDB.asset";
+        private const string ItemDatabasePath = "Assets/_Project/Resources/ItemDB.asset";
         private const string InventoryDataDirectory = "Assets/_Project/Features/Inventory/Data";
         private const string LegacyItemPath =
             "Assets/_Project/Features/Inventory/Data/Food/GrapeMisoSoup.asset";
@@ -99,6 +100,7 @@ namespace CreativeAI.EditorTools.Crafting
             }
 
             SyncRecipeDatabase(importedRecipes);
+            SyncItemDatabase();
             AssetDatabase.SaveAssets();
             AssetDatabase.Refresh();
             Debug.Log(
@@ -125,11 +127,20 @@ namespace CreativeAI.EditorTools.Crafting
                 if (line.Length == 0 || line.StartsWith("#", StringComparison.Ordinal))
                     continue;
 
-                string[] columns = line.Split(',');
-                if (columns.Length != 9)
+                IReadOnlyList<string> columns;
+                try
+                {
+                    columns = CsvRecordParser.Parse(line);
+                }
+                catch (FormatException exception)
+                {
+                    Debug.LogError($"[PostCraft Food CSV] {i + 1}行目: {exception.Message}");
+                    return false;
+                }
+                if (columns.Count != 9)
                 {
                     Debug.LogError(
-                        $"[PostCraft Food CSV] {i + 1}行目: 列数は9列必要です。現在={columns.Length}"
+                        $"[PostCraft Food CSV] {i + 1}行目: 列数は9列必要です。現在={columns.Count}"
                     );
                     return false;
                 }
@@ -375,6 +386,16 @@ namespace CreativeAI.EditorTools.Crafting
             for (int i = 0; i < merged.Count; i++)
                 recipes.GetArrayElementAtIndex(i).objectReferenceValue = merged[i];
             serialized.ApplyModifiedPropertiesWithoutUndo();
+            EditorUtility.SetDirty(database);
+        }
+
+        private static void SyncItemDatabase()
+        {
+            ItemDB database = AssetDatabase.LoadAssetAtPath<ItemDB>(ItemDatabasePath);
+            if (database == null)
+                throw new InvalidOperationException($"ItemDBがありません: {ItemDatabasePath}");
+
+            database.SyncFromInventoryDataFolder();
             EditorUtility.SetDirty(database);
         }
 
