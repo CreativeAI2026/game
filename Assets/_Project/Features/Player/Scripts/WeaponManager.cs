@@ -73,6 +73,9 @@ namespace CreativeAI.Gameplay
         /// <summary>選択中の武器 index。1本も持っていなければ <see cref="NoWeapon"/>。</summary>
         public int CurrentWeaponIndex => _currentWeaponIndex;
 
+        /// <summary>登録されている武器の総数。WeaponHUDController がパネル数の決定に使用する。</summary>
+        public int WeaponCount => _weapons != null ? _weapons.Length : 0;
+
         /// <summary>入手ずみの本数。</summary>
         public int OwnedCount => _owned.Count;
 

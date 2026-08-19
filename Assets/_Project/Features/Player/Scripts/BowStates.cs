@@ -32,8 +32,11 @@ namespace CreativeAI.Gameplay
 
         public override void Enter()
         {
-            ctx._playerController.IsAiming = false;
-            ctx._playerController.CanChangeWeapon = true;
+            if (!ctx._playerController.IsGrabbed)
+            {
+                ctx._playerController.IsAiming = false;
+                ctx._playerController.CanChangeWeapon = true;
+            }
             ctx._drawProgress = 0f;
             ctx.DestroyArrow();
             ctx.HideCrossHair();
@@ -88,6 +91,8 @@ namespace CreativeAI.Gameplay
             if (ctx._drawProgress >= 1f && !ctx._isArrowAtNock)
             {
                 ctx.MoveArrowToNock();
+                ctx.ASource.pitch = Random.Range(0.8f, 1.2f);
+                ctx.ASource.PlayOneShot(ctx.DrawSound);
             }
 
             if (ctx._input.ConsumeAttack())
@@ -120,6 +125,9 @@ namespace CreativeAI.Gameplay
         {
             ctx.FireArrow();
             ctx.ChangeState(new StateRelease(ctx));
+
+            ctx.ASource.pitch = Random.Range(0.8f, 1.2f);
+            ctx.ASource.PlayOneShot(ctx.ShootSound);
         }
     }
 

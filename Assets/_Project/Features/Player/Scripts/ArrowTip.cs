@@ -29,6 +29,20 @@ namespace CreativeAI.Gameplay
         [SerializeField]
         private GameObject _hitEffect;
 
+        [Header("着弾音設定")]
+        [Tooltip("壁に刺さった時の着弾音AudioClip。ArrowProjectileのAudioSourceで再生される。")]
+        [SerializeField]
+        private AudioClip _impactClip;
+
+        [Tooltip("着弾音の音量。")]
+        [SerializeField]
+        [Range(0f, 1f)]
+        private float _impactVolume = 0.8f;
+
+        [Tooltip("着弾音がAIに届く半径（メートル）。")]
+        [SerializeField]
+        private float _impactRadius = 15f;
+
         private PlayerStatus _playerStatus;
         private int _enemyLayer;
         private int _obstacleLayer;
@@ -120,6 +134,22 @@ namespace CreativeAI.Gameplay
             {
                 _projectile.StopFlying();
                 _projectile.transform.SetParent(collision.transform, true);
+
+                // 矢にアタッチされたAudioSourceで着弾音を再生
+                if (_impactClip != null && _projectile.ArrowAudioSource != null)
+                {
+                    _projectile.ArrowAudioSource.pitch = Random.Range(0.8f, 1.2f);
+                    _projectile.ArrowAudioSource.PlayOneShot(_impactClip, _impactVolume);
+                }
+
+                // 着弾位置をSoundEventBusで敵AIに通知する
+                SoundEventBus.Emit(
+                    new SoundEventData(
+                        SoundType.ArrowHit,
+                        collision.contacts[0].point,
+                        _impactRadius
+                    )
+                );
             }
         }
 

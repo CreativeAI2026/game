@@ -34,6 +34,11 @@ namespace CreativeAI.Gameplay
         [Range(0, 1)]
         public float FootstepAudioVolume = 0.5f;
 
+        [Tooltip(
+            "足音・SoundEventBus発行を担当するコンポーネント。足のオブジェクトにアタッチしてここに設定する。"
+        )]
+        public PlayerFootstep PlayerFootstep;
+
         [Space(10)]
         [Tooltip("プレイヤーのジャンプの高さ")]
         public float JumpHeight = 1.2f;
@@ -118,6 +123,7 @@ namespace CreativeAI.Gameplay
         public bool CanChangeWeapon = true;
         public bool IsAiming = false;
         public bool IsFlinching = false;
+        public bool IsGrabbed = false;
 
         private bool IsCurrentDeviceMouse
         {
@@ -196,6 +202,12 @@ namespace CreativeAI.Gameplay
 
         private void CameraRotation()
         {
+            // 掴み中はカメラ制御を vcam に完全に委ねる。
+            // CinemachineCameraTarget への強制書き込みを続けると、vcam の Follow/LookAt 設定や
+            // Animation Rigging の IK と競合して首骨で涙物る原因になる。
+            if (IsGrabbed)
+                return;
+
             if (_input.look.sqrMagnitude >= _threshold && !LockCameraPosition)
             {
                 // マウスの移動量は「前フレームからのピクセル移動量（Delta）」であり既にフレーム間の差分を含んでいるため、
@@ -425,6 +437,10 @@ namespace CreativeAI.Gameplay
                     AudioFootsteps.Play();
                 if (AudioFoley != null)
                     AudioFoley.Play();
+
+                // 足音クリップの再生とSoundEventBusへの発行はPlayerFootstepに委譲する
+                if (PlayerFootstep != null)
+                    PlayerFootstep.PlayFootstep(_input.sprint && !IsAiming);
             }
         }
 

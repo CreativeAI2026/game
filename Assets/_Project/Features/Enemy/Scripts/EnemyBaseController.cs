@@ -79,6 +79,16 @@ namespace CreativeAI.Gameplay
             }
         }
 
+        protected virtual void OnDestroy()
+        {
+            // オブジェクト破棄時やシーン遷移時に、現在のステートのExit処理（イベントの購読解除など）を確実に実行する
+            if (currentState != null)
+            {
+                currentState.Exit();
+                currentState = null;
+            }
+        }
+
         protected virtual void Start()
         {
             // 初期状態（待機や巡回など）は敵の種別や配置状況に依存するため、具象クラスに委譲する

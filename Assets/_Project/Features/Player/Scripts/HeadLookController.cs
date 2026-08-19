@@ -70,6 +70,8 @@ namespace CreativeAI.Gameplay
                 targetPosition,
                 Time.deltaTime * smoothSpeed
             );
+
+            Debug.Log("LookAt " + lookTarget.name);
         }
     }
 }
