@@ -165,10 +165,7 @@ namespace CreativeAI.Gameplay
         public ParticleSystem ElectricEffectPrefab => electricEffectPrefab;
         public float GrabRetractDuration => grabRetractDuration;
 
-        // ────────────────────────────────────────────
         //  内部状態（ステートから読み書き）
-        // ────────────────────────────────────────────
-
         /// <summary>最後に聴取した音源のワールド座標。SoundInvestigateStateの目標地点として使う。</summary>
         [HideInInspector]
         public Vector3 LastHeardSoundPosition;
