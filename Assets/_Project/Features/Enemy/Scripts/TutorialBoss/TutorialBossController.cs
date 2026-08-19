@@ -117,7 +117,9 @@ namespace CreativeAI.Gameplay
         [SerializeField]
         private float grabPullDistance = 1.5f;
 
-        [Tooltip("プレイヤーを引き寄せる目標の横方向オフセット（ボスのright方向）。正値で右、負値で左にずれる。カメラ演出に応じて調整する。")]
+        [Tooltip(
+            "プレイヤーを引き寄せる目標の横方向オフセット（ボスのright方向）。正値で右、負値で左にずれる。カメラ演出に応じて調整する。"
+        )]
         [SerializeField]
         private float grabPullLateralOffset = 0f;
 

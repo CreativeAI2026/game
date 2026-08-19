@@ -51,11 +51,15 @@ namespace CreativeAI.Gameplay
         private GraphicRaycaster _raycaster;
 
         [SerializeField]
-        [Tooltip("上下方向の楕円半径（px）。選択スロット（上固定）の高さ、count=2/4 の下スロットに使用。switchUI は Y=panelSpacingY に配置すること。")]
+        [Tooltip(
+            "上下方向の楕円半径（px）。選択スロット（上固定）の高さ、count=2/4 の下スロットに使用。switchUI は Y=panelSpacingY に配置すること。"
+        )]
         private float panelSpacingY = 100f;
 
         [SerializeField]
-        [Tooltip("Q/E・矢印をまとめた親オブジェクト。武器数が2以上のとき表示、1以下は非表示。常に最前面。")]
+        [Tooltip(
+            "Q/E・矢印をまとめた親オブジェクト。武器数が2以上のとき表示、1以下は非表示。常に最前面。"
+        )]
         private GameObject switchUI;
 
         // 内部状態
@@ -67,7 +71,7 @@ namespace CreativeAI.Gameplay
         /// <summary>スロット番号 → anchoredPosition のテーブル。Start で武器数に応じて生成。</summary>
         private Vector2[] _slotPositions;
 
-        private readonly Color darkColor  = new Color(0.5f, 0.5f, 0.5f, 1f);
+        private readonly Color darkColor = new Color(0.5f, 0.5f, 0.5f, 1f);
         private readonly Color lightColor = Color.white;
 
         // 依存
@@ -77,8 +81,8 @@ namespace CreativeAI.Gameplay
 
         private void Awake()
         {
-            _playerInput   = GetComponent<PlayerInput>();
-            _input         = GetComponent<PlayerInputHandler>();
+            _playerInput = GetComponent<PlayerInput>();
+            _input = GetComponent<PlayerInputHandler>();
             _weaponManager = GetComponent<WeaponManager>();
 
             if (_canvas == null)
@@ -89,7 +93,7 @@ namespace CreativeAI.Gameplay
 
         private void Start()
         {
-            _weaponCount   = _weaponManager != null ? _weaponManager.WeaponCount : 0;
+            _weaponCount = _weaponManager != null ? _weaponManager.WeaponCount : 0;
             _slotPositions = CalculateSlotPositions(_weaponCount);
 
             for (int i = 0; i < panels.Count; i++)
@@ -187,7 +191,13 @@ namespace CreativeAI.Gameplay
         private void HandleWeaponSwitched(bool isLeftRotation)
         {
             // パネル未配線・Start 前(_slotPositions 未初期化)は回すものが無いので何もしない。
-            if (isAnimating || panels == null || panels.Count == 0 || _slotPositions == null || _weaponCount < 2)
+            if (
+                isAnimating
+                || panels == null
+                || panels.Count == 0
+                || _slotPositions == null
+                || _weaponCount < 2
+            )
                 return;
             MovePanels(isLeftRotation).Forget();
         }
@@ -214,12 +224,12 @@ namespace CreativeAI.Gameplay
             // Q(CCW) → +arcStep（角度増加=反時計回り）
             float deltaAngle = isLeftRotation ? arcStep : -arcStep;
 
-            float[] endAngles    = new float[_weaponCount];
+            float[] endAngles = new float[_weaponCount];
             Color[] targetColors = new Color[_weaponCount];
 
             for (int i = 0; i < _weaponCount; i++)
             {
-                endAngles[i]    = startAngles[i] + deltaAngle;
+                endAngles[i] = startAngles[i] + deltaAngle;
                 targetColors[i] = (SlotOf(i) == 0) ? lightColor : darkColor;
 
                 // アニメーション開始時に即座に色を適用し、回転中は次に選択されるパネルのみが光るようにする
@@ -234,7 +244,7 @@ namespace CreativeAI.Gameplay
             while (elapsed < duration)
             {
                 elapsed += Time.deltaTime;
-                float t       = Mathf.Clamp01(elapsed / duration);
+                float t = Mathf.Clamp01(elapsed / duration);
                 float smoothT = t * t * (3f - 2f * t);
 
                 for (int i = 0; i < _weaponCount; i++)
@@ -291,7 +301,8 @@ namespace CreativeAI.Gameplay
         /// </summary>
         private Vector2[] CalculateSlotPositions(int count)
         {
-            if (count == 0) return new Vector2[0];
+            if (count == 0)
+                return new Vector2[0];
 
             var positions = new Vector2[count];
             for (int i = 0; i < count; i++)

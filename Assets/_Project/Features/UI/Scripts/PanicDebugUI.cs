@@ -108,11 +108,7 @@ namespace CreativeAI.Gameplay
             string flightStatus = _panicDetector.IsFlightDetectionActive
                 ? $"逃避    継続: {_panicDetector.FlightTimer:F1}s"
                 : "逃避    (対象敵なし)";
-            UpdateRow(
-                0,
-                _panicDetector.FlightScore,
-                flightStatus
-            );
+            UpdateRow(0, _panicDetector.FlightScore, flightStatus);
 
             // 1: スパム
             UpdateRow(1, _panicDetector.SpamScore, $" {_panicDetector.SpamRate:F1}回/s");
@@ -126,25 +122,13 @@ namespace CreativeAI.Gameplay
             UpdateRow(2, _panicDetector.JitterScore, jitterStatus);
 
             // 3: 空間喪失
-            UpdateRow(
-                3,
-                _panicDetector.TrapScore,
-                $"継続: {_panicDetector.TrapTimer:F1}s"
-            );
+            UpdateRow(3, _panicDetector.TrapScore, $"継続: {_panicDetector.TrapTimer:F1}s");
 
             // 4: 意思崩壊
-            UpdateRow(
-                4,
-                _panicDetector.AimCancelScore,
-                $"累計: {_panicDetector.AimCancelCount}回"
-            );
+            UpdateRow(4, _panicDetector.AimCancelScore, $"累計: {_panicDetector.AimCancelCount}回");
 
             // 5: 回避失敗
-            UpdateRow(
-                5,
-                _panicDetector.HitChainScore,
-                $"連続: {_panicDetector.HitChainCount}回"
-            );
+            UpdateRow(5, _panicDetector.HitChainScore, $"連続: {_panicDetector.HitChainCount}回");
         }
 
         private void UpdateRow(int index, float score, string label)

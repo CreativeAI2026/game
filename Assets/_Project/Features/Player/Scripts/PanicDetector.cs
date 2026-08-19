@@ -138,9 +138,9 @@ namespace CreativeAI.Gameplay
 
         /// <summary>逃避検知が有効かつ対象の敵が存在しているか</summary>
         public bool IsFlightDetectionActive =>
-            _enableFlightDetection &&
-            _enemyTransform != null &&
-            (!_requireActiveEnemy || _enemyTransform.gameObject.activeInHierarchy);
+            _enableFlightDetection
+            && _enemyTransform != null
+            && (!_requireActiveEnemy || _enemyTransform.gameObject.activeInHierarchy);
 
         /// <summary>スパムの正規化スコア（0〜1）</summary>
         public float SpamScore { get; private set; } = 0f;
