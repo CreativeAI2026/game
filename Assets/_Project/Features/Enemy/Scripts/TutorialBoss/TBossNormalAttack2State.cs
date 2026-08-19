@@ -78,7 +78,6 @@ namespace CreativeAI.Gameplay
                 CheckHitAndPull();
             }
 
-            // 全フェーズ終了
             if (_timer >= totalDuration)
             {
                 boss.ChangeState(new TBossWatchState(boss));
