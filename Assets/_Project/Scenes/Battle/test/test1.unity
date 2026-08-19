@@ -20387,6 +20387,7 @@ MonoBehaviour:
   _weapons:
   - {fileID: 861660961}
   _weaponStats: []
+  _startWithAllWeapons: 0
 --- !u!114 &6982812146696338156
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -20562,6 +20563,8 @@ MonoBehaviour:
   - {fileID: 1522675548}
   duration: 0.3
   panelSpacingX: 225
+  _canvas: {fileID: 0}
+  _raycaster: {fileID: 0}
   panelSpacingY: 100
   switchUI: {fileID: 1192582638}
 --- !u!114 &6982812146696338165
@@ -22411,7 +22414,7 @@ MonoBehaviour:
   normalAttack2Range: 7
   specialAttackRange: 10
   watchDuration: 5
-  specialAttackChance: 1
+  specialAttackChance: 0.3
   normalAttack2Chance: 0.4
   tentacleLineRenderers:
   - {fileID: 834380669}
