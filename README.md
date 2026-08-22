@@ -10,26 +10,47 @@ Unity Editor **6000.4.5f1**（Unity 6）で開いてください。バージョ�
 ## ディレクトリ構成
 
 ```
-game/                        ← リポジトリルート
-├── Assets/                  ゲーム本体のアセット
-│   └── _Project/            本プロジェクトのアセット
-│       ├── Features/        ゲーム機能（Player・Enemy・UI 等）
-│       ├── Art/             3D モデル・テクスチャ・アニメ・VFX 等
-│       ├── Audio/           BGM・SE
-│       ├── Scenes/          シーン
-│       ├── Settings/        URP / Input System 等の設定
-│       └── Shared/          機能横断の共有資源
-├── Packages/                Unity Package Manager の管理
-│   └── manifest.json        依存パッケージ一覧
-├── ProjectSettings/         プロジェクト固有の設定（バージョン・物理設定等）
-├── Library/                 ★ 自動生成（commit しない）
-├── Temp/                    ★ 一時ファイル（commit しない）
-├── Logs/                    ★ ログ（commit しない）
-├── UserSettings/            ★ ユーザー個人設定（commit しない）
-├── docs/                    開発ドキュメント（環境構築・開発フロー）
-├── .vscode/                 VS Code 設定（共有）
-├── .gitignore               Git 除外ルール
-└── README.md                ← このファイル
+game/                          ← リポジトリルート
+├── Assets/
+│   ├── _Project/              本プロジェクトのアセット（基本ここに置く）
+│   │   ├── Features/          ゲーム機能。機能ごとにフォルダ + asmdef
+│   │   │   ├── Core/          進行度・セーブ・シーン遷移など土台
+│   │   │   ├── Player/        プレイヤー
+│   │   │   ├── Enemy/         敵
+│   │   │   ├── Combat/        戦闘
+│   │   │   ├── Crafting/      調合
+│   │   │   ├── Inventory/     インベントリ
+│   │   │   ├── Scenario/      イベント・会話
+│   │   │   ├── Field/         フィールド・マップ
+│   │   │   ├── Camera/        カメラ
+│   │   │   ├── Audio/         オーディオ再生
+│   │   │   └── UI/            UI
+│   │   ├── Art/               Models / Textures / Materials / Animations / Shaders / VFX / UI
+│   │   ├── Audio/             BGM・SE のファイル
+│   │   ├── Scenes/            シーン（Title / Field / Battle / UI プレビュー）
+│   │   ├── Settings/          URP / Input System 等の設定
+│   │   ├── Resources/         実行時ロードするアセット（ItemDB 等のカタログ）
+│   │   ├── Editor/            Editor 拡張・セットアップツール（Tools メニュー）
+│   │   └── Tests/             EditMode / PlayMode テスト
+│   ├── Plugins/               外部アセット（DOTween 等）
+│   └── Resources/             Unity 既定の Resources
+├── Packages/                  Unity Package Manager の管理
+│   └── manifest.json          依存パッケージ一覧
+├── ProjectSettings/           プロジェクト固有の設定（バージョン・物理設定等）
+├── docs/                      開発ドキュメント（環境構築・開発フロー）
+├── .github/                   CI（workflows）と PR テンプレート・CI 用スクリプト
+├── .config/                   dotnet ツール（CSharpier）のバージョン固定
+├── .vscode/                   VS Code 設定（共有）
+├── mise.toml                  .NET SDK のバージョン固定
+├── .editorconfig              コードスタイル
+├── .gitignore                 Git 除外ルール
+├── .gitattributes             改行コード等の Git 設定
+├── README.md                  ← このファイル
+├── Library/                   ★ 自動生成（commit しない）
+├── Temp/                      ★ 一時ファイル（commit しない）
+├── Logs/                      ★ ログ（commit しない）
+├── UserSettings/              ★ ユーザー個人設定（commit しない）
+└── *.csproj / *.slnx          ★ Unity が自動生成（commit しない）
 ```
 
 ★ は `.gitignore` で除外されています。

@@ -7,6 +7,9 @@ using UnityEngine.UI;
 
 namespace CreativeAI.Tests.EditMode
 {
+    /// <summary>
+    /// 調合の実行フロー(ローディング → 結果表示 → クローズ)と多重実行の拒否の検証。
+    /// </summary>
     public class CraftFlowTests
     {
         private GameObject _root;

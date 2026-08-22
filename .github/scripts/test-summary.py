@@ -8,9 +8,62 @@ XML が無い（＝コンパイルエラー等でテストまで到達しなか�
 「何も出ないので状況が分からない」状態を作らない。
 """
 
+import re
 import sys
 import xml.etree.ElementTree as ET
 from pathlib import Path
+
+# テストクラスの `/// <summary>` から「内容」列の文言を拾うので、その探索先。
+TESTS_ROOT = Path("Assets/_Project/Tests")
+
+
+_SUMMARY_RE = re.compile(
+    r"///\s*<summary>(?P<body>.*?)///\s*</summary>\s*(?:\[[^\]]*\]\s*)*"
+    r"(?:public\s+|internal\s+|sealed\s+|abstract\s+|static\s+|partial\s+)*class\s+(?P<name>\w+)",
+    re.S,
+)
+
+
+def load_descriptions(root=TESTS_ROOT):
+    """テストクラス名 -> 内容（1 文）。`/// <summary>` の先頭 1 文を使う。
+
+    表とテストの説明が二重管理にならないよう、ソースのドキュメントコメントを唯一の出所にする。
+    summary が無いクラスは空になるので、書けば表に出る。
+    """
+    descriptions = {}
+    if not root.is_dir():
+        return descriptions
+
+    for path in sorted(root.rglob("*.cs")):
+        try:
+            text = path.read_text(encoding="utf-8")
+        except OSError:
+            continue
+        for m in _SUMMARY_RE.finditer(text):
+            body = re.sub(r"^\s*///\s?", "", m.group("body"), flags=re.M)
+            body = re.sub(r"<[^>]+>", "", body)  # <see cref="..."/> などのタグを落とす
+            body = " ".join(body.split())
+            if not body:
+                continue
+            sentence = body.split("。", 1)[0].strip()
+            if len(sentence) > 60:
+                sentence = sentence[:59] + "…"
+            descriptions.setdefault(m.group("name"), sentence.replace("|", "\\|"))
+    return descriptions
+
+
+def class_of(tc):
+    """test-case からクラス名（名前空間なし）を取り出す。
+
+    `fullname` をドットで割ると `TestCase(0.5f, -1)` のような引数付きテストで
+    引数の中の小数点まで区切りに使われてしまう（`0f,-1` のような行が出る）ので、
+    NUnit が持っている `classname` を優先し、無い場合だけ引数部分を落として推定する。
+    """
+    cls = tc.get("classname")
+    if not cls:
+        full = tc.get("fullname") or tc.get("name") or "?"
+        cls = full.split("(", 1)[0].rsplit(".", 1)[0]
+    return cls.rsplit(".", 1)[-1] or "?"
 
 
 def collect(root):
@@ -21,7 +74,7 @@ def collect(root):
 
     for tc in root.iter("test-case"):
         full = tc.get("fullname") or tc.get("name") or "?"
-        cls = full.rsplit(".", 1)[0].split(".")[-1]
+        cls = class_of(tc)
         result = tc.get("result") or "?"
 
         stats = per_class.setdefault(cls, {"total": 0, "passed": 0, "failed": 0, "skipped": 0})
@@ -45,6 +98,25 @@ def message_of(tc):
         if text:
             return " ".join(text.split())
     return ""
+
+
+def verdict_of(stats):
+    """判定セルの文言。どの状態でも「アイコン 件数/全体 ラベル」で揃える。
+
+    優先順位は 失敗 > スキップ > 成功。失敗とスキップが混在するクラスは
+    失敗を主に出し、スキップ件数を括弧で添える（見落とさせないため）。
+    """
+    total = stats["total"]
+    if stats["failed"]:
+        mark = f"❌ {stats['failed']}/{total} 失敗"
+        if stats["skipped"]:
+            mark += f"（{stats['skipped']} スキップ）"
+        return mark
+    if stats["skipped"]:
+        if stats["skipped"] == total:
+            return f"⚠️ {total}/{total} スキップ"
+        return f"⚠️ {stats['skipped']}/{total} スキップ（{stats['passed']} 成功）"
+    return f"✅ {stats['passed']}/{total} 成功"
 
 
 def render(label, path):
@@ -77,14 +149,11 @@ def render(label, path):
     lines.append("")
     lines.append(headline)
     lines.append("")
-    lines.append("| テストクラス | 件数 | 成功 | 失敗 | スキップ | 判定 |")
-    lines.append("| --- | ---: | ---: | ---: | ---: | :---: |")
+    descriptions = load_descriptions()
+    lines.append("| テストクラス | 判定 | 内容 |")
+    lines.append("| --- | :---: | --- |")
     for cls in sorted(per_class):
-        s = per_class[cls]
-        mark = "❌" if s["failed"] else ("⚠️" if s["skipped"] else "✅")
-        lines.append(
-            f"| {cls} | {s['total']} | {s['passed']} | {s['failed']} | {s['skipped']} | {mark} |"
-        )
+        lines.append(f"| {cls} | {verdict_of(per_class[cls])} | {descriptions.get(cls, '')} |")
     lines.append("")
 
     if failures:

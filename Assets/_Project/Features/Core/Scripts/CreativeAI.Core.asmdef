@@ -1,9 +1,7 @@
 {
     "name": "CreativeAI.Core",
     "rootNamespace": "CreativeAI.Core",
-    "references": [
-        "CreativeAI.Shared"
-    ],
+    "references": [],
     "includePlatforms": [],
     "excludePlatforms": [],
     "allowUnsafeCode": false,

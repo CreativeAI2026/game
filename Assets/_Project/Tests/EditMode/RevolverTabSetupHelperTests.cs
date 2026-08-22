@@ -8,6 +8,9 @@ using UnityEngine.UI;
 
 namespace CreativeAI.Tests.EditMode
 {
+    /// <summary>
+    /// リボルバータブの Editor 配線補助(自動割り当て・配置の適用)の検証。
+    /// </summary>
     public class RevolverTabSetupHelperTests
     {
         private Type _helperType;

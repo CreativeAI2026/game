@@ -6,7 +6,8 @@
 
 ## 動作確認
 - [ ] Unity Editor で起動し、該当機能の動作を確認した
-- [ ] CI（format / meta / compile）が緑
+- [ ] Test Runner で EditMode / PlayMode を実行し、どちらも緑になった
+- [ ] CI（format / meta / compile / EditMode・PlayMode テスト）が緑
 
 ## 関連
 <!-- 例: Closes #123 -->

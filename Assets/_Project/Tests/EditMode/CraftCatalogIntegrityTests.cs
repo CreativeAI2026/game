@@ -6,6 +6,9 @@ using UnityEditor;
 
 namespace CreativeAI.Tests.EditMode
 {
+    /// <summary>
+    /// 調合カタログ(ItemDB / CraftRecipeDB)の整合性 — ID 重複・参照切れ・登録漏れが無いことの検証。
+    /// </summary>
     public sealed class CraftCatalogIntegrityTests
     {
         private const string InventoryDataPath = "Assets/_Project/Features/Inventory/Data";

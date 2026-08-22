@@ -6,6 +6,9 @@ using UnityEngine;
 
 namespace CreativeAI.Tests.EditMode
 {
+    /// <summary>
+    /// フリー調合の完成品プレビュー(未発見レシピは伏せる)の検証。
+    /// </summary>
     public class FreeCraftCraftedItemPreviewTests
     {
         private GameObject _recipeBookObject;

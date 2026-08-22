@@ -8,6 +8,9 @@ using UnityEngine;
 
 namespace CreativeAI.Tests.EditMode
 {
+    /// <summary>
+    /// イベント再生(会話・アイテム/武器付与・戦闘・進行度更新)の検証。
+    /// </summary>
     public class EventPlayerTests
     {
         // yield return <IEnumerator> のネストを Unity 同様に展開しながら同期駆動する。

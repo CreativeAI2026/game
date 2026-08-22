@@ -5,6 +5,9 @@ using UnityEngine;
 
 namespace CreativeAI.Tests.EditMode
 {
+    /// <summary>
+    /// ホバー時の拡大・バウンス演出の有効 / 無効切り替えの検証。
+    /// </summary>
     public class HoverScaleOnPointerSettingsTests
     {
         private GameObject _gameObject;
