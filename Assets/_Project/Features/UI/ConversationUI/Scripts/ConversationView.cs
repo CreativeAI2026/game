@@ -15,7 +15,7 @@ namespace CreativeAI.UI.ConversationUI
     /// (常駐・単一化・DontDestroyOnLoad は UIRoot が担うため、このコンポーネント自身は自己生成も DDOL もしない)。状態は保存しない。
     /// 会話中でないときはウィンドウを隠す(再生時 Awake で alpha=0)。編集時は Awake が走らないため
     /// Prefab の見た目(立ち絵+ウィンドウ+ダミー文)がそのままプレビューになる。
-    /// documents/Specification.md「常駐アーキテクチャ」/ UIImplementation.md 参照。
+    /// documents/Specification.md「常駐アーキテクチャ」参照。
     /// </summary>
     public sealed partial class ConversationView : MonoBehaviour, IDialogueView
     {
