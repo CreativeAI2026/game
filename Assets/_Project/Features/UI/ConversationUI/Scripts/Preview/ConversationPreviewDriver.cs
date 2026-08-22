@@ -21,14 +21,14 @@ namespace CreativeAI.UI.ConversationUI
             public string Portrait { get; }
         }
 
-        private static readonly Speaker Protagonist = new("protagonist_normal");
+        private static readonly Speaker Protagonist = new("hero_normal");
         private static readonly Speaker Robot = new("robot_normal");
-        private static readonly Speaker FragileGirl = new("fragile_girl_normal");
-        private static readonly Speaker FragileGirlWorried = new("fragile_girl_worried_smile");
-        private static readonly Speaker FragileGirlFrightened = new("fragile_girl_frightened");
-        private static readonly Speaker FragileGirlSmile = new("fragile_girl_smile");
-        private static readonly Speaker FragileGirlDetermined = new("fragile_girl_determined");
-        private static readonly Speaker FragileGirlSurprised = new("fragile_girl_surprised");
+        private static readonly Speaker FragileGirl = new("girl_normal");
+        private static readonly Speaker FragileGirlWorried = new("girl_wry_smile");
+        private static readonly Speaker FragileGirlFrightened = new("girl_fear");
+        private static readonly Speaker FragileGirlSmile = new("girl_smile");
+        private static readonly Speaker FragileGirlDetermined = new("girl_resolve");
+        private static readonly Speaker FragileGirlSurprised = new("girl_surprised");
         private static readonly Speaker Gramophone = new("gramophone_normal");
 
         [SerializeField]
@@ -231,7 +231,7 @@ namespace CreativeAI.UI.ConversationUI
                 FragileGirlSurprised,
                 "待ってください。朝に拾ったりんごがあるんです。少し傷がありますけど、食べられますから。"
             );
-            yield return conversationView.ShowItemGet(null, "傷のあるりんごを手に入れた。");
+            yield return conversationView.ShowItemGet((Sprite)null, "傷のあるりんごを手に入れた。");
             yield return Line(view, Protagonist, "助かるよ。道中で食べさせてもらう。");
 
             yield return Line(
@@ -239,7 +239,7 @@ namespace CreativeAI.UI.ConversationUI
                 Gramophone,
                 "ホームの倉庫には、古い刀も眠っていた。君の物かは分からないが、丸腰よりはいい。"
             );
-            yield return conversationView.ShowWeaponGet(null, "古い刀を手に入れた。");
+            yield return conversationView.ShowWeaponGet((GameObject)null, "古い刀を手に入れた。");
             yield return Line(
                 view,
                 Robot,

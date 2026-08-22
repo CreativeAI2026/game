@@ -12,7 +12,7 @@ using UnityEngine.UI;
 namespace CreativeAI.Tests.EditMode
 {
     /// <summary>
-    /// 会話UI(documents/Specification.md §5: 画面下に会話ウィンドウ、上半分に立ち絵)。
+    /// 会話UIの検証(画面下に会話ウィンドウ、上半分に立ち絵。documents/Specification.md §5)。
     /// 送り入力そのものは PlayMode の領分なので、ここでは
     /// 「話者名・本文・立ち絵キーの反映」と「選択肢が並ぶ」ところまでを検証する
     /// (選択後の後片付けは Destroy を使うので ConversationViewPlayModeTests 側)。
@@ -353,11 +353,11 @@ namespace CreativeAI.Tests.EditMode
         [Test]
         public void ReadHistory_CanBeMarkedQueriedAndCleared()
         {
-            _view.MarkLineRead("主人公", "protagonist_normal", "既読行");
-            Assert.IsTrue(_view.IsLineRead("主人公", "protagonist_normal", "既読行"));
+            _view.MarkLineRead("主人公", "hero_normal", "既読行");
+            Assert.IsTrue(_view.IsLineRead("主人公", "hero_normal", "既読行"));
 
             _view.ClearReadHistory();
-            Assert.IsFalse(_view.IsLineRead("主人公", "protagonist_normal", "既読行"));
+            Assert.IsFalse(_view.IsLineRead("主人公", "hero_normal", "既読行"));
         }
 
         [Test]
