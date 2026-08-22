@@ -5,7 +5,7 @@ using UnityEditor;
 namespace CreativeAI.Tests.EditMode
 {
     /// <summary>
-    /// 剣・弓・鎌の固定ステータス(documents/Specification.md §1.1 の表)がアセットに入っているかを固定する。
+    /// 剣・弓・鎌の固定ステータスがアセットに入っているかを固定する。表は documents/Specification.md §1.1。
     /// 数値がコード外(アセット)にあると仕様からの乖離に気づけないため、ここで実アセットを読んで突き合わせる。
     /// </summary>
     public class WeaponDataAssetTests

@@ -1,9 +1,9 @@
 using System.Collections.Generic;
 
-namespace CreativeAI.Crafting
+namespace CreativeAI.StatRoll
 {
     /// <summary>
-    /// 調合アルゴリズムの調整ノブ(CraftingStatAlgorithm.md「パラメータ」表)。
+    /// 調合アルゴリズムの調整ノブ(StatRollAlgorithm.md「パラメータ」表)。
     /// 値はバランス調整用。ここを差し替えるだけで挙動を変えられる。
     /// </summary>
     public sealed class CraftingParameters

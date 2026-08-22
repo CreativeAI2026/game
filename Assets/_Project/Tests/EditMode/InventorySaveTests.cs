@@ -7,7 +7,7 @@ using UnityEngine;
 namespace CreativeAI.Tests.EditMode
 {
     /// <summary>
-    /// A-5 個体モデル(ItemStack)/ A-4 セーブDTOの往復 / ProgressManager 復元 の検証。
+    /// 個体ステータス付きアイテム(ItemStack)とセーブDTOの往復・進行度復元の検証。
     /// EditMode では Awake が走らないため Instance/DontDestroyOnLoad には依存しない。
     /// </summary>
     public class InventorySaveTests

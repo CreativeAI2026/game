@@ -8,9 +8,9 @@ using UnityEngine;
 namespace CreativeAI.Tests.EditMode
 {
     /// <summary>
-    /// キャラクターUI(documents/Specification.md §5)。
-    /// タブ切替で「選択中のタブだけ生きる」ルーティングと、装備品タブ・即時使用食材タブの操作が
-    /// InventoryManager(単一ソース)へ届くことを見る。見た目・アニメーションは対象外。
+    /// キャラクターUIのタブ切替と、装備品・即時使用食材タブの操作の検証。
+    /// 「選択中のタブだけ生きる」ルーティングと、タブ上の操作が InventoryManager(単一ソース)へ
+    /// 届くことを見る(documents/Specification.md §5)。見た目・アニメーションは対象外。
     /// </summary>
     public class CharacterUITests
     {

@@ -1,7 +1,7 @@
 using System.Collections.Generic;
 using System.Linq;
-using CreativeAI.Crafting;
 using CreativeAI.Gameplay;
+using CreativeAI.StatRoll;
 using NUnit.Framework;
 
 namespace CreativeAI.Tests.EditMode

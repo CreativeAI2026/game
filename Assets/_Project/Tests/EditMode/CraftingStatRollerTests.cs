@@ -1,11 +1,11 @@
 using System.Linq;
-using CreativeAI.Crafting;
+using CreativeAI.StatRoll;
 using NUnit.Framework;
 
 namespace CreativeAI.Tests.EditMode
 {
     /// <summary>
-    /// 調合で付与するステータスのロール(CraftingStatAlgorithm.md)の検証。
+    /// 調合で付与するステータスのロール(StatRollAlgorithm.md)の検証。
     /// </summary>
     public class CraftingStatRollerTests
     {
@@ -33,7 +33,7 @@ namespace CreativeAI.Tests.EditMode
         [Test]
         public void Roll_OnlyAssignsStatsFromUnionOfParents()
         {
-            // 結果の型は必ず親のいずれかが持つ型(= 和集合 S)に含まれる(CraftingStatAlgorithm.md「記法」)。
+            // 結果の型は必ず親のいずれかが持つ型(= 和集合 S)に含まれる(StatRollAlgorithm.md「記法」)。
             var roller = NewRoller();
             var a = StatVector.Of((StatType.AttackPct, 10), (StatType.DefensePct, 1));
             var b = StatVector.Of((StatType.CritRate, 1));
@@ -126,7 +126,7 @@ namespace CreativeAI.Tests.EditMode
         [Test]
         public void Roll_Synergy_PromotesStatSharedByBothParents()
         {
-            // 共通型は w_s = (a_s + b_s)(1 + σ) で増幅される(CraftingStatAlgorithm.md 層2)。
+            // 共通型は w_s = (a_s + b_s)(1 + σ) で増幅される(StatRollAlgorithm.md 層2)。
             // 素のウェイトでは3番手の CritRate(8)が、σ=0.5 で 12 に増幅され上位2型に食い込む。
             var a = StatVector.Of((StatType.AttackPct, 10), (StatType.CritRate, 4));
             var b = StatVector.Of((StatType.DefensePct, 9), (StatType.CritRate, 4));
@@ -163,7 +163,7 @@ namespace CreativeAI.Tests.EditMode
         [Test]
         public void Roll_EpsilonCutoff_DropsStatBelowThreshold()
         {
-            // ε 未満の型は捨てて実質1型扱いにする(CraftingStatAlgorithm.md「合成と整理」)。
+            // ε 未満の型は捨てて実質1型扱いにする(StatRollAlgorithm.md「合成と整理」)。
             var a = StatVector.Of((StatType.AttackPct, 40));
             var b = StatVector.Of((StatType.DefensePct, 10));
 

@@ -1,12 +1,12 @@
 using System;
 using System.Collections.Generic;
-using CreativeAI.Crafting;
+using CreativeAI.StatRoll;
 
 namespace CreativeAI.Gameplay
 {
     /// <summary>
     /// フィールドに落ちている装備品(合成前のシード)を拾ったときの個体ステータスを決めるロール
-    /// (documents/Specification.md §2.1.1 / CraftingStatAlgorithm.md「ドロップ(拾得)のロール」)。
+    /// (documents/Specification.md §2.1.1 / StatRollAlgorithm.md「ドロップ(拾得)のロール」)。
     ///
     /// 調合(CraftingStatRoller)と同じ「総パワー × ディリクレ配分」だが、親が居ないので:
     /// - 総パワー B = シードの固定ステータス合計(C_cap でクランプ)

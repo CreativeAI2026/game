@@ -1,4 +1,4 @@
-namespace CreativeAI.Crafting
+namespace CreativeAI.StatRoll
 {
     /// <summary>
     /// 乱数源の抽象。テストでは固定シード/固定値の実装を差し込み、

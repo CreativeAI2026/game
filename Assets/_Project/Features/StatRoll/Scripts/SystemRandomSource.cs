@@ -1,6 +1,6 @@
 using System;
 
-namespace CreativeAI.Crafting
+namespace CreativeAI.StatRoll
 {
     /// <summary>
     /// System.Random ベースの乱数源。シードを与えれば再現可能。

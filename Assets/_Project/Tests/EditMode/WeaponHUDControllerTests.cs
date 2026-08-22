@@ -8,8 +8,8 @@ using UnityEngine.UI;
 namespace CreativeAI.Tests.EditMode
 {
     /// <summary>
-    /// 武器切替UIの出し分け(documents/Specification.md §5 / UIImplementation.md §2)。
-    /// 「モードではなく武器の所持本数で出し分ける(0本=非表示 / 1本以上=表示)」。
+    /// 武器切替UIの出し分けの検証(モードではなく武器の所持本数で決める)。
+    /// 0本=非表示 / 1本以上=表示(documents/Specification.md §5)。
     /// GameObject ごと止めると WeaponManager の購読が切れるため Canvas の enabled で出し入れする。
     /// </summary>
     public class WeaponHUDControllerTests

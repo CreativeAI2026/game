@@ -3,7 +3,8 @@
     "rootNamespace": "CreativeAI.Scenario.Editor",
     "references": [
         "CreativeAI.Core",
-        "CreativeAI.Gameplay"
+        "CreativeAI.Gameplay",
+        "CreativeAI.UI"
     ],
     "includePlatforms": [
         "Editor"

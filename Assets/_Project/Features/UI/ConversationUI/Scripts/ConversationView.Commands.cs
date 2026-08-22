@@ -1,4 +1,6 @@
 using System.Collections;
+using CreativeAI.Gameplay;
+using UnityEngine;
 
 namespace CreativeAI.UI.ConversationUI
 {
@@ -84,5 +86,35 @@ namespace CreativeAI.UI.ConversationUI
             InitializePresenters();
             yield return _presentationCommandRouter.Execute(command, argument);
         }
+
+        /// <summary>
+        /// IDialogueView 実装: giveItem ステップの入手演出。itemKey→アイコン/名前の解決はここで行う
+        /// (Core は Gameplay を参照しないため、EventPlayer はキーだけ渡す)。
+        /// message 省略時は「〜を手に入れた。」を名前から組み立てる。
+        /// </summary>
+        public IEnumerator ShowItemGet(string itemKey, string message)
+        {
+            var data = ItemDB.Instance != null ? ItemDB.Instance.GetItemByKey(itemKey) : null;
+            string body =
+                !string.IsNullOrWhiteSpace(message) ? message
+                : data != null && !string.IsNullOrEmpty(data.itemName)
+                    ? $"{data.itemName}を手に入れた。"
+                : null;
+            yield return ShowItemGet(data != null ? data.icon : null, body);
+        }
+
+        /// <summary>
+        /// IDialogueView 実装: giveWeapon ステップの入手演出。3Dモデルは WeaponData がまだ参照を
+        /// 持たないため解決できず、Inspector のダミー(_weaponModelPrefab)にフォールバックする
+        /// (モデル参照は武器を持つ側=WeaponManager 班の担当)。
+        /// </summary>
+        public IEnumerator ShowWeaponGet(string weaponKey, string message)
+        {
+            yield return ShowWeaponGet((GameObject)null, message);
+        }
+
+        /// <summary>IDialogueView 実装: command ステップの演出コマンド。</summary>
+        public IEnumerator RunCommand(string command, string argument) =>
+            RunPresentationCommand(command, argument);
     }
 }
