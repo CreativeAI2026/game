@@ -32,7 +32,7 @@ namespace CreativeAI.Gameplay
         [SerializeField]
         private Image _ekgImage;
 
-        [Tooltip("EKG_Material本体（元のアセット）")]
+        [Tooltip("UI_HpEkg マテリアル本体（元のアセット）")]
         [SerializeField]
         private Material _ekgMaterial;
 
@@ -163,7 +163,7 @@ namespace CreativeAI.Gameplay
         }
 
         /// <summary>
-        /// EKG_Materialのテクスチャとスクロール速度を適用する。
+        /// UI_HpEkg マテリアルのテクスチャとスクロール速度を適用する。
         /// </summary>
         private void ApplyEkgPhase(EkgPhase phase)
         {
