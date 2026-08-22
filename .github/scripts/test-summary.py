@@ -17,6 +17,47 @@ from pathlib import Path
 TESTS_ROOT = Path("Assets/_Project/Tests")
 
 
+# 「内容」列から落とす仕様書への参照。読む人が知りたいのは何を検証しているかで、
+# 章番号は表の中では邪魔になる（参照はソースのコメント側に残す）。
+# `§2「拾得」` のように節番号に続く見出しも、節の名前なのでまとめて落とす。
+_DOC_REF_RE = re.compile(r"(?:documents/)?[A-Za-z][\w.]*\.md|§[\d.]+(?:\s*「[^」]*」)?")
+
+# 参照だけを消すと `(, , )` のような殻が残るので、その判定に使う（区切り記号と助詞だけ）。
+_EMPTY_PAREN_RE = re.compile(r"^[\s,、/・:：の]*$")
+
+
+def first_sentence(body):
+    """先頭 1 文。括弧の中の「。」では切らない（`(… 。参照)` で文が途切れるのを防ぐ）。"""
+    depth = 0
+    for i, ch in enumerate(body):
+        if ch == "(":
+            depth += 1
+        elif ch == ")":
+            depth = max(0, depth - 1)
+        elif ch == "。" and depth == 0:
+            return body[:i]
+    return body
+
+
+def strip_doc_refs(sentence):
+    """「内容」列から仕様書参照を落とす。括弧の中が参照だけなら括弧ごと消す。
+
+    `会話UI(documents/Specification.md §5: 画面下に会話ウィンドウ)` のように
+    括弧の中に説明も入っている場合は、説明だけ残す。
+    """
+
+    def clean(m):
+        inner = _DOC_REF_RE.sub("", m.group(1))
+        inner = re.sub(r"^[\s,、/・:：]+", "", inner)
+        inner = re.sub(r"[\s,、。/・:：]+$", "", inner)
+        inner = " ".join(inner.split())
+        return "" if _EMPTY_PAREN_RE.match(inner) else f"({inner})"
+
+    sentence = re.sub(r"\(([^()]*)\)", clean, sentence)
+    sentence = _DOC_REF_RE.sub("", sentence)  # 括弧に入っていない参照
+    return " ".join(sentence.split()).strip(" 、,/・:：")
+
+
 _SUMMARY_RE = re.compile(
     r"///\s*<summary>(?P<body>.*?)///\s*</summary>\s*(?:\[[^\]]*\]\s*)*"
     r"(?:public\s+|internal\s+|sealed\s+|abstract\s+|static\s+|partial\s+)*class\s+(?P<name>\w+)",
@@ -45,7 +86,9 @@ def load_descriptions(root=TESTS_ROOT):
             body = " ".join(body.split())
             if not body:
                 continue
-            sentence = body.split("。", 1)[0].strip()
+            sentence = strip_doc_refs(first_sentence(body))
+            if not sentence:
+                continue
             if len(sentence) > 60:
                 sentence = sentence[:59] + "…"
             descriptions.setdefault(m.group("name"), sentence.replace("|", "\\|"))

@@ -12,7 +12,7 @@ using UnityEngine.UI;
 namespace CreativeAI.Tests.PlayMode
 {
     /// <summary>
-    /// 会話UIの選択肢(documents/Specification.md §4.1, §5)。
+    /// 会話UIの選択肢の検証(提示 → 選択 → 後片付け)。仕様は documents/Specification.md §4.1, §5。
     /// 選び終わったあとの後片付けが Destroy を使うので、EditMode ではなくここで回す。
     /// </summary>
     public class ConversationViewPlayModeTests

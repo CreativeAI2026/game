@@ -13,8 +13,9 @@ using UnityEngine.UI;
 namespace CreativeAI.Tests.PlayMode
 {
     /// <summary>
-    /// タイトルから常駐一式を組み立てる流れ(documents/Specification.md §6, §6.1)のうち、
-    /// Awake で立つ Instance に依存する部分。EditMode では Awake が走らず
+    /// タイトルから常駐一式(進行・モード・インベントリ・UI・プレイヤー)を組み立てる流れの検証。
+    /// 対象は documents/Specification.md §6, §6.1 のうち Awake で立つ Instance に依存する部分。
+    /// EditMode では Awake が走らず
     /// 二重生成ガードが効かないため、ここは PlayMode で回す。
     /// </summary>
     public class SessionResidencyPlayModeTests

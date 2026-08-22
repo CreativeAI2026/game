@@ -7,8 +7,8 @@ using UnityEngine;
 namespace CreativeAI.Tests.EditMode
 {
     /// <summary>
-    /// documents/Specification.md §2 のインベントリ仕様のうち、値・上限が仕様書に明記されているもの:
-    /// 装備品は最大3つ / hasItem は大事なもの限定 / 食材の回復量は固定(合成前20% 合成後50%)。
+    /// インベントリの上限・固定値の検証(装備品は最大3つ / 食材の回復量は固定 / hasItem は大事なもの限定)。
+    /// 値の出所は documents/Specification.md §2(合成前20% 合成後50%)。
     /// </summary>
     public class InventoryRulesTests
     {

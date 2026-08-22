@@ -8,8 +8,8 @@ using UnityEngine;
 namespace CreativeAI.Tests.EditMode
 {
     /// <summary>
-    /// 扉の開閉(documents/MapLayout.md §1「扉付きの出入口」)。
-    /// 「近づいたときだけ操作でき、移動中(Field)以外・会話イベント中は受け付けない」
+    /// 扉の開閉の検証(近づいたときだけ操作でき、動くのは扉板だけ)。
+    /// 「移動中(Field)以外・会話イベント中は受け付けない」(documents/MapLayout.md §1「扉付きの出入口」)
     /// (拾得・イベント発火と同じ判断軸)。開くのは扉板だけで、ケーシングは動かない。
     /// </summary>
     public class SlidingDoorTests

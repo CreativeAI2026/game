@@ -7,8 +7,8 @@ using UnityEngine;
 namespace CreativeAI.Tests.EditMode
 {
     /// <summary>
-    /// 調合の本体(documents/Specification.md §2.3, §2.3.1)の検証。
-    /// レシピ引き → カテゴリ検証 → 素材消費と結果付与(原子的) → 装備品はロール個体 / 食材は固定。
+    /// 調合本体の検証(レシピ引き → カテゴリ検証 → 素材消費と結果付与を原子的に行う)。
+    /// 装備品はロール個体 / 食材は固定(documents/Specification.md §2.3, §2.3.1)。
     /// MonoBehaviour を挟まない純粋サービスなので InventoryService を直接組んで叩く。
     /// </summary>
     public class RecipeCraftingServiceTests

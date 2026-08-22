@@ -9,8 +9,8 @@ using UnityEngine.TestTools;
 namespace CreativeAI.Tests.EditMode
 {
     /// <summary>
-    /// 武器の所持と選択の検証(documents/Specification.md §1.1, §5, §6)。
-    /// 「初期0本 → イベント(giveWeapon)で入手 → 入手ずみだけ切替 → 選択中の1本だけ補正が乗る」。
+    /// 武器の所持と選択の検証(初期0本 → 入手 → 入手ずみだけ切替 → 選択中の1本だけ補正が乗る)。
+    /// 入手はイベントの giveWeapon から(documents/Specification.md §1.1, §5, §6)。
     /// </summary>
     public class WeaponManagerTests
     {
