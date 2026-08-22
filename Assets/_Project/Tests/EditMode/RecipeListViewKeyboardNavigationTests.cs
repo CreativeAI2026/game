@@ -7,6 +7,9 @@ using UnityEngine.UI;
 
 namespace CreativeAI.Tests.EditMode
 {
+    /// <summary>
+    /// レシピ一覧のキーボード移動と決定の検証。
+    /// </summary>
     public class RecipeListViewKeyboardNavigationTests
     {
         private GameObject _root;

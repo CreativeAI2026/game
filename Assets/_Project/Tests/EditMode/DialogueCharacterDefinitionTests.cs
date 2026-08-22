@@ -4,6 +4,9 @@ using UnityEngine;
 
 namespace CreativeAI.Tests.EditMode
 {
+    /// <summary>
+    /// 会話キャラ定義からの立ち絵(表情)解決の検証。
+    /// </summary>
     public class DialogueCharacterDefinitionTests
     {
         [Test]

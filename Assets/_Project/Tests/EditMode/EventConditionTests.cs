@@ -4,6 +4,9 @@ using NUnit.Framework;
 
 namespace CreativeAI.Tests.EditMode
 {
+    /// <summary>
+    /// イベント発生条件(進行度・フラグ・所持アイテムの AND 判定)の検証。
+    /// </summary>
     public class EventConditionTests
     {
         private static readonly Func<string, string> NoFlags = _ => string.Empty;

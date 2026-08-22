@@ -4,6 +4,9 @@ using UnityEngine;
 
 namespace CreativeAI.Tests.EditMode
 {
+    /// <summary>
+    /// 会話履歴パネルの追加・上限を超えた分のトリム・絞り込みの検証。
+    /// </summary>
     public class DialogueHistoryPanelTests
     {
         [Test]

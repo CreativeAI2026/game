@@ -8,6 +8,9 @@ using UnityEngine;
 
 namespace CreativeAI.Tests.EditMode
 {
+    /// <summary>
+    /// フリー調合で素材の組み合わせからレシピを引く処理の検証。
+    /// </summary>
     public class FreeCraftRecipeResolverTests
     {
         private readonly List<UnityEngine.Object> _createdObjects = new();

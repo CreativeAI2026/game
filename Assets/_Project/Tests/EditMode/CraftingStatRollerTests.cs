@@ -4,6 +4,9 @@ using NUnit.Framework;
 
 namespace CreativeAI.Tests.EditMode
 {
+    /// <summary>
+    /// 調合で付与するステータスのロール(CraftingStatAlgorithm.md)の検証。
+    /// </summary>
     public class CraftingStatRollerTests
     {
         private static CraftingStatRoller NewRoller() =>

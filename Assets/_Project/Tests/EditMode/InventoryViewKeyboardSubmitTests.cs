@@ -6,6 +6,9 @@ using UnityEngine;
 
 namespace CreativeAI.Tests.EditMode
 {
+    /// <summary>
+    /// インベントリのキーボード操作による決定(選択スロットの確定)の検証。
+    /// </summary>
     public class InventoryViewKeyboardSubmitTests
     {
         private GameObject _root;

@@ -4,6 +4,9 @@ using UnityEngine.EventSystems;
 
 namespace CreativeAI.Tests.EditMode
 {
+    /// <summary>
+    /// リボルバータブのインデックス計算(ラップ・最短移動・配置ごとの入力方向)の検証。
+    /// </summary>
     public class RevolverTabIndexUtilityTests
     {
         [TestCase(-1, 5, 4)]

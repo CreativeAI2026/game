@@ -4,6 +4,9 @@ using UnityEngine;
 
 namespace CreativeAI.Tests.EditMode
 {
+    /// <summary>
+    /// リボルバータブの円弧レイアウト(位置・拡大率・フェード)の検証。
+    /// </summary>
     public class RevolverTabLayoutCalculatorTests
     {
         private RevolverTabLayoutSettings _settings;
