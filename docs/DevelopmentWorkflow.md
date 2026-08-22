@@ -79,9 +79,8 @@ CI でテストが落ちると merge できない。push 前に手元で通し�
 - **PlayMode**（`Assets/_Project/Tests/PlayMode/`）… `Awake` / `Start` / コルーチン /
   `Destroy` / 実シーンのロードが要るもの。EditMode ではこれらが走らない。
 
-仕様（`documents/Specification.md` など）に書かれた値やルールを固定するテストには、
-どの条文に対応するかをコメントに残す。**仕様書に無い挙動をテストで固定してしまうと、
-後で直す人の邪魔になる**ので、仕様が決まっていない部分は固定しないこと。
+仕様に書かれた値やルールを固定するテストには、どの条文に対応するかをコメントに残す。
+**仕様書に無い挙動をテストで固定してしまうと、後で直す人の邪魔になる**ので、仕様が決まっていない部分は固定しないこと。
 
 ---
 
@@ -162,9 +161,3 @@ git switch main
 git pull origin main
 git branch -d feature/<内容>   # ローカルの後始末
 ```
-
----
-
-## 関連ドキュメント
-
-- [EnvironmentSetup.md](./EnvironmentSetup.md) — 環境構築手順
