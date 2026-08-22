@@ -5,6 +5,7 @@ using System.IO;
 using System.Linq;
 using CreativeAI.Core.EventSystem;
 using CreativeAI.Gameplay;
+using CreativeAI.UI.ConversationUI;
 using UnityEditor;
 using UnityEngine;
 
@@ -21,6 +22,8 @@ namespace CreativeAI.Scenario.Editor
         private const string DefaultSource = "Assets/_Project/Features/Scenario/events.json";
         private const string OutputDir = "Assets/_Project/Features/Scenario/Data/Dialogues";
         private const string ItemDataDir = "Assets/_Project/Features/Inventory/Data";
+        private const string CharacterDataDir =
+            "Assets/_Project/Features/UI/ConversationUI/Data/Characters";
 
         [MenuItem("Tools/CreativeAI/Import Events")]
         public static void Import()
@@ -115,9 +118,21 @@ namespace CreativeAI.Scenario.Editor
                 .Select(i => i.key)
                 .ToHashSet(StringComparer.Ordinal);
 
+            // 立ち絵アセットに実際に登録済みの portrait キー(絵の準備待ちを警告で可視化する)。
+            var portraitKeys = AssetDatabase
+                .FindAssets("t:DialogueCharacterDefinition", new[] { CharacterDataDir })
+                .Select(AssetDatabase.GUIDToAssetPath)
+                .Select(AssetDatabase.LoadAssetAtPath<DialogueCharacterDefinition>)
+                .Where(c => c != null)
+                .SelectMany(c => c.Expressions)
+                .Where(e => !string.IsNullOrEmpty(e.PortraitKey) && e.Sprite != null)
+                .Select(e => e.PortraitKey)
+                .ToHashSet(StringComparer.Ordinal);
+
             return new EventImporter.ImportCatalog(
                 itemKeys.Count > 0 ? itemKeys : null,
-                keyItemKeys.Count > 0 ? keyItemKeys : null
+                keyItemKeys.Count > 0 ? keyItemKeys : null,
+                portraitKeys.Count > 0 ? portraitKeys : null
             );
         }
 
