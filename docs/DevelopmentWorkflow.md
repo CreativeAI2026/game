@@ -123,7 +123,7 @@ GitHub の画面（ブラウザ）から作成する。
 2. 説明欄に [`.github/pull_request_template.md`](../.github/pull_request_template.md) のテンプレートが自動で入るので、各項目を埋める。
    - **概要**（何を・なぜ）
    - **変更内容**
-   - **動作確認**（Unity Editor で確認した / CI が緑）
+   - **動作確認**（Unity Editor で確認した / ローカルで EditMode・PlayMode が緑 / テストの追加・更新 / CI が緑）
    - **関連 Issue**（例: `Closes #123`）
 3. **Create pull request** を押す。
 
