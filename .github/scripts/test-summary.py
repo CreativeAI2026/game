@@ -13,6 +13,20 @@ import xml.etree.ElementTree as ET
 from pathlib import Path
 
 
+def class_of(tc):
+    """test-case からクラス名（名前空間なし）を取り出す。
+
+    `fullname` をドットで割ると `TestCase(0.5f, -1)` のような引数付きテストで
+    引数の中の小数点まで区切りに使われてしまう（`0f,-1` のような行が出る）ので、
+    NUnit が持っている `classname` を優先し、無い場合だけ引数部分を落として推定する。
+    """
+    cls = tc.get("classname")
+    if not cls:
+        full = tc.get("fullname") or tc.get("name") or "?"
+        cls = full.split("(", 1)[0].rsplit(".", 1)[0]
+    return cls.rsplit(".", 1)[-1] or "?"
+
+
 def collect(root):
     """test-case を (クラス名 -> 集計) と、失敗/スキップの明細に畳む。"""
     per_class = {}
@@ -21,7 +35,7 @@ def collect(root):
 
     for tc in root.iter("test-case"):
         full = tc.get("fullname") or tc.get("name") or "?"
-        cls = full.rsplit(".", 1)[0].split(".")[-1]
+        cls = class_of(tc)
         result = tc.get("result") or "?"
 
         stats = per_class.setdefault(cls, {"total": 0, "passed": 0, "failed": 0, "skipped": 0})
