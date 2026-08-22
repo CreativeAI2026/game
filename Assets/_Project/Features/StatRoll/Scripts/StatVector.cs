@@ -1,7 +1,7 @@
 using System.Collections.Generic;
 using System.Linq;
 
-namespace CreativeAI.Crafting
+namespace CreativeAI.StatRoll
 {
     /// <summary>
     /// ステータス型 → 値 の疎なベクトル。値が正の型だけを保持する。
@@ -30,7 +30,7 @@ namespace CreativeAI.Crafting
 
         public int Count => _values.Count;
 
-        /// <summary>総パワー = 全ステータス値の和(CraftingStatAlgorithm.md 層1)。</summary>
+        /// <summary>総パワー = 全ステータス値の和(StatRollAlgorithm.md 層1)。</summary>
         public float Power => _values.Values.Sum();
 
         public IReadOnlyDictionary<StatType, float> AsDictionary() => _values;

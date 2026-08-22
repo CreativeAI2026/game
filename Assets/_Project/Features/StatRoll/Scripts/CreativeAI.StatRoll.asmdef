@@ -1,6 +1,6 @@
 {
-    "name": "CreativeAI.Crafting",
-    "rootNamespace": "CreativeAI.Crafting",
+    "name": "CreativeAI.StatRoll",
+    "rootNamespace": "CreativeAI.StatRoll",
     "references": [],
     "includePlatforms": [],
     "excludePlatforms": [],

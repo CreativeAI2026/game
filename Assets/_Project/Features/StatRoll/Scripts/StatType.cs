@@ -1,4 +1,4 @@
-namespace CreativeAI.Crafting
+namespace CreativeAI.StatRoll
 {
     /// <summary>
     /// 付与ステータスの型(documents/Specification.md §1.1「アイテムカテゴリと付与ステータス」)。

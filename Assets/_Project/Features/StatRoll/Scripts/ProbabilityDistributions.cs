@@ -1,9 +1,9 @@
 using System;
 
-namespace CreativeAI.Crafting
+namespace CreativeAI.StatRoll
 {
     /// <summary>
-    /// 配分ロール(CraftingStatAlgorithm.md 層2)で使う確率分布のサンプラ。
+    /// 配分ロール(StatRollAlgorithm.md 層2)で使う確率分布のサンプラ。
     /// ガンマ → ディリクレ の順に構成する。
     /// </summary>
     public static class ProbabilityDistributions
