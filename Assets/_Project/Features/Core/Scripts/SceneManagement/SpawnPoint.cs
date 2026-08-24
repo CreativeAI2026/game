@@ -25,7 +25,7 @@ namespace CreativeAI.Core.SceneManagement
                 return null;
 
             SpawnPoint hit = null;
-            foreach (var point in FindObjectsByType<SpawnPoint>(FindObjectsSortMode.None))
+            foreach (var point in FindObjectsByType<SpawnPoint>(FindObjectsInactive.Exclude))
             {
                 if (point._id != id)
                     continue;

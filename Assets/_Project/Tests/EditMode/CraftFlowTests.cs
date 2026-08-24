@@ -1,7 +1,10 @@
 using System.Collections;
+using CreativeAI.Gameplay;
 using CreativeAI.UI.Common;
 using CreativeAI.UI.CraftingUI;
 using NUnit.Framework;
+using TMPro;
+using UnityEditor;
 using UnityEngine;
 using UnityEngine.UI;
 
@@ -49,6 +52,17 @@ namespace CreativeAI.Tests.EditMode
                 _resultView,
                 "_closeOnSelfClick",
                 resultRoot.GetComponent<CloseOnSelfClick>()
+            );
+            var itemNameObject = new GameObject(
+                "ItemName",
+                typeof(RectTransform),
+                typeof(TextMeshProUGUI)
+            );
+            itemNameObject.transform.SetParent(resultRoot.transform, false);
+            TestReflection.SetField(
+                _resultView,
+                "_itemName",
+                itemNameObject.GetComponent<TextMeshProUGUI>()
             );
 
             var warningRoot = new GameObject("Warning", typeof(CanvasGroup));
@@ -167,6 +181,53 @@ namespace CreativeAI.Tests.EditMode
 
             _controller.CancelCraftFlow();
             Assert.IsFalse(badge.gameObject.activeSelf);
+        }
+
+        [Test]
+        public void ShowResult_Equipment_ShowsParametersBelowItemName()
+        {
+            var equipment = ScriptableObject.CreateInstance<EquipmentData>();
+            equipment.itemName = "Test Equipment";
+            equipment.defense = 10;
+            equipment.criticalDamage = 10f;
+
+            try
+            {
+                _controller.ShowResult(equipment, 1, null);
+
+                var parameters = TestReflection.GetField<TMP_Text>(_resultView, "_itemParameters");
+                Assert.IsNotNull(parameters);
+                Assert.IsTrue(parameters.gameObject.activeSelf);
+                StringAssert.Contains("+10%", parameters.text);
+                Assert.AreEqual(2, parameters.text.Split('\n').Length);
+
+                var itemName = TestReflection.GetField<TMP_Text>(_resultView, "_itemName");
+                Assert.Less(
+                    ((RectTransform)parameters.transform).anchoredPosition.y,
+                    ((RectTransform)itemName.transform).anchoredPosition.y
+                );
+            }
+            finally
+            {
+                Object.DestroyImmediate(equipment);
+            }
+        }
+
+        [Test]
+        public void UIRootPrefab_CraftResultPanel_HasAttachedItemParametersText()
+        {
+            const string prefabPath = "Assets/_Project/Features/UI/Root/Prefabs/UIRoot.prefab";
+            var prefab = AssetDatabase.LoadAssetAtPath<GameObject>(prefabPath);
+
+            Assert.IsNotNull(prefab, prefabPath);
+            var resultView = prefab.GetComponentInChildren<CraftResultPanelView>(true);
+            Assert.IsNotNull(resultView);
+
+            var parameters = TestReflection.GetField<TMP_Text>(resultView, "_itemParameters");
+            Assert.IsNotNull(parameters, "ResultPanelのItemParameters参照が未設定です。");
+            Assert.AreEqual("ItemParameters", parameters.gameObject.name);
+            Assert.AreEqual(resultView.transform, parameters.transform.parent.parent);
+            Assert.IsFalse(parameters.raycastTarget);
         }
     }
 }

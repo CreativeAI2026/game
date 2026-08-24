@@ -28,9 +28,10 @@ namespace CreativeAI.UI
                 .SetEase(_ease)
                 .SetUpdate(true)
                 .SetTarget(this)
+                .SetLink(gameObject, LinkBehaviour.KillOnDisable)
                 .OnComplete(() =>
                 {
-                    if (version != _animationVersion)
+                    if (this == null || version != _animationVersion)
                         return;
 
                     _selectionTween = null;
@@ -38,7 +39,7 @@ namespace CreativeAI.UI
                 })
                 .OnKill(() =>
                 {
-                    if (version == _animationVersion)
+                    if (this != null && version == _animationVersion)
                         _selectionTween = null;
                 });
 
