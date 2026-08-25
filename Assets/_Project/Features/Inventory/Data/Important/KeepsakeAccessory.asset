@@ -1,0 +1,22 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: fc9469b4c6fd0214cb14c874db525070, type: 3}
+  m_Name: KeepsakeAccessory
+  m_EditorClassIdentifier: CreativeAI.Gameplay::CreativeAI.Gameplay.ImportantData
+  icon: {fileID: 21300000, guid: 94d9a3e58530a324b954f0ccafb309a6, type: 3}
+  id: 4007
+  key: keepsake_accessory
+  itemName: "\u5F62\u898B\u306E\u30A2\u30AF\u30BB\u30B5\u30EA\u30FC"
+  category: 3
+  effect:
+  description:
+  _maxStack: 1

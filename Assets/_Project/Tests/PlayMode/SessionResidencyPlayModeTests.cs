@@ -62,7 +62,7 @@ namespace CreativeAI.Tests.PlayMode
         private static void DestroyResident<T>()
             where T : MonoBehaviour
         {
-            foreach (var found in Object.FindObjectsByType<T>(FindObjectsSortMode.None))
+            foreach (var found in Object.FindObjectsByType<T>(FindObjectsInactive.Exclude))
                 Object.Destroy(found.gameObject);
         }
 
@@ -83,7 +83,8 @@ namespace CreativeAI.Tests.PlayMode
                     .Invoke(_title, null);
 
         private static int CountOf<T>()
-            where T : MonoBehaviour => Object.FindObjectsByType<T>(FindObjectsSortMode.None).Length;
+            where T : MonoBehaviour =>
+            Object.FindObjectsByType<T>(FindObjectsInactive.Exclude).Length;
 
         [UnityTest]
         public IEnumerator EnsureSessionAndPlayer_IsIdempotent()

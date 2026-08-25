@@ -66,8 +66,12 @@ namespace CreativeAI.UI
             _image
                 .rectTransform.DOScale(Vector3.one, duration)
                 .SetEase(Ease.OutBack)
-                .SetUpdate(true);
-            _image.DOFade(1f, duration * 0.65f).SetUpdate(true);
+                .SetUpdate(true)
+                .SetLink(gameObject, LinkBehaviour.KillOnDisable);
+            _image
+                .DOFade(1f, duration * 0.65f)
+                .SetUpdate(true)
+                .SetLink(gameObject, LinkBehaviour.KillOnDisable);
         }
 
         public bool PlayHide(float duration, Action onComplete)
@@ -79,6 +83,7 @@ namespace CreativeAI.UI
             DOTween
                 .Sequence()
                 .SetUpdate(true)
+                .SetLink(gameObject, LinkBehaviour.KillOnDisable)
                 .Join(
                     _image.rectTransform.DOScale(Vector3.one * 0.35f, duration).SetEase(Ease.InBack)
                 )
@@ -230,6 +235,8 @@ namespace CreativeAI.UI
             RefreshLayout();
             ApplyVisibility(_image.sprite != null);
         }
+
+        private void OnDisable() => KillTween();
 
         private void LateUpdate()
         {

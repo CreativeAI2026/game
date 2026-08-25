@@ -59,7 +59,7 @@ namespace CreativeAI.Tests.EditMode
         private static void DestroyResident<T>()
             where T : MonoBehaviour
         {
-            foreach (var found in Object.FindObjectsByType<T>(FindObjectsSortMode.None))
+            foreach (var found in Object.FindObjectsByType<T>(FindObjectsInactive.Exclude))
                 Object.DestroyImmediate(found.gameObject);
             TestReflection.SetStaticProperty<T>("Instance", null);
         }
@@ -68,7 +68,8 @@ namespace CreativeAI.Tests.EditMode
             (bool)TestReflection.Invoke(_title, "EnsureSessionAndPlayer");
 
         private static int CountOf<T>()
-            where T : MonoBehaviour => Object.FindObjectsByType<T>(FindObjectsSortMode.None).Length;
+            where T : MonoBehaviour =>
+            Object.FindObjectsByType<T>(FindObjectsInactive.Exclude).Length;
 
         [Test]
         public void EnsureSessionAndPlayer_CreatesEveryResidentSystem()
@@ -126,7 +127,9 @@ namespace CreativeAI.Tests.EditMode
             }
             finally
             {
-                foreach (var go in Object.FindObjectsByType<GameObject>(FindObjectsSortMode.None))
+                foreach (
+                    var go in Object.FindObjectsByType<GameObject>(FindObjectsInactive.Exclude)
+                )
                     if (go != null && go.CompareTag("Player"))
                         Object.DestroyImmediate(go);
             }

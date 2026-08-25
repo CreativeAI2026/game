@@ -40,22 +40,22 @@ namespace CreativeAI.Gameplay
         private Material _ekgMaterialInstance;
 
         [System.Serializable]
-        private struct EkgPhase
+        private sealed class EkgPhase
         {
             [Tooltip("HP割合の上限（0〜1）。\n次に設定した値以上、この値以下の間で適用される")]
-            public float hpRatioThreshold;
+            public float hpRatioThreshold = 1f;
 
             [Tooltip("このHP割合帯で表示するテクスチャ")]
-            public Texture2D texture;
+            public Texture2D texture = null;
 
             [Tooltip("このHP割合帯での心電図スクロール速度")]
-            public float scrollSpeed;
+            public float scrollSpeed = 0.25f;
 
             [Tooltip("HPバーの左端の色")]
-            public Color hpBarLeftColor;
+            public Color hpBarLeftColor = Color.white;
 
             [Tooltip("HPバーの右端の色")]
-            public Color hpBarRightColor;
+            public Color hpBarRightColor = Color.white;
         }
 
         [Header("EKGフェーズ設定")]
