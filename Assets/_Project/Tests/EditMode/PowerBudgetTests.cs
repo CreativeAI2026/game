@@ -1,8 +1,11 @@
-using CreativeAI.Crafting;
+using CreativeAI.StatRoll;
 using NUnit.Framework;
 
 namespace CreativeAI.Tests.EditMode
 {
+    /// <summary>
+    /// 調合ステータスの総量計算(ソフトキャップ / ハードキャップ)の検証。
+    /// </summary>
     public class PowerBudgetTests
     {
         private static readonly CraftingParameters P = new CraftingParameters

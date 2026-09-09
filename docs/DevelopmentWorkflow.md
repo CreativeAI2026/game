@@ -79,9 +79,8 @@ CI でテストが落ちると merge できない。push 前に手元で通し�
 - **PlayMode**（`Assets/_Project/Tests/PlayMode/`）… `Awake` / `Start` / コルーチン /
   `Destroy` / 実シーンのロードが要るもの。EditMode ではこれらが走らない。
 
-仕様（`documents/Specification.md` など）に書かれた値やルールを固定するテストには、
-どの条文に対応するかをコメントに残す。**仕様書に無い挙動をテストで固定してしまうと、
-後で直す人の邪魔になる**ので、仕様が決まっていない部分は固定しないこと。
+仕様に書かれた値やルールを固定するテストには、どの条文に対応するかをコメントに残す。
+**仕様書に無い挙動をテストで固定してしまうと、後で直す人の邪魔になる**ので、仕様が決まっていない部分は固定しないこと。
 
 ---
 
@@ -123,7 +122,7 @@ GitHub の画面（ブラウザ）から作成する。
 2. 説明欄に [`.github/pull_request_template.md`](../.github/pull_request_template.md) のテンプレートが自動で入るので、各項目を埋める。
    - **概要**（何を・なぜ）
    - **変更内容**
-   - **動作確認**（Unity Editor で確認した / CI が緑）
+   - **動作確認**（Unity Editor で確認した / ローカルで EditMode・PlayMode が緑 / テストの追加・更新 / CI が緑）
    - **関連 Issue**（例: `Closes #123`）
 3. **Create pull request** を押す。
 
@@ -162,9 +161,3 @@ git switch main
 git pull origin main
 git branch -d feature/<内容>   # ローカルの後始末
 ```
-
----
-
-## 関連ドキュメント
-
-- [EnvironmentSetup.md](./EnvironmentSetup.md) — 環境構築手順

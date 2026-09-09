@@ -1,9 +1,12 @@
 using System.Linq;
-using CreativeAI.Crafting;
+using CreativeAI.StatRoll;
 using NUnit.Framework;
 
 namespace CreativeAI.Tests.EditMode
 {
+    /// <summary>
+    /// 調合ロールで使う確率分布(ディリクレ・ガンマ)のサンプリングの検証。
+    /// </summary>
     public class ProbabilityDistributionsTests
     {
         [Test]

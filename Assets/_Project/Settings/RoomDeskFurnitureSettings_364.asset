@@ -1,0 +1,34 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 42f5c3281cad4e30a62b879452f70a63, type: 3}
+  m_Name: RoomDeskFurnitureSettings_364
+  m_EditorClassIdentifier: CreativeAI.EditorTools::CreativeAI.EditorTools.RoomDeskFurnitureSettings
+  deskPrefab: {fileID: -3039384146529542793, guid: 4802ae8bfd4b3484dad52f797745b19b, type: 3}
+  chairPrefab: {fileID: 8771091787928289351, guid: f597ae4a50d082a409584564e834efa4, type: 3}
+  workstationPrefab: {fileID: 8771091787928289351, guid: 31db8095a95bcb9479b1caa0c49341c7, type: 3}
+  monitorSource: {fileID: -3148262229420900664, guid: 31db8095a95bcb9479b1caa0c49341c7, type: 3}
+  keyboardSource: {fileID: -6259287812768690839, guid: 31db8095a95bcb9479b1caa0c49341c7, type: 3}
+  mouseSource: {fileID: -7995361454647334715, guid: 31db8095a95bcb9479b1caa0c49341c7, type: 3}
+  deskScale: {x: 6.5, y: 7, z: 3}
+  chairScale: {x: 3.8780448, y: 3.5193048, z: 4.2737746}
+  monitorScale: {x: 3.3640459, y: 3.3640459, z: 3.3640459}
+  keyboardScale: {x: 3.3640459, y: 3.3640459, z: 3.3640459}
+  mouseScale: {x: 3.3640459, y: 3.3640459, z: 3.3640459}
+  seatHorizontalOffset: 1.95
+  chairLocalPosition: {x: 0, y: -2.695, z: 3.1002553}
+  chairLocalEuler: {x: -0, y: 180, z: 0}
+  monitorLocalPosition: {x: 0, y: -2.4012144, z: 1.2699273}
+  monitorLocalEuler: {x: -0, y: 0, z: 0}
+  keyboardLocalPosition: {x: 0, y: 0.10499978, z: 0.7653204}
+  keyboardLocalEuler: {x: -0, y: 0, z: 0}
+  mouseLocalPosition: {x: 1.1605958, y: 0.15882441, z: 0.4793765}
+  mouseLocalEuler: {x: -0, y: 0, z: 0}

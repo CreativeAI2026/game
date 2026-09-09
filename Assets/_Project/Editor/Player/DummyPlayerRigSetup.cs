@@ -31,9 +31,17 @@ namespace CreativeAI.EditorTools
         const string SpawnId = "start";
         const string SpawnObjectName = "PlayerSpawn_start";
 
-        // 本番 PlayerController と同じ当たり寸法にしておく(階段の登れる/登れないが変わらないように)
-        const float BodyHeight = 1.8f;
-        const float BodyRadius = 0.28f;
+        // 当たり寸法。建物は階高 9.6u もあるので実寸(身長1.8u)だと世界に対して小さすぎ、
+        // 扉(MapLayout.md の DoorScale = 2.5倍 / 開口 2.55 × 5.40u)とも釣り合わない。
+        // そこで扉と同じ 2.5 倍に揃える: 4.5u なら開口高さの 83% で、人と実物の扉の比率に近い。
+        // 半径も同じ倍率にする(高さだけ伸ばすと 16:1 の棒になるため)。1.4u 幅なので開口は通れる。
+        // 本番の PlayerRig ができたら、当たり寸法はこちらに合わせること(階段の登れる/登れないが変わる)。
+        const float BodyHeight = 4.5f;
+        const float BodyRadius = 0.7f;
+
+        // 視点と三人称カメラの距離も同じ倍率で伸ばす(画角の見え方を保つため)
+        const float EyeHeight = 3.75f; // 1.5 × 2.5
+        const float CameraDistance = 11.25f; // 4.5 × 2.5
 
         [MenuItem("Tools/CreativeAI/Player/Setup Dummy PlayerRig (Field_Area01)")]
         public static void Setup()
@@ -102,11 +110,11 @@ namespace CreativeAI.EditorTools
         {
             var pivot = new GameObject("CameraPivot");
             pivot.transform.SetParent(parent, false);
-            pivot.transform.localPosition = new Vector3(0f, 1.5f, 0f);
+            pivot.transform.localPosition = new Vector3(0f, EyeHeight, 0f);
 
             var camGo = new GameObject("Main Camera") { tag = "MainCamera" };
             camGo.transform.SetParent(pivot.transform, false);
-            camGo.transform.localPosition = new Vector3(0f, 0f, -4.5f);
+            camGo.transform.localPosition = new Vector3(0f, 0f, -CameraDistance);
 
             var cam = camGo.AddComponent<Camera>();
             cam.nearClipPlane = 0.1f;

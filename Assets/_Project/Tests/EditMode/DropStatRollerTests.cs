@@ -1,15 +1,15 @@
 using System;
 using System.Linq;
-using CreativeAI.Crafting;
 using CreativeAI.Gameplay;
+using CreativeAI.StatRoll;
 using NUnit.Framework;
 
 namespace CreativeAI.Tests.EditMode
 {
     /// <summary>
-    /// ドロップ装備品の付与ステータス(型 + 量)のロール
-    /// (documents/Specification.md §2.1.1 / CraftingStatAlgorithm.md「ドロップ(拾得)のロール」)。
-    /// 型は DropStatTypeRoller、量は「総パワー(= シードの固定値合計)× ディリクレ均等配分」。
+    /// ドロップ装備品の付与ステータス(型 + 量)のロールの検証。
+    /// 型は DropStatTypeRoller、量は「総パワー(= シードの固定値合計)× ディリクレ均等配分」
+    /// (documents/Specification.md §2.1.1 / StatRollAlgorithm.md「ドロップ(拾得)のロール」)。
     /// </summary>
     public class DropStatRollerTests
     {

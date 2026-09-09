@@ -9,8 +9,8 @@ using UnityEngine.UI;
 namespace CreativeAI.Tests.EditMode
 {
     /// <summary>
-    /// 即時食材使用UIの出し分け(documents/Specification.md §5, §2.2)。
-    /// 「移動中・戦闘中とも常時表示」で、隠すのは会話中とパネル(インベ/キャラ/セーブ/調合)表示中だけ。
+    /// 即時食材使用UIの出し分けの検証(会話中とパネル表示中だけ隠し、戦闘中も出したままにする)。
+    /// パネルは インベ/キャラ/セーブ/調合(documents/Specification.md §5, §2.2)。
     /// battle ステップも EventPlaybackService.IsPlaying の内側で走るので、モードで戦闘を除外する必要がある。
     /// </summary>
     public class QuickFoodBarControllerTests

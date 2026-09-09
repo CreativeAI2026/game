@@ -8,6 +8,9 @@ using UnityEngine.UI;
 
 namespace CreativeAI.Tests.EditMode
 {
+    /// <summary>
+    /// リボルバータブの選択状態(構築・移動・端でのラップ・決定)の検証。
+    /// </summary>
     public class RevolverTabGroupStateTests
     {
         private GameObject _groupObject;

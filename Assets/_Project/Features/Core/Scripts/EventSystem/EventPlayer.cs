@@ -145,6 +145,10 @@ namespace CreativeAI.Core.EventSystem
 
                         case StepKind.GiveItem:
                             Items?.Give(step.ItemKey);
+                            // 入手演出は会話UI側(絵と名前は itemKey から UI が引く)。
+                            // 会話UIが無い場面(テスト等)は在庫に入るだけで演出は出ない。
+                            if (View != null)
+                                yield return View.ShowItemGet(step.ItemKey, step.Message);
                             break;
 
                         case StepKind.GiveWeapon:
@@ -155,6 +159,8 @@ namespace CreativeAI.Core.EventSystem
                                 );
                             else
                                 Weapons.GiveWeapon(step.WeaponKey);
+                            if (View != null)
+                                yield return View.ShowWeaponGet(step.WeaponKey, step.Message);
                             break;
 
                         case StepKind.Battle:
@@ -172,6 +178,11 @@ namespace CreativeAI.Core.EventSystem
                             else
                                 yield return BattleRunner.Run(battle);
                             mode?.ExitBattle();
+                            break;
+
+                        case StepKind.Command:
+                            if (View != null)
+                                yield return View.RunCommand(step.CommandName, step.Arg);
                             break;
                     }
                 }

@@ -7,8 +7,8 @@ using UnityEngine.TestTools;
 namespace CreativeAI.Tests.EditMode
 {
     /// <summary>
-    /// 食材使用フロー(documents/Specification.md §2.1, §2.2)。
-    /// 「HP即時回復をその場で適用」+「在庫を1つ消費」。回復量は最大HPに対する固定割合(合成前20%/合成後50%)。
+    /// 食材使用の検証(HP即時回復をその場で適用し、在庫を1つ消費)。
+    /// 回復量は最大HPに対する固定割合(合成前20%/合成後50%。documents/Specification.md §2.1, §2.2)。
     /// </summary>
     public class ItemUseServiceTests
     {

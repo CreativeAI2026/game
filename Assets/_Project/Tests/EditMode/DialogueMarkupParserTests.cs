@@ -3,6 +3,9 @@ using NUnit.Framework;
 
 namespace CreativeAI.Tests.EditMode
 {
+    /// <summary>
+    /// 会話テキストのタグ解析(制御タグ除去・TMP タグ温存・待ち時間のクランプ)の検証。
+    /// </summary>
     public class DialogueMarkupParserTests
     {
         [Test]

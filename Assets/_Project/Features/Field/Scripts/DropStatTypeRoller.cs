@@ -1,6 +1,6 @@
 using System;
 using System.Collections.Generic;
-using CreativeAI.Crafting;
+using CreativeAI.StatRoll;
 
 namespace CreativeAI.Gameplay
 {

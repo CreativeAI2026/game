@@ -1,13 +1,13 @@
 using System;
 using System.Collections.Generic;
-using CreativeAI.Crafting;
+using CreativeAI.StatRoll;
 
 namespace CreativeAI.Gameplay
 {
     /// <summary>
-    /// 調合ロールエンジン(CreativeAI.Crafting)とインベントリの装備品(EquipmentData / RolledStat)の橋渡し。
+    /// 調合ロールエンジン(CreativeAI.StatRoll)とインベントリの装備品(EquipmentData / RolledStat)の橋渡し。
     /// 装備品同士の調合は「端末で個体差ロール」する(documents/Specification.md §2.3,
-    /// CraftingStatAlgorithm.md)。食材は固定ルール(FoodData.HealFraction)なのでここは通さない。
+    /// StatRollAlgorithm.md)。食材は固定ルール(FoodData.HealFraction)なのでここは通さない。
     ///
     /// RolledStat.stat の語彙は <see cref="StatType"/> 名(例 "AttackPct")。GetEquippedBonus はこの語彙で解釈する。
     /// 付与ステータスの型・上限2つ・会心率クランプなどは全てロール側(CraftingStatRoller/CraftingParameters)が担う。
@@ -28,7 +28,7 @@ namespace CreativeAI.Gameplay
 
         /// <summary>
         /// フィールドドロップの装備品1個ぶんの個体ステータスをロールする
-        /// (documents/Specification.md §2.1.1 / CraftingStatAlgorithm.md「ドロップ(拾得)のロール」)。
+        /// (documents/Specification.md §2.1.1 / StatRollAlgorithm.md「ドロップ(拾得)のロール」)。
         /// シード SO の固定値は「総パワー(強さの目安)」としてだけ使い、どの型に何ポイント付くかは
         /// 型抽選 + ディリクレ配分で拾った瞬間に決める(同じ場所の同じ装備品でも個体差が出る)。
         /// </summary>

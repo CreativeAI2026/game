@@ -8,6 +8,9 @@ using UnityEngine;
 
 namespace CreativeAI.Tests.EditMode
 {
+    /// <summary>
+    /// イベント再生(会話・アイテム/武器付与・戦闘・進行度更新)の検証。
+    /// </summary>
     public class EventPlayerTests
     {
         // yield return <IEnumerator> のネストを Unity 同様に展開しながら同期駆動する。
@@ -48,6 +51,28 @@ namespace CreativeAI.Tests.EditMode
             )
             {
                 onSelected?.Invoke(ChoiceToReturn);
+                yield break;
+            }
+
+            public readonly List<string> ItemGets = new();
+            public readonly List<string> WeaponGets = new();
+            public readonly List<string> Commands = new();
+
+            public IEnumerator ShowItemGet(string itemKey, string message)
+            {
+                ItemGets.Add(itemKey);
+                yield break;
+            }
+
+            public IEnumerator ShowWeaponGet(string weaponKey, string message)
+            {
+                WeaponGets.Add(weaponKey);
+                yield break;
+            }
+
+            public IEnumerator RunCommand(string command, string argument)
+            {
+                Commands.Add(argument == null ? command : $"{command}:{argument}");
                 yield break;
             }
         }
@@ -131,6 +156,8 @@ namespace CreativeAI.Tests.EditMode
 
             CollectionAssert.AreEqual(new[] { "…誰だ?", "…そうか。" }, _view.Lines);
             CollectionAssert.AreEqual(new[] { "old_key" }, _items.Given);
+            // 在庫に入れるだけでなく、会話UIの入手演出も回す。
+            CollectionAssert.AreEqual(new[] { "old_key" }, _view.ItemGets);
             Assert.AreEqual("together", _pm.GetFlag("girl_choice"));
             Assert.AreEqual(6, _pm.Progress);
         }
@@ -156,7 +183,29 @@ namespace CreativeAI.Tests.EditMode
             Drive(_player.PlayRoutine(ev));
 
             CollectionAssert.AreEqual(new[] { "scythe" }, weapons.Given);
+            CollectionAssert.AreEqual(new[] { "scythe" }, _view.WeaponGets);
             Assert.AreEqual(6, _pm.Progress);
+        }
+
+        [Test]
+        public void PlayRoutine_CommandStep_RoutesToDialogueView()
+        {
+            var ev = EventDefinition.Create(
+                "shaken",
+                new[] { EventCondition.Progress(0) },
+                new[]
+                {
+                    EventStep.Line("主人公", "hero_surprised", "地面が揺れた。"),
+                    EventStep.Command("portrait.left.shake"),
+                    EventStep.Command("wait", "0.5"),
+                    EventStep.Line("主人公", "hero_normal", "…収まったか。"),
+                },
+                nextProgress: 6
+            );
+
+            Drive(_player.PlayRoutine(ev));
+
+            CollectionAssert.AreEqual(new[] { "portrait.left.shake", "wait:0.5" }, _view.Commands);
         }
 
         [Test]

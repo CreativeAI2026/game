@@ -4,6 +4,9 @@ using NUnit.Framework;
 
 namespace CreativeAI.Tests.EditMode
 {
+    /// <summary>
+    /// CSV 1 行のパース(引用符内のカンマ・エスケープ、閉じ忘れの検出)の検証。
+    /// </summary>
     public sealed class CsvRecordParserTests
     {
         [Test]

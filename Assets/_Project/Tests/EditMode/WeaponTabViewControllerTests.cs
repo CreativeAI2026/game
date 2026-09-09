@@ -8,6 +8,9 @@ using UnityEngine.UI;
 
 namespace CreativeAI.Tests.EditMode
 {
+    /// <summary>
+    /// 武器タブの表示更新(初期選択の反映・未設定時のフォールバック)の検証。
+    /// </summary>
     public class WeaponTabViewControllerTests
     {
         private readonly List<Object> _objects = new();

@@ -9,8 +9,8 @@ using UnityEngine.TestTools;
 namespace CreativeAI.Tests.PlayMode
 {
     /// <summary>
-    /// シーン遷移の進行そのもの(documents/Specification.md §3)。
-    /// 「ロード画面はシーンではなく UI オーバーレイ」で、暗幕→ロード→到着処理→暗幕解除の順に進む。
+    /// シーン遷移の進行順の検証(暗幕 → ロード → 到着処理 → 暗幕解除)。
+    /// 「ロード画面はシーンではなく UI オーバーレイ」(documents/Specification.md §3)。
     /// コルーチンと実ロードが要るので PlayMode で回す。
     /// </summary>
     public class SceneLoadPlayModeTests

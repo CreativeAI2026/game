@@ -15,6 +15,23 @@ namespace CreativeAI.Core.EventSystem
 
         /// <summary>選択肢を提示し、選ばれた値を onSelected で返す(コルーチン)。</summary>
         IEnumerator ShowChoice(IReadOnlyList<ChoiceOption> options, Action<string> onSelected);
+
+        /// <summary>
+        /// giveItem の入手演出。itemKey から絵と名前を引くのは UI 側(Core は Gameplay を参照しないため)。
+        /// message 省略時は UI が「〜を手に入れた。」を組み立てる。送り入力まで待つ(コルーチン)。
+        /// </summary>
+        IEnumerator ShowItemGet(string itemKey, string message);
+
+        /// <summary>
+        /// giveWeapon の入手演出。ShowItemGet の武器版(3Dモデルを回して見せる)。
+        /// </summary>
+        IEnumerator ShowWeaponGet(string weaponKey, string message);
+
+        /// <summary>
+        /// command ステップの演出コマンド(window.hide / portrait.left.shake / wait など)を実行する。
+        /// 対応コマンドは documents/ScenarioReference.md「演出コマンド」。
+        /// </summary>
+        IEnumerator RunCommand(string command, string argument);
     }
 
     /// <summary>

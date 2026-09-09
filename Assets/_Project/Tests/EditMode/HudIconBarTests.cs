@@ -8,8 +8,8 @@ using UnityEngine.UI;
 namespace CreativeAI.Tests.EditMode
 {
     /// <summary>
-    /// 右上アイコンバーの出し分け(documents/Specification.md §5, §2.2, §0)。
-    /// 「移動中のみ表示・戦闘モード中は非表示」+「会話UI表示中も非表示(セーブ/インベを開かせない)」。
+    /// 右上アイコンバーの出し分けの検証(移動中だけ表示し、戦闘中と会話中は隠す)。
+    /// 会話中に隠すのはセーブ/インベを開かせないため(documents/Specification.md §5, §2.2, §0)。
     /// GameObject ごと消すと購読が切れるため、Canvas / Raycaster の enabled で出し分ける実装を検証する。
     /// </summary>
     public class HudIconBarTests

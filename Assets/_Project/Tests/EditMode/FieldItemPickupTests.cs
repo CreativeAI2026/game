@@ -2,16 +2,16 @@ using System.Collections.Generic;
 using System.Linq;
 using CreativeAI.Core;
 using CreativeAI.Core.EventSystem;
-using CreativeAI.Crafting;
 using CreativeAI.Gameplay;
+using CreativeAI.StatRoll;
 using NUnit.Framework;
 using UnityEngine;
 
 namespace CreativeAI.Tests.EditMode
 {
     /// <summary>
-    /// フィールドのアイテム拾得(documents/Specification.md §0, §2「拾得」, §2.1.1)。
-    /// 「移動中(Field)のみ拾える / 戦闘中・会話イベント中は拾わない / 装備品は拾った瞬間にロールする」。
+    /// フィールドのアイテム拾得の検証(移動中だけ拾える / 装備品は拾った瞬間にロールする)。
+    /// 戦闘中・会話イベント中は拾わない(documents/Specification.md §0, §2「拾得」, §2.1.1)。
     /// </summary>
     public class FieldItemPickupTests
     {

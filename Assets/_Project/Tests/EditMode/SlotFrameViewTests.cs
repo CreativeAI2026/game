@@ -5,6 +5,9 @@ using UnityEngine.UI;
 
 namespace CreativeAI.Tests.EditMode
 {
+    /// <summary>
+    /// スロット枠の見た目切り替え(所持・選択状態ごとのスプライト)の検証。
+    /// </summary>
     public class SlotFrameViewTests
     {
         private GameObject _gameObject;

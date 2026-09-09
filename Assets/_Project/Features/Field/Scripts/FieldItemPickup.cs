@@ -1,6 +1,6 @@
 using CreativeAI.Core;
 using CreativeAI.Core.EventSystem;
-using CreativeAI.Crafting;
+using CreativeAI.StatRoll;
 using UnityEngine;
 
 namespace CreativeAI.Gameplay
@@ -13,7 +13,7 @@ namespace CreativeAI.Gameplay
     /// (操作不能な間に在庫が動くのを防ぐ。セーブ/食材使用と同じ判断軸)。
     ///
     /// 装備品は<b>拾った瞬間に付与ステータスをロールする</b>(§2.1.1: 型は重み付き非復元抽出 /
-    /// 量は CraftingStatAlgorithm のロールモデル)。同じ装備品でも拾うたびに違う個体になるため、
+    /// 量は StatRollAlgorithm のロールモデル)。同じ装備品でも拾うたびに違う個体になるため、
     /// 数量でまとめず1個ずつ別スタックで持つ。食材・大事なものは固定ルールなのでそのまま数量ぶん積む。
     ///
     /// 配置は「シーン上に手で置く」流儀(EventTrigger / SceneExit と同じ): 空の GameObject に

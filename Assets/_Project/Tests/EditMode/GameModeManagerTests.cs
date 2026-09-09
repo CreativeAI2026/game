@@ -5,6 +5,9 @@ using UnityEngine;
 
 namespace CreativeAI.Tests.EditMode
 {
+    /// <summary>
+    /// ゲームモード(フィールド / 戦闘)の遷移と変化通知の検証。
+    /// </summary>
     public class GameModeManagerTests
     {
         private GameObject _go;

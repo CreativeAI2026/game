@@ -4,6 +4,9 @@ using UnityEngine;
 
 namespace CreativeAI.Tests.EditMode
 {
+    /// <summary>
+    /// スロットアイコンの配置計算(透明余白を除いた実描画範囲で中央寄せ)の検証。
+    /// </summary>
     public class SlotIconViewTests
     {
         [Test]

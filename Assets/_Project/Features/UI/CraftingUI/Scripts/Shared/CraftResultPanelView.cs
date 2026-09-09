@@ -28,6 +28,9 @@ namespace CreativeAI.UI.CraftingUI
         [SerializeField]
         private TMP_Text _itemName;
 
+        [SerializeField]
+        private TMP_Text _itemParameters;
+
         private Action _closedAction;
         private TMP_Text _newBadge;
 
@@ -49,16 +52,26 @@ namespace CreativeAI.UI.CraftingUI
             _itemName ??=
                 UIChildFinder.FindComponent<TMP_Text>(transform, "Name")
                 ?? UIChildFinder.FindComponent<TMP_Text>(transform, "ItemName");
+            _itemParameters ??= UIChildFinder.FindComponent<TMP_Text>(transform, "ItemParameters");
         }
 #endif
 
         public void Show(Sprite icon, string itemName, Action onClosed) =>
-            Show(icon, itemName, false, onClosed);
+            Show(icon, itemName, string.Empty, false, onClosed);
 
-        public void Show(Sprite icon, string itemName, bool showNewBadge, Action onClosed)
+        public void Show(Sprite icon, string itemName, bool showNewBadge, Action onClosed) =>
+            Show(icon, itemName, string.Empty, showNewBadge, onClosed);
+
+        public void Show(
+            Sprite icon,
+            string itemName,
+            string itemParameters,
+            bool showNewBadge,
+            Action onClosed
+        )
         {
             _closedAction = onClosed;
-            RefreshContent(icon, itemName, showNewBadge);
+            RefreshContent(icon, itemName, itemParameters, showNewBadge);
             _closeOnSelfClick?.SetClickAction(Hide);
             CraftUIAnimationUtility.PlayResultIn(gameObject);
         }
@@ -93,7 +106,12 @@ namespace CreativeAI.UI.CraftingUI
             _closedAction = null;
         }
 
-        private void RefreshContent(Sprite icon, string itemName, bool showNewBadge)
+        private void RefreshContent(
+            Sprite icon,
+            string itemName,
+            string itemParameters,
+            bool showNewBadge
+        )
         {
             if (_itemImage != null)
             {
@@ -104,6 +122,8 @@ namespace CreativeAI.UI.CraftingUI
 
             if (_itemName != null)
                 _itemName.text = itemName ?? string.Empty;
+
+            SetItemParameters(itemParameters);
 
             SetNewBadgeVisible(showNewBadge);
         }
@@ -120,7 +140,63 @@ namespace CreativeAI.UI.CraftingUI
             if (_itemName != null)
                 _itemName.text = string.Empty;
 
+            SetItemParameters(string.Empty);
+
             SetNewBadgeVisible(false);
+        }
+
+        private void SetItemParameters(string itemParameters)
+        {
+            bool hasParameters = !string.IsNullOrWhiteSpace(itemParameters);
+            if (!hasParameters && _itemParameters == null)
+                return;
+
+            EnsureItemParameters();
+            _itemParameters.text = itemParameters ?? string.Empty;
+            _itemParameters.gameObject.SetActive(hasParameters);
+        }
+
+        private void EnsureItemParameters()
+        {
+            if (_itemParameters != null)
+                return;
+
+            var parametersObject = new GameObject(
+                "ItemParameters",
+                typeof(RectTransform),
+                typeof(CanvasRenderer)
+            );
+            var parametersRect = (RectTransform)parametersObject.transform;
+            parametersRect.SetParent(transform, false);
+            parametersRect.anchorMin = new Vector2(0.5f, 0.5f);
+            parametersRect.anchorMax = new Vector2(0.5f, 0.5f);
+            parametersRect.pivot = new Vector2(0.5f, 1f);
+            parametersRect.anchoredPosition = new Vector2(0f, -120f);
+            parametersRect.sizeDelta = new Vector2(760f, 180f);
+
+            _itemParameters = parametersObject.AddComponent<TextMeshProUGUI>();
+            _itemParameters.alignment = TextAlignmentOptions.Top;
+            _itemParameters.fontSize = 28f;
+            _itemParameters.enableAutoSizing = true;
+            _itemParameters.fontSizeMin = 18f;
+            _itemParameters.fontSizeMax = 28f;
+            _itemParameters.color = Color.white;
+            _itemParameters.raycastTarget = false;
+
+            if (_itemName != null)
+            {
+                _itemParameters.font = _itemName.font;
+                _itemParameters.fontSharedMaterial = _itemName.fontSharedMaterial;
+                if (_itemName.transform is RectTransform itemNameRect)
+                {
+                    parametersRect.anchorMin = itemNameRect.anchorMin;
+                    parametersRect.anchorMax = itemNameRect.anchorMax;
+                    parametersRect.pivot = new Vector2(itemNameRect.pivot.x, 1f);
+                    parametersRect.anchoredPosition =
+                        itemNameRect.anchoredPosition
+                        + new Vector2(0f, -(itemNameRect.rect.height * itemNameRect.pivot.y + 12f));
+                }
+            }
         }
 
         private void SetNewBadgeVisible(bool visible)

@@ -17,11 +17,11 @@ MonoBehaviour:
   key: fluorescent_light_full_body_tights
   itemName: "\u86CD\u5149\u706F\u3068\u5168\u8EAB\u30BF\u30A4\u30C4"
   category: 1
-  effect: 
+  effect: "\u52B9\u679C  \u9632\u5FA1 +10% / \u4F1A\u5FC3\u30C0\u30E1\u30FC\u30B8 +10%"
   description: 
   _maxStack: 1
   attack: 0
-  defense: 0
-  criticalDamage: 0
+  defense: 10
+  criticalDamage: 10
   criticalRate: 0
   maxHP: 0

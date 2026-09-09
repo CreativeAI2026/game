@@ -9,7 +9,7 @@ namespace CreativeAI.UI
     /// DontDestroyOnLoad で常駐させる(プレイヤーリグと同じ生成方式)。状態は保存されない。
     /// エリア遷移をまたいで持続し、フィールドシーンには UI を置かない。
     /// 常駐なので配線・購読は生成時の1回だけで済む(HudIconBar が毎シーン読み直す必要がない)。
-    /// documents/Specification.md「常駐アーキテクチャ」/ UIImplementation.md 参照。
+    /// documents/Specification.md「常駐アーキテクチャ」参照。
     /// </summary>
     public sealed class UIRoot : MonoBehaviour
     {

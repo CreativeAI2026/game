@@ -6,6 +6,9 @@ using NUnit.Framework;
 
 namespace CreativeAI.Tests.EditMode
 {
+    /// <summary>
+    /// フリー調合の素材スロット割り当て状態の検証。
+    /// </summary>
     public class FreeCraftMaterialAssignmentStateTests
     {
         [Test]

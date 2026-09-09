@@ -5,6 +5,9 @@ using UnityEngine;
 
 namespace CreativeAI.Tests.EditMode
 {
+    /// <summary>
+    /// レシピ調合の選択レシピと個数の保持・クランプの検証。
+    /// </summary>
     public class RecipeCraftSelectionStateTests
     {
         [Test]

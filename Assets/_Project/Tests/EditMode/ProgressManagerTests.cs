@@ -4,6 +4,9 @@ using UnityEngine;
 
 namespace CreativeAI.Tests.EditMode
 {
+    /// <summary>
+    /// 進行度の更新通知とフラグの読み書きの検証。
+    /// </summary>
     public class ProgressManagerTests
     {
         private GameObject _go;

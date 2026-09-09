@@ -28,7 +28,7 @@ namespace CreativeAI.EditorTools
     /// - アプリ常駐(SceneController + ロードオーバーレイ / EventSystem)は Title が生成する(Boot シーンは廃止)。
     /// - セッション常駐の UI レイヤー(UIRoot)は Title で Prefab 化し、TitleUIController が「はじめる」で生成する。
     ///   HUD(HP) / 右上アイコンバー(HudIconBar) / 即時食材使用UI / 武器切替UI / 各パネル / 会話UI を
-    ///   UI ごとに別 Canvas で束ねる。フィールドシーンには UI を置かない(spec/UIImplementation.md)。
+    ///   UI ごとに別 Canvas で束ねる。フィールドシーンには UI を置かない(spec §5「UI / オーバーレイ」)。
     /// Tools > CreativeAI > Setup Initial Scenes から実行。
     /// </summary>
     public static class SetupInitialScenes

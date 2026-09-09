@@ -1,6 +1,7 @@
 #if UNITY_EDITOR
 using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.Linq;
 using CreativeAI.Core.EventSystem;
 using Newtonsoft.Json;
@@ -19,7 +20,10 @@ namespace CreativeAI.Scenario.Editor
         /// <summary>
         /// documents/ScenarioReference.md「登場人物と立ち絵」のカタログ。
         /// line ステップの portrait はこの一覧のいずれかでなければならない(打ち間違い検出)。
-        /// キャラ追加・表情追加のたびにここへ足す(現状カタログはドキュメントとこの集合のみ)。
+        /// キーは実行時に立ち絵を解決する DialogueCharacterDefinition の PortraitKey と同じ文字列
+        /// ({キャラ _id}_{表情} の snake_case)。ここだけ直しても実行時は解決されないので、
+        /// 表情を足すときは定義アセット(Features/UI/ConversationUI/Data/Characters)にも同じキーを足す
+        /// (未登録のまま書くと EventImporterMenu が「立ち絵アセット未登録」を警告する)。
         /// </summary>
         public static readonly IReadOnlyCollection<string> PortraitKeys = new HashSet<string>(
             StringComparer.Ordinal
@@ -55,6 +59,44 @@ namespace CreativeAI.Scenario.Editor
         };
 
         /// <summary>
+        /// command ステップで書ける演出コマンド名(documents/ScenarioReference.md「演出コマンド」)。
+        /// 実行側は ConversationView の演出コマンドルータ。ここに無い名前はルータが警告して
+        /// 何も起きないため、取り込み時に弾く。camera.* / background.* は会話UIの外へ委譲する
+        /// 前方互換の逃げ道なので、接頭辞だけ見て通す(下の IsKnownCommand)。
+        /// </summary>
+        public static readonly IReadOnlyCollection<string> CommandNames = new HashSet<string>(
+            StringComparer.Ordinal
+        )
+        {
+            "window.hide",
+            "window.show",
+            "portrait.left.hide",
+            "portrait.right.hide",
+            "portrait.left.obscure",
+            "portrait.right.obscure",
+            "portrait.left.reveal",
+            "portrait.right.reveal",
+            "portrait.left.shake",
+            "portrait.right.shake",
+            "portrait.left.jump",
+            "portrait.right.jump",
+            "wait",
+            "conversation.close",
+        };
+
+        /// <summary>
+        /// choice の選択肢数の下限・上限(documents/ScenarioReference.md「ステップの種類」)。
+        /// 上限3は選択肢UIの都合: 3択ぶんの高さを基準に中央寄せするので4つ以上は会話ウィンドウに被る。
+        /// </summary>
+        public const int MinChoiceOptions = 2;
+        public const int MaxChoiceOptions = 3;
+
+        private static bool IsKnownCommand(string command) =>
+            CommandNames.Contains(command)
+            || command.StartsWith("camera.", StringComparison.Ordinal)
+            || command.StartsWith("background.", StringComparison.Ordinal);
+
+        /// <summary>
         /// itemKey を弾くための有効キー集合。null なら「未提供」= 警告どまり。
         /// エディタ側(EventImporterMenu)が ItemData から構築して渡す。
         /// (敵は events.json に書かず EventTrigger に配線するため enemyKey の照合は持たない。)
@@ -70,13 +112,23 @@ namespace CreativeAI.Scenario.Editor
             /// </summary>
             public IReadOnlyCollection<string> KeyItemKeys { get; }
 
+            /// <summary>
+            /// 立ち絵アセット(DialogueCharacterDefinition)に実際に登録済みの portrait キー。
+            /// <see cref="PortraitKeys"/> は「予定を含むカタログ」なので、絵がまだ無いキーは
+            /// import は通るが実行時に既定の立ち絵へ落ちる。その取り違えを警告で可視化するために持つ。
+            /// null なら未提供(照合しない)。
+            /// </summary>
+            public IReadOnlyCollection<string> RegisteredPortraitKeys { get; }
+
             public ImportCatalog(
                 IReadOnlyCollection<string> itemKeys,
-                IReadOnlyCollection<string> keyItemKeys = null
+                IReadOnlyCollection<string> keyItemKeys = null,
+                IReadOnlyCollection<string> registeredPortraitKeys = null
             )
             {
                 ItemKeys = itemKeys;
                 KeyItemKeys = keyItemKeys;
+                RegisteredPortraitKeys = registeredPortraitKeys;
             }
         }
 
@@ -410,6 +462,17 @@ namespace CreativeAI.Scenario.Editor
                         );
                         return null;
                     }
+                    // カタログにはあるが立ち絵アセット未登録 = 実行時は既定の立ち絵に落ちる。
+                    // 絵の準備待ちでも書き進められるようエラーにはせず警告にとどめる。
+                    if (
+                        !string.IsNullOrEmpty(portrait)
+                        && catalog?.RegisteredPortraitKeys != null
+                        && !catalog.RegisteredPortraitKeys.Contains(portrait)
+                    )
+                        report.Warn(
+                            id,
+                            $"steps[{i}] line の portrait '{portrait}' は立ち絵アセット未登録です(実行時は既定の立ち絵になります)。"
+                        );
                     return EventStep.Line(speaker, portrait, text);
                 }
 
@@ -423,9 +486,19 @@ namespace CreativeAI.Scenario.Editor
                         report.Error(id, $"steps[{i}] choice は flag(書き込むキー)が必須。");
                         return null;
                     }
-                    if (step["options"] is not JArray options || options.Count == 0)
+                    // 選択肢UIは3択ぶんの高さを基準に中央寄せするレイアウトなので、4つ以上は
+                    // 会話ウィンドウに被る(DialogueChoicePresenter.UpdateLayout)。
+                    // 1つだけの choice は選ばせる意味が無く、書き間違いの方が多いので弾く。
+                    if (
+                        step["options"] is not JArray options
+                        || options.Count < MinChoiceOptions
+                        || options.Count > MaxChoiceOptions
+                    )
                     {
-                        report.Error(id, $"steps[{i}] choice は options が1つ以上必須。");
+                        report.Error(
+                            id,
+                            $"steps[{i}] choice の options は{MinChoiceOptions}〜{MaxChoiceOptions}個にしてください。"
+                        );
                         return null;
                     }
                     var parsed = new List<ChoiceOption>();
@@ -478,7 +551,10 @@ namespace CreativeAI.Scenario.Editor
                             $"steps[{i}] giveItem の itemKey '{itemKey}' は未検証(item カタログ未提供)。"
                         );
                     }
-                    return EventStep.GiveItem(itemKey);
+                    return EventStep.GiveItem(
+                        itemKey,
+                        (step["message"] as JValue)?.Value as string
+                    );
                 }
 
                 case "giveWeapon":
@@ -499,7 +575,45 @@ namespace CreativeAI.Scenario.Editor
                         );
                         return null;
                     }
-                    return EventStep.GiveWeapon(weaponKey);
+                    return EventStep.GiveWeapon(
+                        weaponKey,
+                        (step["message"] as JValue)?.Value as string
+                    );
+                }
+
+                case "command":
+                {
+                    kind = StepKind.Command;
+                    var command = ((step["command"] as JValue)?.Value as string)?.Trim();
+                    if (string.IsNullOrEmpty(command))
+                    {
+                        report.Error(id, $"steps[{i}] command は command(コマンド名)が必須。");
+                        return null;
+                    }
+                    if (!IsKnownCommand(command))
+                    {
+                        report.Error(
+                            id,
+                            $"steps[{i}] command の '{command}' は未対応です(ScenarioReference.md「演出コマンド」参照)。"
+                        );
+                        return null;
+                    }
+                    var arg = (step["arg"] as JValue)?.Value?.ToString();
+                    // wait だけは秒数が要る(欠けると何も待たずに素通りする)。
+                    if (
+                        command == "wait"
+                        && !float.TryParse(
+                            arg,
+                            NumberStyles.Float,
+                            CultureInfo.InvariantCulture,
+                            out _
+                        )
+                    )
+                    {
+                        report.Error(id, $"steps[{i}] command 'wait' は arg に秒数(数値)が必須。");
+                        return null;
+                    }
+                    return EventStep.Command(command, arg);
                 }
 
                 case "battle":
@@ -521,7 +635,7 @@ namespace CreativeAI.Scenario.Editor
                 default:
                     report.Error(
                         id,
-                        $"steps[{i}] の kind '{kindStr}' は不正(line / choice / giveItem / giveWeapon / battle のみ)。"
+                        $"steps[{i}] の kind '{kindStr}' は不正(line / choice / giveItem / giveWeapon / battle / command のみ)。"
                     );
                     return null;
             }

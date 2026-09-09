@@ -6,6 +6,9 @@ using UnityEngine;
 
 namespace CreativeAI.Tests.EditMode
 {
+    /// <summary>
+    /// レシピ調合の作成可能数判定(装備中・即時使用枠の素材は除外)の検証。
+    /// </summary>
     public class RecipeCraftAvailabilityCalculatorTests
     {
         private readonly List<Object> _createdObjects = new();

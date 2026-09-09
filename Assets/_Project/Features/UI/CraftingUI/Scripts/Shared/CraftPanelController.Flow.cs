@@ -145,7 +145,14 @@ namespace CreativeAI.UI.CraftingUI
                 resultItem == null ? string.Empty
                 : safeCount > 1 ? $"{resultItem.itemName} \u00d7{safeCount}"
                 : resultItem.itemName;
-            _resultPanelView.Show(resultItem?.icon, itemName, showNewBadge, closeAction);
+            string itemParameters = ItemStatTextFormatter.BuildStatsText(resultItem);
+            _resultPanelView.Show(
+                resultItem?.icon,
+                itemName,
+                itemParameters,
+                showNewBadge,
+                closeAction
+            );
         }
 
         public void HideResult() => HideSharedResult();

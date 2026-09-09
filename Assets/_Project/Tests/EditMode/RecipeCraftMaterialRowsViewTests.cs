@@ -6,6 +6,9 @@ using UnityEngine;
 
 namespace CreativeAI.Tests.EditMode
 {
+    /// <summary>
+    /// レシピ調合の必要素材行の表示の検証。
+    /// </summary>
     public class RecipeCraftMaterialRowsViewTests
     {
         private GameObject _root;

@@ -103,10 +103,3 @@ mise exec -- dotnet csharpier check .
 ```
 
 ここまで通れば環境構築は完了。日々の開発の進め方は [DevelopmentWorkflow.md](./DevelopmentWorkflow.md) を参照。
-
----
-
-## 関連ドキュメント
-
-- [DevelopmentWorkflow.md](./DevelopmentWorkflow.md) — ブランチ → コミット → PR の開発フロー
-- [../README.md](../README.md) — プロジェクト概要

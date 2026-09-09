@@ -5,8 +5,8 @@ using UnityEngine;
 namespace CreativeAI.Tests.EditMode
 {
     /// <summary>
-    /// 操作で開く UI(キャラ / インベ / セーブ / 調合)の排他表示(documents/Specification.md §5,
-    /// UIImplementation.md §2)。開くのは常に1つで、別のを開くと前のが閉じる。
+    /// 操作で開く UI(キャラ / インベ / セーブ / 調合)の排他表示(documents/Specification.md §5)。
+    /// 開くのは常に1つで、別のを開くと前のが閉じる。
     /// </summary>
     public class UiRouterTests
     {

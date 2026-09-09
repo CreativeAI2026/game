@@ -7,11 +7,10 @@ namespace CreativeAI.UI
 {
     /// <summary>
     /// 画面右上の円形ナビ(キャラ / インベ / セーブ)。HP の HUD とは別 Canvas に分ける
-    /// (HP は入力を受けず頻繁に更新されるため。UIImplementation.md §1)。
+    /// (HP は入力を受けず頻繁に更新されるため)。
     /// ボタン押下で <see cref="UiRouter.Toggle"/> を呼び、<see cref="GameModeManager.OnModeChanged"/> を
     /// 購読して自分の Canvas を Field=表示 / Battle=非表示 に切り替える(モード連動は自分で行い、
     /// 外部の切替役は不要)。常駐 <see cref="UIRoot"/> 配下なので購読・配線は生成時の1回だけで済む。
-    /// documents/UIImplementation.md §2 参照。
     /// </summary>
     public sealed class HudIconBar : MonoBehaviour
     {
