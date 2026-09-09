@@ -12,6 +12,8 @@ namespace CreativeAI.Gameplay
 
         void Update();
 
+        void LateUpdate();
+
         void Exit();
     }
 }

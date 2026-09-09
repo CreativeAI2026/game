@@ -14,6 +14,7 @@ namespace CreativeAI.Gameplay
     {
         // 確信度：近いほど1に近い（1=必ず向かう / 0=振り返るだけ）
         private float _confidence;
+        private bool _hasTriggeredLook;
 
         // この確信度以上なら音源へ向かう（以下なら振り返るだけ）
         private const float WalkThreshold = 0.5f;
@@ -52,20 +53,21 @@ namespace CreativeAI.Gameplay
             _timeoutTimer = 0f;
             _lookOnlyTimer = 0f;
             _arrivedTimer = 0f;
+            _hasTriggeredLook = false;
 
             if (_mode == Mode.Walk)
             {
-                // 確信度が高い：歩いて向かう（走らない。不意打ちでないぶん理不尽感を減らす）
+                // 音源へ向かう（走る）
                 if (boss.Agent != null)
                 {
-                    boss.Agent.speed = boss.WalkSpeed;
+                    boss.Agent.speed = boss.RunSpeed;
                     boss.Agent.isStopped = false;
                     boss.Agent.SetDestination(boss.LastHeardSoundPosition);
                 }
 
                 if (boss.Animator != null)
                 {
-                    boss.Animator.SetBool("IsRunning", false);
+                    boss.Animator.SetBool("IsRunning", true);
                 }
             }
             else
@@ -95,6 +97,22 @@ namespace CreativeAI.Gameplay
             {
                 // 音源方向に振り返るだけ
                 RotateTowardSound();
+
+                // 向きが概ね一致したら Look トリガーを引く
+                Vector3 dir = (boss.LastHeardSoundPosition - boss.transform.position);
+                dir.y = 0f;
+                if (!_hasTriggeredLook && dir.sqrMagnitude > 0.001f)
+                {
+                    float angle = Vector3.Angle(boss.transform.forward, dir.normalized);
+                    if (angle < 5f)
+                    {
+                        if (boss.Animator != null)
+                        {
+                            boss.Animator.SetTrigger("Look");
+                        }
+                        _hasTriggeredLook = true;
+                    }
+                }
 
                 _lookOnlyTimer += Time.deltaTime;
                 if (_lookOnlyTimer >= LookOnlyDuration)
@@ -216,6 +234,12 @@ namespace CreativeAI.Gameplay
             if (boss.Agent != null)
             {
                 boss.Agent.isStopped = true;
+            }
+
+            if (!_hasTriggeredLook && boss.Animator != null)
+            {
+                boss.Animator.SetTrigger("Look");
+                _hasTriggeredLook = true;
             }
         }
 

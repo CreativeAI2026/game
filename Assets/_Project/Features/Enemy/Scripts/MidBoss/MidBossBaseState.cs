@@ -17,7 +17,13 @@ namespace CreativeAI.Gameplay
 
         public virtual void Enter() { }
 
-        public virtual void Update() { }
+        public virtual void Update()
+        {
+        }
+
+        public virtual void LateUpdate()
+        {
+        }
 
         public virtual void Exit() { }
     }

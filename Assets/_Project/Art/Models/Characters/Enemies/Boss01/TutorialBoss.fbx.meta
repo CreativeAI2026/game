@@ -1,5 +1,5 @@
 fileFormatVersion: 2
-guid: 21503793b72bede42bd794cc7dfcf1bb
+guid: 6764708db51e11c4994e08cd1f5fb09d
 ModelImporter:
   serializedVersion: 24200
   internalIDToNameTable: []
@@ -7,58 +7,58 @@ ModelImporter:
   - first:
       type: UnityEngine:Material
       assembly: UnityEngine.CoreModule
-      name: tripo_mat_49f8d785
-    second: {fileID: 2100000, guid: 3640186c0337fe04da1f7be8854bbea8, type: 2}
+      name: tripo_mat_49f8d785.004
+    second: {fileID: 2100000, guid: ad1d87b3d27e9c346afba736e76a52fb, type: 2}
   - first:
       type: UnityEngine:Material
       assembly: UnityEngine.CoreModule
-      name: tripo_mat_5f8a4eda
-    second: {fileID: 2100000, guid: 77ab7be729f4d4b459512b0553fa0a92, type: 2}
+      name: tripo_mat_5f8a4eda.004
+    second: {fileID: 2100000, guid: ecd22addc0f5c4e40b7a485a79e4f4ff, type: 2}
   - first:
       type: UnityEngine:Material
       assembly: UnityEngine.CoreModule
-      name: "\u30DE\u30C6\u30EA\u30A2\u30EB.001"
-    second: {fileID: 2100000, guid: ed9c2fefa0a9cd846b2ceb7fe5d59ddf, type: 2}
+      name: "\u30DE\u30C6\u30EA\u30A2\u30EB.061"
+    second: {fileID: 2100000, guid: 7d3ba004cc9156e4990ad9fd4646be52, type: 2}
   - first:
       type: UnityEngine:Material
       assembly: UnityEngine.CoreModule
-      name: "\u30DE\u30C6\u30EA\u30A2\u30EB.002"
-    second: {fileID: 2100000, guid: 4e4cf752192d14c44aa56c1faa738c03, type: 2}
+      name: "\u30DE\u30C6\u30EA\u30A2\u30EB.062"
+    second: {fileID: 2100000, guid: 46ee1fa44ded4d24ebe1459495d0cd38, type: 2}
   - first:
       type: UnityEngine:Material
       assembly: UnityEngine.CoreModule
-      name: "\u30DE\u30C6\u30EA\u30A2\u30EB.003"
-    second: {fileID: 2100000, guid: 2e01e80d7f411834789b75183200a830, type: 2}
+      name: "\u30DE\u30C6\u30EA\u30A2\u30EB.063"
+    second: {fileID: 2100000, guid: a50fefff50bc729479d9b90191deef69, type: 2}
   - first:
       type: UnityEngine:Material
       assembly: UnityEngine.CoreModule
-      name: "\u30DE\u30C6\u30EA\u30A2\u30EB.004"
-    second: {fileID: 2100000, guid: b2aef0633a8d7504baf0ba26e3a72bc9, type: 2}
+      name: "\u30DE\u30C6\u30EA\u30A2\u30EB.067"
+    second: {fileID: 2100000, guid: 8b687653df64ff944895edf55b929a85, type: 2}
   - first:
       type: UnityEngine:Material
       assembly: UnityEngine.CoreModule
-      name: "\u30DE\u30C6\u30EA\u30A2\u30EB.005"
-    second: {fileID: 2100000, guid: 36b75d7934c911c46bffa386994e0caa, type: 2}
+      name: "\u30DE\u30C6\u30EA\u30A2\u30EB.071"
+    second: {fileID: 2100000, guid: 81c76a3a984b73845a2b8078ca7b6e2c, type: 2}
   - first:
       type: UnityEngine:Material
       assembly: UnityEngine.CoreModule
-      name: "\u30DE\u30C6\u30EA\u30A2\u30EB.009"
-    second: {fileID: 2100000, guid: dc50c138d2807a44c86fd41f8c88d3dc, type: 2}
+      name: "\u30DE\u30C6\u30EA\u30A2\u30EB.072"
+    second: {fileID: 2100000, guid: 8732acdf822df274097be191a61f7962, type: 2}
   - first:
       type: UnityEngine:Material
       assembly: UnityEngine.CoreModule
-      name: "\u30DE\u30C6\u30EA\u30A2\u30EB.010"
-    second: {fileID: 2100000, guid: cb92d6b2657f480499ece55c9f8ffc14, type: 2}
+      name: "\u30DE\u30C6\u30EA\u30A2\u30EB.073"
+    second: {fileID: 2100000, guid: 25e41a7c65ee81944b5c6a56d716e786, type: 2}
   - first:
       type: UnityEngine:Material
       assembly: UnityEngine.CoreModule
-      name: "\u30DE\u30C6\u30EA\u30A2\u30EB.011"
-    second: {fileID: 2100000, guid: facfa2d191ec7fa4ba9cd46d972c0b47, type: 2}
+      name: "\u30DE\u30C6\u30EA\u30A2\u30EB.074"
+    second: {fileID: 2100000, guid: 5deea080ebbf2fd4ca9e9c67b892facb, type: 2}
   - first:
       type: UnityEngine:Material
       assembly: UnityEngine.CoreModule
-      name: "\u30DE\u30C6\u30EA\u30A2\u30EB.014"
-    second: {fileID: 2100000, guid: 252def2afb2727848a17067af8648d01, type: 2}
+      name: "\u30DE\u30C6\u30EA\u30A2\u30EB.075"
+    second: {fileID: 2100000, guid: 450b2c93118b4ce44a87aa5b76b31579, type: 2}
   materials:
     materialImportMode: 2
     materialName: 0
@@ -77,43 +77,14 @@ ModelImporter:
     animationDoRetargetingWarnings: 0
     importAnimatedCustomProperties: 0
     importConstraints: 0
-    animationCompression: 1
+    animationCompression: 3
     animationRotationError: 0.5
     animationPositionError: 0.5
     animationScaleError: 0.5
     animationWrapMode: 0
     extraExposedTransformPaths: []
     extraUserProperties: []
-    clipAnimations:
-    - serializedVersion: 16
-      name: mixamo.com
-      takeName: mixamo.com
-      internalID: -203655887218126122
-      firstFrame: 0
-      lastFrame: 136
-      wrapMode: 0
-      orientationOffsetY: 0
-      level: 0
-      cycleOffset: 0
-      loop: 0
-      hasAdditiveReferencePose: 0
-      loopTime: 1
-      loopBlend: 0
-      loopBlendOrientation: 0
-      loopBlendPositionY: 0
-      loopBlendPositionXZ: 0
-      keepOriginalOrientation: 0
-      keepOriginalPositionY: 1
-      keepOriginalPositionXZ: 0
-      heightFromFeet: 0
-      mirror: 0
-      bodyMask: 01000000010000000100000001000000010000000100000001000000010000000100000001000000010000000100000001000000
-      curves: []
-      events: []
-      transformMask: []
-      maskType: 3
-      maskSource: {instanceID: 0}
-      additiveReferencePoseFrame: 0
+    clipAnimations: []
     isReadable: 0
   meshes:
     lODScreenPercentages: []
@@ -168,17 +139,17 @@ ModelImporter:
     serializedVersion: 3
     human: []
     skeleton: []
-    armTwist: 0.5
-    foreArmTwist: 0.5
-    upperLegTwist: 0.5
-    legTwist: 0.5
-    armStretch: 0.05
-    legStretch: 0.05
+    armTwist: 1
+    foreArmTwist: 0
+    upperLegTwist: 1
+    legTwist: 0
+    armStretch: 0
+    legStretch: 0
     feetSpacing: 0
     globalScale: 1
-    rootMotionBoneName: mixamorig:Hips
+    rootMotionBoneName: Armature
     hasTranslationDoF: 0
-    hasExtraRoot: 0
+    hasExtraRoot: 1
     skeletonHasParents: 1
   lastHumanDescriptionAvatarSource: {instanceID: 0}
   autoGenerateAvatarMappingIfUnspecified: 1

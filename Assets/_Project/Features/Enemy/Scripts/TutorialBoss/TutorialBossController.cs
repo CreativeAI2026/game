@@ -1,6 +1,7 @@
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.AI;
+using UnityEngine.Animations.Rigging;
 
 namespace CreativeAI.Gameplay
 {
@@ -66,14 +67,26 @@ namespace CreativeAI.Gameplay
         [Range(0f, 1f)]
         private float normalAttack2Chance = 0.4f;
 
-        [Header("触手（特殊攻撃）設定")]
-        [Tooltip("触手を描画するLineRendererのリスト（5本分アサインする）。")]
+        [Header("特殊攻撃（ワイヤー）設定")]
+        [Tooltip("ワイヤーとして伸ばすボーン。")]
         [SerializeField]
-        private List<LineRenderer> tentacleLineRenderers = new List<LineRenderer>();
+        private Transform wireBone;
 
-        [Tooltip("触手の根元となるTransform。攻撃用の腕の逆の腕先端に設定する。")]
+        [Tooltip(
+            "ワイヤーボーンの初期ローカル座標（リトラクト時に戻す位置）。実行時に自動取得されます。"
+        )]
+        [HideInInspector]
+        public Vector3 InitialWireBoneLocalPosition;
+
+        [Tooltip("AnimationRiggingのRigコンポーネント（捕獲時のプレイヤー追従ON/OFF用）。")]
         [SerializeField]
-        private Transform tentacleOrigin;
+        private Rig wireRig;
+
+        [Tooltip(
+            "ワイヤーIKのターゲットTransform（捕獲時にプレイヤーの首の位置をコピーして追従させる）。"
+        )]
+        [SerializeField]
+        private Transform wireIkTarget;
 
         [Tooltip("特殊攻撃の狙いフェーズの時間（秒）。")]
         [SerializeField]
@@ -82,6 +95,13 @@ namespace CreativeAI.Gameplay
         [Tooltip("特殊攻撃の射出フェーズの時間（秒）。")]
         [SerializeField]
         private float specialAttackShootDuration = 0.3f;
+
+        [Header("特殊攻撃 向き強制設定")]
+        [Tooltip(
+            "true: Rig(Position Constraint)を使ってワイヤーを正面に引っ張る。\nfalse: スクリプトで強制的に位置と回転を正面に上書きする。"
+        )]
+        [SerializeField]
+        private bool forceStraightWireByRig = true;
 
         [Header("音反応設定")]
         [Tooltip("反応する音の最大半径フィルタ（未実装の半径フィルタ用）。")]
@@ -148,10 +168,12 @@ namespace CreativeAI.Gameplay
         public float WatchDuration => watchDuration;
         public float SpecialAttackChance => specialAttackChance;
         public float NormalAttack2Chance => normalAttack2Chance;
-        public List<LineRenderer> TentacleLineRenderers => tentacleLineRenderers;
-        public Transform TentacleOrigin => tentacleOrigin;
+        public Transform WireBone => wireBone;
+        public Rig WireRig => wireRig;
+        public Transform WireIkTarget => wireIkTarget;
         public float SpecialAttackAimDuration => specialAttackAimDuration;
         public float SpecialAttackShootDuration => specialAttackShootDuration;
+        public bool ForceStraightWireByRig => forceStraightWireByRig;
         public float SoundReactRadius => soundReactRadius;
         public LayerMask ObstacleLayer => obstacleLayer;
         public float GrabDamagePerTick => grabDamagePerTick;
@@ -181,6 +203,10 @@ namespace CreativeAI.Gameplay
         protected override void Awake()
         {
             base.Awake();
+            if (wireBone != null)
+            {
+                InitialWireBoneLocalPosition = wireBone.localPosition;
+            }
         }
 
         protected override void Start()
@@ -202,11 +228,23 @@ namespace CreativeAI.Gameplay
         protected override void Update()
         {
             base.Update();
+            UpdateAnimatorParameters();
         }
 
-        // ────────────────────────────────────────────
-        //  EnemyBaseController オーバーライド
-        // ────────────────────────────────────────────
+        /// <summary>
+        /// アニメーターのブレンドツリーがキャラクター基準の相対的な移動方向を要求するため、
+        /// NavMeshAgentのワールド速度をローカル座標系に変換して適用する。
+        /// </summary>
+        private void UpdateAnimatorParameters()
+        {
+            if (Animator == null || Agent == null)
+            {
+                return;
+            }
+            Vector3 localVelocity = transform.InverseTransformDirection(Agent.velocity);
+            Animator.SetFloat("VelocityX", localVelocity.x);
+            Animator.SetFloat("VelocityZ", localVelocity.z);
+        }
 
         public override void ForceFlinch()
         {
@@ -284,6 +322,22 @@ namespace CreativeAI.Gameplay
         {
             // スクリプトで強制的にライトの向きを変えるとアニメーションと競合してバグるため、
             // 処理を削除し、ライトは常に体の向きに固定されるようにする。
+        }
+
+        /// <summary>
+        /// 特殊攻撃のアニメーション中、一番ワイヤーを射出するのに適したポーズで呼ばれるAnimationEvent。
+        /// </summary>
+        public void OnSpecialAttackPoseReady()
+        {
+            if (Animator != null)
+            {
+                Animator.speed = 0f; // アニメーションを一時停止
+            }
+
+            if (currentState is TBossSpecialAttackState specialState)
+            {
+                specialState.OnPoseReady();
+            }
         }
 
         /// <summary>
