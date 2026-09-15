@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using UnityEngine;
 
@@ -36,6 +37,16 @@ namespace CreativeAI.Gameplay
         private bool _isHitboxActive = false;
         private Vector3 _previousPosition;
         private HashSet<Collider> _alreadyHitTargets = new HashSet<Collider>();
+
+        /// <summary>
+        /// プレイヤーに武器が接触した瞬間に発火する（ガード成立・ダメージ無効時も発火する）。
+        /// 攻撃側が「当たったこと自体」に対する演出（引き寄せ等）を行いたい場合に使う。
+        /// 引数はヒット座標。
+        /// </summary>
+        public event Action<Vector3> OnHitLanded;
+
+        /// <summary>判定半径。デバッグ表示で実際の判定範囲を描くために公開する。</summary>
+        public float HitboxRadius => _hitboxRadius;
 
         private void Awake()
         {
@@ -105,6 +116,11 @@ namespace CreativeAI.Gameplay
             {
                 // 1スイングにつき同一対象へは1回だけヒットさせる
                 _alreadyHitTargets.Add(other);
+
+                // ガード成立でダメージが無効化される場合も、武器が触れたこと自体は変わらないため
+                // ダメージ判定より前に発火する
+                OnHitLanded?.Invoke(hitPoint);
+
                 float finalDamage = _enemyStatus.CurrentAttackPower * _meleeMultiplier;
 
                 // ガード・パリィ判定を先に行い、成立した場合はダメージ処理をスキップする。

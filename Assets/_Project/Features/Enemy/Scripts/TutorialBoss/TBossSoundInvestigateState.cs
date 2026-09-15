@@ -133,9 +133,7 @@ namespace CreativeAI.Gameplay
                 return;
             }
 
-            // Walk モード：ボス本体を音源方向に向けながら歩く
-            // ※ ここでRotateFlashlightTowardを呼ばないことで、懐中電灯がボス体の向きと連動し、
-            //   プレイヤーが光に入ったときに CheckInFlashlight() が正常に true を返せるようになる。
+            // Walk モード：ボス本体を音源方向に向けながら歩く（懐中電灯は体の向きに追従する）
             Vector3 dirToSound = (boss.LastHeardSoundPosition - boss.transform.position);
             dirToSound.y = 0f;
             if (dirToSound.sqrMagnitude > 0.001f)
@@ -154,11 +152,14 @@ namespace CreativeAI.Gameplay
                 boss.transform.position,
                 boss.LastHeardSoundPosition
             );
+            // 経路計算前は remainingDistance が 0 を返すため、hasPath を確認しないと
+            // SetDestination の直後に「到着した」と誤判定してしまう
             bool arrived =
                 distToTarget <= 2f
                 || (
                     boss.Agent != null
                     && !boss.Agent.pathPending
+                    && boss.Agent.hasPath
                     && boss.Agent.remainingDistance <= boss.Agent.stoppingDistance + 0.5f
                 );
 
@@ -196,17 +197,14 @@ namespace CreativeAI.Gameplay
                 return;
             }
 
+            // 懐中電灯はボス本体の向きに固定されているため、体を音源へ向けるだけで
+            // 懐中電灯も追従する（別途懐中電灯だけを回す処理は不要）。
             Quaternion targetRot = Quaternion.LookRotation(dir.normalized);
             boss.transform.rotation = Quaternion.Slerp(
                 boss.transform.rotation,
                 targetRot,
                 Time.deltaTime * 3f
             );
-
-            // LookOnlyモード時のみ懐中電灯を音源に向ける。
-            // Walkモードで呼ぶとプレイヤーが光円錐に入れなくなるため呼ばない。
-            // （懐中電灯はボス本体の向きに連動させる）
-            boss.RotateFlashlightToward(boss.LastHeardSoundPosition);
         }
 
         private void OnArrived()
@@ -261,6 +259,7 @@ namespace CreativeAI.Gameplay
 
             // 新しい音の確信度を計算し、今より高ければ目標を更新
             float newConfidence = 1f - Mathf.Clamp01(distToSound / boss.SoundReactRadius);
+            boss.NotifySoundHeard(newConfidence);
             if (newConfidence > _confidence)
             {
                 _confidence = newConfidence;
@@ -272,7 +271,8 @@ namespace CreativeAI.Gameplay
                     _mode = Mode.Walk;
                     if (boss.Agent != null)
                     {
-                        boss.Agent.speed = boss.WalkSpeed;
+                        // Enterで設定する移動速度と揃える
+                        boss.Agent.speed = boss.RunSpeed;
                         boss.Agent.isStopped = false;
                         boss.Agent.SetDestination(boss.LastHeardSoundPosition);
                     }

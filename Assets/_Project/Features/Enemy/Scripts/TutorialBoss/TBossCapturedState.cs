@@ -112,7 +112,10 @@ namespace CreativeAI.Gameplay
             }
             if (boss.WireBone != null)
             {
-                _initialLocalRot = boss.WireBone.localRotation;
+                // 特殊攻撃の射出でWireBoneの回転は既に上書きされているため、
+                // 現在値ではなくAwakeで保存した本来の初期姿勢を復元先とする。
+                // 現在値を使うとリトラクトのたびに姿勢のずれが蓄積する。
+                _initialLocalRot = boss.InitialWireBoneLocalRotation;
             }
         }
 
@@ -131,7 +134,6 @@ namespace CreativeAI.Gameplay
                     break;
                 case Phase.Pull:
                     UpdatePull();
-                    GrabEscapeEvents.OnCameraDamage?.Invoke();
                     break;
                 case Phase.WaitBeforeDamage:
                     _timer += Time.deltaTime;
@@ -142,6 +144,11 @@ namespace CreativeAI.Gameplay
 
                         SpawnElectricEffect();
                         GrabEscapeEvents.OnShowGauge?.Invoke(0f, boss.GrabEscapeThreshold);
+
+                        // 電撃フェーズのカメラへ切り替える。
+                        // 毎フレーム呼ぶと引き寄せカメラ(vcamPull)を即座に上書きしてしまうため、
+                        // フェーズ遷移のこの一度だけ発火させる。
+                        GrabEscapeEvents.OnCameraDamage?.Invoke();
 
                         Debug.Log("[TutorialBoss] Captured フェーズへ (電撃開始)");
                     }
@@ -267,6 +274,14 @@ namespace CreativeAI.Gameplay
 
         private void UpdateCaptured()
         {
+            // プレイヤーが電撃で力尽きた場合、掴んだまま停止し続けないよう拘束を解除する
+            if (_playerStatus != null && _playerStatus.CurrentHp <= 0f)
+            {
+                Debug.Log("[TutorialBoss] プレイヤーが力尽きたため拘束を解除します");
+                boss.ChangeState(new TBossWatchState(boss));
+                return;
+            }
+
             _damageTimer += Time.deltaTime;
             if (_damageTimer >= boss.GrabDamageInterval)
             {
@@ -303,6 +318,9 @@ namespace CreativeAI.Gameplay
             Debug.Log("[TutorialBoss] 脱出シーケンス開始");
             _phase = Phase.Escape;
             _timer = 0f;
+
+            // 脱出後は怯みステートを経由するため、警戒を落とすと目の前のプレイヤーを見失って徘徊に戻ってしまう
+            boss.IsAlerted = true;
 
             if (_playerAnimator != null)
                 _playerAnimator.SetTrigger(EscapedTrigger);
