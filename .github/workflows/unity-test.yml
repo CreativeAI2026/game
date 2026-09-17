@@ -16,10 +16,12 @@ concurrency:
   group: unity-test-${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: true
 
-# 既定は読み取りのみなので、PR にコメントする権限だけ明示的に足す。
+# permissions を明示すると、ここに書かなかったスコープは none になる。
+# PR コメント用の pull-requests と、テスト結果のチェックラン投稿用の checks が要る。
 permissions:
   contents: read
   pull-requests: write
+  checks: write
 
 jobs:
   test:
@@ -55,10 +57,11 @@ jobs:
           unityVersion: 6000.4.5f1
           testMode: ${{ matrix.testMode }}
           artifactsPath: ${{ matrix.testMode }}-results
-          # githubToken は渡さない。渡すとチェックランを投稿しようとするが、
-          # このリポジトリの GITHUB_TOKEN には checks:write が無く
+          # githubToken は省略しても action 側の default (github.token) が入るため、
+          # チェックランは必ず投稿される。上の permissions に checks:write が無いと
           # 「Resource not accessible by integration」でジョブごと落ちる。
-          # 結果は下の日本語サマリで見る。
+          # fork からの PR はトークンが read-only になるので、外部 PR を受けるように
+          # なったら githubToken: '' を明示して投稿自体を止めること。
 
       - name: サマリを出力
         if: always() # 落ちたときこそ何が落ちたか表で見たい
