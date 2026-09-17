@@ -51,7 +51,11 @@ namespace CreativeAI.Gameplay
             if (_timer >= con.SpecialSpawnDuration)
             {
                 con.ChangeState(
-                    new MidBossWaitState(con, con.WaitAfterAttackDuration, new MidBossStartState(con))
+                    new MidBossWaitState(
+                        con,
+                        con.WaitAfterAttackDuration,
+                        new MidBossStartState(con)
+                    )
                 );
             }
         }

@@ -14,7 +14,12 @@ namespace CreativeAI.Gameplay
     /// </summary>
     public class MidBossRandomMoveState : MidBossBaseState
     {
-        private enum MoveStyle { Zigzag, BigStep }
+        private enum MoveStyle
+        {
+            Zigzag,
+            BigStep,
+        }
+
         private MoveStyle _style;
 
         // 共通
@@ -31,6 +36,7 @@ namespace CreativeAI.Gameplay
 
         // NavMeshSamplePosition のサーチ半径
         private const float NavSampleRadius = 3f;
+
         // ランダム方向候補の試行回数
         private const int DirectionCandidates = 12;
 
@@ -58,9 +64,8 @@ namespace CreativeAI.Gameplay
             if (con.Agent != null)
             {
                 con.Agent.isStopped = false;
-                con.Agent.speed = _style == MoveStyle.Zigzag
-                    ? con.ChaseSpeed
-                    : con.RandomMoveStepSpeed;
+                con.Agent.speed =
+                    _style == MoveStyle.Zigzag ? con.ChaseSpeed : con.RandomMoveStepSpeed;
             }
 
             if (_style == MoveStyle.BigStep)
@@ -71,7 +76,10 @@ namespace CreativeAI.Gameplay
             {
                 // ジグザグはステップ数で管理（最初のブレ角度を決定）
                 _zigzagRemainingSteps = con.RandomMoveStepCount + Random.Range(0, 3);
-                _currentBrakeAngle = Random.Range(-con.RandomMoveZigzagAngle, con.RandomMoveZigzagAngle);
+                _currentBrakeAngle = Random.Range(
+                    -con.RandomMoveZigzagAngle,
+                    con.RandomMoveZigzagAngle
+                );
             }
 
             // 最初の目的地をセット
@@ -85,10 +93,12 @@ namespace CreativeAI.Gameplay
 
         public override void Update()
         {
-            if (con.Agent == null) return;
+            if (con.Agent == null)
+                return;
 
             // 目的地到達判定
-            bool arrived = !con.Agent.pathPending
+            bool arrived =
+                !con.Agent.pathPending
                 && con.Agent.remainingDistance < con.Agent.stoppingDistance + 0.1f;
 
             _stepTimer += UnityEngine.Time.deltaTime;
@@ -146,7 +156,10 @@ namespace CreativeAI.Gameplay
                 if (_stepTimer >= con.ChaseStepStopDuration)
                 {
                     // 次のブレ角度を決定して移動再開
-                    _currentBrakeAngle = Random.Range(-con.RandomMoveZigzagAngle, con.RandomMoveZigzagAngle);
+                    _currentBrakeAngle = Random.Range(
+                        -con.RandomMoveZigzagAngle,
+                        con.RandomMoveZigzagAngle
+                    );
                     _stepTimer = 0f;
                     _isMoving = true;
                     con.Agent.isStopped = false;
@@ -203,10 +216,12 @@ namespace CreativeAI.Gameplay
         /// </summary>
         private void SetNextDestinationZigzag()
         {
-            if (con.Agent == null) return;
+            if (con.Agent == null)
+                return;
 
             Vector3 dir = (_targetPos - con.transform.position);
-            if (dir.sqrMagnitude < 0.01f) return;
+            if (dir.sqrMagnitude < 0.01f)
+                return;
             dir.y = 0f;
             dir.Normalize();
 
@@ -222,7 +237,8 @@ namespace CreativeAI.Gameplay
         /// </summary>
         private void SetNextDestination()
         {
-            if (con.Agent == null) return;
+            if (con.Agent == null)
+                return;
             con.Agent.SetDestination(_targetPos);
         }
 
@@ -242,7 +258,14 @@ namespace CreativeAI.Gameplay
                 Vector3 candidate = con.transform.position + dir * moveDist;
 
                 // NavMesh上に存在するかチェック
-                if (!NavMesh.SamplePosition(candidate, out NavMeshHit navHit, NavSampleRadius, NavMesh.AllAreas))
+                if (
+                    !NavMesh.SamplePosition(
+                        candidate,
+                        out NavMeshHit navHit,
+                        NavSampleRadius,
+                        NavMesh.AllAreas
+                    )
+                )
                 {
                     continue;
                 }
@@ -260,9 +283,18 @@ namespace CreativeAI.Gameplay
             // フォールバック：プレイヤーと逆方向に逃げる
             if (con.Player != null)
             {
-                Vector3 awayDir = (con.transform.position - con.Player.transform.position).normalized;
+                Vector3 awayDir = (
+                    con.transform.position - con.Player.transform.position
+                ).normalized;
                 Vector3 fallback = con.transform.position + awayDir * moveDist;
-                if (NavMesh.SamplePosition(fallback, out NavMeshHit fbHit, NavSampleRadius, NavMesh.AllAreas))
+                if (
+                    NavMesh.SamplePosition(
+                        fallback,
+                        out NavMeshHit fbHit,
+                        NavSampleRadius,
+                        NavMesh.AllAreas
+                    )
+                )
                 {
                     return fbHit.position;
                 }

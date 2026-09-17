@@ -78,7 +78,11 @@ namespace CreativeAI.Gameplay
                     if (_playerStatus != null)
                     {
                         // 毒ダメージはひるみを発生させない
-                        _playerStatus.TakeDamage(_currentDamagePerTick, false, suppressFlinch: true);
+                        _playerStatus.TakeDamage(
+                            _currentDamagePerTick,
+                            false,
+                            suppressFlinch: true
+                        );
                     }
                 }
 

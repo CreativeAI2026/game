@@ -12,17 +12,21 @@ namespace CreativeAI.Gameplay
     {
         [Header("判定設定")]
         [Tooltip("毒エリアの半径")]
-        [SerializeField] private float _radius = 1.5f;
+        [SerializeField]
+        private float _radius = 1.5f;
 
         [Tooltip("判定の厚み（Y軸方向・地面から上への高さ）")]
-        [SerializeField] private float _thickness = 0.5f;
+        [SerializeField]
+        private float _thickness = 0.5f;
 
         [Tooltip("判定の中心をY軸方向にずらす量（通常は厚みの半分）")]
-        [SerializeField] private float _yOffset = 0.25f;
+        [SerializeField]
+        private float _yOffset = 0.25f;
 
         [Header("フェードアウト設定")]
         [Tooltip("当たり判定消失後にDecalをフェードアウトさせる時間（秒）")]
-        [SerializeField] private float _fadeOutDuration = 1.5f;
+        [SerializeField]
+        private float _fadeOutDuration = 1.5f;
 
         // DecalProjectorのfadeFactorをリフレクションで操作する（アセンブリ参照不要）
         private Component _decalProjector;
@@ -100,8 +104,13 @@ namespace CreativeAI.Gameplay
             Vector3 center = transform.position + transform.up * _yOffset;
 
             // LayerMaskを明示的に指定してOverlapBoxを実行
-            Collider[] hits = Physics.OverlapBox(center, halfExtents, transform.rotation, _playerLayer);
-            
+            Collider[] hits = Physics.OverlapBox(
+                center,
+                halfExtents,
+                transform.rotation,
+                _playerLayer
+            );
+
             bool isPlayerInside = false;
 
             foreach (var col in hits)
@@ -187,12 +196,28 @@ namespace CreativeAI.Gameplay
                 float angle1 = i * angleStep * Mathf.Deg2Rad;
                 float angle2 = (i + 1) * angleStep * Mathf.Deg2Rad;
 
-                Vector3 p1_bottom = new Vector3(Mathf.Cos(angle1) * _radius, _yOffset - _thickness * 0.5f, Mathf.Sin(angle1) * _radius);
-                Vector3 p2_bottom = new Vector3(Mathf.Cos(angle2) * _radius, _yOffset - _thickness * 0.5f, Mathf.Sin(angle2) * _radius);
+                Vector3 p1_bottom = new Vector3(
+                    Mathf.Cos(angle1) * _radius,
+                    _yOffset - _thickness * 0.5f,
+                    Mathf.Sin(angle1) * _radius
+                );
+                Vector3 p2_bottom = new Vector3(
+                    Mathf.Cos(angle2) * _radius,
+                    _yOffset - _thickness * 0.5f,
+                    Mathf.Sin(angle2) * _radius
+                );
                 Gizmos.DrawLine(p1_bottom, p2_bottom);
 
-                Vector3 p1_top = new Vector3(Mathf.Cos(angle1) * _radius, _yOffset + _thickness * 0.5f, Mathf.Sin(angle1) * _radius);
-                Vector3 p2_top = new Vector3(Mathf.Cos(angle2) * _radius, _yOffset + _thickness * 0.5f, Mathf.Sin(angle2) * _radius);
+                Vector3 p1_top = new Vector3(
+                    Mathf.Cos(angle1) * _radius,
+                    _yOffset + _thickness * 0.5f,
+                    Mathf.Sin(angle1) * _radius
+                );
+                Vector3 p2_top = new Vector3(
+                    Mathf.Cos(angle2) * _radius,
+                    _yOffset + _thickness * 0.5f,
+                    Mathf.Sin(angle2) * _radius
+                );
                 Gizmos.DrawLine(p1_top, p2_top);
 
                 if (i % 4 == 0)

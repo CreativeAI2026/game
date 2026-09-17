@@ -13,7 +13,13 @@ namespace CreativeAI.Gameplay
     /// </summary>
     public class MidBossNormalAttack1State : MidBossBaseState
     {
-        private enum Phase { Windup, Strike, Done }
+        private enum Phase
+        {
+            Windup,
+            Strike,
+            Done,
+        }
+
         private Phase _phase;
         private float _phaseTimer;
         private bool _hitChecked;
@@ -92,7 +98,11 @@ namespace CreativeAI.Gameplay
 
                 case Phase.Done:
                     con.ChangeState(
-                        new MidBossWaitState(con, con.WaitAfterAttackDuration, new MidBossStartState(con))
+                        new MidBossWaitState(
+                            con,
+                            con.WaitAfterAttackDuration,
+                            new MidBossStartState(con)
+                        )
                     );
                     break;
             }
@@ -117,7 +127,8 @@ namespace CreativeAI.Gameplay
         /// </summary>
         private void UpdateArmRotation(Vector3 targetEuler, float duration)
         {
-            if (con.ArmTransform == null) return;
+            if (con.ArmTransform == null)
+                return;
 
             Quaternion target = Quaternion.Euler(targetEuler);
             float speed = 1f / Mathf.Max(duration, 0.001f);
@@ -133,12 +144,10 @@ namespace CreativeAI.Gameplay
         /// </summary>
         private void CheckHit()
         {
-            if (con.ArmTransform == null) return;
+            if (con.ArmTransform == null)
+                return;
 
-            Collider[] hits = Physics.OverlapSphere(
-                con.ArmTransform.position,
-                con.ArmHitRadius
-            );
+            Collider[] hits = Physics.OverlapSphere(con.ArmTransform.position, con.ArmHitRadius);
 
             foreach (var col in hits)
             {
