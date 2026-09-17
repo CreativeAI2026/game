@@ -33,10 +33,7 @@ namespace CreativeAI.Gameplay
         public TestEnemyIdleState(TestEnemyController core)
             : base(core) { }
 
-        public override void Enter()
-        {
-            Debug.Log("待機ステート開始");
-        }
+        public override void Enter() { }
 
         public override void Update()
         {
@@ -47,10 +44,7 @@ namespace CreativeAI.Gameplay
             }
         }
 
-        public override void Exit()
-        {
-            Debug.Log("待機ステート終了");
-        }
+        public override void Exit() { }
     }
 
     /// <summary>
