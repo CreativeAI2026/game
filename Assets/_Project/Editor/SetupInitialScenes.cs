@@ -205,7 +205,7 @@ namespace CreativeAI.EditorTools
 
             // EventSystem はアプリ常駐(Title の1つを DontDestroyOnLoad 化)。フィールドには置かない。
             EnsureInputSystemEventSystem();
-            var eventSystem = Object.FindAnyObjectByType<EventSystem>();
+            var eventSystem = Object.FindAnyObjectByType<EventSystem>(FindObjectsInactive.Include);
             if (eventSystem != null && eventSystem.GetComponent<PersistentEventSystem>() == null)
                 eventSystem.gameObject.AddComponent<PersistentEventSystem>();
 
@@ -225,7 +225,7 @@ namespace CreativeAI.EditorTools
             var ground = GameObject.CreatePrimitive(PrimitiveType.Plane);
             ground.name = "Ground";
             ground.transform.localScale = new Vector3(10, 1, 10);
-            var camera = Object.FindAnyObjectByType<Camera>();
+            var camera = Object.FindAnyObjectByType<Camera>(FindObjectsInactive.Include);
             if (camera != null)
             {
                 camera.transform.position = new Vector3(0, 5, -10);
@@ -1471,7 +1471,7 @@ namespace CreativeAI.EditorTools
 
         private static void EnsureInputSystemEventSystem()
         {
-            var existing = Object.FindAnyObjectByType<EventSystem>();
+            var existing = Object.FindAnyObjectByType<EventSystem>(FindObjectsInactive.Include);
             if (existing == null)
             {
                 CreateEventSystem();

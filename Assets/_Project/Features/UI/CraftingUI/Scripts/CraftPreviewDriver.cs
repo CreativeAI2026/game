@@ -20,7 +20,7 @@ namespace CreativeAI.UI.CraftingUI
             var router =
                 UIRoot.Instance != null
                     ? UIRoot.Instance.GetComponentInChildren<UiRouter>(true)
-                    : Object.FindAnyObjectByType<UiRouter>();
+                    : Object.FindAnyObjectByType<UiRouter>(FindObjectsInactive.Exclude);
             if (router == null)
             {
                 Debug.LogWarning(

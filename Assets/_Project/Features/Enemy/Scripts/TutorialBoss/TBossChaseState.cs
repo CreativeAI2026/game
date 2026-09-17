@@ -5,7 +5,7 @@ namespace CreativeAI.Gameplay
 {
     /// <summary>
     /// プレイヤーを発見した状態での追跡ステート。
-    /// 一定時間光にプレイヤーが入らなければ見失い、パトロールへ戻る。
+    /// 一定時間光にプレイヤーが入らなければ見失い、捜索ステートへ移行する。
     /// 攻撃範囲内に入ったら様子見→攻撃へ遷移する。
     /// </summary>
     public class TBossChaseState : TBossBaseState
@@ -45,29 +45,32 @@ namespace CreativeAI.Gameplay
             {
                 boss.LostSightTimer += Time.deltaTime;
 
-                // 視界外なら移動を渐渐減速し、完全に見失ったら停止
-                if (boss.LostSightTimer >= boss.LostSightDuration * 0.5f)
+                // 視界外なら移動を徐々に減速し、完全に見失ったら停止
+                if (boss.LostSightTimer >= boss.LostSightDuration * 0.5f && boss.Agent != null)
                 {
                     boss.Agent.isStopped = true;
                 }
 
                 if (boss.LostSightTimer >= boss.LostSightDuration)
                 {
-                    boss.IsAlerted = false;
                     boss.LostSightTimer = 0f;
-                    boss.Agent.isStopped = false;
-                    boss.ChangeState(new TBossPatrolState(boss));
+                    if (boss.Agent != null)
+                    {
+                        boss.Agent.isStopped = false;
+                    }
+                    // 即座にパトロールへ戻さず、最後に把握した位置を捜索してから諦めさせる
+                    boss.ChangeState(new TBossSearchState(boss, boss.LastKnownPlayerPosition));
                     return;
                 }
             }
             else
             {
                 boss.LostSightTimer = 0f;
-                boss.Agent.isStopped = false;
 
                 // プレイヤーを追跡
                 if (boss.Agent != null)
                 {
+                    boss.Agent.isStopped = false;
                     boss.Agent.SetDestination(boss.Player.transform.position);
                 }
 

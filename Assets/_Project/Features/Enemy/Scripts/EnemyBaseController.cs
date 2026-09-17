@@ -16,7 +16,7 @@ namespace CreativeAI.Gameplay
         public Collider EnemyCollider { get; private set; }
         public Collider PlayerCollider { get; private set; }
 
-        private IEnemyState currentState;
+        protected IEnemyState currentState;
         public bool IsAlerted { get; set; }
 
         protected virtual void Awake()
@@ -99,6 +99,14 @@ namespace CreativeAI.Gameplay
             if (currentState != null)
             {
                 currentState.Update();
+            }
+        }
+
+        protected virtual void LateUpdate()
+        {
+            if (currentState != null)
+            {
+                currentState.LateUpdate();
             }
         }
 

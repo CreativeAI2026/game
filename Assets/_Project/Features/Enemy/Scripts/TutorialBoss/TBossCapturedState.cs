@@ -5,9 +5,6 @@ namespace CreativeAI.Gameplay
 {
     public class TBossCapturedState : TBossBaseState
     {
-        private const int TentaclePointCount = 20;
-        private const float NeckWrapRadius = 0.12f;
-        private const int NeckWrapPoints = 6;
         private const string GrabbedTrigger = "Grabbed";
         private const string EscapedTrigger = "Escaped";
         private const string NeckBoneName = "Neck";
@@ -29,9 +26,7 @@ namespace CreativeAI.Gameplay
         private float _damageTimer;
         private float _escapeGauge;
         private Vector2 _prevMoveInput;
-        private Vector3 _retractTargetPos;
         private Vector3 _knockbackVelocity;
-        private readonly Vector3[][] _retractFromPoints;
         private ParticleSystem _electricEffect;
 
         private PlayerController _playerController;
@@ -42,19 +37,13 @@ namespace CreativeAI.Gameplay
         private Rigidbody _playerRb;
         private HeadLookController _headLookController;
         private Transform _neckBone;
-        private int _tentacleCount;
+
+        private Quaternion _initialLocalRot;
+        private Vector3 _escapeStartLocalPos;
+        private Quaternion _escapeStartLocalRot;
 
         public TBossCapturedState(TutorialBossController controller)
-            : base(controller)
-        {
-            int maxTentacles =
-                controller.TentacleLineRenderers != null
-                    ? controller.TentacleLineRenderers.Count
-                    : 0;
-            _retractFromPoints = new Vector3[maxTentacles][];
-            for (int i = 0; i < maxTentacles; i++)
-                _retractFromPoints[i] = new Vector3[TentaclePointCount];
-        }
+            : base(controller) { }
 
         public override void Enter()
         {
@@ -75,8 +64,6 @@ namespace CreativeAI.Gameplay
             _headLookController = boss.Player.GetComponent<HeadLookController>();
 
             _neckBone = FindBone(boss.Player.transform, NeckBoneName);
-            _tentacleCount =
-                boss.TentacleLineRenderers != null ? boss.TentacleLineRenderers.Count : 0;
 
             if (boss.Agent != null)
             {
@@ -96,17 +83,12 @@ namespace CreativeAI.Gameplay
                 _playerInput.LookInput(Vector2.zero);
             }
 
-            // Rigidbody があればそちらで速度をゼロにする。
-            // CharacterController は動かしたままにする（無効化するとY=0にスナップするバグの原因）。
             if (_playerRb != null)
             {
                 _playerRb.linearVelocity = Vector3.zero;
                 _playerRb.angularVelocity = Vector3.zero;
             }
 
-            // HeadLookController は playerRoot.forward を参照するため、
-            // ForcePlayerLookAtBoss による rotation 書き換えと競合して首が回転し続ける。
-            // 掴み中は無効化して競合を防ぐ。
             if (_headLookController != null)
                 _headLookController.enabled = false;
 
@@ -122,8 +104,19 @@ namespace CreativeAI.Gameplay
 
             _phase = Phase.WaitBeforePull;
 
-            // 掴み成功と同時にvcamPullへ切り替え
             GrabEscapeEvents.OnCameraPull?.Invoke();
+
+            if (boss.WireRig != null)
+            {
+                boss.WireRig.weight = 1f;
+            }
+            if (boss.WireBone != null)
+            {
+                // 特殊攻撃の射出でWireBoneの回転は既に上書きされているため、
+                // 現在値ではなくAwakeで保存した本来の初期姿勢を復元先とする。
+                // 現在値を使うとリトラクトのたびに姿勢のずれが蓄積する。
+                _initialLocalRot = boss.InitialWireBoneLocalRotation;
+            }
         }
 
         public override void Update()
@@ -141,7 +134,6 @@ namespace CreativeAI.Gameplay
                     break;
                 case Phase.Pull:
                     UpdatePull();
-                    GrabEscapeEvents.OnCameraDamage?.Invoke();
                     break;
                 case Phase.WaitBeforeDamage:
                     _timer += Time.deltaTime;
@@ -153,6 +145,11 @@ namespace CreativeAI.Gameplay
                         SpawnElectricEffect();
                         GrabEscapeEvents.OnShowGauge?.Invoke(0f, boss.GrabEscapeThreshold);
 
+                        // 電撃フェーズのカメラへ切り替える。
+                        // 毎フレーム呼ぶと引き寄せカメラ(vcamPull)を即座に上書きしてしまうため、
+                        // フェーズ遷移のこの一度だけ発火させる。
+                        GrabEscapeEvents.OnCameraDamage?.Invoke();
+
                         Debug.Log("[TutorialBoss] Captured フェーズへ (電撃開始)");
                     }
                     break;
@@ -163,11 +160,32 @@ namespace CreativeAI.Gameplay
                     UpdateEscape();
                     break;
             }
+        }
 
+        public override void LateUpdate()
+        {
             if (_phase != Phase.Escape)
             {
-                UpdateTentacleWrap();
+                UpdateTentacleIkTarget();
                 ForcePlayerLookAtBoss();
+            }
+            else
+            {
+                // Escape中のボーンリトラクト処理
+                float t = Mathf.Clamp01(_timer / boss.GrabRetractDuration);
+                if (boss.WireBone != null)
+                {
+                    boss.WireBone.localPosition = Vector3.Lerp(
+                        _escapeStartLocalPos,
+                        boss.InitialWireBoneLocalPosition,
+                        t
+                    );
+                    boss.WireBone.localRotation = Quaternion.Slerp(
+                        _escapeStartLocalRot,
+                        _initialLocalRot,
+                        t
+                    );
+                }
             }
         }
 
@@ -200,6 +218,16 @@ namespace CreativeAI.Gameplay
             {
                 boss.Agent.isStopped = false;
             }
+
+            if (boss.WireRig != null)
+            {
+                boss.WireRig.weight = 0f;
+            }
+            if (boss.WireBone != null)
+            {
+                boss.WireBone.localPosition = boss.InitialWireBoneLocalPosition;
+                boss.WireBone.localRotation = _initialLocalRot;
+            }
         }
 
         private void UpdatePull()
@@ -208,12 +236,10 @@ namespace CreativeAI.Gameplay
 
             if (boss.Player != null)
             {
-                // 正面方向 + 横方向オフセット（ボスのright方向。Inspector で調整可能）
                 Vector3 targetPos =
                     boss.transform.position
                     + boss.transform.forward * boss.GrabPullDistance
                     + boss.transform.right * boss.GrabPullLateralOffset;
-                // XZ のみ引き寄せ。Y はプレイヤー自身の位置を保持（地面への埋め込み防止）
                 targetPos.y = boss.Player.transform.position.y;
 
                 float dist = Vector3.Distance(boss.Player.transform.position, targetPos);
@@ -226,7 +252,6 @@ namespace CreativeAI.Gameplay
                     return;
                 }
 
-                // Rigidbody があれば MovePosition で物理的に引き寄せ（transform 直接書き換えなし）
                 if (_playerRb != null)
                 {
                     float speed = dist / Mathf.Max(0.01f, boss.GrabPullDuration - _timer);
@@ -235,7 +260,6 @@ namespace CreativeAI.Gameplay
                 }
                 else if (_playerCC != null && _playerCC.enabled)
                 {
-                    // Rigidbody がない場合のフォールバック
                     Vector3 moveDir = (targetPos - boss.Player.transform.position).normalized;
                     float speed = dist / Mathf.Max(0.01f, boss.GrabPullDuration - _timer);
                     _playerCC.Move(moveDir * speed * Time.deltaTime);
@@ -250,6 +274,14 @@ namespace CreativeAI.Gameplay
 
         private void UpdateCaptured()
         {
+            // プレイヤーが電撃で力尽きた場合、掴んだまま停止し続けないよう拘束を解除する
+            if (_playerStatus != null && _playerStatus.CurrentHp <= 0f)
+            {
+                Debug.Log("[TutorialBoss] プレイヤーが力尽きたため拘束を解除します");
+                boss.ChangeState(new TBossWatchState(boss));
+                return;
+            }
+
             _damageTimer += Time.deltaTime;
             if (_damageTimer >= boss.GrabDamageInterval)
             {
@@ -286,27 +318,9 @@ namespace CreativeAI.Gameplay
             Debug.Log("[TutorialBoss] 脱出シーケンス開始");
             _phase = Phase.Escape;
             _timer = 0f;
-            _retractTargetPos =
-                boss.TentacleOrigin != null
-                    ? boss.TentacleOrigin.position
-                    : boss.transform.position;
 
-            List<LineRenderer> renderers = boss.TentacleLineRenderers;
-            if (renderers != null)
-            {
-                for (int i = 0; i < renderers.Count && i < _retractFromPoints.Length; i++)
-                {
-                    LineRenderer lr = renderers[i];
-                    if (lr == null)
-                        continue;
-                    int count = Mathf.Min(lr.positionCount, TentaclePointCount);
-                    for (int j = 0; j < count; j++)
-                        _retractFromPoints[i][j] = lr.GetPosition(j);
-                    for (int j = count; j < TentaclePointCount; j++)
-                        _retractFromPoints[i][j] =
-                            count > 0 ? _retractFromPoints[i][count - 1] : _retractTargetPos;
-                }
-            }
+            // 脱出後は怯みステートを経由するため、警戒を落とすと目の前のプレイヤーを見失って徘徊に戻ってしまう
+            boss.IsAlerted = true;
 
             if (_playerAnimator != null)
                 _playerAnimator.SetTrigger(EscapedTrigger);
@@ -325,12 +339,18 @@ namespace CreativeAI.Gameplay
                 knockbackDir.y = 0f;
                 knockbackDir.Normalize();
 
-                // ノックバック初速を設定（UpdateEscape でフレームごとに減衰させながら CharacterController で移動）
                 _knockbackVelocity = knockbackDir * boss.GrabEscapeKnockbackForce;
             }
 
-            // ここではまだ操作可能にしない（アニメーション中の移動を防ぐため）。
-            // 操作可能になるのは Exit() が呼ばれた時点。
+            if (boss.WireRig != null)
+            {
+                boss.WireRig.weight = 0f;
+            }
+            if (boss.WireBone != null)
+            {
+                _escapeStartLocalPos = boss.WireBone.localPosition;
+                _escapeStartLocalRot = boss.WireBone.localRotation;
+            }
         }
 
         private void UpdateEscape()
@@ -345,123 +365,37 @@ namespace CreativeAI.Gameplay
                     Time.deltaTime * 5f
                 );
                 Vector3 move = _knockbackVelocity;
-                move.y -= 9.81f; // 簡易重力
+                move.y -= 9.81f;
                 _playerCC.Move(move * Time.deltaTime);
             }
 
             float t = Mathf.Clamp01(_timer / boss.GrabRetractDuration);
-
-            List<LineRenderer> renderers = boss.TentacleLineRenderers;
-            if (renderers != null && boss.TentacleOrigin != null)
-            {
-                Vector3 origin = boss.TentacleOrigin.position;
-                for (int i = 0; i < renderers.Count && i < _retractFromPoints.Length; i++)
-                {
-                    LineRenderer lr = renderers[i];
-                    if (lr == null)
-                        continue;
-                    lr.positionCount = TentaclePointCount;
-                    Vector3[] from = _retractFromPoints[i];
-                    for (int j = 0; j < TentaclePointCount; j++)
-                    {
-                        float pointT = Mathf.Clamp01(t + (float)j / TentaclePointCount * 0.5f);
-                        lr.SetPosition(j, Vector3.Lerp(from[j], origin, pointT));
-                    }
-                }
-            }
-
             if (t >= 1f)
             {
-                if (renderers != null)
-                {
-                    foreach (var lr in renderers)
-                        if (lr != null)
-                            lr.enabled = false;
-                }
-                boss.ChangeState(new TBossWatchState(boss));
+                boss.ChangeState(new TBossFlinchState(boss));
             }
         }
 
-        private void UpdateTentacleWrap()
+        private void UpdateTentacleIkTarget()
         {
-            if (
-                boss.Player == null
-                || boss.TentacleLineRenderers == null
-                || boss.TentacleOrigin == null
-            )
-                return;
-
-            Vector3 neckPos =
-                _neckBone != null
-                    ? _neckBone.position
-                    : boss.Player.transform.position + Vector3.up * 1.4f;
-
-            Vector3 origin = boss.TentacleOrigin.position;
-            Vector3 dirToNeck = (neckPos - origin);
-            float dist = dirToNeck.magnitude;
-
-            if (dist < 0.01f)
+            if (_neckBone != null)
             {
-                dirToNeck = boss.transform.forward;
-                dist = 0.01f;
-            }
-            Vector3 dir = dirToNeck.normalized;
-
-            List<LineRenderer> renderers = boss.TentacleLineRenderers;
-            int count = Mathf.Min(renderers.Count, _tentacleCount);
-
-            float waveFreq = 2.0f;
-            float waveAmp = 0.15f;
-            float waveSpeed = 3.0f;
-
-            Vector3 up = Vector3.up;
-            Vector3 right = Vector3.Cross(dir, up).normalized;
-            if (right == Vector3.zero)
-                right = Vector3.right;
-            up = Vector3.Cross(right, dir).normalized;
-
-            int straightPoints = TentaclePointCount - NeckWrapPoints;
-
-            for (int i = 0; i < count; i++)
-            {
-                LineRenderer lr = renderers[i];
-                if (lr == null || lr.positionCount < TentaclePointCount)
-                    continue;
-
-                float phaseOffset = (float)i / count * Mathf.PI * 2f;
-                float timeOffset = Time.time * waveSpeed + phaseOffset;
-
-                for (int j = 0; j < straightPoints; j++)
+                // Rig (Position Constraint) を使う場合のターゲット移動
+                if (boss.WireIkTarget != null)
                 {
-                    float t = (float)j / Mathf.Max(1, straightPoints - 1);
-                    Vector3 basePos = origin + dir * (dist * t);
-
-                    float waveU = Mathf.Sin(t * waveFreq * Mathf.PI + timeOffset) * waveAmp;
-                    float waveV =
-                        Mathf.Sin(t * waveFreq * Mathf.PI + timeOffset + Mathf.PI * 0.5f)
-                        * waveAmp
-                        * 0.5f;
-                    float envelope = Mathf.Sin(t * Mathf.PI);
-
-                    Vector3 offset = right * (waveU * envelope) + up * (waveV * envelope);
-                    lr.SetPosition(j, basePos + offset);
+                    boss.WireIkTarget.position = _neckBone.position;
                 }
 
-                for (int j = 0; j < NeckWrapPoints; j++)
+                // スクリプトで強制的に追従させるモード（Rigを使用しない場合）
+                if (!boss.ForceStraightWireByRig && boss.WireBone != null)
                 {
-                    int ptIndex = straightPoints + j;
-                    float angle =
-                        phaseOffset
-                        + (float)j / NeckWrapPoints * Mathf.PI * 2f * 0.8f
-                        + Time.time * 2.0f;
-                    float radius = NeckWrapRadius * (1f - (float)j / NeckWrapPoints * 0.3f);
-
-                    Vector3 offset = new Vector3(
-                        Mathf.Cos(angle) * radius,
-                        ((float)j / NeckWrapPoints) * 0.15f - 0.075f,
-                        Mathf.Sin(angle) * radius
+                    // ワイヤーをプレイヤーの首元に直接移動
+                    boss.WireBone.position = _neckBone.position;
+                    // ワイヤーの向きをボスの正面（プレイヤーのいる方向）へ向ける
+                    boss.WireBone.rotation = Quaternion.FromToRotation(
+                        Vector3.up,
+                        boss.transform.forward
                     );
-                    lr.SetPosition(ptIndex, neckPos + offset);
                 }
             }
         }
@@ -496,10 +430,6 @@ namespace CreativeAI.Gameplay
             _electricEffect = null;
         }
 
-        /// <summary>
-        /// 掴み中、毎フレームプレイヤーをボス方向に向かせ続ける。
-        /// 操作が無効化されているのでユーザー入力で向きが変わることはない。
-        /// </summary>
         private void ForcePlayerLookAtBoss()
         {
             if (boss.Player == null)

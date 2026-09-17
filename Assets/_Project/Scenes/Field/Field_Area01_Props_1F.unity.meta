@@ -1,6 +1,11 @@
 fileFormatVersion: 2
+<<<<<<<< HEAD:Assets/_Project/Art/VFX/Hit/Liquid_Hit.prefab.meta
+guid: a7593c21a138fca4181315d80f5a6378
+PrefabImporter:
+========
 guid: fb2a28506615d41f78590c7afcb7ed9c
 DefaultImporter:
+>>>>>>>> 1778f2a6ae6e8b57dd7505c174fba0a4b5b501e4:Assets/_Project/Scenes/Field/Field_Area01_Props_1F.unity.meta
   externalObjects: {}
   userData: 
   assetBundleName: 

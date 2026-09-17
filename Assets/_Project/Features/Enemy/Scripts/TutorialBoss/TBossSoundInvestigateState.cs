@@ -14,6 +14,7 @@ namespace CreativeAI.Gameplay
     {
         // 確信度：近いほど1に近い（1=必ず向かう / 0=振り返るだけ）
         private float _confidence;
+        private bool _hasTriggeredLook;
 
         // この確信度以上なら音源へ向かう（以下なら振り返るだけ）
         private const float WalkThreshold = 0.5f;
@@ -52,20 +53,21 @@ namespace CreativeAI.Gameplay
             _timeoutTimer = 0f;
             _lookOnlyTimer = 0f;
             _arrivedTimer = 0f;
+            _hasTriggeredLook = false;
 
             if (_mode == Mode.Walk)
             {
-                // 確信度が高い：歩いて向かう（走らない。不意打ちでないぶん理不尽感を減らす）
+                // 音源へ向かう（走る）
                 if (boss.Agent != null)
                 {
-                    boss.Agent.speed = boss.WalkSpeed;
+                    boss.Agent.speed = boss.RunSpeed;
                     boss.Agent.isStopped = false;
                     boss.Agent.SetDestination(boss.LastHeardSoundPosition);
                 }
 
                 if (boss.Animator != null)
                 {
-                    boss.Animator.SetBool("IsRunning", false);
+                    boss.Animator.SetBool("IsRunning", true);
                 }
             }
             else
@@ -96,6 +98,22 @@ namespace CreativeAI.Gameplay
                 // 音源方向に振り返るだけ
                 RotateTowardSound();
 
+                // 向きが概ね一致したら Look トリガーを引く
+                Vector3 dir = (boss.LastHeardSoundPosition - boss.transform.position);
+                dir.y = 0f;
+                if (!_hasTriggeredLook && dir.sqrMagnitude > 0.001f)
+                {
+                    float angle = Vector3.Angle(boss.transform.forward, dir.normalized);
+                    if (angle < 5f)
+                    {
+                        if (boss.Animator != null)
+                        {
+                            boss.Animator.SetTrigger("Look");
+                        }
+                        _hasTriggeredLook = true;
+                    }
+                }
+
                 _lookOnlyTimer += Time.deltaTime;
                 if (_lookOnlyTimer >= LookOnlyDuration)
                 {
@@ -115,9 +133,7 @@ namespace CreativeAI.Gameplay
                 return;
             }
 
-            // Walk モード：ボス本体を音源方向に向けながら歩く
-            // ※ ここでRotateFlashlightTowardを呼ばないことで、懐中電灯がボス体の向きと連動し、
-            //   プレイヤーが光に入ったときに CheckInFlashlight() が正常に true を返せるようになる。
+            // Walk モード：ボス本体を音源方向に向けながら歩く（懐中電灯は体の向きに追従する）
             Vector3 dirToSound = (boss.LastHeardSoundPosition - boss.transform.position);
             dirToSound.y = 0f;
             if (dirToSound.sqrMagnitude > 0.001f)
@@ -136,11 +152,14 @@ namespace CreativeAI.Gameplay
                 boss.transform.position,
                 boss.LastHeardSoundPosition
             );
+            // 経路計算前は remainingDistance が 0 を返すため、hasPath を確認しないと
+            // SetDestination の直後に「到着した」と誤判定してしまう
             bool arrived =
                 distToTarget <= 2f
                 || (
                     boss.Agent != null
                     && !boss.Agent.pathPending
+                    && boss.Agent.hasPath
                     && boss.Agent.remainingDistance <= boss.Agent.stoppingDistance + 0.5f
                 );
 
@@ -178,17 +197,14 @@ namespace CreativeAI.Gameplay
                 return;
             }
 
+            // 懐中電灯はボス本体の向きに固定されているため、体を音源へ向けるだけで
+            // 懐中電灯も追従する（別途懐中電灯だけを回す処理は不要）。
             Quaternion targetRot = Quaternion.LookRotation(dir.normalized);
             boss.transform.rotation = Quaternion.Slerp(
                 boss.transform.rotation,
                 targetRot,
                 Time.deltaTime * 3f
             );
-
-            // LookOnlyモード時のみ懐中電灯を音源に向ける。
-            // Walkモードで呼ぶとプレイヤーが光円錐に入れなくなるため呼ばない。
-            // （懐中電灯はボス本体の向きに連動させる）
-            boss.RotateFlashlightToward(boss.LastHeardSoundPosition);
         }
 
         private void OnArrived()
@@ -217,6 +233,12 @@ namespace CreativeAI.Gameplay
             {
                 boss.Agent.isStopped = true;
             }
+
+            if (!_hasTriggeredLook && boss.Animator != null)
+            {
+                boss.Animator.SetTrigger("Look");
+                _hasTriggeredLook = true;
+            }
         }
 
         private void OnSoundHeard(SoundEventData data)
@@ -237,6 +259,7 @@ namespace CreativeAI.Gameplay
 
             // 新しい音の確信度を計算し、今より高ければ目標を更新
             float newConfidence = 1f - Mathf.Clamp01(distToSound / boss.SoundReactRadius);
+            boss.NotifySoundHeard(newConfidence);
             if (newConfidence > _confidence)
             {
                 _confidence = newConfidence;
@@ -248,7 +271,8 @@ namespace CreativeAI.Gameplay
                     _mode = Mode.Walk;
                     if (boss.Agent != null)
                     {
-                        boss.Agent.speed = boss.WalkSpeed;
+                        // Enterで設定する移動速度と揃える
+                        boss.Agent.speed = boss.RunSpeed;
                         boss.Agent.isStopped = false;
                         boss.Agent.SetDestination(boss.LastHeardSoundPosition);
                     }

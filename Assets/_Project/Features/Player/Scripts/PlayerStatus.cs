@@ -172,7 +172,7 @@ namespace CreativeAI.Gameplay
             OnHpChanged?.Invoke(CurrentHp, CurrentMaxHp);
         }
 
-        public void TakeDamage(float damage, bool isCritical)
+        public void TakeDamage(float damage, bool isCritical, bool suppressFlinch = false)
         {
             // 防御力で軽減するが、最低1ダメージは保証する（防御力がダメージを上回ってもノーダメージにはしない）
             float finalDamage = Mathf.Max(1f, damage - CurrentDefense);
@@ -185,7 +185,10 @@ namespace CreativeAI.Gameplay
 
             CameraShakeManager.Instance?.Shake(0.5f);
             DamageVignette.Instance?.TriggerVignette();
-            _flinchHandler?.TriggerFlinch();
+            if (!suppressFlinch)
+            {
+                _flinchHandler?.TriggerFlinch();
+            }
 
             if (CurrentHp <= 0)
             {

@@ -6,7 +6,9 @@ namespace CreativeAI.Gameplay
     /// <summary>
     /// 未発見状態での徘徊ステート。
     /// SoundEventBusを購読し、音を検知したらSoundInvestigateStateへ遷移する。
-    /// プレイヤーが懐中電灯の光に入ったらChaseStateへ遷移する。
+    /// プレイヤーが懐中電灯の光に入っても即座には発見せず、発見度（Awareness）が
+    /// 上限に達して初めてChaseStateへ遷移する。ちらっと見えた程度（Suspicious）の間は
+    /// 立ち止まってプレイヤー方向を向くだけに留め、「気づきかけている」状態を表現する。
     /// </summary>
     public class TBossPatrolState : TBossBaseState
     {
@@ -14,6 +16,12 @@ namespace CreativeAI.Gameplay
         private float _wanderTimer;
         private const float WanderInterval = 4f;
         private const float WanderRadius = 8f;
+
+        // Suspicious状態に入った際に一度だけLookトリガーを引くためのフラグ
+        private bool _hasTriggeredLook;
+
+        // プレイヤーへ向き直る補間速度
+        private const float NoticeRotateSpeed = 3f;
 
         public TBossPatrolState(TutorialBossController controller)
             : base(controller) { }
@@ -34,6 +42,7 @@ namespace CreativeAI.Gameplay
             }
 
             _wanderTimer = WanderInterval; // 即座に最初の目標を設定させる
+            _hasTriggeredLook = false;
 
             // 音イベント購読
             SoundEventBus.OnSoundEmitted += OnSoundHeard;
@@ -41,12 +50,42 @@ namespace CreativeAI.Gameplay
 
         public override void Update()
         {
-            // プレイヤーが光に入ったら発見
-            if (boss.CheckInFlashlight())
+            // 発見度が上限に達したら完全発見
+            if (boss.IsFullyAware)
             {
                 boss.IsAlerted = true;
                 boss.ChangeState(new TBossChaseState(boss));
                 return;
+            }
+
+            // ちらっと見えた等で怪しんでいる間は、立ち止まってプレイヤー方向を向くだけにする
+            if (boss.IsSuspicious)
+            {
+                if (!_hasTriggeredLook)
+                {
+                    _hasTriggeredLook = true;
+                    if (boss.Agent != null)
+                    {
+                        boss.Agent.isStopped = true;
+                    }
+                    if (boss.Animator != null)
+                    {
+                        boss.Animator.SetTrigger("Look");
+                    }
+                }
+
+                FaceTowardPlayer();
+                return;
+            }
+
+            if (_hasTriggeredLook)
+            {
+                // 疑いが晴れたので徘徊を再開する
+                _hasTriggeredLook = false;
+                if (boss.Agent != null)
+                {
+                    boss.Agent.isStopped = false;
+                }
             }
 
             // ランダム徘徊
@@ -91,10 +130,32 @@ namespace CreativeAI.Gameplay
             }
         }
 
+        /// <summary>怪しんでいる間、その場でプレイヤーの方向へ向き直る（懐中電灯は体の向きに追従する）。</summary>
+        private void FaceTowardPlayer()
+        {
+            if (boss.Player == null)
+            {
+                return;
+            }
+
+            Vector3 dir = boss.Player.transform.position - boss.transform.position;
+            dir.y = 0f;
+            if (dir.sqrMagnitude < 0.001f)
+            {
+                return;
+            }
+
+            boss.transform.rotation = Quaternion.Slerp(
+                boss.transform.rotation,
+                Quaternion.LookRotation(dir.normalized),
+                Time.deltaTime * NoticeRotateSpeed
+            );
+        }
+
         private void OnSoundHeard(SoundEventData data)
         {
-            // 音よりもスポットライトでの視認を最優先する
-            if (boss.CheckInFlashlight())
+            // 音よりもスポットライトでの視認を最優先する（完全発見のみ即座に切り替える）
+            if (boss.IsFullyAware)
             {
                 boss.IsAlerted = true;
                 boss.ChangeState(new TBossChaseState(boss));
@@ -118,6 +179,7 @@ namespace CreativeAI.Gameplay
 
             // 距離が近いほど確信度が高い（远ければ振り返るだけ、近ければ歩いて向かう）
             float confidence = 1f - Mathf.Clamp01(distToSound / boss.SoundReactRadius);
+            boss.NotifySoundHeard(confidence);
             boss.ChangeState(new TBossSoundInvestigateState(boss, confidence));
         }
     }

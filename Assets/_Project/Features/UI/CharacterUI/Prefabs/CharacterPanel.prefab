@@ -437,6 +437,9 @@ MonoBehaviour:
   _revolverTabGroup: {fileID: 4632777405441937000}
   _weaponName: {fileID: 6996013619561769945}
   _weaponStats: {fileID: 4733166007541768909}
+  _fadeOutDuration: 0.1
+  _fadeInDuration: 0.16
+  _slideDistance: 18
 --- !u!1 &4681214343665803098
 GameObject:
   m_ObjectHideFlags: 0
@@ -1316,6 +1319,14 @@ PrefabInstance:
       propertyPath: _tabEntries.Array.data[0].definition
       value: 
       objectReference: {fileID: 11400000, guid: 72b479d96be07754aa3f194c7870d097, type: 2}
+    - target: {fileID: 2779502273571536129, guid: c91242a6d36fa1f4ea567493568d29f3, type: 3}
+      propertyPath: m_AnchoredPosition.x
+      value: 89.59999
+      objectReference: {fileID: 0}
+    - target: {fileID: 2779502273571536129, guid: c91242a6d36fa1f4ea567493568d29f3, type: 3}
+      propertyPath: m_AnchoredPosition.y
+      value: -78.40001
+      objectReference: {fileID: 0}
     - target: {fileID: 3490366148985711125, guid: c91242a6d36fa1f4ea567493568d29f3, type: 3}
       propertyPath: m_AnchorMax.x
       value: 1
@@ -1352,9 +1363,25 @@ PrefabInstance:
       propertyPath: m_Name
       value: EquipmentView
       objectReference: {fileID: 0}
+    - target: {fileID: 5206734189455802848, guid: c91242a6d36fa1f4ea567493568d29f3, type: 3}
+      propertyPath: m_AnchoredPosition.x
+      value: -89.59999
+      objectReference: {fileID: 0}
+    - target: {fileID: 5206734189455802848, guid: c91242a6d36fa1f4ea567493568d29f3, type: 3}
+      propertyPath: m_AnchoredPosition.y
+      value: -78.4
+      objectReference: {fileID: 0}
     - target: {fileID: 5373776497171382165, guid: c91242a6d36fa1f4ea567493568d29f3, type: 3}
       propertyPath: m_IsActive
       value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 5651840958293349835, guid: c91242a6d36fa1f4ea567493568d29f3, type: 3}
+      propertyPath: m_AnchoredPosition.x
+      value: 89.59999
+      objectReference: {fileID: 0}
+    - target: {fileID: 5651840958293349835, guid: c91242a6d36fa1f4ea567493568d29f3, type: 3}
+      propertyPath: m_AnchoredPosition.y
+      value: -78.4
       objectReference: {fileID: 0}
     - target: {fileID: 6330510728267214481, guid: c91242a6d36fa1f4ea567493568d29f3, type: 3}
       propertyPath: m_Pivot.x
@@ -1576,6 +1603,14 @@ PrefabInstance:
       value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 1412659112300514181, guid: c91242a6d36fa1f4ea567493568d29f3, type: 3}
+      propertyPath: _emptyLabel
+      value: "\uFF08\u672A\u30BB\u30C3\u30C8\uFF09"
+      objectReference: {fileID: 0}
+    - target: {fileID: 1412659112300514181, guid: c91242a6d36fa1f4ea567493568d29f3, type: 3}
+      propertyPath: _assignmentMode
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 1412659112300514181, guid: c91242a6d36fa1f4ea567493568d29f3, type: 3}
       propertyPath: _inventoryCategory
       value: 2
       objectReference: {fileID: 0}
@@ -1619,6 +1654,14 @@ PrefabInstance:
       propertyPath: _tabEntries.Array.data[0].definition
       value: 
       objectReference: {fileID: 11400000, guid: 4485649022a2f32478dab41989873421, type: 2}
+    - target: {fileID: 2779502273571536129, guid: c91242a6d36fa1f4ea567493568d29f3, type: 3}
+      propertyPath: m_AnchoredPosition.x
+      value: 89.59999
+      objectReference: {fileID: 0}
+    - target: {fileID: 2779502273571536129, guid: c91242a6d36fa1f4ea567493568d29f3, type: 3}
+      propertyPath: m_AnchoredPosition.y
+      value: -78.40001
+      objectReference: {fileID: 0}
     - target: {fileID: 3490366148985711125, guid: c91242a6d36fa1f4ea567493568d29f3, type: 3}
       propertyPath: m_AnchorMax.x
       value: 1
@@ -1655,17 +1698,25 @@ PrefabInstance:
       propertyPath: m_Name
       value: ConsumableView
       objectReference: {fileID: 0}
-    - target: {fileID: 1412659112300514181, guid: c91242a6d36fa1f4ea567493568d29f3, type: 3}
-      propertyPath: _assignmentMode
-      value: 1
+    - target: {fileID: 5206734189455802848, guid: c91242a6d36fa1f4ea567493568d29f3, type: 3}
+      propertyPath: m_AnchoredPosition.x
+      value: -89.59999
       objectReference: {fileID: 0}
-    - target: {fileID: 1412659112300514181, guid: c91242a6d36fa1f4ea567493568d29f3, type: 3}
-      propertyPath: _emptyLabel
-      value: "\uFF08\u672A\u30BB\u30C3\u30C8\uFF09"
+    - target: {fileID: 5206734189455802848, guid: c91242a6d36fa1f4ea567493568d29f3, type: 3}
+      propertyPath: m_AnchoredPosition.y
+      value: -78.4
       objectReference: {fileID: 0}
     - target: {fileID: 5373776497171382165, guid: c91242a6d36fa1f4ea567493568d29f3, type: 3}
       propertyPath: m_IsActive
       value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 5651840958293349835, guid: c91242a6d36fa1f4ea567493568d29f3, type: 3}
+      propertyPath: m_AnchoredPosition.x
+      value: 89.59999
+      objectReference: {fileID: 0}
+    - target: {fileID: 5651840958293349835, guid: c91242a6d36fa1f4ea567493568d29f3, type: 3}
+      propertyPath: m_AnchoredPosition.y
+      value: -78.4
       objectReference: {fileID: 0}
     - target: {fileID: 6330510728267214481, guid: c91242a6d36fa1f4ea567493568d29f3, type: 3}
       propertyPath: m_Pivot.x

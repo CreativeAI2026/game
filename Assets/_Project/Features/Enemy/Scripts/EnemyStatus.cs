@@ -44,7 +44,7 @@ namespace CreativeAI.Gameplay
             _currentHp = MaxHp;
         }
 
-        public void TakeDamage(float damage, bool isCritical)
+        public void TakeDamage(float damage, bool isCritical, bool suppressFlinch = false)
         {
             // プレイヤーの攻撃が完全に無効化され、進行不能やフィードバック喪失に陥るのを防ぐための保証値
             float finalDamage = Mathf.Max(1f, damage - CurrentDefense);

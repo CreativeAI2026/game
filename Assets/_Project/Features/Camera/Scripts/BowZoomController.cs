@@ -48,7 +48,7 @@ namespace CreativeAI.Gameplay
                 _aimCamera = GetComponent<CinemachineCamera>();
 
             if (_bowController == null)
-                _bowController = FindAnyObjectByType<BowController>();
+                _bowController = FindAnyObjectByType<BowController>(FindObjectsInactive.Exclude);
 
             if (_aimCamera != null)
                 _defaultFov = _aimCamera.Lens.FieldOfView;

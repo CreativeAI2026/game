@@ -20,14 +20,23 @@ namespace CreativeAI.Gameplay
         private const float HomingSpeed = 10f;
         private const float LungeSpeed = 8f;
 
+        // 接近フェーズの打ち切り時間。これを超えたら追跡ステートに戻して仕切り直す
+        private const float ApproachTimeout = 5f;
+
+        // Attackステートに入らないままこの時間を超えたら、トリガー取りこぼしとみなして復帰する
+        private const float AttackStateTimeout = 3f;
+
         private bool _isApproaching;
+        private float _approachTimer;
+        private float _attackTimer;
 
         public TBossNormalAttackState(TutorialBossController controller)
             : base(controller) { }
 
         public override void Enter()
         {
-            Debug.Log("[TutorialBoss] 通常攻撃ステート開始");
+            _approachTimer = 0f;
+            _attackTimer = 0f;
 
             if (
                 boss.Player != null
@@ -84,9 +93,6 @@ namespace CreativeAI.Gameplay
                     return;
                 }
 
-                // 懐中電灯をプレイヤーに向ける
-                boss.RotateFlashlightToward(boss.Player.transform.position);
-
                 if (boss.Agent != null)
                 {
                     boss.Agent.SetDestination(boss.Player.transform.position);
@@ -98,6 +104,14 @@ namespace CreativeAI.Gameplay
                 )
                 {
                     StartAttack();
+                    return;
+                }
+
+                // 逃げ続けるプレイヤーを攻撃ステートのまま延々追い回さないよう打ち切り、追跡へ戻して仕切り直す
+                _approachTimer += Time.deltaTime;
+                if (_approachTimer >= ApproachTimeout)
+                {
+                    boss.ChangeState(new TBossChaseState(boss));
                 }
                 return;
             }
@@ -110,6 +124,15 @@ namespace CreativeAI.Gameplay
             AnimatorStateInfo stateInfo = boss.Animator.GetCurrentAnimatorStateInfo(0);
             if (!stateInfo.IsName("Attack"))
             {
+                // Attackトリガーの取りこぼしや遷移の中断でAgentを止めたまま無限待機するのを防ぐ
+                _attackTimer += Time.deltaTime;
+                if (_attackTimer >= AttackStateTimeout)
+                {
+                    Debug.LogWarning(
+                        "[TutorialBoss] Attackステートに入れませんでした。様子見へ復帰します。"
+                    );
+                    boss.ChangeState(new TBossWatchState(boss));
+                }
                 return;
             }
 

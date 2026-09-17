@@ -60,7 +60,7 @@ namespace CreativeAI.Gameplay
         private void Awake()
         {
             if (_panicDetector == null)
-                _panicDetector = FindAnyObjectByType<PanicDetector>();
+                _panicDetector = FindAnyObjectByType<PanicDetector>(FindObjectsInactive.Exclude);
         }
 
         private void OnEnable()

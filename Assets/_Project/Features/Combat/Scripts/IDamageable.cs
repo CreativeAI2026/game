@@ -6,6 +6,6 @@ namespace CreativeAI.Gameplay
     /// </summary>
     public interface IDamageable
     {
-        void TakeDamage(float damage, bool isCritical);
+        void TakeDamage(float damage, bool isCritical, bool suppressFlinch = false);
     }
 }
