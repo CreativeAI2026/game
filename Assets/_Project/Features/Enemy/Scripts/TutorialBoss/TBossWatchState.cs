@@ -22,6 +22,7 @@ namespace CreativeAI.Gameplay
         // 近すぎる/遠すぎるとみなす距離のAttackRange・NormalAttack2Rangeに対する倍率
         private const float TooCloseRangeScale = 0.8f;
         private const float TooFarRangeScale = 0.9f;
+
         // プレイヤーが弓を構えている間は、より遠くまで「適正距離」とみなして距離を取る
         private const float TooFarRangeScaleWhileAiming = 1.3f;
 
@@ -44,9 +45,8 @@ namespace CreativeAI.Gameplay
             );
 
             _strafeDirection = DecideInitialStrafeDirection();
-            _playerController = boss.Player != null
-                ? boss.Player.GetComponent<PlayerController>()
-                : null;
+            _playerController =
+                boss.Player != null ? boss.Player.GetComponent<PlayerController>() : null;
 
             if (boss.Agent != null)
             {

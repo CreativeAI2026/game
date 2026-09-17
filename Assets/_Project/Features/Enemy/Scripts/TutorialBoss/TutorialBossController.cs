@@ -25,6 +25,11 @@ namespace CreativeAI.Gameplay
         [SerializeField]
         private float lostSightDuration = 3f;
 
+        [Header("エフェクト")]
+        [Tooltip("鎌のTrailEffect")]
+        [SerializeField]
+        private TrailRenderer scytheTrail;
+
         [Header("移動設定")]
         [Tooltip("未発見時の歩行速度。")]
         [SerializeField]
@@ -156,7 +161,9 @@ namespace CreativeAI.Gameplay
         [Range(0f, 1f)]
         private float attack2ReachHoldAnimatorSpeed = 0f;
 
-        [Tooltip("リーチを伸ばすために低速/停止させておく時間（秒、実時間）。この間に鎌を伸ばしきる。")]
+        [Tooltip(
+            "リーチを伸ばすために低速/停止させておく時間（秒、実時間）。この間に鎌を伸ばしきる。"
+        )]
         [SerializeField]
         private float attack2ReachHoldDuration = 0.3f;
 
@@ -253,6 +260,9 @@ namespace CreativeAI.Gameplay
         public Transform FlashlightTransform => flashlightTransform;
         public Light FlashlightLight => flashlightLight;
         public float LostSightDuration => lostSightDuration;
+
+        public TrailRenderer ScytheTrail => scytheTrail;
+
         public float WalkSpeed => walkSpeed;
         public float RunSpeed => runSpeed;
         public float StrafeSpeed => strafeSpeed;
@@ -363,6 +373,7 @@ namespace CreativeAI.Gameplay
         protected override void Start()
         {
             base.Start();
+            HideScytheTrail();
             ChangeState(new TBossPatrolState(this));
         }
 
@@ -381,6 +392,22 @@ namespace CreativeAI.Gameplay
             base.Update();
             UpdateAnimatorParameters();
             _perception.Tick(Time.deltaTime);
+        }
+
+        /// <summary>
+        /// 鎌のTrailの描画を開始するAnimationEvent用関数。emittingによる描画制御を用いている。
+        /// </summary>
+        public void ShowScytheTrail()
+        {
+            scytheTrail.emitting = true;
+        }
+
+        /// <summary>
+        /// 鎌のTrailの描画を停止するAnimationEvent用関数。emittingによる描画制御を用いている。
+        /// </summary>
+        public void HideScytheTrail()
+        {
+            scytheTrail.emitting = false;
         }
 
         /// <summary>

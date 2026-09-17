@@ -392,7 +392,10 @@ namespace CreativeAI.Gameplay
                     // ワイヤーをプレイヤーの首元に直接移動
                     boss.WireBone.position = _neckBone.position;
                     // ワイヤーの向きをボスの正面（プレイヤーのいる方向）へ向ける
-                    boss.WireBone.rotation = Quaternion.FromToRotation(Vector3.up, boss.transform.forward);
+                    boss.WireBone.rotation = Quaternion.FromToRotation(
+                        Vector3.up,
+                        boss.transform.forward
+                    );
                 }
             }
         }

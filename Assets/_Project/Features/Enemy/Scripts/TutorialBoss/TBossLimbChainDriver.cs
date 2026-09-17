@@ -23,9 +23,7 @@ namespace CreativeAI.Gameplay
         [Range(0.05f, 1f)]
         public float dampingRatio = 0.35f;
 
-        [Tooltip(
-            "先端側ボーンの緩さ。1で全ボーン同じ硬さ、小さいほど先端がふにゃふにゃに遅れる。"
-        )]
+        [Tooltip("先端側ボーンの緩さ。1で全ボーン同じ硬さ、小さいほど先端がふにゃふにゃに遅れる。")]
         [Range(0.1f, 1f)]
         public float tipLooseness = 0.65f;
 
@@ -356,10 +354,8 @@ namespace CreativeAI.Gameplay
             Vector3 offset = Vector3.zero;
             if (extension > 0.0001f)
             {
-                float localExtension =
-                    ToLocalUnits(bone, extension) * _extensionWeights[index];
-                Vector3 direction =
-                    basePos.sqrMagnitude > 1e-8f ? basePos.normalized : lengthAxis;
+                float localExtension = ToLocalUnits(bone, extension) * _extensionWeights[index];
+                Vector3 direction = basePos.sqrMagnitude > 1e-8f ? basePos.normalized : lengthAxis;
                 offset = direction * localExtension;
             }
 
@@ -424,11 +420,18 @@ namespace CreativeAI.Gameplay
                     // 子のlocalPositionは「このボーンのローカル空間での子の位置」なので、
                     // そのまま長さ方向として使える
                     Transform next = (i + 1 < count) ? _settings.bones[i + 1] : null;
-                    if (next != null && next.parent == bone && next.localPosition.sqrMagnitude > 1e-8f)
+                    if (
+                        next != null
+                        && next.parent == bone
+                        && next.localPosition.sqrMagnitude > 1e-8f
+                    )
                     {
                         lengthAxis = next.localPosition.normalized;
                     }
-                    else if (bone.childCount > 0 && bone.GetChild(0).localPosition.sqrMagnitude > 1e-8f)
+                    else if (
+                        bone.childCount > 0
+                        && bone.GetChild(0).localPosition.sqrMagnitude > 1e-8f
+                    )
                     {
                         lengthAxis = bone.GetChild(0).localPosition.normalized;
                     }
@@ -437,7 +440,8 @@ namespace CreativeAI.Gameplay
                 _lengthAxis[i] = lengthAxis;
 
                 // 波が長さ方向の成分を含むと「うねり」ではなく「ねじれ」になるため直交化する
-                Vector3 wave = configuredWave - lengthAxis * Vector3.Dot(configuredWave, lengthAxis);
+                Vector3 wave =
+                    configuredWave - lengthAxis * Vector3.Dot(configuredWave, lengthAxis);
                 if (wave.sqrMagnitude < 1e-6f)
                 {
                     wave = Vector3.Cross(lengthAxis, Vector3.forward);

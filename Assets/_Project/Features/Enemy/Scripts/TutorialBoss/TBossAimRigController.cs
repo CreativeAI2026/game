@@ -24,7 +24,9 @@ namespace CreativeAI.Gameplay
         private TutorialBossController boss;
 
         [Header("懐中電灯エイム")]
-        [Tooltip("懐中電灯のMulti-Aim ConstraintのSource Objectsに登録する空オブジェクト。未設定なら何もしない。")]
+        [Tooltip(
+            "懐中電灯のMulti-Aim ConstraintのSource Objectsに登録する空オブジェクト。未設定なら何もしない。"
+        )]
         [SerializeField]
         private Transform flashlightAimTarget;
 
@@ -45,7 +47,9 @@ namespace CreativeAI.Gameplay
         private float sweepPeriod = 6f;
 
         [Header("頭のエイム")]
-        [Tooltip("頭・首のMulti-Aim ConstraintのSource Objectsに登録する空オブジェクト。未設定なら何もしない。")]
+        [Tooltip(
+            "頭・首のMulti-Aim ConstraintのSource Objectsに登録する空オブジェクト。未設定なら何もしない。"
+        )]
         [SerializeField]
         private Transform headAimTarget;
 
@@ -53,7 +57,9 @@ namespace CreativeAI.Gameplay
         [SerializeField]
         private Transform headBone;
 
-        [Tooltip("正面から首を向ける最大角度。これを超える位置のプレイヤーは追わない（不自然な回転防止）。")]
+        [Tooltip(
+            "正面から首を向ける最大角度。これを超える位置のプレイヤーは追わない（不自然な回転防止）。"
+        )]
         [SerializeField]
         private float headMaxAngle = 70f;
 
@@ -87,14 +93,12 @@ namespace CreativeAI.Gameplay
                 targetPosition =
                     boss.Player != null
                         ? boss.Player.transform.position + Vector3.up * 1f
-                        : boss.FlashlightTransform.position
-                            + boss.FlashlightTransform.forward * 5f;
+                        : boss.FlashlightTransform.position + boss.FlashlightTransform.forward * 5f;
             }
             else if (sweepWhilePatrolling)
             {
                 // 未発見時は「探している」印象を出すため左右にゆっくり振る
-                float angle =
-                    Mathf.Sin(Time.time * (Mathf.PI * 2f / sweepPeriod)) * sweepAngle;
+                float angle = Mathf.Sin(Time.time * (Mathf.PI * 2f / sweepPeriod)) * sweepAngle;
                 Vector3 sweepDir = Quaternion.AngleAxis(angle, Vector3.up) * boss.transform.forward;
                 targetPosition = boss.FlashlightTransform.position + sweepDir * 5f;
             }

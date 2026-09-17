@@ -301,10 +301,12 @@ namespace CreativeAI.Gameplay
             // 棒が生えるような硬い見た目になるため、Inspectorでの連鎖設定を推奨する。
             if (!IsChainConfigured() && boss.KamaBone != null && _currentExtension > 0.0001f)
             {
-                Vector3 localAxis = boss.KamaExtendLocalAxis.sqrMagnitude > 0.0001f
-                    ? boss.KamaExtendLocalAxis.normalized
-                    : Vector3.up;
-                Vector3 extendOffset = boss.KamaBone.localRotation * (localAxis * _currentExtension);
+                Vector3 localAxis =
+                    boss.KamaExtendLocalAxis.sqrMagnitude > 0.0001f
+                        ? boss.KamaExtendLocalAxis.normalized
+                        : Vector3.up;
+                Vector3 extendOffset =
+                    boss.KamaBone.localRotation * (localAxis * _currentExtension);
                 boss.KamaBone.localPosition += extendOffset;
             }
         }
@@ -363,7 +365,8 @@ namespace CreativeAI.Gameplay
                 boss.Attack2PullDistance,
                 Mathf.Max(0f, currentDistance - boss.AttackRange)
             );
-            Vector3 pullDir = currentDistance > 0.0001f ? toPlayer.normalized : boss.transform.forward;
+            Vector3 pullDir =
+                currentDistance > 0.0001f ? toPlayer.normalized : boss.transform.forward;
             _pullEnd = _pullStart - pullDir * pullAmount;
 
             if (_playerController != null)
@@ -389,7 +392,11 @@ namespace CreativeAI.Gameplay
             }
 
             _pullTimer += Time.deltaTime;
-            float t = Mathf.SmoothStep(0f, 1f, Mathf.Clamp01(_pullTimer / boss.Attack2PullDuration));
+            float t = Mathf.SmoothStep(
+                0f,
+                1f,
+                Mathf.Clamp01(_pullTimer / boss.Attack2PullDuration)
+            );
 
             Vector3 target = Vector3.Lerp(_pullStart, _pullEnd, t);
             _playerCC.Move(target - _playerCC.transform.position);

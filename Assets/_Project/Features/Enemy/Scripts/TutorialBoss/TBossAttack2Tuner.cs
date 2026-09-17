@@ -1,5 +1,4 @@
 using UnityEngine;
-
 #if UNITY_EDITOR
 using UnityEditor;
 #endif
@@ -44,7 +43,9 @@ namespace CreativeAI.Gameplay
         [SerializeField]
         private bool previewEnabled;
 
-        [Tooltip("クリップ内の再生位置（0〜1）。コンテキストメニューから各振りの時刻へジャンプできる。")]
+        [Tooltip(
+            "クリップ内の再生位置（0〜1）。コンテキストメニューから各振りの時刻へジャンプできる。"
+        )]
         [Range(0f, 1f)]
         [SerializeField]
         private float previewNormalizedTime;
@@ -485,9 +486,7 @@ namespace CreativeAI.Gameplay
                     continue;
                 }
 
-                bool isCloser = forward
-                    ? candidate.time < best.time
-                    : candidate.time > best.time;
+                bool isCloser = forward ? candidate.time < best.time : candidate.time > best.time;
                 if (isCloser)
                 {
                     best = candidate;
@@ -663,11 +662,9 @@ namespace CreativeAI.Gameplay
             if (_edgeToSwingAngle >= 0f)
             {
                 string judgement =
-                    _edgeToSwingAngle < 45f
-                        ? "OK（刃が振り方向を向いています）"
-                        : _edgeToSwingAngle > 135f
-                            ? "逆（刃の裏が振り方向を向いています）"
-                            : "横向き";
+                    _edgeToSwingAngle < 45f ? "OK（刃が振り方向を向いています）"
+                    : _edgeToSwingAngle > 135f ? "逆（刃の裏が振り方向を向いています）"
+                    : "横向き";
 
                 Handles.Label(
                     origin + Vector3.up * (gizmoScale * 0.6f),

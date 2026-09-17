@@ -35,8 +35,6 @@ namespace CreativeAI.Gameplay
 
         public override void Enter()
         {
-            Debug.Log("[TutorialBoss] 通常攻撃ステート開始");
-
             _approachTimer = 0f;
             _attackTimer = 0f;
 
