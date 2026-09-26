@@ -43,7 +43,6 @@ jobs:
           unityVersion: 6000.4.5f1
           testMode: all
           artifactsPath: test-results
-          coverageEnabled: false
           githubToken: ''
 
       - name: Save Library
