@@ -3,12 +3,8 @@ using UnityEngine;
 namespace CreativeAI.Gameplay
 {
     /// <summary>
-    /// プレイヤー方向に一直線で突進する遠距離攻撃ステート。
-    /// フェーズ1（予備動作）：プレイヤー方向にホーミング回転しながら待機。
-    /// フェーズ2（突進）：開始時の向きを固定して直線移動。Obstacleタグの壁にぶつかると終了。
-    ///
-    /// ※予備動作のアニメーション導入時は Enter 内の
-    ///   TODO コメント箇所に Animator.SetTrigger("DashWindup") を追加する。
+    /// プレイヤー方向への直線突進（遠距離攻撃）。予備動作中はホーミング回転、突進中は開始時の向きで直進し Obstacle タグの壁に当たると終了。
+    /// 予備動作アニメ導入時は Enter の TODO 箇所に Animator.SetTrigger("DashWindup") を追加する。
     /// </summary>
     public class MidBossDashAttackState : MidBossBaseState
     {

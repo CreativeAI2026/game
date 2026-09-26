@@ -11,10 +11,8 @@ using UnityEngine.UI;
 namespace CreativeAI.Tests.EditMode
 {
     /// <summary>
-    /// タイトルの「はじめる / 続きから」で常駐一式を組み立てる流れ(documents/Specification.md §6, §6.1)。
-    /// 生成順は マネージャ → Inventory → RecipeBook → UIRoot → プレイヤー。
-    /// シーンロード自体はコルーチンなので、ここでは常駐の生成契約だけを検証する。
-    /// 冪等性(Instance による二重生成ガード)は Awake が要るので TitleFlowPlayModeTests 側。
+    /// タイトルの「はじめる / 続きから」で常駐一式(マネージャ → Inventory → RecipeBook → UIRoot → プレイヤーの順)を組み立てる生成契約の検証。
+    /// シーンロードと冪等性ガードは TitleFlowPlayModeTests 側。
     /// </summary>
     public class TitleFlowTests
     {

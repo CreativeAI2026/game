@@ -13,17 +13,9 @@ using Object = UnityEngine.Object;
 namespace CreativeAI.EditorTools
 {
     /// <summary>
-    /// 調合UIの確認用シーン UI_CraftingPreview を作り、調合UI(CraftPanel.prefab)を常駐 UIRoot に組み込む。
-    /// 会話UI確認シーン UI_ConversationPreview(ConversationPreviewDriver)の調合版。
-    /// Tools &gt; CreativeAI &gt; Setup Crafting Preview から実行(バッチモード -executeMethod も可)。
-    ///
-    /// 1) CraftPanel.prefab を UIRoot.prefab の <c>CraftUI</c> Canvas 配下にネスト配置し、
-    ///    <c>UiRouter._craftUI</c> に配線する(= 本番 Title フローからも調合UIが開けるようになる)。
-    /// 2) UI_CraftingPreview を生成(Camera + EventSystem + FieldDevBootstrap + CraftPreviewDriver)。
-    ///    FieldDevBootstrap が常駐一式(UIRoot 含む)を生成しテスト品をシードするので、実素材で調合を試せる。
-    /// 3) UI_CraftingPreview は開発専用として本番 Build Settings には追加しない。
-    ///
-    /// 冪等: 再実行しても CraftUI とプレビューシーンを作り直せる。
+    /// 調合UI確認シーン UI_CraftingPreview を作り、CraftPanel.prefab を UIRoot の <c>CraftUI</c> 配下に置いて <c>UiRouter._craftUI</c> に配線する。
+    /// シーンは FieldDevBootstrap で常駐一式とテスト品を用意し、実素材で試せる。本番 Build Settings には入れない。
+    /// 冪等。Tools &gt; CreativeAI &gt; Setup Crafting Preview から実行。
     /// </summary>
     public static class SetupCraftingPreviewScene
     {

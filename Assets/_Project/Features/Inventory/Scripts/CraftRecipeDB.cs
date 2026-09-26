@@ -21,8 +21,7 @@ namespace CreativeAI.Gameplay
 
         // 解禁(発見)状態は保持しない。セッション常駐でセーブ対象の RecipeBookManager が唯一の持ち主。
         // カタログ(この SO)は読み取り専用に徹し、表示判定は全て RecipeBookManager へ委譲する。
-        // 初期解禁(showInRecipeCraft)は静的な設計データで、RecipeBookManager が起動時に取り込む
-        // (documents/Specification.md §2.3「データ形式」/ §6)。
+        // 初期解禁(showInRecipeCraft)は静的な設計データで、RecipeBookManager が起動時に取り込む。
         private static bool IsRecipeRevealed(CraftRecipeData recipe) =>
             RecipeBookManager.Instance?.IsRevealed(recipe) ?? false;
 

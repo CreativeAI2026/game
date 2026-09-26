@@ -13,10 +13,8 @@ using Object = UnityEngine.Object;
 namespace CreativeAI.UI.ConversationUI.Editor
 {
     /// <summary>
-    /// 会話UIの Prefab と確認用シーン UI_ConversationPreview を一括生成する Editor ツール。
-    /// 立ち絵/ウィンドウ画像を Sprite として import し、ConversationView.prefab を組み立て、
-    /// UI_ConversationPreview シーンにその実体 + プレビュー駆動役を配置する。手書き YAML を避け Unity に正しく
-    /// シリアライズさせるための道具(メニューからも実行可)。
+    /// 会話UIの Prefab と確認用シーン UI_ConversationPreview を一括生成する Editor ツール(立ち絵/ウィンドウ画像の Sprite import 含む)。
+    /// 手書き YAML を避け Unity に正しくシリアライズさせるための道具(メニューからも実行可)。
     /// </summary>
     public static partial class ConversationUIBuilder
     {

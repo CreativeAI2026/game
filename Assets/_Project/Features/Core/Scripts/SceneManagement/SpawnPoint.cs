@@ -3,10 +3,8 @@ using UnityEngine;
 namespace CreativeAI.Core.SceneManagement
 {
     /// <summary>
-    /// フィールドの到着位置の目印。プレイヤーリグはシーンに埋め込まず持ち越されるので
-    /// (PlayerImplementation.md)、到着時にどこへ置くかをシーン上のこのオブジェクトで決める。
-    /// ID はそのシーン内で一意。向きは GameObject の回転をそのまま使う。
-    /// 指定 ID が見つからない場合は原点へフォールバックして警告する(遷移は失敗させない)。
+    /// フィールドの到着位置の目印(ID はシーン内で一意、向きは回転を使う)。持ち越したプレイヤーリグをここに置く。
+    /// ID が見つからなければ原点へフォールバックして警告する。
     /// </summary>
     public sealed class SpawnPoint : MonoBehaviour
     {

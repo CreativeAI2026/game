@@ -8,13 +8,9 @@ using UnityEngine.UI;
 namespace CreativeAI.UI.QuickFoodBar
 {
     /// <summary>
-    /// 即時食材使用UI(常駐)。キャラUIの即時使用食材タブ(<see cref="CreativeAI.UI.CharacterUI.QuickFoodViewController"/>)で
-    /// セットした最大3枠(<see cref="InventoryManager.GetQuickFoodSlots"/>)を常時表示し、タップで即時使用(HP回復+消費)する。
-    ///
-    /// 仕様(Specification.md §5): 移動中・戦闘中とも常時表示(モードで出し分けない)。武器切替UIのように所持で出し分けもしない。
-    /// 仕様§6のとおり <see cref="UIRoot"/> が束ねる UI レイヤーの一部で、UIRoot Prefab の子として同梱される
-    /// (常駐・単一化・DontDestroyOnLoad は UIRoot が担うため、このコンポーネント自身は自己生成も DDOL もしない)。
-    /// 状態は持たない(表示はデータ側の単一ソースを読むだけ)。
+    /// 即時食材使用UI(常駐)。キャラUIの即時使用食材タブ(<see cref="CreativeAI.UI.CharacterUI.QuickFoodViewController"/>)でセットした
+    /// 最大3枠(<see cref="InventoryManager.GetQuickFoodSlots"/>)を常時表示し、タップで即時使用(HP回復+消費)する。
+    /// モードや所持で出し分けない。UIRoot Prefab の子として同梱され、常駐は <see cref="UIRoot"/> が担う。状態は持たない。
     /// </summary>
     public sealed class QuickFoodBarController : MonoBehaviour
     {
@@ -47,7 +43,7 @@ namespace CreativeAI.UI.QuickFoodBar
 
         private void ApplyVisibility()
         {
-            // 会話(line/choice)中は使用不可なので隠す。ただし戦闘中は常時表示(spec §5/§2.2)。
+            // 会話(line/choice)中は使用不可なので隠す。ただし戦闘中は常時表示。
             // battle ステップも EventPlaybackService.IsPlaying の内側で走るため、モードで戦闘を除外する。
             bool inBattle =
                 GameModeManager.Instance != null

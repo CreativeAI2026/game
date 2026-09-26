@@ -6,7 +6,7 @@ namespace CreativeAI.Gameplay
     /// <summary>
     /// マニュアルセーブでディスクに全書きするスナップショット(単一スロット)。
     /// JsonUtility でシリアライズするため public フィールド + [Serializable] で構成する。
-    /// spec §6: 保存はマニュアルセーブ時のみ・オートセーブなし。
+    /// 保存はマニュアルセーブ時のみ・オートセーブなし。
     /// </summary>
     [Serializable]
     public sealed class SaveData
@@ -21,7 +21,7 @@ namespace CreativeAI.Gameplay
         /// </summary>
         public List<int> revealedRecipes = new();
 
-        // プレイヤー状態(spec §6 図: 現在HP・座標を保存 → 死亡時は直近セーブから再開)。
+        // プレイヤー状態(現在HP・座標を保存 → 死亡時は直近セーブから再開)。
         // hasPlayerState=false の場合(リグ未実装・旧セーブ)は復元をスキップし、既定スポーン/満タンで開始する。
         public bool hasPlayerState;
 
@@ -38,13 +38,13 @@ namespace CreativeAI.Gameplay
         public float currentHp;
 
         /// <summary>
-        /// 選択中の武器 index(spec §6: プレイヤーリグは選択武器も保存)。実体は WeaponManager(IWeaponSaveState)。
+        /// 選択中の武器 index(プレイヤーリグは選択武器も保存)。実体は WeaponManager(IWeaponSaveState)。
         /// <see cref="ownedWeaponKeys"/> に含まれない値なら所持の先頭へ寄せて復元される。
         /// </summary>
         public int selectedWeaponIndex;
 
         /// <summary>
-        /// 入手ずみ武器のキー(sword/bow/scythe)。spec §1.1: 主人公は初期0本でイベント入手なので、
+        /// 入手ずみ武器のキー(sword/bow/scythe)。主人公は初期0本でイベント入手なので、
         /// 「どれを持っているか」自体がセーブ対象になる。旧セーブに無ければ空 = 0本で復元される。
         /// </summary>
         public List<string> ownedWeaponKeys = new();

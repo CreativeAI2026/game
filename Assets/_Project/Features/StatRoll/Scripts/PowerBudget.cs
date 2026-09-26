@@ -3,7 +3,7 @@ using System;
 namespace CreativeAI.StatRoll
 {
     /// <summary>
-    /// 層1: 総パワー予算 B の算出(StatRollAlgorithm.md)。
+    /// 層1: 総パワー予算 B の算出。
     /// 「強い方を土台に、弱い方をボーナスで上限漸近させながら足す」。
     /// </summary>
     public static class PowerBudget

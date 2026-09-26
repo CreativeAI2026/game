@@ -10,7 +10,7 @@ namespace CreativeAI.Tests.EditMode
 {
     /// <summary>
     /// 武器の所持と選択の検証(初期0本 → 入手 → 入手ずみだけ切替 → 選択中の1本だけ補正が乗る)。
-    /// 入手はイベントの giveWeapon から(documents/Specification.md §1.1, §5, §6)。
+    /// 入手はイベントの giveWeapon から。
     /// </summary>
     public class WeaponManagerTests
     {
@@ -61,7 +61,7 @@ namespace CreativeAI.Tests.EditMode
         [Test]
         public void Initially_NoWeaponOwned_AndBonusIsZero()
         {
-            // spec §1.1: 主人公は最初1本も持たない。§1: 武器を1本も持っていなければ補正 0。
+            // 主人公は最初1本も持たない。武器を1本も持っていなければ補正 0。
             Assert.AreEqual(0, _weapons.OwnedCount);
             Assert.AreEqual(WeaponManager.NoWeapon, _weapons.CurrentWeaponIndex);
 

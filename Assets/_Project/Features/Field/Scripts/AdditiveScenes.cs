@@ -5,18 +5,9 @@ using UnityEngine.SceneManagement;
 namespace CreativeAI.Gameplay
 {
     /// <summary>
-    /// このシーンに<b>重ねて読み込む別シーン</b>を宣言する係。小物(机・椅子・棚…)を
-    /// 階ごとの別ファイルに分けたまま遊べるようにするためのもの。
-    ///
-    /// 分けている理由は <b>git の競合を構造的に防ぐ</b>ため — 1F/2F/3F の担当者が別ファイルを
-    /// 触るので、同じ .unity を同時に書き換えることがない(documents/PropPlacementWorkflow.md)。
-    /// 畳んで1枚にしてしまうと分離が失われるので、<b>畳まずに実行時に重ねる</b>。
-    ///
-    /// 置き場は生成物 <c>Map</c> の<b>外</b>にすること。<c>Rebuild Field_Area01</c> は Map ルートだけを
-    /// 作り直すので、外に置いておけば消えない。
-    ///
-    /// 対象シーンは <b>Build Settings に登録</b>しておく必要がある(名前で読むため)。
-    /// 未登録だと実行時に読み込めないので、その場合は警告を出して先へ進む(小物が出ないだけ)。
+    /// このシーンに重ねて読み込む別シーンを宣言する。階ごとの小物シーンを畳まずに実行時に重ね、
+    /// 担当者ごとにファイルを分けたまま git 競合を防ぐ。生成物 <c>Map</c> の外に置くこと(Rebuild で消えない)。
+    /// 対象シーンは Build Settings 登録が必要で、未登録なら警告して先へ進む(小物が出ないだけ)。
     /// </summary>
     public sealed class AdditiveScenes : MonoBehaviour
     {

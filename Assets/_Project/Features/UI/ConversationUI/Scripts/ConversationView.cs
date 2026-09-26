@@ -9,13 +9,9 @@ using UnityEngine.UI;
 namespace CreativeAI.UI.ConversationUI
 {
     /// <summary>
-    /// 会話UIの実体。<see cref="IDialogueView"/> を実装し、生成時に <see cref="DialogueViewService.Current"/>
-    /// へ自身を登録する(EventPlayer は常駐生成で drag 配線できないため seam 経由で受け取る、IDialogueView 参照)。
-    /// 仕様§6のとおり <see cref="UIRoot"/> が束ねる UI レイヤーの一部で、UIRoot Prefab の子として同梱される
-    /// (常駐・単一化・DontDestroyOnLoad は UIRoot が担うため、このコンポーネント自身は自己生成も DDOL もしない)。状態は保存しない。
-    /// 会話中でないときはウィンドウを隠す(再生時 Awake で alpha=0)。編集時は Awake が走らないため
-    /// Prefab の見た目(立ち絵+ウィンドウ+ダミー文)がそのままプレビューになる。
-    /// documents/Specification.md「常駐アーキテクチャ」参照。
+    /// 会話UIの実体。<see cref="IDialogueView"/> を実装し、生成時に <see cref="DialogueViewService.Current"/> へ自身を登録する。
+    /// UIRoot Prefab の子として同梱され、常駐・DDOL は <see cref="UIRoot"/> が担う。状態は保存しない。
+    /// 再生時は Awake でウィンドウを隠し、編集時は Prefab の見た目がそのままプレビューになる。
     /// </summary>
     public sealed partial class ConversationView : MonoBehaviour, IDialogueView
     {
@@ -496,10 +492,8 @@ namespace CreativeAI.UI.ConversationUI
         }
 
         /// <summary>
-        /// 受け取ったアイテムの画像を表示し、送り入力まで待って片付ける。
-        /// <paramref name="sprite"/> 未指定なら <see cref="_itemGetSprite"/>(ダミー)を使う。
-        /// 画像は Prefab に要素を持たず実行時に Canvas 直下へ生成する(表示ロジックは常駐 UI 側に集約。
-        /// 将来 EventPlayer の giveItem ステップから itemKey で解決した Sprite を渡す想定)。
+        /// 受け取ったアイテムの画像を表示し、送り入力まで待って片付ける。<paramref name="sprite"/> 未指定なら <see cref="_itemGetSprite"/>(ダミー)。
+        /// 画像は実行時に Canvas 直下へ生成する(将来は giveItem ステップから解決した Sprite を渡す想定)。
         /// </summary>
         public IEnumerator ShowItemGet(Sprite sprite = null, string acquiredMessage = null)
         {
@@ -528,11 +522,8 @@ namespace CreativeAI.UI.ConversationUI
         }
 
         /// <summary>
-        /// 受け取った武器の3Dモデルを RenderTexture 経由でUIに表示し、送り入力まで回転させて待つ。
-        /// アイテム画像(<see cref="ShowItemGet"/>)と同じ位置・サイズに出す。カメラ/ライト/モデルのリグは
-        /// シーンから離した場所へ実行時に組んで終了で破棄する(常駐なし・シーン非依存・専用レイヤー不要)。
-        /// <paramref name="modelPrefab"/> 未指定なら <see cref="_weaponModelPrefab"/>(ダミー)。将来は
-        /// EventPlayer の giveWeapon ステップから weaponKey で解決した Prefab を渡す想定。
+        /// 受け取った武器の3Dモデルを RenderTexture 経由で <see cref="ShowItemGet"/> と同じ位置に表示し、送り入力まで回転させて待つ。
+        /// リグはシーンから離れた場所に実行時に組み、終了時に破棄する。<paramref name="modelPrefab"/> 未指定なら <see cref="_weaponModelPrefab"/>(ダミー)。
         /// </summary>
         public IEnumerator ShowWeaponGet(
             GameObject modelPrefab = null,

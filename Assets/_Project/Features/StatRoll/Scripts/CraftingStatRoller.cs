@@ -5,7 +5,7 @@ using System.Linq;
 namespace CreativeAI.StatRoll
 {
     /// <summary>
-    /// 調合ステータスのロール本体(StatRollAlgorithm.md)。
+    /// 調合ステータスのロール本体。
     /// 総パワー B(決定的) × 配分 p(ディリクレで確率的) を合成し、
     /// ウェイト上位2型に B を配分した結果ベクトルを返す。
     /// </summary>

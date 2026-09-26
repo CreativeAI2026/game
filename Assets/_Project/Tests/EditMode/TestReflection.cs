@@ -4,13 +4,8 @@ using System.Reflection;
 namespace CreativeAI.Tests.EditMode
 {
     /// <summary>
-    /// EditMode テスト用の小さなリフレクションヘルパ。
-    ///
-    /// EditMode では Awake/Start/Update が走らないため、
-    /// - Awake で立つ静的 Instance(ProgressManager 等)
-    /// - Awake/Start で解決される private フィールド(Canvas 参照など)
-    /// - Update から呼ばれる private メソッド
-    /// をテストから直接触る必要がある。本番コードにテスト専用の口を増やさないための逃げ道。
+    /// EditMode テスト用のリフレクションヘルパ。Awake/Start/Update が走らないため、静的 Instance・private フィールド・
+    /// private メソッドをテストから直接触る(本番コードにテスト専用の口を増やさないため)。
     /// </summary>
     internal static class TestReflection
     {

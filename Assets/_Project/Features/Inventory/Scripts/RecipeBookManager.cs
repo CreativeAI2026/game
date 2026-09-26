@@ -5,16 +5,9 @@ using UnityEngine;
 namespace CreativeAI.Gameplay
 {
     /// <summary>
-    /// レシピの解禁(発見)状態だけを持つセッション常駐。自由調合(FreeCraftPanel)で新しい組み合わせを
-    /// 成功させると、そのレシピがここに解禁され、レシピ一覧(RecipeCraftPanelController)に並ぶ=再利用できる。
-    ///
-    /// 解禁状態は「プレイごとの状態」なので、進行度(ProgressManager)や所持品(InventoryManager)とは別概念として
-    /// ここに独立させる(=セッション常駐)。新規開始で自動的にまっさら・タイトルに戻ると破棄・続きからは
-    /// SaveService が復元し、マニュアルセーブで保存される(documents/Specification.md §6)。
-    /// カタログ(CraftRecipeDB)は読み取り専用で、初期解禁(showInRecipeCraft=静的な設計データ)だけを宣言する。
-    /// 実行時の解禁状態はこの Manager が唯一保持し、起動/復元時に初期解禁を取り込む。
-    ///
-    /// レシピの識別キーは結果アイテムの id(resultItem.id)。Scene 読み込み前に自動生成する。
+    /// レシピの解禁状態だけを持つセッション常駐。自由調合で成功した組み合わせを解禁し、レシピ一覧で再利用できるようにする。
+    /// プレイごとの状態なので進行度・所持品とは独立させ、SaveService で保存・復元する。
+    /// CraftRecipeDB は初期解禁だけを宣言し、起動/復元時に取り込む。キーは resultItem.id。Scene 読み込み前に自動生成する。
     /// </summary>
     public sealed class RecipeBookManager : MonoBehaviour
     {

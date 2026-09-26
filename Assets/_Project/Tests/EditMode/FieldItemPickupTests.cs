@@ -11,7 +11,7 @@ namespace CreativeAI.Tests.EditMode
 {
     /// <summary>
     /// フィールドのアイテム拾得の検証(移動中だけ拾える / 装備品は拾った瞬間にロールする)。
-    /// 戦闘中・会話イベント中は拾わない(documents/Specification.md §0, §2「拾得」, §2.1.1)。
+    /// 戦闘中・会話イベント中は拾わない。
     /// </summary>
     public class FieldItemPickupTests
     {
@@ -93,7 +93,7 @@ namespace CreativeAI.Tests.EditMode
         [Test]
         public void Pickup_Equipment_RollsOneInstancePerItem()
         {
-            // 装備品は拾った瞬間にロールした「個体」として1個ずつ入る(§2.1.1)。
+            // 装備品は拾った瞬間にロールした「個体」として1個ずつ入る。
             var gear = MakeItem<EquipmentData>(2001); // OnEnable が category=Equipment
             gear.attack = 20; // 総パワー20の宣言(どの型に書いてあるかは結果に影響しない)
             PlaceItem(gear, 2);
@@ -196,7 +196,7 @@ namespace CreativeAI.Tests.EditMode
 
             Assert.IsTrue(_pickup.TryPickup());
 
-            Assert.IsFalse(sparkle.activeSelf, "拾ったらキラキラエフェクトを消す(§0)");
+            Assert.IsFalse(sparkle.activeSelf, "拾ったらキラキラエフェクトを消す");
         }
 
         [Test]

@@ -159,7 +159,7 @@ namespace CreativeAI.EditorTools.UI
                         ? new[] { ItemCategory.Equipment, ItemCategory.Food }
                         : new[]
                         {
-                            // 武器はインベントリ管理外(spec §2)。インベントリのタブは 装備品/食材/大事なもの の3つ。
+                            // 武器はインベントリ管理外。インベントリのタブは 装備品/食材/大事なもの の3つ。
                             ItemCategory.Equipment,
                             ItemCategory.Food,
                             ItemCategory.Important,

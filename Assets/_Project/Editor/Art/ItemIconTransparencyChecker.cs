@@ -7,10 +7,8 @@ using UnityEngine;
 namespace CreativeAI.EditorTools.Art
 {
     /// <summary>
-    /// アイテムアイコンPNG(Art/UI/Items 配下)の「背景透過の精度」を一括チェックするツール。
-    /// 差し替え候補(透過PNG)がちゃんと透過しているか・白フチ(ハロー)が残っていないかを
-    /// Console にレポートする。読み取りはインポート後の圧縮テクスチャではなく、
-    /// 元PNGのバイト列を直接デコードして行う(圧縮の影響を排除して真のアルファを見るため)。冪等・非破壊。
+    /// アイテムアイコンPNG(Art/UI/Items 配下)の透過・白フチ(ハロー)残りを一括チェックし Console に出す。
+    /// 圧縮の影響を避けるため元PNGを直接デコードして判定する。冪等・非破壊。
     /// </summary>
     public static class ItemIconTransparencyChecker
     {

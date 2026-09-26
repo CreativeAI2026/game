@@ -30,7 +30,7 @@ namespace CreativeAI.StatRoll
 
         public int Count => _values.Count;
 
-        /// <summary>総パワー = 全ステータス値の和(StatRollAlgorithm.md 層1)。</summary>
+        /// <summary>総パワー = 全ステータス値の和(層1)。</summary>
         public float Power => _values.Values.Sum();
 
         public IReadOnlyDictionary<StatType, float> AsDictionary() => _values;

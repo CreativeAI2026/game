@@ -4,13 +4,8 @@ using UnityEngine.AI;
 namespace CreativeAI.Gameplay
 {
     /// <summary>
-    /// プレイヤー方向を向かずにランダム方向へ移動するステート。
-    /// 移動スタイルはEnter時にランダムで決定する（2種類）：
-    ///   スタイルA: ジグザグ移動（じりじり＋ブレ角度）
-    ///   スタイルB: 大ステップ移動（速め＋少ない回数）
-    /// 移動完了後は距離に応じた攻撃または追跡ステートへ遷移する。
-    ///
-    /// ※移動アニメーション導入時は TODO コメント箇所に Animator 操作を追加する。
+    /// プレイヤーを向かずランダム方向へ移動する。Enter 時にジグザグ（じりじり＋ブレ角度）か大ステップ（速め＋少回数）を選び、
+    /// 移動後は距離に応じて攻撃または追跡へ遷移する。移動アニメ導入時は TODO 箇所に Animator 操作を追加する。
     /// </summary>
     public class MidBossRandomMoveState : MidBossBaseState
     {

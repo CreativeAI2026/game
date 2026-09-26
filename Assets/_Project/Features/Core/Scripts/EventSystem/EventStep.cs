@@ -38,7 +38,6 @@ namespace CreativeAI.Core.EventSystem
 
     /// <summary>
     /// 会話の1ステップ。kind に応じて使うフィールドが変わる(union 的)。
-    /// スキーマは documents/ScenarioReference.md の events.json steps に対応。
     /// ファクトリはテスト・将来の Importer が構築に使う。
     /// </summary>
     [Serializable]
@@ -66,7 +65,7 @@ namespace CreativeAI.Core.EventSystem
         private string _itemKey; // giveItem
 
         [SerializeField]
-        private string _weaponKey; // giveWeapon(剣/弓/鎌 = sword/bow/scythe。ScenarioReference.md の武器カタログ)
+        private string _weaponKey; // giveWeapon(剣/弓/鎌 = sword/bow/scythe)
 
         [SerializeField]
         private string _message; // giveItem / giveWeapon: 入手演出に出す文。省略時は UI 側が既定文を作る
@@ -106,8 +105,7 @@ namespace CreativeAI.Core.EventSystem
 
         /// <summary>
         /// 武器を渡すステップ。weaponKey は剣/弓/鎌(sword/bow/scythe)のいずれか。
-        /// 実体はプレイヤーリグの WeaponManager(IWeaponGiver seam)で入手処理する
-        /// (ScenarioReference.md「武器カタログ」, EventImplementation.md)。
+        /// 実体はプレイヤーリグの WeaponManager(IWeaponGiver seam)で入手処理する。
         /// </summary>
         public static EventStep GiveWeapon(string weaponKey, string message = null) =>
             new()
@@ -118,15 +116,13 @@ namespace CreativeAI.Core.EventSystem
             };
 
         /// <summary>
-        /// 戦闘ステップ。敵は JSON に書かず、シーンの EventTrigger の Enemy スロットに Prefab を配線する
-        /// (documents/ScenarioReference.md「battle は { "kind": "battle" } のみ」, EventImplementation.md)。
+        /// 戦闘ステップ。敵は JSON に書かず、シーンの EventTrigger の Enemy スロットに Prefab を配線する。
         /// </summary>
         public static EventStep Battle() => new() { _kind = StepKind.Battle };
 
         /// <summary>
         /// 会話UIの演出コマンド1つ(window.hide / portrait.left.shake / wait など)。
-        /// 実行は IDialogueView.RunCommand → ConversationView の演出コマンドルータ
-        /// (documents/ScenarioReference.md「演出コマンド」)。
+        /// 実行は IDialogueView.RunCommand → ConversationView の演出コマンドルータ。
         /// </summary>
         public static EventStep Command(string command, string arg = null) =>
             new()

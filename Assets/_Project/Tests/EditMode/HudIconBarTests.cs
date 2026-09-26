@@ -9,7 +9,7 @@ namespace CreativeAI.Tests.EditMode
 {
     /// <summary>
     /// 右上アイコンバーの出し分けの検証(移動中だけ表示し、戦闘中と会話中は隠す)。
-    /// 会話中に隠すのはセーブ/インベを開かせないため(documents/Specification.md §5, §2.2, §0)。
+    /// 会話中に隠すのはセーブ/インベを開かせないため。
     /// GameObject ごと消すと購読が切れるため、Canvas / Raycaster の enabled で出し分ける実装を検証する。
     /// </summary>
     public class HudIconBarTests
@@ -62,7 +62,7 @@ namespace CreativeAI.Tests.EditMode
         {
             _gmm.EnterBattle();
 
-            Assert.IsFalse(IsShown, "戦闘モード中は非表示(spec §5)");
+            Assert.IsFalse(IsShown, "戦闘モード中は非表示");
         }
 
         [Test]
@@ -81,7 +81,7 @@ namespace CreativeAI.Tests.EditMode
         {
             EventPlaybackService.SetPlaying(true);
 
-            Assert.IsFalse(IsShown, "会話UI表示中はセーブ/インベを開けない(spec §2.2, §0)");
+            Assert.IsFalse(IsShown, "会話UI表示中はセーブ/インベを開けない");
         }
 
         [Test]

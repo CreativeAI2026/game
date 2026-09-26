@@ -3,19 +3,9 @@ using UnityEngine;
 namespace CreativeAI.Gameplay
 {
     /// <summary>
-    /// 懐中電灯・頭のAnimation Rigging用エイムターゲットを動かすコンポーネント。
-    ///
-    /// このスクリプト自体はボーンを直接動かさない。Multi-Aim Constraint等のRig
-    /// コンポーネントを別途Editorで追加し、その Source Objects にここで動かす
-    /// ターゲットTransformを登録することで、Rig側が実際の回転を計算する構成を想定している
-    /// （既存のWireRig / wireIkTargetと同じ設計パターン）。
-    /// スクリプトから直接ボーンのTransformを書き換えるとアニメーションと競合して破綻することが
-    /// 既に判明している（TutorialBossController削除済みのRotateFlashlightToward参照）ため、
-    /// 必ずRig経由で適用すること。
-    ///
-    /// 参照が未設定のフィールドはそれぞれ何もしないため、Rig未セットアップの現状でも
-    /// アタッチするだけなら安全（デフォルトで無害）。Editor側のセットアップ手順は
-    /// クラス末尾のコメントを参照。
+    /// 懐中電灯・頭の Animation Rigging 用エイムターゲットを動かす。ボーンは直接動かさず、Multi-Aim Constraint 等の Source Objects に登録した
+    /// ターゲットを動かして Rig 側に回転を計算させる（WireRig / wireIkTarget と同じ方式。ボーンを直接書き換えるとアニメと競合して破綻する）。
+    /// 未設定の参照は何もしないので Rig 未セットアップでも安全。セットアップ手順はクラス末尾を参照。
     /// </summary>
     public class TBossAimRigController : MonoBehaviour
     {
@@ -159,20 +149,8 @@ namespace CreativeAI.Gameplay
     }
 }
 
-// ────────────────────────────────────────────────────────────────
-// Editorでのセットアップ手順（このスクリプトだけでは見た目は変化しません）
-// ────────────────────────────────────────────────────────────────
-// 1. TutorialBossプレハブ内に空のGameObjectを2つ作成する
-//    （例: "FlashlightAimTarget" "HeadAimTarget"。位置は初期状態でボスの少し前方に置く）
-// 2. 既存のWireRig（Rigコンポーネントが付いたGameObject）と同じ階層に、
-//    新しいRig用GameObject（例: "AimRig"）を作成し、Rigコンポーネントを追加する
-// 3. AimRigの子として、懐中電灯ボーンを対象にした Multi-Aim Constraint と、
-//    頭/首ボーンを対象にした Multi-Aim Constraint を追加する
-//    - Constrained Object: それぞれ flashlightTransform / 頭ボーン
-//    - Source Objects: 手順1で作った FlashlightAimTarget / HeadAimTarget を登録
-// 4. ルートのRigBuilderコンポーネントのRig Layersに、新しいAimRigを追加する
-// 5. TutorialBossのGameObjectにこのTBossAimRigControllerを追加し、
-//    boss / flashlightAimTarget / headAimTarget / headBone を割り当てる
-//
-// Rigのパス解決で問題が起きた場合は、既存の RigDebugger コンポーネントで
-// パスやConstraintの参照状況を確認できます（Console出力を参照）。
+// Editor セットアップ手順（このスクリプトだけでは見た目は変わらない）
+// 1. TutorialBoss プレハブに空の "FlashlightAimTarget" "HeadAimTarget" を作り、ボスの少し前方に置く
+// 2. WireRig と同階層に Rig 付きの "AimRig" を作り、子に懐中電灯ボーン用・頭/首ボーン用の Multi-Aim Constraint を追加して
+//    Source Objects に手順1のターゲットを登録し、ルートの RigBuilder の Rig Layers に AimRig を追加する
+// 3. このコンポーネントを追加し boss / flashlightAimTarget / headAimTarget / headBone を割り当てる（問題時は RigDebugger で確認）

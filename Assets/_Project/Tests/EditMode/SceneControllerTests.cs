@@ -6,7 +6,7 @@ using UnityEngine.TestTools;
 namespace CreativeAI.Tests.EditMode
 {
     /// <summary>
-    /// シーン遷移役の多重ロードガード(documents/Specification.md §3: フィールドシーンは常に1つだけロード)。
+    /// シーン遷移役の多重ロードガード(フィールドシーンは常に1つだけロード)。
     /// ロード進行そのもの(オーバーレイのフェード・LoadSceneAsync)は PlayMode でないと回せないため、
     /// ここでは「ロード中に来た2本目を無視する」ガードだけを検証する。
     /// </summary>

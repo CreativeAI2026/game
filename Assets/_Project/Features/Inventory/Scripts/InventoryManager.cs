@@ -14,7 +14,7 @@ namespace CreativeAI.Gameplay
         public static InventoryManager Instance { get; private set; }
 
         // EnsureResident() 経由(本番Title フロー)で生成中は true。
-        // この間に Awake したインスタンスはデバッグ用テストアイテムを積まない(新規はまっさら。spec §6.1)。
+        // この間に Awake したインスタンスはデバッグ用テストアイテムを積まない(新規はまっさら)。
         // シーン直置き(開発時に Field を直接 Play)では false のままなので従来どおりテスト品が入る。
         private static bool _creatingResident;
 
@@ -46,10 +46,8 @@ namespace CreativeAI.Gameplay
             _itemUseService ??= new ItemUseService(InventoryService);
 
         /// <summary>
-        /// セッション常駐の Inventory を「はじめる/続きから」時に1つだけ生成する(spec §6.1: 生成はTitleが担う)。
-        /// 既に在ればそれを返す。Core は Gameplay を参照できない(循環)ため SessionBootstrap ではなくここに置き、
-        /// Title フロー(UI 層)から マネージャ生成の後・プレイヤー生成の前に呼ぶ。
-        /// コード生成なのでシーン配置に依存せず、どのエリアから開始しても Inventory が必ず存在する。
+        /// セッション常駐の Inventory を1つだけ生成する(既存ならそれを返す)。循環参照のため SessionBootstrap ではなくここに置き、
+        /// Title フローから マネージャ生成の後・プレイヤー生成の前に呼ぶ。
         /// </summary>
         public static InventoryManager EnsureResident()
         {
@@ -226,7 +224,7 @@ namespace CreativeAI.Gameplay
             return RecipeCraftingService.TryCraft(recipe, materialA, materialB);
         }
 
-        /// <summary>装備品の同時装備上限(仕様 §2.1「装備品 最大3つ」)。</summary>
+        /// <summary>装備品の同時装備上限。</summary>
         public const int MaxEquippedEquipment = 3;
 
         public void SetEquipped(ItemStack stack, bool equipped)
@@ -256,11 +254,8 @@ namespace CreativeAI.Gameplay
                 .Count(s => s != null && s.IsEquipped && s.Data is EquipmentData);
 
         /// <summary>
-        /// 装備中(IsEquipped)の装備品の補正合計。素の値に足すと最終ステータス。
-        /// 武器は在庫外(仕様 L30・3本固定切替)なのでここでは扱わない。選択中武器の補正は
-        /// WeaponManager.GetSelectedBonus() から PlayerStatus が別ルートで合算する。
-        /// 調合で作られた個体(stack.RolledStats あり)は端末でロールした個体差を持つので、そのロール値を
-        /// 使う(CraftStatBridge 経由)。素材の固定 SO(RolledStats 無し)は EquipmentData の値を使う。
+        /// 装備中の装備品の補正合計(武器は WeaponManager 側で別合算)。
+        /// 調合個体(RolledStats あり)はロール値を CraftStatBridge 経由で、固定 SO は EquipmentData の値を使う。
         /// </summary>
         public EquipmentBonus GetEquippedBonus()
         {
@@ -333,7 +328,7 @@ namespace CreativeAI.Gameplay
 
         public List<ItemStack> GetAllItems() => InventoryService.GetAllItems();
 
-        // --- 即時使用食材スロット(最大3)。即時食材使用UIにセットする食材の選択状態(spec §1.2) ---
+        // --- 即時使用食材スロット(最大3)。即時食材使用UIにセットする食材の選択状態 ---
 
         /// <summary>即時使用食材スロットの内容(食材スタック or null)。即時食材使用UI / 即時使用食材タブが読む。</summary>
         public IReadOnlyList<ItemStack> GetQuickFoodSlots() => InventoryService.GetQuickFoodSlots();
@@ -350,7 +345,7 @@ namespace CreativeAI.Gameplay
             if (ItemDB.Instance == null)
                 return;
 
-            // 武器はインベントリ管理の対象外(仕様 §2)。ItemDB はフォルダ一括同期で武器も拾うため、ここで除外する。
+            // 武器はインベントリ管理の対象外。ItemDB はフォルダ一括同期で武器も拾うため、ここで除外する。
             var testItems = ItemDB
                 .Instance.Items.Where(item =>
                     item != null && !(item is WeaponData) && HasZeroSecondDigit(item)
@@ -368,7 +363,7 @@ namespace CreativeAI.Gameplay
 
         private void EquipInitialTestItems()
         {
-            // 食材は装備の概念を持たない(仕様 §2.1)。装備扱いにするのは装備品のみ。
+            // 食材は装備の概念を持たない。装備扱いにするのは装備品のみ。
             EquipInitialTestItems(ItemCategory.Equipment);
         }
 

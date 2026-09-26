@@ -1,16 +1,9 @@
 namespace CreativeAI.Core.Interaction
 {
     /// <summary>
-    /// 「近づいた対象に何ができるか」を画面に1つだけ出すための受け渡し口
-    /// (<see cref="CreativeAI.Core.EventSystem.EventPlaybackService"/> と同じ静的サービスの流儀)。
-    ///
-    /// ワールド側(扉など、CreativeAI.Gameplay)と表示側(常駐UI、CreativeAI.UI)は
-    /// アセンブリが片方向参照(UI → Gameplay)なので、ワールド側から UI を直接触れない。
-    /// ここを間に挟んで、ワールド側は「出す/消す」だけ、UI 側は購読して描くだけにする。
-    ///
-    /// 同時に複数の対象の範囲に入ることがあるので、<b>最後に Show した対象が勝つ</b>。
-    /// 消すのは自分が出しているときだけ(<see cref="Hide"/>)なので、離れた対象が
-    /// 別の対象のプロンプトを消してしまうことはない。
+    /// 近づいた対象の操作プロンプトを1つだけ出す静的サービス。ワールド側(Gameplay)は UI を参照できないので、
+    /// ワールド側は出す/消すだけ、UI 側は購読して描くだけにする。
+    /// 最後に Show した対象が勝ち、<see cref="Hide"/> は自分が出しているときだけ消す。
     /// </summary>
     public static class InteractPromptService
     {

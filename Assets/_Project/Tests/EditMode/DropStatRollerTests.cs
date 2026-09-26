@@ -8,8 +8,7 @@ namespace CreativeAI.Tests.EditMode
 {
     /// <summary>
     /// ドロップ装備品の付与ステータス(型 + 量)のロールの検証。
-    /// 型は DropStatTypeRoller、量は「総パワー(= シードの固定値合計)× ディリクレ均等配分」
-    /// (documents/Specification.md §2.1.1 / StatRollAlgorithm.md「ドロップ(拾得)のロール」)。
+    /// 型は DropStatTypeRoller、量は「総パワー(= シードの固定値合計)× ディリクレ均等配分」。
     /// </summary>
     public class DropStatRollerTests
     {
@@ -42,7 +41,7 @@ namespace CreativeAI.Tests.EditMode
             {
                 var rolled = DropStatRoller.Roll(20.0, new SystemRandomSource(seed));
 
-                Assert.LessOrEqual(rolled.Count, 2, $"seed={seed}: 付与数は最大2つ(§2.1)");
+                Assert.LessOrEqual(rolled.Count, 2, $"seed={seed}: 付与数は最大2つ");
                 Assert.Greater(rolled.Count, 0, $"seed={seed}: 総パワーがあるので1つは付く");
                 CollectionAssert.IsSubsetOf(
                     rolled.Types.ToArray(),
@@ -108,7 +107,7 @@ namespace CreativeAI.Tests.EditMode
         [Test]
         public void Roll_ProducesIndividualVariation()
         {
-            // 「同じ装備品でも拾うたびに違う個体になる」(§2.1.1)。型か量のどちらかが必ず散る。
+            // 「同じ装備品でも拾うたびに違う個体になる」。型か量のどちらかが必ず散る。
             var first = DropStatRoller.Roll(20.0, new SystemRandomSource(1));
             bool sawDifference = false;
 

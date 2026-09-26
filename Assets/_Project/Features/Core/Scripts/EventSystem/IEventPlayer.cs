@@ -15,10 +15,8 @@ namespace CreativeAI.Core.EventSystem
     }
 
     /// <summary>
-    /// 実行時に有効な IEventPlayer を Core 側へ登録する seam。EventPlayer が EnsureResident 時に
-    /// 自身を登録し、EventTrigger は Inspector 未配線時のフォールバックとしてここを見る
-    /// (ItemGiverService / BattleRunnerService と同じ思想)。EventPlayer は Title フローで常駐生成され
-    /// シーンから drag 配線しないため、非常駐の EventTrigger はこの契約経由で受け取る。
+    /// 実行時の IEventPlayer を登録する seam。EventPlayer は常駐生成で drag 配線できないため EnsureResident 時に登録し、
+    /// 非常駐の EventTrigger は Inspector 未配線時のフォールバックとして見る。
     /// </summary>
     public static class EventPlayerService
     {
@@ -28,7 +26,7 @@ namespace CreativeAI.Core.EventSystem
     /// <summary>
     /// 会話イベント再生中(= 操作不能)かどうかを UI に伝える seam。EventPlayer が再生の開始/終了で
     /// 更新し、HudIconBar が購読して会話中は右上ナビ(セーブ/インベ入口)を隠す
-    /// (documents/Specification.md §2.2, §5: 会話UI中はセーブ・インベントリ使用不可)。
+    /// (会話UI中はセーブ・インベントリ使用不可)。
     /// </summary>
     public static class EventPlaybackService
     {

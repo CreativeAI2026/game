@@ -6,7 +6,7 @@ using UnityEngine;
 namespace CreativeAI.Gameplay
 {
     /// <summary>
-    /// プレイヤーの武器の<b>所持状態</b>と<b>選択中の1本</b>を管理する(documents/Specification.md §1.1, §5, §6)。
+    /// プレイヤーの武器の<b>所持状態</b>と<b>選択中の1本</b>を管理する。
     ///
     /// 仕様:
     /// - 主人公は最初1本も持たない。イベントの giveWeapon(<see cref="IWeaponGiver"/>)で入手する。
@@ -23,7 +23,7 @@ namespace CreativeAI.Gameplay
         public const int NoWeapon = -1;
 
         /// <summary>
-        /// events.json の weaponKey(documents/ScenarioReference.md「武器カタログ」)と
+        /// events.json の weaponKey と
         /// <see cref="_weapons"/> / <see cref="_weaponStats"/> の index の対応。並び順が契約。
         /// </summary>
         public static readonly IReadOnlyList<string> WeaponKeys = new[]
@@ -39,9 +39,7 @@ namespace CreativeAI.Gameplay
         private GameObject[] _weapons;
 
         [Header("武器ごとのステータス補正(_weapons と同じ index 順で登録)")]
-        [Tooltip(
-            "選択中の1本の補正のみが最終ステータスに乗る(Specification.md「アイテムカテゴリと付与ステータス」)"
-        )]
+        [Tooltip("選択中の1本の補正のみが最終ステータスに乗る")]
         [SerializeField]
         private WeaponData[] _weaponStats;
 
@@ -65,8 +63,7 @@ namespace CreativeAI.Gameplay
         public event Action<bool> OnWeaponSwitched;
 
         /// <summary>
-        /// 所持本数が変わったときに通知(引数は変化後の本数)。武器切替UIが 0本→非表示 / 1本以上→表示 に使う
-        /// (Specification.md §5)。
+        /// 所持本数が変わったときに通知(引数は変化後の本数)。武器切替UIが 0本→非表示 / 1本以上→表示 に使う。
         /// </summary>
         public event Action<int> OnOwnedCountChanged;
 
@@ -141,7 +138,7 @@ namespace CreativeAI.Gameplay
         /// 選択中の武器の補正を装備品と同じ <see cref="EquipmentBonus"/> 形式で返す。
         /// PlayerStatus が「装備補正 + 武器補正」として最終ステータスに合算する
         /// (装備品:InventoryManager と対称。選択の情報源はここ 1 箇所)。
-        /// spec: 選択中の 1 本の補正のみが乗り、<b>0本のときは 0</b>。
+        /// 選択中の 1 本の補正のみが乗り、<b>0本のときは 0</b>。
         /// 移動速度/攻撃速度は PlayerStatus の対象外なので含めない。
         /// </summary>
         public EquipmentBonus GetSelectedBonus()
@@ -291,7 +288,7 @@ namespace CreativeAI.Gameplay
 
         /// <summary>
         /// 入手ずみ武器の並びの中で1つ進む/戻る。0本・1本のときは変化しない
-        /// (未入手の武器は選べない = 押しても変化なし。Specification.md §5)。
+        /// (未入手の武器は選べない = 押しても変化なし)。
         /// </summary>
         private bool TryStep(int direction)
         {

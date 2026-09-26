@@ -6,19 +6,9 @@ using UnityEngine;
 namespace CreativeAI.Gameplay
 {
     /// <summary>
-    /// フィールドに置かれた取得可能アイテム(documents/Specification.md §0「キラキラとしたエフェクトを伴って
-    /// 地面に配置される」/ §2「拾得」)。プレイヤーが触れると在庫へ入れて自分を消す。
-    ///
-    /// 拾えるのは<b>移動中(Field)だけ</b>。戦闘モード中・会話イベント再生中は触れても拾わない
-    /// (操作不能な間に在庫が動くのを防ぐ。セーブ/食材使用と同じ判断軸)。
-    ///
-    /// 装備品は<b>拾った瞬間に付与ステータスをロールする</b>(§2.1.1: 型は重み付き非復元抽出 /
-    /// 量は StatRollAlgorithm のロールモデル)。同じ装備品でも拾うたびに違う個体になるため、
-    /// 数量でまとめず1個ずつ別スタックで持つ。食材・大事なものは固定ルールなのでそのまま数量ぶん積む。
-    ///
-    /// 配置は「シーン上に手で置く」流儀(EventTrigger / SceneExit と同じ): 空の GameObject に
-    /// Collider(Is Trigger = ON)とこのコンポーネントを付け、Item にアセットを、Sparkle に
-    /// キラキラエフェクトをアサインする。
+    /// フィールドに置かれた取得可能アイテム。プレイヤーが触れると在庫へ入れて自分を消す。拾えるのは移動中(Field)だけ。
+    /// 装備品は拾った瞬間に付与ステータスをロールするので1個ずつ別スタックで持つ(食材・大事なものは数量ぶん積む)。
+    /// 配置はシーンに手置き: Collider(Is Trigger)とこのコンポーネントを付け、Item と Sparkle をアサインする。
     /// </summary>
     [RequireComponent(typeof(Collider))]
     public sealed class FieldItemPickup : MonoBehaviour
@@ -95,7 +85,7 @@ namespace CreativeAI.Gameplay
 
             if (_item is EquipmentData equipment)
             {
-                // 装備品は拾った瞬間にロール(§2.1.1)。個体差があるので1個ずつ別スタック。
+                // 装備品は拾った瞬間にロール。個体差があるので1個ずつ別スタック。
                 var rng = new SystemRandomSource();
                 for (int i = 0; i < _count; i++)
                     inventory.AddInstance(equipment, CraftStatBridge.RollDrop(equipment, rng));

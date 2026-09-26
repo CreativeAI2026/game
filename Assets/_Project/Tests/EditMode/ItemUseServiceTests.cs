@@ -8,7 +8,7 @@ namespace CreativeAI.Tests.EditMode
 {
     /// <summary>
     /// 食材使用の検証(HP即時回復をその場で適用し、在庫を1つ消費)。
-    /// 回復量は最大HPに対する固定割合(合成前20%/合成後50%。documents/Specification.md §2.1, §2.2)。
+    /// 回復量は最大HPに対する固定割合(合成前20%/合成後50%)。
     /// </summary>
     public class ItemUseServiceTests
     {
@@ -151,7 +151,7 @@ namespace CreativeAI.Tests.EditMode
         public void TryUse_WithoutPlayerStatus_DoesNotConsume()
         {
             // 回復先が居ないなら使用そのものを中止する。効果を出せないのに食材だけ消えるのは
-            // spec §2.2「効果適用: HP即時回復をその場で適用」に反する(使用と効果は不可分)。
+            // 「HP即時回復をその場で適用」に反する(使用と効果は不可分)。
             var apple = MakeFood(3001);
             _inv.AddItem(apple, 2);
             var useWithoutPlayer = new ItemUseService(_inv, null);

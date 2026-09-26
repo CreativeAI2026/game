@@ -14,9 +14,7 @@ namespace CreativeAI.Tests.PlayMode
 {
     /// <summary>
     /// タイトルから常駐一式(進行・モード・インベントリ・UI・プレイヤー)を組み立てる流れの検証。
-    /// 対象は documents/Specification.md §6, §6.1 のうち Awake で立つ Instance に依存する部分。
-    /// EditMode では Awake が走らず
-    /// 二重生成ガードが効かないため、ここは PlayMode で回す。
+    /// Awake で立つ Instance(二重生成ガード)に依存するため PlayMode で回す。
     /// </summary>
     public class SessionResidencyPlayModeTests
     {
@@ -110,7 +108,7 @@ namespace CreativeAI.Tests.PlayMode
         [UnityTest]
         public IEnumerator SessionBootstrap_PublishesManagersThroughInstance()
         {
-            // spec §6.1: プレイヤーは GameModeManager を購読するので、先に立っている必要がある。
+            // プレイヤーは GameModeManager を購読するので、先に立っている必要がある。
             SessionBootstrap.EnsureSession();
             yield return null; // Awake で Instance が立つ
 
@@ -136,7 +134,7 @@ namespace CreativeAI.Tests.PlayMode
         [UnityTest]
         public IEnumerator Residents_SurviveASceneLoad()
         {
-            // §6: セッション常駐はフィールド間のエリア遷移をまたぐ(DontDestroyOnLoad)。
+            // セッション常駐はフィールド間のエリア遷移をまたぐ(DontDestroyOnLoad)。
             SessionBootstrap.EnsureSession();
             InventoryManager.EnsureResident();
             yield return null;

@@ -1,10 +1,8 @@
 namespace CreativeAI.Gameplay
 {
     /// <summary>
-    /// セーブ復元に参加するプレイヤー等アクターの境界(seam)。
-    /// 現在HPの実体は担当班(PlayerStatus)が持つため、システム班の SaveService はこの窓口越しに読み書きする。
-    /// これにより保存フォーマット(システム班)とHPの実装(プレイヤー班)を JSON/インターフェースで分離する。
-    /// 座標・向きは tag="Player" のリグ root を SaveService が直接 Transform で扱うため、ここには含めない。
+    /// セーブ復元に参加するアクターの seam。HP の実体(PlayerStatus)を SaveService がこの窓口越しに読み書きする。
+    /// 座標・向きは SaveService が Player タグのリグ root を直接扱うので含めない。
     /// </summary>
     public interface ISaveableActor
     {

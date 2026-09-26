@@ -6,11 +6,8 @@ using UnityEngine.UI;
 namespace CreativeAI.UI
 {
     /// <summary>
-    /// 画面右上の円形ナビ(キャラ / インベ / セーブ)。HP の HUD とは別 Canvas に分ける
-    /// (HP は入力を受けず頻繁に更新されるため)。
-    /// ボタン押下で <see cref="UiRouter.Toggle"/> を呼び、<see cref="GameModeManager.OnModeChanged"/> を
-    /// 購読して自分の Canvas を Field=表示 / Battle=非表示 に切り替える(モード連動は自分で行い、
-    /// 外部の切替役は不要)。常駐 <see cref="UIRoot"/> 配下なので購読・配線は生成時の1回だけで済む。
+    /// 画面右上の円形ナビ(キャラ / インベ / セーブ)。HP の HUD とは別 Canvas(HP は入力を受けず頻繁に更新されるため)。
+    /// ボタンで <see cref="UiRouter.Toggle"/> を呼び、<see cref="GameModeManager.OnModeChanged"/> を購読して Field=表示 / Battle=非表示 を自分で切り替える。
     /// </summary>
     public sealed class HudIconBar : MonoBehaviour
     {
@@ -83,8 +80,8 @@ namespace CreativeAI.UI
         }
 
         /// <summary>
-        /// Field かつ会話イベント中でないときだけ表示。Battle・会話中は非表示にしてセーブ等を開けなくする
-        /// (documents/Specification.md §2.2, §5)。GameObject ごと SetActive すると自分が止まって購読を失うため、
+        /// Field かつ会話イベント中でないときだけ表示。Battle・会話中は非表示にしてセーブ等を開けなくする。
+        /// GameObject ごと SetActive すると自分が止まって購読を失うため、
         /// Canvas / Raycaster を無効化するだけにして自身は生かし続ける。
         /// </summary>
         private void Apply(GameMode mode)

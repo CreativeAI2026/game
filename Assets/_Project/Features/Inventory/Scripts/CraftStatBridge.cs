@@ -5,12 +5,8 @@ using CreativeAI.StatRoll;
 namespace CreativeAI.Gameplay
 {
     /// <summary>
-    /// 調合ロールエンジン(CreativeAI.StatRoll)とインベントリの装備品(EquipmentData / RolledStat)の橋渡し。
-    /// 装備品同士の調合は「端末で個体差ロール」する(documents/Specification.md §2.3,
-    /// StatRollAlgorithm.md)。食材は固定ルール(FoodData.HealFraction)なのでここは通さない。
-    ///
-    /// RolledStat.stat の語彙は <see cref="StatType"/> 名(例 "AttackPct")。GetEquippedBonus はこの語彙で解釈する。
-    /// 付与ステータスの型・上限2つ・会心率クランプなどは全てロール側(CraftingStatRoller/CraftingParameters)が担う。
+    /// 調合ロールエンジン(CreativeAI.StatRoll)と装備品(EquipmentData / RolledStat)の橋渡し。食材は通さない。
+    /// RolledStat.stat は <see cref="StatType"/> 名。型・上限・クランプなどはロール側が担う。
     /// </summary>
     public static class CraftStatBridge
     {
@@ -27,8 +23,7 @@ namespace CreativeAI.Gameplay
         ) => ToRolledStats(Roller.Roll(ToStatVector(a), ToStatVector(b), rng));
 
         /// <summary>
-        /// フィールドドロップの装備品1個ぶんの個体ステータスをロールする
-        /// (documents/Specification.md §2.1.1 / StatRollAlgorithm.md「ドロップ(拾得)のロール」)。
+        /// フィールドドロップの装備品1個ぶんの個体ステータスをロールする。
         /// シード SO の固定値は「総パワー(強さの目安)」としてだけ使い、どの型に何ポイント付くかは
         /// 型抽選 + ディリクレ配分で拾った瞬間に決める(同じ場所の同じ装備品でも個体差が出る)。
         /// </summary>
@@ -44,11 +39,8 @@ namespace CreativeAI.Gameplay
         }
 
         /// <summary>
-        /// ロール済み個体ステータスを装備補正に積み上げる(GetEquippedBonus 用)。
-        /// <see cref="RolledStat.stat"/> は <see cref="StatType"/> 名で照合する。
-        /// 大文字小文字は無視する: 過去のセーブや手書きデータに "attackPct" のような表記が混ざっていても
-        /// 黙って 0 扱い(装備しても補正が乗らない)にならないようにするため。
-        /// 未知の名前は無視する(型が増減しても落ちない)。
+        /// ロール済み個体ステータスを装備補正に積み上げる。<see cref="RolledStat.stat"/> は <see cref="StatType"/> 名で、
+        /// 旧表記でも補正が消えないよう大文字小文字を無視して照合する。未知の名前は無視する。
         /// </summary>
         public static void Accumulate(ref EquipmentBonus bonus, IReadOnlyList<RolledStat> rolled)
         {

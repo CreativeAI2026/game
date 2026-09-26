@@ -10,7 +10,7 @@ namespace CreativeAI.Tests.EditMode
     /// <summary>
     /// キャラクターUIのタブ切替と、装備品・即時使用食材タブの操作の検証。
     /// 「選択中のタブだけ生きる」ルーティングと、タブ上の操作が InventoryManager(単一ソース)へ
-    /// 届くことを見る(documents/Specification.md §5)。見た目・アニメーションは対象外。
+    /// 届くことを見る。見た目・アニメーションは対象外。
     /// </summary>
     public class CharacterUITests
     {
@@ -147,7 +147,7 @@ namespace CreativeAI.Tests.EditMode
             Assert.AreEqual(2, _tabB.Exited);
         }
 
-        // --- 装備品タブ: 装備変更が InventoryManager に届く(spec §5「装備品タブで装備品の装備変更」) ---
+        // --- 装備品タブ: 装備変更が InventoryManager に届く ---
 
         [Test]
         public void EquipmentTab_EquipAndUnequip_GoThroughInventoryManager()
@@ -179,7 +179,7 @@ namespace CreativeAI.Tests.EditMode
         [Test]
         public void EquipmentTab_CannotExceedThreeEquipped()
         {
-            // UI 経由でも上限3は InventoryManager 側で守られる(spec §2.1)。
+            // UI 経由でも上限3は InventoryManager 側で守られる。
             var stacks = new List<ItemStack>();
             for (int i = 0; i < 4; i++)
             {
@@ -194,7 +194,7 @@ namespace CreativeAI.Tests.EditMode
             Assert.AreEqual(3, _inv.GetAllItems().Count(s => s.IsEquipped));
         }
 
-        // --- 即時使用食材タブ: 3枠のセット(spec §5「即時使用食材タブで最大3つのセット」) ---
+        // --- 即時使用食材タブ: 3枠のセット ---
 
         [Test]
         public void QuickFoodTab_SetsFoodIntoTheFirstEmptySlot()

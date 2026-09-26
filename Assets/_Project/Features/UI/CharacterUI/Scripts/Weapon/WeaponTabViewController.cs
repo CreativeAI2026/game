@@ -6,8 +6,8 @@ namespace CreativeAI.UI.CharacterUI
 {
     /// <summary>
     /// キャラクター画面の武器タブ(剣/弓/鎌)。選択中のタブに応じて、その武器の
-    /// <b>固定ステータス</b>(spec §1.1)を表示する。閲覧専用で装備・切替はしない
-    /// (実際の切替はフィールドの武器切替UI)。武器の固定値は spec 定義のため表示用にここへ保持する。
+    /// <b>固定ステータス</b>を表示する。閲覧専用で装備・切替はしない
+    /// (実際の切替はフィールドの武器切替UI)。武器の固定値は表示用にここへ保持する。
     /// </summary>
     public class WeaponTabViewController : MonoBehaviour
     {
@@ -35,7 +35,7 @@ namespace CreativeAI.UI.CharacterUI
         private Vector2 _weaponStatsBasePosition;
         private bool _hasDisplayedWeapon;
 
-        // spec §1.1: 剣/弓/鎌 の2つずつの固定補正。タブ順(剣→弓→鎌)に合わせる。
+        // 剣/弓/鎌 の2つずつの固定補正。タブ順(剣→弓→鎌)に合わせる。
         private static readonly (string name, string stats)[] Weapons =
         {
             ("剣", "攻撃%              +25%\n\n会心ダメージ      +50%"),

@@ -3,7 +3,7 @@ using System.Collections.Generic;
 namespace CreativeAI.StatRoll
 {
     /// <summary>
-    /// 調合アルゴリズムの調整ノブ(StatRollAlgorithm.md「パラメータ」表)。
+    /// 調合アルゴリズムの調整ノブ。
     /// 値はバランス調整用。ここを差し替えるだけで挙動を変えられる。
     /// </summary>
     public sealed class CraftingParameters
@@ -23,7 +23,7 @@ namespace CreativeAI.StatRoll
         /// <summary>ε: 切り捨て下限。これ未満の型は捨てて実質1型扱いにする。</summary>
         public double Epsilon { get; init; } = 1.0;
 
-        /// <summary>付与数の上限(documents/Specification.md §1.1「アイテムカテゴリと付与ステータス」より固定で2)。</summary>
+        /// <summary>付与数の上限(固定で2)。</summary>
         public int MaxStatCount => 2;
 
         /// <summary>型ごとの値の上限(例: 会心率 ≤ 100%)。未登録の型は無制限。</summary>

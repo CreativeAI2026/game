@@ -9,7 +9,7 @@ namespace CreativeAI.Gameplay
 {
     /// <summary>
     /// 進行度・フラグ(ProgressManager)・所持品(InventoryManager)・プレイヤー状態(現在HP・座標・シーン)を
-    /// 1ファイルに全書き/復元する。マニュアルセーブ専用(セーブUIの「はい」から Save を呼ぶ)。単一スロット上書き。spec §6。
+    /// 1ファイルに全書き/復元する。マニュアルセーブ専用(セーブUIの「はい」から Save を呼ぶ)。単一スロット上書き。
     /// </summary>
     public static class SaveService
     {
@@ -22,12 +22,12 @@ namespace CreativeAI.Gameplay
         /// <summary>現在の進行度・フラグ・所持品をディスクへ全書きする。</summary>
         public static void Save()
         {
-            // セーブ可能なのは「フィールド移動中」だけ(戦闘モード中・会話イベント再生中は不可。spec §0)。
+            // セーブ可能なのは「フィールド移動中」だけ(戦闘モード中・会話イベント再生中は不可)。
             // 入口(HudIconBar)側でもボタンを塞いでいるが、別経路からの呼び出しに備えた多重防御。
             if (!CanSaveNow(out string blockedReason))
             {
                 Debug.LogWarning(
-                    $"[SaveService] セーブを中断しました({blockedReason})。フィールド移動中のみセーブ可能です(spec §0)。"
+                    $"[SaveService] セーブを中断しました({blockedReason})。フィールド移動中のみセーブ可能です。"
                 );
                 return;
             }
@@ -79,7 +79,7 @@ namespace CreativeAI.Gameplay
         }
 
         /// <summary>
-        /// 現在セーブしてよいか(spec §0: フィールド移動中のみ)。戦闘モード中・会話イベント再生中は false。
+        /// 現在セーブしてよいか(フィールド移動中のみ)。戦闘モード中・会話イベント再生中は false。
         /// マネージャ未生成(タイトル直後など)は Field 扱いで許可する。
         /// </summary>
         private static bool CanSaveNow(out string blockedReason)
@@ -117,7 +117,7 @@ namespace CreativeAI.Gameplay
             var actor = player.GetComponentInChildren<ISaveableActor>();
             data.currentHp = actor != null ? actor.CaptureHp() : 0f;
 
-            // 入手ずみ武器と選択武器を保存(spec §6)。窓口(WeaponManager)が無ければ「0本・未選択」。
+            // 入手ずみ武器と選択武器を保存。窓口(WeaponManager)が無ければ「0本・未選択」。
             var weapon = player.GetComponentInChildren<IWeaponSaveState>();
             data.selectedWeaponIndex = weapon != null ? weapon.CaptureSelectedWeaponIndex() : -1;
             data.ownedWeaponKeys.Clear();

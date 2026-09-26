@@ -77,7 +77,7 @@ namespace CreativeAI.Tests.EditMode
         [Test]
         public void ConditionsMet_EmptyConditions_IsInvalidData_FallsBackToTrue()
         {
-            // 仕様(ScenarioReference.md)では conditions は必須で progress を必ず1つ含むため、
+            // conditions は必須で progress を必ず1つ含むため、
             // 条件0件のイベントは存在しない。Importer が取り込み時に弾く
             // (EventImporterTests.Parse_MissingProgressCondition_IsError)。
             // ここで固定するのは「万一そうなっても例外にせず真を返す」フォールバック挙動であって、

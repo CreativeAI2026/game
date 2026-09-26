@@ -7,29 +7,10 @@ using UnityEngine.UI;
 namespace CreativeAI.Gameplay
 {
     /// <summary>
-    /// 所持武器数（0〜4）に応じてパネルの表示・位置・レイヤーを自動管理する。
-    /// 武器切替UI(documents/Specification.md §5)。選択中の武器を中央に置くインラインHUD。
-    ///
-    /// ■ スロット設計
-    ///   スロット0 = 選択中 = 常に上の固定座標 (0, +panelSpacingY)
-    ///   武器数に応じたスロット座標は CalculateSlotPositions() で自動計算。
-    ///   currentIndex は「panels[] のうち、現在スロット0（選択位置）にいる要素のインデックス」を示す。
-    ///
-    /// ■ 出し分けと表示
-    ///   出し分けはモードではなく<b>武器の所持本数</b>: 0本で非表示・1本以上で表示(表示中は移動中・戦闘中とも)。
-    ///   GameObject ごと消すと <see cref="WeaponManager"/> の購読が切れて戻れないため、
-    ///   HudIconBar と同じく Canvas / GraphicRaycaster の enabled で出し入れする。
-    ///
-    /// ■ アニメーション
-    ///   全パネルが楕円上を弧を描いて移動する（角度 Lerp）。
-    ///   E(次の武器) → 時計回り(CW) / Q(前の武器) → 反時計回り(CCW)
-    ///
-    /// ■ レイヤー管理（ApplyLayerOrder）
-    ///   switchUI          → 常に最前面（SetAsLastSibling）
-    ///   選択中パネル(slot0) → switchUI の直下
-    ///   以降スロット順      → 遠いほど奥（SetSiblingIndex が低い）
-    ///   切替アニメーション開始時・終了後の両方で必ず再適用し、
-    ///   アニメーション中の重なり崩れを防ぐ。
+    /// 武器切替UI。所持武器数(0〜4)に応じてパネルの表示・位置・レイヤーを管理する。スロット0 = 選択中(上の固定座標)で、currentIndex はそこにいる panels[] の要素を指す。
+    /// 0本で非表示・1本以上で表示し、購読を切らないよう Canvas / GraphicRaycaster の enabled で出し入れする。
+    /// 切替時は全パネルが楕円上を弧を描いて移動する(E=時計回り / Q=反時計回り)。
+    /// 描画順(<see cref="ApplyLayerOrder"/>)はアニメ開始時・終了後の両方で再適用し、重なり崩れを防ぐ。
     /// </summary>
     public class WeaponHUDController : MonoBehaviour
     {
@@ -147,7 +128,7 @@ namespace CreativeAI.Gameplay
             ApplyVisibility(_weaponManager != null ? _weaponManager.OwnedCount : 0);
 
         /// <summary>
-        /// 武器0本=非表示 / 1本以上=表示(documents/Specification.md §5。モードでは変えない)。
+        /// 武器0本=非表示 / 1本以上=表示(モードでは変えない)。
         /// GameObject ごと止めると WeaponManager の購読が切れて戻れないため Canvas を無効化するだけにする。
         /// </summary>
         private void ApplyVisibility(int ownedCount)
@@ -278,10 +259,7 @@ namespace CreativeAI.Gameplay
         }
 
         /// <summary>
-        /// パネルの描画順を強制適用する。
-        ///   switchUI              → 常に最前面（SetAsLastSibling）
-        ///   選択中パネル(slot 0)   → switchUI の直下
-        ///   slot n-1              → 最背面
+        /// パネルの描画順を強制適用する(switchUI が最前面、選択中パネルがその直下、slot n-1 が最背面)。
         /// </summary>
         private void ApplyLayerOrder()
         {

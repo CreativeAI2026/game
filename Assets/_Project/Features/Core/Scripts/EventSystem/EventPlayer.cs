@@ -4,11 +4,8 @@ using UnityEngine;
 namespace CreativeAI.Core.EventSystem
 {
     /// <summary>
-    /// EventTrigger に発火を託され、1本の会話イベントを頭から順に再生し切る指揮役。
-    /// Title フローで EnsureResident により常駐生成され、EventPlayerService.Current に自身を登録する
-    /// (非常駐の EventTrigger はこの seam 経由で受け取るため、per-field 配線は不要)。
-    /// 各ステップで会話UI(IDialogueView) / Inventory(IItemGiver) / ProgressManager を叩き、
-    /// 終了時に進行度を進める。documents/Specification.md §4, §6, EventImplementation.md 参照。
+    /// EventTrigger から託された会話イベントを順に再生し、終了時に進行度を進める指揮役。
+    /// 常駐生成され EventPlayerService.Current に自身を登録する(per-field 配線は不要)。
     /// </summary>
     public sealed class EventPlayer : MonoBehaviour, IEventPlayer
     {
@@ -118,8 +115,8 @@ namespace CreativeAI.Core.EventSystem
                     $"[EventPlayer] IDialogueView 未設定 (event={ev.Id}). 会話は表示されません。"
                 );
 
-            // 会話イベント中は操作不能。右上ナビ(セーブ/インベ入口)を隠すため再生中フラグを立てる
-            // (documents/Specification.md §2.2, §5)。中断されても finally で必ず戻す。
+            // 会話イベント中は操作不能。右上ナビ(セーブ/インベ入口)を隠すため再生中フラグを立てる。
+            // 中断されても finally で必ず戻す。
             EventPlaybackService.SetPlaying(true);
             try
             {

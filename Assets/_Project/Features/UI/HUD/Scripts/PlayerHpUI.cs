@@ -139,15 +139,8 @@ namespace CreativeAI.Gameplay
         }
 
         /// <summary>
-        /// HP割合に対応するフェーズを選択する。
-        /// リストは hpRatioThreshold の降順（大→小）を前提とする。
-        /// 「threshold >= hpRatio を満たす最後の要素」を選ぶことで、
-        /// 1.0 / 0.5 / 0.2 の順で正しく振り分ける。
-        ///
-        /// 例）thresholds = [1.0, 0.5, 0.2]
-        ///   ratio=0.8 → 1.0>=0.8 のみ真 → Element 0
-        ///   ratio=0.4 → 1.0>=0.4, 0.5>=0.4 が真 → 最後の Element 1
-        ///   ratio=0.1 → 1.0>=0.1, 0.5>=0.1, 0.2>=0.1 が真 → 最後の Element 2
+        /// HP割合に対応するフェーズを選ぶ。リストは hpRatioThreshold の降順が前提で、
+        /// 「threshold >= hpRatio を満たす最後の要素」を選ぶ(例: [1.0, 0.5, 0.2] で ratio=0.4 → Element 1)。
         /// </summary>
         private EkgPhase SelectPhase(float hpRatio)
         {
