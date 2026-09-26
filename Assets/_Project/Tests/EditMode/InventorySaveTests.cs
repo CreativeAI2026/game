@@ -106,7 +106,7 @@ namespace CreativeAI.Tests.EditMode
             gear.criticalRate = 3f;
             gear.criticalDamage = 0.5f;
 
-            // 武器は在庫外(仕様 L30)。仮に在庫へ入れて装備フラグを立てても、
+            // 武器は在庫外。仮に在庫へ入れて装備フラグを立てても、
             // GetEquippedBonus は武器を加算しない(補正は WeaponManager 経由に一本化)。
             var weapon = ScriptableObject.CreateInstance<WeaponData>();
             weapon.attack = 20;

@@ -4,15 +4,9 @@ using UnityEngine;
 namespace CreativeAI.EditorTools.Art
 {
     /// <summary>
-    /// アイテムアイコンPNG(Art/UI/Items 配下)のインポート設定を「小さく表示してもジャギらない」
-    /// 標準へ自動で揃える AssetPostprocessor。新規追加・再インポートのたびに毎回適用(冪等・自動)。
-    ///
-    /// 適用内容:
-    /// - Sprite(2D and UI) / Alpha Is Transparency ON … <see cref="ItemIconTransparencyChecker"/> の期待と一致
-    /// - Mip Maps 生成 + Trilinear … 縮小表示(小アイコン)のエイリアシング(ドット/ギザギザ)を抑える
-    ///
-    /// 手動でInspectorから変えても再インポートで標準へ戻る(全アイテムアイコンを同一基準に保つのが狙い)。
-    /// 武器プレースホルダ(他班素材)は対象外。
+    /// アイテムアイコンPNG(Art/UI/Items 配下)のインポート設定を標準へ自動で揃える AssetPostprocessor(冪等)。
+    /// Sprite / Alpha Is Transparency ON(<see cref="ItemIconTransparencyChecker"/> の期待と一致)、Mip Maps + Trilinear で縮小時のジャギを抑える。
+    /// Inspector で変えても再インポートで戻る。武器プレースホルダ(他班素材)は対象外。
     /// </summary>
     public sealed class ItemIconImportSettings : AssetPostprocessor
     {

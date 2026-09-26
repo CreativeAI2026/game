@@ -13,7 +13,6 @@ namespace CreativeAI.Scenario.Editor
 {
     /// <summary>
     /// EventImporter を叩いて events.json を EventDefinition(.asset)に書き出すエディタ拡張。
-    /// 手順は documents/EventImplementation.md「Importer」。
     /// 手動: Tools > CreativeAI > Import Events / バッチ:
     /// Unity -batchmode -quit -executeMethod CreativeAI.Scenario.Editor.EventImporterMenu.Run
     /// </summary>
@@ -96,12 +95,8 @@ namespace CreativeAI.Scenario.Editor
         }
 
         /// <summary>
-        /// ItemData(key)から有効キー集合を作る。
-        /// - giveItem 用: 全カテゴリのキー
-        /// - hasItem 用: 大事なもの(Important)のキーだけ(ScenarioReference.md「hasItem の制約」)
-        /// どちらもアセットが1つも無ければ null(=未検証・警告どまり)にし、作成前に全部を弾かない。
-        /// 1つでもあれば、その集合で存在検証(未一致はエラー)。
-        /// 敵は events.json に書かず EventTrigger に配線するため、ここでは照合しない。
+        /// ItemData(key)から有効キー集合を作る(giveItem は全カテゴリ、hasItem は Important のみ)。
+        /// アセットが無ければ null(警告どまり)、あれば存在検証する。敵は EventTrigger 配線なので照合しない。
         /// </summary>
         private static EventImporter.ImportCatalog BuildCatalog()
         {

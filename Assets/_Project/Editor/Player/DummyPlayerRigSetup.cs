@@ -11,12 +11,8 @@ using UnityEngine.SceneManagement;
 namespace CreativeAI.EditorTools
 {
     /// <summary>
-    /// 本番の PlayerRig が出来るまでの仮リグ(カプセル + カメラ + <see cref="DummyPlayerController"/>)を
-    /// Prefab として作り、Field_Area01 を直接 Play したときに生成されるよう配線する。
-    ///
-    /// 生成経路は本番と同じ <c>GameStarter.EnsurePlayerRig</c> なので、本番リグが出来たら
-    /// ResidentBootstrapConfig の Player Rig Prefab を差し替えるだけで乗り換えられる。
-    /// Tools &gt; CreativeAI &gt; Player から実行。
+    /// 本番 PlayerRig までの仮リグ(カプセル + カメラ + <see cref="DummyPlayerController"/>)を Prefab 化し、Field_Area01 直接 Play で生成されるよう配線する。
+    /// 生成は本番と同じ <c>GameStarter.EnsurePlayerRig</c> なので、ResidentBootstrapConfig の Prefab 差し替えで乗り換えられる。
     /// </summary>
     public static class DummyPlayerRigSetup
     {
@@ -26,13 +22,13 @@ namespace CreativeAI.EditorTools
         const string MaterialPath = "Assets/_Project/Art/Materials/Dev_DummyPlayer.mat";
         const string FieldScenePath = "Assets/_Project/Scenes/Field/Field_Area01.unity";
 
-        // 1F の歩ける所(MapLayout.md 1F row 10 / col 55 = ワールド X=2, Z=10, 床 Y=-48)。
+        // 1F の歩ける所(1F row 10 / col 55 = ワールド X=2, Z=10, 床 Y=-48)。
         static readonly Vector3 SpawnPosition = new Vector3(2f, -48f, 10f);
         const string SpawnId = "start";
         const string SpawnObjectName = "PlayerSpawn_start";
 
         // 当たり寸法。建物は階高 9.6u もあるので実寸(身長1.8u)だと世界に対して小さすぎ、
-        // 扉(MapLayout.md の DoorScale = 2.5倍 / 開口 2.55 × 5.40u)とも釣り合わない。
+        // 扉(DoorScale = 2.5倍 / 開口 2.55 × 5.40u)とも釣り合わない。
         // そこで扉と同じ 2.5 倍に揃える: 4.5u なら開口高さの 83% で、人と実物の扉の比率に近い。
         // 半径も同じ倍率にする(高さだけ伸ばすと 16:1 の棒になるため)。1.4u 幅なので開口は通れる。
         // 本番の PlayerRig ができたら、当たり寸法はこちらに合わせること(階段の登れる/登れないが変わる)。
@@ -71,7 +67,7 @@ namespace CreativeAI.EditorTools
             controller.skinWidth = 0.02f;
             controller.minMoveDistance = 0f;
 
-            // EventTrigger の OnTriggerEnter を確実に飛ばすため(PlayerImplementation.md ①)
+            // EventTrigger の OnTriggerEnter を確実に飛ばすため
             var body = root.AddComponent<Rigidbody>();
             body.isKinematic = true;
             body.useGravity = false;

@@ -10,7 +10,7 @@ namespace CreativeAI.Tests.PlayMode
 {
     /// <summary>
     /// シーン遷移の進行順の検証(暗幕 → ロード → 到着処理 → 暗幕解除)。
-    /// 「ロード画面はシーンではなく UI オーバーレイ」(documents/Specification.md §3)。
+    /// 「ロード画面はシーンではなく UI オーバーレイ」。
     /// コルーチンと実ロードが要るので PlayMode で回す。
     /// </summary>
     public class SceneLoadPlayModeTests
@@ -141,7 +141,7 @@ namespace CreativeAI.Tests.PlayMode
         [UnityTest]
         public IEnumerator LoadScene_LoadsExactlyOneScene()
         {
-            // §3「常に1つだけロードされ互いに相互排他」。Single ロードなので加算されない。
+            // 「常に1つだけロードされ互いに相互排他」。Single ロードなので加算されない。
             _controller.LoadScene("01_Title");
 
             float timeout = Time.realtimeSinceStartup + 20f;

@@ -5,7 +5,7 @@ namespace CreativeAI.Gameplay
     /// <summary>
     /// 武器の所持状態と選択中の武器をセーブ/復元する境界(seam)。実体はプレイヤーリグの WeaponManager(担当班)が持つため、
     /// システム班の SaveService はこの窓口越しに読み書きする(現在HPの <see cref="ISaveableActor"/> と対称)。
-    /// spec §6: プレイヤーリグは「入手ずみ武器」と「選択武器」の両方を保存対象とする。
+    /// プレイヤーリグは「入手ずみ武器」と「選択武器」の両方を保存対象とする。
     /// </summary>
     public interface IWeaponSaveState
     {

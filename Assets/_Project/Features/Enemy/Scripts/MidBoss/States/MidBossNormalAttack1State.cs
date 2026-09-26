@@ -3,13 +3,8 @@ using UnityEngine;
 namespace CreativeAI.Gameplay
 {
     /// <summary>
-    /// 腕オブジェクトを使った近接たたきつけ攻撃ステート。
-    /// フェーズ1：振りかぶり（armWindupEuler 方向へゆっくり回転）
-    /// フェーズ2：たたきつけ（armStrikeEuler 方向へ高速回転 + OverlapSphere で当たり判定）
-    ///
-    /// ※アニメーション未導入のため armTransform を直接 Transform 操作で表現する。
-    ///   アニメーション導入時は UpdateArmRotation() 内のコードを削除し、
-    ///   Animator.SetTrigger("NormalAttack1") に差し替えるだけで移行できる。
+    /// 腕の近接たたきつけ攻撃。振りかぶり（armWindupEuler へゆっくり回転）→ たたきつけ（armStrikeEuler へ高速回転 + OverlapSphere 判定）。
+    /// アニメ未導入のため armTransform を直接操作している。導入時は UpdateArmRotation() の中身を Animator.SetTrigger("NormalAttack1") に差し替える。
     /// </summary>
     public class MidBossNormalAttack1State : MidBossBaseState
     {

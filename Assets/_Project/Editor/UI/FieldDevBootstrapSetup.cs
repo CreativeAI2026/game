@@ -7,11 +7,8 @@ using UnityEngine.SceneManagement;
 namespace CreativeAI.EditorTools.UI
 {
     /// <summary>
-    /// dev-bootstrap 導入ツール。
-    /// ① Create Config: 常駐 Prefab 参照(UIRoot / ConversationView)を集約した ResidentBootstrapConfig を
-    ///    Resources に作る。
-    /// ② Field Surgery: UI_Sandbox から自前の常駐コピー(Canvas=HUD/パネル一式・InventoryManager)を撤去し、
-    ///    FieldDevBootstrap を1つ置く。以降そのシーンは直接 Play で常駐UIを生成する。
+    /// dev-bootstrap 導入ツール。① ResidentBootstrapConfig を Resources に作る。
+    /// ② UI_Sandbox の自前常駐コピーを撤去して FieldDevBootstrap を置き、直接 Play で常駐UIを生成させる。
     /// </summary>
     public static class FieldDevBootstrapSetup
     {

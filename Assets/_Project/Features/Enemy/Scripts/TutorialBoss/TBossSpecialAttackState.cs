@@ -5,12 +5,8 @@ using UnityEngine.AI;
 namespace CreativeAI.Gameplay
 {
     /// <summary>
-    /// 触手を使った特殊攻撃ステート。LineRendererで5本の触手を演出する。
-    /// フェーズ1（狙い）：各触手をサイン波＋ノイズでランダムにうねらせながらターゲットを向き続ける
-    /// フェーズ2（射出）：全触手を一気に直線伸展し、先端付近の複数点でOverlapSphereによる当たり判定を行う
-    /// ヒット時はCapturedStateへ遷移する。
-    /// 外れた場合は伸ばしきり→引っ込めの後、クリップを最後まで再生しきってからWatchStateへ遷移する
-    /// （この間もAgentは停止したままなので、モーションが終わるまで移動しない）。
+    /// 触手の特殊攻撃（LineRenderer で5本）。狙いはサイン波＋ノイズでうねらせつつターゲットを向き続け、射出で一気に直線伸展して先端付近の複数点を OverlapSphere 判定する。
+    /// ヒットで CapturedState へ。外れたら伸ばしきり→引っ込め後、クリップを再生しきってから WatchState へ（その間 Agent は停止）。
     /// </summary>
     public class TBossSpecialAttackState : TBossBaseState
     {
@@ -199,12 +195,8 @@ namespace CreativeAI.Gameplay
                 boss.Agent.isStopped = false;
             }
 
-            // OnSpecialAttackPoseReady で 0 にしたアニメーション再生速度を必ず戻す。
-            // 怯み・死亡などでフェーズ途中に中断された場合、ここが最後の砦になる。
-            //
-            // なお空振り時にLocomotionへ強制的に切り替える処理は削除した。
-            // Finishフェーズでクリップを最後まで再生しきってからWatchへ抜けるため、
-            // ここで切り替えるとモーションが途中で途切れてしまう。
+            // OnSpecialAttackPoseReady で 0 にしたアニメ速度を必ず戻す（怯み・死亡などで中断された場合の最後の砦）。
+            // 空振り時に Locomotion へ強制切替しないのは、Finish でクリップを再生しきってから Watch へ抜けるため。
             if (boss.Animator != null)
             {
                 boss.Animator.speed = 1f;
@@ -429,10 +421,7 @@ namespace CreativeAI.Gameplay
         }
 
         /// <summary>
-        /// ワイヤー先端の当たり判定。
-        /// 射出速度は「射程 ÷ 射出時間」で秒速数十mに達するため、単発のOverlapSphereでは
-        /// 1フレームの移動量が判定直径を上回ってプレイヤーを素抜けてしまう。
-        /// そのため前フレームの先端位置から現在位置までを掃引して判定する。
+        /// ワイヤー先端の当たり判定。射出速度が秒速数十 m に達し単発の OverlapSphere では素抜けるため、前フレームの先端位置から現在位置までを掃引して判定する。
         /// </summary>
         private void CheckHitAtTip()
         {

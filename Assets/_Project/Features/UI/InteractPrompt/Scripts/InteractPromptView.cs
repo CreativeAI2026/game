@@ -7,14 +7,9 @@ using UnityEngine;
 namespace CreativeAI.UI.InteractPrompt
 {
     /// <summary>
-    /// 「[E] 扉を開ける」のような操作プロンプト(常駐)。
-    /// <see cref="InteractPromptService"/> を購読して、ワールド側が出したラベルを1つだけ表示する。
-    ///
-    /// 仕様§6のとおり <see cref="UIRoot"/> が束ねる UI レイヤーの一部で、UIRoot Prefab の子として
-    /// 同梱される(常駐・単一化・DontDestroyOnLoad は UIRoot が担う)。
-    /// 開くパネル(インベ/キャラ/セーブ/調合)表示中と会話中は隠す。隠すのは
-    /// <see cref="HudIconBar"/> / QuickFoodBar と同じく <b>Canvas.enabled</b> で、
-    /// GameObject は殺さない(購読が切れないようにするため)。
+    /// 「[E] 扉を開ける」のような操作プロンプト(常駐)。<see cref="InteractPromptService"/> を購読してラベルを1つだけ表示する。
+    /// UIRoot Prefab の子として同梱され、常駐は <see cref="UIRoot"/> が担う。
+    /// パネル表示中と会話中は隠す(購読を切らないよう GameObject でなく Canvas.enabled で。<see cref="HudIconBar"/> と同じ)。
     /// </summary>
     public sealed class InteractPromptView : MonoBehaviour
     {

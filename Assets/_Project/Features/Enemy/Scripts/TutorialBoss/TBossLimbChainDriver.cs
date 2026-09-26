@@ -64,18 +64,9 @@ namespace CreativeAI.Gameplay
     }
 
     /// <summary>
-    /// ボーン連鎖にバネ追従（ラグ）・進行波・自重ドループ・伸長を与えるドライバ。
-    ///
-    /// AnimationRiggingを使わず、Animatorが姿勢を書き終えた後（LateUpdate）に
-    /// Transformを直接上書きする方式。SpecialAttackState／NormalAttack2Stateと同じ方針。
-    ///
-    /// 「縄・ゴムらしさ」はほぼ全てセグメント間の遅れから生まれるため、
-    /// 各ボーンをアニメーションの姿勢へ「バネで」追従させ、先端側ほど硬さを落として
-    /// 遅れを大きくする。これによりアニメーションの弧を壊さずにしなりと揺り戻しが出る。
-    ///
-    /// 伸長はメートル指定で受け取る。このモデルは階層途中に0.1倍のスケール補正ノードが
-    /// 挟まっており、ボーンのlocalPositionはメートルではないため、親のワールドスケールで
-    /// 割ってローカル単位へ変換している。
+    /// ボーン連鎖にバネ追従（ラグ）・進行波・自重ドループ・伸長を与える。AnimationRigging を使わず LateUpdate で Transform を直接上書きする。
+    /// しなりは各ボーンをアニメ姿勢へバネで追従させ、先端ほど硬さを落として遅れを増やすことで、アニメの弧を壊さずに出す。
+    /// 伸長はメートル指定。階層途中に 0.1 倍のスケール補正ノードがあるため、親のワールドスケールで割ってローカル単位へ変換する。
     /// </summary>
     public class TBossLimbChainDriver
     {
@@ -160,17 +151,11 @@ namespace CreativeAI.Gameplay
             _hasExtensionRecord = false;
         }
 
-        /// <summary>
-        /// LateUpdateから毎フレーム呼ぶ。
-        /// </summary>
+        /// <summary>LateUpdate から毎フレーム呼ぶ。</summary>
         /// <param name="extension">連鎖全体で伸ばす長さ（メートル）。0で伸長なし。</param>
         /// <param name="wavePower">波とドループの強さ（0〜1）。通常は伸長の進捗を渡す。</param>
-        /// <param name="deltaTime">経過時間。Animator.speedを0にしていても実時間で進むため揺れ続ける。</param>
-        /// <param name="snapToTarget">
-        /// trueの場合、バネの遅れを挟まず目標姿勢へ即座に合わせる（静止プレビュー用）。
-        /// ResetStateを毎フレーム呼ぶ代わりにこちらを使うこと。ResetStateは伸長の記録も破棄するため、
-        /// 毎フレーム呼ぶと累積防止が働かず腕が際限なく伸びる。
-        /// </param>
+        /// <param name="deltaTime">Animator.speed が 0 でも実時間で進むため揺れ続ける。</param>
+        /// <param name="snapToTarget">バネを挟まず目標姿勢へ即合わせる（静止プレビュー用）。ResetState は伸長の記録も消し、毎フレーム呼ぶと腕が際限なく伸びるので代わりにこちらを使う。</param>
         public void Apply(
             float extension,
             float wavePower,
@@ -399,10 +384,7 @@ namespace CreativeAI.Gameplay
         }
 
         /// <summary>
-        /// 各ボーンの長さ方向と、波を掛ける直交軸を求める。
-        /// このリグはボーンのローカル軸が揃っていない（LeftArmは+Zが長さ方向）ため、
-        /// 固定軸を前提にするとドループが「垂れ」ではなく「ねじれ」になってしまう。
-        /// そのため子ボーンの位置から長さ方向を実測する。
+        /// 各ボーンの長さ方向と波の直交軸を子ボーンの位置から実測する。このリグはローカル軸が揃っておらず（LeftArm は +Z が長さ方向）、固定軸だとドループがねじれになるため。
         /// </summary>
         private void RecalculateBoneAxes()
         {

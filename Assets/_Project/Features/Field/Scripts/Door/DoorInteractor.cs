@@ -7,15 +7,9 @@ using UnityEngine.InputSystem;
 namespace CreativeAI.Gameplay
 {
     /// <summary>
-    /// 扉に近づくと「扉を開ける」を画面に出し、キーで開閉する。
-    ///
-    /// 近接判定は <see cref="FieldItemPickup"/> / EventTrigger と同じ流儀
-    /// (Collider(Is Trigger) + <c>OnTriggerEnter</c>/<c>OnTriggerExit</c> + タグ判定)。
-    /// 操作できるのは<b>移動中(Field)だけ</b>で、戦闘中・会話イベント再生中は
-    /// プロンプトも出さないし押しても開かない(操作不能な間に世界が動くのを防ぐ)。
-    ///
-    /// 表示は <see cref="InteractPromptService"/> 越しに常駐UIへ渡す(ワールド側から
-    /// UI アセンブリは参照できないため)。
+    /// 扉に近づくと「扉を開ける」を出し、キーで開閉する(近接判定は <see cref="FieldItemPickup"/> と同じ Trigger + タグ判定)。
+    /// 操作できるのは移動中(Field)だけで、戦闘中・会話中はプロンプトも出さない。
+    /// 表示は <see cref="InteractPromptService"/> 越しに常駐UIへ渡す(ワールド側から UI アセンブリを参照できないため)。
     /// </summary>
     [RequireComponent(typeof(Collider))]
     [DisallowMultipleComponent]

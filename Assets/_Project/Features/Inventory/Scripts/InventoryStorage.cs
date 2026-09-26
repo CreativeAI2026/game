@@ -7,7 +7,7 @@ namespace CreativeAI.Gameplay
     /// </summary>
     public class InventoryStorage
     {
-        /// <summary>即時使用食材スロット数(spec §1.2: 即時食材使用UIにセットできる最大3つ)。</summary>
+        /// <summary>即時使用食材スロット数(即時食材使用UIにセットできる最大3つ)。</summary>
         public const int QuickFoodSlotCount = 3;
 
         private readonly List<ItemStack> _items = new();

@@ -3,10 +3,8 @@ using UnityEngine;
 namespace CreativeAI.Gameplay
 {
     /// <summary>
-    /// 手下（MidBossMinionProjectile）を生成してプレイヤーに向かわせる特殊攻撃ステート。
-    /// TestEnemyNeedleAttackState をベースに、手下の上昇モーションを魚のような揺らぎに変更している。
-    ///
-    /// ※予備動作アニメーション導入時は TODO コメント箇所に Animator.SetTrigger("Roar") を追加する。
+    /// 手下（MidBossMinionProjectile）を生成してプレイヤーへ向かわせる特殊攻撃。TestEnemyNeedleAttackState ベースで上昇を魚のような揺らぎに変更。
+    /// 予備動作アニメ導入時は TODO 箇所に Animator.SetTrigger("Roar") を追加する。
     /// </summary>
     public class MidBossSpecialAttackState : MidBossBaseState
     {

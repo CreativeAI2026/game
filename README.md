@@ -1,11 +1,11 @@
 # CreativeAI — Unity プロジェクト
 
-Unity Editor **6000.4.5f1**（Unity 6）で開いてください。バージョンは `ProjectSettings/ProjectVersion.txt` で管理されています。
+Unity Editor **6000.4.5f1**（Unity 6）で開いてください。
 
 ## はじめに（開発に参加する人へ）
 
 - 環境構築の手順 → [`docs/EnvironmentSetup.md`](docs/EnvironmentSetup.md)
-- 開発フロー（ブランチ → コミット → PR → CI） → [`docs/DevelopmentWorkflow.md`](docs/DevelopmentWorkflow.md)
+- 開発フロー（ブランチ名・コミットメッセージ・整形・PR） → [`docs/DevelopmentWorkflow.md`](docs/DevelopmentWorkflow.md)
 
 ## ディレクトリ構成
 
@@ -56,10 +56,3 @@ game/                          ← リポジトリルート
 ```
 
 ★ は `.gitignore` で除外されています。
-
-## ドキュメント
-
-| ファイル | 内容 |
-|----------|------|
-| [`docs/EnvironmentSetup.md`](docs/EnvironmentSetup.md) | 環境構築手順（Unity / mise / CSharpier） |
-| [`docs/DevelopmentWorkflow.md`](docs/DevelopmentWorkflow.md) | 開発フロー（ブランチ → コミット → PR → CI） |

@@ -12,18 +12,13 @@ namespace CreativeAI.Scenario.Editor
     /// <summary>
     /// 物語班が手書きする events.json を検証し、1イベント = 1つの EventDefinition に変換する
     /// 純粋パーサ(ファイル IO・AssetDatabase を持たない=テスト可能)。
-    /// 書式は documents/ScenarioReference.md、手順は documents/EventImplementation.md。
     /// 実際の .asset 書き出しは EventImporterMenu が担う。
     /// </summary>
     public static class EventImporter
     {
         /// <summary>
-        /// documents/ScenarioReference.md「登場人物と立ち絵」のカタログ。
-        /// line ステップの portrait はこの一覧のいずれかでなければならない(打ち間違い検出)。
-        /// キーは実行時に立ち絵を解決する DialogueCharacterDefinition の PortraitKey と同じ文字列
-        /// ({キャラ _id}_{表情} の snake_case)。ここだけ直しても実行時は解決されないので、
-        /// 表情を足すときは定義アセット(Features/UI/ConversationUI/Data/Characters)にも同じキーを足す
-        /// (未登録のまま書くと EventImporterMenu が「立ち絵アセット未登録」を警告する)。
+        /// line ステップの portrait に書ける立ち絵キーのカタログ(打ち間違い検出)。DialogueCharacterDefinition の PortraitKey と同じ
+        /// ({キャラ _id}_{表情} の snake_case)なので、表情を足すときは定義アセット(Features/UI/ConversationUI/Data/Characters)にも足す。
         /// </summary>
         public static readonly IReadOnlyCollection<string> PortraitKeys = new HashSet<string>(
             StringComparer.Ordinal
@@ -47,7 +42,7 @@ namespace CreativeAI.Scenario.Editor
 
         /// <summary>
         /// giveWeapon の weaponKey として許される値。武器は剣/弓/鎌の3種で固定なので
-        /// item カタログではなくこの集合で照合する(ScenarioReference.md「武器カタログ」)。
+        /// item カタログではなくこの集合で照合する。
         /// </summary>
         public static readonly IReadOnlyCollection<string> WeaponKeys = new HashSet<string>(
             StringComparer.Ordinal
@@ -59,10 +54,8 @@ namespace CreativeAI.Scenario.Editor
         };
 
         /// <summary>
-        /// command ステップで書ける演出コマンド名(documents/ScenarioReference.md「演出コマンド」)。
-        /// 実行側は ConversationView の演出コマンドルータ。ここに無い名前はルータが警告して
-        /// 何も起きないため、取り込み時に弾く。camera.* / background.* は会話UIの外へ委譲する
-        /// 前方互換の逃げ道なので、接頭辞だけ見て通す(下の IsKnownCommand)。
+        /// command ステップで書ける演出コマンド名。ConversationView のルータに無い名前は何も起きないので取り込み時に弾く。
+        /// camera.* / background.* は外部委譲用に接頭辞だけ見て通す(IsKnownCommand)。
         /// </summary>
         public static readonly IReadOnlyCollection<string> CommandNames = new HashSet<string>(
             StringComparer.Ordinal
@@ -85,7 +78,7 @@ namespace CreativeAI.Scenario.Editor
         };
 
         /// <summary>
-        /// choice の選択肢数の下限・上限(documents/ScenarioReference.md「ステップの種類」)。
+        /// choice の選択肢数の下限・上限。
         /// 上限3は選択肢UIの都合: 3択ぶんの高さを基準に中央寄せするので4つ以上は会話ウィンドウに被る。
         /// </summary>
         public const int MinChoiceOptions = 2;
@@ -107,16 +100,13 @@ namespace CreativeAI.Scenario.Editor
             public IReadOnlyCollection<string> ItemKeys { get; }
 
             /// <summary>
-            /// hasItem の itemKey 照合用。**大事なもの(Important)のキーだけ**を持つ
-            /// (documents/ScenarioReference.md「hasItem の制約: itemKey は大事なものカタログ」)。
+            /// hasItem の itemKey 照合用。**大事なもの(Important)のキーだけ**を持つ。
             /// </summary>
             public IReadOnlyCollection<string> KeyItemKeys { get; }
 
             /// <summary>
-            /// 立ち絵アセット(DialogueCharacterDefinition)に実際に登録済みの portrait キー。
-            /// <see cref="PortraitKeys"/> は「予定を含むカタログ」なので、絵がまだ無いキーは
-            /// import は通るが実行時に既定の立ち絵へ落ちる。その取り違えを警告で可視化するために持つ。
-            /// null なら未提供(照合しない)。
+            /// 立ち絵アセットに実際に登録済みの portrait キー(null なら照合しない)。
+            /// <see cref="PortraitKeys"/> にあっても絵が無いキーは実行時に既定の立ち絵へ落ちるので、それを警告するために持つ。
             /// </summary>
             public IReadOnlyCollection<string> RegisteredPortraitKeys { get; }
 
@@ -176,12 +166,9 @@ namespace CreativeAI.Scenario.Editor
         }
 
         /// <summary>
-        /// events.json 文字列を検証して EventDefinition 群を組み立てる。例外は投げず、
-        /// 不正はすべて Report.Diagnostics に積む。JSON 自体が壊れている場合のみ Events は空になる。
+        /// events.json を検証して EventDefinition 群を組み立てる。例外は投げず不正は Report.Diagnostics に積む。
         /// </summary>
-        /// <param name="catalog">
-        /// itemKey の有効集合。null(または集合が null)なら itemKey は警告どまり。
-        /// </param>
+        /// <param name="catalog">itemKey の有効集合。null なら itemKey は警告どまり。</param>
         public static Report Parse(string json, ImportCatalog catalog = null)
         {
             var report = new Report();
@@ -268,8 +255,7 @@ namespace CreativeAI.Scenario.Editor
                 }
             }
 
-            // progress 条件を必ず1つ含む(進行度==でちょうど1回だけ発火する前提。
-            // documents/ScenarioReference.md「progress を必ず1つ含む」)。
+            // progress 条件を必ず1つ含む(進行度==でちょうど1回だけ発火する前提)。
             var progressValues = conditions
                 .Where(c => c.Type == ConditionType.Progress)
                 .Select(c => c.ProgressValue)
@@ -311,8 +297,7 @@ namespace CreativeAI.Scenario.Editor
 
             // --- nextProgress(必須・progress の value より大きい) ---
             // 進行度==で発火 → 終了時に nextProgress へ進めて value と一致しなくなる。
-            // これで「どのイベントもちょうど1回だけ発火する」を保証する
-            // (documents/ScenarioReference.md「nextProgress 必須で progress の value より大」)。
+            // これで「どのイベントもちょうど1回だけ発火する」を保証する。
             int? nextProgress = null;
             if (!ev.TryGetValue("nextProgress", out var np))
             {
@@ -391,7 +376,7 @@ namespace CreativeAI.Scenario.Editor
                         );
                         return null;
                     }
-                    // hasItem は「大事なもの」専用(ScenarioReference.md「hasItem の制約」)。
+                    // hasItem は「大事なもの」専用。
                     // 打ち間違いや装備品/食材の key を書くと実行時は常に false になり
                     // イベントが永久に発火しないため、取り込み時に弾く。
                     // giveItem と同じく、カタログ未提供なら警告どまり(アセット未作成時に全滅させない)。
@@ -458,7 +443,7 @@ namespace CreativeAI.Scenario.Editor
                     {
                         report.Error(
                             id,
-                            $"steps[{i}] line の portrait '{portrait}' はカタログに存在しません(ScenarioReference.md 参照)。"
+                            $"steps[{i}] line の portrait '{portrait}' はカタログに存在しません。"
                         );
                         return null;
                     }
@@ -479,7 +464,7 @@ namespace CreativeAI.Scenario.Editor
                 case "choice":
                 {
                     kind = StepKind.Choice;
-                    // JSON 側のキー名は "flag"(ScenarioReference.md)。内部フィールドは flagKey。
+                    // JSON 側のキー名は "flag"。内部フィールドは flagKey。
                     var flagKey = (step["flag"] as JValue)?.Value as string;
                     if (string.IsNullOrEmpty(flagKey))
                     {
@@ -566,7 +551,7 @@ namespace CreativeAI.Scenario.Editor
                         report.Error(id, $"steps[{i}] giveWeapon は weaponKey が必須。");
                         return null;
                     }
-                    // 武器は剣/弓/鎌の3種で固定(ScenarioReference.md)。それ以外は打ち間違いとして弾く。
+                    // 武器は剣/弓/鎌の3種で固定。それ以外は打ち間違いとして弾く。
                     if (!WeaponKeys.Contains(weaponKey))
                     {
                         report.Error(
@@ -592,10 +577,7 @@ namespace CreativeAI.Scenario.Editor
                     }
                     if (!IsKnownCommand(command))
                     {
-                        report.Error(
-                            id,
-                            $"steps[{i}] command の '{command}' は未対応です(ScenarioReference.md「演出コマンド」参照)。"
-                        );
+                        report.Error(id, $"steps[{i}] command の '{command}' は未対応です。");
                         return null;
                     }
                     var arg = (step["arg"] as JValue)?.Value?.ToString();
@@ -619,8 +601,7 @@ namespace CreativeAI.Scenario.Editor
                 case "battle":
                 {
                     kind = StepKind.Battle;
-                    // 敵は JSON に書かない。シーンの EventTrigger の Enemy スロットに Prefab を配線する
-                    // (documents/ScenarioReference.md / EventImplementation.md)。
+                    // 敵は JSON に書かない。シーンの EventTrigger の Enemy スロットに Prefab を配線する。
                     if (step["enemyKey"] != null)
                     {
                         report.Error(
@@ -642,7 +623,7 @@ namespace CreativeAI.Scenario.Editor
         }
 
         /// <summary>
-        /// battle 配置制約(ScenarioReference.md): 先頭・末尾は line。battle は会話の途中のみ。
+        /// battle 配置制約: 先頭・末尾は line。battle は会話の途中のみ。
         /// かつ 1イベントにつき battle は最大1つ。
         /// kind が解析できなかったステップ(null)は既に別途エラー済みなのでここでは無視する。
         /// </summary>
@@ -654,8 +635,8 @@ namespace CreativeAI.Scenario.Editor
             bool ok = true;
             int battleCount = kinds.Count(k => k == StepKind.Battle);
 
-            // 先頭・末尾 line は「battle が単独・末尾にならない」ための battle 制約
-            // (documents/ScenarioReference.md)。battle を含まないイベントには適用しない。
+            // 先頭・末尾 line は「battle が単独・末尾にならない」ための battle 制約。
+            // battle を含まないイベントには適用しない。
             if (battleCount > 0)
             {
                 if (kinds[0] is StepKind first && first != StepKind.Line)

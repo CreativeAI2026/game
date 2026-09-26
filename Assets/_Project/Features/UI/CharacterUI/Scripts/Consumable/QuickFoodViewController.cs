@@ -6,13 +6,9 @@ using UnityEngine;
 namespace CreativeAI.UI.CharacterUI
 {
     /// <summary>
-    /// キャラクターUI「即時使用食材」タブの View。所持食材リストから最大3つを
-    /// 即時使用スロット(QuickFood)にセット/解除する。実際の消費は常駐の即時食材使用UIが行い、
-    /// ここは「どの食材をクイック使用するか」の選択状態(<see cref="InventoryManager.GetQuickFoodSlots"/>)を編集するだけ。
-    ///
-    /// 装備品タブ(<see cref="EquipmentViewController"/>)と違い、セットしても在庫は減らず補正も付かない。
-    /// スロットは在庫内スタックへの参照で、在庫から消えると InventoryService 側が自動で空にし
-    /// <see cref="InventoryManager.QuickFoodChanged"/> を発火する。
+    /// キャラクターUI「即時使用食材」タブの View。所持食材から最大3つを即時使用スロットにセット/解除する
+    /// (<see cref="InventoryManager.GetQuickFoodSlots"/> を編集するだけで消費は常駐UIが行う。在庫は減らず補正も付かない)。
+    /// スロットは在庫内スタックへの参照で、在庫から消えると自動で空になり <see cref="InventoryManager.QuickFoodChanged"/> が発火する。
     /// </summary>
     public class QuickFoodViewController : MonoBehaviour, ICharacterTabView
     {

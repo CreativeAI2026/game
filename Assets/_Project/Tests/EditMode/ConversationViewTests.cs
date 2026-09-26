@@ -12,10 +12,8 @@ using UnityEngine.UI;
 namespace CreativeAI.Tests.EditMode
 {
     /// <summary>
-    /// 会話UIの検証(画面下に会話ウィンドウ、上半分に立ち絵。documents/Specification.md §5)。
-    /// 送り入力そのものは PlayMode の領分なので、ここでは
-    /// 「話者名・本文・立ち絵キーの反映」と「選択肢が並ぶ」ところまでを検証する
-    /// (選択後の後片付けは Destroy を使うので ConversationViewPlayModeTests 側)。
+    /// 会話UIの検証(話者名・本文・立ち絵キーの反映と選択肢の並び)。
+    /// 送り入力と選択後の後片付けは ConversationViewPlayModeTests 側。
     /// </summary>
     public class ConversationViewTests
     {
@@ -374,7 +372,7 @@ namespace CreativeAI.Tests.EditMode
         [Test]
         public void Awake_RegistersItselfToTheDialogueViewSeam()
         {
-            // EventPlayer は DialogueViewService 経由で会話UIを見つける(spec §6 の seam)。
+            // EventPlayer は DialogueViewService 経由で会話UIを見つける(seam)。
             var go = new GameObject("ConversationView2", typeof(RectTransform));
             try
             {

@@ -10,13 +10,8 @@ using UnityEngine;
 namespace CreativeAI.EditorTools
 {
     /// <summary>
-    /// 小物シーンを<b>畳まずに遊べる</b>ようにする配線。
-    ///
-    /// 1. `Field_Area01` に <see cref="AdditiveScenes"/> を置き、小物3枚を宣言する
-    /// 2. 小物3枚を Build Settings に登録する(名前で読むので未登録だと実行時に読めない)
-    ///
-    /// これで「担当ごとに別ファイル」を保ったままゲームに出せる。
-    /// 統合(MergeIntoMapScene)は使わない運用になる — documents/PropPlacementWorkflow.md 参照。
+    /// 小物シーンを畳まずに遊べるよう、`Field_Area01` に <see cref="AdditiveScenes"/> を置いて小物3枚を宣言し、
+    /// Build Settings に登録する(名前で読むので未登録だと読めない)。統合(MergeIntoMapScene)は使わない運用。
     /// </summary>
     public static class PropSceneSetup
     {

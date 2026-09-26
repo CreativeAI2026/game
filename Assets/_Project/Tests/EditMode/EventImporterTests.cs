@@ -8,7 +8,6 @@ namespace CreativeAI.Tests.EditMode
 {
     /// <summary>
     /// events.json の取り込み検証(書式チェック・キー照合・EventDefinition への変換)。
-    /// 書式は documents/ScenarioReference.md。
     /// ファイル IO・AssetDatabase を伴わない純粋パーサ部分(EventImporter.Parse)だけを検証する。
     /// </summary>
     public class EventImporterTests
@@ -16,7 +15,7 @@ namespace CreativeAI.Tests.EditMode
         [Test]
         public void Parse_DocExample_StationAwakening_BuildsDefinitionWithSteps()
         {
-            // documents/ScenarioReference.md の例(station_awakening)がそのまま取り込めることを担保する。
+            // 例(station_awakening)がそのまま取り込めることを担保する。
             // 地の文(portrait 省略) / ？？？ + obscure・reveal / 演出タグ / battle / giveWeapon + message /
             // choice まで一通り含む。battle は敵を書かず { "kind": "battle" } のみ(敵は EventTrigger に配線)。
             const string json =
@@ -507,7 +506,7 @@ namespace CreativeAI.Tests.EditMode
             Assert.IsTrue(report.Diagnostics.Any(d => d.Message.Contains("nonexistent")));
         }
 
-        // --- conditions: hasItem(ScenarioReference.md「hasItem の制約」= 大事なもの限定) ---
+        // --- conditions: hasItem(大事なもの限定) ---
 
         private const string HasItemJsonTemplate =
             @"{ ""events"": [ {
@@ -619,7 +618,7 @@ namespace CreativeAI.Tests.EditMode
             Assert.IsTrue(report.Diagnostics.Any(d => d.Message.Contains("hasWeapon")));
         }
 
-        // --- steps: choice(ScenarioReference.md「フォーマット」) ---
+        // --- steps: choice ---
 
         [Test]
         public void Parse_Choice_MissingFlag_IsError()

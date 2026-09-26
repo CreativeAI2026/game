@@ -10,11 +10,7 @@ namespace CreativeAI.Tests.EditMode
 {
     /// <summary>
     /// イベント発火ゲートの検証(条件を満たしても戦闘中は新規イベントを発火しない)。
-    /// 根拠は documents/Specification.md §6 の常駐アーキ図
-    /// (EventTrigger →参照(モード:Battle中は発火しない)→ GameModeManager)。
-    ///
-    /// EditMode では Awake が走らず ProgressManager/GameModeManager の Instance が立たないため、
-    /// 静的プロパティをリフレクションで差し込んでから OnTriggerEnter を直接叩く。
+    /// EditMode では Instance が立たないため、静的プロパティをリフレクションで差し込んで OnTriggerEnter を直接叩く。
     /// </summary>
     public class EventTriggerTests
     {

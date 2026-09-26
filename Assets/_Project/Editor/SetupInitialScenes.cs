@@ -23,12 +23,8 @@ using Text = TMPro.TextMeshProUGUI;
 namespace CreativeAI.EditorTools
 {
     /// <summary>
-    /// 01_Title / Field_Area00(スカフォールド)の2シーンを生成し、Build Settings に登録する(Title 先頭)。
-    /// 手作りの本番フィールド は上書きしない。
-    /// - アプリ常駐(SceneController + ロードオーバーレイ / EventSystem)は Title が生成する(Boot シーンは廃止)。
-    /// - セッション常駐の UI レイヤー(UIRoot)は Title で Prefab 化し、TitleUIController が「はじめる」で生成する。
-    ///   HUD(HP) / 右上アイコンバー(HudIconBar) / 即時食材使用UI / 武器切替UI / 各パネル / 会話UI を
-    ///   UI ごとに別 Canvas で束ねる。フィールドシーンには UI を置かない(spec §5「UI / オーバーレイ」)。
+    /// 01_Title / Field_Area00(スカフォールド)を生成し Build Settings に登録する(Title 先頭、本番フィールドは上書きしない)。
+    /// アプリ常駐は Title が生成し、UIRoot は Prefab 化して「はじめる」で生成する(UI ごとに別 Canvas、フィールドに UI は置かない)。
     /// Tools > CreativeAI > Setup Initial Scenes から実行。
     /// </summary>
     public static class SetupInitialScenes
@@ -86,7 +82,7 @@ namespace CreativeAI.EditorTools
         }
 
         // ---------------- アプリ常駐(SceneController + ロードオーバーレイ)----------------
-        // Title シーンに置き、起動時に1回だけ生成する(spec §6.1「生成はすべてタイトルが担う」)。
+        // Title シーンに置き、起動時に1回だけ生成する。
         // Canvas/Overlay は SceneController の子。タイトル再入場時は SceneController.Awake の
         // Instance ガードが重複した PersistentSystems ごと Destroy するので二重生成しない。
         private static void CreatePersistentSystems()
@@ -237,11 +233,8 @@ namespace CreativeAI.EditorTools
         }
 
         // ---------------- セッション常駐 UI レイヤー(UIRoot Prefab)----------------
-        // UI ごとに別 Canvas を持つ整理用の親 GameObject を組み、Prefab として保存して返す
-        // (Title の TitleUIController に配線し、「はじめる」で Instantiate → DontDestroyOnLoad)。
-        // 重なり順は各 Canvas の sortingOrder で決める(HUD/バー/食材/武器=0、操作パネル=10、会話=20)。
-        // 排他パネル(Character/Inventory/Save)は各自の Canvas を常時アクティブにし、中身のパネルを
-        // UiRouter が SetActive で出し入れする(パネル未表示時の空 Canvas はほぼ無コスト)。
+        // UI ごとに別 Canvas を持つ親を Prefab 化して返す(TitleUIController が「はじめる」で生成)。重なり順は sortingOrder
+        // (HUD系=0、操作パネル=10、会話=20)。排他パネルは Canvas を常時アクティブにし、中身を UiRouter が出し入れする。
         private static GameObject BuildAndSaveUIRootPrefab()
         {
             var root = new GameObject("UIRoot");

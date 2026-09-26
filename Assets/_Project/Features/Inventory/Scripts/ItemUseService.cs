@@ -32,7 +32,7 @@ namespace CreativeAI.Gameplay
                 return false;
 
             // 効果を適用できないなら消費もしない。回復先(プレイヤー)が居ない場面で食材だけ消えるのを防ぐ
-            // (spec §2.2「効果適用: HP即時回復をその場で適用」= 使用と効果は不可分)。
+            // (使用と効果は不可分)。
             var playerStatus = ResolvePlayerStatus();
             if (playerStatus == null)
             {

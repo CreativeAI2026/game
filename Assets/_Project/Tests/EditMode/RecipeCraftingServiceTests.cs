@@ -8,7 +8,7 @@ namespace CreativeAI.Tests.EditMode
 {
     /// <summary>
     /// 調合本体の検証(レシピ引き → カテゴリ検証 → 素材消費と結果付与を原子的に行う)。
-    /// 装備品はロール個体 / 食材は固定(documents/Specification.md §2.3, §2.3.1)。
+    /// 装備品はロール個体 / 食材は固定。
     /// MonoBehaviour を挟まない純粋サービスなので InventoryService を直接組んで叩く。
     /// </summary>
     public class RecipeCraftingServiceTests
@@ -83,10 +83,7 @@ namespace CreativeAI.Tests.EditMode
             var result = StackOf(soup);
             Assert.IsNotNull(result);
             Assert.AreEqual(1, result.Count);
-            Assert.IsFalse(
-                result.IsInstance,
-                "食材は固定ルールなので個体差ロールしない(spec §2.3)"
-            );
+            Assert.IsFalse(result.IsInstance, "食材は固定ルールなので個体差ロールしない");
         }
 
         [Test]
@@ -105,9 +102,9 @@ namespace CreativeAI.Tests.EditMode
 
             var made = StackOf(result);
             Assert.IsNotNull(made);
-            Assert.IsTrue(made.IsInstance, "装備品は端末でロールした個体になる(spec §2.3)");
+            Assert.IsTrue(made.IsInstance, "装備品は端末でロールした個体になる");
             Assert.IsNotNull(made.RolledStats);
-            Assert.LessOrEqual(made.RolledStats.Count, 2, "付与数は最大2つ(spec §2.1)");
+            Assert.LessOrEqual(made.RolledStats.Count, 2, "付与数は最大2つ");
         }
 
         [Test]
@@ -139,7 +136,7 @@ namespace CreativeAI.Tests.EditMode
             Assert.AreEqual(2, _craft.GetMaximumCraftable(recipe));
         }
 
-        // --- カテゴリ検証(spec §2.3: 装備品同士 / 食材同士のみ) ---
+        // --- カテゴリ検証(装備品同士 / 食材同士のみ) ---
 
         [Test]
         public void TryCraft_CrossCategory_IsRejected()
@@ -159,7 +156,7 @@ namespace CreativeAI.Tests.EditMode
         [Test]
         public void TryCraft_WeaponMaterial_IsRejected()
         {
-            // 武器は調合不可(spec §2.3)。
+            // 武器は調合不可。
             var w1 = Make<WeaponData>(1001);
             var w2 = Make<WeaponData>(1002);
             var recipe = MakeRecipe(w1, w2, Make<EquipmentData>(2101));
@@ -173,7 +170,7 @@ namespace CreativeAI.Tests.EditMode
         [Test]
         public void TryCraft_ImportantItemMaterial_IsRejected()
         {
-            // 大事なものは調合の対象外(spec §2.1 補足)。
+            // 大事なものは調合の対象外。
             var k1 = MakeImportant(4001);
             var k2 = MakeImportant(4002);
             var recipe = MakeRecipe(k1, k2, Make<FoodData>(3105));
@@ -229,7 +226,7 @@ namespace CreativeAI.Tests.EditMode
             Assert.AreEqual(1, StackOf(a).Count);
         }
 
-        // --- 原子性(spec §2.3.1: 素材を消費し結果を付与、を1回で確定) ---
+        // --- 原子性(素材を消費し結果を付与、を1回で確定) ---
 
         [Test]
         public void TryCraft_InsufficientMaterial_LeavesInventoryUntouched()

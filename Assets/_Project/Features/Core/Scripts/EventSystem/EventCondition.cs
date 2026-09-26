@@ -13,7 +13,6 @@ namespace CreativeAI.Core.EventSystem
     /// <summary>
     /// イベント発火条件の1つ。progress(進行度が値にちょうど一致) / flag(指定キーが指定値) /
     /// hasItem(指定 itemKey の「大事なもの」を所持) のいずれか。
-    /// スキーマは documents/ScenarioReference.md の events.json に対応。
     /// ファクトリ(Progress / Flag / HasItem)はテストと Importer が構築に使う。
     /// </summary>
     [Serializable]
@@ -57,11 +56,8 @@ namespace CreativeAI.Core.EventSystem
         public string ItemKey => _itemKey;
 
         /// <summary>
-        /// この条件を満たすか。進行度比較は「ちょうど一致(==)」、フラグは完全一致、
-        /// hasItem は <paramref name="hasItem"/>(itemKey→所持か)に委譲する。
-        /// == なので終了時に AdvanceTo で進行度が進むと二度と一致せず、各イベントは1回だけ発火する
-        /// (documents/ScenarioReference.md, Specification.md §4)。
-        /// <paramref name="hasItem"/> 未指定(null)なら HasItem 条件は不成立扱い。
+        /// この条件を満たすか。進行度は == 比較なので AdvanceTo 後は一致せず、各イベントは1回だけ発火する。
+        /// hasItem は <paramref name="hasItem"/> に委譲し、null なら不成立扱い。
         /// </summary>
         public bool IsMet(
             int progress,

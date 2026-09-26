@@ -1,19 +1,11 @@
 #!/usr/bin/env bash
-#
-# Unity .meta 整合チェック
-#   1. Assets/ 配下の全アセット（ファイル）に対応する .meta があるか
-#   2. アセットを含む全フォルダに対応する .meta があるか
-#   3. 全 .meta に対応するアセット（ファイル / フォルダ）があるか（孤児 .meta 検出）
-#
-# git の追跡対象のみを対象にする（ローカルの未追跡ファイルは無視）。
-# macOS の bash 3.2 でも動くよう、連想配列を使わず sort/comm で集合演算する。
+# Assets/ 配下の .meta の欠落と孤児を検出する（git の追跡ファイルが対象）。
 set -euo pipefail
-export LC_ALL=C   # sort と comm の照合順序を一致させる
+export LC_ALL=C
 
 tmp="$(mktemp -d)"
 trap 'rm -rf "$tmp"' EXIT
 
-# Keep non-ASCII asset names as real paths instead of C-style quoted strings.
 git -c core.quotePath=false ls-files -- 'Assets/' > "$tmp/all"
 
 if [[ ! -s "$tmp/all" ]]; then
@@ -21,7 +13,6 @@ if [[ ! -s "$tmp/all" ]]; then
   exit 0
 fi
 
-# .meta を要求するアセット = 非 .meta ファイル + それらを含むディレクトリ（Assets 自身は除く）
 grep -v '\.meta$' "$tmp/all" > "$tmp/files" || true
 awk -F/ '{
   path=""
@@ -32,22 +23,17 @@ awk -F/ '{
 }' "$tmp/all" | sort -u > "$tmp/dirs"
 cat "$tmp/files" "$tmp/dirs" | sort -u > "$tmp/assets"
 
-# .meta が指すアセットパス（末尾 .meta を除去）
 grep '\.meta$' "$tmp/all" | sed 's/\.meta$//' | sort -u > "$tmp/metas"
 
 errors=0
 
-# 1 & 2: アセットにあるが .meta が無い
 while IFS= read -r a; do
   [[ -z "$a" ]] && continue
   echo "::error::Missing .meta for: $a"
   errors=$((errors + 1))
 done < <(comm -23 "$tmp/assets" "$tmp/metas")
 
-# 3: .meta はあるが対応アセットが無い（孤児）
-#    ただし「空フォルダのフォルダ .meta（folderAsset: yes）」は許容する。
-#    git は空ディレクトリを追跡しないため、構造維持目的でフォルダ .meta のみ
-#    コミットされている状態は正常系として扱う。危険なのはファイルの孤児 .meta。
+# git は空フォルダを追跡しないので、フォルダの .meta だけが残っているのは許容する。
 skipped_folders=0
 while IFS= read -r a; do
   [[ -z "$a" ]] && continue

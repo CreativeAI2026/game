@@ -29,16 +29,13 @@ namespace CreativeAI.Core.EventSystem
 
         /// <summary>
         /// command ステップの演出コマンド(window.hide / portrait.left.shake / wait など)を実行する。
-        /// 対応コマンドは documents/ScenarioReference.md「演出コマンド」。
         /// </summary>
         IEnumerator RunCommand(string command, string argument);
     }
 
     /// <summary>
-    /// 実行時に有効な IDialogueView を Core 側へ登録する seam。会話UI(UI アセンブリ)が生成時に
-    /// 自身を登録し、EventPlayer は Inspector 未配線時のフォールバックとしてここを見る
-    /// (ItemGiverService と同じ思想)。EventPlayer は常駐・会話UIも常駐生成のため drag 配線できず、
-    /// かつ Core は UI を参照できないため、具象ではなくこの契約経由で受け取る。
+    /// 実行時の IDialogueView を登録する seam。Core は UI を参照できず常駐同士で drag 配線もできないため、
+    /// 会話UIが生成時に登録し、EventPlayer は Inspector 未配線時のフォールバックとして見る。
     /// </summary>
     public static class DialogueViewService
     {

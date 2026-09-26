@@ -8,7 +8,6 @@ namespace CreativeAI.Tests.EditMode
 {
     /// <summary>
     /// レシピ帳の解禁状態の検証(自由調合で成功した組み合わせが解禁され、セーブ/復元で保たれる)。
-    /// 仕様は documents/Specification.md §2.3.2。
     /// EditMode では Awake が走らないので初期解禁(SeedInitialUnlocks)は入っていない状態から始まる。
     /// </summary>
     public class RecipeBookManagerTests

@@ -3,24 +3,16 @@ using UnityEngine;
 namespace CreativeAI.UI
 {
     /// <summary>
-    /// セッション常駐の UI レイヤーのルート。HUD(HP) / 右上アイコンバー / 即時食材使用UI / 武器切替UI /
-    /// 各パネル(キャラ・インベ・セーブ・調合) / 会話UI を束ねる整理用の親。
-    /// Title フローで <see cref="EnsureResident"/> により Prefab から1回だけ生成し、
-    /// DontDestroyOnLoad で常駐させる(プレイヤーリグと同じ生成方式)。状態は保存されない。
-    /// エリア遷移をまたいで持続し、フィールドシーンには UI を置かない。
-    /// 常駐なので配線・購読は生成時の1回だけで済む(HudIconBar が毎シーン読み直す必要がない)。
-    /// documents/Specification.md「常駐アーキテクチャ」参照。
+    /// セッション常駐の UI レイヤーのルート。HUD / アイコンバー / 即時食材使用UI / 武器切替UI / 各パネル / 会話UI を束ねる親。
+    /// Title フローで <see cref="EnsureResident"/> により1回だけ生成し DontDestroyOnLoad で常駐させる。状態は保存せず、フィールドシーンには UI を置かない。
     /// </summary>
     public sealed class UIRoot : MonoBehaviour
     {
         public static UIRoot Instance { get; private set; }
 
         /// <summary>
-        /// セッション常駐の UI レイヤーを Prefab から1回だけ生成する。既に在ればそれを返す。
-        /// Core→UI の循環を避けるため <c>SessionBootstrap</c> ではなく UI 層(Title フロー)から呼ぶ
-        /// (Inventory と同じ理由)。生成順はマネージャ(GameModeManager 等)の後
-        /// ── HudIconBar が生成時にモードを購読するため。spec §6.1。
-        /// Prefab 未割当なら警告して null(UI は出ないがゲームは進む)。
+        /// UI レイヤーを Prefab から1回だけ生成する(既に在ればそれを返す。Prefab 未割当なら警告して null)。
+        /// Core→UI の循環を避けるため <c>SessionBootstrap</c> でなく UI 層(Title フロー)から、マネージャ生成後に呼ぶ(HudIconBar が生成時にモードを購読するため)。
         /// </summary>
         public static UIRoot EnsureResident(GameObject uiRootPrefab)
         {

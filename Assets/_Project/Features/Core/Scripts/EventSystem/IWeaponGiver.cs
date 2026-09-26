@@ -1,10 +1,8 @@
 namespace CreativeAI.Core.EventSystem
 {
     /// <summary>
-    /// giveWeapon ステップの seam。実体は Gameplay(プレイヤーリグの WeaponManager)で実装し、
-    /// EventPlayer に注入する。Core は Gameplay を参照しないためこの契約を挟む
-    /// (giveItem の <see cref="IItemGiver"/> と対称)。
-    /// 実装者(WeaponManager)がまだ無い間は EventPlayer が警告してスキップする(前方互換)。
+    /// giveWeapon ステップの seam(実体は WeaponManager、<see cref="IItemGiver"/> と対称)。
+    /// 実装が無い間は EventPlayer が警告してスキップする。
     /// </summary>
     public interface IWeaponGiver
     {

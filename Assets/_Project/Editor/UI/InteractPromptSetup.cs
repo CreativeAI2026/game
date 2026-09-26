@@ -7,11 +7,8 @@ using UnityEngine.UI;
 namespace CreativeAI.EditorTools.UI
 {
     /// <summary>
-    /// 操作プロンプト(「[E] 扉を開ける」)を <see cref="CreativeAI.UI.UIRoot"/> Prefab の子として注入するツール。
-    /// 仕様§6のとおり UIRoot が UI レイヤーを束ねるため、独立 Prefab ではなく UIRoot.prefab に同梱する
-    /// (常駐・単一化・DontDestroyOnLoad は UIRoot が担う = Title/config への追加配線は不要)。
-    /// 排他パネルではないので UiRouter.UiId には足さない。
-    /// 冪等: 既に "InteractPrompt" 子が在れば作り直す。
+    /// 操作プロンプト(「[E] 扉を開ける」)を <see cref="CreativeAI.UI.UIRoot"/> Prefab の子として注入する(常駐化は UIRoot 任せ)。
+    /// 排他パネルではないので UiRouter.UiId には足さない。冪等(既存の "InteractPrompt" は作り直す)。
     /// </summary>
     public static class InteractPromptSetup
     {

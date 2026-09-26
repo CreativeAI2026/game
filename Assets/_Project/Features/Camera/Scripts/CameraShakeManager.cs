@@ -1,16 +1,6 @@
-// ■ セットアップ手順
-//   1. シーン内の任意の GameObject（例: "CameraEffects"）にこのスクリプトをアタッチする
-//   2. 同じ GameObject に CinemachineImpulseSource コンポーネントも追加し、
-//      Inspector から _impulseSource フィールドに割り当てる
-//   3. 揺らしたい Cinemachine Camera（メインカメラ・AimCamera 両方）に
-//      CinemachineImpulseListener コンポーネントを追加する
-//      Cinemachine 3.x では 1 つの Source から複数の Listener が同じシグナルを受け取れる。
-//      ChannelMask は双方とも同じチャンネル（デフォルト: 1）に合わせておくこと。
-//
-// ■ Cinemachine バージョンについて
-//   - Cinemachine 2.x (Unity 2022 以前) : using Cinemachine; を使用
-//   - Cinemachine 3.x (Unity 6 以降)    : using Unity.Cinemachine; に変更してください
-//      また CinemachineImpulseSource の型が変わる場合は適宜修正してください
+// セットアップ: 任意の GameObject にアタッチし、CinemachineImpulseSource を追加して _impulseSource に割り当てる。
+//   揺らしたいカメラ（メイン・AimCamera 両方）に CinemachineImpulseListener を追加し、ChannelMask を揃える（デフォルト: 1）。
+// Cinemachine 2.x（Unity 2022 以前）は using Cinemachine;、3.x（Unity 6 以降）は using Unity.Cinemachine; を使う。
 
 using Unity.Cinemachine;
 using UnityEngine;

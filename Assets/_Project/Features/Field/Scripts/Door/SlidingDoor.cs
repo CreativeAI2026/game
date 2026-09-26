@@ -3,15 +3,9 @@ using UnityEngine;
 namespace CreativeAI.Gameplay
 {
     /// <summary>
-    /// 横に引いて開く扉。扉板(Leaf)だけを自分のローカル X 方向へ滑らせる。
-    ///
-    /// 扉の glb は「壁に固定される側(ケーシング + 制御パネル)」と「動く側(Leaf)」を
-    /// <b>別オブジェクトのまま</b>書き出してある(blender-space の classroom_door.py 等)。
-    /// 1メッシュに結合されていると開けられないので、Leaf が見つからないときは警告を出して
-    /// 何もしない(モデルを差し替えたときに気付けるように)。
-    ///
-    /// マップの壁は1マス4u厚なので、扉板は袖壁の内側へ引き込めば完全に隠れる。
-    /// 移動量は扉板の実寸から自動で決める(<see cref="_slideDistance"/> = 0 のとき)。
+    /// 横に引いて開く扉。扉板(Leaf)だけをローカル X 方向へ滑らせる。
+    /// glb は固定側と Leaf を別オブジェクトで書き出す前提で、Leaf が見つからなければ警告して何もしない。
+    /// 移動量は <see cref="_slideDistance"/> = 0 のとき扉板の実寸から自動で決める(厚さ4uの袖壁内に隠れる)。
     /// </summary>
     [DisallowMultipleComponent]
     public sealed class SlidingDoor : MonoBehaviour

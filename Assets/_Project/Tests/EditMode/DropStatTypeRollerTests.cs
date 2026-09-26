@@ -7,7 +7,7 @@ using NUnit.Framework;
 namespace CreativeAI.Tests.EditMode
 {
     /// <summary>
-    /// ドロップ装備品の付与型抽選(documents/Specification.md §2.1.1)の検証。
+    /// ドロップ装備品の付与型抽選の検証。
     /// 重み 攻撃%2 / 防御%2 / 最大HP%2 / 会心ダメージ1 / 会心率1 の非復元抽出。
     /// </summary>
     public class DropStatTypeRollerTests
@@ -72,7 +72,7 @@ namespace CreativeAI.Tests.EditMode
             Assert.AreEqual(
                 DropStatTypeRoller.MaxStatCount,
                 DropStatTypeRoller.Roll(new SystemRandomSource(0), 99).Count,
-                "付与数は最大2つ(Specification.md §2.1)"
+                "付与数は最大2つ"
             );
         }
 
