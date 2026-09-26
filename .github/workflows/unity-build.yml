@@ -1,17 +1,11 @@
 name: Unity Compile Check
 
 # StandaloneLinux64 (Mono) でビルドを通すことで「全 asmdef がコンパイルできるか」を検証する。
-# 要 Secrets: UNITY_LICENSE / UNITY_EMAIL / UNITY_PASSWORD
 
 on:
   push:
     branches: [main]
   pull_request:
-    paths:
-      - 'Assets/**'
-      - 'Packages/**'
-      - 'ProjectSettings/**'
-      - '.github/workflows/unity-build.yml'
 
 concurrency:
   group: unity-build-${{ github.workflow }}-${{ github.ref }}
@@ -24,8 +18,9 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Cache Library
-        uses: actions/cache@v4
+      - name: Restore Library
+        id: library
+        uses: actions/cache/restore@v4
         with:
           path: Library
           key: Library-StandaloneLinux64-${{ hashFiles('Assets/**', 'Packages/**', 'ProjectSettings/**') }}
@@ -43,3 +38,10 @@ jobs:
           unityVersion: 6000.4.5f1
           targetPlatform: StandaloneLinux64
           allowDirtyBuild: true
+
+      - name: Save Library
+        if: github.ref == 'refs/heads/main' && steps.library.outputs.cache-hit != 'true'
+        uses: actions/cache/save@v4
+        with:
+          path: Library
+          key: ${{ steps.library.outputs.cache-primary-key }}

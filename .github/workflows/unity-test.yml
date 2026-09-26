@@ -1,11 +1,6 @@
 name: Unity Tests
 
 # EditMode / PlayMode のテストを走らせる。
-# 要 Secrets: UNITY_LICENSE / UNITY_EMAIL / UNITY_PASSWORD (Unity Compile Check と同じもの)
-#
-# paths フィルタは意図的に付けていない。必須チェック(branch protection)にすると、
-# フィルタで skip されたワークフローは「保留」のまま残り、docs だけの PR が
-# 永久に merge できなくなるため。全 PR で必ず走らせて必ず結論を出す。
 
 on:
   push:
@@ -16,33 +11,24 @@ concurrency:
   group: unity-test-${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: true
 
-# permissions を明示すると、ここに書かなかったスコープは none になる。
-# PR コメント用の pull-requests と、テスト結果のチェックラン投稿用の checks が要る。
 permissions:
   contents: read
   pull-requests: write
-  checks: write
 
 jobs:
   test:
-    name: Test (${{ matrix.testMode }})
+    name: Test
     runs-on: ubuntu-latest
-    strategy:
-      fail-fast: false # 片方が落ちても、もう片方の結果は知りたい
-      matrix:
-        testMode: [editmode, playmode]
     steps:
       - uses: actions/checkout@v4
-        with:
-          lfs: true
 
-      - name: Cache Library
-        uses: actions/cache@v4
+      - name: Restore Library
+        id: library
+        uses: actions/cache/restore@v4
         with:
           path: Library
-          key: Library-test-${{ matrix.testMode }}-${{ hashFiles('Assets/**', 'Packages/**', 'ProjectSettings/**') }}
+          key: Library-test-${{ hashFiles('Assets/**', 'Packages/**', 'ProjectSettings/**') }}
           restore-keys: |
-            Library-test-${{ matrix.testMode }}-
             Library-test-
             Library-
 
@@ -55,30 +41,32 @@ jobs:
           UNITY_PASSWORD: ${{ secrets.UNITY_PASSWORD }}
         with:
           unityVersion: 6000.4.5f1
-          testMode: ${{ matrix.testMode }}
-          artifactsPath: ${{ matrix.testMode }}-results
-          # githubToken は省略しても action 側の default (github.token) が入るため、
-          # チェックランは必ず投稿される。上の permissions に checks:write が無いと
-          # 「Resource not accessible by integration」でジョブごと落ちる。
-          # fork からの PR はトークンが read-only になるので、外部 PR を受けるように
-          # なったら githubToken: '' を明示して投稿自体を止めること。
+          testMode: all
+          artifactsPath: test-results
+          coverageEnabled: false
+          githubToken: ''
+
+      - name: Save Library
+        if: github.ref == 'refs/heads/main' && steps.library.outputs.cache-hit != 'true'
+        uses: actions/cache/save@v4
+        with:
+          path: Library
+          key: ${{ steps.library.outputs.cache-primary-key }}
 
       - name: サマリを出力
         if: always() # 落ちたときこそ何が落ちたか表で見たい
         run: |
-          # ジョブサマリ（ジョブページ上部）とログの両方に出しつつ、PR コメント用にも残す。
           python3 .github/scripts/test-summary.py \
-            "${{ matrix.testMode }} テスト結果" \
-            ${{ matrix.testMode }}-results/*.xml | tee summary.md >> "$GITHUB_STEP_SUMMARY"
-          cat summary.md
+            "テスト結果" \
+            test-results/*.xml | tee summary.md
 
       # 表を読むのにジョブページを開かせない。PR の会話タブにそのまま貼る。
-      # 同じ testMode のコメントは毎回作らず、マーカーで見つけて上書きする。
+      # コメントは毎回作らず、マーカーで見つけて上書きする。
       - name: PR にサマリをコメント
         if: always() && github.event_name == 'pull_request'
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          MARKER: <!-- unity-test-summary:${{ matrix.testMode }} -->
+          MARKER: <!-- unity-test-summary -->
           PR: ${{ github.event.pull_request.number }}
         run: |
           { echo "$MARKER"; cat summary.md; } > comment.md
@@ -94,5 +82,5 @@ jobs:
         uses: actions/upload-artifact@v4
         if: always() # 落ちたときこそ結果を見たい
         with:
-          name: test-results-${{ matrix.testMode }}
+          name: test-results
           path: ${{ steps.tests.outputs.artifactsPath }}
