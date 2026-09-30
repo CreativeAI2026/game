@@ -516,8 +516,103 @@ namespace CreativeAI.EditorTools
                 foreach (var s in stairCells)
                     CreateStairs(NewGroup("Stairs", floorRoots[s.LowerFloor]), stairs, s);
 
+            ApplyStaticFlags(root);
             Selection.activeGameObject = root;
         }
+
+        // ---------------------------------------------------------------- Static
+
+        // 固定物はライトマップに焼き、バッチングとオクルージョンカリングの対象にする
+        const StaticEditorFlags SolidFlags =
+            StaticEditorFlags.ContributeGI
+            | StaticEditorFlags.BatchingStatic
+            | StaticEditorFlags.OccluderStatic
+            | StaticEditorFlags.OccludeeStatic
+            | StaticEditorFlags.ReflectionProbeStatic;
+
+        // 透ける物は奥を隠さず、ベイクで影も落とさない(ガラスの真っ黒な影になる)
+        const StaticEditorFlags SeeThroughFlags =
+            StaticEditorFlags.BatchingStatic
+            | StaticEditorFlags.OccludeeStatic
+            | StaticEditorFlags.ReflectionProbeStatic;
+
+        /// <summary>Field_Area01 を作り直さずに、今の Map へ Static 設定だけ当てて保存する。</summary>
+        [MenuItem("Tools/CreativeAI/Map/Apply Static Flags To Field_Area01")]
+        public static void ApplyStaticFlagsToArea01()
+        {
+            var scene = FindOpenScene(ScenePath);
+            if (!scene.IsValid())
+                scene = EditorSceneManager.OpenScene(ScenePath, OpenSceneMode.Single);
+            var root = FindMapRoot(scene);
+            if (root == null)
+            {
+                Debug.LogError($"[MapLayoutBuilder] {ScenePath} に {MapRootName} がありません。");
+                return;
+            }
+            ApplyStaticFlags(root);
+            EditorSceneManager.SaveScene(scene);
+        }
+
+        /// <summary>
+        /// Map 配下の見た目に Static を付ける。動く扉板は外す(Static だと開閉しても描画が動かない)。
+        /// ライトマップ用 UV(UV2)の無いメッシュはライトマップに焼けないので、光はライトプローブから受ける。
+        /// </summary>
+        static void ApplyStaticFlags(GameObject root)
+        {
+            var moving = new HashSet<Transform>();
+            foreach (var door in root.GetComponentsInChildren<SlidingDoor>(true))
+            {
+                var leaf = door.Leaf != null ? door.Leaf : SlidingDoor.FindLeaf(door.transform);
+                if (leaf != null)
+                    moving.Add(leaf);
+            }
+
+            int solid = 0,
+                seeThrough = 0,
+                probeLit = 0,
+                skipped = 0;
+            foreach (var renderer in root.GetComponentsInChildren<MeshRenderer>(true))
+            {
+                var go = renderer.gameObject;
+                if (moving.Any(leaf => go.transform.IsChildOf(leaf)))
+                {
+                    GameObjectUtility.SetStaticEditorFlags(go, 0);
+                    skipped++;
+                    continue;
+                }
+
+                if (IsSeeThrough(renderer))
+                {
+                    GameObjectUtility.SetStaticEditorFlags(go, SeeThroughFlags);
+                    seeThrough++;
+                    continue;
+                }
+
+                GameObjectUtility.SetStaticEditorFlags(go, SolidFlags);
+                solid++;
+                var hasLightmapUV =
+                    go.TryGetComponent<MeshFilter>(out var filter)
+                    && filter.sharedMesh != null
+                    && filter.sharedMesh.HasVertexAttribute(
+                        UnityEngine.Rendering.VertexAttribute.TexCoord1
+                    );
+                renderer.receiveGI = hasLightmapUV ? ReceiveGI.Lightmaps : ReceiveGI.LightProbes;
+                // Prefab インスタンスは記録しないとシーン保存時に上書きが残らない
+                PrefabUtility.RecordPrefabInstancePropertyModifications(renderer);
+                if (!hasLightmapUV)
+                    probeLit++;
+            }
+
+            Debug.Log(
+                $"[MapLayoutBuilder] Static を付けました: 固定物 {solid}(うちUV2なしでプローブ受光 {probeLit})"
+                    + $" / 透ける物 {seeThrough} / 動く扉板 {skipped}"
+            );
+        }
+
+        static bool IsSeeThrough(Renderer renderer) =>
+            renderer.sharedMaterials.Any(m =>
+                m != null && m.renderQueue > (int)UnityEngine.Rendering.RenderQueue.GeometryLast
+            );
 
         static Transform NewGroup(string name, Transform parent)
         {
