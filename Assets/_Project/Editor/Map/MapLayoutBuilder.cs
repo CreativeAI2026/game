@@ -216,7 +216,8 @@ namespace CreativeAI.EditorTools
             var go = new GameObject("Directional Light");
             var light = go.AddComponent<Light>();
             light.type = LightType.Directional;
-            light.shadows = LightShadows.Soft;
+            // 屋根の無い建物に太陽の影を落とすと、下の階の床にカメラ追従の円弧状の光漏れが出る
+            light.shadows = LightShadows.None;
             go.transform.rotation = Quaternion.Euler(50f, -30f, 0f);
         }
 
