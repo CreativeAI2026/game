@@ -67,7 +67,7 @@ namespace CreativeAI.Core
             {
                 Debug.LogWarning(
                     $"[EventTrigger] '{name}': IEventPlayer が見つからず発火をスキップ (event={_event.Id})。"
-                        + " 常駐 EventPlayer(SessionBootstrap)が未生成か、_eventPlayer が未割当です。"
+                        + " 常駐 EventPlayer(GameSession)が未生成か、_eventPlayer が未割当です。"
                 );
                 return;
             }

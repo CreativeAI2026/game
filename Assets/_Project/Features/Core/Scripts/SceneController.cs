@@ -83,4 +83,21 @@ namespace CreativeAI.Core
             _isLoading = false;
         }
     }
+
+    /// <summary>
+    /// 遷移中に出す暗転・読み込み表示の窓口。実体は UI 側(LoadingOverlayController)で、
+    /// Core は UI を参照できないためこの契約を挟む。SceneController が子から探して使う。
+    /// </summary>
+    public interface ILoadingOverlay
+    {
+        IEnumerator ShowCoroutine(float duration);
+        IEnumerator HideCoroutine(float duration);
+        void SetProgress(float progress01);
+    }
+
+    public static class SceneNames
+    {
+        /// <summary>スカフォールド用の仮フィールド(ライト・カメラ・地面だけ)。Title の遷移先の初期値。</summary>
+        public const string FieldArea00 = "Field_Area00";
+    }
 }

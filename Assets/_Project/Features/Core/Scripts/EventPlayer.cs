@@ -1,4 +1,6 @@
+using System;
 using System.Collections;
+using System.Collections.Generic;
 using UnityEngine;
 
 namespace CreativeAI.Core
@@ -11,7 +13,7 @@ namespace CreativeAI.Core
     {
         public static EventPlayer Instance { get; private set; }
 
-        /// <summary>セッション常駐生成の入口。既に在ればそれを返す(SessionBootstrap から呼ぶ)。</summary>
+        /// <summary>セッション常駐生成の入口。既に在ればそれを返す(UI 層の GameSession から呼ぶ)。</summary>
         public static EventPlayer EnsureResident()
         {
             if (Instance != null)
@@ -192,5 +194,169 @@ namespace CreativeAI.Core
                 EventPlaybackService.SetPlaying(false);
             }
         }
+    }
+
+    /// <summary>
+    /// 会話イベント再生の指揮役。EventTrigger が条件成立時に発火を託す。
+    /// 実際の非同期シグネチャ(UniTask / CancellationToken)は EventPlayer 実装時に確定する。
+    /// </summary>
+    public interface IEventPlayer
+    {
+        /// <summary>
+        /// イベントを再生する。battle ステップがあれば <paramref name="battle"/> の Prefab を
+        /// トリガー位置に出して戦う(敵未配線なら警告してスキップ)。battle が無いイベントでは
+        /// <paramref name="battle"/> は使われない(default で可)。
+        /// </summary>
+        void Play(EventDefinition ev, BattleSetup battle = default);
+    }
+
+    /// <summary>
+    /// 実行時の IEventPlayer を登録する seam。EventPlayer は常駐生成で drag 配線できないため EnsureResident 時に登録し、
+    /// 非常駐の EventTrigger は Inspector 未配線時のフォールバックとして見る。
+    /// </summary>
+    public static class EventPlayerService
+    {
+        public static IEventPlayer Current { get; set; }
+    }
+
+    /// <summary>
+    /// 会話イベント再生中(= 操作不能)かどうかを UI に伝える seam。EventPlayer が再生の開始/終了で
+    /// 更新し、HudIconBar が購読して会話中は右上ナビ(セーブ/インベ入口)を隠す
+    /// (会話UI中はセーブ・インベントリ使用不可)。
+    /// </summary>
+    public static class EventPlaybackService
+    {
+        public static bool IsPlaying { get; private set; }
+        public static event System.Action<bool> PlayingChanged;
+
+        public static void SetPlaying(bool playing)
+        {
+            if (IsPlaying == playing)
+                return;
+            IsPlaying = playing;
+            PlayingChanged?.Invoke(playing);
+        }
+    }
+
+    /// <summary>
+    /// 会話UIの seam。実体は UI アセンブリ(CreativeAI.UI)で実装し、EventPlayer に注入する。
+    /// Core を最下層に保つため、EventPlayer は具象UIではなくこの契約に依存する。
+    /// </summary>
+    public interface IDialogueView
+    {
+        /// <summary>1行表示し、プレイヤーが送るまで待つ(コルーチン)。</summary>
+        IEnumerator ShowLine(string speaker, string portrait, string text);
+
+        /// <summary>選択肢を提示し、選ばれた値を onSelected で返す(コルーチン)。</summary>
+        IEnumerator ShowChoice(IReadOnlyList<ChoiceOption> options, Action<string> onSelected);
+
+        /// <summary>
+        /// giveItem の入手演出。itemKey から絵と名前を引くのは UI 側(Core は Gameplay を参照しないため)。
+        /// message 省略時は UI が「〜を手に入れた。」を組み立てる。送り入力まで待つ(コルーチン)。
+        /// </summary>
+        IEnumerator ShowItemGet(string itemKey, string message);
+
+        /// <summary>
+        /// giveWeapon の入手演出。ShowItemGet の武器版(3Dモデルを回して見せる)。
+        /// </summary>
+        IEnumerator ShowWeaponGet(string weaponKey, string message);
+
+        /// <summary>
+        /// command ステップの演出コマンド(window.hide / portrait.left.shake / wait など)を実行する。
+        /// </summary>
+        IEnumerator RunCommand(string command, string argument);
+    }
+
+    /// <summary>
+    /// 実行時の IDialogueView を登録する seam。Core は UI を参照できず常駐同士で drag 配線もできないため、
+    /// 会話UIが生成時に登録し、EventPlayer は Inspector 未配線時のフォールバックとして見る。
+    /// </summary>
+    public static class DialogueViewService
+    {
+        public static IDialogueView Current { get; set; }
+    }
+
+    /// <summary>
+    /// 戦闘の入力一式。敵は events.json ではなくシーンの EventTrigger の Enemy スロットに
+    /// 配線した Prefab を使い、トリガー位置(または子の SpawnPoint)へ出す。
+    /// </summary>
+    public readonly struct BattleSetup
+    {
+        public readonly GameObject EnemyPrefab;
+        public readonly Vector3 Position;
+        public readonly Quaternion Rotation;
+
+        public BattleSetup(GameObject enemyPrefab, Vector3 position, Quaternion rotation)
+        {
+            EnemyPrefab = enemyPrefab;
+            Position = position;
+            Rotation = rotation;
+        }
+
+        /// <summary>敵 Prefab が配線されているか。false ならこの戦闘は警告してスキップする。</summary>
+        public bool HasEnemy => EnemyPrefab != null;
+    }
+
+    /// <summary>
+    /// battle ステップの seam(実体は戦闘班)。敵 Prefab をトリガー位置に出し、勝利まで待つコルーチン。
+    /// 敗北時はシーン再読込で再開されるので完了しない想定。
+    /// </summary>
+    public interface IBattleRunner
+    {
+        IEnumerator Run(BattleSetup setup);
+    }
+
+    /// <summary>
+    /// 実行時の IBattleRunner を登録する seam。Core は Gameplay を参照できず drag 配線もできないため、
+    /// Title フローで登録し、EventPlayer は Inspector 未配線時のフォールバックとして見る。
+    /// </summary>
+    public static class BattleRunnerService
+    {
+        public static IBattleRunner Current { get; set; }
+    }
+
+    /// <summary>
+    /// giveItem ステップの seam。実体は Gameplay(InventoryManager のラッパ)で実装し、
+    /// EventPlayer に注入する。Core は Gameplay を参照しないためこの契約を挟む。
+    /// </summary>
+    public interface IItemGiver
+    {
+        void Give(string itemKey);
+
+        /// <summary>
+        /// itemKey の「大事なもの」を1つ以上所持しているか(hasItem 条件の判定)。
+        /// 実体(InventoryManager)は itemKey を ItemDB で引き、カテゴリが 大事なもの の場合のみ
+        /// 所持数を見る。装備品/食材/武器のキーや未登録キーは対象外で false を返す。
+        /// </summary>
+        bool HasImportantItem(string itemKey);
+    }
+
+    /// <summary>
+    /// 実行時の IItemGiver を登録する seam。Core は Gameplay を参照できず drag 配線もできないため、
+    /// InventoryManager が Awake で登録し、EventPlayer は Inspector 未配線時のフォールバックとして見る。
+    /// </summary>
+    public static class ItemGiverService
+    {
+        public static IItemGiver Current { get; set; }
+    }
+
+    /// <summary>
+    /// giveWeapon ステップの seam(実体は WeaponManager、<see cref="IItemGiver"/> と対称)。
+    /// 実装が無い間は EventPlayer が警告してスキップする。
+    /// </summary>
+    public interface IWeaponGiver
+    {
+        /// <summary>weaponKey(sword/bow/scythe)の武器を1本入手する。既に所持なら何もしない。</summary>
+        void GiveWeapon(string weaponKey);
+    }
+
+    /// <summary>
+    /// 実行時に有効な IWeaponGiver を Core 側へ登録する seam。実装者(プレイヤーリグの WeaponManager)が
+    /// Awake で自身を登録し、EventPlayer は Inspector 未配線時のフォールバックとしてここを見る
+    /// (<see cref="ItemGiverService"/> と同じ思想)。
+    /// </summary>
+    public static class WeaponGiverService
+    {
+        public static IWeaponGiver Current { get; set; }
     }
 }
