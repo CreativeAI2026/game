@@ -19,8 +19,11 @@ namespace CreativeAI.EditorTools
     {
         public const char Void = ' '; // 床が無いマス
         public const float Cell = 4f; // 1マスの一辺(u)
-        public const float FloorHeight = 9.6f; // 階高 = 壁の高さ
+        public const float FloorHeight = 9.6f; // 階高
         const float FloorSlabThickness = 0.4f;
+
+        // 壁は上の階の床板の下面で止める。階高いっぱいだと壁の上面が上の階の床面と重なってちらつく
+        const float WallHeight = FloorHeight - FloorSlabThickness;
 
         const string ScenePath = "Assets/_Project/Scenes/Field/Field_Area01.unity";
         const string EnvDir = "Assets/_Project/Art/Models/Environment";
@@ -216,7 +219,8 @@ namespace CreativeAI.EditorTools
             var go = new GameObject("Directional Light");
             var light = go.AddComponent<Light>();
             light.type = LightType.Directional;
-            light.shadows = LightShadows.Soft;
+            // 屋根の無い建物に太陽の影を落とすと、下の階の床にカメラ追従の円弧状の光漏れが出る
+            light.shadows = LightShadows.None;
             go.transform.rotation = Quaternion.Euler(50f, -30f, 0f);
         }
 
@@ -443,7 +447,7 @@ namespace CreativeAI.EditorTools
 
                 var wallGroup = NewGroup("Walls", parent);
                 foreach (var rect in MergeRects(wallMask, rows, cols))
-                    CreateBox(wallGroup, "Wall", rect, FloorHeight, FloorHeight * 0.5f, wallMat);
+                    CreateBox(wallGroup, "Wall", rect, WallHeight, WallHeight * 0.5f, wallMat);
 
                 if (handrail != null)
                 {
@@ -516,8 +520,131 @@ namespace CreativeAI.EditorTools
                 foreach (var s in stairCells)
                     CreateStairs(NewGroup("Stairs", floorRoots[s.LowerFloor]), stairs, s);
 
+            ApplyStaticFlags(root);
             Selection.activeGameObject = root;
         }
+
+        // ---------------------------------------------------------------- Static
+
+        // 固定物はライトマップに焼き、バッチングとオクルージョンカリングの対象にする
+        const StaticEditorFlags SolidFlags =
+            StaticEditorFlags.ContributeGI
+            | StaticEditorFlags.BatchingStatic
+            | StaticEditorFlags.OccluderStatic
+            | StaticEditorFlags.OccludeeStatic
+            | StaticEditorFlags.ReflectionProbeStatic;
+
+        // 透ける物は奥を隠さず、ベイクで影も落とさない(ガラスの真っ黒な影になる)
+        const StaticEditorFlags SeeThroughFlags =
+            StaticEditorFlags.BatchingStatic
+            | StaticEditorFlags.OccludeeStatic
+            | StaticEditorFlags.ReflectionProbeStatic;
+
+        /// <summary>Field_Area01 を作り直さずに、今の Map へ Static 設定だけ当てて保存する。</summary>
+        [MenuItem("Tools/CreativeAI/Map/Apply Static Flags To Field_Area01")]
+        public static void ApplyStaticFlagsToArea01()
+        {
+            var scene = FindOpenScene(ScenePath);
+            if (!scene.IsValid())
+                scene = EditorSceneManager.OpenScene(ScenePath, OpenSceneMode.Single);
+            var root = FindMapRoot(scene);
+            if (root == null)
+            {
+                Debug.LogError($"[MapLayoutBuilder] {ScenePath} に {MapRootName} がありません。");
+                return;
+            }
+            ApplyStaticFlags(root);
+            EditorSceneManager.SaveScene(scene);
+        }
+
+        /// <summary>
+        /// Map 配下の見た目に Static を付ける。動く扉板は外す(Static だと開閉しても描画が動かない)。
+        /// ライトマップ用 UV(UV2)の無いメッシュはライトマップに焼けないので、光はライトプローブから受ける。
+        /// </summary>
+        static void ApplyStaticFlags(GameObject root)
+        {
+            var moving = new HashSet<Transform>();
+            foreach (var door in root.GetComponentsInChildren<SlidingDoor>(true))
+            {
+                var leaf = door.Leaf != null ? door.Leaf : SlidingDoor.FindLeaf(door.transform);
+                if (leaf != null)
+                    moving.Add(leaf);
+            }
+
+            int solid = 0,
+                seeThrough = 0,
+                probeLit = 0,
+                skipped = 0;
+            foreach (var renderer in root.GetComponentsInChildren<MeshRenderer>(true))
+            {
+                var go = renderer.gameObject;
+                if (moving.Any(leaf => go.transform.IsChildOf(leaf)))
+                {
+                    GameObjectUtility.SetStaticEditorFlags(go, 0);
+                    skipped++;
+                    continue;
+                }
+
+                if (IsSeeThrough(renderer))
+                {
+                    GameObjectUtility.SetStaticEditorFlags(go, SeeThroughFlags);
+                    seeThrough++;
+                    continue;
+                }
+
+                GameObjectUtility.SetStaticEditorFlags(go, SolidFlags);
+                solid++;
+                var hasLightmapUV =
+                    go.TryGetComponent<MeshFilter>(out var filter)
+                    && filter.sharedMesh != null
+                    && filter.sharedMesh.HasVertexAttribute(
+                        UnityEngine.Rendering.VertexAttribute.TexCoord1
+                    );
+                renderer.receiveGI = hasLightmapUV ? ReceiveGI.Lightmaps : ReceiveGI.LightProbes;
+                // Prefab インスタンスは記録しないとシーン保存時に上書きが残らない
+                PrefabUtility.RecordPrefabInstancePropertyModifications(renderer);
+                if (!hasLightmapUV)
+                    probeLit++;
+            }
+
+            Debug.Log(
+                $"[MapLayoutBuilder] Static を付けました: 固定物 {solid}(うちUV2なしでプローブ受光 {probeLit})"
+                    + $" / 透ける物 {seeThrough} / 動く扉板 {skipped}"
+            );
+        }
+
+        // 1マス(4u)の壁片が遮蔽物として残るように、既定の 5 から下げる
+        const float OcclusionSmallestOccluder = 4f;
+        const float OcclusionSmallestHole = 0.25f;
+
+        /// <summary>
+        /// Field_Area01 だけを開いてオクルージョンカリングを焼く。小物は Static でないので焼く対象に要らず、
+        /// 小物シーンを一緒に開くとそちらにも参照が書き込まれて担当者と競合する。Rebuild したら焼き直す。
+        /// </summary>
+        [MenuItem("Tools/CreativeAI/Map/Bake Occlusion Field_Area01")]
+        public static void BakeOcclusionArea01()
+        {
+            if (!EditorSceneManager.SaveCurrentModifiedScenesIfUserWantsTo())
+                return;
+            var scene = EditorSceneManager.OpenScene(ScenePath, OpenSceneMode.Single);
+
+            StaticOcclusionCulling.smallestOccluder = OcclusionSmallestOccluder;
+            StaticOcclusionCulling.smallestHole = OcclusionSmallestHole;
+            StaticOcclusionCulling.backfaceThreshold = 100f;
+            if (!StaticOcclusionCulling.Compute())
+            {
+                Debug.LogError("[MapLayoutBuilder] オクルージョンカリングのベイクに失敗しました。");
+                return;
+            }
+
+            EditorSceneManager.SaveScene(scene);
+            Debug.Log("[MapLayoutBuilder] オクルージョンカリングを焼きました。");
+        }
+
+        static bool IsSeeThrough(Renderer renderer) =>
+            renderer.sharedMaterials.Any(m =>
+                m != null && m.renderQueue > (int)UnityEngine.Rendering.RenderQueue.GeometryLast
+            );
 
         static Transform NewGroup(string name, Transform parent)
         {
@@ -750,6 +877,13 @@ namespace CreativeAI.EditorTools
             go.transform.localScale = prefab.transform.localScale * scale;
         }
 
+        /// <summary>階高いっぱいで作られたモデル(ガラス壁)を、原点の床面を保ったまま壁の高さへ縮める。</summary>
+        static void FitToWallHeight(GameObject go)
+        {
+            var s = go.transform.localScale;
+            go.transform.localScale = new Vector3(s.x, s.y * (WallHeight / FloorHeight), s.z);
+        }
+
         /// <summary>
         /// 図の上でそのマスを通る壁の線が東西向きか。左右が壁なら東西、そうでなく上下が壁なら南北。
         /// 図の外は壁扱い(外周に接する扉・ガラスも向きが決まる)。
@@ -950,6 +1084,7 @@ namespace CreativeAI.EditorTools
                     var go = (GameObject)PrefabUtility.InstantiatePrefab(prefab, parent);
                     go.name = $"GlassWall_{row}_{col}";
                     PlaceModel(go, prefab, Place(row, col, 0f), Quaternion.Euler(0f, yaw, 0f));
+                    FitToWallHeight(go);
                 }
 
             for (var i = 0; i < run.Length; i++)
@@ -1005,12 +1140,12 @@ namespace CreativeAI.EditorTools
                         $"GlassJamb_{row}_{col}",
                         new Vector3(
                             horizontal ? Cell * col : gapMid,
-                            FloorHeight * 0.5f,
+                            WallHeight * 0.5f,
                             horizontal ? gapMid : Cell * row
                         ),
                         horizontal
-                            ? new Vector3(Cell, FloorHeight, gap)
-                            : new Vector3(gap, FloorHeight, Cell),
+                            ? new Vector3(Cell, WallHeight, gap)
+                            : new Vector3(gap, WallHeight, Cell),
                         wallMat
                     );
                 }
@@ -1101,22 +1236,22 @@ namespace CreativeAI.EditorTools
             CreateFiller(
                 root.transform,
                 "SideL",
-                new Vector3((-half + minX) * 0.5f, FloorHeight * 0.5f, 0f),
-                new Vector3(minX + half, FloorHeight, DoorGlassThickness),
+                new Vector3((-half + minX) * 0.5f, WallHeight * 0.5f, 0f),
+                new Vector3(minX + half, WallHeight, DoorGlassThickness),
                 glassMat
             );
             CreateFiller(
                 root.transform,
                 "SideR",
-                new Vector3((maxX + half) * 0.5f, FloorHeight * 0.5f, 0f),
-                new Vector3(half - maxX, FloorHeight, DoorGlassThickness),
+                new Vector3((maxX + half) * 0.5f, WallHeight * 0.5f, 0f),
+                new Vector3(half - maxX, WallHeight, DoorGlassThickness),
                 glassMat
             );
             CreateFiller(
                 root.transform,
                 "Lintel",
-                new Vector3((minX + maxX) * 0.5f, (height + FloorHeight) * 0.5f, 0f),
-                new Vector3(maxX - minX, FloorHeight - height, DoorGlassThickness),
+                new Vector3((minX + maxX) * 0.5f, (height + WallHeight) * 0.5f, 0f),
+                new Vector3(maxX - minX, WallHeight - height, DoorGlassThickness),
                 glassMat
             );
         }
@@ -1218,6 +1353,7 @@ namespace CreativeAI.EditorTools
                 var go = (GameObject)PrefabUtility.InstantiatePrefab(prefab, parent);
                 go.name = $"GlassCorner_{row}_{col}";
                 PlaceModel(go, prefab, center, Quaternion.Euler(0f, yaw, 0f));
+                FitToWallHeight(go);
                 var scale = go.transform.localScale;
                 scale.x *= span / Cell; // 板の幅方向(モデルのローカル X)を継ぐ長さに合わせる
                 go.transform.localScale = scale;
