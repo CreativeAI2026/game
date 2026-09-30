@@ -13,29 +13,36 @@ Unity Editor **6000.4.5f1**（Unity 6）で開いてください。
 game/                          ← リポジトリルート
 ├── Assets/
 │   ├── _Project/              本プロジェクトのアセット（基本ここに置く）
-│   │   ├── Features/          ゲーム機能。機能ごとにフォルダ + asmdef
-│   │   │   ├── Core/          進行度・イベント・シーン遷移など土台
-│   │   │   ├── Player/        プレイヤー
-│   │   │   ├── Enemy/         敵
-│   │   │   ├── Combat/        戦闘
-│   │   │   ├── Crafting/      調合
-│   │   │   ├── StatRoll/      アイテムのステータス算出（調合・ドロップ共通のロール）
-│   │   │   ├── Inventory/     インベントリ
-│   │   │   ├── Scenario/      イベント・会話
+│   │   ├── Features/          ゲーム機能。機能ごとのフォルダにロジック・データを置く
+│   │   │   ├── Core/          進行度・会話イベント再生・ゲームモード・シーン遷移など土台
+│   │   │   ├── Player/        プレイヤー・武器
+│   │   │   ├── Enemy/         敵・ボス
+│   │   │   ├── Combat/        戦闘（当たり判定・パラメータ）
+│   │   │   ├── Crafting/      調合（レシピ・解禁状態・調合処理）
+│   │   │   ├── Inventory/     アイテム定義・所持品・装備品の能力値
 │   │   │   ├── SaveSystem/    セーブ・ロード
-│   │   │   ├── Field/         フィールド・マップ
+│   │   │   ├── Field/         フィールド（扉・拾えるアイテム・シーンの重ね読み）
 │   │   │   ├── Camera/        カメラ
 │   │   │   ├── Audio/         オーディオ再生
-│   │   │   └── UI/            UI
+│   │   │   └── UI/            各機能の画面
+│   │   │       ├── Root/          UIRoot・画面切り替え・起動時の常駐生成（GameSession）
+│   │   │       ├── Common/        画面共通の部品（スロット・タブ・アニメーション）
+│   │   │       ├── HUD/           フィールド中の表示（HP・武器・操作表示・即時食材・暗転）
+│   │   │       ├── TitleUI/       タイトル
+│   │   │       ├── InventoryUI/   インベントリ
+│   │   │       ├── CraftingUI/    調合
+│   │   │       ├── CharacterUI/   キャラクター（装備・武器・即時食材）
+│   │   │       ├── ConversationUI/ 会話
+│   │   │       └── SaveDialog/    セーブ確認
 │   │   ├── Art/               Models / Textures / Materials / Animations / Shaders / VFX / UI
 │   │   ├── Audio/             BGM・SE のファイル
 │   │   ├── Scenes/            シーン（Title / Field / Battle / UI プレビュー）
 │   │   ├── Settings/          URP / Input System 等の設定
-│   │   ├── Resources/         実行時ロードするアセット（ItemDB 等のカタログ）
-│   │   ├── Editor/            Editor 拡張・セットアップツール（Tools メニュー）
+│   │   ├── Resources/         実行時ロードするアセット（ItemDB・CraftRecipeDB・常駐生成の設定）
+│   │   ├── Editor/            Editor 拡張（Tools メニュー・UI バリデータ・CSV / イベント取り込み）
 │   │   └── Tests/             EditMode / PlayMode テスト
 │   ├── Plugins/               外部アセット（DOTween 等）
-│   └── Resources/             Unity 既定の Resources
+│   └── Resources/             DOTween の設定（DOTween がこの場所を前提にしているので動かさない）
 ├── Packages/                  Unity Package Manager の管理
 │   └── manifest.json          依存パッケージ一覧
 ├── ProjectSettings/           プロジェクト固有の設定（バージョン・物理設定等）
