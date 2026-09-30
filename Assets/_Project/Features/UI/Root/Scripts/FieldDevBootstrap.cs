@@ -1,6 +1,4 @@
 using CreativeAI.Core;
-using CreativeAI.Core.EventSystem;
-using CreativeAI.Core.SceneManagement;
 using CreativeAI.Gameplay;
 using UnityEngine;
 
@@ -8,7 +6,7 @@ namespace CreativeAI.UI
 {
     /// <summary>
     /// 開発用シーンを Title を経由せず直接 Play したとき、常駐システム(マネージャ / Inventory / UIRoot / 会話UI)を
-    /// Title と同じ順(TitleUIController.EnsureSessionAndPlayer)で生成する開発用ブートストラップ。Title 経由なら何もしない(冪等)。
+    /// Title と同じ手順(GameSession)で生成する開発用ブートストラップ。Title 経由なら何もしない(冪等)。
     /// Field シーン側に常駐のコピーを持たせないためのもの。直接 Play 時は所持品にテスト品を積む。
     /// </summary>
     public class FieldDevBootstrap : MonoBehaviour
@@ -43,22 +41,12 @@ namespace CreativeAI.UI
                 );
             }
 
-            // ① マネージャ(ProgressManager / GameModeManager / EventPlayer)
-            SessionBootstrap.EnsureSession();
-            // ② 所持品
-            var inventory = InventoryManager.EnsureResident();
-            // ②' レシピ解禁状態
-            RecipeBookManager.EnsureResident();
-            // ③ UI レイヤー(会話UI・即時食材使用UI を子として同梱)
-            UIRoot.EnsureResident(config != null ? config.uiRootPrefab : null);
-            // ④ 戦闘実行
-            BattleRunnerService.Current ??= new BattleRunner();
+            GameSession.EnsureResidents(config != null ? config.uiRootPrefab : null);
 
-            // ⑤ プレイヤーリグ(Title と同じ GameStarter.EnsurePlayerRig を通し、
-            //    配置も本番と同じ SpawnPoint 経由にする)。
+            // プレイヤーリグも Title と同じ経路で出し、配置も本番と同じ SpawnPoint 経由にする。
             if (_spawnPlayerRig)
             {
-                var player = GameStarter.EnsurePlayerRig(
+                var player = GameSession.EnsurePlayerRig(
                     config != null ? config.playerRigPrefab : null
                 );
                 if (player != null)
@@ -66,8 +54,8 @@ namespace CreativeAI.UI
             }
 
             // 開発用: テスト品を積む(本番 Title フローでは呼ばれない = まっさら)。
-            if (_seedTestItems && inventory != null)
-                inventory.SeedTestItems();
+            if (_seedTestItems && InventoryManager.Instance != null)
+                InventoryManager.Instance.SeedTestItems();
         }
     }
 }

@@ -13,93 +13,363 @@ MonoBehaviour:
   m_Name: CraftRecipeDB
   m_EditorClassIdentifier: CreativeAI.Gameplay::CreativeAI.Gameplay.CraftRecipeDB
   _recipes:
-  - {fileID: 11400000, guid: 2890fe6bae331d44aa4c6a7c69de2e23, type: 2}
-  - {fileID: 11400000, guid: 4acde9e8265f9da4ba403cf4dfcda592, type: 2}
-  - {fileID: 11400000, guid: ae42464d880822c448b8e0a1a6603fdd, type: 2}
-  - {fileID: 11400000, guid: a95801c7e1b72c04287b09c44a9c8faf, type: 2}
-  - {fileID: 11400000, guid: d223d9f43ac1c9b438d8e3461edc6206, type: 2}
-  - {fileID: 11400000, guid: e8819f825a347d34b854d3c668848fdf, type: 2}
-  - {fileID: 11400000, guid: c2ff00884ba1b084d88f4e7e499c72c1, type: 2}
-  - {fileID: 11400000, guid: 9afb1b719617b964693393c3567e7e24, type: 2}
-  - {fileID: 11400000, guid: 1e68f2b6ef8290440bd9b62b834623bf, type: 2}
-  - {fileID: 11400000, guid: ef9861b0293166b40a5c88517b4a97f2, type: 2}
-  - {fileID: 11400000, guid: b8968421e9095b4418964774b3f9e3fd, type: 2}
-  - {fileID: 11400000, guid: 749a4a5f1361e0d42b11eed64e7922d7, type: 2}
-  - {fileID: 11400000, guid: 16462d5a220db074998305c4b4ded60c, type: 2}
-  - {fileID: 11400000, guid: e51a42ca25bc0524ab4e18be73744f83, type: 2}
-  - {fileID: 11400000, guid: 071c216393d853644bf37e0a722baf1b, type: 2}
-  - {fileID: 11400000, guid: 50e163700272b8347ba8d186d9777fff, type: 2}
-  - {fileID: 11400000, guid: 48c92779c1faf024694263b236ffef64, type: 2}
-  - {fileID: 11400000, guid: f3b057a0ca851fc449237364add1e822, type: 2}
-  - {fileID: 11400000, guid: 2b6908b01ed05154b85ccb2bbeb1ae77, type: 2}
-  - {fileID: 11400000, guid: 6400e8c04324e594aa93d0d3f0f32274, type: 2}
-  - {fileID: 11400000, guid: bae17c89b59511646919749ad47ad693, type: 2}
-  - {fileID: 11400000, guid: 46b2bef98b79e10498f3e878dba2a77a, type: 2}
-  - {fileID: 11400000, guid: 30a460d916d6c214486b997aaaf310a1, type: 2}
-  - {fileID: 11400000, guid: ea92895e69f377a429f93b41f95cbc71, type: 2}
-  - {fileID: 11400000, guid: 305921cba3619984c8a46792b35eaf86, type: 2}
-  - {fileID: 11400000, guid: 2e48f7e39f40096438fa4791d5776831, type: 2}
-  - {fileID: 11400000, guid: c1ccbbce837d0ee4f94413d8613018d2, type: 2}
-  - {fileID: 11400000, guid: 845edf8644795824e8ee299a480b6398, type: 2}
-  - {fileID: 11400000, guid: 6d7454a7fc664b24ea7876141e5bcc8d, type: 2}
-  - {fileID: 11400000, guid: 247e8c7ce1b7c73488a68605a256ef35, type: 2}
-  - {fileID: 11400000, guid: fbd0e40c7159e1641ac08adf2935fc3c, type: 2}
-  - {fileID: 11400000, guid: 60aebeeb7a39be245a12bd8882ce5176, type: 2}
-  - {fileID: 11400000, guid: 2bf6ef210bda0f948bf71ccbe9dadfed, type: 2}
-  - {fileID: 11400000, guid: c34bd6a4fa1d2da489eace33ef0831ea, type: 2}
-  - {fileID: 11400000, guid: 5dc7ceeb48fc2fd49b42f119887f054d, type: 2}
-  - {fileID: 11400000, guid: 120a300e3d711e04481d8308b8ce1400, type: 2}
-  - {fileID: 11400000, guid: 24a9d18d5ac4908439e12653f80f2a08, type: 2}
-  - {fileID: 11400000, guid: bd49a7166e9316441b60c635214dc8f9, type: 2}
-  - {fileID: 11400000, guid: 81ebf25d5b3352f4bb9d26d5b2ede62c, type: 2}
-  - {fileID: 11400000, guid: bd26514c215dd5c45b4d39cb3c850f1d, type: 2}
-  - {fileID: 11400000, guid: 60f221a9e009494418e437bfaf7484f8, type: 2}
-  - {fileID: 11400000, guid: c870f0d04851e2b4bab8b1abed2fc672, type: 2}
-  - {fileID: 11400000, guid: 1026d6438da9bd34e92750453b6b5c7b, type: 2}
-  - {fileID: 11400000, guid: 18b3e4333fc5747488a43dbc14848a10, type: 2}
-  - {fileID: 11400000, guid: bd1dc4c4d50f9af4fa4ae5d59bddcc6e, type: 2}
-  - {fileID: 11400000, guid: fbc154d611b3f57469d8baef90f45633, type: 2}
-  - {fileID: 11400000, guid: a40c3a672746ff248a1fb2dcd351cd21, type: 2}
-  - {fileID: 11400000, guid: a78383aeddd2a4845994f4ceb5681ff8, type: 2}
-  - {fileID: 11400000, guid: 4c2d44c002adfc84eb3e1a3c01505327, type: 2}
-  - {fileID: 11400000, guid: 9d6e73b42fca6c946946ccdc2116934d, type: 2}
-  - {fileID: 11400000, guid: 00f29bb424a8dba499451c8fc673495b, type: 2}
-  - {fileID: 11400000, guid: 08412e65139d26c4fbc39f99a8ccb7c5, type: 2}
-  - {fileID: 11400000, guid: bd48c4f014bd65744b435ead7832e728, type: 2}
-  - {fileID: 11400000, guid: c44bff74e0418d34eb948d52bae99fb0, type: 2}
-  - {fileID: 11400000, guid: 92bc7a19324610440a0f7b9db9197389, type: 2}
-  - {fileID: 11400000, guid: cc96692e1600b7c4fb183d3f333b9a9c, type: 2}
-  - {fileID: 11400000, guid: b379aa775afb5014ea2dc0301fefc80d, type: 2}
-  - {fileID: 11400000, guid: e91476bc81b91a94a87e28943c0c50c1, type: 2}
-  - {fileID: 11400000, guid: e23d4244d5dba3b4ba93122696ef0eeb, type: 2}
-  - {fileID: 11400000, guid: 441a07ab5c5e4454dadfbeae485e0827, type: 2}
-  - {fileID: 11400000, guid: 235f8408c618b554b8130f0bc58a717f, type: 2}
-  - {fileID: 11400000, guid: fbcd5ef560ebc5649b21fb26aebf4624, type: 2}
-  - {fileID: 11400000, guid: e42480aee3a2f8b40a831ec0235c511b, type: 2}
-  - {fileID: 11400000, guid: 76fae3b7fc0e2a543a36a98ed4b6a7cd, type: 2}
-  - {fileID: 11400000, guid: 6a8136e4c2c81ab41ab398d6ca769d4d, type: 2}
-  - {fileID: 11400000, guid: 540390b5e9037354884abc3712499768, type: 2}
-  - {fileID: 11400000, guid: ecb35527dded4ab409c2bfb92864a738, type: 2}
-  - {fileID: 11400000, guid: e5f167dc4092c7a419483bab9360daea, type: 2}
-  - {fileID: 11400000, guid: 5540d62b6a515aa4bb985fc11b9d2173, type: 2}
-  - {fileID: 11400000, guid: 7c738e2243381f449bb1be11d14cecdc, type: 2}
-  - {fileID: 11400000, guid: bb9a7e7a4e53ed14790b71a635c8e7b0, type: 2}
-  - {fileID: 11400000, guid: e03d8b83f11fd0845aa2ea9317794f2e, type: 2}
-  - {fileID: 11400000, guid: eb44506f91303904cb10c208ae54f3f6, type: 2}
-  - {fileID: 11400000, guid: 30b9d9bc8d691da4da859b325796301e, type: 2}
-  - {fileID: 11400000, guid: fb79057a4ae66a04b8dd2962285e9df4, type: 2}
-  - {fileID: 11400000, guid: a8bd59312134b304da4ca71d2c11abe7, type: 2}
-  - {fileID: 11400000, guid: fbcd9886968ae7e4086b6d080a2c2860, type: 2}
-  - {fileID: 11400000, guid: 7f8bcb7f7eea343438aacc764272a77c, type: 2}
-  - {fileID: 11400000, guid: 6f14b03a673c3cb478232e2365328f55, type: 2}
-  - {fileID: 11400000, guid: 99451f1595bb4d44493a8d761d67ab27, type: 2}
-  - {fileID: 11400000, guid: aae05ca020751ae408bd9a3e3b2a6458, type: 2}
-  - {fileID: 11400000, guid: 63e09a2d8a4ef1e45ae725240240dc82, type: 2}
-  - {fileID: 11400000, guid: 6edb9e53d1c08874297149186553bb35, type: 2}
-  - {fileID: 11400000, guid: 2ef9fb02614e52a458943954f250547b, type: 2}
-  - {fileID: 11400000, guid: e6cb46085bcb94c4eb00925d8bcda737, type: 2}
-  - {fileID: 11400000, guid: 4203724923ee34f4da20037f25b9c693, type: 2}
-  - {fileID: 11400000, guid: 2de285035e7372f429c74b423c2b3096, type: 2}
-  - {fileID: 11400000, guid: 3ffdeaed9e6f04c459243d0f9fb0335c, type: 2}
-  - {fileID: 11400000, guid: e83922d2ebc2b0149af50b95be908f35, type: 2}
-  - {fileID: 11400000, guid: 5da3e901178969e45bf1a635f189033c, type: 2}
+  - material1: {fileID: 11400000, guid: 2eb5d3fd27304bd9910bb746953d70a5, type: 2}
+    material2: {fileID: 11400000, guid: b451bc339ee442319638382ca5c2766a, type: 2}
+    resultItem: {fileID: 11400000, guid: fbbd837ed22546f9878dc0ed682aea2b, type: 2}
+    showInRecipeCraft: 0
+  - material1: {fileID: 11400000, guid: d50673e5f8234ffa997515445c6786d0, type: 2}
+    material2: {fileID: 11400000, guid: e7fbd7ecfd83ba64284e68d09bba1571, type: 2}
+    resultItem: {fileID: 11400000, guid: 8b6d7421c1da06f4799e8c2bc676f82c, type: 2}
+    showInRecipeCraft: 0
+  - material1: {fileID: 11400000, guid: d50673e5f8234ffa997515445c6786d0, type: 2}
+    material2: {fileID: 11400000, guid: b04cdf6d2ced4304ae75648fd546e7de, type: 2}
+    resultItem: {fileID: 11400000, guid: c36438585f0ce6344b70158e1f1da6f8, type: 2}
+    showInRecipeCraft: 0
+  - material1: {fileID: 11400000, guid: d50673e5f8234ffa997515445c6786d0, type: 2}
+    material2: {fileID: 11400000, guid: 18612e0964134b588a072ac494cc0a52, type: 2}
+    resultItem: {fileID: 11400000, guid: 7f5386ae92d52224496af04d4ce44d5d, type: 2}
+    showInRecipeCraft: 0
+  - material1: {fileID: 11400000, guid: d50673e5f8234ffa997515445c6786d0, type: 2}
+    material2: {fileID: 11400000, guid: 446d1c0a90ff4bd29036b7aab7e31237, type: 2}
+    resultItem: {fileID: 11400000, guid: dd8fabd1bc590e5408c7ee24dc6fa2fa, type: 2}
+    showInRecipeCraft: 0
+  - material1: {fileID: 11400000, guid: d50673e5f8234ffa997515445c6786d0, type: 2}
+    material2: {fileID: 11400000, guid: cb9e1f3296b348bdae2064628629fcb6, type: 2}
+    resultItem: {fileID: 11400000, guid: afcf5cf44f9fee14eac1f757dbe044db, type: 2}
+    showInRecipeCraft: 0
+  - material1: {fileID: 11400000, guid: d50673e5f8234ffa997515445c6786d0, type: 2}
+    material2: {fileID: 11400000, guid: d42214171a36493da213814a46ca19ba, type: 2}
+    resultItem: {fileID: 11400000, guid: e6f7858d0748c7b4f95ef3bcf9975add, type: 2}
+    showInRecipeCraft: 0
+  - material1: {fileID: 11400000, guid: d50673e5f8234ffa997515445c6786d0, type: 2}
+    material2: {fileID: 11400000, guid: 194ce770bcb04d7fa9e7e3dae62863b7, type: 2}
+    resultItem: {fileID: 11400000, guid: a56690cb18921b64f99212062bba0e50, type: 2}
+    showInRecipeCraft: 0
+  - material1: {fileID: 11400000, guid: d50673e5f8234ffa997515445c6786d0, type: 2}
+    material2: {fileID: 11400000, guid: c64d3855eeab47c19a8e777c3871f7b6, type: 2}
+    resultItem: {fileID: 11400000, guid: d60dd3c745c4bf54b8db151e71939a4a, type: 2}
+    showInRecipeCraft: 0
+  - material1: {fileID: 11400000, guid: d50673e5f8234ffa997515445c6786d0, type: 2}
+    material2: {fileID: 11400000, guid: 7b796a2dd0e5425a831e3aafdd7ef37e, type: 2}
+    resultItem: {fileID: 11400000, guid: 05117110d437eaf46aa146ec2592046d, type: 2}
+    showInRecipeCraft: 0
+  - material1: {fileID: 11400000, guid: e7fbd7ecfd83ba64284e68d09bba1571, type: 2}
+    material2: {fileID: 11400000, guid: b04cdf6d2ced4304ae75648fd546e7de, type: 2}
+    resultItem: {fileID: 11400000, guid: b9c2bc952da9ed64b97b959536add2b8, type: 2}
+    showInRecipeCraft: 0
+  - material1: {fileID: 11400000, guid: e7fbd7ecfd83ba64284e68d09bba1571, type: 2}
+    material2: {fileID: 11400000, guid: 18612e0964134b588a072ac494cc0a52, type: 2}
+    resultItem: {fileID: 11400000, guid: 5707c1a188396114ea876b9e40691883, type: 2}
+    showInRecipeCraft: 0
+  - material1: {fileID: 11400000, guid: e7fbd7ecfd83ba64284e68d09bba1571, type: 2}
+    material2: {fileID: 11400000, guid: 446d1c0a90ff4bd29036b7aab7e31237, type: 2}
+    resultItem: {fileID: 11400000, guid: 2319f96c959b7f84f91ba2bd2f8b4988, type: 2}
+    showInRecipeCraft: 0
+  - material1: {fileID: 11400000, guid: e7fbd7ecfd83ba64284e68d09bba1571, type: 2}
+    material2: {fileID: 11400000, guid: cb9e1f3296b348bdae2064628629fcb6, type: 2}
+    resultItem: {fileID: 11400000, guid: 14dfcb419a7bb1549a040c0a548ea40c, type: 2}
+    showInRecipeCraft: 0
+  - material1: {fileID: 11400000, guid: e7fbd7ecfd83ba64284e68d09bba1571, type: 2}
+    material2: {fileID: 11400000, guid: d42214171a36493da213814a46ca19ba, type: 2}
+    resultItem: {fileID: 11400000, guid: 0d5159bdccf50ac48b9d25e957a2ef9f, type: 2}
+    showInRecipeCraft: 0
+  - material1: {fileID: 11400000, guid: e7fbd7ecfd83ba64284e68d09bba1571, type: 2}
+    material2: {fileID: 11400000, guid: 194ce770bcb04d7fa9e7e3dae62863b7, type: 2}
+    resultItem: {fileID: 11400000, guid: d4e5b9a0d561f864e83125a0779d05b9, type: 2}
+    showInRecipeCraft: 0
+  - material1: {fileID: 11400000, guid: e7fbd7ecfd83ba64284e68d09bba1571, type: 2}
+    material2: {fileID: 11400000, guid: c64d3855eeab47c19a8e777c3871f7b6, type: 2}
+    resultItem: {fileID: 11400000, guid: 11007bba6b95ff441a1d2791b3ef2eae, type: 2}
+    showInRecipeCraft: 0
+  - material1: {fileID: 11400000, guid: e7fbd7ecfd83ba64284e68d09bba1571, type: 2}
+    material2: {fileID: 11400000, guid: 7b796a2dd0e5425a831e3aafdd7ef37e, type: 2}
+    resultItem: {fileID: 11400000, guid: d4551ca405ecc56449e73e066c740096, type: 2}
+    showInRecipeCraft: 0
+  - material1: {fileID: 11400000, guid: b04cdf6d2ced4304ae75648fd546e7de, type: 2}
+    material2: {fileID: 11400000, guid: 18612e0964134b588a072ac494cc0a52, type: 2}
+    resultItem: {fileID: 11400000, guid: b17a1356badf8254189be95b1199f71d, type: 2}
+    showInRecipeCraft: 0
+  - material1: {fileID: 11400000, guid: b04cdf6d2ced4304ae75648fd546e7de, type: 2}
+    material2: {fileID: 11400000, guid: 446d1c0a90ff4bd29036b7aab7e31237, type: 2}
+    resultItem: {fileID: 11400000, guid: b94f736428f968c45a41de40f29c2dfd, type: 2}
+    showInRecipeCraft: 0
+  - material1: {fileID: 11400000, guid: b04cdf6d2ced4304ae75648fd546e7de, type: 2}
+    material2: {fileID: 11400000, guid: cb9e1f3296b348bdae2064628629fcb6, type: 2}
+    resultItem: {fileID: 11400000, guid: ea7ccc3c901ec574696da2c0f5a19a5c, type: 2}
+    showInRecipeCraft: 0
+  - material1: {fileID: 11400000, guid: b04cdf6d2ced4304ae75648fd546e7de, type: 2}
+    material2: {fileID: 11400000, guid: d42214171a36493da213814a46ca19ba, type: 2}
+    resultItem: {fileID: 11400000, guid: 1ebb5a7920566394ebaec86baddc7e18, type: 2}
+    showInRecipeCraft: 0
+  - material1: {fileID: 11400000, guid: b04cdf6d2ced4304ae75648fd546e7de, type: 2}
+    material2: {fileID: 11400000, guid: 194ce770bcb04d7fa9e7e3dae62863b7, type: 2}
+    resultItem: {fileID: 11400000, guid: c20086f0d603028488ee80911472d5c4, type: 2}
+    showInRecipeCraft: 0
+  - material1: {fileID: 11400000, guid: b04cdf6d2ced4304ae75648fd546e7de, type: 2}
+    material2: {fileID: 11400000, guid: c64d3855eeab47c19a8e777c3871f7b6, type: 2}
+    resultItem: {fileID: 11400000, guid: acf979a4e0a9cdc488e6ca6711be1ebf, type: 2}
+    showInRecipeCraft: 0
+  - material1: {fileID: 11400000, guid: b04cdf6d2ced4304ae75648fd546e7de, type: 2}
+    material2: {fileID: 11400000, guid: 7b796a2dd0e5425a831e3aafdd7ef37e, type: 2}
+    resultItem: {fileID: 11400000, guid: 084f2007a16fa884683f6b332c93910b, type: 2}
+    showInRecipeCraft: 0
+  - material1: {fileID: 11400000, guid: 18612e0964134b588a072ac494cc0a52, type: 2}
+    material2: {fileID: 11400000, guid: 446d1c0a90ff4bd29036b7aab7e31237, type: 2}
+    resultItem: {fileID: 11400000, guid: 088de31c701157643a20cb4b7f164311, type: 2}
+    showInRecipeCraft: 0
+  - material1: {fileID: 11400000, guid: 18612e0964134b588a072ac494cc0a52, type: 2}
+    material2: {fileID: 11400000, guid: cb9e1f3296b348bdae2064628629fcb6, type: 2}
+    resultItem: {fileID: 11400000, guid: 701179be4ac2b7941b2b55b87b9d6018, type: 2}
+    showInRecipeCraft: 0
+  - material1: {fileID: 11400000, guid: 18612e0964134b588a072ac494cc0a52, type: 2}
+    material2: {fileID: 11400000, guid: d42214171a36493da213814a46ca19ba, type: 2}
+    resultItem: {fileID: 11400000, guid: f29e583eb66f13842b28d9fd2a7dbbe0, type: 2}
+    showInRecipeCraft: 0
+  - material1: {fileID: 11400000, guid: 18612e0964134b588a072ac494cc0a52, type: 2}
+    material2: {fileID: 11400000, guid: 194ce770bcb04d7fa9e7e3dae62863b7, type: 2}
+    resultItem: {fileID: 11400000, guid: 366c8fc166293704ba27abdbfa61f352, type: 2}
+    showInRecipeCraft: 0
+  - material1: {fileID: 11400000, guid: 18612e0964134b588a072ac494cc0a52, type: 2}
+    material2: {fileID: 11400000, guid: c64d3855eeab47c19a8e777c3871f7b6, type: 2}
+    resultItem: {fileID: 11400000, guid: d3941ec751264fd4596fca6e1a5158b9, type: 2}
+    showInRecipeCraft: 0
+  - material1: {fileID: 11400000, guid: 18612e0964134b588a072ac494cc0a52, type: 2}
+    material2: {fileID: 11400000, guid: 7b796a2dd0e5425a831e3aafdd7ef37e, type: 2}
+    resultItem: {fileID: 11400000, guid: 52f77cad33be1ef44a240a0e4a492f83, type: 2}
+    showInRecipeCraft: 0
+  - material1: {fileID: 11400000, guid: 446d1c0a90ff4bd29036b7aab7e31237, type: 2}
+    material2: {fileID: 11400000, guid: cb9e1f3296b348bdae2064628629fcb6, type: 2}
+    resultItem: {fileID: 11400000, guid: d98b25d07857a9647a9842b36aff84e8, type: 2}
+    showInRecipeCraft: 0
+  - material1: {fileID: 11400000, guid: 446d1c0a90ff4bd29036b7aab7e31237, type: 2}
+    material2: {fileID: 11400000, guid: d42214171a36493da213814a46ca19ba, type: 2}
+    resultItem: {fileID: 11400000, guid: 095260a5f083a3f4384787f2a4df3ed5, type: 2}
+    showInRecipeCraft: 0
+  - material1: {fileID: 11400000, guid: 446d1c0a90ff4bd29036b7aab7e31237, type: 2}
+    material2: {fileID: 11400000, guid: 194ce770bcb04d7fa9e7e3dae62863b7, type: 2}
+    resultItem: {fileID: 11400000, guid: a08317b7c51d1b14ba277818405490b1, type: 2}
+    showInRecipeCraft: 0
+  - material1: {fileID: 11400000, guid: 446d1c0a90ff4bd29036b7aab7e31237, type: 2}
+    material2: {fileID: 11400000, guid: c64d3855eeab47c19a8e777c3871f7b6, type: 2}
+    resultItem: {fileID: 11400000, guid: c2dc332c4298a7d4381bb307a4730b15, type: 2}
+    showInRecipeCraft: 0
+  - material1: {fileID: 11400000, guid: 446d1c0a90ff4bd29036b7aab7e31237, type: 2}
+    material2: {fileID: 11400000, guid: 7b796a2dd0e5425a831e3aafdd7ef37e, type: 2}
+    resultItem: {fileID: 11400000, guid: 51647128bd874b648be700dc6cfae7ce, type: 2}
+    showInRecipeCraft: 0
+  - material1: {fileID: 11400000, guid: cb9e1f3296b348bdae2064628629fcb6, type: 2}
+    material2: {fileID: 11400000, guid: d42214171a36493da213814a46ca19ba, type: 2}
+    resultItem: {fileID: 11400000, guid: ab2e9b4e192b0ac41907d71db0e8a421, type: 2}
+    showInRecipeCraft: 0
+  - material1: {fileID: 11400000, guid: cb9e1f3296b348bdae2064628629fcb6, type: 2}
+    material2: {fileID: 11400000, guid: 194ce770bcb04d7fa9e7e3dae62863b7, type: 2}
+    resultItem: {fileID: 11400000, guid: 2fdd886d4f961e745af09d687d654ba0, type: 2}
+    showInRecipeCraft: 0
+  - material1: {fileID: 11400000, guid: cb9e1f3296b348bdae2064628629fcb6, type: 2}
+    material2: {fileID: 11400000, guid: c64d3855eeab47c19a8e777c3871f7b6, type: 2}
+    resultItem: {fileID: 11400000, guid: 21b3d76ca2c91d340bf2aee619482ac9, type: 2}
+    showInRecipeCraft: 0
+  - material1: {fileID: 11400000, guid: cb9e1f3296b348bdae2064628629fcb6, type: 2}
+    material2: {fileID: 11400000, guid: 7b796a2dd0e5425a831e3aafdd7ef37e, type: 2}
+    resultItem: {fileID: 11400000, guid: 31eca416662f93a438c4dd4c4afdceec, type: 2}
+    showInRecipeCraft: 0
+  - material1: {fileID: 11400000, guid: d42214171a36493da213814a46ca19ba, type: 2}
+    material2: {fileID: 11400000, guid: 194ce770bcb04d7fa9e7e3dae62863b7, type: 2}
+    resultItem: {fileID: 11400000, guid: 38498affd7a5cb74680e11b10f964c16, type: 2}
+    showInRecipeCraft: 0
+  - material1: {fileID: 11400000, guid: d42214171a36493da213814a46ca19ba, type: 2}
+    material2: {fileID: 11400000, guid: c64d3855eeab47c19a8e777c3871f7b6, type: 2}
+    resultItem: {fileID: 11400000, guid: c80961542908f0049bd55862b2708b84, type: 2}
+    showInRecipeCraft: 0
+  - material1: {fileID: 11400000, guid: d42214171a36493da213814a46ca19ba, type: 2}
+    material2: {fileID: 11400000, guid: 7b796a2dd0e5425a831e3aafdd7ef37e, type: 2}
+    resultItem: {fileID: 11400000, guid: 88daaa9f4b52a004fb7b40e9a50e7b73, type: 2}
+    showInRecipeCraft: 0
+  - material1: {fileID: 11400000, guid: 194ce770bcb04d7fa9e7e3dae62863b7, type: 2}
+    material2: {fileID: 11400000, guid: c64d3855eeab47c19a8e777c3871f7b6, type: 2}
+    resultItem: {fileID: 11400000, guid: bd5d8ed276637574c8cf6ff8da7bebfa, type: 2}
+    showInRecipeCraft: 0
+  - material1: {fileID: 11400000, guid: 194ce770bcb04d7fa9e7e3dae62863b7, type: 2}
+    material2: {fileID: 11400000, guid: 7b796a2dd0e5425a831e3aafdd7ef37e, type: 2}
+    resultItem: {fileID: 11400000, guid: 9dc9f61c82e137448b341601e958a434, type: 2}
+    showInRecipeCraft: 0
+  - material1: {fileID: 11400000, guid: c64d3855eeab47c19a8e777c3871f7b6, type: 2}
+    material2: {fileID: 11400000, guid: 7b796a2dd0e5425a831e3aafdd7ef37e, type: 2}
+    resultItem: {fileID: 11400000, guid: de812e2f96c811c4897169d68b2944e8, type: 2}
+    showInRecipeCraft: 0
+  - material1: {fileID: 11400000, guid: 2ebb5bdd3d3e852419a745d1aed05ea4, type: 2}
+    material2: {fileID: 11400000, guid: 71839228ad8a466dac4035c72a1f8d0c, type: 2}
+    resultItem: {fileID: 11400000, guid: 932b00837a405f64a81c95f10e0fdae6, type: 2}
+    showInRecipeCraft: 0
+  - material1: {fileID: 11400000, guid: 2ebb5bdd3d3e852419a745d1aed05ea4, type: 2}
+    material2: {fileID: 11400000, guid: 2f5de283966b4b5c9632285cafa4be05, type: 2}
+    resultItem: {fileID: 11400000, guid: ea9d5f5725b82b94ea99addb76dce421, type: 2}
+    showInRecipeCraft: 0
+  - material1: {fileID: 11400000, guid: 2ebb5bdd3d3e852419a745d1aed05ea4, type: 2}
+    material2: {fileID: 11400000, guid: 8b88b3472af442a08c8a69ea59d17c73, type: 2}
+    resultItem: {fileID: 11400000, guid: 09d8ae98601ebc5439fe1c735312521a, type: 2}
+    showInRecipeCraft: 0
+  - material1: {fileID: 11400000, guid: 2ebb5bdd3d3e852419a745d1aed05ea4, type: 2}
+    material2: {fileID: 11400000, guid: 2eb5d3fd27304bd9910bb746953d70a5, type: 2}
+    resultItem: {fileID: 11400000, guid: 96ac84cb941531c42a0fd95f61ea67a0, type: 2}
+    showInRecipeCraft: 0
+  - material1: {fileID: 11400000, guid: 2ebb5bdd3d3e852419a745d1aed05ea4, type: 2}
+    material2: {fileID: 11400000, guid: b451bc339ee442319638382ca5c2766a, type: 2}
+    resultItem: {fileID: 11400000, guid: fe8eef5f92c3fdc46a73749772bf9308, type: 2}
+    showInRecipeCraft: 0
+  - material1: {fileID: 11400000, guid: 2ebb5bdd3d3e852419a745d1aed05ea4, type: 2}
+    material2: {fileID: 11400000, guid: 8c4535c786474d6eb773698d6df4a346, type: 2}
+    resultItem: {fileID: 11400000, guid: e7a64019f6d51a949b62e31abec042d2, type: 2}
+    showInRecipeCraft: 0
+  - material1: {fileID: 11400000, guid: 2ebb5bdd3d3e852419a745d1aed05ea4, type: 2}
+    material2: {fileID: 11400000, guid: 15dd448ceebc42a889c1bcd5eedaa7a8, type: 2}
+    resultItem: {fileID: 11400000, guid: 779701ed8d2f8cc4c8b9d1bf0d8d209d, type: 2}
+    showInRecipeCraft: 0
+  - material1: {fileID: 11400000, guid: 2ebb5bdd3d3e852419a745d1aed05ea4, type: 2}
+    material2: {fileID: 11400000, guid: b0d3d076214645ddb3027eb822fb1c11, type: 2}
+    resultItem: {fileID: 11400000, guid: 0df8a97388e2f0147841d9a6bc0e6e79, type: 2}
+    showInRecipeCraft: 0
+  - material1: {fileID: 11400000, guid: 2ebb5bdd3d3e852419a745d1aed05ea4, type: 2}
+    material2: {fileID: 11400000, guid: 4d3fa0cefa2f449db371240a45db0bba, type: 2}
+    resultItem: {fileID: 11400000, guid: 1cd1e5e418ea699449361600b91dc8a2, type: 2}
+    showInRecipeCraft: 0
+  - material1: {fileID: 11400000, guid: 71839228ad8a466dac4035c72a1f8d0c, type: 2}
+    material2: {fileID: 11400000, guid: 2f5de283966b4b5c9632285cafa4be05, type: 2}
+    resultItem: {fileID: 11400000, guid: 4f4987290ee5aa849ac0cd52077f1646, type: 2}
+    showInRecipeCraft: 0
+  - material1: {fileID: 11400000, guid: 71839228ad8a466dac4035c72a1f8d0c, type: 2}
+    material2: {fileID: 11400000, guid: 8b88b3472af442a08c8a69ea59d17c73, type: 2}
+    resultItem: {fileID: 11400000, guid: 0484a41d51ebb284c827f9b2fe7fdc63, type: 2}
+    showInRecipeCraft: 0
+  - material1: {fileID: 11400000, guid: 71839228ad8a466dac4035c72a1f8d0c, type: 2}
+    material2: {fileID: 11400000, guid: 2eb5d3fd27304bd9910bb746953d70a5, type: 2}
+    resultItem: {fileID: 11400000, guid: e149201acdd1a9a46935c108fb8e56df, type: 2}
+    showInRecipeCraft: 0
+  - material1: {fileID: 11400000, guid: 71839228ad8a466dac4035c72a1f8d0c, type: 2}
+    material2: {fileID: 11400000, guid: b451bc339ee442319638382ca5c2766a, type: 2}
+    resultItem: {fileID: 11400000, guid: f84243c4531972e43bcee6d300a6b676, type: 2}
+    showInRecipeCraft: 0
+  - material1: {fileID: 11400000, guid: 71839228ad8a466dac4035c72a1f8d0c, type: 2}
+    material2: {fileID: 11400000, guid: 8c4535c786474d6eb773698d6df4a346, type: 2}
+    resultItem: {fileID: 11400000, guid: 177f73e5235a3d0499c184209b829b7c, type: 2}
+    showInRecipeCraft: 0
+  - material1: {fileID: 11400000, guid: 71839228ad8a466dac4035c72a1f8d0c, type: 2}
+    material2: {fileID: 11400000, guid: 15dd448ceebc42a889c1bcd5eedaa7a8, type: 2}
+    resultItem: {fileID: 11400000, guid: dd6e477e7117e6a47b287e51ded1fba7, type: 2}
+    showInRecipeCraft: 0
+  - material1: {fileID: 11400000, guid: 71839228ad8a466dac4035c72a1f8d0c, type: 2}
+    material2: {fileID: 11400000, guid: b0d3d076214645ddb3027eb822fb1c11, type: 2}
+    resultItem: {fileID: 11400000, guid: e6ed3f7a271e6294b9e81e8505fc75db, type: 2}
+    showInRecipeCraft: 0
+  - material1: {fileID: 11400000, guid: 71839228ad8a466dac4035c72a1f8d0c, type: 2}
+    material2: {fileID: 11400000, guid: 4d3fa0cefa2f449db371240a45db0bba, type: 2}
+    resultItem: {fileID: 11400000, guid: 927c0978a2265cb4b8d05bd83396ffbe, type: 2}
+    showInRecipeCraft: 0
+  - material1: {fileID: 11400000, guid: 2f5de283966b4b5c9632285cafa4be05, type: 2}
+    material2: {fileID: 11400000, guid: 8b88b3472af442a08c8a69ea59d17c73, type: 2}
+    resultItem: {fileID: 11400000, guid: c94f0279c5d90f6478eb36498a2dfa06, type: 2}
+    showInRecipeCraft: 0
+  - material1: {fileID: 11400000, guid: 2f5de283966b4b5c9632285cafa4be05, type: 2}
+    material2: {fileID: 11400000, guid: 2eb5d3fd27304bd9910bb746953d70a5, type: 2}
+    resultItem: {fileID: 11400000, guid: 1b03400bd4206774693f4784f768ea1a, type: 2}
+    showInRecipeCraft: 0
+  - material1: {fileID: 11400000, guid: 2f5de283966b4b5c9632285cafa4be05, type: 2}
+    material2: {fileID: 11400000, guid: b451bc339ee442319638382ca5c2766a, type: 2}
+    resultItem: {fileID: 11400000, guid: 000aef58739e9454285f1cf943b1e857, type: 2}
+    showInRecipeCraft: 0
+  - material1: {fileID: 11400000, guid: 2f5de283966b4b5c9632285cafa4be05, type: 2}
+    material2: {fileID: 11400000, guid: 8c4535c786474d6eb773698d6df4a346, type: 2}
+    resultItem: {fileID: 11400000, guid: ac68ceb50233fcc4580ecf8eaac29edf, type: 2}
+    showInRecipeCraft: 0
+  - material1: {fileID: 11400000, guid: 2f5de283966b4b5c9632285cafa4be05, type: 2}
+    material2: {fileID: 11400000, guid: 15dd448ceebc42a889c1bcd5eedaa7a8, type: 2}
+    resultItem: {fileID: 11400000, guid: 0eef8be04542f1d41b14a0c3877cf99f, type: 2}
+    showInRecipeCraft: 0
+  - material1: {fileID: 11400000, guid: 2f5de283966b4b5c9632285cafa4be05, type: 2}
+    material2: {fileID: 11400000, guid: b0d3d076214645ddb3027eb822fb1c11, type: 2}
+    resultItem: {fileID: 11400000, guid: 05e3e39e283aa664989502a0595d6fe2, type: 2}
+    showInRecipeCraft: 0
+  - material1: {fileID: 11400000, guid: 2f5de283966b4b5c9632285cafa4be05, type: 2}
+    material2: {fileID: 11400000, guid: 4d3fa0cefa2f449db371240a45db0bba, type: 2}
+    resultItem: {fileID: 11400000, guid: 807ecf5d16c16e24c83b693fdf54c99c, type: 2}
+    showInRecipeCraft: 0
+  - material1: {fileID: 11400000, guid: 8b88b3472af442a08c8a69ea59d17c73, type: 2}
+    material2: {fileID: 11400000, guid: 2eb5d3fd27304bd9910bb746953d70a5, type: 2}
+    resultItem: {fileID: 11400000, guid: d6fb6fe35786bc14d824106e219090a5, type: 2}
+    showInRecipeCraft: 0
+  - material1: {fileID: 11400000, guid: 8b88b3472af442a08c8a69ea59d17c73, type: 2}
+    material2: {fileID: 11400000, guid: b451bc339ee442319638382ca5c2766a, type: 2}
+    resultItem: {fileID: 11400000, guid: ef1da4428cd19cf4a94a9eacb38b45e0, type: 2}
+    showInRecipeCraft: 0
+  - material1: {fileID: 11400000, guid: 8b88b3472af442a08c8a69ea59d17c73, type: 2}
+    material2: {fileID: 11400000, guid: 8c4535c786474d6eb773698d6df4a346, type: 2}
+    resultItem: {fileID: 11400000, guid: 420fd869501493c46ae4baeed24bb633, type: 2}
+    showInRecipeCraft: 0
+  - material1: {fileID: 11400000, guid: 8b88b3472af442a08c8a69ea59d17c73, type: 2}
+    material2: {fileID: 11400000, guid: 15dd448ceebc42a889c1bcd5eedaa7a8, type: 2}
+    resultItem: {fileID: 11400000, guid: 727a7d7be861ef8468f59c1df6871094, type: 2}
+    showInRecipeCraft: 0
+  - material1: {fileID: 11400000, guid: 8b88b3472af442a08c8a69ea59d17c73, type: 2}
+    material2: {fileID: 11400000, guid: b0d3d076214645ddb3027eb822fb1c11, type: 2}
+    resultItem: {fileID: 11400000, guid: 3e7086cf45cc51d44a90b35f1d6153eb, type: 2}
+    showInRecipeCraft: 0
+  - material1: {fileID: 11400000, guid: 8b88b3472af442a08c8a69ea59d17c73, type: 2}
+    material2: {fileID: 11400000, guid: 4d3fa0cefa2f449db371240a45db0bba, type: 2}
+    resultItem: {fileID: 11400000, guid: 1a5a5542e2e45ec4691a313c15b7bf45, type: 2}
+    showInRecipeCraft: 0
+  - material1: {fileID: 11400000, guid: 2eb5d3fd27304bd9910bb746953d70a5, type: 2}
+    material2: {fileID: 11400000, guid: 8c4535c786474d6eb773698d6df4a346, type: 2}
+    resultItem: {fileID: 11400000, guid: 8b6010d4a136c284ea9b7f7ad9f908a3, type: 2}
+    showInRecipeCraft: 0
+  - material1: {fileID: 11400000, guid: 2eb5d3fd27304bd9910bb746953d70a5, type: 2}
+    material2: {fileID: 11400000, guid: 15dd448ceebc42a889c1bcd5eedaa7a8, type: 2}
+    resultItem: {fileID: 11400000, guid: 44b3606fb5ec672449c40db5e6d3d337, type: 2}
+    showInRecipeCraft: 0
+  - material1: {fileID: 11400000, guid: 2eb5d3fd27304bd9910bb746953d70a5, type: 2}
+    material2: {fileID: 11400000, guid: b0d3d076214645ddb3027eb822fb1c11, type: 2}
+    resultItem: {fileID: 11400000, guid: 2b4a228708581774ebf975e18ebff42f, type: 2}
+    showInRecipeCraft: 0
+  - material1: {fileID: 11400000, guid: 2eb5d3fd27304bd9910bb746953d70a5, type: 2}
+    material2: {fileID: 11400000, guid: 4d3fa0cefa2f449db371240a45db0bba, type: 2}
+    resultItem: {fileID: 11400000, guid: 64ecdc8171edc574abf8f291924ebca9, type: 2}
+    showInRecipeCraft: 0
+  - material1: {fileID: 11400000, guid: b451bc339ee442319638382ca5c2766a, type: 2}
+    material2: {fileID: 11400000, guid: 8c4535c786474d6eb773698d6df4a346, type: 2}
+    resultItem: {fileID: 11400000, guid: 5c1746a1e32f6324baed31eb2e09e634, type: 2}
+    showInRecipeCraft: 0
+  - material1: {fileID: 11400000, guid: b451bc339ee442319638382ca5c2766a, type: 2}
+    material2: {fileID: 11400000, guid: 15dd448ceebc42a889c1bcd5eedaa7a8, type: 2}
+    resultItem: {fileID: 11400000, guid: fd04c5bb218f38c42916b6655c73d0f9, type: 2}
+    showInRecipeCraft: 0
+  - material1: {fileID: 11400000, guid: b451bc339ee442319638382ca5c2766a, type: 2}
+    material2: {fileID: 11400000, guid: b0d3d076214645ddb3027eb822fb1c11, type: 2}
+    resultItem: {fileID: 11400000, guid: f29e58b42451abf46bd32505c04dce1b, type: 2}
+    showInRecipeCraft: 0
+  - material1: {fileID: 11400000, guid: b451bc339ee442319638382ca5c2766a, type: 2}
+    material2: {fileID: 11400000, guid: 4d3fa0cefa2f449db371240a45db0bba, type: 2}
+    resultItem: {fileID: 11400000, guid: 62c493f6a2c6f6244934d8ce7d3dfee9, type: 2}
+    showInRecipeCraft: 0
+  - material1: {fileID: 11400000, guid: 8c4535c786474d6eb773698d6df4a346, type: 2}
+    material2: {fileID: 11400000, guid: 15dd448ceebc42a889c1bcd5eedaa7a8, type: 2}
+    resultItem: {fileID: 11400000, guid: a5ca25f754d9f92498fb36ca0b7be4af, type: 2}
+    showInRecipeCraft: 0
+  - material1: {fileID: 11400000, guid: 8c4535c786474d6eb773698d6df4a346, type: 2}
+    material2: {fileID: 11400000, guid: b0d3d076214645ddb3027eb822fb1c11, type: 2}
+    resultItem: {fileID: 11400000, guid: 2e760212e73ad2f4d8bb213f56b1aeff, type: 2}
+    showInRecipeCraft: 0
+  - material1: {fileID: 11400000, guid: 8c4535c786474d6eb773698d6df4a346, type: 2}
+    material2: {fileID: 11400000, guid: 4d3fa0cefa2f449db371240a45db0bba, type: 2}
+    resultItem: {fileID: 11400000, guid: 53cbb02b26fc5544bb1487b5c1d98c9a, type: 2}
+    showInRecipeCraft: 0
+  - material1: {fileID: 11400000, guid: 15dd448ceebc42a889c1bcd5eedaa7a8, type: 2}
+    material2: {fileID: 11400000, guid: b0d3d076214645ddb3027eb822fb1c11, type: 2}
+    resultItem: {fileID: 11400000, guid: c1df96bc8a9d29e4a8cc8fc00c51d29c, type: 2}
+    showInRecipeCraft: 0
+  - material1: {fileID: 11400000, guid: 15dd448ceebc42a889c1bcd5eedaa7a8, type: 2}
+    material2: {fileID: 11400000, guid: 4d3fa0cefa2f449db371240a45db0bba, type: 2}
+    resultItem: {fileID: 11400000, guid: c92f12f1c977c6741854b337b7a2c264, type: 2}
+    showInRecipeCraft: 0
+  - material1: {fileID: 11400000, guid: b0d3d076214645ddb3027eb822fb1c11, type: 2}
+    material2: {fileID: 11400000, guid: 4d3fa0cefa2f449db371240a45db0bba, type: 2}
+    resultItem: {fileID: 11400000, guid: 07605ef345777c145895ba9ad82d6c14, type: 2}
+    showInRecipeCraft: 0

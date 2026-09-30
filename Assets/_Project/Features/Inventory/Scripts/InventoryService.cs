@@ -1,21 +1,23 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using UnityEngine;
 
 namespace CreativeAI.Gameplay
 {
     /// <summary>
-    /// Central place for inventory mutations and queries.
-    /// Item effects and crafting rules should live outside this service.
+    /// 所持品の中身(アイテムの束 + 即時使用食材スロット)と、その追加・消費・検索・食材の使用。
+    /// 調合のルールは RecipeCraftingService 側に置く。
     /// </summary>
     public class InventoryService
     {
-        private readonly InventoryStorage _storage;
+        /// <summary>即時使用食材スロット数(即時食材使用UIにセットできる最大3つ)。</summary>
+        public const int QuickFoodSlotCount = 3;
 
-        public InventoryService(InventoryStorage storage)
-        {
-            _storage = storage ?? throw new ArgumentNullException(nameof(storage));
-        }
+        private readonly List<ItemStack> _items = new();
+
+        // 即時食材使用UIが参照する即時使用食材スロット(順序あり)。各要素は _items 内の食材スタックへの参照(未セットは null)。
+        private readonly ItemStack[] _quickFoodSlots = new ItemStack[QuickFoodSlotCount];
 
         public event Action InventoryChanged;
 
@@ -46,19 +48,10 @@ namespace CreativeAI.Gameplay
             while (remaining > 0)
             {
                 int stackCount = Math.Min(remaining, maxStack);
-                _storage.Items.Add(new ItemStack(data, stackCount));
+                _items.Add(new ItemStack(data, stackCount));
                 remaining -= stackCount;
             }
 
-            InventoryChanged?.Invoke();
-        }
-
-        public void AddEquipmentItem(EquipmentData data, EquipmentInstance instance)
-        {
-            if (data == null || instance == null)
-                return;
-
-            _storage.Items.Add(new ItemStack(data, instance));
             InventoryChanged?.Invoke();
         }
 
@@ -68,7 +61,7 @@ namespace CreativeAI.Gameplay
                 return null;
 
             var stack = new ItemStack(data, rolledStats);
-            _storage.Items.Add(stack);
+            _items.Add(stack);
             InventoryChanged?.Invoke();
             return stack;
         }
@@ -77,14 +70,14 @@ namespace CreativeAI.Gameplay
         {
             bool hadQuickFood = ClearAllQuickFoodSlots();
 
-            if (_storage.Items.Count == 0)
+            if (_items.Count == 0)
             {
                 if (hadQuickFood)
                     QuickFoodChanged?.Invoke();
                 return;
             }
 
-            _storage.Items.Clear();
+            _items.Clear();
             InventoryChanged?.Invoke();
             if (hadQuickFood)
                 QuickFoodChanged?.Invoke();
@@ -104,14 +97,14 @@ namespace CreativeAI.Gameplay
             if (stack == null || count <= 0 || stack.Count < count)
                 return false;
 
-            if (!_storage.Items.Contains(stack))
+            if (!_items.Contains(stack))
                 return false;
 
             stack.Count -= count;
             bool quickFoodChanged = false;
             if (stack.Count <= 0)
             {
-                _storage.Items.Remove(stack);
+                _items.Remove(stack);
                 quickFoodChanged = ClearQuickFoodReferencing(stack);
             }
 
@@ -129,9 +122,9 @@ namespace CreativeAI.Gameplay
             int remaining = count;
             bool removedAny = false;
             bool quickFoodChanged = false;
-            for (int i = _storage.Items.Count - 1; i >= 0 && remaining > 0; i--)
+            for (int i = _items.Count - 1; i >= 0 && remaining > 0; i--)
             {
-                var stack = _storage.Items[i];
+                var stack = _items[i];
                 if (stack.Data != data)
                     continue;
 
@@ -142,7 +135,7 @@ namespace CreativeAI.Gameplay
 
                 if (stack.Count <= 0)
                 {
-                    _storage.Items.RemoveAt(i);
+                    _items.RemoveAt(i);
                     quickFoodChanged |= ClearQuickFoodReferencing(stack);
                 }
             }
@@ -163,35 +156,32 @@ namespace CreativeAI.Gameplay
             if (data == null)
                 return 0;
 
-            return _storage.Items.Where(stack => stack.Data == data).Sum(stack => stack.Count);
+            return _items.Where(stack => stack.Data == data).Sum(stack => stack.Count);
         }
 
         public List<ItemStack> GetItemsByCategory(ItemCategory category)
         {
-            return _storage.Items.FindAll(stack =>
-                stack.Data != null && stack.Data.category == category
-            );
+            return _items.FindAll(stack => stack.Data != null && stack.Data.category == category);
         }
 
         public bool ContainsStack(ItemStack stack)
         {
-            return stack != null && _storage.Items.Contains(stack);
+            return stack != null && _items.Contains(stack);
         }
 
-        public List<ItemStack> GetAllItems() => new(_storage.Items);
+        public List<ItemStack> GetAllItems() => new(_items);
 
         // --- 即時使用食材スロット(最大3・順序あり)。即時食材使用UIにセットする食材の選択状態 ---
 
         /// <summary>即時使用食材スロットの現在の内容(要素は食材スタック or null)。読み取り専用のスナップショット。</summary>
-        public IReadOnlyList<ItemStack> GetQuickFoodSlots() =>
-            (ItemStack[])_storage.QuickFoodSlots.Clone();
+        public IReadOnlyList<ItemStack> GetQuickFoodSlots() => (ItemStack[])_quickFoodSlots.Clone();
 
         /// <summary>stack が即時使用食材スロットにセットされているか(調合の素材から除外する判定に使う)。</summary>
         public bool IsInQuickFood(ItemStack stack)
         {
             if (stack == null)
                 return false;
-            var slots = _storage.QuickFoodSlots;
+            var slots = _quickFoodSlots;
             for (int i = 0; i < slots.Length; i++)
                 if (slots[i] == stack)
                     return true;
@@ -204,10 +194,10 @@ namespace CreativeAI.Gameplay
         /// </summary>
         public bool SetQuickFood(int slot, ItemStack stack)
         {
-            var slots = _storage.QuickFoodSlots;
+            var slots = _quickFoodSlots;
             if (slot < 0 || slot >= slots.Length)
                 return false;
-            if (stack == null || stack.Data is not FoodData || !_storage.Items.Contains(stack))
+            if (stack == null || stack.Data is not FoodData || !_items.Contains(stack))
                 return false;
 
             for (int i = 0; i < slots.Length; i++)
@@ -222,7 +212,7 @@ namespace CreativeAI.Gameplay
         /// <summary>スロット slot を空にする。既に空なら何もしない。</summary>
         public void ClearQuickFood(int slot)
         {
-            var slots = _storage.QuickFoodSlots;
+            var slots = _quickFoodSlots;
             if (slot < 0 || slot >= slots.Length || slots[slot] == null)
                 return;
 
@@ -233,7 +223,7 @@ namespace CreativeAI.Gameplay
         /// <summary>指定スタックを参照している即時使用食材スロットを空にする(在庫から消えたときの後始末)。発火は呼び出し側。</summary>
         private bool ClearQuickFoodReferencing(ItemStack stack)
         {
-            var slots = _storage.QuickFoodSlots;
+            var slots = _quickFoodSlots;
             bool changed = false;
             for (int i = 0; i < slots.Length; i++)
             {
@@ -249,7 +239,7 @@ namespace CreativeAI.Gameplay
         /// <summary>全スロットを空にする(Clear 用)。発火は呼び出し側。</summary>
         private bool ClearAllQuickFoodSlots()
         {
-            var slots = _storage.QuickFoodSlots;
+            var slots = _quickFoodSlots;
             bool changed = false;
             for (int i = 0; i < slots.Length; i++)
             {
@@ -264,9 +254,35 @@ namespace CreativeAI.Gameplay
 
         private IEnumerable<ItemStack> GetStacksWithRoom(ItemData data, int maxStack)
         {
-            return _storage.Items.Where(stack =>
+            return _items.Where(stack =>
                 stack.Data == data && !stack.IsInstance && stack.Count < maxStack
             );
+        }
+
+        /// <summary>
+        /// 食材を1つ使う(HP即時回復)。回復量は最大HPに対する固定割合(合成前20%/合成後50%)。
+        /// 回復先の playerStatus が無ければ消費もしない(使用と効果は不可分)。調合の素材消費からは呼ばない。
+        /// </summary>
+        public bool TryUseFood(ItemStack stack, PlayerStatus playerStatus)
+        {
+            if (
+                stack == null
+                || !ContainsStack(stack)
+                || stack.Count <= 0
+                || stack.Data is not FoodData food
+            )
+                return false;
+
+            if (playerStatus == null)
+            {
+                Debug.LogWarning(
+                    "[InventoryService] PlayerStatus が見つからないため食材の使用を中止しました(在庫は消費しません)。"
+                );
+                return false;
+            }
+
+            playerStatus.Heal(playerStatus.CurrentMaxHp * food.HealFraction);
+            return ConsumeFromStack(stack, 1);
         }
     }
 }

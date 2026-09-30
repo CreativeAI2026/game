@@ -1,7 +1,8 @@
+using CreativeAI.Gameplay;
 using UnityEngine;
 using UnityEngine.UI;
 
-namespace CreativeAI.Gameplay
+namespace CreativeAI.UI
 {
     public class UIGradient : BaseMeshEffect
     {

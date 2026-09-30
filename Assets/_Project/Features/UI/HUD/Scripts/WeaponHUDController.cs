@@ -1,10 +1,11 @@
 using System.Collections.Generic;
+using CreativeAI.Gameplay;
 using Cysharp.Threading.Tasks;
 using UnityEngine;
 using UnityEngine.InputSystem;
 using UnityEngine.UI;
 
-namespace CreativeAI.Gameplay
+namespace CreativeAI.UI
 {
     /// <summary>
     /// 武器切替UI。所持武器数(0〜4)に応じてパネルの表示・位置・レイヤーを管理する。スロット0 = 選択中(上の固定座標)で、currentIndex はそこにいる panels[] の要素を指す。

@@ -1,6 +1,6 @@
 using System.Collections.Generic;
 using System.Linq;
-using CreativeAI.Core.EventSystem;
+using CreativeAI.Core;
 using UnityEngine;
 
 namespace CreativeAI.Gameplay
@@ -32,21 +32,17 @@ namespace CreativeAI.Gameplay
         [SerializeField]
         private bool _addTestItemsOnAwake = true;
 
-        private readonly InventoryStorage _storage = new();
         private InventoryService _inventoryService;
         private RecipeCraftingService _recipeCraftingService;
-        private ItemUseService _itemUseService;
+        private PlayerStatus _playerStatus;
 
         public InventoryService InventoryService => _inventoryService ??= CreateInventoryService();
 
         public RecipeCraftingService RecipeCraftingService =>
             _recipeCraftingService ??= new RecipeCraftingService(InventoryService);
 
-        public ItemUseService ItemUseService =>
-            _itemUseService ??= new ItemUseService(InventoryService);
-
         /// <summary>
-        /// セッション常駐の Inventory を1つだけ生成する(既存ならそれを返す)。循環参照のため SessionBootstrap ではなくここに置き、
+        /// セッション常駐の Inventory を1つだけ生成する(既存ならそれを返す)。Core から Gameplay は参照できないため Core ではなくここに置き、
         /// Title フローから マネージャ生成の後・プレイヤー生成の前に呼ぶ。
         /// </summary>
         public static InventoryManager EnsureResident()
@@ -109,11 +105,6 @@ namespace CreativeAI.Gameplay
         public void AddItem(ItemData data, int count = 1)
         {
             InventoryService.AddItem(data, count);
-        }
-
-        public void AddEquipmentItem(EquipmentData data, EquipmentInstance instance)
-        {
-            InventoryService.AddEquipmentItem(data, instance);
         }
 
         /// <summary>
@@ -186,7 +177,12 @@ namespace CreativeAI.Gameplay
 
         public bool TryUse(ItemStack stack)
         {
-            return ItemUseService.TryUse(stack);
+            if (_playerStatus == null)
+            {
+                var player = GameObject.FindGameObjectWithTag("Player");
+                _playerStatus = player != null ? player.GetComponent<PlayerStatus>() : null;
+            }
+            return InventoryService.TryUseFood(stack, _playerStatus);
         }
 
         public bool HasItem(ItemData data, int count = 1)
@@ -199,27 +195,27 @@ namespace CreativeAI.Gameplay
             return InventoryService.GetItemCount(data);
         }
 
-        public bool CanCraft(CraftRecipeData recipe, int quantity = 1)
+        public bool CanCraft(CraftRecipe recipe, int quantity = 1)
         {
             return RecipeCraftingService.CanCraft(recipe, quantity);
         }
 
-        public bool CanCraft(CraftRecipeData recipe, ItemStack materialA, ItemStack materialB)
+        public bool CanCraft(CraftRecipe recipe, ItemStack materialA, ItemStack materialB)
         {
             return RecipeCraftingService.CanCraft(recipe, materialA, materialB);
         }
 
-        public int GetMaximumCraftable(CraftRecipeData recipe)
+        public int GetMaximumCraftable(CraftRecipe recipe)
         {
             return RecipeCraftingService.GetMaximumCraftable(recipe);
         }
 
-        public bool TryCraft(CraftRecipeData recipe, int quantity)
+        public bool TryCraft(CraftRecipe recipe, int quantity)
         {
             return RecipeCraftingService.TryCraft(recipe, quantity);
         }
 
-        public bool TryCraft(CraftRecipeData recipe, ItemStack materialA, ItemStack materialB)
+        public bool TryCraft(CraftRecipe recipe, ItemStack materialA, ItemStack materialB)
         {
             return RecipeCraftingService.TryCraft(recipe, materialA, materialB);
         }
@@ -255,7 +251,7 @@ namespace CreativeAI.Gameplay
 
         /// <summary>
         /// 装備中の装備品の補正合計(武器は WeaponManager 側で別合算)。
-        /// 調合個体(RolledStats あり)はロール値を CraftStatBridge 経由で、固定 SO は EquipmentData の値を使う。
+        /// 調合・拾得の個体(RolledStats あり)はロール値を、固定 SO は EquipmentData の値を使う。
         /// </summary>
         public EquipmentBonus GetEquippedBonus()
         {
@@ -271,7 +267,7 @@ namespace CreativeAI.Gameplay
                 if (stack.RolledStats != null && stack.RolledStats.Count > 0)
                 {
                     // 調合でロールされた個体(個体差あり)。
-                    CraftStatBridge.Accumulate(ref b, stack.RolledStats);
+                    b.Add(stack.RolledStats);
                 }
                 else
                 {
@@ -385,7 +381,7 @@ namespace CreativeAI.Gameplay
 
         private InventoryService CreateInventoryService()
         {
-            var service = new InventoryService(_storage);
+            var service = new InventoryService();
             service.InventoryChanged += OnInventoryServiceChanged;
             service.QuickFoodChanged += OnQuickFoodChanged;
             return service;

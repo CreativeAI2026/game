@@ -1,7 +1,5 @@
 using CreativeAI.Core;
-using CreativeAI.Core.EventSystem;
 using CreativeAI.UI;
-using CreativeAI.UI.QuickFoodBar;
 using NUnit.Framework;
 using UnityEngine;
 using UnityEngine.UI;

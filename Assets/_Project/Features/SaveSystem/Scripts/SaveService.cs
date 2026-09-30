@@ -1,7 +1,6 @@
 using System.Collections.Generic;
 using System.IO;
 using CreativeAI.Core;
-using CreativeAI.Core.EventSystem;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 
@@ -113,12 +112,12 @@ namespace CreativeAI.Gameplay
             data.posZ = pos.z;
             data.rotationY = player.transform.eulerAngles.y;
 
-            // 現在HPの実体は担当班の実装(ISaveableActor)から取る。窓口が無ければ座標だけ保存。
-            var actor = player.GetComponentInChildren<ISaveableActor>();
-            data.currentHp = actor != null ? actor.CaptureHp() : 0f;
+            // 現在HPは PlayerStatus から取る。無ければ座標だけ保存。
+            var status = player.GetComponentInChildren<PlayerStatus>();
+            data.currentHp = status != null ? status.CaptureHp() : 0f;
 
-            // 入手ずみ武器と選択武器を保存。窓口(WeaponManager)が無ければ「0本・未選択」。
-            var weapon = player.GetComponentInChildren<IWeaponSaveState>();
+            // 入手ずみ武器と選択武器を保存。WeaponManager が無ければ「0本・未選択」。
+            var weapon = player.GetComponentInChildren<WeaponManager>();
             data.selectedWeaponIndex = weapon != null ? weapon.CaptureSelectedWeaponIndex() : -1;
             data.ownedWeaponKeys.Clear();
             if (weapon != null)
@@ -192,11 +191,13 @@ namespace CreativeAI.Gameplay
             );
 
             // 武器を先に復元して最終ステータス(最大HP等)を確定させてから HP をクランプする。
-            var weapon = player.GetComponentInChildren<IWeaponSaveState>();
-            weapon?.RestoreWeapons(data.ownedWeaponKeys, data.selectedWeaponIndex);
+            var weapon = player.GetComponentInChildren<WeaponManager>();
+            if (weapon != null)
+                weapon.RestoreWeapons(data.ownedWeaponKeys, data.selectedWeaponIndex);
 
-            var actor = player.GetComponentInChildren<ISaveableActor>();
-            actor?.RestoreHp(data.currentHp);
+            var status = player.GetComponentInChildren<PlayerStatus>();
+            if (status != null)
+                status.RestoreHp(data.currentHp);
         }
 
         private static void RestoreItems(InventoryManager inv, ItemDB db, List<ItemEntry> entries)
@@ -241,5 +242,79 @@ namespace CreativeAI.Gameplay
                     return i;
             return -1;
         }
+    }
+
+    /// <summary>
+    /// マニュアルセーブでディスクに全書きするスナップショット(単一スロット)。
+    /// JsonUtility でシリアライズするため public フィールド + [Serializable] で構成する。
+    /// 保存はマニュアルセーブ時のみ・オートセーブなし。
+    /// </summary>
+    [System.Serializable]
+    public sealed class SaveData
+    {
+        public int progress;
+        public List<FlagEntry> flags = new();
+        public List<ItemEntry> items = new();
+
+        /// <summary>
+        /// 解禁(発見)済みレシピのキー(= 結果アイテムの id)。実体は RecipeBookManager(セッション常駐)。
+        /// 旧セーブに無ければ空=解禁なしで復元される(showInRecipeCraft のレシピは常に表示)。
+        /// </summary>
+        public List<int> revealedRecipes = new();
+
+        // プレイヤー状態(現在HP・座標を保存 → 死亡時は直近セーブから再開)。
+        // hasPlayerState=false の場合(リグ未実装・旧セーブ)は復元をスキップし、既定スポーン/満タンで開始する。
+        public bool hasPlayerState;
+
+        /// <summary>再開時に読み込むフィールドシーン名。空なら呼び出し側の既定シーンにフォールバック。</summary>
+        public string sceneName;
+        public float posX;
+        public float posY;
+        public float posZ;
+
+        /// <summary>向き(Y軸回転, 度)。座標だけでは向きが失われるため保持する。</summary>
+        public float rotationY;
+
+        /// <summary>保存時点の現在HP。実体は PlayerStatus から取得する。</summary>
+        public float currentHp;
+
+        /// <summary>
+        /// 選択中の武器 index(プレイヤーリグは選択武器も保存)。実体は WeaponManager。
+        /// <see cref="ownedWeaponKeys"/> に含まれない値なら所持の先頭へ寄せて復元される。
+        /// </summary>
+        public int selectedWeaponIndex;
+
+        /// <summary>
+        /// 入手ずみ武器のキー(sword/bow/scythe)。主人公は初期0本でイベント入手なので、
+        /// 「どれを持っているか」自体がセーブ対象になる。旧セーブに無ければ空 = 0本で復元される。
+        /// </summary>
+        public List<string> ownedWeaponKeys = new();
+    }
+
+    [System.Serializable]
+    public sealed class FlagEntry
+    {
+        public string key;
+        public string value;
+    }
+
+    /// <summary>所持品1件。ロール済み個体は rolledStats を持ち、スタック品は空。</summary>
+    [System.Serializable]
+    public sealed class ItemEntry
+    {
+        public int itemId;
+        public int count;
+        public bool equipped;
+        public List<RolledStat> rolledStats;
+
+        /// <summary>
+        /// このスタックが即時使用食材スロットにセットされているか。旧セーブは既定 false(未セット)で復元される。
+        /// bool にしているのは、JsonUtility が欠落フィールドに初期化子(-1 等)を反映しない場合でも
+        /// 既定 false で安全に「未セット」と判定するため(slot=0 との誤判定を避ける)。
+        /// </summary>
+        public bool inQuickFood;
+
+        /// <summary>即時使用食材スロット番号(0..2)。<see cref="inQuickFood"/> が true のときのみ有効。</summary>
+        public int quickFoodSlot;
     }
 }

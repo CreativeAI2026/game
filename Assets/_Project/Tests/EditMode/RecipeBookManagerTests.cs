@@ -33,14 +33,13 @@ namespace CreativeAI.Tests.EditMode
         }
 
         /// <summary>実カタログの初期解禁と id がぶつからないよう、テスト専用の id 帯を使う。</summary>
-        private CraftRecipeData MakeRecipe(int resultId)
+        private CraftRecipe MakeRecipe(int resultId)
         {
             var result = ScriptableObject.CreateInstance<FoodData>();
             result.id = resultId;
-            var recipe = ScriptableObject.CreateInstance<CraftRecipeData>();
+            var recipe = new CraftRecipe();
             recipe.resultItem = result;
             _assets.Add(result);
-            _assets.Add(recipe);
             return recipe;
         }
 
@@ -58,8 +57,7 @@ namespace CreativeAI.Tests.EditMode
         [Test]
         public void Reveal_NullOrResultlessRecipe_IsIgnored()
         {
-            var broken = ScriptableObject.CreateInstance<CraftRecipeData>(); // resultItem 未設定
-            _assets.Add(broken);
+            var broken = new CraftRecipe(); // resultItem 未設定
 
             Assert.IsFalse(_book.Reveal(null));
             Assert.IsFalse(_book.Reveal(broken));

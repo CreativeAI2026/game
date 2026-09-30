@@ -1,4 +1,3 @@
-using CreativeAI.Gameplay;
 using UnityEngine;
 
 namespace CreativeAI.Gameplay

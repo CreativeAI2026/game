@@ -1,4 +1,4 @@
-using CreativeAI.Core.SceneManagement;
+using CreativeAI.Core;
 using NUnit.Framework;
 using UnityEngine;
 using UnityEngine.TestTools;

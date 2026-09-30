@@ -20,7 +20,7 @@ namespace CreativeAI.Tests.EditMode
         [SetUp]
         public void SetUp()
         {
-            _inv = new InventoryService(new InventoryStorage());
+            _inv = new InventoryService();
             _craft = new RecipeCraftingService(_inv);
         }
 
@@ -48,13 +48,12 @@ namespace CreativeAI.Tests.EditMode
             return a;
         }
 
-        private CraftRecipeData MakeRecipe(ItemData m1, ItemData m2, ItemData result)
+        private CraftRecipe MakeRecipe(ItemData m1, ItemData m2, ItemData result)
         {
-            var r = ScriptableObject.CreateInstance<CraftRecipeData>();
+            var r = new CraftRecipe();
             r.material1 = m1;
             r.material2 = m2;
             r.resultItem = result;
-            _assets.Add(r);
             return r;
         }
 
@@ -224,6 +223,71 @@ namespace CreativeAI.Tests.EditMode
                 "即時使用にセット済みの食材は素材にできない"
             );
             Assert.AreEqual(1, StackOf(a).Count);
+        }
+
+        // --- 作れない理由(画面の警告の出し分け) ---
+
+        [Test]
+        public void GetBlockReason_EnoughMaterials_IsNone()
+        {
+            var a = Make<FoodData>(3001);
+            var b = Make<FoodData>(3002);
+            var recipe = MakeRecipe(a, b, Make<FoodData>(3108));
+            _inv.AddItem(a, 2);
+            _inv.AddItem(b, 2);
+
+            Assert.AreEqual(CraftBlockReason.None, _craft.GetBlockReason(recipe, 2));
+            Assert.AreEqual(CraftBlockReason.MissingMaterials, _craft.GetBlockReason(recipe, 3));
+            Assert.AreEqual(2, _craft.GetMaximumCraftable(recipe));
+        }
+
+        [Test]
+        public void GetBlockReason_OnlyEquippedMaterial_IsEquippedMaterial()
+        {
+            var a = Make<EquipmentData>(2001);
+            var b = Make<EquipmentData>(2002);
+            var recipe = MakeRecipe(a, b, Make<EquipmentData>(2102));
+            _inv.AddItem(a, 1);
+            _inv.AddItem(b, 1);
+            StackOf(a).IsEquipped = true;
+
+            Assert.AreEqual(CraftBlockReason.EquippedMaterial, _craft.GetBlockReason(recipe, 1));
+        }
+
+        [Test]
+        public void GetBlockReason_EnoughOnlyWithQuickFood_IsQuickFoodMaterial()
+        {
+            var a = Make<FoodData>(3001);
+            var b = Make<FoodData>(3002);
+            var recipe = MakeRecipe(a, b, Make<FoodData>(3109));
+            _inv.AddItem(a, 1);
+            _inv.AddItem(b, 1);
+            Assert.IsTrue(_inv.SetQuickFood(0, StackOf(a)));
+
+            Assert.AreEqual(CraftBlockReason.QuickFoodMaterial, _craft.GetBlockReason(recipe, 1));
+        }
+
+        [Test]
+        public void GetBlockReason_QuickFoodButOtherMaterialMissing_IsMissingMaterials()
+        {
+            var a = Make<FoodData>(3001);
+            var b = Make<FoodData>(3002);
+            var recipe = MakeRecipe(a, b, Make<FoodData>(3110));
+            _inv.AddItem(a, 1);
+            Assert.IsTrue(_inv.SetQuickFood(0, StackOf(a)));
+
+            Assert.AreEqual(CraftBlockReason.MissingMaterials, _craft.GetBlockReason(recipe, 1));
+        }
+
+        [Test]
+        public void GetOwnedCount_IncludesEquippedStacks()
+        {
+            var a = Make<EquipmentData>(2001);
+            _inv.AddItem(a, 1);
+            _inv.AddItem(a, 1);
+            StackOf(a).IsEquipped = true;
+
+            Assert.AreEqual(2, _craft.GetOwnedCount(a));
         }
 
         // --- 原子性(素材を消費し結果を付与、を1回で確定) ---

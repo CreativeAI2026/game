@@ -1,5 +1,5 @@
 using System.Collections;
-using CreativeAI.Core.EventSystem;
+using CreativeAI.Core;
 using UnityEngine;
 
 namespace CreativeAI.Gameplay
