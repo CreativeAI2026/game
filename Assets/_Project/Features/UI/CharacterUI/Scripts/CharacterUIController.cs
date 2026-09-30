@@ -4,7 +4,7 @@ using UnityEngine;
 
 namespace CreativeAI.UI
 {
-    public partial class CharacterUIController : MonoBehaviour
+    public class CharacterUIController : MonoBehaviour
     {
         [Header("Tabs"), SerializeField]
         private TabGroup _tabGroup;

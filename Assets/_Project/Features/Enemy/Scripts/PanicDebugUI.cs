@@ -1,9 +1,8 @@
-using CreativeAI.Gameplay;
 using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
 
-namespace CreativeAI.UI
+namespace CreativeAI.Gameplay
 {
     /// <summary>
     /// PanicDetector の焦り度スコアと各指標をリアルタイムでデバッグ表示するUIコンポーネント。
