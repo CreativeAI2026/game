@@ -1,7 +1,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using CreativeAI.Core;
-using CreativeAI.Scenario.Editor;
+using CreativeAI.EditorTools;
 using NUnit.Framework;
 
 namespace CreativeAI.Tests.EditMode

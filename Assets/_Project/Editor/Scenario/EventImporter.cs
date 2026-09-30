@@ -7,7 +7,7 @@ using CreativeAI.Core;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 
-namespace CreativeAI.Scenario.Editor
+namespace CreativeAI.EditorTools
 {
     /// <summary>
     /// 物語班が手書きする events.json を検証し、1イベント = 1つの EventDefinition に変換する

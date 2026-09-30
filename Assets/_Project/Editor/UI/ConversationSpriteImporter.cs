@@ -1,7 +1,8 @@
+using CreativeAI.UI;
 using UnityEditor;
 using UnityEngine;
 
-namespace CreativeAI.UI.ConversationUI.Editor
+namespace CreativeAI.EditorTools
 {
     /// <summary>Conversation UI用画像のSprite import設定を統一する。</summary>
     internal static class ConversationSpriteImporter

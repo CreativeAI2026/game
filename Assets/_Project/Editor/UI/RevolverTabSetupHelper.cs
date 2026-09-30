@@ -20,8 +20,7 @@ namespace CreativeAI.EditorTools
             "Assets/_Project/Features/UI/InventoryUI/Prefabs/TabButton.prefab";
         private const string CharacterPanelPath =
             "Assets/_Project/Features/UI/CharacterUI/Prefabs/CharacterPanel.prefab";
-        private const string DefinitionDirectory =
-            "Assets/_Project/Features/Inventory/Data/TabDefinition/";
+        private const string DefinitionDirectory = "Assets/_Project/Features/UI/CharacterUI/Data/";
 
         private static bool _processing;
 

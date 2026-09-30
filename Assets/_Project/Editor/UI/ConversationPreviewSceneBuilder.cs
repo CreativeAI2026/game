@@ -1,4 +1,5 @@
 using System.IO;
+using CreativeAI.UI;
 using UnityEditor;
 using UnityEditor.SceneManagement;
 using UnityEngine;
@@ -6,7 +7,7 @@ using UnityEngine.EventSystems;
 using UnityEngine.InputSystem.UI;
 using UnityEngine.SceneManagement;
 
-namespace CreativeAI.UI.ConversationUI.Editor
+namespace CreativeAI.EditorTools
 {
     /// <summary>Conversation UIの確認用Sceneを生成する。</summary>
     internal static class ConversationPreviewSceneBuilder

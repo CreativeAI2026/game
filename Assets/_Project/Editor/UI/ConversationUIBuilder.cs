@@ -10,13 +10,13 @@ using UnityEngine.SceneManagement;
 using UnityEngine.UI;
 using Object = UnityEngine.Object;
 
-namespace CreativeAI.UI.ConversationUI.Editor
+namespace CreativeAI.EditorTools
 {
     /// <summary>
     /// 会話UIの Prefab と確認用シーン UI_ConversationPreview を一括生成する Editor ツール(立ち絵/ウィンドウ画像の Sprite import 含む)。
     /// 手書き YAML を避け Unity に正しくシリアライズさせるための道具(メニューからも実行可)。
     /// </summary>
-    public static partial class ConversationUIBuilder
+    public static class ConversationUIBuilder
     {
         private const string ConversationArtPath = "Assets/_Project/Art/UI/Conversation/";
         private const string WindowPng = ConversationArtPath + "ConversationWindow.png";
@@ -662,5 +662,35 @@ namespace CreativeAI.UI.ConversationUI.Editor
             rt.offsetMin = Vector2.zero;
             rt.offsetMax = Vector2.zero;
         }
+
+        [MenuItem("Tools/CreativeAI/Upgrade Conversation UI If Needed")]
+        public static void UpgradePrefabLayoutIfNeeded()
+        {
+            var prefab = AssetDatabase.LoadAssetAtPath<GameObject>(PrefabPath);
+            if (IsCurrentPrefab(prefab))
+            {
+                Debug.Log("[ConversationUIBuilder] ConversationView Prefab は最新です。");
+                return;
+            }
+
+            ConversationSpriteImporter.ImportAsSprite(WindowPng);
+            ConversationSpriteImporter.ImportAsSprite(ContinueButtonPng);
+            ConversationSpriteImporter.ImportAsSprite(ChoiceButtonPng);
+            ConversationSpriteImporter.ImportAsSprite(ItemPreviewPng);
+            BuildPrefab();
+            AssetDatabase.SaveAssets();
+            Debug.Log(
+                "[ConversationUIBuilder] ConversationView Prefab を最新UI構成へ更新しました。"
+            );
+        }
+
+        private static bool IsCurrentPrefab(GameObject prefab) =>
+            prefab != null
+            && prefab.transform.Find("ContextGuide") != null
+            && prefab.transform.Find("ItemRewardBackdrop") != null
+            && prefab.transform.Find("AUTOAButton") != null
+            && prefab.transform.Find("DialogueHistoryPanel") != null
+            && prefab.transform.Find("Layout/_System/ConversationArchiveV11") != null
+            && ConversationPrefabValidator.HasPreviewRewardReferences(prefab);
     }
 }

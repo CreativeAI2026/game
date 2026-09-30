@@ -9,12 +9,12 @@ using CreativeAI.UI;
 using UnityEditor;
 using UnityEngine;
 
-namespace CreativeAI.Scenario.Editor
+namespace CreativeAI.EditorTools
 {
     /// <summary>
     /// EventImporter を叩いて events.json を EventDefinition(.asset)に書き出すエディタ拡張。
     /// 手動: Tools > CreativeAI > Import Events / バッチ:
-    /// Unity -batchmode -quit -executeMethod CreativeAI.Scenario.Editor.EventImporterMenu.Run
+    /// Unity -batchmode -quit -executeMethod CreativeAI.EditorTools.EventImporterMenu.Run
     /// </summary>
     public static class EventImporterMenu
     {

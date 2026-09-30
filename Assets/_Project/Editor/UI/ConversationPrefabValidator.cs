@@ -1,8 +1,9 @@
 using System;
+using CreativeAI.UI;
 using UnityEditor;
 using UnityEngine;
 
-namespace CreativeAI.UI.ConversationUI.Editor
+namespace CreativeAI.EditorTools
 {
     /// <summary>Conversation Prefabのシリアライズ参照とMissing Scriptを検証する。</summary>
     internal static class ConversationPrefabValidator
