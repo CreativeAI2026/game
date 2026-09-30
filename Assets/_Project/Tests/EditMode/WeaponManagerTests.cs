@@ -166,7 +166,7 @@ namespace CreativeAI.Tests.EditMode
             Assert.AreEqual(50f, bow.criticalChance, "選択中の1本の補正だけが乗る(合算しない)");
         }
 
-        // --- セーブ復元(IWeaponSaveState) ---
+        // --- セーブ復元 ---
 
         [Test]
         public void SaveState_RoundTrip_PreservesOwnedAndSelected()

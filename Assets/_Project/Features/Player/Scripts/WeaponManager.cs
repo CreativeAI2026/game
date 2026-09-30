@@ -17,7 +17,7 @@ namespace CreativeAI.Gameplay
     /// 武器切り替え時に Animator.Rebind() で状態を完全リセットし、
     /// 前の武器のアニメーショントリガーやステートが残留するのを防ぐ。
     /// </summary>
-    public class WeaponManager : MonoBehaviour, IWeaponSaveState, IWeaponGiver
+    public class WeaponManager : MonoBehaviour, IWeaponGiver
     {
         /// <summary>武器が1本も選ばれていない状態の index。</summary>
         public const int NoWeapon = -1;
@@ -167,7 +167,7 @@ namespace CreativeAI.Gameplay
             return b;
         }
 
-        // --- IWeaponSaveState(セーブ復元の境界。SaveService から呼ばれる) ---
+        // --- セーブ(SaveService から呼ばれる) ---
 
         public int CaptureSelectedWeaponIndex() => _currentWeaponIndex;
 
