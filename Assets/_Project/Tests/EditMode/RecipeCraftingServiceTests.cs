@@ -20,7 +20,7 @@ namespace CreativeAI.Tests.EditMode
         [SetUp]
         public void SetUp()
         {
-            _inv = new InventoryService(new InventoryStorage());
+            _inv = new InventoryService();
             _craft = new RecipeCraftingService(_inv);
         }
 

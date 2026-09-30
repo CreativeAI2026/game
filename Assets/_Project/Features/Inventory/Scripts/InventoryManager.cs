@@ -32,21 +32,17 @@ namespace CreativeAI.Gameplay
         [SerializeField]
         private bool _addTestItemsOnAwake = true;
 
-        private readonly InventoryStorage _storage = new();
         private InventoryService _inventoryService;
         private RecipeCraftingService _recipeCraftingService;
-        private ItemUseService _itemUseService;
+        private PlayerStatus _playerStatus;
 
         public InventoryService InventoryService => _inventoryService ??= CreateInventoryService();
 
         public RecipeCraftingService RecipeCraftingService =>
             _recipeCraftingService ??= new RecipeCraftingService(InventoryService);
 
-        public ItemUseService ItemUseService =>
-            _itemUseService ??= new ItemUseService(InventoryService);
-
         /// <summary>
-        /// セッション常駐の Inventory を1つだけ生成する(既存ならそれを返す)。循環参照のため SessionBootstrap ではなくここに置き、
+        /// セッション常駐の Inventory を1つだけ生成する(既存ならそれを返す)。Core から Gameplay は参照できないため Core ではなくここに置き、
         /// Title フローから マネージャ生成の後・プレイヤー生成の前に呼ぶ。
         /// </summary>
         public static InventoryManager EnsureResident()
@@ -109,11 +105,6 @@ namespace CreativeAI.Gameplay
         public void AddItem(ItemData data, int count = 1)
         {
             InventoryService.AddItem(data, count);
-        }
-
-        public void AddEquipmentItem(EquipmentData data, EquipmentInstance instance)
-        {
-            InventoryService.AddEquipmentItem(data, instance);
         }
 
         /// <summary>
@@ -186,7 +177,12 @@ namespace CreativeAI.Gameplay
 
         public bool TryUse(ItemStack stack)
         {
-            return ItemUseService.TryUse(stack);
+            if (_playerStatus == null)
+            {
+                var player = GameObject.FindGameObjectWithTag("Player");
+                _playerStatus = player != null ? player.GetComponent<PlayerStatus>() : null;
+            }
+            return InventoryService.TryUseFood(stack, _playerStatus);
         }
 
         public bool HasItem(ItemData data, int count = 1)
@@ -385,7 +381,7 @@ namespace CreativeAI.Gameplay
 
         private InventoryService CreateInventoryService()
         {
-            var service = new InventoryService(_storage);
+            var service = new InventoryService();
             service.InventoryChanged += OnInventoryServiceChanged;
             service.QuickFoodChanged += OnQuickFoodChanged;
             return service;

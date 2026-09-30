@@ -83,7 +83,6 @@ namespace CreativeAI.Gameplay
             set => _count = IsInstance ? 1 : value;
         }
 
-        public EquipmentInstance EquipmentInstance { get; }
         public bool IsEquipped { get; set; }
 
         /// <summary>
@@ -93,22 +92,12 @@ namespace CreativeAI.Gameplay
         public IReadOnlyList<RolledStat> RolledStats { get; }
 
         /// <summary>ロール済み個体か(true ならマージ・スタックしない)。</summary>
-        public bool IsInstance =>
-            EquipmentInstance != null || (RolledStats != null && RolledStats.Count > 0);
+        public bool IsInstance => RolledStats != null && RolledStats.Count > 0;
 
         public ItemStack(ItemData data, int count = 1)
         {
             Data = data;
             Count = count;
-        }
-
-        public ItemStack(EquipmentData data, EquipmentInstance equipmentInstance)
-        {
-            Data = data;
-            EquipmentInstance =
-                equipmentInstance
-                ?? throw new System.ArgumentNullException(nameof(equipmentInstance));
-            Count = 1;
         }
 
         /// <summary>ロール済み個体を1つ作る（数量は常に1・マージしない）。</summary>

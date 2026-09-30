@@ -5,7 +5,7 @@ using UnityEngine.EventSystems;
 
 namespace CreativeAI.UI
 {
-    public partial class ItemSlot : BaseItemSlot, IPointerClickHandler
+    public class ItemSlot : BaseItemSlot, IPointerClickHandler
     {
         private ItemStack _itemStack;
         private InventoryView _controller;
@@ -138,6 +138,24 @@ namespace CreativeAI.UI
                 $"{nameof(ItemSlot)} '{name}' に {referenceName} がないため、該当表示をスキップします。Prefab上で設定してください。",
                 this
             );
+        }
+
+        protected override void RefreshSelectionVisuals()
+        {
+            ResolveViewReferences();
+            _frameView?.SetSelected(_isSlotSelected);
+        }
+
+        public void SetEquipped(bool isEquipped)
+        {
+            ResolveViewReferences();
+            _markerView?.SetEquipped(isEquipped);
+        }
+
+        public void SetCraftAssigned(bool isAssigned)
+        {
+            ResolveViewReferences();
+            _markerView?.SetCraftAssigned(isAssigned);
         }
     }
 }
