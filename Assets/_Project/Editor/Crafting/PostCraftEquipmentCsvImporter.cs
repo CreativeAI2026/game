@@ -14,8 +14,6 @@ namespace CreativeAI.EditorTools
         private const string CsvPath = "Assets/_Project/Editor/Crafting/PostCraftEquipment.csv";
         private const string ItemOutputDirectory =
             "Assets/_Project/Features/Inventory/Data/Equipment/PostCraft";
-        private const string RecipeOutputDirectory =
-            "Assets/_Project/Features/Crafting/Data/Equipment";
         private const string RecipeDatabasePath =
             "Assets/_Project/Resources/Crafting/CraftRecipeDB.asset";
         private const string ItemDatabasePath = "Assets/_Project/Resources/ItemDB.asset";
@@ -48,14 +46,11 @@ namespace CreativeAI.EditorTools
             }
 
             EnsureDirectory(ItemOutputDirectory);
-            EnsureDirectory(RecipeOutputDirectory);
 
             int spriteChanges = 0;
             int createdItems = 0;
             int updatedItems = 0;
-            int createdRecipes = 0;
-            int updatedRecipes = 0;
-            var importedRecipes = new List<CraftRecipeData>();
+            var importedRecipes = new List<CraftRecipe>();
 
             foreach (Row row in rows)
             {
@@ -78,16 +73,7 @@ namespace CreativeAI.EditorTools
                     else
                         updatedItems++;
 
-                    CraftRecipeData recipe = LoadOrCreate<CraftRecipeData>(
-                        $"{RecipeOutputDirectory}/{row.AssetName}.asset",
-                        out bool recipeCreated
-                    );
-                    ApplyRecipe(row, result, recipe);
-                    importedRecipes.Add(recipe);
-                    if (recipeCreated)
-                        createdRecipes++;
-                    else
-                        updatedRecipes++;
+                    importedRecipes.Add(CreateRecipe(row, result));
                 }
             }
             finally
@@ -102,7 +88,7 @@ namespace CreativeAI.EditorTools
             Debug.Log(
                 $"[PostCraft CSV] 同期完了: Sprite変更={spriteChanges}, "
                     + $"ItemData 作成={createdItems}/更新={updatedItems}, "
-                    + $"Recipe 作成={createdRecipes}/更新={updatedRecipes}"
+                    + $"Recipe 同期={importedRecipes.Count}"
             );
         }
 
@@ -315,15 +301,14 @@ namespace CreativeAI.EditorTools
             EditorUtility.SetDirty(item);
         }
 
-        private static void ApplyRecipe(Row row, EquipmentData result, CraftRecipeData recipe)
-        {
-            Undo.RecordObject(recipe, "PostCraft Recipeを同期");
-            recipe.resultItem = result;
-            recipe.material1 = FindItem(row.Material1Key);
-            recipe.material2 = FindItem(row.Material2Key);
-            recipe.showInRecipeCraft = row.ShowInRecipeCraft;
-            EditorUtility.SetDirty(recipe);
-        }
+        private static CraftRecipe CreateRecipe(Row row, EquipmentData result) =>
+            new()
+            {
+                resultItem = result,
+                material1 = FindItem(row.Material1Key),
+                material2 = FindItem(row.Material2Key),
+                showInRecipeCraft = row.ShowInRecipeCraft,
+            };
 
         private static ItemData FindItem(string key) =>
             AssetDatabase
@@ -345,7 +330,7 @@ namespace CreativeAI.EditorTools
             return asset;
         }
 
-        private static void SyncRecipeDatabase(IReadOnlyCollection<CraftRecipeData> importedRecipes)
+        private static void SyncRecipeDatabase(IReadOnlyCollection<CraftRecipe> importedRecipes)
         {
             CraftRecipeDB database = AssetDatabase.LoadAssetAtPath<CraftRecipeDB>(
                 RecipeDatabasePath
@@ -355,26 +340,9 @@ namespace CreativeAI.EditorTools
                     $"CraftRecipeDBがありません: {RecipeDatabasePath}"
                 );
 
-            var serialized = new SerializedObject(database);
-            SerializedProperty recipes = serialized.FindProperty("_recipes");
-            var merged = new List<CraftRecipeData>();
-            for (int i = 0; i < recipes.arraySize; i++)
-            {
-                var recipe =
-                    recipes.GetArrayElementAtIndex(i).objectReferenceValue as CraftRecipeData;
-                if (recipe != null && !merged.Contains(recipe))
-                    merged.Add(recipe);
-            }
-            foreach (CraftRecipeData recipe in importedRecipes)
-            {
-                if (!merged.Contains(recipe))
-                    merged.Add(recipe);
-            }
-
-            recipes.arraySize = merged.Count;
-            for (int i = 0; i < merged.Count; i++)
-                recipes.GetArrayElementAtIndex(i).objectReferenceValue = merged[i];
-            serialized.ApplyModifiedPropertiesWithoutUndo();
+            Undo.RecordObject(database, "CraftRecipeDBを同期");
+            foreach (CraftRecipe recipe in importedRecipes)
+                database.SetRecipe(recipe);
             EditorUtility.SetDirty(database);
         }
 

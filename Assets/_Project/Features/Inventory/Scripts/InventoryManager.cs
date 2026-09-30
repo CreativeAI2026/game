@@ -199,27 +199,27 @@ namespace CreativeAI.Gameplay
             return InventoryService.GetItemCount(data);
         }
 
-        public bool CanCraft(CraftRecipeData recipe, int quantity = 1)
+        public bool CanCraft(CraftRecipe recipe, int quantity = 1)
         {
             return RecipeCraftingService.CanCraft(recipe, quantity);
         }
 
-        public bool CanCraft(CraftRecipeData recipe, ItemStack materialA, ItemStack materialB)
+        public bool CanCraft(CraftRecipe recipe, ItemStack materialA, ItemStack materialB)
         {
             return RecipeCraftingService.CanCraft(recipe, materialA, materialB);
         }
 
-        public int GetMaximumCraftable(CraftRecipeData recipe)
+        public int GetMaximumCraftable(CraftRecipe recipe)
         {
             return RecipeCraftingService.GetMaximumCraftable(recipe);
         }
 
-        public bool TryCraft(CraftRecipeData recipe, int quantity)
+        public bool TryCraft(CraftRecipe recipe, int quantity)
         {
             return RecipeCraftingService.TryCraft(recipe, quantity);
         }
 
-        public bool TryCraft(CraftRecipeData recipe, ItemStack materialA, ItemStack materialB)
+        public bool TryCraft(CraftRecipe recipe, ItemStack materialA, ItemStack materialB)
         {
             return RecipeCraftingService.TryCraft(recipe, materialA, materialB);
         }

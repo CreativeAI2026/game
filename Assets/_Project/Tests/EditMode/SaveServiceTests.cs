@@ -226,7 +226,7 @@ namespace CreativeAI.Tests.EditMode
         [Test]
         public void SaveThenLoad_RestoresRevealedRecipes()
         {
-            var recipe = MakeAsset<CraftRecipeData>();
+            var recipe = new CraftRecipe();
             // 実カタログの初期解禁(showInRecipeCraft)と id がぶつからないよう、テスト専用の id を使う。
             recipe.resultItem = MakeFood(990001);
             Assert.IsTrue(_book.Reveal(recipe)); // 前提: 新規解禁

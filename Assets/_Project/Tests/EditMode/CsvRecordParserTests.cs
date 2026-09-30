@@ -1,5 +1,5 @@
 using System;
-using CreativeAI.Gameplay;
+using CreativeAI.EditorTools;
 using NUnit.Framework;
 
 namespace CreativeAI.Tests.EditMode

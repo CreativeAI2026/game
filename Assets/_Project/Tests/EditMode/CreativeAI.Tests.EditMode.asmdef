@@ -8,6 +8,7 @@
         "CreativeAI.UI",
         "Unity.TextMeshPro",
         "CreativeAI.Scenario.Editor",
+        "CreativeAI.EditorTools",
         "UnityEngine.TestRunner",
         "UnityEditor.TestRunner"
     ],
