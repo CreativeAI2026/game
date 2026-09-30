@@ -1,14 +1,12 @@
 using System.Collections;
 using System.Linq;
 using CreativeAI.Gameplay;
-using CreativeAI.UI.Common;
-using CreativeAI.UI.InventoryUI;
 using TMPro;
 using UnityEngine;
 using UnityEngine.InputSystem;
 using UnityEngine.UI;
 
-namespace CreativeAI.UI.CraftingUI
+namespace CreativeAI.UI
 {
     public class FreeCraftPanelController : MonoBehaviour
     {

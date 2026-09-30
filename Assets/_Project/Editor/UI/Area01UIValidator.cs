@@ -3,15 +3,12 @@ using System.Collections.Generic;
 using System.Linq;
 using CreativeAI.Gameplay;
 using CreativeAI.UI;
-using CreativeAI.UI.CharacterUI;
-using CreativeAI.UI.CraftingUI;
-using CreativeAI.UI.InventoryUI;
 using UnityEditor;
 using UnityEditor.SceneManagement;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 
-namespace CreativeAI.EditorTools.UI
+namespace CreativeAI.EditorTools
 {
     public static class Area01UIValidator
     {

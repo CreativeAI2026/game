@@ -1,10 +1,8 @@
 using CreativeAI.Core;
-using CreativeAI.Core.EventSystem;
-using CreativeAI.Core.Interaction;
 using TMPro;
 using UnityEngine;
 
-namespace CreativeAI.UI.InteractPrompt
+namespace CreativeAI.UI
 {
     /// <summary>
     /// 「[E] 扉を開ける」のような操作プロンプト(常駐)。<see cref="InteractPromptService"/> を購読してラベルを1つだけ表示する。

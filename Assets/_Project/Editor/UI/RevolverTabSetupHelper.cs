@@ -1,12 +1,11 @@
 using System;
 using System.IO;
 using CreativeAI.UI;
-using CreativeAI.UI.InventoryUI;
 using UnityEditor;
 using UnityEngine;
 using UnityEngine.UI;
 
-namespace CreativeAI.EditorTools.UI
+namespace CreativeAI.EditorTools
 {
     [InitializeOnLoad]
     public static class RevolverTabSetupHelper
@@ -156,8 +155,7 @@ namespace CreativeAI.EditorTools.UI
                 if (oldGroup != null)
                     oldGroup.gameObject.SetActive(false);
 
-                var controller =
-                    weaponView.GetComponent<CreativeAI.UI.CharacterUI.WeaponTabViewController>();
+                var controller = weaponView.GetComponent<CreativeAI.UI.WeaponTabViewController>();
                 if (controller == null)
                     throw new InvalidOperationException("WeaponTabViewController was not found.");
                 var controllerObject = new SerializedObject(controller);

@@ -1,7 +1,6 @@
 using System.Collections.Generic;
 using System.Linq;
 using CreativeAI.Core;
-using CreativeAI.Core.EventSystem;
 using CreativeAI.Gameplay;
 using CreativeAI.StatRoll;
 using NUnit.Framework;

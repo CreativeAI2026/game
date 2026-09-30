@@ -2,7 +2,7 @@ using System.Collections;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 
-namespace CreativeAI.Core.SceneManagement
+namespace CreativeAI.Core
 {
     [DefaultExecutionOrder(-100)]
     public class SceneController : MonoBehaviour

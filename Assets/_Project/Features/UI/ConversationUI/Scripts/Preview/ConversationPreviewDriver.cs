@@ -1,9 +1,9 @@
 using System;
 using System.Collections;
-using CreativeAI.Core.EventSystem;
+using CreativeAI.Core;
 using UnityEngine;
 
-namespace CreativeAI.UI.ConversationUI
+namespace CreativeAI.UI
 {
     /// <summary>
     /// UI_ConversationPreview 専用のプレビュー駆動役。

@@ -1,4 +1,4 @@
-namespace CreativeAI.UI.InventoryUI
+namespace CreativeAI.UI
 {
     public partial class ItemSlot
     {

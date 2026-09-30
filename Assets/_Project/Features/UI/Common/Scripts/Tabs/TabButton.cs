@@ -1,4 +1,3 @@
-using CreativeAI.UI.InventoryUI;
 using DG.Tweening;
 using UnityEngine;
 using UnityEngine.UI;

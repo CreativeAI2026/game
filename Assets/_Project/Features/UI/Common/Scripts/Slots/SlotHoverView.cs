@@ -1,4 +1,3 @@
-using CreativeAI.UI.InventoryUI;
 using UnityEngine;
 
 namespace CreativeAI.UI

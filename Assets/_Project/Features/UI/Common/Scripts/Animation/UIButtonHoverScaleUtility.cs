@@ -1,9 +1,8 @@
 using System.Collections.Generic;
-using CreativeAI.UI.InventoryUI;
 using UnityEngine;
 using UnityEngine.UI;
 
-namespace CreativeAI.UI.Common
+namespace CreativeAI.UI
 {
     public static class UIButtonHoverScaleUtility
     {

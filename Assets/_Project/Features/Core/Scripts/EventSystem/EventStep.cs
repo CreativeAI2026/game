@@ -2,7 +2,7 @@ using System;
 using System.Collections.Generic;
 using UnityEngine;
 
-namespace CreativeAI.Core.EventSystem
+namespace CreativeAI.Core
 {
     public enum StepKind
     {

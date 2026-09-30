@@ -2,7 +2,7 @@ using System;
 using UnityEngine;
 using UnityEngine.UI;
 
-namespace CreativeAI.UI.ConversationUI
+namespace CreativeAI.UI
 {
     /// <summary>会話HUDボタンのイベント登録と表示状態を管理する。</summary>
     internal sealed class ConversationControlsPresenter

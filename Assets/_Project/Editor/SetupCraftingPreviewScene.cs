@@ -1,7 +1,6 @@
 #if UNITY_EDITOR
 using System.IO;
 using CreativeAI.UI;
-using CreativeAI.UI.CraftingUI;
 using UnityEditor;
 using UnityEditor.SceneManagement;
 using UnityEngine;

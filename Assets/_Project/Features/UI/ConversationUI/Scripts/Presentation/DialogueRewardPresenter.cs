@@ -3,7 +3,7 @@ using UnityEngine;
 using UnityEngine.Rendering.Universal;
 using UnityEngine.UI;
 
-namespace CreativeAI.UI.ConversationUI
+namespace CreativeAI.UI
 {
     /// <summary>アイテム画像と3D武器モデルの獲得表示、および一時リソースの解放を担当する。</summary>
     internal sealed class DialogueRewardPresenter

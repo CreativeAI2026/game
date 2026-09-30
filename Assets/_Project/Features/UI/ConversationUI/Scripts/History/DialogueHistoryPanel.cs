@@ -1,14 +1,14 @@
 using System;
 using System.Collections.Generic;
 using System.Text;
-using CreativeAI.Core.EventSystem;
+using CreativeAI.Core;
 using TMPro;
 using UnityEngine;
 using UnityEngine.EventSystems;
 using UnityEngine.InputSystem;
 using UnityEngine.UI;
 
-namespace CreativeAI.UI.ConversationUI
+namespace CreativeAI.UI
 {
     /// <summary>会話中に表示済みの行を読み返す、画面全体の履歴パネル。</summary>
     public sealed class DialogueHistoryPanel : MonoBehaviour

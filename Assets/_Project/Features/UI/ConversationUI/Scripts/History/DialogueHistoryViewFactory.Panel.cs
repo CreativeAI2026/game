@@ -2,7 +2,7 @@ using System;
 using UnityEngine;
 using UnityEngine.UI;
 
-namespace CreativeAI.UI.ConversationUI
+namespace CreativeAI.UI
 {
     internal sealed partial class DialogueHistoryViewFactory
     {

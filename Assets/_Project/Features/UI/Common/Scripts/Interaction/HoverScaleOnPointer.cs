@@ -3,7 +3,7 @@ using DG.Tweening;
 using UnityEngine;
 using UnityEngine.EventSystems;
 
-namespace CreativeAI.UI.InventoryUI
+namespace CreativeAI.UI
 {
     [RequireComponent(typeof(RectTransform))]
     public partial class HoverScaleOnPointer

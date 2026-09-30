@@ -2,7 +2,7 @@ using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
 
-namespace CreativeAI.UI.ConversationUI
+namespace CreativeAI.UI
 {
     /// <summary>履歴内の選択肢候補を、選択結果だけの表示と全候補表示で切り替える。</summary>
     public sealed class DialogueChoiceHistoryToggle : MonoBehaviour

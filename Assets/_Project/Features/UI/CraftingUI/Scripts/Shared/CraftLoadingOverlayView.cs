@@ -1,7 +1,6 @@
-using CreativeAI.UI;
 using UnityEngine;
 
-namespace CreativeAI.UI.CraftingUI
+namespace CreativeAI.UI
 {
     public sealed class CraftLoadingOverlayView : MonoBehaviour
     {

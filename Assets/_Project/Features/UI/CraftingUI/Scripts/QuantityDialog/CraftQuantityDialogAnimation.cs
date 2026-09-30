@@ -2,7 +2,7 @@ using System;
 using DG.Tweening;
 using UnityEngine;
 
-namespace CreativeAI.UI.CraftingUI
+namespace CreativeAI.UI
 {
     public static class CraftQuantityDialogAnimation
     {

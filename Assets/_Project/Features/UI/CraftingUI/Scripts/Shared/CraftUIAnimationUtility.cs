@@ -3,7 +3,7 @@ using DG.Tweening;
 using TMPro;
 using UnityEngine;
 
-namespace CreativeAI.UI.CraftingUI
+namespace CreativeAI.UI
 {
     public static class CraftUIAnimationUtility
     {

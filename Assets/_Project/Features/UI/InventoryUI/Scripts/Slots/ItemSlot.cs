@@ -3,7 +3,7 @@ using CreativeAI.Gameplay;
 using UnityEngine;
 using UnityEngine.EventSystems;
 
-namespace CreativeAI.UI.InventoryUI
+namespace CreativeAI.UI
 {
     public partial class ItemSlot : BaseItemSlot, IPointerClickHandler
     {

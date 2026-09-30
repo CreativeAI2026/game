@@ -2,7 +2,7 @@ using System;
 using System.Collections.Generic;
 using UnityEngine;
 
-namespace CreativeAI.UI.ConversationUI
+namespace CreativeAI.UI
 {
     public enum DialoguePortraitSide
     {

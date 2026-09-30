@@ -2,7 +2,7 @@ using System.Collections;
 using UnityEngine;
 using UnityEngine.UI;
 
-namespace CreativeAI.UI.ConversationUI
+namespace CreativeAI.UI
 {
     /// <summary>立ち絵の解決、左右スロット、話者フォーカスと立ち絵演出を担当する。</summary>
     internal sealed class DialoguePortraitPresenter

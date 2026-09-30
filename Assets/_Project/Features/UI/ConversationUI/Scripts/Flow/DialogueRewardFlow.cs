@@ -3,7 +3,7 @@ using System.Collections;
 using TMPro;
 using UnityEngine;
 
-namespace CreativeAI.UI.ConversationUI
+namespace CreativeAI.UI
 {
     /// <summary>報酬メッセージの表示準備、入場、退場を調停する。</summary>
     internal sealed class DialogueRewardFlow

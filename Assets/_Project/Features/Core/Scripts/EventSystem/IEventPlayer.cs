@@ -1,4 +1,4 @@
-namespace CreativeAI.Core.EventSystem
+namespace CreativeAI.Core
 {
     /// <summary>
     /// 会話イベント再生の指揮役。EventTrigger が条件成立時に発火を託す。

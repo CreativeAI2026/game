@@ -3,7 +3,7 @@ using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
 
-namespace CreativeAI.UI.ConversationUI
+namespace CreativeAI.UI
 {
     /// <summary>会話履歴パネルと履歴行のUnity UI階層を構築する。</summary>
     internal sealed partial class DialogueHistoryViewFactory

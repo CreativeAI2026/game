@@ -1,7 +1,6 @@
 using System.Collections;
 using CreativeAI.Gameplay;
-using CreativeAI.UI.Common;
-using CreativeAI.UI.CraftingUI;
+using CreativeAI.UI;
 using NUnit.Framework;
 using TMPro;
 using UnityEditor;

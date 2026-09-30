@@ -1,5 +1,5 @@
 using System;
-using CreativeAI.Core.EventSystem;
+using CreativeAI.Core;
 using NUnit.Framework;
 
 namespace CreativeAI.Tests.EditMode

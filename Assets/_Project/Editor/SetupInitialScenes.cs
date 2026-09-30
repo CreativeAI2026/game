@@ -8,15 +8,8 @@ using UnityEngine.EventSystems;
 using UnityEngine.InputSystem.UI;
 using UnityEngine.UI;
 using CreativeAI.Core;
-using CreativeAI.Core.SceneManagement;
-using CreativeAI.UI.Common;
-using CreativeAI.UI.CharacterUI;
-using CreativeAI.UI.InventoryUI;
-using CreativeAI.UI.LoadingOverlay;
-using CreativeAI.UI.SaveDialog;
-using CreativeAI.UI.TitleUI;
-using Object = UnityEngine.Object;
 using CreativeAI.UI;
+using Object = UnityEngine.Object;
 using CreativeAI.Gameplay;
 using Text = TMPro.TextMeshProUGUI;
 

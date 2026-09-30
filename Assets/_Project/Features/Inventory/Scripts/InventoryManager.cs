@@ -1,6 +1,6 @@
 using System.Collections.Generic;
 using System.Linq;
-using CreativeAI.Core.EventSystem;
+using CreativeAI.Core;
 using UnityEngine;
 
 namespace CreativeAI.Gameplay

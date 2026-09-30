@@ -1,4 +1,3 @@
-using CreativeAI.Core.EventSystem;
 using UnityEngine;
 
 namespace CreativeAI.Core

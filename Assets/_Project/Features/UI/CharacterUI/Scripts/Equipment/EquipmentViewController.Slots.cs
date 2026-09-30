@@ -3,7 +3,7 @@ using System.Linq;
 using CreativeAI.Gameplay;
 using UnityEngine;
 
-namespace CreativeAI.UI.CharacterUI
+namespace CreativeAI.UI
 {
     public partial class EquipmentViewController
     {

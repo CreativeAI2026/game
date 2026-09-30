@@ -1,14 +1,13 @@
 using System.Collections.Generic;
 using CreativeAI.Core;
-using CreativeAI.Core.EventSystem;
 using CreativeAI.Gameplay;
 using UnityEngine;
 using UnityEngine.UI;
 
-namespace CreativeAI.UI.QuickFoodBar
+namespace CreativeAI.UI
 {
     /// <summary>
-    /// 即時食材使用UI(常駐)。キャラUIの即時使用食材タブ(<see cref="CreativeAI.UI.CharacterUI.QuickFoodViewController"/>)でセットした
+    /// 即時食材使用UI(常駐)。キャラUIの即時使用食材タブ(<see cref="CreativeAI.UI.QuickFoodViewController"/>)でセットした
     /// 最大3枠(<see cref="InventoryManager.GetQuickFoodSlots"/>)を常時表示し、タップで即時使用(HP回復+消費)する。
     /// モードや所持で出し分けない。UIRoot Prefab の子として同梱され、常駐は <see cref="UIRoot"/> が担う。状態は持たない。
     /// </summary>

@@ -3,9 +3,6 @@ using System.Collections.Generic;
 using System.Linq;
 using CreativeAI.Gameplay;
 using CreativeAI.UI;
-using CreativeAI.UI.Common;
-using CreativeAI.UI.CraftingUI;
-using CreativeAI.UI.InventoryUI;
 using TMPro;
 using UnityEditor;
 using UnityEditor.SceneManagement;
@@ -13,7 +10,7 @@ using UnityEngine;
 using UnityEngine.SceneManagement;
 using UnityEngine.UI;
 
-namespace CreativeAI.EditorTools.UI
+namespace CreativeAI.EditorTools
 {
     public static class CraftingUIValidator
     {

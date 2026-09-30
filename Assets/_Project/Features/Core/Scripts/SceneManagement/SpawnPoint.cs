@@ -1,6 +1,6 @@
 using UnityEngine;
 
-namespace CreativeAI.Core.SceneManagement
+namespace CreativeAI.Core
 {
     /// <summary>
     /// フィールドの到着位置の目印(ID はシーン内で一意、向きは回転を使う)。持ち越したプレイヤーリグをここに置く。

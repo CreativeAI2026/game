@@ -4,7 +4,7 @@ using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
 
-namespace CreativeAI.UI.ConversationUI
+namespace CreativeAI.UI
 {
     /// <summary>一行分の立ち絵解決、本文表示準備、履歴記録を調停する。</summary>
     internal sealed class DialogueLineFlow

@@ -1,10 +1,9 @@
 using System;
-using CreativeAI.UI.Common;
 using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
 
-namespace CreativeAI.UI.CraftingUI
+namespace CreativeAI.UI
 {
     [RequireComponent(typeof(CanvasGroup))]
     [RequireComponent(typeof(CloseOnSelfClick))]

@@ -1,7 +1,7 @@
 using UnityEditor;
 using UnityEngine;
 
-namespace CreativeAI.EditorTools.Art
+namespace CreativeAI.EditorTools
 {
     /// <summary>
     /// アイテムアイコンPNG(Art/UI/Items 配下)のインポート設定を標準へ自動で揃える AssetPostprocessor(冪等)。

@@ -1,7 +1,7 @@
 using System;
 using UnityEngine.InputSystem;
 
-namespace CreativeAI.UI.ConversationUI
+namespace CreativeAI.UI
 {
     /// <summary>会話UIのキーボードショートカットと操作可否更新を担当する。</summary>
     internal sealed class ConversationInputController

@@ -5,7 +5,7 @@ using UnityEngine;
 using UnityEngine.Scripting.APIUpdating;
 using UnityEngine.UI;
 
-namespace CreativeAI.UI.CraftingUI
+namespace CreativeAI.UI
 {
     public readonly struct RecipeCraftMaterialRowData
     {

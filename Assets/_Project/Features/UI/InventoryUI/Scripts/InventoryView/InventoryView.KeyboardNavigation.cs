@@ -2,7 +2,7 @@ using UnityEngine;
 using UnityEngine.InputSystem;
 using UnityEngine.UI;
 
-namespace CreativeAI.UI.InventoryUI
+namespace CreativeAI.UI
 {
     public partial class InventoryView
     {

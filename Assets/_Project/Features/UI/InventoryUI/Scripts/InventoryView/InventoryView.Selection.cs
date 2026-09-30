@@ -4,7 +4,7 @@ using UnityEngine;
 using UnityEngine.EventSystems;
 using UnityEngine.UI;
 
-namespace CreativeAI.UI.InventoryUI
+namespace CreativeAI.UI
 {
     public partial class InventoryView
     {

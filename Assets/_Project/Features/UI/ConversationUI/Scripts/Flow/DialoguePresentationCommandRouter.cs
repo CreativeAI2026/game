@@ -3,7 +3,7 @@ using System.Collections;
 using System.Globalization;
 using UnityEngine;
 
-namespace CreativeAI.UI.ConversationUI
+namespace CreativeAI.UI
 {
     /// <summary>スクリプトエンジン由来の演出コマンドを会話UI操作へ変換する。</summary>
     internal sealed class DialoguePresentationCommandRouter

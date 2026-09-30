@@ -4,7 +4,7 @@ using CreativeAI.Gameplay;
 using UnityEngine;
 using UnityEngine.Scripting.APIUpdating;
 
-namespace CreativeAI.UI.InventoryUI
+namespace CreativeAI.UI
 {
     [MovedFrom(
         true,

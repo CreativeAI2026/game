@@ -1,8 +1,7 @@
 using System.Linq;
 using CreativeAI.Gameplay;
-using CreativeAI.UI.InventoryUI;
 
-namespace CreativeAI.UI.CharacterUI
+namespace CreativeAI.UI
 {
     public partial class EquipmentViewController
     {

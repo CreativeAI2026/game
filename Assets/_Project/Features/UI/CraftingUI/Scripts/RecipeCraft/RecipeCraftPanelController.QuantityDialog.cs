@@ -1,8 +1,7 @@
 using CreativeAI.Gameplay;
-using CreativeAI.UI.Common;
 using UnityEngine;
 
-namespace CreativeAI.UI.CraftingUI
+namespace CreativeAI.UI
 {
     public partial class RecipeCraftPanelController
     {

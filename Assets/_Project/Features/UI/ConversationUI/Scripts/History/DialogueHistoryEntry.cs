@@ -1,6 +1,6 @@
 using UnityEngine;
 
-namespace CreativeAI.UI.ConversationUI
+namespace CreativeAI.UI
 {
     internal enum DialogueHistoryEntryKind
     {

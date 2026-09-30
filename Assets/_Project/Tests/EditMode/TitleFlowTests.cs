@@ -1,8 +1,6 @@
 using CreativeAI.Core;
-using CreativeAI.Core.EventSystem;
-using CreativeAI.Core.SceneManagement;
 using CreativeAI.Gameplay;
-using CreativeAI.UI.TitleUI;
+using CreativeAI.UI;
 using NUnit.Framework;
 using UnityEngine;
 using UnityEngine.TestTools;

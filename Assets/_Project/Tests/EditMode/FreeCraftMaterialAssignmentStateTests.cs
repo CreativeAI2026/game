@@ -1,7 +1,7 @@
 using System;
 using System.Linq;
 using CreativeAI.Gameplay;
-using CreativeAI.UI.CraftingUI;
+using CreativeAI.UI;
 using NUnit.Framework;
 
 namespace CreativeAI.Tests.EditMode

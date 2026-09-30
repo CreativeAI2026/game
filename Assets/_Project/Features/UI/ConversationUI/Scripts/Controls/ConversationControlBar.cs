@@ -1,7 +1,7 @@
 using TMPro;
 using UnityEngine;
 
-namespace CreativeAI.UI.ConversationUI
+namespace CreativeAI.UI
 {
     /// <summary>会話操作バーの登場、無操作時の減光、ツールチップを管理する。</summary>
     public sealed class ConversationControlBar : MonoBehaviour

@@ -1,11 +1,9 @@
 using CreativeAI.Core;
-using CreativeAI.Core.EventSystem;
-using CreativeAI.Core.SceneManagement;
 using CreativeAI.Gameplay;
 using UnityEngine;
 using UnityEngine.UI;
 
-namespace CreativeAI.UI.TitleUI
+namespace CreativeAI.UI
 {
     public class TitleUIController : MonoBehaviour
     {

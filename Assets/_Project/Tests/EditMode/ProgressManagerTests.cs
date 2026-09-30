@@ -1,4 +1,4 @@
-using CreativeAI.Core.EventSystem;
+using CreativeAI.Core;
 using NUnit.Framework;
 using UnityEngine;
 

@@ -1,9 +1,8 @@
 using System.Collections;
-using CreativeAI.UI;
 using TMPro;
 using UnityEngine;
 
-namespace CreativeAI.UI.CraftingUI
+namespace CreativeAI.UI
 {
     [RequireComponent(typeof(CanvasGroup))]
     public sealed class CraftWarningToastView : MonoBehaviour

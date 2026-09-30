@@ -1,10 +1,9 @@
 using System.Collections;
 using System.Collections.Generic;
 using CreativeAI.Gameplay;
-using CreativeAI.UI.InventoryUI;
 using UnityEngine;
 
-namespace CreativeAI.UI.CharacterUI
+namespace CreativeAI.UI
 {
     public partial class EquipmentViewController : MonoBehaviour, ICharacterTabView
     {

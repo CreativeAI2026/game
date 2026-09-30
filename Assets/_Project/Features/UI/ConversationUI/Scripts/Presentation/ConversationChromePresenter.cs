@@ -3,7 +3,7 @@ using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
 
-namespace CreativeAI.UI.ConversationUI
+namespace CreativeAI.UI
 {
     /// <summary>会話ウィンドウ、操作ガイド、AUTO表示と送りインジケーターを担当する。</summary>
     internal sealed partial class ConversationChromePresenter

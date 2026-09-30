@@ -1,6 +1,6 @@
 using System.Collections;
 using System.Collections.Generic;
-using CreativeAI.Core.SceneManagement;
+using CreativeAI.Core;
 using NUnit.Framework;
 using UnityEngine;
 using UnityEngine.SceneManagement;

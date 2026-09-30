@@ -1,10 +1,10 @@
-using CreativeAI.UI.InteractPrompt;
+using CreativeAI.UI;
 using TMPro;
 using UnityEditor;
 using UnityEngine;
 using UnityEngine.UI;
 
-namespace CreativeAI.EditorTools.UI
+namespace CreativeAI.EditorTools
 {
     /// <summary>
     /// 操作プロンプト(「[E] 扉を開ける」)を <see cref="CreativeAI.UI.UIRoot"/> Prefab の子として注入する(常駐化は UIRoot 任せ)。

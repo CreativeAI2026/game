@@ -1,10 +1,9 @@
 using System.Collections.Generic;
 using System.Linq;
 using CreativeAI.Gameplay;
-using CreativeAI.UI.InventoryUI;
 using UnityEngine;
 
-namespace CreativeAI.UI.CraftingUI
+namespace CreativeAI.UI
 {
     public partial class RecipeCraftPanelController
     {

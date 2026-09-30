@@ -2,7 +2,7 @@ using UnityEngine;
 using UnityEngine.EventSystems;
 using UnityEngine.UI;
 
-namespace CreativeAI.UI.ConversationUI
+namespace CreativeAI.UI
 {
     /// <summary>会話操作ボタンのホバー、押下、トグル状態を共通表現する。</summary>
     public sealed class ConversationControlButton

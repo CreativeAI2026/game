@@ -1,7 +1,7 @@
 using System.Collections;
 using UnityEngine;
 
-namespace CreativeAI.Core.EventSystem
+namespace CreativeAI.Core
 {
     /// <summary>
     /// 戦闘の入力一式。敵は events.json ではなくシーンの EventTrigger の Enemy スロットに

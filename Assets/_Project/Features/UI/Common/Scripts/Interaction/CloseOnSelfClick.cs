@@ -3,7 +3,7 @@ using UnityEngine;
 using UnityEngine.Events;
 using UnityEngine.EventSystems;
 
-namespace CreativeAI.UI.Common
+namespace CreativeAI.UI
 {
     public class CloseOnSelfClick : MonoBehaviour, IPointerClickHandler
     {

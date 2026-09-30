@@ -1,9 +1,8 @@
 using System.Collections.Generic;
 using CreativeAI.Gameplay;
-using CreativeAI.UI.InventoryUI;
 using UnityEngine;
 
-namespace CreativeAI.UI.CharacterUI
+namespace CreativeAI.UI
 {
     /// <summary>
     /// キャラクターUI「即時使用食材」タブの View。所持食材から最大3つを即時使用スロットにセット/解除する

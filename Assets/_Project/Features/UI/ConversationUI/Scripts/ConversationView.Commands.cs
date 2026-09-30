@@ -2,7 +2,7 @@ using System.Collections;
 using CreativeAI.Gameplay;
 using UnityEngine;
 
-namespace CreativeAI.UI.ConversationUI
+namespace CreativeAI.UI
 {
     public sealed partial class ConversationView
     {

@@ -1,4 +1,4 @@
-namespace CreativeAI.Core.EventSystem
+namespace CreativeAI.Core
 {
     /// <summary>
     /// giveWeapon ステップの seam(実体は WeaponManager、<see cref="IItemGiver"/> と対称)。

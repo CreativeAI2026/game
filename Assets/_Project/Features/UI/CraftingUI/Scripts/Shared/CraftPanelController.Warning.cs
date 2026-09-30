@@ -1,4 +1,4 @@
-namespace CreativeAI.UI.CraftingUI
+namespace CreativeAI.UI
 {
     public partial class CraftPanelController
     {

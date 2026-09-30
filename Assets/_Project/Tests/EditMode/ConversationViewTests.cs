@@ -1,8 +1,8 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
-using CreativeAI.Core.EventSystem;
-using CreativeAI.UI.ConversationUI;
+using CreativeAI.Core;
+using CreativeAI.UI;
 using NUnit.Framework;
 using TMPro;
 using UnityEngine;

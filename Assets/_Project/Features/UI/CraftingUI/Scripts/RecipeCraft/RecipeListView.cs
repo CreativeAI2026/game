@@ -6,7 +6,7 @@ using UnityEngine;
 using UnityEngine.InputSystem;
 using UnityEngine.UI;
 
-namespace CreativeAI.UI.CraftingUI
+namespace CreativeAI.UI
 {
     public sealed class RecipeListView : MonoBehaviour
     {

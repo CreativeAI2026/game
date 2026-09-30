@@ -1,4 +1,4 @@
-using CreativeAI.UI.ConversationUI;
+using CreativeAI.UI;
 using NUnit.Framework;
 
 namespace CreativeAI.Tests.EditMode

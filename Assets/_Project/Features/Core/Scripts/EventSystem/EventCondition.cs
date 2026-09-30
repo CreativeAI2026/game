@@ -1,7 +1,7 @@
 using System;
 using UnityEngine;
 
-namespace CreativeAI.Core.EventSystem
+namespace CreativeAI.Core
 {
     public enum ConditionType
     {

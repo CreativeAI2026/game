@@ -1,7 +1,7 @@
 using UnityEngine;
 using UnityEngine.EventSystems;
 
-namespace CreativeAI.UI.CraftingUI
+namespace CreativeAI.UI
 {
     public class DialogClickBlocker : MonoBehaviour, IPointerClickHandler
     {

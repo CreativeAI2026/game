@@ -2,7 +2,7 @@ using DG.Tweening;
 using TMPro;
 using UnityEngine;
 
-namespace CreativeAI.UI.CharacterUI
+namespace CreativeAI.UI
 {
     /// <summary>
     /// キャラクター画面の武器タブ(剣/弓/鎌)。選択中のタブに応じて、その武器の

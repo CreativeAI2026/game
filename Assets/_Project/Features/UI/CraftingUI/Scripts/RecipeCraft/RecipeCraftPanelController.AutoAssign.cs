@@ -2,7 +2,7 @@
 using System.Linq;
 #endif
 
-namespace CreativeAI.UI.CraftingUI
+namespace CreativeAI.UI
 {
     public partial class RecipeCraftPanelController
     {
@@ -17,8 +17,7 @@ namespace CreativeAI.UI.CraftingUI
             _materialRowsView ??= GetComponentInChildren<RecipeCraftMaterialRowsView>(true);
             _detailPanel ??= GetComponentsInChildren<CreativeAI.UI.ItemDetailPanel>(true)
                 .FirstOrDefault(panel =>
-                    panel.GetComponentInParent<CreativeAI.UI.InventoryUI.InventoryView>(true)
-                    == null
+                    panel.GetComponentInParent<CreativeAI.UI.InventoryView>(true) == null
                 );
         }
 #endif

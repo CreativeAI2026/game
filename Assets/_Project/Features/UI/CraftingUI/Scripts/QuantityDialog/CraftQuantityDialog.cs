@@ -1,12 +1,11 @@
 using System;
 using System.Collections.Generic;
-using CreativeAI.UI.Common;
 using TMPro;
 using UnityEngine;
 using UnityEngine.InputSystem;
 using UnityEngine.UI;
 
-namespace CreativeAI.UI.CraftingUI
+namespace CreativeAI.UI
 {
     public class CraftQuantityDialog : MonoBehaviour
     {

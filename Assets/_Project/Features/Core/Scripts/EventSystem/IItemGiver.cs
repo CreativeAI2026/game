@@ -1,4 +1,4 @@
-namespace CreativeAI.Core.EventSystem
+namespace CreativeAI.Core
 {
     /// <summary>
     /// giveItem ステップの seam。実体は Gameplay(InventoryManager のラッパ)で実装し、

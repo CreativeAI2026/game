@@ -4,7 +4,7 @@ using TMPro;
 using UnityEngine;
 using UnityEngine.InputSystem;
 
-namespace CreativeAI.UI.ConversationUI
+namespace CreativeAI.UI
 {
     /// <summary>本文のタイプライター表示、文字ウェイト、早送りとタイプ音を担当する。</summary>
     internal sealed class DialogueTextPlayer

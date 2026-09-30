@@ -1,11 +1,10 @@
 using System.Collections.Generic;
 using CreativeAI.Gameplay;
-using CreativeAI.UI;
 using UnityEngine;
 using UnityEngine.Scripting.APIUpdating;
 using UnityEngine.UI;
 
-namespace CreativeAI.UI.CraftingUI
+namespace CreativeAI.UI
 {
     [MovedFrom(
         true,

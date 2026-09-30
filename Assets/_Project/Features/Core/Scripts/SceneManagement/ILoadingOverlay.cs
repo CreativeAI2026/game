@@ -1,6 +1,6 @@
 using System.Collections;
 
-namespace CreativeAI.Core.SceneManagement
+namespace CreativeAI.Core
 {
     public interface ILoadingOverlay
     {

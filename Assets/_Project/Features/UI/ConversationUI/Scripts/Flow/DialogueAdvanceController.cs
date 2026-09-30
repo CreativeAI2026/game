@@ -4,7 +4,7 @@ using TMPro;
 using UnityEngine;
 using UnityEngine.InputSystem;
 
-namespace CreativeAI.UI.ConversationUI
+namespace CreativeAI.UI
 {
     /// <summary>手動送り、既読スキップ、AUTO送りと進捗率の計算を担当する。</summary>
     internal sealed class DialogueAdvanceController

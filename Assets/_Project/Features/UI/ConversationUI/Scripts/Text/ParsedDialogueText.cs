@@ -1,6 +1,6 @@
 using System.Collections.Generic;
 
-namespace CreativeAI.UI.ConversationUI
+namespace CreativeAI.UI
 {
     /// <summary>表示文字列と、文字位置に紐づく会話演出情報。</summary>
     public sealed class ParsedDialogueText

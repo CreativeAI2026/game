@@ -1,6 +1,6 @@
 using UnityEngine;
 
-namespace CreativeAI.UI.ConversationUI
+namespace CreativeAI.UI
 {
     /// <summary>キャラクター定義から表示情報を解決する。</summary>
     internal static class DialoguePortraitResolver

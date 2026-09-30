@@ -1,4 +1,4 @@
-namespace CreativeAI.Core.Interaction
+namespace CreativeAI.Core
 {
     /// <summary>
     /// 近づいた対象の操作プロンプトを1つだけ出す静的サービス。ワールド側(Gameplay)は UI を参照できないので、

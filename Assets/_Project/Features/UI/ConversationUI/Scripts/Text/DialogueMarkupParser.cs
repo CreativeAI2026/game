@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Globalization;
 using System.Text;
 
-namespace CreativeAI.UI.ConversationUI
+namespace CreativeAI.UI
 {
     public static class DialogueMarkupParser
     {

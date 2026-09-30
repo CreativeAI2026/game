@@ -1,7 +1,7 @@
 using UnityEngine;
 using UnityEngine.UI;
 
-namespace CreativeAI.UI.Common
+namespace CreativeAI.UI
 {
     /// <summary>
     /// 汎用パネル基底。Open() / Close() で SetActive を切り替える。

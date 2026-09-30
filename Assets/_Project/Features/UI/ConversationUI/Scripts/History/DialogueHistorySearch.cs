@@ -1,6 +1,6 @@
 using System;
 
-namespace CreativeAI.UI.ConversationUI
+namespace CreativeAI.UI
 {
     /// <summary>履歴検索の一致判定と表示用ハイライトを担当する。</summary>
     internal static class DialogueHistorySearch

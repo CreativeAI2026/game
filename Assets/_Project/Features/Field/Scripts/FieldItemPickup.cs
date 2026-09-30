@@ -1,5 +1,4 @@
 using CreativeAI.Core;
-using CreativeAI.Core.EventSystem;
 using CreativeAI.StatRoll;
 using UnityEngine;
 

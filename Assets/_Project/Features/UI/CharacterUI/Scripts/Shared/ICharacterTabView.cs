@@ -1,4 +1,4 @@
-namespace CreativeAI.UI.CharacterUI
+namespace CreativeAI.UI
 {
     /// <summary>
     /// CharacterUI のタブに乗る View の契約。<see cref="CharacterUIController"/> がタブ選択に応じて

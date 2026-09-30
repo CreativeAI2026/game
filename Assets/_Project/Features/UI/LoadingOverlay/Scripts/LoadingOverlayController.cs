@@ -1,9 +1,9 @@
 using System.Collections;
-using CreativeAI.Core.SceneManagement;
+using CreativeAI.Core;
 using UnityEngine;
 using UnityEngine.UI;
 
-namespace CreativeAI.UI.LoadingOverlay
+namespace CreativeAI.UI
 {
     [RequireComponent(typeof(CanvasGroup))]
     public class LoadingOverlayController : MonoBehaviour, ILoadingOverlay

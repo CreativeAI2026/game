@@ -4,7 +4,7 @@ using UnityEditor.SceneManagement;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 
-namespace CreativeAI.EditorTools.UI
+namespace CreativeAI.EditorTools
 {
     /// <summary>
     /// dev-bootstrap 導入ツール。① ResidentBootstrapConfig を Resources に作る。

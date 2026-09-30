@@ -3,9 +3,9 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using CreativeAI.Core.EventSystem;
+using CreativeAI.Core;
 using CreativeAI.Gameplay;
-using CreativeAI.UI.ConversationUI;
+using CreativeAI.UI;
 using UnityEditor;
 using UnityEngine;
 

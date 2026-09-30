@@ -1,6 +1,6 @@
 using System.Collections.Generic;
 
-namespace CreativeAI.UI.ConversationUI
+namespace CreativeAI.UI
 {
     /// <summary>会話中に保持する既読行と選択済み選択肢の状態。</summary>
     internal sealed class DialogueSessionState

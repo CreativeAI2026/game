@@ -2,7 +2,7 @@ using System;
 using System.Collections.Generic;
 using UnityEngine;
 
-namespace CreativeAI.Core.EventSystem
+namespace CreativeAI.Core
 {
     /// <summary>
     /// メインストーリーの進行度(整数1つ)とフラグ(key→値)を保持する常駐 SSOT。

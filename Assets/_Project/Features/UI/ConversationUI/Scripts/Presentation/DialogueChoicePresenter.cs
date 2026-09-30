@@ -1,7 +1,7 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
-using CreativeAI.Core.EventSystem;
+using CreativeAI.Core;
 using TMPro;
 using UnityEngine;
 using UnityEngine.EventSystems;
@@ -9,7 +9,7 @@ using UnityEngine.InputSystem;
 using UnityEngine.UI;
 using UIEventTrigger = UnityEngine.EventSystems.EventTrigger;
 
-namespace CreativeAI.UI.ConversationUI
+namespace CreativeAI.UI
 {
     /// <summary>選択肢の生成、配置、フォーカス、表示演出と後片付けを担当する。</summary>
     internal sealed partial class DialogueChoicePresenter

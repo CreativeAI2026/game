@@ -1,7 +1,6 @@
 using System.Collections.Generic;
 using System.Reflection;
 using CreativeAI.UI;
-using CreativeAI.UI.CharacterUI;
 using NUnit.Framework;
 using UnityEngine;
 using UnityEngine.UI;

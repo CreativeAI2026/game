@@ -1,7 +1,7 @@
 using CreativeAI.Gameplay;
 using UnityEngine;
 
-namespace CreativeAI.UI.InventoryUI
+namespace CreativeAI.UI
 {
     [CreateAssetMenu(
         fileName = "InventoryTabDefinition",

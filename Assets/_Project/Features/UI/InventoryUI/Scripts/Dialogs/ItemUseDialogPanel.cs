@@ -1,11 +1,10 @@
 using System.Collections.Generic;
 using CreativeAI.Gameplay;
-using CreativeAI.UI.Common;
 using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
 
-namespace CreativeAI.UI.InventoryUI
+namespace CreativeAI.UI
 {
     public class ItemUseDialogPanel : MonoBehaviour
     {

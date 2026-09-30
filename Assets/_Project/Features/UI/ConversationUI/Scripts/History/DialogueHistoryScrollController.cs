@@ -2,7 +2,7 @@ using System;
 using UnityEngine;
 using UnityEngine.UI;
 
-namespace CreativeAI.UI.ConversationUI
+namespace CreativeAI.UI
 {
     /// <summary>履歴パネルの最新位置追従とスクロール位置表示を管理する。</summary>
     internal sealed class DialogueHistoryScrollController

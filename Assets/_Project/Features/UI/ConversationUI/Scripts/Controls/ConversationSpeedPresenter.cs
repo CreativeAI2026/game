@@ -2,7 +2,7 @@ using System.Collections;
 using TMPro;
 using UnityEngine;
 
-namespace CreativeAI.UI.ConversationUI
+namespace CreativeAI.UI
 {
     /// <summary>テキスト速度のラベルと一時通知を表示する。</summary>
     internal sealed class ConversationSpeedPresenter

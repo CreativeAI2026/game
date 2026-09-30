@@ -1,8 +1,7 @@
 using CreativeAI.Gameplay;
-using CreativeAI.UI.Common;
 using UnityEngine;
 
-namespace CreativeAI.UI.InventoryUI
+namespace CreativeAI.UI
 {
     public class InventoryPanelController : UIPanelStub
     {

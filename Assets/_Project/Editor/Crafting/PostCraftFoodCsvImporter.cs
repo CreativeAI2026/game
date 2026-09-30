@@ -7,7 +7,7 @@ using CreativeAI.Gameplay;
 using UnityEditor;
 using UnityEngine;
 
-namespace CreativeAI.EditorTools.Crafting
+namespace CreativeAI.EditorTools
 {
     public static class PostCraftFoodCsvImporter
     {

@@ -2,7 +2,6 @@ using System;
 using System.Collections.Generic;
 using System.Reflection;
 using CreativeAI.Core;
-using CreativeAI.Core.EventSystem;
 using NUnit.Framework;
 using UnityEngine;
 

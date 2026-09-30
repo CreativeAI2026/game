@@ -2,7 +2,7 @@ using System;
 using System.Collections;
 using UnityEngine;
 
-namespace CreativeAI.UI.ConversationUI
+namespace CreativeAI.UI
 {
     /// <summary>履歴パネルのフェード開閉と終了通知を管理する。</summary>
     internal sealed class DialogueHistoryPanelAnimator

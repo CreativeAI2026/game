@@ -1,7 +1,7 @@
 using System.Collections;
 using UnityEngine;
 
-namespace CreativeAI.UI.ConversationUI
+namespace CreativeAI.UI
 {
     public sealed partial class ConversationView
     {

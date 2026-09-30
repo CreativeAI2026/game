@@ -1,6 +1,4 @@
 using CreativeAI.Core;
-using CreativeAI.Core.EventSystem;
-using CreativeAI.Core.Interaction;
 using UnityEngine;
 using UnityEngine.InputSystem;
 

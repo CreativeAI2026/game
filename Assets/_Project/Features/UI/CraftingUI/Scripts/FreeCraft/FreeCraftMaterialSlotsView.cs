@@ -4,7 +4,7 @@ using System.Linq;
 using CreativeAI.Gameplay;
 using UnityEngine;
 
-namespace CreativeAI.UI.CraftingUI
+namespace CreativeAI.UI
 {
     public sealed class FreeCraftMaterialSlotsView : MonoBehaviour
     {

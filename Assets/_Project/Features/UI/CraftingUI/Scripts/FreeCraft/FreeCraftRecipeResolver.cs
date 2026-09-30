@@ -2,7 +2,7 @@ using System;
 using System.Collections.Generic;
 using CreativeAI.Gameplay;
 
-namespace CreativeAI.UI.CraftingUI
+namespace CreativeAI.UI
 {
     public enum FreeCraftRecipeFailure
     {

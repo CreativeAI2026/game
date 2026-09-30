@@ -1,4 +1,4 @@
-namespace CreativeAI.Core.SceneManagement
+namespace CreativeAI.Core
 {
     public static class SceneNames
     {

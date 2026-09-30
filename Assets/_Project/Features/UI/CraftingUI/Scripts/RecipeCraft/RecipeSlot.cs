@@ -5,7 +5,7 @@ using UnityEngine;
 using UnityEngine.EventSystems;
 using UnityEngine.UI;
 
-namespace CreativeAI.UI.CraftingUI
+namespace CreativeAI.UI
 {
     [RequireComponent(typeof(Button), typeof(Image))]
     public class RecipeSlot : BaseItemSlot, IPointerClickHandler
