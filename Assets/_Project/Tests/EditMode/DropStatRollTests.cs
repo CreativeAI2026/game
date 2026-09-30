@@ -1,16 +1,15 @@
 using System;
 using System.Linq;
 using CreativeAI.Gameplay;
-using CreativeAI.StatRoll;
 using NUnit.Framework;
 
 namespace CreativeAI.Tests.EditMode
 {
     /// <summary>
     /// ドロップ装備品の付与ステータス(型 + 量)のロールの検証。
-    /// 型は DropStatTypeRoller、量は「総パワー(= シードの固定値合計)× ディリクレ均等配分」。
+    /// 型は FieldItemPickup.RollDropStatTypes、量は「総パワー(= シードの固定値合計)× ディリクレ均等配分」。
     /// </summary>
-    public class DropStatRollerTests
+    public class DropStatRollTests
     {
         private static readonly StatType[] EquipmentStatTypes =
         {
@@ -24,14 +23,17 @@ namespace CreativeAI.Tests.EditMode
         [Test]
         public void Roll_NullRandom_Throws()
         {
-            Assert.Throws<ArgumentNullException>(() => DropStatRoller.Roll(20.0, null));
+            Assert.Throws<ArgumentNullException>(() => FieldItemPickup.RollDropStats(20.0, null));
         }
 
         [Test]
         public void Roll_ZeroOrNegativePower_IsEmpty()
         {
-            Assert.AreEqual(0, DropStatRoller.Roll(0.0, new SystemRandomSource(1)).Count);
-            Assert.AreEqual(0, DropStatRoller.Roll(-5.0, new SystemRandomSource(1)).Count);
+            Assert.AreEqual(0, FieldItemPickup.RollDropStats(0.0, new SystemRandomSource(1)).Count);
+            Assert.AreEqual(
+                0,
+                FieldItemPickup.RollDropStats(-5.0, new SystemRandomSource(1)).Count
+            );
         }
 
         [Test]
@@ -39,7 +41,7 @@ namespace CreativeAI.Tests.EditMode
         {
             for (int seed = 0; seed < 100; seed++)
             {
-                var rolled = DropStatRoller.Roll(20.0, new SystemRandomSource(seed));
+                var rolled = FieldItemPickup.RollDropStats(20.0, new SystemRandomSource(seed));
 
                 Assert.LessOrEqual(rolled.Count, 2, $"seed={seed}: 付与数は最大2つ");
                 Assert.Greater(rolled.Count, 0, $"seed={seed}: 総パワーがあるので1つは付く");
@@ -56,7 +58,7 @@ namespace CreativeAI.Tests.EditMode
         {
             for (int seed = 0; seed < 100; seed++)
             {
-                var rolled = DropStatRoller.Roll(20.0, new SystemRandomSource(seed));
+                var rolled = FieldItemPickup.RollDropStats(20.0, new SystemRandomSource(seed));
 
                 Assert.LessOrEqual(
                     rolled.Power,
@@ -70,15 +72,19 @@ namespace CreativeAI.Tests.EditMode
         public void Roll_TotalIsCappedByPowerCap()
         {
             // シードの宣言値が C_cap(既定100)を超えても、そこで打ち止め(連鎖インフレ防止)。
-            var rolled = DropStatRoller.Roll(500.0, new SystemRandomSource(7));
+            var rolled = FieldItemPickup.RollDropStats(500.0, new SystemRandomSource(7));
 
-            Assert.LessOrEqual(rolled.Power, (float)CraftingParameters.Default.PowerCap + 1e-3f);
+            Assert.LessOrEqual(rolled.Power, (float)StatRollParameters.Default.PowerCap + 1e-3f);
         }
 
         [Test]
         public void Roll_SingleStat_GetsTheWholeBudget()
         {
-            var rolled = DropStatRoller.Roll(20.0, new SystemRandomSource(3), statCount: 1);
+            var rolled = FieldItemPickup.RollDropStats(
+                20.0,
+                new SystemRandomSource(3),
+                statCount: 1
+            );
 
             Assert.AreEqual(1, rolled.Count);
             Assert.AreEqual(20.0f, rolled.Power, 1e-3f, "1型なら総パワーを丸ごと乗せる");
@@ -89,15 +95,15 @@ namespace CreativeAI.Tests.EditMode
         {
             Assert.AreEqual(
                 0,
-                DropStatRoller.Roll(20.0, new SystemRandomSource(3), statCount: 0).Count
+                FieldItemPickup.RollDropStats(20.0, new SystemRandomSource(3), statCount: 0).Count
             );
         }
 
         [Test]
         public void Roll_SameSeed_IsDeterministic()
         {
-            var a = DropStatRoller.Roll(20.0, new SystemRandomSource(42));
-            var b = DropStatRoller.Roll(20.0, new SystemRandomSource(42));
+            var a = FieldItemPickup.RollDropStats(20.0, new SystemRandomSource(42));
+            var b = FieldItemPickup.RollDropStats(20.0, new SystemRandomSource(42));
 
             CollectionAssert.AreEquivalent(a.Types.ToArray(), b.Types.ToArray());
             foreach (var type in a.Types)
@@ -108,12 +114,12 @@ namespace CreativeAI.Tests.EditMode
         public void Roll_ProducesIndividualVariation()
         {
             // 「同じ装備品でも拾うたびに違う個体になる」。型か量のどちらかが必ず散る。
-            var first = DropStatRoller.Roll(20.0, new SystemRandomSource(1));
+            var first = FieldItemPickup.RollDropStats(20.0, new SystemRandomSource(1));
             bool sawDifference = false;
 
             for (int seed = 2; seed < 30 && !sawDifference; seed++)
             {
-                var other = DropStatRoller.Roll(20.0, new SystemRandomSource(seed));
+                var other = FieldItemPickup.RollDropStats(20.0, new SystemRandomSource(seed));
                 sawDifference =
                     !first.Types.OrderBy(t => t).SequenceEqual(other.Types.OrderBy(t => t))
                     || first.Types.Any(t => Math.Abs(first[t] - other[t]) > 1e-3f);
@@ -125,10 +131,14 @@ namespace CreativeAI.Tests.EditMode
         [Test]
         public void Roll_CritRateIsClampedToItsCap()
         {
-            // 会心率は 100% 上限(CraftingParameters.Caps)。総パワー上限と同値なので超えない。
+            // 会心率は 100% 上限(StatRollParameters.Caps)。総パワー上限と同値なので超えない。
             for (int seed = 0; seed < 100; seed++)
             {
-                var rolled = DropStatRoller.Roll(500.0, new SystemRandomSource(seed), statCount: 1);
+                var rolled = FieldItemPickup.RollDropStats(
+                    500.0,
+                    new SystemRandomSource(seed),
+                    statCount: 1
+                );
                 Assert.LessOrEqual(rolled[StatType.CritRate], 100f + 1e-3f, $"seed={seed}");
             }
         }

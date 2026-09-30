@@ -255,7 +255,7 @@ namespace CreativeAI.Gameplay
 
         /// <summary>
         /// 装備中の装備品の補正合計(武器は WeaponManager 側で別合算)。
-        /// 調合個体(RolledStats あり)はロール値を CraftStatBridge 経由で、固定 SO は EquipmentData の値を使う。
+        /// 調合・拾得の個体(RolledStats あり)はロール値を、固定 SO は EquipmentData の値を使う。
         /// </summary>
         public EquipmentBonus GetEquippedBonus()
         {
@@ -271,7 +271,7 @@ namespace CreativeAI.Gameplay
                 if (stack.RolledStats != null && stack.RolledStats.Count > 0)
                 {
                     // 調合でロールされた個体(個体差あり)。
-                    CraftStatBridge.Accumulate(ref b, stack.RolledStats);
+                    b.Add(stack.RolledStats);
                 }
                 else
                 {

@@ -46,7 +46,7 @@ namespace CreativeAI.Gameplay
     }
 
     /// <summary>
-    /// 調合でロールされた個体ステータス1つ。stat は <c>CreativeAI.StatRoll.StatType</c> 名(例: "AttackPct")で、
+    /// 調合・拾得でロールされた個体ステータス1つ。stat は <see cref="StatType"/> 名(例: "AttackPct")で、
     /// 読み取りは大文字小文字を無視する。
     /// </summary>
     [System.Serializable]
@@ -61,6 +61,14 @@ namespace CreativeAI.Gameplay
         {
             this.stat = stat;
             this.value = value;
+        }
+
+        public static IReadOnlyList<RolledStat> FromVector(StatVector rolled)
+        {
+            var list = new List<RolledStat>(rolled.Count);
+            foreach (var type in rolled.Types)
+                list.Add(new RolledStat(type.ToString(), rolled[type]));
+            return list;
         }
     }
 

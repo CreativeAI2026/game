@@ -1,5 +1,5 @@
 using System.Linq;
-using CreativeAI.StatRoll;
+using CreativeAI.Gameplay;
 using NUnit.Framework;
 
 namespace CreativeAI.Tests.EditMode
@@ -7,15 +7,18 @@ namespace CreativeAI.Tests.EditMode
     /// <summary>
     /// 調合で付与するステータスのロールの検証。
     /// </summary>
-    public class CraftingStatRollerTests
+    public class CraftedStatRollTests
     {
-        private static CraftingStatRoller NewRoller() =>
-            new CraftingStatRoller(CraftingParameters.Default);
+        private static StatVector Roll(
+            StatVector a,
+            StatVector b,
+            IRandomSource rng,
+            StatRollParameters parameters = null
+        ) => RecipeCraftingService.RollCraftedStats(a, b, rng, parameters);
 
         [Test]
         public void Roll_NeverProducesMoreThanTwoStats()
         {
-            var roller = NewRoller();
             var a = StatVector.Of(
                 (StatType.AttackPct, 10),
                 (StatType.DefensePct, 8),
@@ -25,7 +28,7 @@ namespace CreativeAI.Tests.EditMode
 
             for (int seed = 0; seed < 50; seed++)
             {
-                var r = roller.Roll(a, b, new SystemRandomSource(seed));
+                var r = Roll(a, b, new SystemRandomSource(seed));
                 Assert.LessOrEqual(r.Count, 2, $"seed={seed} で付与数が2を超えた");
             }
         }
@@ -34,14 +37,13 @@ namespace CreativeAI.Tests.EditMode
         public void Roll_OnlyAssignsStatsFromUnionOfParents()
         {
             // 結果の型は必ず親のいずれかが持つ型(= 和集合 S)に含まれる。
-            var roller = NewRoller();
             var a = StatVector.Of((StatType.AttackPct, 10), (StatType.DefensePct, 1));
             var b = StatVector.Of((StatType.CritRate, 1));
             var union = new[] { StatType.AttackPct, StatType.DefensePct, StatType.CritRate };
 
             for (int seed = 0; seed < 50; seed++)
             {
-                var r = roller.Roll(a, b, new SystemRandomSource(seed));
+                var r = Roll(a, b, new SystemRandomSource(seed));
                 foreach (var t in r.Types)
                     Assert.Contains(t, union, $"seed={seed} で親が持たない型 {t}");
                 // ウェイト Attack=10 が Defense=1 / CritRate=1 を圧倒するので上位2型に必ず入る。
@@ -58,11 +60,10 @@ namespace CreativeAI.Tests.EditMode
         public void Roll_SingleSharedStat_GetsFullBudget()
         {
             // 候補が1型だけ(両親とも同じ型のみ)→ ロール不要で全量その型へ
-            var roller = NewRoller();
             var a = StatVector.Of((StatType.AttackPct, 10));
             var b = StatVector.Of((StatType.AttackPct, 10));
 
-            var r = roller.Roll(a, b, new SystemRandomSource(1));
+            var r = Roll(a, b, new SystemRandomSource(1));
             Assert.AreEqual(1, r.Count);
             Assert.Greater(r[StatType.AttackPct], 0f);
 
@@ -73,12 +74,11 @@ namespace CreativeAI.Tests.EditMode
         [Test]
         public void Roll_IsDeterministic_ForSameSeed()
         {
-            var roller = NewRoller();
             var a = StatVector.Of((StatType.AttackPct, 12), (StatType.CritDamage, 6));
             var b = StatVector.Of((StatType.DefensePct, 8), (StatType.AttackPct, 4));
 
-            var r1 = roller.Roll(a, b, new SystemRandomSource(42));
-            var r2 = roller.Roll(a, b, new SystemRandomSource(42));
+            var r1 = Roll(a, b, new SystemRandomSource(42));
+            var r2 = Roll(a, b, new SystemRandomSource(42));
 
             CollectionAssert.AreEquivalent(r1.Types, r2.Types);
             foreach (var t in r1.Types)
@@ -88,16 +88,15 @@ namespace CreativeAI.Tests.EditMode
         [Test]
         public void Roll_TotalDoesNotExceedPowerCap()
         {
-            var roller = NewRoller();
             var a = StatVector.Of((StatType.AttackPct, 60), (StatType.DefensePct, 30));
             var b = StatVector.Of((StatType.AttackPct, 50), (StatType.MaxHpPct, 40));
 
             for (int seed = 0; seed < 50; seed++)
             {
-                var r = roller.Roll(a, b, new SystemRandomSource(seed));
+                var r = Roll(a, b, new SystemRandomSource(seed));
                 Assert.LessOrEqual(
                     r.Power,
-                    CraftingParameters.Default.PowerCap + 1e-3,
+                    StatRollParameters.Default.PowerCap + 1e-3,
                     $"seed={seed} で総量が上限を超えた"
                 );
             }
@@ -107,19 +106,17 @@ namespace CreativeAI.Tests.EditMode
         public void Roll_ClampsCappedStat()
         {
             // 会心率は 100% で頭打ち。budget を会心率に全振りしても超えない。
-            var roller = NewRoller();
             var a = StatVector.Of((StatType.CritRate, 80));
             var b = StatVector.Of((StatType.CritRate, 80));
 
-            var r = roller.Roll(a, b, new SystemRandomSource(3));
+            var r = Roll(a, b, new SystemRandomSource(3));
             Assert.LessOrEqual(r[StatType.CritRate], 100f);
         }
 
         [Test]
         public void Roll_EmptyParents_ReturnsEmpty()
         {
-            var roller = NewRoller();
-            var r = roller.Roll(StatVector.Empty, StatVector.Empty, new SystemRandomSource(0));
+            var r = Roll(StatVector.Empty, StatVector.Empty, new SystemRandomSource(0));
             Assert.AreEqual(0, r.Count);
         }
 
@@ -131,22 +128,20 @@ namespace CreativeAI.Tests.EditMode
             var a = StatVector.Of((StatType.AttackPct, 10), (StatType.CritRate, 4));
             var b = StatVector.Of((StatType.DefensePct, 9), (StatType.CritRate, 4));
 
-            var noSynergy = new CraftingStatRoller(new CraftingParameters { Synergy = 0.0 });
-            var withSynergy = new CraftingStatRoller(new CraftingParameters { Synergy = 0.5 });
+            var noSynergy = new StatRollParameters { Synergy = 0.0 };
+            var withSynergy = new StatRollParameters { Synergy = 0.5 };
 
             int withoutCount = 0;
             int withCount = 0;
             for (int seed = 0; seed < 50; seed++)
             {
                 if (
-                    noSynergy
-                        .Roll(a, b, new SystemRandomSource(seed))
+                    Roll(a, b, new SystemRandomSource(seed), noSynergy)
                         .Types.Contains(StatType.CritRate)
                 )
                     withoutCount++;
                 if (
-                    withSynergy
-                        .Roll(a, b, new SystemRandomSource(seed))
+                    Roll(a, b, new SystemRandomSource(seed), withSynergy)
                         .Types.Contains(StatType.CritRate)
                 )
                     withCount++;
@@ -168,10 +163,11 @@ namespace CreativeAI.Tests.EditMode
             var b = StatVector.Of((StatType.DefensePct, 10));
 
             // ε=0(切り捨てなし)を基準にして、この入力・シードでの2型の値を測る。
-            var baseline = new CraftingStatRoller(new CraftingParameters { Epsilon = 0.0 }).Roll(
+            var baseline = Roll(
                 a,
                 b,
-                new SystemRandomSource(7)
+                new SystemRandomSource(7),
+                new StatRollParameters { Epsilon = 0.0 }
             );
             Assert.AreEqual(2, baseline.Count, "前提: ε=0 なら2型そろう");
             float smaller = baseline.Types.Min(t => baseline[t]);
@@ -180,9 +176,12 @@ namespace CreativeAI.Tests.EditMode
 
             // ε を小さい方と大きい方の間に置くと、小さい方だけが捨てられる。
             // ε はサンプリング後に適用されるので、同じシードなら値は再現する。
-            var r = new CraftingStatRoller(
-                new CraftingParameters { Epsilon = (smaller + larger) / 2.0 }
-            ).Roll(a, b, new SystemRandomSource(7));
+            var r = Roll(
+                a,
+                b,
+                new SystemRandomSource(7),
+                new StatRollParameters { Epsilon = (smaller + larger) / 2.0 }
+            );
 
             Assert.AreEqual(1, r.Count);
             Assert.AreEqual(larger, r[r.Types.Single()], 1e-4f);

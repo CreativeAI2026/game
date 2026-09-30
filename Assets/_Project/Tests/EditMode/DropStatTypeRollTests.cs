@@ -1,7 +1,6 @@
 using System.Collections.Generic;
 using System.Linq;
 using CreativeAI.Gameplay;
-using CreativeAI.StatRoll;
 using NUnit.Framework;
 
 namespace CreativeAI.Tests.EditMode
@@ -10,12 +9,12 @@ namespace CreativeAI.Tests.EditMode
     /// ドロップ装備品の付与型抽選の検証。
     /// 重み 攻撃%2 / 防御%2 / 最大HP%2 / 会心ダメージ1 / 会心率1 の非復元抽出。
     /// </summary>
-    public class DropStatTypeRollerTests
+    public class DropStatTypeRollTests
     {
         [Test]
         public void Weights_MatchSpecTable()
         {
-            var w = DropStatTypeRoller.Weights.ToDictionary(x => x.Type, x => x.Weight);
+            var w = FieldItemPickup.DropStatWeights.ToDictionary(x => x.Type, x => x.Weight);
 
             Assert.AreEqual(2, w[StatType.AttackPct]);
             Assert.AreEqual(2, w[StatType.DefensePct]);
@@ -31,9 +30,9 @@ namespace CreativeAI.Tests.EditMode
         {
             for (int seed = 0; seed < 200; seed++)
             {
-                var picked = DropStatTypeRoller.Roll(new SystemRandomSource(seed));
+                var picked = FieldItemPickup.RollDropStatTypes(new SystemRandomSource(seed));
 
-                Assert.LessOrEqual(picked.Count, DropStatTypeRoller.MaxStatCount, $"seed={seed}");
+                Assert.LessOrEqual(picked.Count, FieldItemPickup.MaxDropStatCount, $"seed={seed}");
                 Assert.AreEqual(
                     picked.Count,
                     picked.Distinct().Count(),
@@ -47,7 +46,7 @@ namespace CreativeAI.Tests.EditMode
         {
             // uniform=0 は常に「残っている候補の先頭」を引く。復元抽出なら 2 回とも攻撃% になるが、
             // 非復元なので 2 回目は候補から外れて次の型(防御%)になる。
-            var picked = DropStatTypeRoller.Roll(
+            var picked = FieldItemPickup.RollDropStatTypes(
                 new SequenceRandomSource(new[] { 0.0, 0.0 }),
                 count: 2
             );
@@ -58,8 +57,8 @@ namespace CreativeAI.Tests.EditMode
         [Test]
         public void Roll_IsDeterministic_ForSameSeed()
         {
-            var r1 = DropStatTypeRoller.Roll(new SystemRandomSource(42));
-            var r2 = DropStatTypeRoller.Roll(new SystemRandomSource(42));
+            var r1 = FieldItemPickup.RollDropStatTypes(new SystemRandomSource(42));
+            var r2 = FieldItemPickup.RollDropStatTypes(new SystemRandomSource(42));
 
             CollectionAssert.AreEqual(r1, r2);
         }
@@ -67,11 +66,17 @@ namespace CreativeAI.Tests.EditMode
         [Test]
         public void Roll_CountIsClampedToZeroAndMax()
         {
-            Assert.AreEqual(0, DropStatTypeRoller.Roll(new SystemRandomSource(0), 0).Count);
-            Assert.AreEqual(0, DropStatTypeRoller.Roll(new SystemRandomSource(0), -3).Count);
             Assert.AreEqual(
-                DropStatTypeRoller.MaxStatCount,
-                DropStatTypeRoller.Roll(new SystemRandomSource(0), 99).Count,
+                0,
+                FieldItemPickup.RollDropStatTypes(new SystemRandomSource(0), 0).Count
+            );
+            Assert.AreEqual(
+                0,
+                FieldItemPickup.RollDropStatTypes(new SystemRandomSource(0), -3).Count
+            );
+            Assert.AreEqual(
+                FieldItemPickup.MaxDropStatCount,
+                FieldItemPickup.RollDropStatTypes(new SystemRandomSource(0), 99).Count,
                 "付与数は最大2つ"
             );
         }
@@ -86,7 +91,7 @@ namespace CreativeAI.Tests.EditMode
 
             for (int i = 0; i < samples; i++)
             {
-                var t = DropStatTypeRoller.Roll(rng, count: 1).Single();
+                var t = FieldItemPickup.RollDropStatTypes(rng, count: 1).Single();
                 counts.TryGetValue(t, out int c);
                 counts[t] = c + 1;
             }
