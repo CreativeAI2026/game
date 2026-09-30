@@ -175,14 +175,10 @@ namespace CreativeAI.EditorTools
                 color: new Color(1f, 1f, 1f, 0.85f)
             );
 
-            // 開始処理(プレイヤーリグ生成)。PlayerRig Prefab スロットは未割当のまま
+            // PlayerRig Prefab スロット(_playerRigPrefab)は未割当のまま
             // (プレイヤー担当が Project の PlayerRig Prefab をドラッグ)。
-            var starterGo = new GameObject("GameStarter");
-            var starter = starterGo.AddComponent<GameStarter>();
-
             var titleController = canvasGo.AddComponent<TitleUIController>();
             SetRef(titleController, "_tapToStartButton", button);
-            SetRef(titleController, "_gameStarter", starter);
             // 生成器の Title はスカフォールド用 Field_Area00 へ遷移(本番フィールドに依存しない)。
             SetStr(titleController, "_nextSceneName", SceneNames.FieldArea00);
 

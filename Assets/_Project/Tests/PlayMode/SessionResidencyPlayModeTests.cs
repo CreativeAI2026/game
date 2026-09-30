@@ -19,7 +19,6 @@ namespace CreativeAI.Tests.PlayMode
         private GameObject _titleGo;
         private TitleUIController _title;
         private GameObject _sceneControllerGo;
-        private GameObject _starterGo;
 
         [SetUp]
         public void SetUp()
@@ -27,16 +26,12 @@ namespace CreativeAI.Tests.PlayMode
             _sceneControllerGo = new GameObject("PersistentSystems");
             _sceneControllerGo.AddComponent<SceneController>();
 
-            _starterGo = new GameObject("GameStarter");
-            var starter = _starterGo.AddComponent<GameStarter>();
-
             // Awake が _tapToStartButton を要求するので、非アクティブで組んでから起こす。
             _titleGo = new GameObject("TitleUI");
             _titleGo.SetActive(false);
             _title = _titleGo.AddComponent<TitleUIController>();
             var button = _titleGo.AddComponent<Button>();
             SetPrivate(_title, "_tapToStartButton", button);
-            SetPrivate(_title, "_gameStarter", starter);
             _titleGo.SetActive(true);
         }
 
@@ -50,7 +45,6 @@ namespace CreativeAI.Tests.PlayMode
             DestroyResident<RecipeBookManager>();
             DestroyResident<EventPlayer>();
             Object.Destroy(_titleGo);
-            Object.Destroy(_starterGo);
             Object.Destroy(_sceneControllerGo);
             yield return null; // Destroy の反映を待つ(次のテストへ持ち越さない)
         }
@@ -104,10 +98,10 @@ namespace CreativeAI.Tests.PlayMode
         }
 
         [UnityTest]
-        public IEnumerator SessionBootstrap_PublishesManagersThroughInstance()
+        public IEnumerator EnsureResidents_PublishesManagersThroughInstance()
         {
             // プレイヤーは GameModeManager を購読するので、先に立っている必要がある。
-            SessionBootstrap.EnsureSession();
+            GameSession.EnsureResidents(null);
             yield return null; // Awake で Instance が立つ
 
             Assert.IsNotNull(GameModeManager.Instance, "モードの単一ソース");
@@ -116,13 +110,13 @@ namespace CreativeAI.Tests.PlayMode
         }
 
         [UnityTest]
-        public IEnumerator SessionBootstrap_DoubleCall_KeepsASingleInstance()
+        public IEnumerator EnsureResidents_DoubleCall_KeepsASingleInstance()
         {
-            SessionBootstrap.EnsureSession();
+            GameSession.EnsureResidents(null);
             yield return null;
             var progress = ProgressManager.Instance;
 
-            SessionBootstrap.EnsureSession();
+            GameSession.EnsureResidents(null);
             yield return null;
 
             Assert.AreSame(progress, ProgressManager.Instance, "同じ実体を使い回す");
@@ -133,7 +127,7 @@ namespace CreativeAI.Tests.PlayMode
         public IEnumerator Residents_SurviveASceneLoad()
         {
             // セッション常駐はフィールド間のエリア遷移をまたぐ(DontDestroyOnLoad)。
-            SessionBootstrap.EnsureSession();
+            GameSession.EnsureResidents(null);
             InventoryManager.EnsureResident();
             yield return null;
             var progress = ProgressManager.Instance;

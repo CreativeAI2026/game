@@ -12,7 +12,7 @@ namespace CreativeAI.UI
 
         /// <summary>
         /// UI レイヤーを Prefab から1回だけ生成する(既に在ればそれを返す。Prefab 未割当なら警告して null)。
-        /// Core→UI の循環を避けるため <c>SessionBootstrap</c> でなく UI 層(Title フロー)から、マネージャ生成後に呼ぶ(HudIconBar が生成時にモードを購読するため)。
+        /// <see cref="GameSession"/> から、マネージャ生成後に呼ぶ(HudIconBar が生成時にモードを購読するため)。
         /// </summary>
         public static UIRoot EnsureResident(GameObject uiRootPrefab)
         {
