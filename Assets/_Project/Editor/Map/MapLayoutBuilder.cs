@@ -19,8 +19,11 @@ namespace CreativeAI.EditorTools
     {
         public const char Void = ' '; // 床が無いマス
         public const float Cell = 4f; // 1マスの一辺(u)
-        public const float FloorHeight = 9.6f; // 階高 = 壁の高さ
+        public const float FloorHeight = 9.6f; // 階高
         const float FloorSlabThickness = 0.4f;
+
+        // 壁は上の階の床板の下面で止める。階高いっぱいだと壁の上面が上の階の床面と重なってちらつく
+        const float WallHeight = FloorHeight - FloorSlabThickness;
 
         const string ScenePath = "Assets/_Project/Scenes/Field/Field_Area01.unity";
         const string EnvDir = "Assets/_Project/Art/Models/Environment";
@@ -444,7 +447,7 @@ namespace CreativeAI.EditorTools
 
                 var wallGroup = NewGroup("Walls", parent);
                 foreach (var rect in MergeRects(wallMask, rows, cols))
-                    CreateBox(wallGroup, "Wall", rect, FloorHeight, FloorHeight * 0.5f, wallMat);
+                    CreateBox(wallGroup, "Wall", rect, WallHeight, WallHeight * 0.5f, wallMat);
 
                 if (handrail != null)
                 {
@@ -874,6 +877,13 @@ namespace CreativeAI.EditorTools
             go.transform.localScale = prefab.transform.localScale * scale;
         }
 
+        /// <summary>階高いっぱいで作られたモデル(ガラス壁)を、原点の床面を保ったまま壁の高さへ縮める。</summary>
+        static void FitToWallHeight(GameObject go)
+        {
+            var s = go.transform.localScale;
+            go.transform.localScale = new Vector3(s.x, s.y * (WallHeight / FloorHeight), s.z);
+        }
+
         /// <summary>
         /// 図の上でそのマスを通る壁の線が東西向きか。左右が壁なら東西、そうでなく上下が壁なら南北。
         /// 図の外は壁扱い(外周に接する扉・ガラスも向きが決まる)。
@@ -1074,6 +1084,7 @@ namespace CreativeAI.EditorTools
                     var go = (GameObject)PrefabUtility.InstantiatePrefab(prefab, parent);
                     go.name = $"GlassWall_{row}_{col}";
                     PlaceModel(go, prefab, Place(row, col, 0f), Quaternion.Euler(0f, yaw, 0f));
+                    FitToWallHeight(go);
                 }
 
             for (var i = 0; i < run.Length; i++)
@@ -1129,12 +1140,12 @@ namespace CreativeAI.EditorTools
                         $"GlassJamb_{row}_{col}",
                         new Vector3(
                             horizontal ? Cell * col : gapMid,
-                            FloorHeight * 0.5f,
+                            WallHeight * 0.5f,
                             horizontal ? gapMid : Cell * row
                         ),
                         horizontal
-                            ? new Vector3(Cell, FloorHeight, gap)
-                            : new Vector3(gap, FloorHeight, Cell),
+                            ? new Vector3(Cell, WallHeight, gap)
+                            : new Vector3(gap, WallHeight, Cell),
                         wallMat
                     );
                 }
@@ -1225,22 +1236,22 @@ namespace CreativeAI.EditorTools
             CreateFiller(
                 root.transform,
                 "SideL",
-                new Vector3((-half + minX) * 0.5f, FloorHeight * 0.5f, 0f),
-                new Vector3(minX + half, FloorHeight, DoorGlassThickness),
+                new Vector3((-half + minX) * 0.5f, WallHeight * 0.5f, 0f),
+                new Vector3(minX + half, WallHeight, DoorGlassThickness),
                 glassMat
             );
             CreateFiller(
                 root.transform,
                 "SideR",
-                new Vector3((maxX + half) * 0.5f, FloorHeight * 0.5f, 0f),
-                new Vector3(half - maxX, FloorHeight, DoorGlassThickness),
+                new Vector3((maxX + half) * 0.5f, WallHeight * 0.5f, 0f),
+                new Vector3(half - maxX, WallHeight, DoorGlassThickness),
                 glassMat
             );
             CreateFiller(
                 root.transform,
                 "Lintel",
-                new Vector3((minX + maxX) * 0.5f, (height + FloorHeight) * 0.5f, 0f),
-                new Vector3(maxX - minX, FloorHeight - height, DoorGlassThickness),
+                new Vector3((minX + maxX) * 0.5f, (height + WallHeight) * 0.5f, 0f),
+                new Vector3(maxX - minX, WallHeight - height, DoorGlassThickness),
                 glassMat
             );
         }
@@ -1342,6 +1353,7 @@ namespace CreativeAI.EditorTools
                 var go = (GameObject)PrefabUtility.InstantiatePrefab(prefab, parent);
                 go.name = $"GlassCorner_{row}_{col}";
                 PlaceModel(go, prefab, center, Quaternion.Euler(0f, yaw, 0f));
+                FitToWallHeight(go);
                 var scale = go.transform.localScale;
                 scale.x *= span / Cell; // 板の幅方向(モデルのローカル X)を継ぐ長さに合わせる
                 go.transform.localScale = scale;
