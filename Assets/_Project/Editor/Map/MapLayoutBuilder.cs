@@ -609,6 +609,34 @@ namespace CreativeAI.EditorTools
             );
         }
 
+        // 1マス(4u)の壁片が遮蔽物として残るように、既定の 5 から下げる
+        const float OcclusionSmallestOccluder = 4f;
+        const float OcclusionSmallestHole = 0.25f;
+
+        /// <summary>
+        /// Field_Area01 だけを開いてオクルージョンカリングを焼く。小物は Static でないので焼く対象に要らず、
+        /// 小物シーンを一緒に開くとそちらにも参照が書き込まれて担当者と競合する。Rebuild したら焼き直す。
+        /// </summary>
+        [MenuItem("Tools/CreativeAI/Map/Bake Occlusion Field_Area01")]
+        public static void BakeOcclusionArea01()
+        {
+            if (!EditorSceneManager.SaveCurrentModifiedScenesIfUserWantsTo())
+                return;
+            var scene = EditorSceneManager.OpenScene(ScenePath, OpenSceneMode.Single);
+
+            StaticOcclusionCulling.smallestOccluder = OcclusionSmallestOccluder;
+            StaticOcclusionCulling.smallestHole = OcclusionSmallestHole;
+            StaticOcclusionCulling.backfaceThreshold = 100f;
+            if (!StaticOcclusionCulling.Compute())
+            {
+                Debug.LogError("[MapLayoutBuilder] オクルージョンカリングのベイクに失敗しました。");
+                return;
+            }
+
+            EditorSceneManager.SaveScene(scene);
+            Debug.Log("[MapLayoutBuilder] オクルージョンカリングを焼きました。");
+        }
+
         static bool IsSeeThrough(Renderer renderer) =>
             renderer.sharedMaterials.Any(m =>
                 m != null && m.renderQueue > (int)UnityEngine.Rendering.RenderQueue.GeometryLast
