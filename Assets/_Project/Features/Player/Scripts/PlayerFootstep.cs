@@ -3,19 +3,21 @@ using UnityEngine;
 namespace CreativeAI.Gameplay
 {
     /// <summary>
-    /// 足オブジェクトにアタッチする足音コンポーネント。
-    /// AudioSourceは生成・破棄せず、このオブジェクトに固定でアタッチされたものを使う。
-    /// AnimationEventには依存せず、PlayerControllerのGrounded状態と移動速度を参照して
-    /// 自前で接地・移動を判定し、一定間隔で足音を再生する。
-    /// 音の再生と同時に SoundEventBus へ音イベントを発行し、敵AIに感知させる。
+    /// 足音・着地音の再生と、敵AIへの音イベント発行(SoundEventBus)を担当する。プレイヤーのルートに置く。
+    ///
+    /// 鳴らすタイミングは移動クリップの AnimationEvent(OnFootstep / OnLand)で決まる。
+    /// イベントはモデル層の <see cref="PlayerAnimationEventRelay"/> から中継される。
+    /// 本番アニメーションに差し替えたら、足が接地するフレームに OnFootstep、着地に OnLand を置く。
     /// </summary>
     [RequireComponent(typeof(AudioSource))]
+    [RequireComponent(typeof(PlayerController))]
     public class PlayerFootstep : MonoBehaviour
     {
-        [Header("接地判定の参照")]
-        [Tooltip("PlayerControllerへの参照。Grounded状態と移動速度の取得に使う。")]
-        [SerializeField]
-        private PlayerController _playerController;
+        // ブレンドツリーでは再生中の複数クリップから同時にイベントが届く。主に再生されているクリップの分だけ鳴らす
+        private const float MinClipWeight = 0.5f;
+
+        // 移動速度がこれだけ歩き速度を上回っていたらダッシュ音にする(歩きの加減速の揺れを拾わないための余裕)
+        private const float SprintSpeedMargin = 0.5f;
 
         [Header("足音クリップ")]
         [Tooltip("歩行時。ランダムに1つ選ばれる。")]
@@ -26,14 +28,9 @@ namespace CreativeAI.Gameplay
         [SerializeField]
         private AudioClip[] _dashFootStepClips;
 
-        [Header("足音の再生間隔")]
-        [Tooltip("歩き時の足音間隔（秒）。")]
+        [Tooltip("着地音。空欄なら鳴らさない")]
         [SerializeField]
-        private float _walkInterval = 0.5f;
-
-        [Tooltip("ダッシュ時の足音間隔（秒）。")]
-        [SerializeField]
-        private float _runInterval = 0.3f;
+        private AudioClip _landingClip;
 
         [Header("音量")]
         [SerializeField]
@@ -49,70 +46,48 @@ namespace CreativeAI.Gameplay
         [SerializeField]
         private float _runRadius = 12f;
 
-        // 足音の再生間隔タイマー
-        private float _footstepTimer;
-
         private AudioSource _audioSource;
+        private PlayerController _playerController;
+        private CharacterController _characterController;
 
         private void Awake()
         {
             _audioSource = GetComponent<AudioSource>();
+            _playerController = GetComponent<PlayerController>();
+            // PlayerController は [RequireComponent(typeof(CharacterController))]
+            _characterController = GetComponent<CharacterController>();
         }
 
-        private void Update()
+        /// <summary>移動クリップの OnFootstep イベント(PlayerAnimationEventRelay 経由)。</summary>
+        public void OnFootstepEvent(AnimationEvent evt)
         {
-            if (_playerController == null)
-            {
+            if (evt.animatorClipInfo.weight <= MinClipWeight)
                 return;
-            }
 
-            // 接地していない、または移動入力がない場合は再生しない
-            if (!_playerController.Grounded)
-            {
-                _footstepTimer = 0f;
-                return;
-            }
-
-            // CharacterControllerの水平速度で移動中かどうかを判定
-            // （PlayerControllerの_speedはprivateなため、velocityから取る）
-            CharacterController cc = _playerController.GetComponent<CharacterController>();
-            if (cc == null)
-            {
-                return;
-            }
-
-            float horizontalSpeed = new Vector3(cc.velocity.x, 0f, cc.velocity.z).magnitude;
-
-            // ほぼ静止しているなら再生しない
-            if (horizontalSpeed < 0.1f)
-            {
-                _footstepTimer = 0f;
-                return;
-            }
-
-            bool isSprinting = horizontalSpeed > _playerController.MoveSpeed + 0.5f;
-            float interval = isSprinting ? _runInterval : _walkInterval;
-
-            _footstepTimer += Time.deltaTime;
-            if (_footstepTimer >= interval)
-            {
-                _footstepTimer = 0f;
-                PlayFootstep(isSprinting);
-            }
+            Vector3 velocity = _characterController.velocity;
+            float horizontalSpeed = new Vector3(velocity.x, 0f, velocity.z).magnitude;
+            PlayFootstep(horizontalSpeed > _playerController.MoveSpeed + SprintSpeedMargin);
         }
 
-        /// <summary>
-        /// 足音を1回再生し、SoundEventBusに発行する。
-        /// AnimationEventからも呼び出せるが、通常はUpdate内のタイマーから呼ばれる。
-        /// </summary>
-        public void PlayFootstep(bool isSprinting)
+        /// <summary>着地クリップの OnLand イベント(PlayerAnimationEventRelay 経由)。</summary>
+        public void OnLandEvent(AnimationEvent evt)
+        {
+            if (evt.animatorClipInfo.weight <= MinClipWeight)
+                return;
+
+            // 着地音は任意項目
+            if (_landingClip != null)
+                _audioSource.PlayOneShot(_landingClip, _volume);
+        }
+
+        /// <summary>足音を1回再生し、SoundEventBusに発行する。</summary>
+        private void PlayFootstep(bool isSprinting)
         {
             AudioClip[] clips = isSprinting ? _dashFootStepClips : _walkFootStepClips;
 
-            if (clips == null || clips.Length == 0)
-            {
+            // 足音クリップは任意項目。未設定(0個)なら鳴らさない
+            if (clips.Length == 0)
                 return;
-            }
 
             AudioClip clip = clips[Random.Range(0, clips.Length)];
             _audioSource.pitch = Random.Range(0.8f, 1.2f);

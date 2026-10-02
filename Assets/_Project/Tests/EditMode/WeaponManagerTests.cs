@@ -42,10 +42,11 @@ namespace CreativeAI.Tests.EditMode
                 MakeWeaponData(0, 50f, 50f),
             };
             var so = new SerializedObject(_weapons);
-            var prop = so.FindProperty("_weaponStats");
+            var prop = so.FindProperty("_slots");
             prop.arraySize = stats.Length;
             for (int i = 0; i < stats.Length; i++)
-                prop.GetArrayElementAtIndex(i).objectReferenceValue = stats[i];
+                prop.GetArrayElementAtIndex(i).FindPropertyRelative("stats").objectReferenceValue =
+                    stats[i];
             so.ApplyModifiedPropertiesWithoutUndo();
         }
 

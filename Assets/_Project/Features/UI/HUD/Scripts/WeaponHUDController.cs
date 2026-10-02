@@ -1,7 +1,6 @@
 using System.Collections.Generic;
 using Cysharp.Threading.Tasks;
 using UnityEngine;
-using UnityEngine.InputSystem;
 using UnityEngine.UI;
 
 namespace CreativeAI.Gameplay
@@ -74,17 +73,11 @@ namespace CreativeAI.Gameplay
         private readonly Color darkColor = new Color(0.5f, 0.5f, 0.5f, 1f);
         private readonly Color lightColor = Color.white;
 
-        // 依存
-        private PlayerInput _playerInput;
-        private PlayerInputHandler _input;
+        // 依存。プレイヤーは Prefab から実行時に生成されるので、PlayerRegistry から受け取る(未生成の間は null)
         private WeaponManager _weaponManager;
 
         private void Awake()
         {
-            _playerInput = GetComponent<PlayerInput>();
-            _input = GetComponent<PlayerInputHandler>();
-            _weaponManager = GetComponent<WeaponManager>();
-
             if (_canvas == null)
                 _canvas = GetComponent<Canvas>();
             if (_raycaster == null)
@@ -92,6 +85,12 @@ namespace CreativeAI.Gameplay
         }
 
         private void Start()
+        {
+            RebuildLayout();
+        }
+
+        /// <summary>武器の総数に合わせてパネルの表示・配置を作り直す(開始時・プレイヤーが入れ替わったとき)。</summary>
+        private void RebuildLayout()
         {
             _weaponCount = _weaponManager != null ? _weaponManager.WeaponCount : 0;
             _slotPositions = CalculateSlotPositions(_weaponCount);
@@ -116,22 +115,44 @@ namespace CreativeAI.Gameplay
 
         private void OnEnable()
         {
-            if (_weaponManager != null)
-            {
-                _weaponManager.OnWeaponSwitched += HandleWeaponSwitched;
-                _weaponManager.OnOwnedCountChanged += HandleOwnedCountChanged;
-            }
+            PlayerRegistry.Changed += HandlePlayerChanged;
+            if (PlayerRegistry.Current != null)
+                _weaponManager = PlayerRegistry.Current.GetComponent<WeaponManager>();
+
+            SubscribeWeaponManager();
             // Start より先に来ても効くように、購読と同時に現状を反映する。
             ApplyOwnedCount();
         }
 
         private void OnDisable()
         {
-            if (_weaponManager != null)
-            {
-                _weaponManager.OnWeaponSwitched -= HandleWeaponSwitched;
-                _weaponManager.OnOwnedCountChanged -= HandleOwnedCountChanged;
-            }
+            PlayerRegistry.Changed -= HandlePlayerChanged;
+            UnsubscribeWeaponManager();
+        }
+
+        /// <summary>プレイヤーが生成・破棄されたときに、購読先の WeaponManager を付け替える。</summary>
+        private void HandlePlayerChanged(PlayerController player)
+        {
+            UnsubscribeWeaponManager();
+            _weaponManager = player != null ? player.GetComponent<WeaponManager>() : null;
+            SubscribeWeaponManager();
+            RebuildLayout();
+        }
+
+        private void SubscribeWeaponManager()
+        {
+            if (_weaponManager == null)
+                return; // プレイヤー未生成
+            _weaponManager.OnWeaponSwitched += HandleWeaponSwitched;
+            _weaponManager.OnOwnedCountChanged += HandleOwnedCountChanged;
+        }
+
+        private void UnsubscribeWeaponManager()
+        {
+            if (_weaponManager == null)
+                return;
+            _weaponManager.OnWeaponSwitched -= HandleWeaponSwitched;
+            _weaponManager.OnOwnedCountChanged -= HandleOwnedCountChanged;
         }
 
         /// <summary>

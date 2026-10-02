@@ -1,4 +1,5 @@
 using UnityEngine;
+using UnityEngine.Assertions;
 
 namespace CreativeAI.Gameplay
 {
@@ -43,27 +44,21 @@ namespace CreativeAI.Gameplay
         [SerializeField]
         private float _impactRadius = 15f;
 
-        private PlayerStatus _playerStatus;
         private int _enemyLayer;
         private int _obstacleLayer;
         private ArrowProjectile _projectile;
 
         void Awake()
         {
-            GameObject player = GameObject.FindGameObjectWithTag("Player");
-            if (player != null)
-            {
-                _playerStatus = player.GetComponent<PlayerStatus>();
-            }
-
             _enemyLayer = LayerMask.NameToLayer(_enemyLayerName);
             _obstacleLayer = LayerMask.NameToLayer(_obstacleLayerName);
             _projectile = GetComponentInParent<ArrowProjectile>();
+            Assert.IsNotNull(_projectile, $"{name}: 親に ArrowProjectile がありません");
         }
 
         public void ProcessCollision(Collision collision)
         {
-            if (_projectile != null && !_projectile.IsFlying)
+            if (!_projectile.IsFlying)
                 return;
 
             int layer = collision.gameObject.layer;
@@ -76,14 +71,7 @@ namespace CreativeAI.Gameplay
             {
                 // IArrowHittable を実装したオブジェクト（スポーンボタン等のギミック）に命中した場合の処理
                 hittable.OnArrowHit();
-                if (_projectile != null)
-                {
-                    Destroy(_projectile.gameObject);
-                }
-                else
-                {
-                    Destroy(gameObject);
-                }
+                _projectile.ReturnToPool();
             }
             else if (
                 layer == _obstacleLayer
@@ -103,54 +91,33 @@ namespace CreativeAI.Gameplay
         {
             if (collision.gameObject.TryGetComponent(out IDamageable enemy))
             {
-                if (_playerStatus != null)
-                {
-                    // ダメージ計算はPlayerStatusに委譲し、装備やバフの影響を一元管理する
-                    float finalDamage = _playerStatus.RollDamage(
-                        _bowMultiplier,
-                        out bool isCritical
-                    );
-
-                    enemy.TakeDamage(finalDamage, isCritical);
-                }
+                // ダメージ計算はPlayerStatusに委譲し、装備やバフの影響を一元管理する
+                float finalDamage = _projectile.Owner.RollDamage(_bowMultiplier, out bool isCritical);
+                enemy.TakeDamage(finalDamage, isCritical);
             }
 
             ContactPoint contact = collision.contacts[0];
             SpawnHitEffect(contact.point, contact.normal);
 
-            if (_projectile != null)
-            {
-                Destroy(_projectile.gameObject);
-            }
-            else
-            {
-                Destroy(gameObject);
-            }
+            _projectile.ReturnToPool();
         }
 
         private void StickToSurface(Collision collision)
         {
-            if (_projectile != null)
+            _projectile.StopFlying();
+            _projectile.transform.SetParent(collision.transform, true);
+
+            // 矢にアタッチされたAudioSourceで着弾音を再生(SE は任意項目。未設定なら鳴らさない)
+            if (_impactClip != null)
             {
-                _projectile.StopFlying();
-                _projectile.transform.SetParent(collision.transform, true);
-
-                // 矢にアタッチされたAudioSourceで着弾音を再生
-                if (_impactClip != null && _projectile.ArrowAudioSource != null)
-                {
-                    _projectile.ArrowAudioSource.pitch = Random.Range(0.8f, 1.2f);
-                    _projectile.ArrowAudioSource.PlayOneShot(_impactClip, _impactVolume);
-                }
-
-                // 着弾位置をSoundEventBusで敵AIに通知する
-                SoundEventBus.Emit(
-                    new SoundEventData(
-                        SoundType.ArrowHit,
-                        collision.contacts[0].point,
-                        _impactRadius
-                    )
-                );
+                _projectile.ArrowAudioSource.pitch = Random.Range(0.8f, 1.2f);
+                _projectile.ArrowAudioSource.PlayOneShot(_impactClip, _impactVolume);
             }
+
+            // 着弾位置をSoundEventBusで敵AIに通知する
+            SoundEventBus.Emit(
+                new SoundEventData(SoundType.ArrowHit, collision.contacts[0].point, _impactRadius)
+            );
         }
 
         // TODO : 現在はダメージを与えたときにしか生成されないが、のちに壁に当たったときにも別のエフェクトを生成させる

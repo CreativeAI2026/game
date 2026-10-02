@@ -371,7 +371,7 @@ namespace CreativeAI.Gameplay
 
             if (_playerController != null)
             {
-                _playerController.CanMove = false;
+                _playerController.Locks.Set(this, PlayerLock.Move | PlayerLock.Jump);
                 _movementSuppressed = true;
             }
 
@@ -415,11 +415,8 @@ namespace CreativeAI.Gameplay
             {
                 _movementSuppressed = false;
 
-                // 怯み・掴みが同時に成立している場合はそちら側が操作を管理するため、ここでは戻さない
-                if (!_playerController.IsGrabbed && !_playerController.IsFlinching)
-                {
-                    _playerController.CanMove = true;
-                }
+                // 自分が掛けた分だけを外す。怯み・掴みが同時に成立していても、そちらの制限は残る
+                _playerController.Locks.Release(this);
             }
 
             if (_collisionIgnored && boss.EnemyCollider != null && boss.PlayerCollider != null)

@@ -15,6 +15,15 @@ namespace CreativeAI.Gameplay
 
         public float CurrentHp { get; private set; }
 
+        /// <summary>HP が 0 になったか。死亡後は被ダメージ・回復を受け付けない。</summary>
+        public bool IsDead { get; private set; }
+
+        /// <summary>HP が 0 になった瞬間に1回だけ通知する(操作停止は PlayerDeathHandler、ゲームオーバー進行は購読側)。</summary>
+        public event Action OnDied;
+
+        /// <summary>ダメージを受けた瞬間に通知する(死亡時も含む)。</summary>
+        public event Action Damaged;
+
         // 装備による補正合計(素の値に足すと最終ステータス)。装備変更で再計算する。
         private EquipmentBonus _equipment;
 
@@ -174,25 +183,31 @@ namespace CreativeAI.Gameplay
 
         public void TakeDamage(float damage, bool isCritical, bool suppressFlinch = false)
         {
+            if (IsDead)
+                return;
+
             // 防御力で軽減するが、最低1ダメージは保証する（防御力がダメージを上回ってもノーダメージにはしない）
             float finalDamage = Mathf.Max(1f, damage - CurrentDefense);
 
-            CurrentHp -= finalDamage;
+            CurrentHp = Mathf.Max(0f, CurrentHp - finalDamage);
             OnHpChanged?.Invoke(CurrentHp, CurrentMaxHp);
             Debug.Log(
                 $"プレイヤーは {finalDamage} ダメージを受けた！ 残りHP: {CurrentHp}/{CurrentMaxHp}"
             );
 
             CameraShakeManager.Instance?.Shake(0.5f);
-            DamageVignette.Instance?.TriggerVignette();
+            // 画面演出(赤ビネット等)は UI 側がこのイベントを購読して行う(プレイヤーは UI を知らない)
+            Damaged?.Invoke();
+
+            if (CurrentHp <= 0f)
+            {
+                Die();
+                return; // 死亡時は怯ませない
+            }
+
             if (!suppressFlinch)
             {
                 _flinchHandler?.TriggerFlinch();
-            }
-
-            if (CurrentHp <= 0)
-            {
-                Die();
             }
         }
 
@@ -218,6 +233,9 @@ namespace CreativeAI.Gameplay
 
         public void Heal(float amount)
         {
+            if (IsDead)
+                return;
+
             CurrentHp = Mathf.Min(CurrentHp + amount, CurrentMaxHp);
             OnHpChanged?.Invoke(CurrentHp, CurrentMaxHp);
             Debug.Log($"プレイヤーは {amount} 回復した！ 残りHP: {CurrentHp}/{CurrentMaxHp}");
@@ -237,8 +255,9 @@ namespace CreativeAI.Gameplay
 
         private void Die()
         {
+            IsDead = true;
             Debug.Log("プレイヤーは力尽きた...");
-            // ゲームオーバー処理やアニメーション再生など
+            OnDied?.Invoke();
         }
 
         // --- ISaveableActor(セーブ復元の境界。SaveService から呼ばれる) ---
@@ -253,6 +272,7 @@ namespace CreativeAI.Gameplay
         public void RestoreHp(float hp)
         {
             CurrentHp = Mathf.Clamp(hp, 0f, CurrentMaxHp);
+            IsDead = CurrentHp <= 0f;
             OnHpChanged?.Invoke(CurrentHp, CurrentMaxHp);
         }
     }

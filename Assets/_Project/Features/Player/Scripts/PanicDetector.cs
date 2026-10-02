@@ -1,5 +1,6 @@
 using System;
 using UnityEngine;
+using UnityEngine.Assertions;
 
 namespace CreativeAI.Gameplay
 {
@@ -15,40 +16,29 @@ namespace CreativeAI.Gameplay
     ///   5. 意思崩壊    - 弓を構えたのに撃たずキャンセル累計 [Starcke&Brand 2012]
     ///   6. 回避失敗    - 短時間に連続被弾した回数           [Yerkes-Dodson 注意狭隘化]
     /// </summary>
+    [RequireComponent(typeof(PlayerController))]
+    [RequireComponent(typeof(PlayerInputHandler))]
+    [RequireComponent(typeof(PlayerStatus))]
+    [RequireComponent(typeof(CharacterController))]
+    [RequireComponent(typeof(PlayerCameraController))]
+    [RequireComponent(typeof(PlayerTargetManager))]
+    [RequireComponent(typeof(WeaponManager))]
     public class PanicDetector : MonoBehaviour
     {
-        [Header("参照（自動取得。手動設定も可）")]
-        [SerializeField]
+        // 同じリグ上のコンポーネント(Awake で取得)
         private PlayerController _playerController;
-
-        [SerializeField]
         private PlayerInputHandler _inputHandler;
-
-        [SerializeField]
         private BowController _bowController;
-
-        [SerializeField]
         private PlayerStatus _playerStatus;
-
-        [SerializeField]
         private CharacterController _characterController;
-
-        [Tooltip("敵オブジェクトへの参照（逃避検知に使用）")]
-        [SerializeField]
-        private Transform _enemyTransform;
+        private PlayerCameraController _camera;
+        private PlayerTargetManager _targetManager;
+        private WeaponManager _weaponManager;
 
         [Header("逃避 設定")]
-        [Tooltip("敵が存在しない場合やイベント中に逃避感知を動的に有効/無効にするか")]
+        [Tooltip("逃避検知を有効にするか(イベント中などに SetFlightDetectionEnabled で切り替えられる)")]
         [SerializeField]
         private bool _enableFlightDetection = true;
-
-        [Tooltip("敵オブジェクトがHierarchy上で有効（activeInHierarchy）な時のみ逃避とみなすか")]
-        [SerializeField]
-        private bool _requireActiveEnemy = true;
-
-        [Tooltip("敵の参照がInspectorで未設定の場合、Tag 'Enemy' で自動検索するか")]
-        [SerializeField]
-        private bool _autoSearchEnemyByTag = true;
 
         [Tooltip("この秒数以上、敵にカメラを向けず移動し続けたら満点（重み: 20）")]
         [SerializeField]
@@ -136,11 +126,9 @@ namespace CreativeAI.Gameplay
         /// <summary>逃避継続時間（秒）</summary>
         public float FlightTimer => _flightTimer;
 
-        /// <summary>逃避検知が有効かつ対象の敵が存在しているか</summary>
+        /// <summary>逃避検知が有効かつ、索敵範囲内に敵がいるか(敵は PlayerTargetManager の最寄りの敵)</summary>
         public bool IsFlightDetectionActive =>
-            _enableFlightDetection
-            && _enemyTransform != null
-            && (!_requireActiveEnemy || _enemyTransform.gameObject.activeInHierarchy);
+            _enableFlightDetection && _targetManager.CurrentTarget != null;
 
         /// <summary>スパムの正規化スコア（0〜1）</summary>
         public float SpamScore { get; private set; } = 0f;
@@ -186,26 +174,21 @@ namespace CreativeAI.Gameplay
 
         private void Awake()
         {
-            // 同じGameObject上のコンポーネントを自動取得（手動設定されていない場合のフォールバック）
-            if (_playerController == null)
-                _playerController = GetComponent<PlayerController>();
-            if (_inputHandler == null)
-                _inputHandler = GetComponent<PlayerInputHandler>();
-            if (_characterController == null)
-                _characterController = GetComponent<CharacterController>();
-            if (_playerStatus == null)
-                _playerStatus = GetComponent<PlayerStatus>();
-            if (_bowController == null)
-                _bowController = GetComponentInChildren<BowController>(includeInactive: true);
+            _playerController = GetComponent<PlayerController>();
+            _inputHandler = GetComponent<PlayerInputHandler>();
+            _characterController = GetComponent<CharacterController>();
+            _playerStatus = GetComponent<PlayerStatus>();
+            _camera = GetComponent<PlayerCameraController>();
+            _targetManager = GetComponent<PlayerTargetManager>();
+            _weaponManager = GetComponent<WeaponManager>();
+            _bowController = GetComponentInChildren<BowController>(includeInactive: true);
+            Assert.IsNotNull(_bowController, $"{name}: 子階層に BowController が見つかりません");
         }
 
         private void OnEnable()
         {
-            if (_inputHandler != null)
-                _inputHandler.OnSubActionPressed += OnDefenseButtonPressed;
-
-            if (_playerStatus != null)
-                _playerStatus.OnHpChanged += OnPlayerHpChanged;
+            _inputHandler.OnSubActionPressed += OnDefenseButtonPressed;
+            _playerStatus.OnHpChanged += OnPlayerHpChanged;
 
             // 発射成功イベントを購読し、意思崩壊の誤検知を防ぐ
             BowController.OnFired += OnArrowFired;
@@ -213,24 +196,15 @@ namespace CreativeAI.Gameplay
 
         private void OnDisable()
         {
-            if (_inputHandler != null)
-                _inputHandler.OnSubActionPressed -= OnDefenseButtonPressed;
-
-            if (_playerStatus != null)
-                _playerStatus.OnHpChanged -= OnPlayerHpChanged;
+            _inputHandler.OnSubActionPressed -= OnDefenseButtonPressed;
+            _playerStatus.OnHpChanged -= OnPlayerHpChanged;
 
             BowController.OnFired -= OnArrowFired;
         }
 
         private void Start()
         {
-            if (_playerController != null)
-            {
-                _prevCamYaw =
-                    _playerController.CinemachineCameraTarget != null
-                        ? _playerController.CinemachineCameraTarget.transform.eulerAngles.y
-                        : 0f;
-            }
+            _prevCamYaw = _camera.CinemachineCameraTarget.transform.eulerAngles.y;
         }
 
         private void Update()
@@ -249,14 +223,6 @@ namespace CreativeAI.Gameplay
             }
 
             CalculatePanicScore();
-        }
-
-        /// <summary>
-        /// 外部やイベントからターゲットの敵を動的に設定するメソッド
-        /// </summary>
-        public void SetEnemyTarget(Transform enemy)
-        {
-            _enemyTransform = enemy;
         }
 
         /// <summary>
@@ -284,24 +250,9 @@ namespace CreativeAI.Gameplay
                 return;
             }
 
-            if (_inputHandler == null || _playerController == null)
-                return;
-
-            // 敵参照がない場合に自動検索
-            if (_enemyTransform == null && _autoSearchEnemyByTag)
-            {
-                GameObject enemyObj = GameObject.FindWithTag("Enemy");
-                if (enemyObj != null)
-                {
-                    _enemyTransform = enemyObj.transform;
-                }
-            }
-
-            // 敵が存在しない、または非アクティブな場合は逃避判定を行わない（タイマー減少）
-            if (
-                _enemyTransform == null
-                || (_requireActiveEnemy && !_enemyTransform.gameObject.activeInHierarchy)
-            )
+            // 索敵範囲内に敵がいない場合は逃避判定を行わない（タイマー減少）
+            Transform enemy = _targetManager.CurrentTarget;
+            if (enemy == null)
             {
                 _flightTimer = Mathf.Max(0f, _flightTimer - Time.deltaTime);
                 return;
@@ -315,18 +266,12 @@ namespace CreativeAI.Gameplay
             }
 
             // カメラの向き（XZ平面）と敵方向の角度差を計算
-            Vector3 camForwardXZ =
-                Camera.main != null
-                    ? new Vector3(
-                        Camera.main.transform.forward.x,
-                        0f,
-                        Camera.main.transform.forward.z
-                    ).normalized
-                    : Vector3.forward;
+            Vector3 camForward = Camera.main.transform.forward;
+            Vector3 camForwardXZ = new Vector3(camForward.x, 0f, camForward.z).normalized;
             Vector3 toEnemyXZ = new Vector3(
-                _enemyTransform.position.x - _playerController.transform.position.x,
+                enemy.position.x - _playerController.transform.position.x,
                 0f,
-                _enemyTransform.position.z - _playerController.transform.position.z
+                enemy.position.z - _playerController.transform.position.z
             ).normalized;
 
             float angle = Vector3.Angle(camForwardXZ, toEnemyXZ);
@@ -381,27 +326,17 @@ namespace CreativeAI.Gameplay
         /// </summary>
         private void DetectJitter()
         {
-            if (_bowController == null || _playerController == null)
-            {
-                JitterScore = 0f;
-                return;
-            }
-
             bool isAiming = _bowController.IsAiming;
             if (!isAiming)
             {
                 JitterScore = 0f;
                 _jitterAngularSpeed = 0f;
                 // 非構え中は前フレームのヨーを更新しておく（構えに入った直後の誤検知を防ぐ）
-                if (_playerController.CinemachineCameraTarget != null)
-                    _prevCamYaw = _playerController.CinemachineCameraTarget.transform.eulerAngles.y;
+                _prevCamYaw = _camera.CinemachineCameraTarget.transform.eulerAngles.y;
                 return;
             }
 
-            if (_playerController.CinemachineCameraTarget == null)
-                return;
-
-            float currentYaw = _playerController.CinemachineCameraTarget.transform.eulerAngles.y;
+            float currentYaw = _camera.CinemachineCameraTarget.transform.eulerAngles.y;
 
             // 角度のラッピング（-180〜180に正規化）して急反転を正確に計測する
             float delta = Mathf.DeltaAngle(_prevCamYaw, currentYaw);
@@ -423,9 +358,6 @@ namespace CreativeAI.Gameplay
         /// </summary>
         private void DetectTrap()
         {
-            if (_inputHandler == null || _characterController == null || _playerController == null)
-                return;
-
             if (!_playerController.CanMove)
                 return;
 
@@ -509,9 +441,6 @@ namespace CreativeAI.Gameplay
         /// </summary>
         private void DetectAimCancel()
         {
-            if (_bowController == null)
-                return;
-
             bool isAimingNow = _bowController.IsAiming;
 
             if (_wasAiming && !isAimingNow)
@@ -547,10 +476,10 @@ namespace CreativeAI.Gameplay
         /// </summary>
         private void OnDefenseButtonPressed()
         {
-            // WeaponManager で剣が選択されているときのみカウント
-            // 弓構え中（IsAiming）はスパムとしてカウントしない
-            bool bowIsAiming = _bowController != null && _bowController.IsAiming;
-            if (bowIsAiming)
+            // subAction は武器ごとに意味が違う(剣=防御 / 弓=構え / 鎌=投擲)。
+            // 「防御の連打」を測る指標なので、剣を装備しているときだけ数える
+            GameObject weapon = _weaponManager.CurrentWeaponObject;
+            if (weapon == null || !weapon.TryGetComponent<SwordController>(out _))
                 return;
 
             _spamPressCount++;

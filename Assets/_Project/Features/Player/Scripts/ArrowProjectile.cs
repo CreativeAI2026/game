@@ -20,6 +20,9 @@ namespace CreativeAI.Gameplay
 
         public bool IsFlying { get; private set; }
 
+        /// <summary>この矢を撃ったプレイヤー(Launch で設定)。</summary>
+        public PlayerStatus Owner { get; private set; }
+
         // ObjectPoolから設定される（ArrowPoolが呼び出す）
         private IObjectPool<ArrowProjectile> _pool;
         private float _lifetimeTimer;
@@ -60,8 +63,10 @@ namespace CreativeAI.Gameplay
         /// つがえ中（ボーンの子オブジェクト状態）にRigidbodyがあると
         /// アニメーションと物理が干渉するため、射出時に初めて追加する。
         /// </summary>
-        public void Launch(Vector3 direction, float speed)
+        /// <param name="owner">撃ったプレイヤー。命中時のダメージ計算(攻撃力・会心)に使う。</param>
+        public void Launch(Vector3 direction, float speed, PlayerStatus owner)
         {
+            Owner = owner;
             IsFlying = true;
             _lifetimeTimer = 0f;
 
@@ -91,8 +96,6 @@ namespace CreativeAI.Gameplay
         {
             IsFlying = false;
 
-            Debug.Log("着弾");
-
             Rigidbody rb = GetComponent<Rigidbody>();
             if (rb != null)
             {
@@ -108,21 +111,11 @@ namespace CreativeAI.Gameplay
             }
         }
 
-        /// <summary>
-        /// プールへ矢を返却する。プールが未設定の場合はDestroyにフォールバックする。
-        /// </summary>
+        /// <summary>プールへ矢を返却する(矢は必ず ArrowPool から借りる)。</summary>
         public void ReturnToPool()
         {
             IsFlying = false;
-
-            if (_pool != null)
-            {
-                _pool.Release(this);
-            }
-            else
-            {
-                Destroy(gameObject);
-            }
+            _pool.Release(this);
         }
 
         private void OnCollisionEnter(Collision collision)
@@ -131,11 +124,7 @@ namespace CreativeAI.Gameplay
                 return;
 
             // 物理イベントはRigidbodyを持つルートに飛んでくるため、先端のArrowTipに転送する
-            ArrowTip tip = GetComponentInChildren<ArrowTip>();
-            if (tip != null)
-            {
-                tip.ProcessCollision(collision);
-            }
+            GetComponentInChildren<ArrowTip>().ProcessCollision(collision);
         }
     }
 }

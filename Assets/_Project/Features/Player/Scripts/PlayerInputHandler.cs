@@ -16,8 +16,7 @@ namespace CreativeAI.Gameplay
         public Vector2 look;
         public bool jump;
         public bool sprint;
-        public bool attack;
-        public bool subAction; // 武器ごとに異なるアクション（弓：構え、剣：防御）に使用
+        public bool subAction; // 武器ごとに異なるアクション（剣：防御、弓：構え、鎌：投擲）に使用
         public bool weaponNext;
         public bool weaponPrev;
 
@@ -28,23 +27,44 @@ namespace CreativeAI.Gameplay
         public bool cursorLocked = true;
         public bool cursorInputForLook = true;
 
-        private bool _attackPending = false;
+        [Header("先行入力")]
+        [Tooltip(
+            "攻撃ボタンを押してから、この秒数以内に攻撃できる状態になれば攻撃が出る(先行入力の有効期限)。"
+                + "期限を過ぎた入力は捨てる(怯み中に押した攻撃が、怯み明けに勝手に出るのを防ぐ)"
+        )]
+        [SerializeField]
+        private float _attackBufferSeconds = 0.3f;
 
-        public bool HasAttackInput => _attackPending;
+        private bool _attackPending = false;
+        private float _attackPressedTime;
+
+        private bool IsAttackInputExpired => Time.time - _attackPressedTime > _attackBufferSeconds;
 
         /// <summary>
         /// 攻撃入力を消費する。1回の入力に対して1回だけtrueを返す。
         /// 武器コントローラー側で攻撃可能なタイミングまで入力を保持し、
-        /// 準備ができた時点で消費する設計。
+        /// 準備ができた時点で消費する設計。有効期限を過ぎた入力は false を返して捨てる。
         /// </summary>
         public bool ConsumeAttack()
         {
-            if (_attackPending)
-            {
-                _attackPending = false;
-                return true;
-            }
-            return false;
+            if (!_attackPending)
+                return false;
+
+            _attackPending = false;
+            return !IsAttackInputExpired;
+        }
+
+        /// <summary>保持している入力値をすべて消す(死亡時など、入力を無効化する直前に呼ぶ)。</summary>
+        public void ClearAllInput()
+        {
+            move = Vector2.zero;
+            look = Vector2.zero;
+            jump = false;
+            sprint = false;
+            subAction = false;
+            weaponNext = false;
+            weaponPrev = false;
+            _attackPending = false;
         }
 
         public void OnMove(InputValue value)
@@ -128,6 +148,7 @@ namespace CreativeAI.Gameplay
         public void AttackInput()
         {
             _attackPending = true;
+            _attackPressedTime = Time.time;
         }
 
         public void WeaponNextInput(bool newWeaponNextState)

@@ -1,18 +1,20 @@
 using System.Collections;
 using UnityEngine;
+using UnityEngine.Assertions;
 using UnityEngine.UI;
 
 namespace CreativeAI.Gameplay
 {
     /// <summary>
-    /// 被弾時の赤ビネット演出を管理する。
+    /// 被弾時の赤ビネット演出を管理する(シーン側の UI)。
     /// 連続被弾時は前回の演出をキャンセルして再スタートすることで、
     /// 被弾のたびに視覚フィードバックをリセットする。
+    ///
+    /// プレイヤーは UI を知らず、この UI が PlayerRegistry からプレイヤーを受け取って
+    /// PlayerStatus.Damaged を購読する(プレイヤーが後から生成されても購読できる)。
     /// </summary>
     public class DamageVignette : MonoBehaviour
     {
-        public static DamageVignette Instance { get; private set; }
-
         [Tooltip("全画面を覆う赤いビネット用の Image コンポーネント")]
         [SerializeField]
         private Image _vignetteImage;
@@ -35,31 +37,44 @@ namespace CreativeAI.Gameplay
         private float _maxAlpha = 0.7f;
 
         private Coroutine _vignetteCoroutine;
+        private PlayerStatus _status;
 
-        private void Start()
+        private void Awake()
         {
-            if (Instance != null && Instance != this)
-            {
-                Destroy(gameObject);
-                return;
-            }
-            Instance = this;
-
+            Assert.IsNotNull(_vignetteImage, $"{name}: _vignetteImage が未設定です");
             SetAlpha(0f);
         }
 
+        private void OnEnable()
+        {
+            PlayerRegistry.Changed += Bind;
+            Bind(PlayerRegistry.Current);
+        }
+
+        private void OnDisable()
+        {
+            PlayerRegistry.Changed -= Bind;
+            Bind(null);
+        }
+
+        /// <summary>購読先のプレイヤーを切り替える(未生成・破棄時は null)。</summary>
+        private void Bind(PlayerController player)
+        {
+            if (_status != null)
+                _status.Damaged -= TriggerVignette;
+
+            _status = player != null ? player.GetComponent<PlayerStatus>() : null;
+
+            if (_status != null)
+                _status.Damaged += TriggerVignette;
+        }
+
         /// <summary>
-        /// 被弾ビネット演出を開始する。PlayerStatus.TakeDamage() から呼び出される。
+        /// 被弾ビネット演出を開始する。PlayerStatus.Damaged から呼ばれる。
         /// 連続被弾時は前のコルーチンをキャンセルして最初からやり直す。
         /// </summary>
-        public void TriggerVignette()
+        private void TriggerVignette()
         {
-            if (_vignetteImage == null)
-            {
-                Debug.LogWarning("[DamageVignette] _vignetteImage が設定されていません。");
-                return;
-            }
-
             if (_vignetteCoroutine != null)
                 StopCoroutine(_vignetteCoroutine);
 
@@ -93,8 +108,6 @@ namespace CreativeAI.Gameplay
 
         private void SetAlpha(float alpha)
         {
-            if (_vignetteImage == null)
-                return;
             Color c = _vignetteImage.color;
             c.a = Mathf.Clamp01(alpha);
             _vignetteImage.color = c;
