@@ -26,7 +26,10 @@ namespace CreativeAI.UI.ConversationUI
                             character.DisplayName,
                             character.ThemeColor,
                             character.TypingSound,
-                            character.PortraitOffset
+                            character.PortraitOffset,
+                            character.IdleMotion,
+                            character.IdleMotionAmplitude,
+                            character.IdleMotionCycleDuration
                         );
             }
             return new DialoguePortraitPresenter.ResolvedPortrait(
@@ -36,7 +39,10 @@ namespace CreativeAI.UI.ConversationUI
                 string.Empty,
                 new Color(0.75f, 0.9f, 1f, 1f),
                 null,
-                Vector2.zero
+                Vector2.zero,
+                DialoguePortraitIdleMotion.None,
+                0f,
+                1f
             );
         }
     }

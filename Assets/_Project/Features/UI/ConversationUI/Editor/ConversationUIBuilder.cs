@@ -128,8 +128,8 @@ namespace CreativeAI.UI.ConversationUI.Editor
             // 参考レイアウトに合わせ、画面右側で足元を画面外へ逃がし、ウィンドウの背面に立たせる。
             SetAnchored(
                 portrait,
-                new Vector2(0.12f, 0),
-                new Vector2(0.12f, 0),
+                new Vector2(0.1f, 0),
+                new Vector2(0.1f, 0),
                 new Vector2(0.5f, 0),
                 new Vector2(0, -60),
                 new Vector2(650, 1170)
@@ -140,8 +140,8 @@ namespace CreativeAI.UI.ConversationUI.Editor
             rightPortraitImage.enabled = false;
             SetAnchored(
                 rightPortrait,
-                new Vector2(0.88f, 0f),
-                new Vector2(0.88f, 0f),
+                new Vector2(0.9f, 0f),
+                new Vector2(0.9f, 0f),
                 new Vector2(0.5f, 0f),
                 new Vector2(0f, -60f),
                 new Vector2(650f, 1170f)

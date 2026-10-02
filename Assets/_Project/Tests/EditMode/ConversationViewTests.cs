@@ -228,14 +228,16 @@ namespace CreativeAI.Tests.EditMode
             );
 
             Drive(_view.ShowLine("主人公", "protagonist", "左側"));
-            Assert.AreEqual(0.12f, _portrait.rectTransform.anchorMin.x, 0.001f);
-            Assert.AreEqual(0.12f, _portrait.rectTransform.anchorMax.x, 0.001f);
+            Assert.AreEqual(0.1f, _portrait.rectTransform.anchorMin.x, 0.001f);
+            Assert.AreEqual(0.1f, _portrait.rectTransform.anchorMax.x, 0.001f);
+            Assert.AreEqual(-30f, _portrait.rectTransform.anchoredPosition.y, 0.001f);
             Assert.AreEqual(1.03f, _portrait.rectTransform.localScale.x, 0.001f);
 
             Drive(_view.ShowLine("相手", "other", "右側"));
             var rightPortrait = TestReflection.GetField<Image>(_view, "_rightPortrait");
-            Assert.AreEqual(0.88f, rightPortrait.rectTransform.anchorMin.x, 0.001f);
-            Assert.AreEqual(0.88f, rightPortrait.rectTransform.anchorMax.x, 0.001f);
+            Assert.AreEqual(0.9f, rightPortrait.rectTransform.anchorMin.x, 0.001f);
+            Assert.AreEqual(0.9f, rightPortrait.rectTransform.anchorMax.x, 0.001f);
+            Assert.AreEqual(-30f, rightPortrait.rectTransform.anchoredPosition.y, 0.001f);
             Assert.AreEqual(-1.03f, rightPortrait.rectTransform.localScale.x, 0.001f);
             Assert.AreEqual(0.92f, _portrait.rectTransform.localScale.x, 0.001f);
             Assert.AreEqual(0.45f, _portrait.color.r, 0.001f);
@@ -244,6 +246,45 @@ namespace CreativeAI.Tests.EditMode
             Assert.AreEqual(1.03f, _portrait.rectTransform.localScale.x, 0.001f);
             Assert.AreEqual(-0.92f, rightPortrait.rectTransform.localScale.x, 0.001f);
             Assert.AreEqual(0.45f, rightPortrait.color.r, 0.001f);
+        }
+
+        [Test]
+        public void ShowLine_AppliesBaseScaleBeforeActiveScale()
+        {
+            var portrait = MakeSprite();
+            SetPortraitCatalog(entries: new[] { ("protagonist", portrait) });
+            TestReflection.SetField(_view, "_portraitBaseScale", 0.8f);
+
+            Drive(_view.ShowLine("主人公", "protagonist", "基本スケール"));
+
+            Assert.AreEqual(0.824f, _portrait.rectTransform.localScale.x, 0.001f);
+            Assert.AreEqual(0.824f, _portrait.rectTransform.localScale.y, 0.001f);
+        }
+
+        [Test]
+        public void ShowLine_FloatingCharacterMovesAroundItsConfiguredBasePosition()
+        {
+            var robot = MakeSprite();
+            SetPortraitCatalog(DialoguePortraitSide.Right, ("robot_normal", robot));
+            var definition = TestReflection.GetField<DialogueCharacterDefinition[]>(
+                _view,
+                "_characters"
+            )[0];
+            TestReflection.SetField(definition, "_idleMotion", DialoguePortraitIdleMotion.Float);
+            TestReflection.SetField(definition, "_idleMotionAmplitude", 12f);
+            TestReflection.SetField(definition, "_idleMotionCycleDuration", 2f);
+
+            Drive(_view.ShowLine("ロボ", "robot_normal", "浮遊"));
+            var presenter = TestReflection.GetField<object>(_view, "_portraitPresenter");
+            var rightPortrait = TestReflection.GetField<Image>(_view, "_rightPortrait");
+            float startedAt = TestReflection.GetField<float>(presenter, "_rightIdleStartedAt");
+            float baseY = rightPortrait.rectTransform.anchoredPosition.y;
+
+            TestReflection.Invoke(presenter, "Tick", startedAt + 0.5f);
+            Assert.AreEqual(baseY + 12f, rightPortrait.rectTransform.anchoredPosition.y, 0.001f);
+
+            TestReflection.Invoke(presenter, "Tick", startedAt + 1f);
+            Assert.AreEqual(baseY, rightPortrait.rectTransform.anchoredPosition.y, 0.001f);
         }
 
         [Test]

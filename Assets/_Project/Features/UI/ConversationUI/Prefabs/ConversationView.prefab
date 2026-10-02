@@ -1989,8 +1989,8 @@ RectTransform:
   m_Children: []
   m_Father: {fileID: 5655546372910238925}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
-  m_AnchorMin: {x: 0.12, y: 0}
-  m_AnchorMax: {x: 0.12, y: 0}
+  m_AnchorMin: {x: 0.1, y: 0}
+  m_AnchorMax: {x: 0.1, y: 0}
   m_AnchoredPosition: {x: 0, y: -60}
   m_SizeDelta: {x: 650, y: 1170}
   m_Pivot: {x: 0.5, y: 0}
@@ -2140,8 +2140,8 @@ RectTransform:
   m_Children: []
   m_Father: {fileID: 5655546372910238925}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
-  m_AnchorMin: {x: 0.88, y: 0}
-  m_AnchorMax: {x: 0.88, y: 0}
+  m_AnchorMin: {x: 0.9, y: 0}
+  m_AnchorMax: {x: 0.9, y: 0}
   m_AnchoredPosition: {x: 0, y: -60}
   m_SizeDelta: {x: 650, y: 1170}
   m_Pivot: {x: 0.5, y: 0}
@@ -4003,8 +4003,11 @@ MonoBehaviour:
   _windowRoot: {fileID: 2921108077164726442}
   _portrait: {fileID: 4684732012226159678}
   _rightPortrait: {fileID: 6820284287176848235}
-  _portraitLeftAnchorX: 0.12
-  _portraitRightAnchorX: 0.88
+  _portraitLeftAnchorX: 0.1
+  _portraitRightAnchorX: 0.9
+  _portraitHorizontalOffset: 0
+  _portraitHeightOffset: -30
+  _portraitBaseScale: 1
   _portraitActiveScale: 1.03
   _portraitInactiveScale: 0.92
   _portraitInactiveBrightness: 0.45

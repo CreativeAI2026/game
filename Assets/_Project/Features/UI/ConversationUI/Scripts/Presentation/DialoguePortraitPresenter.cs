@@ -16,7 +16,10 @@ namespace CreativeAI.UI.ConversationUI
                 string displayName,
                 Color themeColor,
                 AudioClip typingSound,
-                Vector2 offset
+                Vector2 offset,
+                DialoguePortraitIdleMotion idleMotion,
+                float idleMotionAmplitude,
+                float idleMotionCycleDuration
             )
             {
                 Sprite = sprite;
@@ -26,6 +29,9 @@ namespace CreativeAI.UI.ConversationUI
                 ThemeColor = themeColor;
                 TypingSound = typingSound;
                 Offset = offset;
+                IdleMotion = idleMotion;
+                IdleMotionAmplitude = idleMotionAmplitude;
+                IdleMotionCycleDuration = idleMotionCycleDuration;
             }
 
             public Sprite Sprite { get; }
@@ -35,6 +41,9 @@ namespace CreativeAI.UI.ConversationUI
             public Color ThemeColor { get; }
             public AudioClip TypingSound { get; }
             public Vector2 Offset { get; }
+            public DialoguePortraitIdleMotion IdleMotion { get; }
+            public float IdleMotionAmplitude { get; }
+            public float IdleMotionCycleDuration { get; }
         }
 
         private Image _left;
@@ -43,10 +52,24 @@ namespace CreativeAI.UI.ConversationUI
         private Image _baseRight;
         private float _leftAnchorX;
         private float _rightAnchorX;
+        private Vector2 _positionOffset;
         private float _leftBaseTopY;
         private float _rightBaseTopY;
         private Vector2 _leftOffset;
         private Vector2 _rightOffset;
+        private DialoguePortraitIdleMotion _leftIdleMotion;
+        private DialoguePortraitIdleMotion _rightIdleMotion;
+        private float _leftIdleAmplitude;
+        private float _rightIdleAmplitude;
+        private float _leftIdleCycleDuration = 1f;
+        private float _rightIdleCycleDuration = 1f;
+        private float _leftIdleStartedAt;
+        private float _rightIdleStartedAt;
+        private float _leftIdleOffsetY;
+        private float _rightIdleOffsetY;
+        private Vector2 _leftEffectOffset;
+        private Vector2 _rightEffectOffset;
+        private float _baseScale;
         private float _activeScale;
         private float _inactiveScale;
         private float _inactiveBrightness;
@@ -65,6 +88,8 @@ namespace CreativeAI.UI.ConversationUI
             Image right,
             float leftAnchorX,
             float rightAnchorX,
+            Vector2 positionOffset,
+            float baseScale,
             float activeScale,
             float inactiveScale,
             float inactiveBrightness,
@@ -78,6 +103,8 @@ namespace CreativeAI.UI.ConversationUI
             _right = right;
             _leftAnchorX = leftAnchorX;
             _rightAnchorX = rightAnchorX;
+            _positionOffset = positionOffset;
+            _baseScale = baseScale;
             if (leftChanged)
             {
                 _baseLeft = left;
@@ -116,6 +143,12 @@ namespace CreativeAI.UI.ConversationUI
             active.sprite = resolved.Sprite;
             active.enabled = true;
             SetOffset(resolved.Side, resolved.Offset);
+            SetIdleMotion(
+                resolved.Side,
+                resolved.IdleMotion,
+                resolved.IdleMotionAmplitude,
+                resolved.IdleMotionCycleDuration
+            );
             ApplySide(active, resolved.Side);
             if (resolved.Side == DialoguePortraitSide.Left)
                 _leftShown = true;
@@ -126,12 +159,10 @@ namespace CreativeAI.UI.ConversationUI
             Color activeStart = isNew
                 ? new Color(activeTarget.r, activeTarget.g, activeTarget.b, 0f)
                 : active.color;
-            float activeScaleStart = isNew
-                ? _inactiveScale
-                : Mathf.Abs(active.rectTransform.localScale.x);
+            float activeScaleStart = isNew ? _inactiveScale : CurrentScaleMagnitude(active);
             Color inactiveStart = inactive != null ? inactive.color : Color.white;
             float inactiveScaleStart =
-                inactive != null ? Mathf.Abs(inactive.rectTransform.localScale.x) : _inactiveScale;
+                inactive != null ? CurrentScaleMagnitude(inactive) : _inactiveScale;
             float duration = isNew ? _fadeDuration : _focusDuration;
             for (
                 float elapsed = 0f;
@@ -176,12 +207,20 @@ namespace CreativeAI.UI.ConversationUI
             {
                 _left.enabled = false;
                 _leftShown = false;
+                ClearMotion(DialoguePortraitSide.Left);
             }
             if (_right != null)
             {
                 _right.enabled = false;
                 _rightShown = false;
+                ClearMotion(DialoguePortraitSide.Right);
             }
+        }
+
+        public void Tick(float unscaledTime)
+        {
+            UpdateIdleMotion(DialoguePortraitSide.Left, unscaledTime);
+            UpdateIdleMotion(DialoguePortraitSide.Right, unscaledTime);
         }
 
         public bool IsObscured(DialoguePortraitSide side) =>
@@ -228,8 +267,6 @@ namespace CreativeAI.UI.ConversationUI
             var portrait = side == DialoguePortraitSide.Left ? _left : _right;
             if (portrait == null || !portrait.enabled)
                 yield break;
-            var rect = portrait.rectTransform;
-            Vector2 basePosition = rect.anchoredPosition;
             Color baseColor = portrait.color;
             duration = Mathf.Max(0.01f, duration);
             for (
@@ -240,21 +277,14 @@ namespace CreativeAI.UI.ConversationUI
             {
                 float t = elapsed / duration;
                 if (effect == ConversationView.PortraitEffect.Shake)
-                    rect.anchoredPosition =
-                        basePosition + Vector2.right * Mathf.Sin(t * Mathf.PI * 8f) * 10f;
+                    SetEffectOffset(side, Vector2.right * Mathf.Sin(t * Mathf.PI * 8f) * 10f);
                 else if (effect == ConversationView.PortraitEffect.Jump)
-                    rect.anchoredPosition =
-                        basePosition + Vector2.up * Mathf.Sin(t * Mathf.PI) * 28f;
-                else if (effect == ConversationView.PortraitEffect.Fade)
-                    portrait.color = new Color(
-                        baseColor.r,
-                        baseColor.g,
-                        baseColor.b,
-                        Mathf.Abs(Mathf.Cos(t * Mathf.PI))
-                    );
+                    SetEffectOffset(side, Vector2.up * Mathf.Sin(t * Mathf.PI) * 28f);
+                ApplyPosition(portrait, side);
                 yield return null;
             }
-            rect.anchoredPosition = basePosition;
+            SetEffectOffset(side, Vector2.zero);
+            ApplyPosition(portrait, side);
             portrait.color = baseColor;
         }
 
@@ -286,6 +316,8 @@ namespace CreativeAI.UI.ConversationUI
                 _left.color = new Color(leftStart.r, leftStart.g, leftStart.b, 0f);
             if (_right != null && _right.enabled)
                 _right.color = new Color(rightStart.r, rightStart.g, rightStart.b, 0f);
+            ClearMotion(DialoguePortraitSide.Left);
+            ClearMotion(DialoguePortraitSide.Right);
         }
 
         public void EnsureSlots()
@@ -313,8 +345,8 @@ namespace CreativeAI.UI.ConversationUI
 
             Color leftStart = leftVisible ? _left.color : Color.clear;
             Color rightStart = rightVisible ? _right.color : Color.clear;
-            float leftScale = leftVisible ? Mathf.Abs(_left.rectTransform.localScale.x) : 1f;
-            float rightScale = rightVisible ? Mathf.Abs(_right.rectTransform.localScale.x) : 1f;
+            float leftScale = leftVisible ? CurrentScaleMagnitude(_left) : 1f;
+            float rightScale = rightVisible ? CurrentScaleMagnitude(_right) : 1f;
             float duration = Mathf.Max(0.12f, _fadeDuration * 0.75f);
             for (float elapsed = 0f; elapsed < duration; elapsed += FrameDelta())
             {
@@ -344,6 +376,8 @@ namespace CreativeAI.UI.ConversationUI
                 _left.enabled = false;
             if (_right != null)
                 _right.enabled = false;
+            ClearMotion(DialoguePortraitSide.Left);
+            ClearMotion(DialoguePortraitSide.Right);
             _leftShown = false;
             _rightShown = false;
         }
@@ -352,23 +386,43 @@ namespace CreativeAI.UI.ConversationUI
         {
             var rect = portrait.rectTransform;
             float anchorX = side == DialoguePortraitSide.Left ? _leftAnchorX : _rightAnchorX;
-            float baseTopY = side == DialoguePortraitSide.Left ? _leftBaseTopY : _rightBaseTopY;
-            Vector2 offset = side == DialoguePortraitSide.Left ? _leftOffset : _rightOffset;
             rect.anchorMin = new Vector2(anchorX, rect.anchorMin.y);
             rect.anchorMax = new Vector2(anchorX, rect.anchorMax.y);
             rect.pivot = new Vector2(rect.pivot.x, 1f);
-            rect.anchoredPosition = new Vector2(offset.x, baseTopY + offset.y);
+            ApplyPosition(portrait, side);
+        }
+
+        private void ApplyPosition(Image portrait, DialoguePortraitSide side)
+        {
+            if (portrait == null)
+                return;
+
+            var rect = portrait.rectTransform;
+            float baseTopY = side == DialoguePortraitSide.Left ? _leftBaseTopY : _rightBaseTopY;
+            Vector2 offset = side == DialoguePortraitSide.Left ? _leftOffset : _rightOffset;
+            float idleOffsetY =
+                side == DialoguePortraitSide.Left ? _leftIdleOffsetY : _rightIdleOffsetY;
+            Vector2 effectOffset =
+                side == DialoguePortraitSide.Left ? _leftEffectOffset : _rightEffectOffset;
+            rect.anchoredPosition = new Vector2(
+                _positionOffset.x + offset.x + effectOffset.x,
+                baseTopY + _positionOffset.y + offset.y + idleOffsetY + effectOffset.y
+            );
         }
 
         private void SetScale(Image portrait, DialoguePortraitSide side, float magnitude)
         {
             var rect = portrait.rectTransform;
+            float scale = _baseScale * magnitude;
             rect.localScale = new Vector3(
-                (side == DialoguePortraitSide.Left ? 1f : -1f) * magnitude,
-                magnitude,
+                (side == DialoguePortraitSide.Left ? 1f : -1f) * scale,
+                scale,
                 rect.localScale.z
             );
         }
+
+        private float CurrentScaleMagnitude(Image portrait) =>
+            Mathf.Abs(portrait.rectTransform.localScale.x) / Mathf.Max(0.001f, _baseScale);
 
         private void SetOffset(DialoguePortraitSide side, Vector2 offset)
         {
@@ -376,6 +430,107 @@ namespace CreativeAI.UI.ConversationUI
                 _leftOffset = offset;
             else
                 _rightOffset = offset;
+        }
+
+        private void SetIdleMotion(
+            DialoguePortraitSide side,
+            DialoguePortraitIdleMotion motion,
+            float amplitude,
+            float cycleDuration
+        )
+        {
+            amplitude = Mathf.Max(0f, amplitude);
+            cycleDuration = Mathf.Max(0.01f, cycleDuration);
+            bool changed =
+                side == DialoguePortraitSide.Left
+                    ? _leftIdleMotion != motion
+                        || !Mathf.Approximately(_leftIdleAmplitude, amplitude)
+                        || !Mathf.Approximately(_leftIdleCycleDuration, cycleDuration)
+                    : _rightIdleMotion != motion
+                        || !Mathf.Approximately(_rightIdleAmplitude, amplitude)
+                        || !Mathf.Approximately(_rightIdleCycleDuration, cycleDuration);
+
+            if (side == DialoguePortraitSide.Left)
+            {
+                _leftIdleMotion = motion;
+                _leftIdleAmplitude = amplitude;
+                _leftIdleCycleDuration = cycleDuration;
+                if (changed)
+                {
+                    _leftIdleStartedAt = Time.unscaledTime;
+                    _leftIdleOffsetY = 0f;
+                }
+            }
+            else
+            {
+                _rightIdleMotion = motion;
+                _rightIdleAmplitude = amplitude;
+                _rightIdleCycleDuration = cycleDuration;
+                if (changed)
+                {
+                    _rightIdleStartedAt = Time.unscaledTime;
+                    _rightIdleOffsetY = 0f;
+                }
+            }
+        }
+
+        private void UpdateIdleMotion(DialoguePortraitSide side, float unscaledTime)
+        {
+            var portrait = side == DialoguePortraitSide.Left ? _left : _right;
+            if (portrait == null || !portrait.enabled)
+                return;
+
+            DialoguePortraitIdleMotion motion =
+                side == DialoguePortraitSide.Left ? _leftIdleMotion : _rightIdleMotion;
+            float amplitude =
+                side == DialoguePortraitSide.Left ? _leftIdleAmplitude : _rightIdleAmplitude;
+            float cycleDuration =
+                side == DialoguePortraitSide.Left
+                    ? _leftIdleCycleDuration
+                    : _rightIdleCycleDuration;
+            float startedAt =
+                side == DialoguePortraitSide.Left ? _leftIdleStartedAt : _rightIdleStartedAt;
+            float offset = CalculateIdleOffset(
+                motion,
+                unscaledTime - startedAt,
+                amplitude,
+                cycleDuration
+            );
+
+            if (side == DialoguePortraitSide.Left)
+                _leftIdleOffsetY = offset;
+            else
+                _rightIdleOffsetY = offset;
+            ApplyPosition(portrait, side);
+        }
+
+        private void SetEffectOffset(DialoguePortraitSide side, Vector2 offset)
+        {
+            if (side == DialoguePortraitSide.Left)
+                _leftEffectOffset = offset;
+            else
+                _rightEffectOffset = offset;
+        }
+
+        private void ClearMotion(DialoguePortraitSide side)
+        {
+            SetIdleMotion(side, DialoguePortraitIdleMotion.None, 0f, 1f);
+            SetEffectOffset(side, Vector2.zero);
+            ApplyPosition(side == DialoguePortraitSide.Left ? _left : _right, side);
+        }
+
+        private static float CalculateIdleOffset(
+            DialoguePortraitIdleMotion motion,
+            float elapsed,
+            float amplitude,
+            float cycleDuration
+        )
+        {
+            if (motion != DialoguePortraitIdleMotion.Float || amplitude <= 0f)
+                return 0f;
+
+            float phase = elapsed / Mathf.Max(0.01f, cycleDuration) * Mathf.PI * 2f;
+            return Mathf.Sin(phase) * amplitude;
         }
 
         private static float ResolveTopY(Image portrait)

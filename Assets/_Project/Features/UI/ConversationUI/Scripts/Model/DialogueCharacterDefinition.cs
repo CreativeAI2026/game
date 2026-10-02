@@ -10,6 +10,12 @@ namespace CreativeAI.UI.ConversationUI
         Right,
     }
 
+    public enum DialoguePortraitIdleMotion
+    {
+        None,
+        Float,
+    }
+
     /// <summary>
     /// 会話キャラクターの表示名・立ち位置・表情スプライトを一元管理する定義。
     /// シナリオ側は portrait キーだけを保持し、表示上の情報はこのアセットから解決する。
@@ -45,6 +51,20 @@ namespace CreativeAI.UI.ConversationUI
         private Vector2 _portraitOffset;
 
         [SerializeField]
+        [Tooltip("会話中に常時再生する、そのキャラクター固有の立ち絵モーション")]
+        private DialoguePortraitIdleMotion _idleMotion;
+
+        [SerializeField]
+        [Range(0f, 100f)]
+        [Tooltip("Float モーションで基準位置から上下する最大距離（px）")]
+        private float _idleMotionAmplitude = 14f;
+
+        [SerializeField]
+        [Range(0.2f, 10f)]
+        [Tooltip("Float モーションが一往復する時間（秒）")]
+        private float _idleMotionCycleDuration = 1.8f;
+
+        [SerializeField]
         private AudioClip _typingSound;
 
         [SerializeField]
@@ -55,6 +75,9 @@ namespace CreativeAI.UI.ConversationUI
         public DialoguePortraitSide Side => _side;
         public Color ThemeColor => _themeColor;
         public Vector2 PortraitOffset => _portraitOffset;
+        public DialoguePortraitIdleMotion IdleMotion => _idleMotion;
+        public float IdleMotionAmplitude => _idleMotionAmplitude;
+        public float IdleMotionCycleDuration => _idleMotionCycleDuration;
         public AudioClip TypingSound => _typingSound;
         public IReadOnlyList<Expression> Expressions => _expressions;
 

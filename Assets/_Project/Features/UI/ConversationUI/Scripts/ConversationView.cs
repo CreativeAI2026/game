@@ -40,7 +40,6 @@ namespace CreativeAI.UI.ConversationUI
         {
             Shake,
             Jump,
-            Fade,
         }
 
         public ConversationState State { get; private set; } = ConversationState.Hidden;
@@ -60,11 +59,32 @@ namespace CreativeAI.UI.ConversationUI
         [SerializeField]
         private Image _rightPortrait; // 実行時に _portrait から生成する右側スロット
 
+        [Header("立ち絵レイアウト")]
         [SerializeField]
-        private float _portraitLeftAnchorX = 0.12f; // 主人公など画面左側に立つキャラクター
+        [Range(0f, 1f)]
+        [Tooltip("左側に表示する立ち絵の横位置。0 が画面左端、1 が画面右端です。")]
+        private float _portraitLeftAnchorX = 0.1f; // 主人公など画面左側に立つキャラクター
 
         [SerializeField]
-        private float _portraitRightAnchorX = 0.88f; // 会話相手など画面右側に立つキャラクター
+        [Range(0f, 1f)]
+        [Tooltip("右側に表示する立ち絵の横位置。0 が画面左端、1 が画面右端です。")]
+        private float _portraitRightAnchorX = 0.9f; // 会話相手など画面右側に立つキャラクター
+
+        [SerializeField]
+        [Tooltip("すべての立ち絵に加える横方向の位置調整（px）。")]
+        private float _portraitHorizontalOffset;
+
+        [SerializeField]
+        [Range(-300f, 300f)]
+        [Tooltip("すべての立ち絵に加える高さ調整（px）。小さくすると下へ移動します。")]
+        private float _portraitHeightOffset = -30f;
+
+        [SerializeField]
+        [Range(0.25f, 2f)]
+        [Tooltip(
+            "すべての立ち絵に掛ける基本倍率。Active / Inactive Scale はこの値に乗算されます。"
+        )]
+        private float _portraitBaseScale = 1f;
 
         [SerializeField]
         private float _portraitActiveScale = 1.03f;
@@ -403,6 +423,8 @@ namespace CreativeAI.UI.ConversationUI
                 _rightPortrait,
                 _portraitLeftAnchorX,
                 _portraitRightAnchorX,
+                new Vector2(_portraitHorizontalOffset, _portraitHeightOffset),
+                _portraitBaseScale,
                 _portraitActiveScale,
                 _portraitInactiveScale,
                 _portraitInactiveBrightness,
@@ -436,6 +458,7 @@ namespace CreativeAI.UI.ConversationUI
 
         private void Update()
         {
+            _portraitPresenter?.Tick(Time.unscaledTime);
             _inputController?.Tick();
         }
 

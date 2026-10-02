@@ -59,7 +59,10 @@ namespace CreativeAI.UI.ConversationUI
                     string.Empty,
                     new Color(0.78f, 0.82f, 0.9f, 1f),
                     null,
-                    Vector2.zero
+                    Vector2.zero,
+                    DialoguePortraitIdleMotion.None,
+                    0f,
+                    1f
                 )
                 : DialoguePortraitResolver.Resolve(
                     portrait,
