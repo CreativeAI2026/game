@@ -4,11 +4,8 @@ using UnityEngine.AI;
 namespace CreativeAI.Gameplay
 {
     /// <summary>
-    /// プレイヤーを発見した後、攻撃の機会を伺う様子見ステート。
-    /// TestEnemy の StrafeState に相当する。
-    /// 一定時間後に攻撃ステートへ遷移する。
-    /// 単に左右へ揺れるだけでなく、間合いが近すぎれば下がり、遠すぎれば詰め、
-    /// 適正距離ではプレイヤーの視野外側へ回り込むように動く（間合い管理）。
+    /// 発見後に攻撃の機会を伺う様子見ステート（TestEnemy の StrafeState 相当）。一定時間後に攻撃へ遷移する。
+    /// 近すぎれば下がり、遠すぎれば詰め、適正距離ではプレイヤーの視野外側へ回り込む（間合い管理）。
     /// </summary>
     public class TBossWatchState : TBossBaseState
     {

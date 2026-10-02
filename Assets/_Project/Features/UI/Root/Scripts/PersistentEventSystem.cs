@@ -4,11 +4,8 @@ using UnityEngine.EventSystems;
 namespace CreativeAI.UI
 {
     /// <summary>
-    /// UI 入力の司令塔 <see cref="EventSystem"/> をアプリ常駐化する係。表示中の UI にクリック/タップを
-    /// 届けるだけで、UI を出す役ではない。Title に自動生成される1つに付け、起動時に DontDestroyOnLoad で
-    /// 常駐させ以降の全シーンで使い回す。冪等ガードで二重化を防ぐ(既に常駐が居れば自分を破棄)。
-    /// フィールドシーンには UI を置かない設計なので EventSystem も置かず、重複しない。
-    /// documents/Specification.md「常駐アーキテクチャ」参照。
+    /// UI 入力の <see cref="EventSystem"/> をアプリ常駐化する係(UI を出す役ではない)。Title に自動生成される1つに付け、
+    /// DontDestroyOnLoad で全シーンで使い回す。既に常駐が居れば自分を破棄する。フィールドシーンには EventSystem を置かない。
     /// </summary>
     [RequireComponent(typeof(EventSystem))]
     public sealed class PersistentEventSystem : MonoBehaviour

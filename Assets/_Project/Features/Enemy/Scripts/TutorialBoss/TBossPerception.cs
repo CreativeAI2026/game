@@ -3,14 +3,8 @@ using UnityEngine;
 namespace CreativeAI.Gameplay
 {
     /// <summary>
-    /// TutorialBossの「知覚」だけを扱うクラス。
-    /// 懐中電灯による視認判定、発見度（Awareness）の管理、
-    /// 直近で把握したプレイヤー位置の記憶を担当する。
-    ///
-    /// MonoBehaviourにはせず、TutorialBossControllerが所有するプレーンなC#クラスとした。
-    /// Component化するとPrefab側の再構成（GameObject追加・参照の再アサイン）が必要になり
-    /// 既存シーン/Prefabの参照破損リスクが生まれるため、責務の分離だけを行いUnity側の
-    /// 構成には影響を与えない設計にしている。
+    /// TutorialBoss の知覚（懐中電灯での視認判定・発見度 Awareness の管理・直近のプレイヤー位置の記憶）を担当する。
+    /// Prefab の再構成や参照破損を避けるため MonoBehaviour にせず、TutorialBossController が所有するプレーンなクラスにしている。
     /// </summary>
     public class TBossPerception
     {

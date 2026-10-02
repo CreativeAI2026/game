@@ -1,24 +1,18 @@
 # 環境構築手順書
 
-このリポジトリ（`CreativeAI2026/game`）をローカルで開発できる状態にするまでの手順。
-初めてセットアップする人はこの順番で進めれば OK。
-
 - Unity Editor: **6000.4.5f1**（Unity 6）— `ProjectSettings/ProjectVersion.txt` で管理
 - C# フォーマッタ: **CSharpier 1.2.6**（`.config/dotnet-tools.json` で固定）
 - .NET SDK: **10.0.300**（`mise.toml` で固定）
 
 ---
 
-## 0. 前提ツール
+## 前提ツール
 
 | ツール | 用途 | 入手先 |
 |--------|------|--------|
 | Git | バージョン管理 | https://git-scm.com/ |
 | Unity Hub | Unity Editor の管理・起動 | https://unity.com/download |
 | mise | .NET SDK のバージョン固定（CSharpier 実行用） | https://mise.jdx.dev/ |
-| GitHub CLI（任意） | `gh` で PR 作成を楽にする | https://cli.github.com/ |
-
-> mise を使わず手元の .NET SDK で動かすこともできるが、バージョン差で整形結果がブレる原因になる。チームで揃えるため mise 経由を推奨。
 
 ### mise のインストール
 
@@ -52,7 +46,7 @@ echo 'mise activate pwsh | Out-String | Invoke-Expression' >> $PROFILE
 
 ---
 
-## 1. リポジトリをクローン
+## リポジトリをクローン
 
 ```bash
 git clone git@github.com:CreativeAI2026/game.git
@@ -61,19 +55,18 @@ cd game
 
 ---
 
-## 2. Unity Editor をインストール
+## Unity Editor をインストール
 
 1. Unity Hub を開く。
 2. **Installs → Install Editor** で **6000.4.5f1** を選択してインストール。
-   - Hub に出てこない場合は [Unity download archive](https://unity.com/releases/editor/archive) から該当バージョンを入れる。
 3. **Projects → Add** でクローンした `game/` フォルダを選択。
-4. プロジェクトを開く。初回はインポートに数分かかる（`Library/` が生成される）。
+4. プロジェクトを開く。
 
 > `Library/` `Temp/` `Logs/` `UserSettings/` は `.gitignore` で除外されている自動生成物。コミットしない。
 
 ---
 
-## 3. .NET SDK（mise）をセットアップ
+## .NET SDK（mise）をセットアップ
 
 CSharpier をローカルで動かすために .NET SDK を入れる。`mise.toml` でバージョンが固定されている。
 
@@ -93,7 +86,7 @@ mise exec -- dotnet csharpier --version   # 1.2.6 が出れば OK
 
 ---
 
-## 4. 動作確認
+## 動作確認
 
 - Unity Editor でシーンを開いて Play できる。
 - 下記が成功する（整形漏れがなければ何も出力されない）:
@@ -101,5 +94,3 @@ mise exec -- dotnet csharpier --version   # 1.2.6 が出れば OK
 ```bash
 mise exec -- dotnet csharpier check .
 ```
-
-ここまで通れば環境構築は完了。日々の開発の進め方は [DevelopmentWorkflow.md](./DevelopmentWorkflow.md) を参照。

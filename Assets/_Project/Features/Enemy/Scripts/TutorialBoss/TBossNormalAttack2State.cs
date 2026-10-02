@@ -4,23 +4,10 @@ using UnityEngine.AI;
 namespace CreativeAI.Gameplay
 {
     /// <summary>
-    /// 鎌を使った連撃の攻撃ステート。
-    /// 進行はAnimatorクリップに委ね、リーチの伸縮をAnimationEventで制御する。
-    ///
-    /// クリップ側は「振る前に腕を伸ばし、振り切ったら戻す」を振りの回数だけ繰り返す構成のため、
-    /// 伸縮のイベントも1クリップ内で複数回呼ばれることを前提としている。
-    ///   OnAttack2ReachExtend  : リーチを伸ばし始める（振りの直前に置く）
-    ///   OnAttack2ReachRetract : リーチを元の長さへ戻し始める（振り切った直後に置く）
-    ///   OnAttack2ReachReset   : リーチを即座に元の長さへ戻す（クリップ終端の保険）
-    ///
-    /// なおアニメーション自体もある程度腕を伸ばしており、ここでの伸長はその上に加算される。
-    ///
-    /// 向き直りは「リーチを伸ばしていない間だけ」行う。振りの前に狙いを付け直しつつ、
-    /// 振りに入った後は追尾しないため回避の余地が残る（UpdateHoming参照）。
-    ///
-    /// ヒット判定・ダメージ・ガード処理は既存のEnemyMeleeHitbox（AnimationEventでEnable/Disable）に委譲し、
-    /// このステートはEnemyMeleeHitbox.OnHitLandedを購読して「当たったら少しだけ引き寄せる」演出のみを担当する。
-    /// SpecialAttackState（触手）と同様、鎌の伸縮はAnimationRiggingではなくTransformの直接上書きで行う。
+    /// 鎌の連撃ステート。進行は Animator クリップに任せ、リーチ伸縮を AnimationEvent で制御する（振りの回数だけ1クリップ内で複数回呼ばれる前提）。
+    ///   OnAttack2ReachExtend: 伸ばし始める（振りの直前） / OnAttack2ReachRetract: 戻し始める（振り切った直後） / OnAttack2ReachReset: 即戻す（終端の保険）
+    /// 伸長はアニメ自体の伸びに加算される。向き直りはリーチを伸ばしていない間だけ行う（UpdateHoming）。判定・ダメージ・ガードは EnemyMeleeHitbox に委譲し、
+    /// ここは OnHitLanded で少し引き寄せる演出のみ。伸縮は SpecialAttackState 同様 AnimationRigging ではなく Transform の直接上書きで行う。
     /// </summary>
     public class TBossNormalAttack2State : TBossBaseState
     {
@@ -177,11 +164,8 @@ namespace CreativeAI.Gameplay
         }
 
         /// <summary>
-        /// AnimationEvent(OnAttack2ReachExtend)から呼ばれる。鎌のリーチを伸ばし始める。
-        /// 1クリップ内で何度呼んでもよい（振りごとに伸ばす→戻すを繰り返す構成に対応する）。
-        ///
-        /// Attack2ReachHoldDurationが0より大きい場合のみ、その時間だけアニメーションを
-        /// 低速/停止させて「伸びる瞬間」を見せる。0にすればアニメーションは止まらない。
+        /// AnimationEvent(OnAttack2ReachExtend) から呼ばれ、鎌のリーチを伸ばし始める（1クリップ内で何度呼んでもよい）。
+        /// Attack2ReachHoldDuration > 0 ならその時間だけアニメを低速/停止して伸びる瞬間を見せる。
         /// </summary>
         public void OnReachExtend()
         {
@@ -241,12 +225,8 @@ namespace CreativeAI.Gameplay
         }
 
         /// <summary>
-        /// 振りに入る前だけプレイヤーへ向き直る。
-        ///
-        /// 2振り目は縦振りのため、Enter時に一度向いただけではその間にプレイヤーが移動して当たらない。
-        /// 一方で振っている最中も追尾し続けると回避不能な攻撃になってしまうため、
-        /// リーチを伸ばし始めた時点（＝振りに入ると決めた時点）で向きを固定する。
-        /// 振り切って戻した後は再び向き直るので、次の振りの前に狙いを付け直せる。
+        /// 振りに入る前だけプレイヤーへ向き直る。2振り目は縦振りで Enter 時の向きだけでは当たらない一方、振り中も追尾すると回避不能になるため、
+        /// リーチを伸ばし始めた時点で向きを固定し、戻した後に再び向き直る。
         /// </summary>
         private void UpdateHoming()
         {
@@ -287,11 +267,8 @@ namespace CreativeAI.Gameplay
         }
 
         /// <summary>
-        /// 鎌の伸縮・角度補正を適用する。SpecialAttackStateのApplyWireTransformと同様、
-        /// AnimationRiggingではなくLateUpdateでのTransform直接上書きで行う
-        /// （Animation Riggingでの実装が繰り返し詰まったための方針転換）。
-        ///
-        /// 伸長としなりは1本のボーンでは硬い見た目になるため、連鎖全体へ分配するTBossLimbChainDriverへ委譲する。
+        /// 鎌の伸縮・角度補正を LateUpdate の Transform 直接上書きで適用する（SpecialAttackState.ApplyWireTransform と同様。Animation Rigging では詰まったため）。
+        /// 1本のボーンでは硬く見えるため、連鎖全体へ分配する TBossLimbChainDriver に委譲する。
         /// </summary>
         private void ApplyKamaTransform()
         {

@@ -3,10 +3,7 @@ using UnityEngine;
 namespace CreativeAI.Gameplay
 {
     /// <summary>
-    /// 液体攻撃で発射される球形プロジェクタイル。
-    /// Rigidbodyによる水平投射＋重力落下で飛び、プレイヤーに直撃したら直接ダメージ＋毒を付与し、
-    /// 地面・障害物に着弾したら毒付与エリアを生成する。
-    /// コライダーは isTrigger = true で運用する。
+    /// 液体攻撃の球形弾（コライダーは isTrigger）。水平投射＋重力落下で飛び、プレイヤー直撃で直接ダメージ＋毒、地面・障害物への着弾で毒エリアを生成する。
     /// </summary>
     [RequireComponent(typeof(Rigidbody))]
     public class MidBossLiquidProjectile : MonoBehaviour
@@ -44,18 +41,9 @@ namespace CreativeAI.Gameplay
         private GameObject _landEffect;
 
         /// <summary>
-        /// 液体弾を初期化して発射する。
-        /// 水平投射の初速は spawnPos → targetPos の落下時間から逆算して計算する。
+        /// 液体弾を初期化して発射する。水平初速は spawnPos → targetPos（地面上の点）の落下時間から逆算する。
+        /// damageArea* は着弾後の毒エリア、poison* は毒の設定（時間系はいずれも秒）。
         /// </summary>
-        /// <param name="spawnPos">発射位置</param>
-        /// <param name="targetPos">着弾目標（地面上の点）</param>
-        /// <param name="directDamage">プレイヤー直撃時のダメージ量</param>
-        /// <param name="damageAreaPrefab">着弾後に生成する毒付与エリアプレハブ</param>
-        /// <param name="damageAreaDuration">毒付与エリア持続時間（秒）</param>
-        /// <param name="damageAreaInterval">毒付与エリアの判定間隔（秒）</param>
-        /// <param name="poisonDuration">毒の持続時間（秒）</param>
-        /// <param name="poisonDamagePerTick">毒の1tick あたりのダメージ量</param>
-        /// <param name="poisonTickInterval">毒のダメージ間隔（秒）</param>
         public void Initialize(
             Vector3 spawnPos,
             Vector3 targetPos,

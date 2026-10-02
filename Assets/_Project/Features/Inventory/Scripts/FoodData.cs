@@ -6,7 +6,7 @@ namespace CreativeAI.Gameplay
     public class FoodData : ItemData
     {
         // 食材の効果は「HP即時回復」のみ。回復量は最大HPに対する固定割合で、全食材共通・
-        // 素材の組み合わせに依らない(documents/Specification.md §2.1):
+        // 素材の組み合わせに依らない:
         //   合成前 = 最大HPの 20% / 合成後 = 最大HPの 50%
         public const float PreCraftHealFraction = 0.20f;
         public const float PostCraftHealFraction = 0.50f;

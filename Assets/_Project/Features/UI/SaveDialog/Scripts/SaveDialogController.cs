@@ -1,9 +1,8 @@
 using CreativeAI.Gameplay;
-using CreativeAI.UI.Common;
 using UnityEngine;
 using UnityEngine.UI;
 
-namespace CreativeAI.UI.SaveDialog
+namespace CreativeAI.UI
 {
     public class SaveDialogController : UIPanelStub
     {

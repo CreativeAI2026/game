@@ -14,13 +14,13 @@ namespace CreativeAI.UI
     public class ResidentBootstrapConfig : ScriptableObject
     {
         [Tooltip(
-            "セッション常駐の UI レイヤー(UIRoot Prefab)。会話UI・即時食材使用UI も UIRoot が子として束ねる(§6)"
+            "セッション常駐の UI レイヤー(UIRoot Prefab)。会話UI・即時食材使用UI も UIRoot が子として束ねる"
         )]
         public GameObject uiRootPrefab;
 
         [Tooltip(
             "プレイヤーリグ Prefab。Title を経由しない直接 Play(FieldDevBootstrap)で生成する。"
-                + "本番 Title フローは 01_Title の GameStarter のスロットを使うので、そちらとは別枠"
+                + "本番 Title フローは 01_Title の TitleUIController のスロットを使うので、そちらとは別枠"
         )]
         public GameObject playerRigPrefab;
     }

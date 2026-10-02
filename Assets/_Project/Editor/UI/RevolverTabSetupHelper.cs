@@ -1,12 +1,11 @@
 using System;
 using System.IO;
 using CreativeAI.UI;
-using CreativeAI.UI.InventoryUI;
 using UnityEditor;
 using UnityEngine;
 using UnityEngine.UI;
 
-namespace CreativeAI.EditorTools.UI
+namespace CreativeAI.EditorTools
 {
     [InitializeOnLoad]
     public static class RevolverTabSetupHelper
@@ -21,8 +20,7 @@ namespace CreativeAI.EditorTools.UI
             "Assets/_Project/Features/UI/InventoryUI/Prefabs/TabButton.prefab";
         private const string CharacterPanelPath =
             "Assets/_Project/Features/UI/CharacterUI/Prefabs/CharacterPanel.prefab";
-        private const string DefinitionDirectory =
-            "Assets/_Project/Features/Inventory/Data/TabDefinition/";
+        private const string DefinitionDirectory = "Assets/_Project/Features/UI/CharacterUI/Data/";
 
         private static bool _processing;
 
@@ -156,8 +154,7 @@ namespace CreativeAI.EditorTools.UI
                 if (oldGroup != null)
                     oldGroup.gameObject.SetActive(false);
 
-                var controller =
-                    weaponView.GetComponent<CreativeAI.UI.CharacterUI.WeaponTabViewController>();
+                var controller = weaponView.GetComponent<CreativeAI.UI.WeaponTabViewController>();
                 if (controller == null)
                     throw new InvalidOperationException("WeaponTabViewController was not found.");
                 var controllerObject = new SerializedObject(controller);

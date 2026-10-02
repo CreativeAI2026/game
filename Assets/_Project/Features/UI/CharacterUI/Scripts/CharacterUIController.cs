@@ -2,9 +2,9 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
-namespace CreativeAI.UI.CharacterUI
+namespace CreativeAI.UI
 {
-    public partial class CharacterUIController : MonoBehaviour
+    public class CharacterUIController : MonoBehaviour
     {
         [Header("Tabs"), SerializeField]
         private TabGroup _tabGroup;

@@ -6,18 +6,9 @@ using UnityEditor;
 namespace CreativeAI.Gameplay
 {
     /// <summary>
-    /// 通常攻撃2（鎌）のリーチ・しなりをEditモードのまま調整するためのデバッグ用コンポーネント。
-    ///
-    /// Playモードに入って敵AIが攻撃を選ぶのを待ち、一瞬の振りを目視して…という手順を踏まずに、
-    /// アニメーションを任意の時刻で止めた状態に伸長としなりを適用して確認できる。
-    /// Editモードで動くため、Inspectorで触った値はそのまま保存される（Playモード中の調整のように消えない）。
-    ///
-    /// 計算には本番と同じTBossLimbChainDriverとTutorialBossControllerの設定を使うため、
-    /// ここで見えている姿勢がそのまま実際の攻撃の姿勢になる。
-    ///
-    /// 【調整の目安】
-    ///   リーチ : previewExtensionProgressを1にして、判定球が地面に潜らない伸び量を探す
-    ///   しなり : previewFlexMotionをONにし、stiffness / tipLooseness / dampingRatio を詰める
+    /// 通常攻撃2（鎌）のリーチ・しなりを Edit モードで調整するデバッグ用コンポーネント。アニメを任意時刻で止めた姿勢に伸長・しなりを適用して確認でき、値もそのまま保存される。
+    /// 本番と同じ TBossLimbChainDriver / TutorialBossController の設定で計算するので、見えている姿勢が実際の攻撃と一致する。
+    /// 目安: リーチは previewExtensionProgress=1 で判定球が地面に潜らない伸び量を、しなりは previewFlexMotion ON で stiffness / tipLooseness / dampingRatio を詰める。
     /// </summary>
     [ExecuteAlways]
     public class TBossAttack2Tuner : MonoBehaviour

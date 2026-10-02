@@ -6,7 +6,7 @@ using UnityEngine;
 namespace CreativeAI.Tests.EditMode
 {
     /// <summary>
-    /// 最終ステータス = 素の値 + 装備の補正 + 武器の補正(documents/Specification.md §1)の検証。
+    /// 最終ステータス = 素の値 + 装備の補正 + 武器の補正の検証。
     /// 攻撃/防御/最大HP は %(パーセントポイント)なので base×(1+Σ%/100)、
     /// 会心率・会心ダメージは %ポイントの単純加算(会心率のみ 0〜100 でクランプ)。
     /// </summary>
@@ -19,7 +19,7 @@ namespace CreativeAI.Tests.EditMode
         [SetUp]
         public void SetUp()
         {
-            // Specification.md §1 の主人公の素の値。
+            // 主人公の素の値。
             _data = ScriptableObject.CreateInstance<PlayerParameterData>();
             _data.baseAttackPower = 2000f;
             _data.baseDefense = 500f;

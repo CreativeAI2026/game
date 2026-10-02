@@ -3,12 +3,8 @@ using UnityEngine;
 namespace CreativeAI.Gameplay
 {
     /// <summary>
-    /// 扇形に液体弾を発射する遠距離攻撃ステート。
-    /// 予備動作後、liquidShotCount 本を liquidFanAngle の扇形に均等配置して射出する。
-    /// 着弾時に MidBossDamageArea が生成され、一定時間ダメージを与える（ひるみなし）。
-    ///
-    /// ※予備動作・液体吐きだしのアニメーション導入時は
-    ///   TODO コメント箇所に Animator.SetTrigger を追加する。
+    /// 遠距離攻撃。予備動作後、液体弾を liquidShotCount 本 liquidFanAngle の扇形に均等射出し、着弾地点に一定時間ダメージを与える MidBossDamageArea を生成する（ひるみなし）。
+    /// アニメ導入時は TODO 箇所に Animator.SetTrigger を追加する。
     /// </summary>
     public class MidBossLiquidAttackState : MidBossBaseState
     {

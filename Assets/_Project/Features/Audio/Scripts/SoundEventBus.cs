@@ -4,12 +4,8 @@ using UnityEngine;
 namespace CreativeAI.Gameplay
 {
     /// <summary>
-    /// 音イベントを発行・購読するための静的バスクラス。
-    /// 発行側（足音、矢の着弾など）と受信側（敵AI）を疎結合に繋ぐ。
-    /// 使い方:
-    ///   発行 → SoundEventBus.Emit(new SoundEventData(...))
-    ///   購読 → SoundEventBus.OnSoundEmitted += MyHandler
-    ///   解除 → SoundEventBus.OnSoundEmitted -= MyHandler
+    /// 音イベントの静的バス。発行側（足音、矢の着弾など）と受信側（敵AI）を疎結合に繋ぐ。
+    /// 発行は Emit(new SoundEventData(...))、購読/解除は OnSoundEmitted += / -=。
     /// </summary>
     public static class SoundEventBus
     {

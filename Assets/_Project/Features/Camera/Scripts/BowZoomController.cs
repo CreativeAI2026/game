@@ -1,13 +1,6 @@
-// ■ セットアップ手順
-//   1. AimCamera の GameObject にこのスクリプトをアタッチする
-//   2. _aimCamera フィールドは同じ GameObject の CinemachineCamera から自動取得される
-//   3. _bowController フィールドにシーン内の BowController を割り当てる
-//      （未設定の場合は FindAnyObjectByType で自動検索する）
-//
-// ■ 動作仕様
-//   - エイム中（IsAiming = true）: FOV を _zoomedFov まで徐々にズームイン
-//   - 発射時                    : FOV をデフォルトに即座にスナップリセット
-//   - エイム解除時              : FOV を滑らかにデフォルトへ戻す
+// セットアップ: AimCamera の GameObject にアタッチする。_aimCamera は同じ GameObject の CinemachineCamera から自動取得、
+//   _bowController は未設定なら FindAnyObjectByType で自動検索する。
+// 動作: エイム中は FOV を _zoomedFov へ徐々にズーム、発射時はデフォルトへ即リセット、エイム解除時は滑らかに戻す。
 
 using Unity.Cinemachine;
 using UnityEngine;

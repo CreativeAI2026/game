@@ -2,7 +2,6 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using CreativeAI.Core;
-using CreativeAI.Core.EventSystem;
 using CreativeAI.Gameplay;
 using NUnit.Framework;
 using UnityEngine;
@@ -11,9 +10,7 @@ using UnityEngine.TestTools;
 namespace CreativeAI.Tests.EditMode
 {
     /// <summary>
-    /// SaveService の保存→復元の往復と、セーブ可否のゲート(documents/Specification.md §0, §6)。
-    /// SaveData の JSON 往復だけでなく「マネージャから取り込んで書き、読んで戻す」経路を通す。
-    ///
+    /// SaveService の保存→復元の往復(マネージャから取り込み→書き→読み→戻す)と、セーブ可否のゲートの検証。
     /// 実ファイル(persistentDataPath/save.json)を使うので、既存のセーブは退避して必ず戻す。
     /// </summary>
     public class SaveServiceTests
@@ -128,7 +125,7 @@ namespace CreativeAI.Tests.EditMode
             return e;
         }
 
-        // --- セーブ可否(spec §0: フィールド移動中のみ) ---
+        // --- セーブ可否(フィールド移動中のみ) ---
 
         [Test]
         public void Save_InBattleMode_IsBlocked()
@@ -229,7 +226,7 @@ namespace CreativeAI.Tests.EditMode
         [Test]
         public void SaveThenLoad_RestoresRevealedRecipes()
         {
-            var recipe = MakeAsset<CraftRecipeData>();
+            var recipe = new CraftRecipe();
             // 実カタログの初期解禁(showInRecipeCraft)と id がぶつからないよう、テスト専用の id を使う。
             recipe.resultItem = MakeFood(990001);
             Assert.IsTrue(_book.Reveal(recipe)); // 前提: 新規解禁

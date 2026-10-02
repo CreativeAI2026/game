@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using CreativeAI.Gameplay;
+using CreativeAI.UI;
 using NUnit.Framework;
 using UnityEditor;
 using UnityEngine;
@@ -9,7 +10,7 @@ namespace CreativeAI.Tests.EditMode
 {
     /// <summary>
     /// 武器切替UIの出し分けの検証(モードではなく武器の所持本数で決める)。
-    /// 0本=非表示 / 1本以上=表示(documents/Specification.md §5)。
+    /// 0本=非表示 / 1本以上=表示。
     /// GameObject ごと止めると WeaponManager の購読が切れるため Canvas の enabled で出し入れする。
     /// </summary>
     public class WeaponHUDControllerTests
@@ -69,7 +70,7 @@ namespace CreativeAI.Tests.EditMode
         public void ZeroWeapons_IsHidden()
         {
             Assert.AreEqual(0, _weapons.OwnedCount); // 前提: 初期0本
-            Assert.IsFalse(IsShown, "武器0本のときは非表示(spec §5)");
+            Assert.IsFalse(IsShown, "武器0本のときは非表示");
         }
 
         [Test]

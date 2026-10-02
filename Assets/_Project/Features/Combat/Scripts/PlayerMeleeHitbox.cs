@@ -4,10 +4,8 @@ using UnityEngine;
 namespace CreativeAI.Gameplay
 {
     /// <summary>
-    /// プレイヤーの近接攻撃ヒットボックス。
-    /// 武器オブジェクトにアタッチし、アニメーションイベントから有効/無効を切り替えて使用する。
-    /// SphereCastによる軌跡判定とOverlapSphereによる重なり判定の二段構えで、
-    /// 高速スイング時のすり抜けと密着時の検出漏れの両方を防ぐ。
+    /// プレイヤーの近接攻撃ヒットボックス。武器にアタッチし、アニメーションイベントで有効/無効を切り替える。
+    /// SphereCast（軌跡）と OverlapSphere（重なり）の二段構えで、高速スイングのすり抜けと密着時の検出漏れを防ぐ。
     /// </summary>
     public class PlayerMeleeHitbox : MonoBehaviour
     {

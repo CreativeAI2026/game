@@ -119,52 +119,6 @@ NavMeshSettings:
     debug:
       m_Flags: 0
   m_NavMeshData: {fileID: 0}
---- !u!1 &29764359
-GameObject:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  serializedVersion: 6
-  m_Component:
-  - component: {fileID: 29764361}
-  - component: {fileID: 29764360}
-  m_Layer: 0
-  m_Name: GameStarter
-  m_TagString: Untagged
-  m_Icon: {fileID: 0}
-  m_NavMeshLayer: 0
-  m_StaticEditorFlags: 0
-  m_IsActive: 1
---- !u!114 &29764360
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 29764359}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 8c7b9ff657dce4e46879c80818340a3e, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: CreativeAI.Core::CreativeAI.Core.GameStarter
-  _playerRigPrefab: {fileID: 0}
-  _playerTag: Player
---- !u!4 &29764361
-Transform:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 29764359}
-  serializedVersion: 2
-  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 0, y: 0, z: 0}
-  m_LocalScale: {x: 1, y: 1, z: 1}
-  m_ConstrainProportionsScale: 0
-  m_Children: []
-  m_Father: {fileID: 0}
-  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &187538744
 GameObject:
   m_ObjectHideFlags: 0
@@ -400,7 +354,7 @@ MonoBehaviour:
   _tapToStartButton: {fileID: 1560239932}
   _continueButton: {fileID: 0}
   _nextSceneName: Field_Area00
-  _gameStarter: {fileID: 29764360}
+  _playerRigPrefab: {fileID: 0}
   _uiRootPrefab: {fileID: 7357621368793443196, guid: d0c8f5a2fab99460a9cbf61536da8406, type: 3}
 --- !u!114 &410022266
 MonoBehaviour:
@@ -1576,5 +1530,4 @@ SceneRoots:
   - {fileID: 952960396}
   - {fileID: 1935485352}
   - {fileID: 410022269}
-  - {fileID: 29764361}
   - {fileID: 1699493010}

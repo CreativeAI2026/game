@@ -2,17 +2,13 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using CreativeAI.UI;
-using CreativeAI.UI.CharacterUI;
-using CreativeAI.UI.Common;
-using CreativeAI.UI.CraftingUI;
-using CreativeAI.UI.InventoryUI;
 using UnityEditor;
 using UnityEditor.SceneManagement;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 using UnityEngine.UI;
 
-namespace CreativeAI.EditorTools.UI
+namespace CreativeAI.EditorTools
 {
     public static class InventoryUIValidator
     {

@@ -8,7 +8,6 @@ namespace CreativeAI.Tests.EditMode
 {
     /// <summary>
     /// インベントリの上限・固定値の検証(装備品は最大3つ / 食材の回復量は固定 / hasItem は大事なもの限定)。
-    /// 値の出所は documents/Specification.md §2(合成前20% 合成後50%)。
     /// </summary>
     public class InventoryRulesTests
     {
@@ -37,7 +36,7 @@ namespace CreativeAI.Tests.EditMode
             return d;
         }
 
-        // --- §2.1 装備品は最大3つ ---
+        // --- 装備品は最大3つ ---
 
         [Test]
         public void SetEquipped_RejectsFourthEquipment()
@@ -81,7 +80,7 @@ namespace CreativeAI.Tests.EditMode
             Assert.AreEqual(3, _inv.GetAllItems().Count(s => s.IsEquipped));
         }
 
-        // --- §4.1 / ScenarioReference「hasItem の制約」: 大事なもの限定 ---
+        // --- hasItem は大事なもの限定 ---
 
         [Test]
         public void HasImportantItem_TrueOnlyForOwnedKeyItem()
@@ -102,7 +101,7 @@ namespace CreativeAI.Tests.EditMode
         [Test]
         public void HasImportantItem_FalseForEquipmentAndFood_EvenWhenOwned()
         {
-            // 「装備品/食材の所持は条件にしない」(Specification.md §4.1)。所持していても false。
+            // 「装備品/食材の所持は条件にしない」。所持していても false。
             var gear = MakeEquipment(901);
             gear.key = "umbrella";
             var food = ScriptableObject.CreateInstance<FoodData>(); // OnEnable が category=Food
@@ -129,7 +128,7 @@ namespace CreativeAI.Tests.EditMode
             Assert.IsFalse(_inv.HasImportantItem("mysterious_ky"), "打ち間違いキーは false");
         }
 
-        // --- §4 / ScenarioReference: giveItem は itemKey で ItemDB を引いて1個渡す ---
+        // --- giveItem は itemKey で ItemDB を引いて1個渡す ---
 
         [Test]
         public void Give_AddsOneItemResolvedByKey()
@@ -162,7 +161,7 @@ namespace CreativeAI.Tests.EditMode
             Assert.AreEqual(0, _inv.GetAllItems().Count, "未知のキーでは何も追加しない");
         }
 
-        // --- §2.1 食材の回復量は固定(合成前20% / 合成後50%) ---
+        // --- 食材の回復量は固定(合成前20% / 合成後50%) ---
 
         [Test]
         public void FoodData_HealFraction_IsFixedByCraftedFlag()
