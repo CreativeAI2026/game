@@ -723,6 +723,7 @@ GameObject:
   - component: {fileID: 6664488289985067727}
   - component: {fileID: 3777738532329491596}
   - component: {fileID: 4404804298159787586}
+  - component: {fileID: 9200000000000000002}
   m_Layer: 0
   m_Name: CraftPanel
   m_TagString: Untagged
@@ -824,6 +825,19 @@ MonoBehaviour:
   _warningToastView: {fileID: 4943298344776607878}
   _closeButton: {fileID: 2072709094699775840}
   _craftFlowDurationSeconds: 1
+--- !u!114 &9200000000000000002
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1615753759167315579}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 89b233144e054cd8b0bc0128329e42e4, type: 3}
+  m_Name:
+  m_EditorClassIdentifier: CreativeAI.UI::CreativeAI.UI.TabPanelSwitcher
+  _tabGroup: {fileID: 9200000000000000003}
 --- !u!1 &1833137740223892930
 GameObject:
   m_ObjectHideFlags: 0
@@ -7029,3 +7043,14 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 2971a3ae252330a48a79a8d145517ab5, type: 3}
   m_Name: 
   m_EditorClassIdentifier: CreativeAI.UI::CreativeAI.UI.ItemDetailPanel
+--- !u!114 &9200000000000000003 stripped
+MonoBehaviour:
+  m_CorrespondingSourceObject: {fileID: 7802374465429409981, guid: 2abc32ae4b1906f4696db9cf1b10043e, type: 3}
+  m_PrefabInstance: {fileID: 6495478823994207491}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: ebba1816be8e97b40b033d5ad6afbdd7, type: 3}
+  m_Name:
+  m_EditorClassIdentifier: CreativeAI.UI::CreativeAI.UI.TabGroup

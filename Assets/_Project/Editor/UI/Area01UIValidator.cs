@@ -101,6 +101,7 @@ namespace CreativeAI.EditorTools.UI
             var characterControllers = FindAll<CharacterUIController>(scene);
             var recipeCraftPanels = FindAll<RecipeCraftPanelController>(scene);
             var tabGroups = FindAll<TabGroup>(scene);
+            var tabPanelSwitchers = FindAll<TabPanelSwitcher>(scene);
 
             ValidateCount(inventories, ExpectedInventoryCount, nameof(InventoryView), report);
             ValidateCount(panelControllers, 1, nameof(InventoryPanelController), report);
@@ -114,6 +115,7 @@ namespace CreativeAI.EditorTools.UI
                 inventories,
                 recipeCraftPanels,
                 weaponTabControllers,
+                tabPanelSwitchers,
                 report
             );
             foreach (var controller in characterControllers)
@@ -213,11 +215,37 @@ namespace CreativeAI.EditorTools.UI
             IEnumerable<InventoryView> inventories,
             IEnumerable<RecipeCraftPanelController> recipeCraftPanels,
             IEnumerable<WeaponTabViewController> weaponTabControllers,
+            IEnumerable<TabPanelSwitcher> tabPanelSwitchers,
             UIValidationReport report
         )
         {
             var categoryTabGroups = new HashSet<TabGroup>();
             var indexOnlyTabGroups = new HashSet<TabGroup>();
+            var panelSwitchTabGroups = new HashSet<TabGroup>();
+            foreach (var switcher in tabPanelSwitchers)
+            {
+                if (switcher.TabGroup == null)
+                {
+                    report.Error(
+                        UIHierarchyPathUtility.GetPath(switcher.transform),
+                        "_tabGroup",
+                        "TabPanelSwitcherにTabGroupを設定してください。",
+                        switcher
+                    );
+                    continue;
+                }
+
+                if (!panelSwitchTabGroups.Add(switcher.TabGroup))
+                {
+                    report.Error(
+                        UIHierarchyPathUtility.GetPath(switcher.transform),
+                        "_tabGroup",
+                        "同じTabGroupを複数のTabPanelSwitcherで制御しないでください。",
+                        switcher
+                    );
+                }
+            }
+
             foreach (var inventory in inventories)
             {
                 var serializedInventory = new SerializedObject(inventory);
@@ -248,7 +276,29 @@ namespace CreativeAI.EditorTools.UI
             foreach (var tabGroup in tabGroups)
             {
                 if (categoryTabGroups.Contains(tabGroup) || indexOnlyTabGroups.Contains(tabGroup))
+                {
+                    if (panelSwitchTabGroups.Contains(tabGroup))
+                    {
+                        report.Error(
+                            UIHierarchyPathUtility.GetPath(tabGroup.transform),
+                            nameof(TabPanelSwitcher),
+                            "カテゴリ選択専用のTabGroupにTabPanelSwitcherは不要です。",
+                            tabGroup
+                        );
+                    }
+
                     continue;
+                }
+
+                if (!panelSwitchTabGroups.Contains(tabGroup))
+                {
+                    report.Error(
+                        UIHierarchyPathUtility.GetPath(tabGroup.transform),
+                        nameof(TabPanelSwitcher),
+                        "Panel切り替えを行うTabGroupにはTabPanelSwitcherを設定してください。",
+                        tabGroup
+                    );
+                }
 
                 for (int i = 0; i < tabGroup.EntryCount; i++)
                 {

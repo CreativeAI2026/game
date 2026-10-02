@@ -13,34 +13,41 @@ namespace CreativeAI.UI.CharacterUI
         private bool _initialized;
         private bool _resetOnNextEnable;
 
-        private void Start()
+        private void Awake()
         {
             CollectTabViews();
             foreach (var view in _tabViews)
                 view?.EnsureInitialized();
-
-            if (_tabGroup != null)
-                _tabGroup.OnSelectionChanged += OnSelectionChanged;
 
             _initialized = true;
         }
 
         private void OnEnable()
         {
+            if (_tabGroup != null)
+            {
+                _tabGroup.OnSelectionChanged -= OnSelectionChanged;
+                _tabGroup.OnSelectionChanged += OnSelectionChanged;
+
+                if (_tabGroup.CurrentIndex >= 0)
+                    OnSelectionChanged(
+                        _tabGroup.CurrentIndex,
+                        _tabGroup.CurrentDefinition,
+                        _tabGroup.CurrentView
+                    );
+            }
+
             if (_initialized && _resetOnNextEnable)
                 StartCoroutine(ResetAfterOpen());
         }
 
         private void OnDisable()
         {
-            if (_initialized)
-                _resetOnNextEnable = true;
-        }
-
-        private void OnDestroy()
-        {
             if (_tabGroup != null)
                 _tabGroup.OnSelectionChanged -= OnSelectionChanged;
+
+            if (_initialized)
+                _resetOnNextEnable = true;
         }
 
         private IEnumerator ResetAfterOpen()
@@ -62,21 +69,27 @@ namespace CreativeAI.UI.CharacterUI
         {
             foreach (var view in _tabViews)
             {
-                if (view is not Component component)
-                    continue;
-
-                bool belongsToSelectedView =
-                    selectedView != null
-                    && (
-                        component.transform == selectedView.transform
-                        || component.transform.IsChildOf(selectedView.transform)
-                    );
-                if (!belongsToSelectedView)
+                if (!BelongsToSelectedView(view, selectedView))
                     view.OnExit();
-                else
+            }
+
+            foreach (var view in _tabViews)
+            {
+                if (BelongsToSelectedView(view, selectedView))
                     view.OnEnter();
             }
         }
+
+        private static bool BelongsToSelectedView(
+            ICharacterTabView view,
+            GameObject selectedView
+        ) =>
+            view is Component component
+            && selectedView != null
+            && (
+                component.transform == selectedView.transform
+                || component.transform.IsChildOf(selectedView.transform)
+            );
 
         private void CollectTabViews()
         {

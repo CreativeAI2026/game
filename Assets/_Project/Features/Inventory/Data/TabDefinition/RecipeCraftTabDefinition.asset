@@ -10,7 +10,9 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: d8ffb44db9f14197bba77b238675d550, type: 3}
-  m_Name: RecipeCraftabDefinition
+  m_Name: RecipeCraftTabDefinition
   m_EditorClassIdentifier: CreativeAI.UI::CreativeAI.UI.TabDefinition
   _id: 
+  _label: "\u30EC\u30B7\u30D4\u30AF\u30E9\u30D5\u30C8"
+  _englishLabel: RECIPE CRAFT
   _icon: {fileID: 21300000, guid: 08bda233f3d43e8419b23d1f022d337a, type: 3}

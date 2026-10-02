@@ -1,6 +1,5 @@
 using System;
 using System.Collections.Generic;
-using DG.Tweening;
 using UnityEngine;
 using UnityEngine.UI;
 
@@ -88,7 +87,7 @@ namespace CreativeAI.UI
                 btn.Bind(entry.definition);
                 btn.AlignUnderlineTo(_underlineAlignmentTarget);
                 int captured = _buttons.Count;
-                btn.Button.onClick.AddListener(() => SelectTab(captured));
+                btn.Button.onClick.AddListener(() => SelectTabFromUser(captured));
                 btn.Button.interactable = _interactionEnabled;
                 _buttons.Add(btn);
                 _buttonToEntryIndices.Add(entryIndex);
@@ -122,13 +121,21 @@ namespace CreativeAI.UI
 
         public void SelectTab(int index)
         {
-            if (!_interactionEnabled)
-                return;
+            SelectTabInternal(index);
+        }
 
+        private void SelectTabFromUser(int index)
+        {
+            if (_interactionEnabled)
+                SelectTabInternal(index);
+        }
+
+        private void SelectTabInternal(int index, bool forceSelectionChanged = false)
+        {
             if (index < 0 || index >= _buttons.Count || index >= _buttonToEntryIndices.Count)
                 return;
 
-            if (index == _currentIndex)
+            if (index == _currentIndex && !forceSelectionChanged)
             {
                 RestoreCurrentSelection();
                 return;
@@ -145,8 +152,6 @@ namespace CreativeAI.UI
 
         private void ApplySelection(int buttonIndex)
         {
-            int entryIndex = _buttonToEntryIndices[buttonIndex];
-
             for (int i = 0; i < _buttons.Count; i++)
             {
                 if (_buttons[i] != null)
@@ -157,12 +162,6 @@ namespace CreativeAI.UI
                             _dimInactiveTabs,
                             _allowSelectedBounce
                         );
-            }
-
-            for (int i = 0; i < _tabEntries.Count; i++)
-            {
-                if (_tabEntries[i].view != null)
-                    _tabEntries[i].view.SetActive(i == entryIndex);
             }
         }
 
@@ -177,8 +176,7 @@ namespace CreativeAI.UI
                 return;
             }
 
-            _currentIndex = -1;
-            SelectTab(0);
+            SelectTabInternal(0, true);
         }
 
         public void RestoreCurrentSelection()
@@ -208,15 +206,6 @@ namespace CreativeAI.UI
                 if (_buttons[i] != null)
                     _buttons[i]
                         .SetActive(false, _animDuration, _dimInactiveTabs, _allowSelectedBounce);
-            }
-
-            if (_tabEntries == null)
-                return;
-
-            for (int i = 0; i < _tabEntries.Count; i++)
-            {
-                if (_tabEntries[i].view != null)
-                    _tabEntries[i].view.SetActive(false);
             }
         }
 
