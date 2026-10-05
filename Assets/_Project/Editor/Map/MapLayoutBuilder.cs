@@ -108,9 +108,9 @@ namespace CreativeAI.EditorTools
         // (例: ClassroomDoor-V は glb だと -0.74〜+0.765、Unity では -0.765〜+0.74)。
         static readonly DoorDef[] Doors =
         {
-            new DoorDef('R', "Door/LabDoor-V.glb", -0.685f, 0.620f, 2.270f),
-            new DoorDef('C', "Door/ClassroomDoor-V.glb", -0.765f, 0.740f, 2.320f),
-            new DoorDef('L', "Door/LibraryDoor-V.glb", -0.815f, 0.790f, 2.360f),
+            new DoorDef('R', "Structure/LabDoor-V.glb", -0.685f, 0.620f, 2.270f),
+            new DoorDef('C', "Structure/ClassroomDoor-V.glb", -0.765f, 0.740f, 2.320f),
+            new DoorDef('L', "Structure/LibraryDoor-V.glb", -0.815f, 0.790f, 2.360f),
         };
 
         readonly struct DoorDef
