@@ -139,6 +139,20 @@ namespace CreativeAI.UI.InventoryUI
             RefreshCraftAssignedSlots();
         }
 
+        public void SetEquippedMarkers(IEnumerable<ItemStack> stacks)
+        {
+            var equippedStacks = new HashSet<ItemStack>();
+            if (stacks != null)
+            {
+                foreach (var stack in stacks)
+                    if (stack != null)
+                        equippedStacks.Add(stack);
+            }
+
+            foreach (var slot in _visibleSlots)
+                slot.SetEquipped(slot.Stack != null && equippedStacks.Contains(slot.Stack));
+        }
+
         private bool IsCraftAssigned(ItemStack stack) =>
             stack != null
             && (

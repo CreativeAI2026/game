@@ -87,6 +87,7 @@ namespace CreativeAI.UI.CharacterUI
 
             RefreshSlotLayout();
             SelectEquipmentSlot(0);
+            _inventory.RefreshCurrentTab();
 
             _initialized = true;
             BindTriangleLayoutEvents();
@@ -138,7 +139,10 @@ namespace CreativeAI.UI.CharacterUI
 
         public void OnEnter()
         {
+            bool wasInitialized = _initialized;
             EnsureInitialized();
+            if (wasInitialized)
+                _inventory?.RefreshCurrentTab();
 
             if (!HasSlots)
                 return;

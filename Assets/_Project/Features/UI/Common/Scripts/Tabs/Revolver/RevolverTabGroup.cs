@@ -13,13 +13,13 @@ namespace CreativeAI.UI
         private List<RevolverTabEntry> _entries = new();
 
         [Header("Build")]
-        [SerializeField]
+        [SerializeField, HideInInspector]
         private GameObject _itemPrefab;
 
-        [SerializeField]
+        [SerializeField, HideInInspector]
         private RectTransform _itemRoot;
 
-        [SerializeField, Min(0)]
+        [SerializeField, HideInInspector, Min(0)]
         private int _initialIndex;
 
         [Header("Layout")]
@@ -27,20 +27,20 @@ namespace CreativeAI.UI
         private RevolverTabLayoutSettings _layout = new();
 
         [Header("Animation")]
-        [SerializeField, Min(0f)]
+        [SerializeField, HideInInspector, Min(0f)]
         private float _moveDuration = 0.25f;
 
-        [SerializeField]
+        [SerializeField, HideInInspector]
         private Ease _ease = Ease.OutCubic;
 
         [Header("Interaction")]
-        [SerializeField]
+        [SerializeField, HideInInspector]
         private bool _loop = true;
 
-        [SerializeField]
+        [SerializeField, HideInInspector]
         private bool _clickSelect = true;
 
-        [SerializeField]
+        [SerializeField, HideInInspector]
         private bool _submitOnSelectedClick = true;
 
         private readonly List<RevolverTabItemView> _items = new();
@@ -59,6 +59,30 @@ namespace CreativeAI.UI
         public bool IsAnimating => _selectionTween != null && _selectionTween.IsActive();
         public TabDefinition CurrentDefinition => GetDefinition(_selectedIndex);
         public GameObject CurrentView => GetView(_selectedIndex);
+        public float MaxAngle
+        {
+            get => _layout?.MaxAngle ?? 0f;
+            set
+            {
+                _layout ??= new RevolverTabLayoutSettings();
+                _layout.MaxAngle = value;
+                RefreshLayout();
+            }
+        }
+
+        public bool TryGetBackgroundLayout(
+            out RectTransform coordinateRoot,
+            out Sprite sprite,
+            out Vector2 circleCenter,
+            out float circleWidth
+        )
+        {
+            coordinateRoot = _itemRoot;
+            sprite = _layout?.BackgroundSprite;
+            circleCenter = _layout?.BackgroundCircleCenter ?? Vector2.zero;
+            circleWidth = _layout?.BackgroundCircleWidth ?? 0f;
+            return coordinateRoot != null && sprite != null && circleWidth > 0f;
+        }
 
         public event Action<int, TabDefinition, GameObject> SelectionChanged;
         public event Action<int, TabDefinition, GameObject> Submitted;
@@ -89,6 +113,15 @@ namespace CreativeAI.UI
             KillSelectionTween();
             ClearGeneratedItems();
         }
+
+#if UNITY_EDITOR
+        private void OnValidate()
+        {
+            GetComponent<RevolverBackgroundView>()?.RefreshLayout();
+            if (Application.isPlaying && _built)
+                RefreshLayout();
+        }
+#endif
 
         public TabDefinition GetDefinition(int index)
         {

@@ -17,10 +17,12 @@ namespace CreativeAI.Tests.EditMode
             _settings = new RevolverTabLayoutSettings
             {
                 VisibleItemCount = 5,
-                TangentRadius = 300f,
-                ArcDepth = 100f,
                 MaxAngle = 90f,
                 Placement = RevolverArcPlacement.Top,
+                BackgroundCircleCenter = Vector2.zero,
+                BackgroundCircleWidth = 600f,
+                TabRadialPadding = 0f,
+                IconScale = 0.8f,
                 SelectedScale = 1f,
                 EdgeScale = 0.5f,
                 SelectedAlpha = 1f,
@@ -35,6 +37,7 @@ namespace CreativeAI.Tests.EditMode
             var edge = RevolverTabLayoutCalculator.Calculate(2f, _settings);
 
             Assert.AreEqual(1f, center.Scale, 0.0001f);
+            Assert.AreEqual(0.8f, center.IconScale, 0.0001f);
             Assert.AreEqual(1f, center.Alpha, 0.0001f);
             Assert.Greater(center.Scale, edge.Scale);
             Assert.Greater(center.Alpha, edge.Alpha);
@@ -69,20 +72,36 @@ namespace CreativeAI.Tests.EditMode
         [TestCase(RevolverArcPlacement.Bottom)]
         [TestCase(RevolverArcPlacement.Left)]
         [TestCase(RevolverArcPlacement.Right)]
-        public void AllPlacements_PutSelectedItemAtOrigin(RevolverArcPlacement placement)
+        public void AllPlacements_PutSelectedItemOnCircleEdge(RevolverArcPlacement placement)
         {
             _settings.Placement = placement;
-            Assert.AreEqual(
-                Vector2.zero,
-                RevolverTabLayoutCalculator.Calculate(0f, _settings).AnchoredPosition
-            );
+            Vector2 position = RevolverTabLayoutCalculator
+                .Calculate(0f, _settings)
+                .AnchoredPosition;
+
+            Assert.AreEqual(300f, position.magnitude, 0.0001f);
         }
 
-        [TestCase(RevolverArcPlacement.Top, 0f, 1f)]
-        [TestCase(RevolverArcPlacement.Bottom, 0f, -1f)]
-        [TestCase(RevolverArcPlacement.Left, -1f, 0f)]
-        [TestCase(RevolverArcPlacement.Right, 1f, 0f)]
-        public void Placement_OffsetsNeighborsTowardCircleCenter(
+        [Test]
+        public void CircleCenterAndPadding_DefineItemRadius()
+        {
+            _settings.Placement = RevolverArcPlacement.Left;
+            _settings.BackgroundCircleCenter = new Vector2(-400f, 25f);
+            _settings.BackgroundCircleWidth = 1000f;
+            _settings.TabRadialPadding = 100f;
+
+            Vector2 position = RevolverTabLayoutCalculator
+                .Calculate(0f, _settings)
+                .AnchoredPosition;
+
+            Assert.AreEqual(new Vector2(0f, 25f), position);
+        }
+
+        [TestCase(RevolverArcPlacement.Top, 0f, -1f)]
+        [TestCase(RevolverArcPlacement.Bottom, 0f, 1f)]
+        [TestCase(RevolverArcPlacement.Left, 1f, 0f)]
+        [TestCase(RevolverArcPlacement.Right, -1f, 0f)]
+        public void Placement_UsesRequestedSideOfCircle(
             RevolverArcPlacement placement,
             float expectedXSign,
             float expectedYSign
@@ -189,7 +208,7 @@ namespace CreativeAI.Tests.EditMode
             );
             Assert.Less(
                 Vector2.Distance(first.AnchoredPosition, second.AnchoredPosition),
-                _settings.TangentRadius
+                _settings.BackgroundCircleWidth
             );
         }
 

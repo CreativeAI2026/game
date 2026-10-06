@@ -65,6 +65,8 @@ namespace CreativeAI.UI.CharacterUI
 
             var items = InventoryManager.Instance?.GetItemsByCategory(_inventoryCategory);
             _inventory.SetItems(items, scrollMode);
+            if (_assignmentMode == AssignmentMode.QuickConsumable)
+                _inventory.SetEquippedMarkers(InventoryManager.Instance?.GetQuickFoodSlots());
         }
 
         private void BindInventoryChangedEvent()

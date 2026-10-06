@@ -265,6 +265,7 @@ namespace CreativeAI.UI.CharacterUI
         private void OnQuickFoodChanged()
         {
             RefreshQuickConsumableSlots();
+            _inventory?.RefreshCurrentTab();
             RefreshDetailFromCurrentSlot();
         }
     }

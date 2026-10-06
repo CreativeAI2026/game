@@ -1,7 +1,6 @@
 using System;
 using System.Collections.Generic;
 using CreativeAI.Gameplay;
-using DG.Tweening;
 using UnityEngine;
 using UnityEngine.EventSystems;
 using UnityEngine.UI;
@@ -46,29 +45,6 @@ namespace CreativeAI.UI
         public event Action<EquipmentSlot> Clicked;
         public event Action<EquipmentSlot> DoubleClicked;
 
-        public void ApplyCustomFrameOrientation(bool mirrored, float duration = 0f)
-        {
-            ResolveViewReferences(false);
-            RectTransform frameRect = _frameView?.FrameRect;
-            if (frameRect == null || _frameView.Role != SlotFrameRole.Custom)
-                return;
-
-            Vector3 frameScale = frameRect.localScale;
-            float frameScaleMagnitude = Mathf.Abs(frameScale.x);
-            float targetScaleX = mirrored ? -frameScaleMagnitude : frameScaleMagnitude;
-            frameRect.DOKill();
-
-            if (duration > 0f && Application.isPlaying)
-            {
-                frameRect.DOScaleX(targetScaleX, duration).SetEase(Ease.InOutSine);
-            }
-            else
-            {
-                frameScale.x = targetScaleX;
-                frameRect.localScale = frameScale;
-            }
-        }
-
         public new ItemData Item
         {
             get => _stack?.Data;
@@ -82,6 +58,7 @@ namespace CreativeAI.UI
             ResolveViewReferences();
             Button = GetComponent<Button>();
             _iconView?.SetEmptyAlpha(EmptyIconAlpha);
+            _countBadgeView?.SetPositionReference(_iconView?.FitRect ?? _iconView?.IconRect);
             ConfigureHover();
             Refresh();
         }
