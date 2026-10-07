@@ -46,8 +46,9 @@ namespace CreativeAI.Scenario.Editor
         };
 
         /// <summary>
-        /// giveWeapon の weaponKey として許される値。武器は剣/弓/鎌の3種で固定なので
+        /// giveWeapon の weaponKey として許される値。武器は剣/弓/鎌/ハンマーの4種で固定なので
         /// item カタログではなくこの集合で照合する(ScenarioReference.md「武器カタログ」)。
+        /// ゲーム側の WeaponManager.WeaponKeys と同じ内容に保つこと。
         /// </summary>
         public static readonly IReadOnlyCollection<string> WeaponKeys = new HashSet<string>(
             StringComparer.Ordinal
@@ -56,6 +57,7 @@ namespace CreativeAI.Scenario.Editor
             "sword",
             "bow",
             "scythe",
+            "hammer",
         };
 
         /// <summary>

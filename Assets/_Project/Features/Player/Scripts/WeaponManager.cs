@@ -31,7 +31,15 @@ namespace CreativeAI.Gameplay
             "sword",
             "bow",
             "scythe",
+            "hammer",
         };
+
+        /// <summary>
+        /// 切り替えの順番(E = 次の武器 で進む向き)。Q はこの逆順。
+        /// WeaponKeys の番号はセーブ・events.json との契約なので並べ替えず、切り替え順はここで別に持つ。
+        /// 武器切替 HUD の輪の並びもこの順(選択中を上に置き、反時計回りに次の武器)。
+        /// </summary>
+        private static readonly string[] SwitchOrderKeys = { "sword", "scythe", "hammer", "bow" };
 
         /// <summary>武器1本分の設定。以前は3本の配列に分かれていて、並びを揃え損ねると別の武器の値が使われていた。</summary>
         [Serializable]
@@ -52,7 +60,7 @@ namespace CreativeAI.Gameplay
             public RuntimeAnimatorController animatorController;
         }
 
-        [Header("武器の一覧(並び順 = WeaponKeys: 0 剣 / 1 弓 / 2 鎌)")]
+        [Header("武器の一覧(並び順 = WeaponKeys: 0 剣 / 1 弓 / 2 鎌 / 3 ハンマー)")]
         [Tooltip("ステータス補正の Key が並び順と合っていないと、Inspector 編集時に警告が出る")]
         [SerializeField]
         private WeaponSlot[] _slots = Array.Empty<WeaponSlot>();
@@ -65,7 +73,7 @@ namespace CreativeAI.Gameplay
         [SerializeField]
         private bool _startWithAllWeapons;
 
-        // 入手ずみ武器の index。昇順を保つ(切替順 = 剣→弓→鎌)。
+        // 入手ずみ武器の index。切り替え順(SwitchOrderKeys = 剣→鎌→ハンマー→弓)に並べておく。
         private readonly List<int> _owned = new();
         private int _currentWeaponIndex = NoWeapon;
 
@@ -109,11 +117,36 @@ namespace CreativeAI.Gameplay
         /// <summary>登録されている武器の総数。WeaponHUDController がパネル数の決定に使用する。</summary>
         public int WeaponCount => _slots.Length;
 
+        /// <summary>
+        /// 武器のアイコン(ステータス補正アセット WeaponData の Icon)。未設定なら null。
+        /// HUD はこれを使ってパネルとアイコンを武器ごとに対応させる。
+        /// </summary>
+        public Sprite GetIcon(int index)
+        {
+            if (index < 0 || index >= _slots.Length)
+                return null;
+            WeaponData stats = _slots[index].stats;
+            return stats != null ? stats.icon : null; // ステータス補正が未設定の枠
+        }
+
         /// <summary>入手ずみの本数。</summary>
         public int OwnedCount => _owned.Count;
 
-        /// <summary>入手ずみ武器の index(昇順)。</summary>
+        /// <summary>入手ずみ武器の index。切り替え順(E で進む順)に並んでいる。</summary>
         public IReadOnlyList<int> OwnedIndices => _owned;
+
+        /// <summary>入手ずみの一覧を切り替え順に並べ直す。</summary>
+        private void SortOwnedBySwitchOrder()
+        {
+            _owned.Sort((a, b) => SwitchOrderOf(a).CompareTo(SwitchOrderOf(b)));
+        }
+
+        private static int SwitchOrderOf(int weaponIndex)
+        {
+            int order = Array.IndexOf(SwitchOrderKeys, WeaponKeys[weaponIndex]);
+            // 切り替え順に載っていない武器は末尾(番号順)に回す
+            return order >= 0 ? order : SwitchOrderKeys.Length + weaponIndex;
+        }
 
         public bool IsOwned(int index) => _owned.Contains(index);
 
@@ -135,7 +168,7 @@ namespace CreativeAI.Gameplay
         // --- IWeaponGiver: イベントの giveWeapon から呼ばれる ---
 
         /// <summary>
-        /// weaponKey(sword/bow/scythe)の武器を1本入手する。既に所持なら何もしない。
+        /// weaponKey(WeaponKeys のいずれか)の武器を1本入手する。既に所持なら何もしない。
         /// 最初の1本なら自動で選択状態にし、補正を最終ステータスへ反映させる。
         /// </summary>
         public void GiveWeapon(string weaponKey)
@@ -144,7 +177,7 @@ namespace CreativeAI.Gameplay
             if (index < 0)
             {
                 Debug.LogWarning(
-                    $"[WeaponManager] 未知の weaponKey '{weaponKey}'(sword / bow / scythe のみ)。入手をスキップしました。"
+                    $"[WeaponManager] 未知の weaponKey '{weaponKey}'({string.Join(" / ", WeaponKeys)} のみ)。入手をスキップしました。"
                 );
                 return;
             }
@@ -159,7 +192,7 @@ namespace CreativeAI.Gameplay
                 return; // 既に所持
 
             _owned.Add(index);
-            _owned.Sort();
+            SortOwnedBySwitchOrder();
 
             bool isFirst = _owned.Count == 1;
             if (isFirst)
@@ -228,7 +261,7 @@ namespace CreativeAI.Gameplay
                         _owned.Add(index);
                 }
             }
-            _owned.Sort();
+            SortOwnedBySwitchOrder();
 
             int selected = _owned.Contains(selectedWeaponIndex)
                 ? selectedWeaponIndex

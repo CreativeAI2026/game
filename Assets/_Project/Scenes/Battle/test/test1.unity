@@ -1111,6 +1111,7 @@ GameObject:
   - component: {fileID: 381762068}
   - component: {fileID: 381762067}
   - component: {fileID: 381762066}
+  - component: {fileID: 381762071}
   m_Layer: 0
   m_Name: AimCamera
   m_TagString: Untagged
@@ -1131,7 +1132,6 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: CreativeAI.Gameplay::CreativeAI.Gameplay.BowZoomController
   _aimCamera: {fileID: 381762069}
-  _bowController: {fileID: 590605236}
   _zoomedFov: 25
   _zoomInSpeed: 3
   _zoomOutSpeed: 6
@@ -1243,6 +1243,18 @@ Transform:
   m_Children: []
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &381762071
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 381762065}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 1b64a64e8c65a10499b85db699e51f6c, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: CreativeAI.Gameplay::CreativeAI.Gameplay.AimSystem
 --- !u!1 &418725771
 GameObject:
   m_ObjectHideFlags: 0
@@ -2254,17 +2266,6 @@ TrailRenderer:
   m_Autodestruct: 0
   m_Emitting: 1
   m_ApplyActiveColorSpace: 1
---- !u!114 &590605236 stripped
-MonoBehaviour:
-  m_CorrespondingSourceObject: {fileID: 8830876905192145249, guid: 4d30f9d77d1f9c64bb9fe22315f2c5c2, type: 3}
-  m_PrefabInstance: {fileID: 7444754261803039258}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 0}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 805564ee19a387b41931437256511542, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: CreativeAI.Gameplay::CreativeAI.Gameplay.BowController
 --- !u!1 &629639038
 GameObject:
   m_ObjectHideFlags: 0
@@ -7542,6 +7543,9 @@ GameObject:
   - component: {fileID: 1750203044}
   - component: {fileID: 1750203046}
   - component: {fileID: 1750203045}
+  - component: {fileID: 1750203049}
+  - component: {fileID: 1750203048}
+  - component: {fileID: 1750203047}
   m_Layer: 5
   m_Name: WeaponHUDRoot
   m_TagString: Untagged
@@ -7607,6 +7611,67 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1750203043}
   m_CullTransparentMesh: 1
+--- !u!114 &1750203047
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1750203043}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 52b2193c734a2f24cb9bdc7fcd92e22b, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: CreativeAI.UI::CreativeAI.Gameplay.WeaponHUDController
+  _panelTemplate: {fileID: 0}
+  _templateIcon: {fileID: 0}
+  duration: 0.3
+  panelSpacingX: 225
+  panelSpacingY: 100
+  _canvas: {fileID: 0}
+  _raycaster: {fileID: 0}
+  switchUI: {fileID: 1192582638}
+--- !u!114 &1750203048
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1750203043}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: dc42784cf147c0c48a680349fa168899, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: UnityEngine.UI::UnityEngine.UI.GraphicRaycaster
+  m_IgnoreReversedGraphics: 1
+  m_BlockingObjects: 0
+  m_BlockingMask:
+    serializedVersion: 2
+    m_Bits: 4294967295
+--- !u!223 &1750203049
+Canvas:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1750203043}
+  m_Enabled: 1
+  serializedVersion: 3
+  m_RenderMode: 2
+  m_Camera: {fileID: 0}
+  m_PlaneDistance: 100
+  m_PixelPerfect: 0
+  m_ReceivesEvents: 1
+  m_OverrideSorting: 0
+  m_OverridePixelPerfect: 0
+  m_SortingBucketNormalizedSize: 0
+  m_VertexColorAlwaysGammaSpace: 0
+  m_UseReflectionProbes: 0
+  m_AdditionalShaderChannelsFlag: 0
+  m_UpdateRectTransformForStandalone: 0
+  m_SortingLayerID: 0
+  m_SortingOrder: 0
+  m_TargetDisplay: 0
 --- !u!1 &1766401408
 GameObject:
   m_ObjectHideFlags: 0
@@ -10588,6 +10653,7 @@ GameObject:
   - component: {fileID: 3178232481162554467}
   - component: {fileID: 8563569782828869674}
   - component: {fileID: 4376812655940043104}
+  - component: {fileID: 8563569782828869675}
   m_Layer: 5
   m_Name: CrossHair
   m_TagString: Untagged
@@ -13297,6 +13363,10 @@ PrefabInstance:
       propertyPath: _hpBarGradient
       value: 
       objectReference: {fileID: 5683792397099066089}
+    - target: {fileID: 2553588993140117269, guid: 4d30f9d77d1f9c64bb9fe22315f2c5c2, type: 3}
+      propertyPath: _startWithAllWeapons
+      value: 0
+      objectReference: {fileID: 0}
     - target: {fileID: 3600155962492746536, guid: 4d30f9d77d1f9c64bb9fe22315f2c5c2, type: 3}
       propertyPath: switchUI
       value: 
@@ -13357,6 +13427,10 @@ PrefabInstance:
       propertyPath: m_LocalEulerAnglesHint.z
       value: 0
       objectReference: {fileID: 0}
+    - target: {fileID: 3992504625198873444, guid: 4d30f9d77d1f9c64bb9fe22315f2c5c2, type: 3}
+      propertyPath: m_StreamingVersion
+      value: 20241001
+      objectReference: {fileID: 0}
     - target: {fileID: 4805791544596948780, guid: 4d30f9d77d1f9c64bb9fe22315f2c5c2, type: 3}
       propertyPath: _aimCam
       value: 
@@ -13367,10 +13441,7 @@ PrefabInstance:
       objectReference: {fileID: 1692520507}
     - target: {fileID: 6731614312153948213, guid: 4d30f9d77d1f9c64bb9fe22315f2c5c2, type: 3}
       propertyPath: m_WarningMessage
-      value: "\nBinding warning: Some generic clip(s) animate transforms that are
-        already bound by a Humanoid avatar. These transforms can only be changed
-        by Humanoid clips.\n\tTransform 'Head'\n\tTransform 'Neck'\n\tTransform 'Head'\n\tTransform
-        'Neck'\n\tTransform 'Head'\n\tTransform 'Neck'"
+      value: 
       objectReference: {fileID: 0}
     - target: {fileID: 8457278659484452282, guid: 4d30f9d77d1f9c64bb9fe22315f2c5c2, type: 3}
       propertyPath: m_Name
@@ -13412,6 +13483,7 @@ GameObject:
   - component: {fileID: 1644461532243026436}
   - component: {fileID: 5761887455318610848}
   - component: {fileID: 3378114521805213267}
+  - component: {fileID: 7493039563033612498}
   m_Layer: 5
   m_Name: UI2
   m_TagString: Untagged
@@ -13419,6 +13491,40 @@ GameObject:
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
   m_IsActive: 1
+--- !u!114 &7493039563033612498
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 7493039563033612497}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 95508eeefd6b0004fa5392a35ee9e7d5, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: CreativeAI.Gameplay::CreativeAI.Gameplay.PlayerHpUI
+  _maxHpText: {fileID: 6389343614938278852}
+  _currentHpText: {fileID: 5190608411634798236}
+  _hpSlider: {fileID: 2795815849751236492}
+  _hpBarGradient: {fileID: 5683792397099066089}
+  _ekgImage: {fileID: 661186990}
+  _ekgMaterial: {fileID: 2100000, guid: d6b885b89e34de0429ed827075c96b3c, type: 2}
+  _ekgPhases:
+  - hpRatioThreshold: 1
+    texture: {fileID: 2800000, guid: 210c7a3b96c01bb43802fc571c2ae13e, type: 3}
+    scrollSpeed: 0.25
+    hpBarLeftColor: {r: 0.050980397, g: 0.59607846, b: 0.3529412, a: 1}
+    hpBarRightColor: {r: 0.0627451, g: 0.3647059, b: 0.20784315, a: 1}
+  - hpRatioThreshold: 0.5
+    texture: {fileID: 2800000, guid: 2b66af6bd4621e848a2e8277673d7938, type: 3}
+    scrollSpeed: 0.5
+    hpBarLeftColor: {r: 0.8352942, g: 0.61960787, b: 0.14509805, a: 1}
+    hpBarRightColor: {r: 0.6117647, g: 0.44705886, b: 0.0627451, a: 1}
+  - hpRatioThreshold: 0.2
+    texture: {fileID: 2800000, guid: 2b66af6bd4621e848a2e8277673d7938, type: 3}
+    scrollSpeed: 0.75
+    hpBarLeftColor: {r: 0.7058824, g: 0.039215688, b: 0.121568635, a: 1}
+    hpBarRightColor: {r: 0.52156866, g: 0, b: 0.043137256, a: 1}
 --- !u!1 &7518591653073637733
 GameObject:
   m_ObjectHideFlags: 0
@@ -13923,7 +14029,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 0
+  m_IsActive: 1
 --- !u!114 &8324345132044947247
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -14246,6 +14352,18 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 2863042279901018115}
   m_CullTransparentMesh: 1
+--- !u!114 &8563569782828869675
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2863042279901018115}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 9169dd2864585aa42b04bf79395670d3, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: CreativeAI.UI::CreativeAI.Gameplay.CrosshairView
 --- !u!222 &8603829380121587443
 CanvasRenderer:
   m_ObjectHideFlags: 0

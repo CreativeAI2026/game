@@ -144,21 +144,10 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 914b77eaceb078b47a9f50d623a44f82, type: 3}
   m_Name: 
   m_EditorClassIdentifier: CreativeAI.Gameplay::CreativeAI.Gameplay.ScytheController
-  weaponIndex: 2
   searchRadius: 8
   attackRange: 3
   dashSpeed: 20
-  enemyLayer:
-    serializedVersion: 2
-    m_Bits: 512
   _hitbox: {fileID: 699812971520842315}
-  characterController: {fileID: 7806826174951427822}
-  input: {fileID: 0}
-  animator: {fileID: 0}
-  playerController: {fileID: 0}
-  playerTransform: {fileID: 0}
-  targetEnemy: {fileID: 0}
-  comboStep: 0
   _heldModel: {fileID: 138943197029582176}
   _boomerangPrefab: {fileID: 3005109670742047642, guid: 7cd0f4a981803704a9f317719d555b62, type: 3}
 --- !u!114 &2462219161215437537
@@ -340,7 +329,6 @@ Transform:
   - {fileID: 2651476902592636188}
   - {fileID: 5691410901192601545}
   - {fileID: 8821770251752878446}
-  - {fileID: 7132045151596416439}
   m_Father: {fileID: 2766661389953558580}
   m_LocalEulerAnglesHint: {x: -80, y: 203, z: -115.669}
 --- !u!114 &8830876905192145249
@@ -355,27 +343,15 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 805564ee19a387b41931437256511542, type: 3}
   m_Name: 
   m_EditorClassIdentifier: CreativeAI.Gameplay::CreativeAI.Gameplay.BowController
-  weaponIndex: 1
   _arrowNockPoint: {fileID: 881107482570484385}
   _bowStringRenderer: {fileID: 5698361964145444352}
   _stringTopPoint: {fileID: 2651476902592636188}
   _stringBottomPoint: {fileID: 5691410901192601545}
   _stringRestMidPoint: {fileID: 8821770251752878446}
-  _stringPullTarget: {fileID: 7132045151596416439}
-  _arrowPrefab: {fileID: 9160311305063574316, guid: 2c88ff77d91f73a41ac43ebbdf2b54b2, type: 3}
   _arrowSpeed: 100
   _maxRange: 200
-  _drawDuration: 0.85
-  _releaseDuration: 0.65
-  _fireTriggerName: Fire
-  crossHairImage: {fileID: 0}
   _drawSound: {fileID: 8300000, guid: 4986d275684de904cbb5f58e54a10a3b, type: 3}
   _shootSound: {fileID: 8300000, guid: 60208c05579a52048b0af9abbde4579c, type: 3}
-  _input: {fileID: 0}
-  _playerController: {fileID: 0}
-  _animator: {fileID: 0}
-  _drawProgress: 0
-  _isArrowAtNock: 0
 --- !u!114 &8091385248840035243
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -505,37 +481,6 @@ AudioSource:
     m_PreInfinity: 2
     m_PostInfinity: 2
     m_RotationOrder: 4
---- !u!1 &2675253418826589554
-GameObject:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  serializedVersion: 6
-  m_Component:
-  - component: {fileID: 7132045151596416439}
-  m_Layer: 8
-  m_Name: StringPullTarget
-  m_TagString: Untagged
-  m_Icon: {fileID: 0}
-  m_NavMeshLayer: 0
-  m_StaticEditorFlags: 0
-  m_IsActive: 1
---- !u!4 &7132045151596416439
-Transform:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 2675253418826589554}
-  serializedVersion: 2
-  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: -0, y: -0.013, z: -0.644}
-  m_LocalScale: {x: 1, y: 1, z: 1}
-  m_ConstrainProportionsScale: 0
-  m_Children: []
-  m_Father: {fileID: 8578029318333021237}
-  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &3151391460896353537
 GameObject:
   m_ObjectHideFlags: 0
@@ -568,6 +513,7 @@ Transform:
   - {fileID: 2152335283584353230}
   - {fileID: 8578029318333021237}
   - {fileID: 2626399160605501203}
+  - {fileID: 5791745088513452041}
   m_Father: {fileID: 3894082549405657859}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &3948102864785690085
@@ -773,28 +719,14 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 72e5aa97cb27d8640a204d22c28d9378, type: 3}
   m_Name: 
   m_EditorClassIdentifier: CreativeAI.Gameplay::CreativeAI.Gameplay.SwordController
-  weaponIndex: 0
   searchRadius: 5
   attackRange: 1
   dashSpeed: 30
-  enemyLayer:
-    serializedVersion: 2
-    m_Bits: 512
   _hitbox: {fileID: 7111180468013580485}
-  characterController: {fileID: 7806826174951427822}
-  input: {fileID: 0}
-  animator: {fileID: 0}
-  playerController: {fileID: 0}
-  playerTransform: {fileID: 0}
-  targetEnemy: {fileID: 0}
-  comboStep: 0
-  comboResetTime: 1
   parryWindowDuration: 0.2
   guardMaxCount: 5
   guardEffectPrefab: {fileID: 6283385569647498531, guid: c307aa68ab3e4cc4a8123308c3d2813d, type: 3}
   parryEffectPrefab: {fileID: 358637981425055526, guid: 00deabee16ae5674b93d3e9f636735e0, type: 3}
-  parryTimer: 0
-  guardHitCount: 0
 --- !u!114 &5042688619474655831
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -941,6 +873,37 @@ MonoBehaviour:
   _targetLayer:
     serializedVersion: 2
     m_Bits: 512
+--- !u!1 &7698239273175219019
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 5791745088513452041}
+  m_Layer: 7
+  m_Name: Hammer
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &5791745088513452041
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 7698239273175219019}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 2766661389953558580}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &8457278659484452282
 GameObject:
   m_ObjectHideFlags: 0
@@ -951,21 +914,21 @@ GameObject:
   m_Component:
   - component: {fileID: 3894082549405657859}
   - component: {fileID: 7806826174951427822}
+  - component: {fileID: 3992504625198873444}
   - component: {fileID: 6278270930459678961}
   - component: {fileID: 1327995090680955938}
   - component: {fileID: 7764641960921969504}
   - component: {fileID: 9019347759860532179}
   - component: {fileID: 2553588993140117269}
-  - component: {fileID: 4805791544596948780}
   - component: {fileID: 4200084836634315996}
   - component: {fileID: 2641262661537847898}
   - component: {fileID: 8961634776305585442}
-  - component: {fileID: 3600155962492746536}
-  - component: {fileID: 885529805094278748}
   - component: {fileID: 9027847180880299159}
   - component: {fileID: 3617110376455742997}
   - component: {fileID: 2963798237447989764}
   - component: {fileID: 8062889035107698620}
+  - component: {fileID: 8561533611627647685}
+  - component: {fileID: 5410422798457887496}
   m_Layer: 7
   m_Name: PlayerArmature
   m_TagString: Player
@@ -989,7 +952,6 @@ Transform:
   - {fileID: 3439977942161466046}
   - {fileID: 2766661389953558580}
   - {fileID: 7577421215270764474}
-  - {fileID: 4256036534355691354}
   - {fileID: 7309617434048872567}
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
@@ -1018,6 +980,49 @@ CharacterController:
   m_SkinWidth: 0.02
   m_MinMoveDistance: 0
   m_Center: {x: 0, y: 0.93, z: 0}
+--- !u!114 &3992504625198873444
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 8457278659484452282}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: f9dfa5b682dcd46bda6128250e975f58, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Unity.Cinemachine::Unity.Cinemachine.CinemachineCamera
+  Priority:
+    Enabled: 0
+    m_Value: 0
+  OutputChannel: 1
+  StandbyUpdate: 2
+  m_StreamingVersion: 20241001
+  m_LegacyPriority: 0
+  Target:
+    TrackingTarget: {fileID: 0}
+    LookAtTarget: {fileID: 0}
+    CustomLookAtTarget: 0
+  Lens:
+    FieldOfView: 40
+    OrthographicSize: 10
+    NearClipPlane: 0.1
+    FarClipPlane: 5000
+    Dutch: 0
+    ModeOverride: 0
+    PhysicalProperties:
+      GateFit: 2
+      SensorSize: {x: 21.946, y: 16.002}
+      LensShift: {x: 0, y: 0}
+      FocusDistance: 10
+      Iso: 200
+      ShutterSpeed: 0.005
+      Aperture: 16
+      BladeCount: 5
+      Curvature: {x: 2, y: 11}
+      BarrelClipping: 0.25
+      Anamorphism: 0
+  BlendHint: 0
 --- !u!114 &6278270930459678961
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -1145,13 +1150,13 @@ MonoBehaviour:
   look: {x: 0, y: 0}
   jump: 0
   sprint: 0
-  attack: 0
   subAction: 0
   weaponNext: 0
   weaponPrev: 0
   analogMovement: 0
   cursorLocked: 0
   cursorInputForLook: 1
+  _attackBufferSeconds: 0.3
 --- !u!114 &9019347759860532179
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -1172,23 +1177,11 @@ MonoBehaviour:
   Gravity: -15
   JumpTimeout: 0.5
   FallTimeout: 0.15
-  Grounded: 1
   GroundedOffset: -0.14
   GroundedRadius: 0.28
   GroundLayers:
     serializedVersion: 2
     m_Bits: 72
-  CinemachineCameraTarget: {fileID: 2329010984694957153}
-  TopClamp: 30
-  BottomClamp: -25
-  CameraAngleOverride: 0
-  LockCameraPosition: 0
-  _aimSpineBone: 7
-  CanMove: 0
-  CanChangeWeapon: 0
-  IsAiming: 0
-  IsFlinching: 0
-  IsGrabbed: 0
 --- !u!114 &2553588993140117269
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -1201,33 +1194,20 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: ea39ae18318fb8148968f36b9a1aae6d, type: 3}
   m_Name: 
   m_EditorClassIdentifier: CreativeAI.Gameplay::CreativeAI.Gameplay.WeaponManager
-  _weapons:
-  - {fileID: 4997155624850279967}
-  - {fileID: 2419690289684156987}
-  - {fileID: 1203584483946721191}
-  _weaponStats:
-  - {fileID: 11400000, guid: b063e40c551c45769a17ae2d3eb58263, type: 2}
-  - {fileID: 11400000, guid: e6b75b93f6094e578d5ffe2322f3c360, type: 2}
-  - {fileID: 11400000, guid: 34829291ee714d0bad50fe2680dde16f, type: 2}
-  _animatorControllers:
-  - {fileID: 22100000, guid: 593fc409b1c1f804da7f256ac1c158b5, type: 2}
-  - {fileID: 0}
-  - {fileID: 22100000, guid: c4646e5d54d02344d8583ebaac6a0ede, type: 2}
+  _slots:
+  - weapon: {fileID: 4997155624850279967}
+    stats: {fileID: 11400000, guid: b063e40c551c45769a17ae2d3eb58263, type: 2}
+    animatorController: {fileID: 22100000, guid: 593fc409b1c1f804da7f256ac1c158b5, type: 2}
+  - weapon: {fileID: 2419690289684156987}
+    stats: {fileID: 11400000, guid: e6b75b93f6094e578d5ffe2322f3c360, type: 2}
+    animatorController: {fileID: 22100000, guid: c69964233ab3cf84d9e0804b746bf623, type: 2}
+  - weapon: {fileID: 1203584483946721191}
+    stats: {fileID: 11400000, guid: 34829291ee714d0bad50fe2680dde16f, type: 2}
+    animatorController: {fileID: 22100000, guid: c4646e5d54d02344d8583ebaac6a0ede, type: 2}
+  - weapon: {fileID: 7698239273175219019}
+    stats: {fileID: 11400000, guid: 556ca783faa8ad84bbb25da497a86dce, type: 2}
+    animatorController: {fileID: 22100000, guid: 10027f82a78aee84f9ce25e2f1d58769, type: 2}
   _startWithAllWeapons: 1
---- !u!114 &4805791544596948780
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 8457278659484452282}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 1b64a64e8c65a10499b85db699e51f6c, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: CreativeAI.Gameplay::CreativeAI.Gameplay.AimSystem
-  _aimCam: {fileID: 0}
-  _bowWeaponIndex: 1
 --- !u!114 &4200084836634315996
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -1240,9 +1220,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 6e565ad51489fa0459c3cb38dee83283, type: 3}
   m_Name: 
   m_EditorClassIdentifier: CreativeAI.Gameplay::CreativeAI.Gameplay.PlayerFlinchHandler
-  _flinchTriggerName: PlayerFlinch
-  _flinchStateName: Flinch
-  _flinchTimeout: 1
+  _enterFlinchTimeout: 1
 --- !u!114 &2641262661537847898
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -1273,65 +1251,6 @@ MonoBehaviour:
   enemyLayer:
     serializedVersion: 2
     m_Bits: 512
-  currentTarget: {fileID: 0}
---- !u!114 &3600155962492746536
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 8457278659484452282}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 52b2193c734a2f24cb9bdc7fcd92e22b, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: CreativeAI.UI::CreativeAI.Gameplay.WeaponHUDController
-  panels:
-  - {fileID: 0}
-  - {fileID: 0}
-  - {fileID: 0}
-  - {fileID: 0}
-  duration: 0.3
-  panelSpacingX: 225
-  _canvas: {fileID: 0}
-  _raycaster: {fileID: 0}
-  panelSpacingY: 100
-  switchUI: {fileID: 0}
---- !u!114 &885529805094278748
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 8457278659484452282}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 95508eeefd6b0004fa5392a35ee9e7d5, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: CreativeAI.Gameplay::CreativeAI.Gameplay.PlayerHpUI
-  _maxHpText: {fileID: 0}
-  _currentHpText: {fileID: 0}
-  _hpSlider: {fileID: 0}
-  _hpBarGradient: {fileID: 0}
-  _ekgImage: {fileID: 0}
-  _ekgMaterial: {fileID: 2100000, guid: d6b885b89e34de0429ed827075c96b3c, type: 2}
-  _ekgPhases:
-  - hpRatioThreshold: 1
-    texture: {fileID: 2800000, guid: 210c7a3b96c01bb43802fc571c2ae13e, type: 3}
-    scrollSpeed: 0.25
-    hpBarLeftColor: {r: 0.050980397, g: 0.59607846, b: 0.3529412, a: 1}
-    hpBarRightColor: {r: 0.0627451, g: 0.3647059, b: 0.20784315, a: 1}
-  - hpRatioThreshold: 0.5
-    texture: {fileID: 2800000, guid: 2b66af6bd4621e848a2e8277673d7938, type: 3}
-    scrollSpeed: 0.5
-    hpBarLeftColor: {r: 0.8352942, g: 0.61960787, b: 0.14509805, a: 1}
-    hpBarRightColor: {r: 0.6117647, g: 0.44705886, b: 0.0627451, a: 1}
-  - hpRatioThreshold: 0.2
-    texture: {fileID: 2800000, guid: 2b66af6bd4621e848a2e8277673d7938, type: 3}
-    scrollSpeed: 0.75
-    hpBarLeftColor: {r: 0.7058824, g: 0.039215688, b: 0.121568635, a: 1}
-    hpBarRightColor: {r: 0.52156866, g: 0, b: 0.043137256, a: 1}
-  _playerStatus: {fileID: 1327995090680955938}
 --- !u!114 &9027847180880299159
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -1344,10 +1263,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 33f3d6720a88e804793af04ced7556b2, type: 3}
   m_Name: 
   m_EditorClassIdentifier: CreativeAI.Gameplay::CreativeAI.Gameplay.PanicDetector
-  _enemyTransform: {fileID: 0}
   _enableFlightDetection: 1
-  _requireActiveEnemy: 1
-  _autoSearchEnemyByTag: 1
   _flightMaxDuration: 3
   _flightAwayAngleThreshold: 80
   _spamMaxRate: 3
@@ -1496,6 +1412,36 @@ MonoBehaviour:
   _volume: 1
   _walkRadius: 6
   _runRadius: 12
+--- !u!114 &8561533611627647685
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 8457278659484452282}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: a43def6cbf583b242b3edb39413b5a26, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: CreativeAI.Gameplay::CreativeAI.Gameplay.PlayerCameraController
+  CinemachineCameraTarget: {fileID: 2329010984694957153}
+  TopClamp: 30
+  BottomClamp: -25
+  CameraAngleOverride: 0
+  LockCameraPosition: 0
+--- !u!114 &5410422798457887496
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 8457278659484452282}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 90d1e3d35bbc8e24db91956ee62ca0f8, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: CreativeAI.Gameplay::CreativeAI.Gameplay.PlayerAimSpineBend
+  _spineBone: 7
 --- !u!1 &8794979613826268917
 GameObject:
   m_ObjectHideFlags: 0
@@ -1526,37 +1472,6 @@ Transform:
   m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 8578029318333021237}
-  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!1 &8872569364798368541
-GameObject:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  serializedVersion: 6
-  m_Component:
-  - component: {fileID: 4256036534355691354}
-  m_Layer: 0
-  m_Name: HeadTrackingAtTarget
-  m_TagString: Untagged
-  m_Icon: {fileID: 0}
-  m_NavMeshLayer: 0
-  m_StaticEditorFlags: 0
-  m_IsActive: 1
---- !u!4 &4256036534355691354
-Transform:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 8872569364798368541}
-  serializedVersion: 2
-  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 0.271, y: 1.684, z: -0.7965672}
-  m_LocalScale: {x: 1, y: 1, z: 1}
-  m_ConstrainProportionsScale: 0
-  m_Children: []
-  m_Father: {fileID: 3894082549405657859}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1001 &2184657325105232933
 PrefabInstance:

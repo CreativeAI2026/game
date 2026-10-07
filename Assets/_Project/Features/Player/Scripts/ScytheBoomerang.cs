@@ -27,13 +27,22 @@ namespace CreativeAI.Gameplay
         [SerializeField]
         private float _maxDistance = 10f;
 
-        [Tooltip("行きの速度(m/秒)")]
+        [Tooltip("投げた瞬間の速度(m/秒)。折り返し地点に近づくほど減速する")]
         [SerializeField]
         private float _outboundSpeed = 20f;
 
-        [Tooltip("帰りの速度(m/秒)")]
+        [Tooltip("折り返し地点での速度(行きの速度に対する割合 0〜1)。小さいほど折り返しで溜めが出る")]
         [SerializeField]
-        private float _returnSpeed = 25f;
+        [Range(0.05f, 1f)]
+        private float _apexSpeedRatio = 0.25f;
+
+        [Tooltip("帰りの最高速度(m/秒)")]
+        [SerializeField]
+        private float _returnSpeed = 12f;
+
+        [Tooltip("折り返してから帰りの最高速度に達するまでの時間(秒)。折り返し地点の速度から徐々に加速する")]
+        [SerializeField]
+        private float _returnAccelerationTime = 0.6f;
 
         [Tooltip("戻り先にこの距離(m)まで近づいたら受け取ったとみなす")]
         [SerializeField]
@@ -49,7 +58,7 @@ namespace CreativeAI.Gameplay
         private float _obstacleProbeRadius = 0.3f;
 
         [Header("見た目の回転")]
-        [Tooltip("回転させるモデル(子オブジェクト)。ルートを回すと進行方向の計算に影響するため子を回す")]
+        [Tooltip("回転させるオブジェクト(モデルの親など。ルートでもよい)。行き・帰りとも回し続ける")]
         [SerializeField]
         private Transform _spinRoot;
 
@@ -65,7 +74,10 @@ namespace CreativeAI.Gameplay
         private Phase _phase = Phase.Idle;
         private Vector3 _direction;
         private float _traveled;
+        private float _returnElapsed;
         private Transform _returnTarget;
+
+        private float ApexSpeed => _outboundSpeed * _apexSpeedRatio;
 
         /// <summary>手元に戻って受け取られたときに通知。</summary>
         public event Action Caught;
@@ -123,7 +135,10 @@ namespace CreativeAI.Gameplay
 
         private void UpdateOutbound()
         {
-            float step = _outboundSpeed * Time.deltaTime;
+            // 折り返し地点に近づくほど減速する(ブーメランらしい「溜め」)
+            float progress = Mathf.Clamp01(_traveled / _maxDistance);
+            float speed = Mathf.Lerp(_outboundSpeed, ApexSpeed, progress);
+            float step = speed * Time.deltaTime;
 
             bool hitObstacle = Physics.SphereCast(
                 transform.position,
@@ -149,24 +164,23 @@ namespace CreativeAI.Gameplay
 
         private void UpdateReturning()
         {
+            // 折り返し地点の速度から、帰りの最高速度まで徐々に加速する
+            _returnElapsed += Time.deltaTime;
+            float t = _returnAccelerationTime > 0f ? Mathf.Clamp01(_returnElapsed / _returnAccelerationTime) : 1f;
+            float speed = Mathf.Lerp(ApexSpeed, _returnSpeed, t);
+
+            // 向き(回転)は書き換えない。書き換えると見た目の回転(_spinRoot)が打ち消される
             Vector3 target = _returnTarget.position;
-            transform.position = Vector3.MoveTowards(
-                transform.position,
-                target,
-                _returnSpeed * Time.deltaTime
-            );
+            transform.position = Vector3.MoveTowards(transform.position, target, speed * Time.deltaTime);
 
-            Vector3 toTarget = target - transform.position;
-            if (toTarget.sqrMagnitude > 0.0001f)
-                transform.rotation = Quaternion.LookRotation(toTarget);
-
-            if (toTarget.magnitude <= _catchDistance)
+            if (Vector3.Distance(transform.position, target) <= _catchDistance)
                 Catch();
         }
 
         private void BeginReturn()
         {
             _phase = Phase.Returning;
+            _returnElapsed = 0f;
             // 当たり済みリストを空にし、行きで当たった敵にも帰りでもう1回当たるようにする
             _hitbox.EnableHitbox();
         }
