@@ -5,7 +5,7 @@ using UnityEditor;
 namespace CreativeAI.Tests.EditMode
 {
     /// <summary>
-    /// 剣・弓・鎌の固定ステータスがアセットに入っているかを固定する。表は documents/Specification.md §1.1。
+    /// 剣・弓・鎌の固定ステータスがアセットに入っているかを固定する。
     /// 数値がコード外(アセット)にあると仕様からの乖離に気づけないため、ここで実アセットを読んで突き合わせる。
     /// </summary>
     public class WeaponDataAssetTests
@@ -64,7 +64,7 @@ namespace CreativeAI.Tests.EditMode
         [Test]
         public void AllThreeWeapons_HaveEqualAverageDamage()
         {
-            // spec §1.1 の注: 平均ダメージ = 攻撃力 ×(1 + 会心率 × 会心ダメージ)が3種とも等価になるよう設定。
+            // 平均ダメージ = 攻撃力 ×(1 + 会心率 × 会心ダメージ)が3種とも等価になるよう設定。
             // 素の値(攻撃2000 / 会心率0 / 会心ダメージ0)でいずれも平均 2500 になる。
             const float baseAttack = 2000f;
 
@@ -81,7 +81,7 @@ namespace CreativeAI.Tests.EditMode
         [Test]
         public void Weapons_AreOutsideInventoryCatalog()
         {
-            // spec §2: 武器はインベントリ管理の対象外。ItemDB は Inventory/Data フォルダを同期するので、
+            // 武器はインベントリ管理の対象外。ItemDB は Inventory/Data フォルダを同期するので、
             // 武器アセットがそこに置かれていないこと(= giveItem のカタログに混ざらないこと)を守る。
             Assert.IsFalse(
                 WeaponDir.StartsWith("Assets/_Project/Features/Inventory/Data"),

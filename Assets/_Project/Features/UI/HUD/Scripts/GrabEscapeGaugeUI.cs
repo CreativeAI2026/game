@@ -1,8 +1,9 @@
+using CreativeAI.Gameplay;
 using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
 
-namespace CreativeAI.Gameplay
+namespace CreativeAI.UI
 {
     public class GrabEscapeGaugeUI : MonoBehaviour
     {

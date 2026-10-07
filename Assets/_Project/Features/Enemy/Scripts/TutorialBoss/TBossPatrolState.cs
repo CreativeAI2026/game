@@ -4,11 +4,8 @@ using UnityEngine.AI;
 namespace CreativeAI.Gameplay
 {
     /// <summary>
-    /// 未発見状態での徘徊ステート。
-    /// SoundEventBusを購読し、音を検知したらSoundInvestigateStateへ遷移する。
-    /// プレイヤーが懐中電灯の光に入っても即座には発見せず、発見度（Awareness）が
-    /// 上限に達して初めてChaseStateへ遷移する。ちらっと見えた程度（Suspicious）の間は
-    /// 立ち止まってプレイヤー方向を向くだけに留め、「気づきかけている」状態を表現する。
+    /// 未発見時の徘徊。SoundEventBus で音を検知したら SoundInvestigateState へ。光に入っても即発見せず、発見度（Awareness）が上限に達して ChaseState へ遷移する。
+    /// ちらっと見えた程度（Suspicious）の間は立ち止まってプレイヤー方向を向くだけに留める。
     /// </summary>
     public class TBossPatrolState : TBossBaseState
     {

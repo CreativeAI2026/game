@@ -9,27 +9,10 @@ using UnityEngine.SceneManagement;
 namespace CreativeAI.EditorTools
 {
     /// <summary>
-    /// 小物(机・椅子・本棚…)を<b>複数人で同時に置く</b>ための段取り。
-    ///
-    /// マップ(`Field_Area01.unity`)は <see cref="MapLayoutBuilder"/> の生成物なので誰も直接触らず、
-    /// 各担当は<b>自分の小物シーンだけ</b>を編集する。シーンは Additive で重ねて開くので、
-    /// 見た目は1つの空間で作業するのと同じまま、保存先のファイルだけが分かれる
-    /// (= 同じ .unity を複数人が触らないので git の競合が起きない)。
-    ///
-    /// 使い方:
-    /// 1. `小物シーン/雛形を作成` … 未作成の階ぶんだけ空シーンを作る(初回だけ)
-    /// 2. `小物シーン/実行時に重ねる設定` … Field_Area01 に <c>AdditiveScenes</c> を配線し、
-    ///    小物3枚を Build Settings に登録する(初回だけ / <see cref="PropSceneSetup"/>)
-    /// 3. `小物シーン/1F を開く` … マップ + 担当シーンを開き、担当シーンをアクティブにし、
-    ///    マップを掴めなくする(Scene ビューで壁をドラッグして動かす事故を防ぐ)
-    /// 4. 置いて保存。保存されるのは自分のシーンだけ
-    ///
-    /// <b>1枚に畳む手段は用意しない。</b> 小物シーンは実行時に <c>AdditiveScenes</c> が重ねて読むので、
-    /// 分けたままリリースまで通せる。畳むと 1F/2F/3F の担当者が同じ Field_Area01.unity を
-    /// 触ることになり競合が復活するため、そういう操作を置かないこと自体を仕組みにしている。
-    ///
-    /// 万一マップがずれても、`Rebuild Field_Area01` で図(documents/MapLayout.md)から作り直せる。
-    /// 作り直すのは `Map` ルートだけなので、小物は消えない。
+    /// 小物を複数人で同時に置くための段取り。マップ(<see cref="MapLayoutBuilder"/> の生成物)は触らず、各担当は
+    /// 自分の小物シーンだけを Additive で重ねて編集する(同じ .unity を触らないので git 競合が起きない)。
+    /// 手順: `雛形を作成` → `実行時に重ねる設定`(<see cref="PropSceneSetup"/>) → `1F を開く` → 置いて保存。
+    /// 競合が復活するので1枚に畳む手段は置かない。マップがずれても `Rebuild Field_Area01` は `Map` ルートだけ作り直す。
     /// </summary>
     public static class PropSceneWorkflow
     {
@@ -95,10 +78,8 @@ namespace CreativeAI.EditorTools
         public static void Open3F() => OpenForWork("3F");
 
         /// <summary>
-        /// マップ + 指定階の小物シーンを開き、<b>小物シーンをアクティブに</b>する。
-        /// アクティブにしないと、置いた小物がマップシーン側に入ってしまう(= 競合の元)。
-        /// あわせてマップの `Map` ルートを<b>ピッキング無効</b>にして、Scene ビューで
-        /// 壁や床を掴めないようにする。
+        /// マップ + 指定階の小物シーンを開き、小物シーンをアクティブにする(しないと小物がマップ側に入る)。
+        /// `Map` ルートはピッキング無効にして壁や床を掴めないようにする。
         /// </summary>
         public static void OpenForWork(string floor)
         {

@@ -1,7 +1,6 @@
 using System.Collections.Generic;
 using CreativeAI.Gameplay;
-using CreativeAI.UI.Common;
-using CreativeAI.UI.InventoryUI;
+using CreativeAI.UI;
 using NUnit.Framework;
 using TMPro;
 using UnityEngine;
@@ -11,7 +10,6 @@ namespace CreativeAI.Tests.EditMode
 {
     /// <summary>
     /// インベントリ食材タブからの使用導線の検証(移動中は食材タブからも所持食材を使用できる)。
-    /// 仕様は documents/Specification.md §2.2。
     /// ダイアログは食材にだけ出て、使用ボタンで HP回復 + 在庫1消費まで通ることを見る。
     /// </summary>
     public class ItemUseDialogPanelTests

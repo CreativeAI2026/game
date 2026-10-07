@@ -1,25 +1,26 @@
 using System.Collections.Generic;
 using System.Linq;
 using CreativeAI.Gameplay;
-using CreativeAI.StatRoll;
 using NUnit.Framework;
 using UnityEngine;
 
 namespace CreativeAI.Tests.EditMode
 {
     /// <summary>
-    /// ロール済み個体(調合品・拾得品)の付与ステータスが最終ステータスまで届くかの検証
-    /// (documents/Specification.md §1「装備の補正」/ §2.1.1「ロールするのは拾った瞬間」/ §2.3)。
-    ///
-    /// ここが守っているのは <see cref="RolledStat.stat"/> の<b>語彙の一致</b>:
-    /// 書き出し(CraftStatBridge.RollEquipment / RollDrop)と読み取り(Accumulate)がズレると、
-    /// 装備しても補正が 0 のまま黙って無視される。
+    /// ロール済み個体(調合品・拾得品)の付与ステータスが最終ステータスまで届くかの検証。
+    /// 書き出し(調合・拾得のロール)と読み取り(EquipmentBonus.Add)で <see cref="RolledStat.stat"/> の語彙がズレると補正が黙って 0 になる。
     /// </summary>
     public class RolledStatBonusTests
     {
         private GameObject _invGo;
         private InventoryManager _inv;
         private readonly List<Object> _created = new();
+
+        // 拾得と同じ経路でロールする。
+        private static IReadOnlyList<RolledStat> RollDrop(EquipmentData seed, IRandomSource rng) =>
+            RolledStat.FromVector(
+                FieldItemPickup.RollDropStats(EquipmentData.ToStatVector(seed).Power, rng)
+            );
 
         [SetUp]
         public void SetUp()
@@ -60,13 +61,13 @@ namespace CreativeAI.Tests.EditMode
         {
             var seed = MakeEquipment(2101, seedPower: 20);
 
-            var rolled = CraftStatBridge.RollDrop(seed, new SystemRandomSource(1));
+            var rolled = RollDrop(seed, new SystemRandomSource(1));
 
             CollectionAssert.IsNotEmpty(rolled.ToList());
             foreach (var r in rolled)
                 Assert.IsTrue(
                     System.Enum.TryParse<StatType>(r.stat, ignoreCase: false, out _),
-                    $"'{r.stat}' は StatType の名前ではない(Accumulate が読めない語彙)"
+                    $"'{r.stat}' は StatType の名前ではない(EquipmentBonus.Add が読めない語彙)"
                 );
         }
 
@@ -76,7 +77,13 @@ namespace CreativeAI.Tests.EditMode
             var a = MakeEquipment(2102, seedPower: 10);
             var b = MakeEquipment(2103, seedPower: 10);
 
-            var rolled = CraftStatBridge.RollEquipment(a, b, new SystemRandomSource(2));
+            var rolled = RolledStat.FromVector(
+                RecipeCraftingService.RollCraftedStats(
+                    EquipmentData.ToStatVector(a),
+                    EquipmentData.ToStatVector(b),
+                    new SystemRandomSource(2)
+                )
+            );
 
             foreach (var r in rolled)
                 Assert.IsTrue(System.Enum.TryParse<StatType>(r.stat, ignoreCase: false, out _));
@@ -87,7 +94,7 @@ namespace CreativeAI.Tests.EditMode
         [Test]
         public void EquippedInstance_AddsItsRolledValues_NotTheSeedValues()
         {
-            // 個体の補正はロール値で決まる。アセットの固定値(§2.1.1: 総パワーの宣言)は使わない。
+            // 個体の補正はロール値で決まる。アセットの固定値(総パワーの宣言)は使わない。
             var gear = MakeEquipment(2104, seedPower: 999);
             AddEquippedInstance(
                 gear,
@@ -158,7 +165,7 @@ namespace CreativeAI.Tests.EditMode
         [Test]
         public void HealAmount_DoesNotLeakIntoEquipmentBonus()
         {
-            // HealAmount は食材専用(§2.1)。装備補正のどのフィールドにも足さない。
+            // HealAmount は食材専用。装備補正のどのフィールドにも足さない。
             var gear = MakeEquipment(2108);
             AddEquippedInstance(gear, new RolledStat(nameof(StatType.HealAmount), 40f));
 
@@ -198,7 +205,7 @@ namespace CreativeAI.Tests.EditMode
         public void PickingUpAndEquipping_RaisesFinalStats()
         {
             var playerData = ScriptableObject.CreateInstance<PlayerParameterData>();
-            playerData.baseAttackPower = 2000f; // spec §1 の素の値
+            playerData.baseAttackPower = 2000f; // 素の値
             playerData.baseMaxLife = 1000f;
             playerData.baseDefense = 500f;
             playerData.baseCriticalChance = 0f;
@@ -214,7 +221,7 @@ namespace CreativeAI.Tests.EditMode
 
                 // 拾得と同じ経路でロールした個体を在庫へ入れて装備する。
                 var seed = MakeEquipment(2120, seedPower: 20);
-                var rolled = CraftStatBridge.RollDrop(seed, new SystemRandomSource(5));
+                var rolled = RollDrop(seed, new SystemRandomSource(5));
                 AddEquippedInstance(seed, rolled.ToArray());
 
                 status.SetEquipment(_inv.GetEquippedBonus());

@@ -4,11 +4,8 @@ using UnityEngine.AI;
 namespace CreativeAI.Gameplay
 {
     /// <summary>
-    /// 一度は視認・被弾などでプレイヤーの位置を把握したが、見失った際の捜索ステート。
-    /// 最後に把握した位置（または被弾時の推定位置）へ向かい、周囲を数回見回してから
-    /// 諦めてパトロールへ戻る。ChaseStateやWatchStateで見失った場合、
-    /// および光の外から被弾した場合（ForceAlert）の両方から遷移してくる。
-    /// 捜索中は音への感度を保つため、SoundEventBusを購読して目標地点を更新する。
+    /// 把握していたプレイヤーを見失った際の捜索。最後の把握位置（被弾時は推定位置）へ向かい、数回見回してからパトロールへ戻る。
+    /// Chase/Watch で見失った場合と光の外からの被弾（ForceAlert）から遷移し、捜索中も SoundEventBus で目標地点を更新する。
     /// </summary>
     public class TBossSearchState : TBossBaseState
     {

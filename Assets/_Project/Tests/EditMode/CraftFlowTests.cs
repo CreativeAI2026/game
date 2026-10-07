@@ -1,7 +1,6 @@
 using System.Collections;
 using CreativeAI.Gameplay;
-using CreativeAI.UI.Common;
-using CreativeAI.UI.CraftingUI;
+using CreativeAI.UI;
 using NUnit.Framework;
 using TMPro;
 using UnityEditor;
@@ -18,79 +17,65 @@ namespace CreativeAI.Tests.EditMode
         private GameObject _root;
         private GameObject _loadingRoot;
         private CraftPanelController _controller;
-        private CraftResultPanelView _resultView;
 
         [SetUp]
         public void SetUp()
         {
             _root = new GameObject("CraftFlowTestRoot");
 
-            _loadingRoot = new GameObject("Loading", typeof(CanvasGroup));
+            _loadingRoot = new GameObject("Loading", typeof(RectTransform));
             _loadingRoot.transform.SetParent(_root.transform, false);
-            var loadingView = _loadingRoot.AddComponent<CraftLoadingOverlayView>();
-            TestReflection.SetField(loadingView, "_root", _loadingRoot);
-            TestReflection.SetField(
-                loadingView,
-                "_canvasGroup",
-                _loadingRoot.GetComponent<CanvasGroup>()
-            );
+            var gear = new GameObject("LoadingGear", typeof(RectTransform));
+            gear.transform.SetParent(_loadingRoot.transform, false);
 
             var resultRoot = new GameObject(
                 "Result",
+                typeof(RectTransform),
                 typeof(CanvasGroup),
-                typeof(CloseOnSelfClick),
-                typeof(CraftResultPanelView)
+                typeof(CloseOnSelfClick)
             );
             resultRoot.transform.SetParent(_root.transform, false);
-            _resultView = resultRoot.GetComponent<CraftResultPanelView>();
-            TestReflection.SetField(
-                _resultView,
-                "_canvasGroup",
-                resultRoot.GetComponent<CanvasGroup>()
-            );
-            TestReflection.SetField(
-                _resultView,
-                "_closeOnSelfClick",
-                resultRoot.GetComponent<CloseOnSelfClick>()
-            );
-            var itemNameObject = new GameObject(
-                "ItemName",
-                typeof(RectTransform),
-                typeof(TextMeshProUGUI)
-            );
-            itemNameObject.transform.SetParent(resultRoot.transform, false);
-            TestReflection.SetField(
-                _resultView,
-                "_itemName",
-                itemNameObject.GetComponent<TextMeshProUGUI>()
-            );
+            var itemName = CreateText("ItemName", resultRoot.transform);
+            var itemParameters = CreateText("ItemParameters", resultRoot.transform);
 
-            var warningRoot = new GameObject("Warning", typeof(CanvasGroup));
-            warningRoot.transform.SetParent(_root.transform, false);
-            var warningView = warningRoot.AddComponent<CraftWarningToastView>();
+            var warning = CreateText("WarningText", _root.transform);
+            var warningCanvasGroup = warning.gameObject.AddComponent<CanvasGroup>();
 
-            var controllerRoot = new GameObject("CraftPanelController");
-            controllerRoot.transform.SetParent(_root.transform, false);
-            _controller = controllerRoot.AddComponent<CraftPanelController>();
+            var closeButton = new GameObject("CloseButton", typeof(RectTransform), typeof(Button));
+            closeButton.transform.SetParent(_root.transform, false);
 
-            var closeButtonRoot = new GameObject(
-                "CloseButton",
-                typeof(RectTransform),
-                typeof(Button)
-            );
-            closeButtonRoot.transform.SetParent(controllerRoot.transform, false);
-
-            TestReflection.SetField(_controller, "_loadingOverlayView", loadingView);
-            TestReflection.SetField(_controller, "_resultPanelView", _resultView);
-            TestReflection.SetField(_controller, "_warningToastView", warningView);
+            _controller = _root.AddComponent<CraftPanelController>();
             TestReflection.SetField(
                 _controller,
                 "_closeButton",
-                closeButtonRoot.GetComponent<Button>()
+                closeButton.GetComponent<Button>()
             );
+            TestReflection.SetField(_controller, "_loadingRoot", _loadingRoot);
+            TestReflection.SetField(_controller, "_loadingGear", (RectTransform)gear.transform);
+            TestReflection.SetField(
+                _controller,
+                "_resultCanvasGroup",
+                resultRoot.GetComponent<CanvasGroup>()
+            );
+            TestReflection.SetField(
+                _controller,
+                "_resultCloseOnClick",
+                resultRoot.GetComponent<CloseOnSelfClick>()
+            );
+            TestReflection.SetField(_controller, "_resultItemName", itemName);
+            TestReflection.SetField(_controller, "_resultItemParameters", itemParameters);
+            TestReflection.SetField(_controller, "_warningText", warning);
+            TestReflection.SetField(_controller, "_warningCanvasGroup", warningCanvasGroup);
             TestReflection.SetField(_controller, "_craftFlowDurationSeconds", 0f);
 
             _controller.CancelCraftFlow();
+        }
+
+        private static TMP_Text CreateText(string name, Transform parent)
+        {
+            var textObject = new GameObject(name, typeof(RectTransform), typeof(TextMeshProUGUI));
+            textObject.transform.SetParent(parent, false);
+            return textObject.GetComponent<TextMeshProUGUI>();
         }
 
         [TearDown]
@@ -175,7 +160,7 @@ namespace CreativeAI.Tests.EditMode
             Assert.IsTrue(routine.MoveNext());
             Assert.IsFalse(routine.MoveNext());
 
-            var badge = TestReflection.GetField<TMPro.TMP_Text>(_resultView, "_newBadge");
+            var badge = TestReflection.GetField<TMP_Text>(_controller, "_resultNewBadge");
             Assert.IsNotNull(badge);
             Assert.IsTrue(badge.gameObject.activeSelf);
 
@@ -184,7 +169,7 @@ namespace CreativeAI.Tests.EditMode
         }
 
         [Test]
-        public void ShowResult_Equipment_ShowsParametersBelowItemName()
+        public void ShowResult_Equipment_ShowsParameters()
         {
             var equipment = ScriptableObject.CreateInstance<EquipmentData>();
             equipment.itemName = "Test Equipment";
@@ -195,17 +180,13 @@ namespace CreativeAI.Tests.EditMode
             {
                 _controller.ShowResult(equipment, 1, null);
 
-                var parameters = TestReflection.GetField<TMP_Text>(_resultView, "_itemParameters");
-                Assert.IsNotNull(parameters);
+                var parameters = TestReflection.GetField<TMP_Text>(
+                    _controller,
+                    "_resultItemParameters"
+                );
                 Assert.IsTrue(parameters.gameObject.activeSelf);
                 StringAssert.Contains("+10%", parameters.text);
                 Assert.AreEqual(2, parameters.text.Split('\n').Length);
-
-                var itemName = TestReflection.GetField<TMP_Text>(_resultView, "_itemName");
-                Assert.Less(
-                    ((RectTransform)parameters.transform).anchoredPosition.y,
-                    ((RectTransform)itemName.transform).anchoredPosition.y
-                );
             }
             finally
             {
@@ -220,13 +201,16 @@ namespace CreativeAI.Tests.EditMode
             var prefab = AssetDatabase.LoadAssetAtPath<GameObject>(prefabPath);
 
             Assert.IsNotNull(prefab, prefabPath);
-            var resultView = prefab.GetComponentInChildren<CraftResultPanelView>(true);
-            Assert.IsNotNull(resultView);
+            var craftPanel = prefab.GetComponentInChildren<CraftPanelController>(true);
+            Assert.IsNotNull(craftPanel);
 
-            var parameters = TestReflection.GetField<TMP_Text>(resultView, "_itemParameters");
+            var resultRoot = TestReflection
+                .GetField<CanvasGroup>(craftPanel, "_resultCanvasGroup")
+                .transform;
+            var parameters = TestReflection.GetField<TMP_Text>(craftPanel, "_resultItemParameters");
             Assert.IsNotNull(parameters, "ResultPanelのItemParameters参照が未設定です。");
             Assert.AreEqual("ItemParameters", parameters.gameObject.name);
-            Assert.AreEqual(resultView.transform, parameters.transform.parent.parent);
+            Assert.AreEqual(resultRoot, parameters.transform.parent.parent);
             Assert.IsFalse(parameters.raycastTarget);
         }
     }

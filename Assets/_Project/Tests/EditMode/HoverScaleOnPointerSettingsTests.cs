@@ -1,5 +1,5 @@
 using System.Reflection;
-using CreativeAI.UI.InventoryUI;
+using CreativeAI.UI;
 using NUnit.Framework;
 using UnityEngine;
 

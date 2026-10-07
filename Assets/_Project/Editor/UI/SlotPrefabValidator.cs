@@ -2,14 +2,12 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using CreativeAI.UI;
-using CreativeAI.UI.CraftingUI;
-using CreativeAI.UI.InventoryUI;
 using TMPro;
 using UnityEditor;
 using UnityEngine;
 using UnityEngine.UI;
 
-namespace CreativeAI.EditorTools.UI
+namespace CreativeAI.EditorTools
 {
     public static class SlotPrefabValidator
     {

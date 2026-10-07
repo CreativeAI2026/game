@@ -3,15 +3,12 @@ using System.Collections.Generic;
 using System.Linq;
 using CreativeAI.Gameplay;
 using CreativeAI.UI;
-using CreativeAI.UI.CharacterUI;
-using CreativeAI.UI.CraftingUI;
-using CreativeAI.UI.InventoryUI;
 using UnityEditor;
 using UnityEditor.SceneManagement;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 
-namespace CreativeAI.EditorTools.UI
+namespace CreativeAI.EditorTools
 {
     public static class Area01UIValidator
     {
@@ -159,7 +156,7 @@ namespace CreativeAI.EditorTools.UI
                         ? new[] { ItemCategory.Equipment, ItemCategory.Food }
                         : new[]
                         {
-                            // 武器はインベントリ管理外(spec §2)。インベントリのタブは 装備品/食材/大事なもの の3つ。
+                            // 武器はインベントリ管理外。インベントリのタブは 装備品/食材/大事なもの の3つ。
                             ItemCategory.Equipment,
                             ItemCategory.Food,
                             ItemCategory.Important,

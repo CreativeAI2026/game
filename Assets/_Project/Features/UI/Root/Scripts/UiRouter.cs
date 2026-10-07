@@ -4,10 +4,8 @@ using UnityEngine;
 namespace CreativeAI.UI
 {
     /// <summary>
-    /// 操作で開く UI(キャラ / インベ / セーブ / 調合)の排他表示を管理する薄いルート。
-    /// 常駐 <see cref="UIRoot"/> にアタッチする。入口は Open / Toggle の1本で、開くのは常に1つ
-    /// (別のを開くと前のが閉じる=排他)。「今どれが開いているか」を持つだけで、
-    /// 全システムが叩く重い UIManager は作らない(spec §5「UI / オーバーレイ」の設計判断)。
+    /// 操作で開く UI(キャラ / インベ / セーブ / 調合)の排他表示を管理する薄いルート。常駐 <see cref="UIRoot"/> にアタッチする。
+    /// 入口は Open / Toggle で、別のを開くと前のが閉じる。「今どれが開いているか」だけを持つ。
     /// </summary>
     public sealed class UiRouter : MonoBehaviour
     {

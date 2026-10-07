@@ -1,8 +1,8 @@
 using System.Collections;
 using System.Collections.Generic;
 using System.Reflection;
-using CreativeAI.Core.EventSystem;
-using CreativeAI.UI.ConversationUI;
+using CreativeAI.Core;
+using CreativeAI.UI;
 using NUnit.Framework;
 using TMPro;
 using UnityEngine;
@@ -12,7 +12,7 @@ using UnityEngine.UI;
 namespace CreativeAI.Tests.PlayMode
 {
     /// <summary>
-    /// 会話UIの選択肢の検証(提示 → 選択 → 後片付け)。仕様は documents/Specification.md §4.1, §5。
+    /// 会話UIの選択肢の検証(提示 → 選択 → 後片付け)。
     /// 選び終わったあとの後片付けが Destroy を使うので、EditMode ではなくここで回す。
     /// </summary>
     public class ConversationViewPlayModeTests

@@ -45,37 +45,35 @@ namespace CreativeAI.Tests.EditMode
         }
 
         [Test]
-        public void RecipeCatalog_HasValidReferencesUniquePairs_AndContainsEveryRecipe()
+        public void RecipeCatalog_HasValidReferencesAndUniquePairs()
         {
-            List<CraftRecipeData> recipes = LoadAssets<CraftRecipeData>(
-                "Assets/_Project/Features/Crafting/Data"
+            CraftRecipeDB database = AssetDatabase.LoadAssetAtPath<CraftRecipeDB>(
+                RecipeDatabasePath
             );
-            Assert.That(recipes, Is.Not.Empty);
+            Assert.That(database, Is.Not.Null, RecipeDatabasePath);
+            Assert.That(database.Recipes, Is.Not.Empty);
 
             var pairs = new HashSet<string>();
-            foreach (CraftRecipeData recipe in recipes)
+            for (int i = 0; i < database.Recipes.Count; i++)
             {
-                Assert.That(recipe.resultItem, Is.Not.Null, $"{recipe.name}: resultItem");
-                Assert.That(recipe.material1, Is.Not.Null, $"{recipe.name}: material1");
-                Assert.That(recipe.material2, Is.Not.Null, $"{recipe.name}: material2");
-                Assert.That(recipe.material1, Is.Not.SameAs(recipe.material2), recipe.name);
+                CraftRecipe recipe = database.Recipes[i];
+                string label = $"_recipes[{i}]";
+                Assert.That(recipe.resultItem, Is.Not.Null, $"{label}: resultItem");
+                Assert.That(recipe.material1, Is.Not.Null, $"{label}: material1");
+                Assert.That(recipe.material2, Is.Not.Null, $"{label}: material2");
+                Assert.That(recipe.material1, Is.Not.SameAs(recipe.material2), label);
 
                 string pair =
                     string.CompareOrdinal(recipe.material1.key, recipe.material2.key) < 0
                         ? $"{recipe.material1.key}|{recipe.material2.key}"
                         : $"{recipe.material2.key}|{recipe.material1.key}";
                 Assert.That(pairs.Add(pair), Is.True, $"素材ペアが重複しています: {pair}");
+                Assert.That(
+                    database.FindRecipe(recipe.material2, recipe.material1),
+                    Is.SameAs(recipe),
+                    $"{label}: 素材を逆順にしても引けること"
+                );
             }
-
-            CraftRecipeDB database = AssetDatabase.LoadAssetAtPath<CraftRecipeDB>(
-                RecipeDatabasePath
-            );
-            Assert.That(database, Is.Not.Null, RecipeDatabasePath);
-            CollectionAssert.AreEquivalent(
-                recipes,
-                database.Recipes,
-                "CraftRecipeDBがDataと一致しません。"
-            );
         }
 
         private static List<T> LoadAssets<T>(string folder)

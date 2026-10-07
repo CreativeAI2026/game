@@ -4,11 +4,8 @@ using UnityEngine.AI;
 namespace CreativeAI.Gameplay
 {
     /// <summary>
-    /// 音を検知した際の調査ステート。
-    /// バイオRE4ガラドールのように、音源の距離に応じて確信度を変化させ、
-    /// 近距離（高確信）→その場所まで歩いて向かう
-    /// 遠距離（低確信）→その方向に振り返るだけで動かない
-    /// 音源の近くまで来たらパトロールに戻る。移動中に視認したらChaseへ。
+    /// 音を検知した際の調査（RE4 ガラドール風）。音源が近い（高確信）なら歩いて向かい、遠い（低確信）なら振り返るだけ。
+    /// 音源付近に着いたらパトロールへ、移動中に視認したら Chase へ。
     /// </summary>
     public class TBossSoundInvestigateState : TBossBaseState
     {

@@ -1,11 +1,12 @@
 using System.Collections.Generic;
 using System.Threading;
+using CreativeAI.Gameplay;
 using Cysharp.Threading.Tasks;
 using UnityEngine;
 using UnityEngine.Assertions;
 using UnityEngine.UI;
 
-namespace CreativeAI.Gameplay
+namespace CreativeAI.UI
 {
     /// <summary>
     /// 武器切替UI(documents/Specification.md §5)。入手ずみの武器のパネルを楕円上に並べ、選択中の武器を上に置く。
@@ -183,7 +184,7 @@ namespace CreativeAI.Gameplay
             ApplyVisibility(_weaponManager != null ? _weaponManager.OwnedCount : 0);
 
         /// <summary>
-        /// 武器0本=非表示 / 1本以上=表示(documents/Specification.md §5。モードでは変えない)。
+        /// 武器0本=非表示 / 1本以上=表示(モードでは変えない)。
         /// GameObject ごと止めると WeaponManager の購読が切れて戻れないため Canvas を無効化するだけにする。
         /// </summary>
         private void ApplyVisibility(int ownedCount)

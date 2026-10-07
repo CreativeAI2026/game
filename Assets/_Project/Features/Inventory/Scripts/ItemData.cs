@@ -46,10 +46,8 @@ namespace CreativeAI.Gameplay
     }
 
     /// <summary>
-    /// 調合でロールされた個体ステータス1つ(付与ステータスの型 + 値)。
-    /// stat は Specification §2.1「アイテムカテゴリと付与ステータス」の型名
-    /// = <c>CreativeAI.StatRoll.StatType</c> の名前(例: "AttackPct" / "MaxHpPct")。
-    /// 読み取り(CraftStatBridge.Accumulate)は大文字小文字を無視するので旧表記のセーブも効く。
+    /// 調合・拾得でロールされた個体ステータス1つ。stat は <see cref="StatType"/> 名(例: "AttackPct")で、
+    /// 読み取りは大文字小文字を無視する。
     /// </summary>
     [System.Serializable]
     public sealed class RolledStat
@@ -64,6 +62,14 @@ namespace CreativeAI.Gameplay
             this.stat = stat;
             this.value = value;
         }
+
+        public static IReadOnlyList<RolledStat> FromVector(StatVector rolled)
+        {
+            var list = new List<RolledStat>(rolled.Count);
+            foreach (var type in rolled.Types)
+                list.Add(new RolledStat(type.ToString(), rolled[type]));
+            return list;
+        }
     }
 
     public class ItemStack
@@ -77,7 +83,6 @@ namespace CreativeAI.Gameplay
             set => _count = IsInstance ? 1 : value;
         }
 
-        public EquipmentInstance EquipmentInstance { get; }
         public bool IsEquipped { get; set; }
 
         /// <summary>
@@ -87,22 +92,12 @@ namespace CreativeAI.Gameplay
         public IReadOnlyList<RolledStat> RolledStats { get; }
 
         /// <summary>ロール済み個体か(true ならマージ・スタックしない)。</summary>
-        public bool IsInstance =>
-            EquipmentInstance != null || (RolledStats != null && RolledStats.Count > 0);
+        public bool IsInstance => RolledStats != null && RolledStats.Count > 0;
 
         public ItemStack(ItemData data, int count = 1)
         {
             Data = data;
             Count = count;
-        }
-
-        public ItemStack(EquipmentData data, EquipmentInstance equipmentInstance)
-        {
-            Data = data;
-            EquipmentInstance =
-                equipmentInstance
-                ?? throw new System.ArgumentNullException(nameof(equipmentInstance));
-            Count = 1;
         }
 
         /// <summary>ロール済み個体を1つ作る（数量は常に1・マージしない）。</summary>

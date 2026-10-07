@@ -1,33 +1,21 @@
 #!/usr/bin/env python3
-"""NUnit3 の結果 XML を GitHub Actions のジョブサマリ用 Markdown（日本語）に変換する。
-
-使い方:
-    python3 .github/scripts/test-summary.py <ラベル> <結果XMLのパス...> >> "$GITHUB_STEP_SUMMARY"
-
-XML が無い（＝コンパイルエラー等でテストまで到達しなかった）場合もその旨を出力し、
-「何も出ないので状況が分からない」状態を作らない。
-"""
+"""NUnit3 の結果 XML を日本語の Markdown 表に変換する。"""
 
 import re
 import sys
 import xml.etree.ElementTree as ET
 from pathlib import Path
 
-# テストクラスの `/// <summary>` から「内容」列の文言を拾うので、その探索先。
 TESTS_ROOT = Path("Assets/_Project/Tests")
 
-
-# 「内容」列から落とす仕様書への参照。読む人が知りたいのは何を検証しているかで、
-# 章番号は表の中では邪魔になる（参照はソースのコメント側に残す）。
-# `§2「拾得」` のように節番号に続く見出しも、節の名前なのでまとめて落とす。
-_DOC_REF_RE = re.compile(r"(?:documents/)?[A-Za-z][\w.]*\.md|§[\d.]+(?:\s*「[^」]*」)?")
-
-# 参照だけを消すと `(, , )` のような殻が残るので、その判定に使う（区切り記号と助詞だけ）。
-_EMPTY_PAREN_RE = re.compile(r"^[\s,、/・:：の]*$")
+_SUMMARY_RE = re.compile(
+    r"///\s*<summary>(?P<body>.*?)///\s*</summary>\s*(?:\[[^\]]*\]\s*)*"
+    r"(?:public\s+|internal\s+|sealed\s+|abstract\s+|static\s+|partial\s+)*class\s+(?P<name>\w+)",
+    re.S,
+)
 
 
 def first_sentence(body):
-    """先頭 1 文。括弧の中の「。」では切らない（`(… 。参照)` で文が途切れるのを防ぐ）。"""
     depth = 0
     for i, ch in enumerate(body):
         if ch == "(":
@@ -39,38 +27,7 @@ def first_sentence(body):
     return body
 
 
-def strip_doc_refs(sentence):
-    """「内容」列から仕様書参照を落とす。括弧の中が参照だけなら括弧ごと消す。
-
-    `会話UI(documents/Specification.md §5: 画面下に会話ウィンドウ)` のように
-    括弧の中に説明も入っている場合は、説明だけ残す。
-    """
-
-    def clean(m):
-        inner = _DOC_REF_RE.sub("", m.group(1))
-        inner = re.sub(r"^[\s,、/・:：]+", "", inner)
-        inner = re.sub(r"[\s,、。/・:：]+$", "", inner)
-        inner = " ".join(inner.split())
-        return "" if _EMPTY_PAREN_RE.match(inner) else f"({inner})"
-
-    sentence = re.sub(r"\(([^()]*)\)", clean, sentence)
-    sentence = _DOC_REF_RE.sub("", sentence)  # 括弧に入っていない参照
-    return " ".join(sentence.split()).strip(" 、,/・:：")
-
-
-_SUMMARY_RE = re.compile(
-    r"///\s*<summary>(?P<body>.*?)///\s*</summary>\s*(?:\[[^\]]*\]\s*)*"
-    r"(?:public\s+|internal\s+|sealed\s+|abstract\s+|static\s+|partial\s+)*class\s+(?P<name>\w+)",
-    re.S,
-)
-
-
 def load_descriptions(root=TESTS_ROOT):
-    """テストクラス名 -> 内容（1 文）。`/// <summary>` の先頭 1 文を使う。
-
-    表とテストの説明が二重管理にならないよう、ソースのドキュメントコメントを唯一の出所にする。
-    summary が無いクラスは空になるので、書けば表に出る。
-    """
     descriptions = {}
     if not root.is_dir():
         return descriptions
@@ -82,11 +39,11 @@ def load_descriptions(root=TESTS_ROOT):
             continue
         for m in _SUMMARY_RE.finditer(text):
             body = re.sub(r"^\s*///\s?", "", m.group("body"), flags=re.M)
-            body = re.sub(r"<[^>]+>", "", body)  # <see cref="..."/> などのタグを落とす
+            body = re.sub(r"<[^>]+>", "", body)
             body = " ".join(body.split())
             if not body:
                 continue
-            sentence = strip_doc_refs(first_sentence(body))
+            sentence = first_sentence(body)
             if not sentence:
                 continue
             if len(sentence) > 60:
@@ -96,12 +53,6 @@ def load_descriptions(root=TESTS_ROOT):
 
 
 def class_of(tc):
-    """test-case からクラス名（名前空間なし）を取り出す。
-
-    `fullname` をドットで割ると `TestCase(0.5f, -1)` のような引数付きテストで
-    引数の中の小数点まで区切りに使われてしまう（`0f,-1` のような行が出る）ので、
-    NUnit が持っている `classname` を優先し、無い場合だけ引数部分を落として推定する。
-    """
     cls = tc.get("classname")
     if not cls:
         full = tc.get("fullname") or tc.get("name") or "?"
@@ -110,7 +61,6 @@ def class_of(tc):
 
 
 def collect(root):
-    """test-case を (クラス名 -> 集計) と、失敗/スキップの明細に畳む。"""
     per_class = {}
     failures = []
     skipped = []
@@ -144,11 +94,6 @@ def message_of(tc):
 
 
 def verdict_of(stats):
-    """判定セルの文言。どの状態でも「アイコン 件数/全体 ラベル」で揃える。
-
-    優先順位は 失敗 > スキップ > 成功。失敗とスキップが混在するクラスは
-    失敗を主に出し、スキップ件数を括弧で添える（見落とさせないため）。
-    """
     total = stats["total"]
     if stats["failed"]:
         mark = f"❌ {stats['failed']}/{total} 失敗"
@@ -226,9 +171,9 @@ def main():
         return 2
 
     label = sys.argv[1]
-    # game-ci は artifactsPath 配下に複数の XML を吐くことがあるので、全部まとめる。
     for path in sys.argv[2:]:
-        print(render(label, path))
+        mode = Path(path).stem.removesuffix("-results")
+        print(render(label if "*" in mode else f"{mode} {label}", path))
         print()
     return 0
 
