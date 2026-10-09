@@ -24,9 +24,7 @@ namespace CreativeAI.EditorTools
             if (!EditorSceneManager.SaveCurrentModifiedScenesIfUserWantsTo())
                 return;
 
-            var missing = Parts
-                .Where(p => !File.Exists(PropSceneWorkflow.ScenePath(p)))
-                .ToArray();
+            var missing = Parts.Where(p => !File.Exists(PropSceneWorkflow.ScenePath(p))).ToArray();
             if (missing.Length > 0)
             {
                 Debug.LogError(
