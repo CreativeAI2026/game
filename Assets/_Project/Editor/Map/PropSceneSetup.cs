@@ -10,18 +10,13 @@ using UnityEngine;
 namespace CreativeAI.EditorTools
 {
     /// <summary>
-    /// 小物シーンを畳まずに遊べるよう、`Field_Area01` に <see cref="AdditiveScenes"/> を置いて小物3枚を宣言し、
+    /// 小物シーンを畳まずに遊べるよう、`Field_Area01` に <see cref="AdditiveScenes"/> を置いて小物シーンを全部宣言し、
     /// Build Settings に登録する(名前で読むので未登録だと読めない)。統合(MergeIntoMapScene)は使わない運用。
     /// </summary>
     public static class PropSceneSetup
     {
         const string HolderName = "PropScenes";
-        static readonly string[] Floors = { "1F", "2F", "3F" };
-
-        static string ScenePath(string floor) =>
-            $"Assets/_Project/Scenes/Field/Field_Area01_Props_{floor}.unity";
-
-        static string SceneName(string floor) => $"Field_Area01_Props_{floor}";
+        static string[] Parts => PropSceneWorkflow.Parts;
 
         [MenuItem("Tools/CreativeAI/Map/小物シーン/実行時に重ねる設定(配線 + Build Settings 登録)")]
         public static void Setup()
@@ -29,7 +24,9 @@ namespace CreativeAI.EditorTools
             if (!EditorSceneManager.SaveCurrentModifiedScenesIfUserWantsTo())
                 return;
 
-            var missing = Floors.Where(f => !File.Exists(ScenePath(f))).ToArray();
+            var missing = Parts
+                .Where(p => !File.Exists(PropSceneWorkflow.ScenePath(p)))
+                .ToArray();
             if (missing.Length > 0)
             {
                 Debug.LogError(
@@ -43,14 +40,14 @@ namespace CreativeAI.EditorTools
             WireUpMapScene();
         }
 
-        /// <summary>小物3枚を Build Settings の末尾に足す(既にあれば触らない)。</summary>
+        /// <summary>小物シーンを Build Settings の末尾に足す(既にあれば触らない)。</summary>
         static void RegisterInBuildSettings()
         {
             var list = EditorBuildSettings.scenes.ToList();
             var added = new List<string>();
-            foreach (var floor in Floors)
+            foreach (var part in Parts)
             {
-                var path = ScenePath(floor);
+                var path = PropSceneWorkflow.ScenePath(part);
                 if (list.Any(s => s.path == path))
                     continue;
                 list.Add(new EditorBuildSettingsScene(path, true));
@@ -68,7 +65,7 @@ namespace CreativeAI.EditorTools
             );
         }
 
-        /// <summary>Field_Area01 に AdditiveScenes を置いて小物3枚を宣言する。</summary>
+        /// <summary>Field_Area01 に AdditiveScenes を置いて小物シーンを全部宣言する。</summary>
         static void WireUpMapScene()
         {
             var scene = EditorSceneManager.OpenScene(
@@ -88,7 +85,7 @@ namespace CreativeAI.EditorTools
             if (comp == null)
                 comp = holder.AddComponent<AdditiveScenes>();
 
-            var names = Floors.Select(SceneName).ToArray();
+            var names = Parts.Select(PropSceneWorkflow.SceneName).ToArray();
             var so = new SerializedObject(comp);
             var arr = so.FindProperty("_sceneNames");
             arr.arraySize = names.Length;
