@@ -716,6 +716,13 @@ namespace CreativeAI.UI
         public IEnumerator RunCommand(string command, string argument) =>
             RunPresentationCommand(command, argument);
 
+        public IEnumerator Close()
+        {
+            if (State == ConversationState.Hidden)
+                yield break;
+            yield return HideAnimated();
+        }
+
         private void SetChoicesActive(bool active)
         {
             _choicePresenter?.SetActive(active);
