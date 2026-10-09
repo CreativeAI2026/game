@@ -30,6 +30,19 @@ namespace CreativeAI.UI.CharacterUI
         [SerializeField]
         private AnimatedValueBar _hpBar;
 
+        [Header("文字アニメーション")]
+        [SerializeField]
+        private bool _animateTextOnOpen = true;
+
+        [SerializeField, Min(0f)]
+        private float _textStartDelay = 0.08f;
+
+        [SerializeField, Min(0.001f)]
+        private float _characterInterval = 0.045f;
+
+        [SerializeField, Min(0f)]
+        private float _rowDelay = 0.04f;
+
         [Header("テスト表示")]
         [SerializeField, InspectorName("テスト値を使う")]
         private bool _useTestValues;
@@ -52,17 +65,21 @@ namespace CreativeAI.UI.CharacterUI
         [SerializeField, Min(0f), InspectorName("CRTD")]
         private float _testCriticalDamage = 150f;
 
+        private TmpTypewriterPlayer _typewriter;
+
         private void Awake()
         {
+            _typewriter = new TmpTypewriterPlayer(this);
             ResolveReferences();
         }
 
         private void OnEnable()
         {
             ResolveReferences();
+            _typewriter ??= new TmpTypewriterPlayer(this);
             if (!_useTestValues)
                 Subscribe();
-            RefreshAll(false);
+            RefreshAll(false, _animateTextOnOpen);
             _hpBar?.PlayOpenAnimation();
         }
 
@@ -76,12 +93,13 @@ namespace CreativeAI.UI.CharacterUI
                 Unsubscribe();
                 if (!_useTestValues)
                     Subscribe();
-                RefreshAll(false);
+                RefreshAll(false, false);
             }
         }
 
         private void OnDisable()
         {
+            _typewriter?.CompleteAll();
             Unsubscribe();
         }
 
@@ -89,7 +107,8 @@ namespace CreativeAI.UI.CharacterUI
         private void ReplayTestStatus()
         {
             ResolveReferences();
-            RefreshAll(false);
+            _typewriter ??= new TmpTypewriterPlayer(this);
+            RefreshAll(false, _animateTextOnOpen);
             _hpBar?.PlayOpenAnimation();
         }
 
@@ -98,7 +117,7 @@ namespace CreativeAI.UI.CharacterUI
             if (_useTestValues)
                 return;
 
-            SetHp(current, maximum, true);
+            SetHp(current, maximum, true, false);
         }
 
         private void OnStatsChanged()
@@ -106,55 +125,71 @@ namespace CreativeAI.UI.CharacterUI
             if (_useTestValues)
                 return;
 
-            RefreshAll(true);
+            RefreshAll(true, false);
         }
 
-        private void RefreshAll(bool animateHp)
+        private void RefreshAll(bool animateHp, bool animateText)
         {
             if (_useTestValues)
             {
-                SetHp(_testCurrentHp, _testMaxHp, animateHp);
-                SetNumber(_attackValue, _testAttack);
-                SetNumber(_defenseValue, _testDefense);
-                SetPercent(_criticalRateValue, _testCriticalRate);
-                SetPercent(_criticalDamageValue, _testCriticalDamage);
+                SetHp(_testCurrentHp, _testMaxHp, animateHp, animateText);
+                SetNumber(_attackValue, _testAttack, 1, animateText);
+                SetNumber(_defenseValue, _testDefense, 2, animateText);
+                SetPercent(_criticalRateValue, _testCriticalRate, 3, animateText);
+                SetPercent(_criticalDamageValue, _testCriticalDamage, 4, animateText);
                 return;
             }
 
             if (_playerStatus == null)
                 return;
 
-            SetHp(_playerStatus.CurrentHp, _playerStatus.CurrentMaxHp, animateHp);
-            SetNumber(_attackValue, _playerStatus.CurrentAttackPower);
-            SetNumber(_defenseValue, _playerStatus.CurrentDefense);
-            SetPercent(_criticalRateValue, _playerStatus.CurrentCriticalChance);
-            SetPercent(_criticalDamageValue, _playerStatus.CurrentCriticalDamageRatio);
+            SetHp(_playerStatus.CurrentHp, _playerStatus.CurrentMaxHp, animateHp, animateText);
+            SetNumber(_attackValue, _playerStatus.CurrentAttackPower, 1, animateText);
+            SetNumber(_defenseValue, _playerStatus.CurrentDefense, 2, animateText);
+            SetPercent(_criticalRateValue, _playerStatus.CurrentCriticalChance, 3, animateText);
+            SetPercent(
+                _criticalDamageValue,
+                _playerStatus.CurrentCriticalDamageRatio,
+                4,
+                animateText
+            );
         }
 
-        private void SetHp(float current, float maximum, bool animate)
+        private void SetHp(float current, float maximum, bool animateBar, bool animateText)
         {
             float clampedMaximum = Mathf.Max(0f, maximum);
             float clampedCurrent = Mathf.Clamp(current, 0f, clampedMaximum);
 
-            if (_hpValue != null)
-            {
-                _hpValue.text =
-                    $"{Mathf.RoundToInt(clampedCurrent)}/{Mathf.RoundToInt(clampedMaximum)}";
-            }
+            PlayText(
+                _hpValue,
+                $"{Mathf.RoundToInt(clampedCurrent)}/{Mathf.RoundToInt(clampedMaximum)}",
+                0,
+                animateText
+            );
 
-            _hpBar?.SetValue(clampedCurrent, clampedMaximum, animate);
+            _hpBar?.SetValue(clampedCurrent, clampedMaximum, animateBar);
         }
 
-        private static void SetNumber(TMP_Text text, float value)
+        private void SetNumber(TMP_Text text, float value, int rowIndex, bool animate)
         {
-            if (text != null)
-                text.text = Mathf.RoundToInt(value).ToString();
+            PlayText(text, Mathf.RoundToInt(value).ToString(), rowIndex, animate);
         }
 
-        private static void SetPercent(TMP_Text text, float value)
+        private void SetPercent(TMP_Text text, float value, int rowIndex, bool animate)
         {
-            if (text != null)
-                text.text = $"{value:0.##}%";
+            PlayText(text, $"{value:0.##}%", rowIndex, animate);
+        }
+
+        private void PlayText(TMP_Text text, string value, int rowIndex, bool animate)
+        {
+            _typewriter ??= new TmpTypewriterPlayer(this);
+            _typewriter.Play(
+                text,
+                value,
+                _textStartDelay + _rowDelay * rowIndex,
+                _characterInterval,
+                animate
+            );
         }
 
         private void Subscribe()

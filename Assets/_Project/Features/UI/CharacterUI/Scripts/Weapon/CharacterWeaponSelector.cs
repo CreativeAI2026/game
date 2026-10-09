@@ -55,18 +55,34 @@ namespace CreativeAI.UI.CharacterUI
         [SerializeField]
         private bool _resetOnEnable = true;
 
+        [Header("文字アニメーション")]
+        [SerializeField]
+        private bool _animateText = true;
+
+        [SerializeField, Min(0f)]
+        private float _textStartDelay = 0.05f;
+
+        [SerializeField, Min(0.001f)]
+        private float _characterInterval = 0.035f;
+
+        [SerializeField, Min(0f)]
+        private float _sectionDelay = 0.06f;
+
         private bool _initialized;
+        private TmpTypewriterPlayer _typewriter;
 
         public int CurrentIndex { get; private set; } = -1;
 
         private void Awake()
         {
+            _typewriter = new TmpTypewriterPlayer(this);
             ResolveReferences();
             Initialize();
         }
 
         private void OnEnable()
         {
+            _typewriter ??= new TmpTypewriterPlayer(this);
             Initialize();
             if (_weapons.Count == 0)
                 return;
@@ -75,6 +91,11 @@ namespace CreativeAI.UI.CharacterUI
                 Select(Mathf.Clamp(_initialIndex, 0, _weapons.Count - 1));
             else
                 ApplySelection();
+        }
+
+        private void OnDisable()
+        {
+            _typewriter?.CompleteAll();
         }
 
         private void OnDestroy()
@@ -131,22 +152,29 @@ namespace CreativeAI.UI.CharacterUI
             if (data == null)
                 return;
 
-            if (_weaponName != null)
-                _weaponName.text = data.itemName;
-            if (_weaponDescription != null)
-                _weaponDescription.text = data.description;
-            SetModifier(_attackValue, data.attack);
-            SetModifier(_criticalRateValue, data.criticalRate);
-            SetModifier(_criticalDamageValue, data.criticalDamage);
+            PlayText(_weaponName, data.itemName, 0);
+            PlayText(_weaponDescription, data.description, 1);
+            SetModifier(_attackValue, data.attack, 2);
+            SetModifier(_criticalRateValue, data.criticalRate, 3);
+            SetModifier(_criticalDamageValue, data.criticalDamage, 4);
         }
 
-        private static void SetModifier(TMP_Text text, float value)
+        private void SetModifier(TMP_Text text, float value, int sectionIndex)
         {
-            if (text == null)
-                return;
-
             string sign = value >= 0f ? "+" : string.Empty;
-            text.text = $"{sign}{value:0.##}%";
+            PlayText(text, $"{sign}{value:0.##}%", sectionIndex);
+        }
+
+        private void PlayText(TMP_Text text, string value, int sectionIndex)
+        {
+            _typewriter ??= new TmpTypewriterPlayer(this);
+            _typewriter.Play(
+                text,
+                value,
+                _textStartDelay + _sectionDelay * sectionIndex,
+                _characterInterval,
+                _animateText
+            );
         }
 
         private void ResolveReferences()

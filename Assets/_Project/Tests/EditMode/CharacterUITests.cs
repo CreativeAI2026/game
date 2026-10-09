@@ -222,6 +222,25 @@ namespace CreativeAI.Tests.EditMode
         }
 
         [Test]
+        public void QuickFoodTab_SwapSlots_PreservesBothItemsAndOrder()
+        {
+            var apple = MakeFood(3001);
+            var banana = MakeFood(3002);
+            _inv.AddItem(apple, 1);
+            _inv.AddItem(banana, 1);
+            ItemStack appleStack = StackOf(apple);
+            ItemStack bananaStack = StackOf(banana);
+            _inv.SetQuickFood(0, appleStack);
+            _inv.SetQuickFood(1, bananaStack);
+
+            Assert.IsTrue(_inv.SwapQuickFood(0, 1));
+
+            var slots = _inv.GetQuickFoodSlots();
+            Assert.AreSame(bananaStack, slots[0]);
+            Assert.AreSame(appleStack, slots[1]);
+        }
+
+        [Test]
         public void QuickFoodTab_RejectsNonFoodAndOutOfRange()
         {
             var gear = MakeEquipment(2001);

@@ -230,6 +230,24 @@ namespace CreativeAI.Gameplay
             QuickFoodChanged?.Invoke();
         }
 
+        /// <summary>即時使用食材スロット2枠の内容を、1回の変更通知で入れ替える。</summary>
+        public bool SwapQuickFood(int firstSlot, int secondSlot)
+        {
+            var slots = _storage.QuickFoodSlots;
+            if (
+                firstSlot < 0
+                || firstSlot >= slots.Length
+                || secondSlot < 0
+                || secondSlot >= slots.Length
+                || firstSlot == secondSlot
+            )
+                return false;
+
+            (slots[firstSlot], slots[secondSlot]) = (slots[secondSlot], slots[firstSlot]);
+            QuickFoodChanged?.Invoke();
+            return true;
+        }
+
         /// <summary>指定スタックを参照している即時使用食材スロットを空にする(在庫から消えたときの後始末)。発火は呼び出し側。</summary>
         private bool ClearQuickFoodReferencing(ItemStack stack)
         {

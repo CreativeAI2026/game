@@ -98,7 +98,9 @@ namespace CreativeAI.Gameplay
         /// </summary>
         public void SeedTestItems()
         {
-            if (_testItemsSeeded)
+            // Domain Reload / Scene Reload 無効時は、前回の開発用 Manager が空のまま残ることがある。
+            // 所持品が空なら再投入を許可し、同じ内容を重複追加することだけを防ぐ。
+            if (_testItemsSeeded && GetAllItems().Count > 0)
                 return;
             _testItemsSeeded = true;
             AddTestItems();
@@ -338,6 +340,10 @@ namespace CreativeAI.Gameplay
 
         /// <summary>スロット slot を空にする。</summary>
         public void ClearQuickFood(int slot) => InventoryService.ClearQuickFood(slot);
+
+        /// <summary>即時使用食材スロット2枠の内容を入れ替える。</summary>
+        public bool SwapQuickFood(int firstSlot, int secondSlot) =>
+            InventoryService.SwapQuickFood(firstSlot, secondSlot);
 
         private void AddTestItems()
         {
