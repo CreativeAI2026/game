@@ -33,13 +33,13 @@ namespace CreativeAI.Gameplay
         private bool _addTestItemsOnAwake = true;
 
         private InventoryService _inventoryService;
-        private RecipeCraftingService _recipeCraftingService;
+        private RecipeCraftingService _recipeRecipeCraftingService;
         private PlayerStatus _playerStatus;
 
         public InventoryService InventoryService => _inventoryService ??= CreateInventoryService();
 
         public RecipeCraftingService RecipeCraftingService =>
-            _recipeCraftingService ??= new RecipeCraftingService(InventoryService);
+            _recipeRecipeCraftingService ??= new RecipeCraftingService(InventoryService);
 
         /// <summary>
         /// セッション常駐の Inventory を1つだけ生成する(既存ならそれを返す)。Core から Gameplay は参照できないため Core ではなくここに置き、
@@ -195,24 +195,9 @@ namespace CreativeAI.Gameplay
             return InventoryService.GetItemCount(data);
         }
 
-        public bool CanCraft(CraftRecipe recipe, int quantity = 1)
-        {
-            return RecipeCraftingService.CanCraft(recipe, quantity);
-        }
-
         public bool CanCraft(CraftRecipe recipe, ItemStack materialA, ItemStack materialB)
         {
             return RecipeCraftingService.CanCraft(recipe, materialA, materialB);
-        }
-
-        public int GetMaximumCraftable(CraftRecipe recipe)
-        {
-            return RecipeCraftingService.GetMaximumCraftable(recipe);
-        }
-
-        public bool TryCraft(CraftRecipe recipe, int quantity)
-        {
-            return RecipeCraftingService.TryCraft(recipe, quantity);
         }
 
         public bool TryCraft(CraftRecipe recipe, ItemStack materialA, ItemStack materialB)
@@ -282,40 +267,8 @@ namespace CreativeAI.Gameplay
             return b;
         }
 
-        public bool IsEquipped(ItemStack stack) => stack?.IsEquipped ?? false;
-
-        public bool IsItemEquipped(ItemData data)
-        {
-            return data != null
-                && InventoryService
-                    .GetAllItems()
-                    .Any(stack => stack.Data == data && stack.IsEquipped);
-        }
-
-        public bool HasEquippedMaterial(IEnumerable<ItemData> materials)
-        {
-            return materials != null && materials.Any(IsItemEquipped);
-        }
-
         /// <summary>stack が即時使用食材スロットにセットされているか(調合の素材から除外・警告に使う)。</summary>
         public bool IsInQuickFood(ItemStack stack) => InventoryService.IsInQuickFood(stack);
-
-        /// <summary>data の在庫スタックのいずれかが即時使用食材にセットされているか。</summary>
-        public bool IsItemInQuickFood(ItemData data)
-        {
-            if (data == null)
-                return false;
-            foreach (var slot in InventoryService.GetQuickFoodSlots())
-                if (slot != null && slot.Data == data)
-                    return true;
-            return false;
-        }
-
-        /// <summary>materials のいずれかが即時使用食材にセットされているか(レシピ調合の可否判定用)。</summary>
-        public bool HasQuickFoodMaterial(IEnumerable<ItemData> materials)
-        {
-            return materials != null && materials.Any(IsItemInQuickFood);
-        }
 
         public List<ItemStack> GetItemsByCategory(ItemCategory category)
         {

@@ -119,10 +119,10 @@ namespace CreativeAI.EditorTools
                     Debug.LogError($"[PostCraft CSV] {i + 1}行目: {exception.Message}");
                     return false;
                 }
-                if (columns.Count != 9)
+                if (columns.Count != 8)
                 {
                     Debug.LogError(
-                        $"[PostCraft CSV] {i + 1}行目: 列数は9列必要です。現在={columns.Count}"
+                        $"[PostCraft CSV] {i + 1}行目: 列数は8列必要です。現在={columns.Count}"
                     );
                     return false;
                 }
@@ -140,14 +140,6 @@ namespace CreativeAI.EditorTools
                     return false;
                 }
 
-                if (!bool.TryParse(columns[8].Trim(), out bool showInRecipeCraft))
-                {
-                    Debug.LogError(
-                        $"[PostCraft CSV] {i + 1}行目: showInRecipeCraftはtrue/falseで指定してください。"
-                    );
-                    return false;
-                }
-
                 rows.Add(
                     new Row(
                         i + 1,
@@ -158,8 +150,7 @@ namespace CreativeAI.EditorTools
                         columns[4].Trim(),
                         columns[5].Trim(),
                         columns[6].Trim(),
-                        columns[7].Trim(),
-                        showInRecipeCraft
+                        columns[7].Trim()
                     )
                 );
             }
@@ -307,7 +298,6 @@ namespace CreativeAI.EditorTools
                 resultItem = result,
                 material1 = FindItem(row.Material1Key),
                 material2 = FindItem(row.Material2Key),
-                showInRecipeCraft = row.ShowInRecipeCraft,
             };
 
         private static ItemData FindItem(string key) =>
@@ -382,7 +372,6 @@ namespace CreativeAI.EditorTools
             public string Description { get; }
             public string Material1Key { get; }
             public string Material2Key { get; }
-            public bool ShowInRecipeCraft { get; }
 
             public Row(
                 int lineNumber,
@@ -393,8 +382,7 @@ namespace CreativeAI.EditorTools
                 string itemName,
                 string description,
                 string material1Key,
-                string material2Key,
-                bool showInRecipeCraft
+                string material2Key
             )
             {
                 LineNumber = lineNumber;
@@ -406,7 +394,6 @@ namespace CreativeAI.EditorTools
                 Description = description;
                 Material1Key = material1Key;
                 Material2Key = material2Key;
-                ShowInRecipeCraft = showInRecipeCraft;
             }
         }
     }

@@ -95,7 +95,6 @@ namespace CreativeAI.Tests.EditMode
                     return true;
                 },
                 null,
-                1,
                 null
             );
 
@@ -114,13 +113,11 @@ namespace CreativeAI.Tests.EditMode
         [Test]
         public void RunCraftFlow_Failure_HidesFlowAndUnlocksInteraction()
         {
-            bool failed = false;
-            var routine = _controller.RunCraftFlow(() => false, null, 1, null, () => failed = true);
+            var routine = _controller.RunCraftFlow(() => false, null, null);
 
             Assert.IsTrue(routine.MoveNext());
             Assert.IsFalse(routine.MoveNext());
 
-            Assert.IsTrue(failed);
             Assert.IsFalse(_loadingRoot.activeSelf);
             Assert.IsFalse(_controller.IsCraftFlowRunning);
         }
@@ -128,8 +125,8 @@ namespace CreativeAI.Tests.EditMode
         [Test]
         public void RunCraftFlow_WhileRunning_RejectsSecondFlow()
         {
-            IEnumerator first = _controller.RunCraftFlow(() => true, null, 1, null);
-            IEnumerator second = _controller.RunCraftFlow(() => true, null, 1, null);
+            IEnumerator first = _controller.RunCraftFlow(() => true, null, null);
+            IEnumerator second = _controller.RunCraftFlow(() => true, null, null);
 
             Assert.IsTrue(first.MoveNext());
             Assert.IsFalse(second.MoveNext());
@@ -140,32 +137,10 @@ namespace CreativeAI.Tests.EditMode
         [Test]
         public void RunCraftFlow_NullAction_DoesNotStart()
         {
-            IEnumerator routine = _controller.RunCraftFlow(null, null, 1, null);
+            IEnumerator routine = _controller.RunCraftFlow(null, null, null);
 
             Assert.IsFalse(routine.MoveNext());
             Assert.IsFalse(_controller.IsCraftFlowRunning);
-        }
-
-        [Test]
-        public void RunCraftFlow_FirstCraft_ShowsNewBadgeUntilResultCloses()
-        {
-            IEnumerator routine = _controller.RunCraftFlow(
-                () => true,
-                null,
-                1,
-                null,
-                showNewBadge: true
-            );
-
-            Assert.IsTrue(routine.MoveNext());
-            Assert.IsFalse(routine.MoveNext());
-
-            var badge = TestReflection.GetField<TMP_Text>(_controller, "_resultNewBadge");
-            Assert.IsNotNull(badge);
-            Assert.IsTrue(badge.gameObject.activeSelf);
-
-            _controller.CancelCraftFlow();
-            Assert.IsFalse(badge.gameObject.activeSelf);
         }
 
         [Test]
@@ -178,7 +153,7 @@ namespace CreativeAI.Tests.EditMode
 
             try
             {
-                _controller.ShowResult(equipment, 1, null);
+                _controller.ShowResult(equipment, null);
 
                 var parameters = TestReflection.GetField<TMP_Text>(
                     _controller,

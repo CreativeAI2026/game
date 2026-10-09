@@ -4,16 +4,6 @@ using System.Linq;
 
 namespace CreativeAI.Gameplay
 {
-    /// <summary>調合できない理由。画面の警告にもそのまま使う。</summary>
-    public enum CraftBlockReason
-    {
-        None,
-        CategoryMismatch,
-        EquippedMaterial,
-        MissingMaterials,
-        QuickFoodMaterial,
-    }
-
     /// <summary>
     /// CraftRecipe のレシピで調合する。素材はインベントリのアイテムとして消費するだけで、
     /// アイテム使用時の効果は発動しない。
@@ -28,274 +18,81 @@ namespace CreativeAI.Gameplay
                 inventoryService ?? throw new ArgumentNullException(nameof(inventoryService));
         }
 
-        public bool CanCraft(CraftRecipe recipe, int quantity = 1)
-        {
-            return TryResolveMaterialStacks(recipe, quantity, out _);
-        }
-
+        /// <summary>
+        /// 選んだ素材2つ(各1個)でレシピの完成品を作れるか。装備中・即時食材セット中の素材は使えない。
+        /// </summary>
         public bool CanCraft(CraftRecipe recipe, ItemStack materialA, ItemStack materialB)
         {
-            return CanUseSelectedMaterialStacks(recipe, materialA, materialB);
+            return IsValidRecipe(recipe)
+                && CanUseAsMaterial(materialA)
+                && CanUseAsMaterial(materialB)
+                && materialA != materialB
+                && materialA.Data != materialB.Data
+                && recipe.MatchesMaterials(materialA.Data, materialB.Data);
         }
 
-        public int GetMaximumCraftable(CraftRecipe recipe) =>
-            GetMaximumCraftable(recipe, excludeQuickFood: true);
-
-        /// <summary>所持している総数(装備中・即時食材セット中も含む)。素材一覧の「所持数」表示用。</summary>
-        public int GetOwnedCount(ItemData item) => _inventoryService.GetItemCount(item);
-
-        /// <summary>
-        /// quantity 個作れない理由。装備中 → 即時食材セット中 → 素材不足 の優先順で返す。作れるなら None。
-        /// </summary>
-        public CraftBlockReason GetBlockReason(CraftRecipe recipe, int quantity)
-        {
-            int craftable = GetMaximumCraftable(recipe, excludeQuickFood: true);
-            if (quantity > 0 && craftable >= quantity)
-                return CraftBlockReason.None;
-
-            if (HasEquippedMaterialOnly(recipe))
-                return CraftBlockReason.EquippedMaterial;
-
-            // 即時食材の分も数えれば足りるなら、即時食材が原因。
-            if (quantity > 0 && GetMaximumCraftable(recipe, excludeQuickFood: false) >= quantity)
-                return CraftBlockReason.QuickFoodMaterial;
-
-            return CraftBlockReason.MissingMaterials;
-        }
-
-        private int GetMaximumCraftable(CraftRecipe recipe, bool excludeQuickFood)
-        {
-            if (!TryGetValidMaterials(recipe, out var materials))
-                return 0;
-
-            int max = int.MaxValue;
-            foreach (var material in materials)
-            {
-                int available = _inventoryService
-                    .GetAllItems()
-                    .Where(stack =>
-                        stack.Data == material
-                        && stack.Count > 0
-                        && !stack.IsEquipped
-                        && !(excludeQuickFood && _inventoryService.IsInQuickFood(stack))
-                    )
-                    .Sum(stack => stack.Count);
-                max = Math.Min(max, available);
-            }
-
-            return Math.Max(0, max);
-        }
-
-        // 装備中を除くと1個も作れず、その素材を装備中なら true。
-        private bool HasEquippedMaterialOnly(CraftRecipe recipe)
-        {
-            if (!TryGetValidMaterials(recipe, out var materials))
-                return false;
-
-            var allItems = _inventoryService.GetAllItems();
-            bool craftableWithoutEquipped = materials.All(material =>
-                allItems.Any(stack =>
-                    stack.Data == material && stack.Count > 0 && !stack.IsEquipped
-                )
-            );
-            return !craftableWithoutEquipped
-                && allItems.Any(stack =>
-                    stack.IsEquipped && stack.Count > 0 && materials.Contains(stack.Data)
-                );
-        }
-
-        public bool TryCraft(CraftRecipe recipe, int quantity)
-        {
-            if (!TryResolveMaterialStacks(recipe, quantity, out var consumptions))
-                return false;
-
-            if (!CanConsumeAll(consumptions))
-                return false;
-
-            foreach (var consumption in consumptions)
-            {
-                bool consumed = _inventoryService.ConsumeFromStack(
-                    consumption.Stack,
-                    consumption.Count
-                );
-                if (!consumed)
-                    return false;
-            }
-
-            GrantResult(recipe, quantity);
-            return true;
-        }
-
+        /// <summary>素材を1個ずつ消費して完成品を1つ付与する。作れなければ何も変えずに false。</summary>
         public bool TryCraft(CraftRecipe recipe, ItemStack materialA, ItemStack materialB)
         {
-            if (!CanUseSelectedMaterialStacks(recipe, materialA, materialB))
+            if (!CanCraft(recipe, materialA, materialB))
                 return false;
 
-            var consumptions = new List<StackConsumption> { new(materialA, 1), new(materialB, 1) };
-
-            if (!CanConsumeAll(consumptions))
+            if (
+                !_inventoryService.ConsumeFromStack(materialA, 1)
+                || !_inventoryService.ConsumeFromStack(materialB, 1)
+            )
                 return false;
 
-            foreach (var consumption in consumptions)
-            {
-                bool consumed = _inventoryService.ConsumeFromStack(
-                    consumption.Stack,
-                    consumption.Count
-                );
-                if (!consumed)
-                    return false;
-            }
-
-            GrantResult(recipe, 1);
+            GrantResult(recipe);
             return true;
         }
 
         /// <summary>
-        /// 結果アイテムを付与する。装備品は「端末で個体差ロール」した個体を quantity 個ぶん作る。
-        /// 食材など非装備品は
-        /// 固定ルールなのでそのまま数量ぶん追加する。単発 TryCraft の一部=確定でありプレビュー/再ロールは無い。
+        /// 結果アイテムを1つ付与する。装備品は個体差ロールした個体を作り、食材など非装備品はそのまま追加する。
         /// </summary>
-        private void GrantResult(CraftRecipe recipe, int quantity)
+        private void GrantResult(CraftRecipe recipe)
         {
             if (recipe.resultItem is EquipmentData)
             {
-                var a = recipe.material1 as EquipmentData;
-                var b = recipe.material2 as EquipmentData;
-                var rng = new SystemRandomSource();
-                for (int i = 0; i < quantity; i++)
-                {
-                    var rolled = RollCraftedStats(
-                        EquipmentData.ToStatVector(a),
-                        EquipmentData.ToStatVector(b),
-                        rng
-                    );
-                    _inventoryService.AddInstance(recipe.resultItem, RolledStat.FromVector(rolled));
-                }
+                var rolled = RollCraftedStats(
+                    EquipmentData.ToStatVector(recipe.material1 as EquipmentData),
+                    EquipmentData.ToStatVector(recipe.material2 as EquipmentData),
+                    new SystemRandomSource()
+                );
+                _inventoryService.AddInstance(recipe.resultItem, RolledStat.FromVector(rolled));
             }
             else
             {
-                _inventoryService.AddItem(recipe.resultItem, quantity);
+                _inventoryService.AddItem(recipe.resultItem, 1);
             }
         }
 
-        private bool TryResolveMaterialStacks(
-            CraftRecipe recipe,
-            int quantity,
-            out List<StackConsumption> consumptions
-        )
-        {
-            consumptions = null;
-
-            if (recipe == null || recipe.resultItem == null || quantity <= 0)
-                return false;
-
-            if (!TryGetValidMaterials(recipe, out var materials))
-                return false;
-
-            consumptions = new List<StackConsumption>();
-            var availableStacks = _inventoryService.GetAllItems();
-
-            foreach (var material in materials)
-            {
-                int remaining = quantity;
-                foreach (
-                    var stack in availableStacks.Where(candidate =>
-                        CanUseAsMaterial(candidate, material, 1)
-                    )
-                )
-                {
-                    int consumeCount = Math.Min(stack.Count, remaining);
-                    consumptions.Add(new StackConsumption(stack, consumeCount));
-                    remaining -= consumeCount;
-
-                    if (remaining <= 0)
-                        break;
-                }
-
-                if (remaining > 0)
-                    return false;
-            }
-
-            return consumptions.Count > 0;
-        }
-
-        private bool CanUseAsMaterial(ItemStack stack, ItemData requiredItem, int count)
-        {
-            if (
-                stack == null
-                || stack.Data != requiredItem
-                || stack.Count <= 0
-                || stack.IsEquipped
-                || _inventoryService.IsInQuickFood(stack)
-            )
-                return false;
-
-            return stack.Count >= count;
-        }
-
-        private bool CanUseSelectedMaterialStacks(
-            CraftRecipe recipe,
-            ItemStack materialA,
-            ItemStack materialB
-        )
-        {
-            if (!TryGetValidMaterials(recipe, out _))
-                return false;
-
-            if (
-                !CanUseAsSelectedMaterial(materialA)
-                || !CanUseAsSelectedMaterial(materialB)
-                || materialA == materialB
-                || materialA.Data == materialB.Data
-            )
-                return false;
-
-            return recipe.MatchesMaterials(materialA.Data, materialB.Data);
-        }
-
-        private bool CanUseAsSelectedMaterial(ItemStack stack)
+        private bool CanUseAsMaterial(ItemStack stack)
         {
             return stack != null
                 && stack.Data != null
                 && stack.Count > 0
                 && !stack.IsEquipped
-                && !_inventoryService.IsInQuickFood(stack);
+                && !_inventoryService.IsInQuickFood(stack)
+                && _inventoryService.ContainsStack(stack);
         }
 
-        private static bool TryGetValidMaterials(CraftRecipe recipe, out List<ItemData> materials)
+        private static bool IsValidRecipe(CraftRecipe recipe)
         {
-            materials = null;
-
-            if (recipe == null || recipe.resultItem == null)
+            if (recipe?.resultItem == null)
                 return false;
 
-            materials = recipe.Materials.ToList();
-            if (materials.Count != 2 || materials.Any(material => material == null))
+            var a = recipe.material1;
+            var b = recipe.material2;
+            if (a == null || b == null || a == b)
                 return false;
 
             // 調合は「装備品同士 / 食材同士」のみ(武器・大事なもの・カテゴリ跨ぎは不可)。
             // UI 非経由の直呼びも弾くためサービス層で明示ガードする。
-            if (materials[0] is WeaponData || materials[1] is WeaponData)
+            if (a is WeaponData || b is WeaponData)
                 return false;
-            if (materials[0].category != materials[1].category)
-                return false;
-            if (
-                materials[0].category != ItemCategory.Equipment
-                && materials[0].category != ItemCategory.Food
-            )
-                return false;
-
-            return materials[0] != materials[1];
-        }
-
-        private bool CanConsumeAll(List<StackConsumption> consumptions)
-        {
-            return consumptions != null
-                && consumptions.All(consumption =>
-                    CanUseAsSelectedMaterial(consumption.Stack)
-                    && _inventoryService.ContainsStack(consumption.Stack)
-                    && consumption.Stack.Count >= consumption.Count
-                );
+            return a.category == b.category
+                && (a.category == ItemCategory.Equipment || a.category == ItemCategory.Food);
         }
 
         // --- 装備品の能力値の抽選 ---
@@ -367,18 +164,6 @@ namespace CreativeAI.Gameplay
                 return bas;
 
             return bas + headroom * (1.0 - Math.Exp(-p.Beta * sub / headroom));
-        }
-
-        private readonly struct StackConsumption
-        {
-            public StackConsumption(ItemStack stack, int count)
-            {
-                Stack = stack;
-                Count = count;
-            }
-
-            public ItemStack Stack { get; }
-            public int Count { get; }
         }
     }
 }

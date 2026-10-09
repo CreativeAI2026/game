@@ -20,12 +20,10 @@ namespace CreativeAI.Tests.EditMode
         private string _backup;
         private GameObject _pmGo;
         private GameObject _invGo;
-        private GameObject _bookGo;
         private GameObject _gmmGo;
         private GameObject _playerGo;
         private ProgressManager _pm;
         private InventoryManager _inv;
-        private RecipeBookManager _book;
         private GameModeManager _gmm;
         private WeaponManager _weapons;
         private PlayerParameterData _playerData;
@@ -69,10 +67,6 @@ namespace CreativeAI.Tests.EditMode
             _inv = _invGo.AddComponent<InventoryManager>();
             TestReflection.SetStaticProperty("Instance", _inv);
 
-            _bookGo = new GameObject("BOOK");
-            _book = _bookGo.AddComponent<RecipeBookManager>();
-            TestReflection.SetStaticProperty("Instance", _book);
-
             _gmmGo = new GameObject("GMM");
             _gmm = _gmmGo.AddComponent<GameModeManager>();
             TestReflection.SetStaticProperty("Instance", _gmm);
@@ -97,11 +91,9 @@ namespace CreativeAI.Tests.EditMode
             ItemDB.InjectForTests(null);
             TestReflection.SetStaticProperty<ProgressManager>("Instance", null);
             TestReflection.SetStaticProperty<InventoryManager>("Instance", null);
-            TestReflection.SetStaticProperty<RecipeBookManager>("Instance", null);
             TestReflection.SetStaticProperty<GameModeManager>("Instance", null);
             Object.DestroyImmediate(_playerGo);
             Object.DestroyImmediate(_gmmGo);
-            Object.DestroyImmediate(_bookGo);
             Object.DestroyImmediate(_invGo);
             Object.DestroyImmediate(_pmGo);
             foreach (var a in _assets)
@@ -221,23 +213,6 @@ namespace CreativeAI.Tests.EditMode
             Assert.IsTrue(restoredRolled.IsInstance, "ロール済み個体は個体のまま戻る");
             Assert.AreEqual("attackPct", restoredRolled.RolledStats[0].stat);
             Assert.AreEqual(12.5f, restoredRolled.RolledStats[0].value, 1e-4f);
-        }
-
-        [Test]
-        public void SaveThenLoad_RestoresRevealedRecipes()
-        {
-            var recipe = new CraftRecipe();
-            // 実カタログの初期解禁(showInRecipeCraft)と id がぶつからないよう、テスト専用の id を使う。
-            recipe.resultItem = MakeFood(990001);
-            Assert.IsTrue(_book.Reveal(recipe)); // 前提: 新規解禁
-
-            SaveService.Save();
-            _book.RestoreRevealed(new List<int>()); // 解禁を落としてから復元
-            Assert.IsFalse(_book.IsRevealed(recipe));
-
-            SaveService.Load();
-
-            Assert.IsTrue(_book.IsRevealed(recipe));
         }
 
         [Test]
