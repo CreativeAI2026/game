@@ -17,7 +17,6 @@ MonoBehaviour:
   key: apple_brown_rice_cream_cookie
   itemName: "\u308A\u3093\u3054\u3068\u30AF\u30EA\u30FC\u30E0\u7384\u7C73\u30AF\u30C3\u30AD\u30FC"
   category: 2
-  effect: 
   description: 
   _maxStack: 1
   _craftedResult: 1

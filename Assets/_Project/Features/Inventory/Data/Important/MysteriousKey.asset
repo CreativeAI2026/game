@@ -17,6 +17,5 @@ MonoBehaviour:
   key: mysterious_key
   itemName: "\u8B0E\u306E\u9375"
   category: 3
-  effect:
   description:
   _maxStack: 1

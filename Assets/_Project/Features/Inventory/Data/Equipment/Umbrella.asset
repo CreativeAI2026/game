@@ -17,7 +17,6 @@ MonoBehaviour:
   key: umbrella
   itemName: "傘"
   category: 1
-  effect: "効果   防御力 +10%"
   description:
   _maxStack: 1
   attack: 0

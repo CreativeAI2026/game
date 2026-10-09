@@ -17,7 +17,6 @@ MonoBehaviour:
   key: grapes_peach
   itemName: "\u3076\u3069\u3046\u3068\u6843"
   category: 2
-  effect: 
   description: 
   _maxStack: 1
   _craftedResult: 1

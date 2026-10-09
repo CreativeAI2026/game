@@ -17,7 +17,6 @@ MonoBehaviour:
   key: coffee_orange_juice
   itemName: "\u30B3\u30FC\u30D2\u30FC\u3068\u307F\u304B\u3093\u30B8\u30E5\u30FC\u30B9"
   category: 2
-  effect: 
   description: 
   _maxStack: 1
   _craftedResult: 1

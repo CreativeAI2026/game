@@ -1,4 +1,5 @@
 using System.Collections;
+using System.Collections.Generic;
 using CreativeAI.Gameplay;
 using CreativeAI.UI;
 using NUnit.Framework;
@@ -92,10 +93,8 @@ namespace CreativeAI.Tests.EditMode
                 () =>
                 {
                     crafted = true;
-                    return true;
+                    return new ItemStack(null);
                 },
-                null,
-                1,
                 null
             );
 
@@ -114,13 +113,11 @@ namespace CreativeAI.Tests.EditMode
         [Test]
         public void RunCraftFlow_Failure_HidesFlowAndUnlocksInteraction()
         {
-            bool failed = false;
-            var routine = _controller.RunCraftFlow(() => false, null, 1, null, () => failed = true);
+            var routine = _controller.RunCraftFlow(() => null, null);
 
             Assert.IsTrue(routine.MoveNext());
             Assert.IsFalse(routine.MoveNext());
 
-            Assert.IsTrue(failed);
             Assert.IsFalse(_loadingRoot.activeSelf);
             Assert.IsFalse(_controller.IsCraftFlowRunning);
         }
@@ -128,8 +125,8 @@ namespace CreativeAI.Tests.EditMode
         [Test]
         public void RunCraftFlow_WhileRunning_RejectsSecondFlow()
         {
-            IEnumerator first = _controller.RunCraftFlow(() => true, null, 1, null);
-            IEnumerator second = _controller.RunCraftFlow(() => true, null, 1, null);
+            IEnumerator first = _controller.RunCraftFlow(() => new ItemStack(null), null);
+            IEnumerator second = _controller.RunCraftFlow(() => new ItemStack(null), null);
 
             Assert.IsTrue(first.MoveNext());
             Assert.IsFalse(second.MoveNext());
@@ -140,36 +137,45 @@ namespace CreativeAI.Tests.EditMode
         [Test]
         public void RunCraftFlow_NullAction_DoesNotStart()
         {
-            IEnumerator routine = _controller.RunCraftFlow(null, null, 1, null);
+            IEnumerator routine = _controller.RunCraftFlow(null, null);
 
             Assert.IsFalse(routine.MoveNext());
             Assert.IsFalse(_controller.IsCraftFlowRunning);
         }
 
         [Test]
-        public void RunCraftFlow_FirstCraft_ShowsNewBadgeUntilResultCloses()
+        public void ShowResult_RolledEquipment_ShowsRolledParameters()
         {
-            IEnumerator routine = _controller.RunCraftFlow(
-                () => true,
-                null,
-                1,
-                null,
-                showNewBadge: true
+            var equipment = ScriptableObject.CreateInstance<EquipmentData>();
+            equipment.itemName = "Test Equipment";
+            equipment.defense = 10; // 固定値はロール個体の表示に混ざらない
+            var rolled = new ItemStack(
+                equipment,
+                new List<RolledStat> { new("AttackPct", 12.5f), new("CritRate", 4f) }
             );
 
-            Assert.IsTrue(routine.MoveNext());
-            Assert.IsFalse(routine.MoveNext());
+            try
+            {
+                _controller.ShowResult(rolled, null);
 
-            var badge = TestReflection.GetField<TMP_Text>(_controller, "_resultNewBadge");
-            Assert.IsNotNull(badge);
-            Assert.IsTrue(badge.gameObject.activeSelf);
-
-            _controller.CancelCraftFlow();
-            Assert.IsFalse(badge.gameObject.activeSelf);
+                var parameters = TestReflection.GetField<TMP_Text>(
+                    _controller,
+                    "_resultItemParameters"
+                );
+                Assert.IsTrue(parameters.gameObject.activeSelf);
+                StringAssert.Contains("攻撃 +12.5%", parameters.text);
+                StringAssert.Contains("会心率 +4%", parameters.text);
+                StringAssert.DoesNotContain("防御", parameters.text);
+                Assert.AreEqual(2, parameters.text.Split('\n').Length);
+            }
+            finally
+            {
+                Object.DestroyImmediate(equipment);
+            }
         }
 
         [Test]
-        public void ShowResult_Equipment_ShowsParameters()
+        public void ShowResult_FixedEquipment_ShowsItemParameters()
         {
             var equipment = ScriptableObject.CreateInstance<EquipmentData>();
             equipment.itemName = "Test Equipment";
@@ -178,14 +184,13 @@ namespace CreativeAI.Tests.EditMode
 
             try
             {
-                _controller.ShowResult(equipment, 1, null);
+                _controller.ShowResult(new ItemStack(equipment), null);
 
                 var parameters = TestReflection.GetField<TMP_Text>(
                     _controller,
                     "_resultItemParameters"
                 );
-                Assert.IsTrue(parameters.gameObject.activeSelf);
-                StringAssert.Contains("+10%", parameters.text);
+                StringAssert.Contains("防御 +10%", parameters.text);
                 Assert.AreEqual(2, parameters.text.Split('\n').Length);
             }
             finally

@@ -10,8 +10,8 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: e1bf1653fbb00d84bbe67daf4d1c5c8a, type: 3}
-  m_Name: ItemDB
-  m_EditorClassIdentifier: CreativeAI.Gameplay::CreativeAI.Gameplay.ItemDB
+  m_Name: ItemCatalog
+  m_EditorClassIdentifier: CreativeAI.Gameplay::CreativeAI.Gameplay.ItemCatalog
   items:
   - {fileID: 11400000, guid: d50673e5f8234ffa997515445c6786d0, type: 2}
   - {fileID: 11400000, guid: e7fbd7ecfd83ba64284e68d09bba1571, type: 2}

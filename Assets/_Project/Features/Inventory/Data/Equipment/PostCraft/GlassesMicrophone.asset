@@ -17,7 +17,6 @@ MonoBehaviour:
   key: glasses_microphone
   itemName: "\u30E1\u30AC\u30CD\u3068\u30DE\u30A4\u30AF"
   category: 1
-  effect: 
   description: 
   _maxStack: 1
   attack: 0

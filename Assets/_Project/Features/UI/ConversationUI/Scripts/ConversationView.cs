@@ -693,7 +693,8 @@ namespace CreativeAI.UI
         /// </summary>
         public IEnumerator ShowItemGet(string itemKey, string message)
         {
-            var data = ItemDB.Instance != null ? ItemDB.Instance.GetItemByKey(itemKey) : null;
+            var data =
+                ItemCatalog.Instance != null ? ItemCatalog.Instance.GetItemByKey(itemKey) : null;
             string body =
                 !string.IsNullOrWhiteSpace(message) ? message
                 : data != null && !string.IsNullOrEmpty(data.itemName)

@@ -17,7 +17,6 @@ MonoBehaviour:
   key: clock_microphone
   itemName: "\u61D0\u4E2D\u6642\u8A08\u3068\u30DE\u30A4\u30AF"
   category: 1
-  effect: 
   description: 
   _maxStack: 1
   attack: 0

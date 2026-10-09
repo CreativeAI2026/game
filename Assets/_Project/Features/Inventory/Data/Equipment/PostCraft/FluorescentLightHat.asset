@@ -17,7 +17,6 @@ MonoBehaviour:
   key: fluorescent_light_hat
   itemName: "\u86CD\u5149\u706F\u3068\u5E3D\u5B50"
   category: 1
-  effect: 
   description: 
   _maxStack: 1
   attack: 0

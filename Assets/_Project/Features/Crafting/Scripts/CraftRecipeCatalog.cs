@@ -1,6 +1,5 @@
 using System;
 using System.Collections.Generic;
-using System.Linq;
 using UnityEngine;
 
 namespace CreativeAI.Gameplay
@@ -13,12 +12,6 @@ namespace CreativeAI.Gameplay
         public ItemData material2;
         public ItemData resultItem;
 
-        // 初期から解禁(常時表示)かどうかの設計データ。実行時の解禁状態は RecipeBookManager が持つ。
-        public bool showInRecipeCraft;
-
-        public IEnumerable<ItemData> Materials =>
-            new[] { material1, material2 }.Where(item => item != null);
-
         public bool MatchesMaterials(ItemData itemA, ItemData itemB)
         {
             if (itemA == null || itemB == null || material1 == null || material2 == null)
@@ -30,14 +23,13 @@ namespace CreativeAI.Gameplay
     }
 
     /// <summary>
-    /// レシピの一覧。(素材A, 素材B) → レシピ の Map として引ける。読み取り専用のカタログで、
-    /// 解禁状態は持たない(RecipeBookManager に問い合わせる)。
+    /// レシピの一覧。(素材A, 素材B) → レシピ の Map として引ける。読み取り専用のカタログ。
     /// </summary>
     [CreateAssetMenu(
-        fileName = "CraftRecipeDB",
-        menuName = "Scriptable Objects/Crafting/Craft Recipe DB"
+        fileName = "CraftRecipeCatalog",
+        menuName = "Scriptable Objects/Crafting/Craft Recipe Catalog"
     )]
-    public class CraftRecipeDB : ScriptableObject
+    public class CraftRecipeCatalog : ScriptableObject
     {
         [SerializeField]
         private List<CraftRecipe> _recipes = new();
@@ -46,8 +38,6 @@ namespace CreativeAI.Gameplay
 
         public IReadOnlyList<CraftRecipe> Recipes => _recipes;
 
-        public IEnumerable<CraftRecipe> VisibleRecipes => _recipes.Where(IsVisible);
-
         public CraftRecipe FindRecipe(ItemData materialA, ItemData materialB)
         {
             if (materialA == null || materialB == null)
@@ -55,12 +45,6 @@ namespace CreativeAI.Gameplay
 
             _recipeByMaterials ??= BuildMap();
             return _recipeByMaterials.GetValueOrDefault(MaterialKey(materialA, materialB));
-        }
-
-        public bool IsVisible(CraftRecipe recipe)
-        {
-            return recipe?.resultItem != null
-                && (RecipeBookManager.Instance?.IsRevealed(recipe) ?? false);
         }
 
         private Dictionary<(int, int), CraftRecipe> BuildMap()
@@ -86,18 +70,5 @@ namespace CreativeAI.Gameplay
         {
             _recipeByMaterials = null;
         }
-
-#if UNITY_EDITOR
-        /// <summary>CSV 取り込み用。同じ完成品のレシピがあれば置き換え、無ければ追加する。</summary>
-        public void SetRecipe(CraftRecipe recipe)
-        {
-            int index = _recipes.FindIndex(existing => existing?.resultItem == recipe.resultItem);
-            if (index >= 0)
-                _recipes[index] = recipe;
-            else
-                _recipes.Add(recipe);
-            _recipeByMaterials = null;
-        }
-#endif
     }
 }

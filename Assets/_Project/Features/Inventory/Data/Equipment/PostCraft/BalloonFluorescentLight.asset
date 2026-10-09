@@ -17,7 +17,6 @@ MonoBehaviour:
   key: balloon_fluorescent_light
   itemName: "\u98A8\u8239\u3068\u86CD\u5149\u706F"
   category: 1
-  effect: 
   description: 
   _maxStack: 1
   attack: 0

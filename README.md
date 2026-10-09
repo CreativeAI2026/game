@@ -18,7 +18,7 @@ game/                          ← リポジトリルート
 │   │   │   ├── Player/        プレイヤー・武器
 │   │   │   ├── Enemy/         敵・ボス
 │   │   │   ├── Combat/        戦闘（当たり判定・パラメータ）
-│   │   │   ├── Crafting/      調合（レシピ・解禁状態・調合処理）
+│   │   │   ├── Crafting/      調合（レシピ・調合処理）
 │   │   │   ├── Inventory/     アイテム定義・所持品・装備品の能力値
 │   │   │   ├── SaveSystem/    セーブ・ロード
 │   │   │   ├── Field/         フィールド（扉・拾えるアイテム・シーンの重ね読み）
@@ -38,7 +38,7 @@ game/                          ← リポジトリルート
 │   │   ├── Audio/             BGM・SE のファイル
 │   │   ├── Scenes/            シーン（Title / Field / Battle / UI プレビュー）
 │   │   ├── Settings/          URP / Input System 等の設定
-│   │   ├── Resources/         実行時ロードするアセット（ItemDB・CraftRecipeDB・常駐生成の設定）
+│   │   ├── Resources/         実行時ロードするアセット（ItemCatalog・CraftRecipeCatalog・常駐生成の設定）
 │   │   ├── Editor/            Editor 拡張（Tools メニュー・UI バリデータ・CSV / イベント取り込み）
 │   │   └── Tests/             EditMode / PlayMode テスト
 │   ├── Plugins/               外部アセット（DOTween 等）

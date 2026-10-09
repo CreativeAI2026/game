@@ -8,22 +8,22 @@ using UnityEditor;
 
 namespace CreativeAI.Gameplay
 {
-    [CreateAssetMenu(fileName = "ItemDB", menuName = "Scriptable Objects/ItemDB")]
-    public class ItemDB : ScriptableObject
+    [CreateAssetMenu(fileName = "ItemCatalog", menuName = "Scriptable Objects/ItemCatalog")]
+    public class ItemCatalog : ScriptableObject
     {
         private const string InventoryDataFolder = "Assets/_Project/Features/Inventory/Data";
 
-        private static ItemDB _instance;
-        private static ItemDB _injected;
+        private static ItemCatalog _instance;
+        private static ItemCatalog _injected;
 
-        public static ItemDB Instance
+        public static ItemCatalog Instance
         {
             get
             {
                 // 注入中は Resources ロードも同期もしない(合成カタログが実アセットで潰れるため)。
                 if (_injected != null)
                     return _injected;
-                _instance ??= Resources.Load<ItemDB>("ItemDB");
+                _instance ??= Resources.Load<ItemCatalog>("ItemCatalog");
 #if UNITY_EDITOR
                 _instance?.SyncFromInventoryDataFolder();
 #endif
@@ -33,7 +33,7 @@ namespace CreativeAI.Gameplay
 
         /// <summary>
         /// テスト専用: <see cref="Instance"/> を合成カタログに差し替える。null を渡すと解除して通常のロードに戻る。
-        /// ItemDB は Resources + Data フォルダ同期で自分を組み立てるため、実アセットに依存せず
+        /// ItemCatalog は Resources + Data フォルダ同期で自分を組み立てるため、実アセットに依存せず
         /// itemKey→ItemData の解決を検証したいテストにはこの注入口が要る。
         /// </summary>
         public static void InjectForTests(IReadOnlyList<ItemData> testItems)
@@ -44,7 +44,7 @@ namespace CreativeAI.Gameplay
             if (testItems == null)
                 return;
 
-            _injected = CreateInstance<ItemDB>();
+            _injected = CreateInstance<ItemCatalog>();
             _injected.items = testItems.Where(i => i != null).ToList();
         }
 
@@ -96,7 +96,7 @@ namespace CreativeAI.Gameplay
             if (items != null && items.SequenceEqual(loadedItems))
                 return;
 
-            Undo.RecordObject(this, "Sync ItemDB");
+            Undo.RecordObject(this, "Sync ItemCatalog");
             items = loadedItems;
             EditorUtility.SetDirty(this);
         }

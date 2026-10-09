@@ -17,7 +17,6 @@ MonoBehaviour:
   key: glasses_magnet
   itemName: "\u30E1\u30AC\u30CD\u3068\u78C1\u77F3"
   category: 1
-  effect: 
   description: 
   _maxStack: 1
   attack: 0

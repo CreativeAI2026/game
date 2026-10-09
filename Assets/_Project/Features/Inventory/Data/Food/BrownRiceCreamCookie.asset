@@ -18,7 +18,6 @@ MonoBehaviour:
   itemName: "クリーム玄米クッキー"
   category: 2
   description:
-  effect: "効果　最大HPの20%を回復"
   _maxStack: 99
   attack: 0
   defense: 0

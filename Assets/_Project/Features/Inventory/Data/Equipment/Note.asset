@@ -18,7 +18,6 @@ MonoBehaviour:
   itemName: "ノート"
   category: 1
   description:
-  effect: "効果   最大HP +20"
   attack: 0
   defense: 0
   criticalDamage: 0

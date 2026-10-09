@@ -18,7 +18,6 @@ MonoBehaviour:
   itemName: "剣"
   category: 0
   description:
-  effect: "攻撃% +25% / 会心ダメージ +50%"
   attack: 25
   defense: 0
   criticalDamage: 50

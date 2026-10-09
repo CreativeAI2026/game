@@ -392,7 +392,7 @@ namespace CreativeAI.Core
 
         /// <summary>
         /// itemKey の「大事なもの」を1つ以上所持しているか(hasItem 条件の判定)。
-        /// 実体(InventoryManager)は itemKey を ItemDB で引き、カテゴリが 大事なもの の場合のみ
+        /// 実体(InventoryManager)は itemKey を ItemCatalog で引き、カテゴリが 大事なもの の場合のみ
         /// 所持数を見る。装備品/食材/武器のキーや未登録キーは対象外で false を返す。
         /// </summary>
         bool HasImportantItem(string itemKey);

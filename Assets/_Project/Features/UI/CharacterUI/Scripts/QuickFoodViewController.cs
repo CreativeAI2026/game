@@ -179,7 +179,7 @@ namespace CreativeAI.UI
                 _slots[i].SetSelected(i == index);
             _selectedSlotIndex = index;
 
-            _detailPanel?.Show(_slots[index].Item, _emptyLabel);
+            _detailPanel?.Show(_slots[index].Stack, _emptyLabel);
         }
 
         private int FirstEmptySlotIndex()
@@ -262,7 +262,7 @@ namespace CreativeAI.UI
         {
             if (!IsFood(stack))
                 return;
-            _detailPanel?.Show(stack.Data);
+            _detailPanel?.Show(stack);
         }
 
         private void OnFoodSlotDoubleClicked(ItemStack stack)
@@ -279,7 +279,7 @@ namespace CreativeAI.UI
             if (InventoryManager.Instance?.SetQuickFood(target, stack) == true)
             {
                 SelectSlot(target);
-                _detailPanel?.Show(stack.Data);
+                _detailPanel?.Show(stack);
             }
         }
 

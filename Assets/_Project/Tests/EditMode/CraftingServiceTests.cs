@@ -11,17 +11,17 @@ namespace CreativeAI.Tests.EditMode
     /// 装備品はロール個体 / 食材は固定。
     /// MonoBehaviour を挟まない純粋サービスなので InventoryService を直接組んで叩く。
     /// </summary>
-    public class RecipeCraftingServiceTests
+    public class CraftingServiceTests
     {
         private InventoryService _inv;
-        private RecipeCraftingService _craft;
+        private CraftingService _craft;
         private readonly List<Object> _assets = new();
 
         [SetUp]
         public void SetUp()
         {
             _inv = new InventoryService();
-            _craft = new RecipeCraftingService(_inv);
+            _craft = new CraftingService(_inv);
         }
 
         [TearDown]
@@ -59,6 +59,12 @@ namespace CreativeAI.Tests.EditMode
 
         private ItemStack StackOf(ItemData data) => _inv.GetAllItems().Find(s => s.Data == data);
 
+        private bool CanCraftOnce(CraftRecipe r) =>
+            _craft.CanCraft(r, StackOf(r.material1), StackOf(r.material2));
+
+        private bool CraftOnce(CraftRecipe r) =>
+            _craft.TryCraft(r, StackOf(r.material1), StackOf(r.material2), out _);
+
         /// <summary>在庫にあるその品の総数(スタックごと消えていれば 0)。</summary>
         private int CountOf(ItemData data) =>
             _inv.GetAllItems().Where(s => s.Data == data).Sum(s => s.Count);
@@ -75,8 +81,9 @@ namespace CreativeAI.Tests.EditMode
             _inv.AddItem(grapes, 1);
             _inv.AddItem(miso, 1);
 
-            Assert.IsTrue(_craft.TryCraft(recipe, 1));
+            Assert.IsTrue(_craft.TryCraft(recipe, StackOf(grapes), StackOf(miso), out var crafted));
 
+            Assert.AreSame(StackOf(soup), crafted, "完成品が入った在庫のスタックを返す");
             Assert.AreEqual(0, CountOf(grapes), "素材は消費される");
             Assert.AreEqual(0, CountOf(miso));
             var result = StackOf(soup);
@@ -97,10 +104,11 @@ namespace CreativeAI.Tests.EditMode
             _inv.AddItem(a, 1);
             _inv.AddItem(b, 1);
 
-            Assert.IsTrue(_craft.TryCraft(recipe, 1));
+            Assert.IsTrue(_craft.TryCraft(recipe, StackOf(a), StackOf(b), out var crafted));
 
             var made = StackOf(result);
             Assert.IsNotNull(made);
+            Assert.AreSame(made, crafted, "作った個体そのもの(結果表示に使う)を返す");
             Assert.IsTrue(made.IsInstance, "装備品は端末でロールした個体になる");
             Assert.IsNotNull(made.RolledStats);
             Assert.LessOrEqual(made.RolledStats.Count, 2, "付与数は最大2つ");
@@ -116,23 +124,11 @@ namespace CreativeAI.Tests.EditMode
             _inv.AddItem(a, 3);
             _inv.AddItem(b, 2);
 
-            Assert.IsTrue(_craft.TryCraft(recipe, StackOf(a), StackOf(b)));
+            Assert.IsTrue(_craft.TryCraft(recipe, StackOf(a), StackOf(b), out _));
 
             Assert.AreEqual(2, CountOf(a));
             Assert.AreEqual(1, CountOf(b));
             Assert.AreEqual(1, CountOf(result));
-        }
-
-        [Test]
-        public void GetMaximumCraftable_IsLimitedByScarcestMaterial()
-        {
-            var a = Make<FoodData>(3001);
-            var b = Make<FoodData>(3002);
-            var recipe = MakeRecipe(a, b, Make<FoodData>(3103));
-            _inv.AddItem(a, 5);
-            _inv.AddItem(b, 2);
-
-            Assert.AreEqual(2, _craft.GetMaximumCraftable(recipe));
         }
 
         // --- カテゴリ検証(装備品同士 / 食材同士のみ) ---
@@ -146,8 +142,8 @@ namespace CreativeAI.Tests.EditMode
             _inv.AddItem(food, 1);
             _inv.AddItem(gear, 1);
 
-            Assert.IsFalse(_craft.CanCraft(recipe));
-            Assert.IsFalse(_craft.TryCraft(recipe, 1));
+            Assert.IsFalse(CanCraftOnce(recipe));
+            Assert.IsFalse(CraftOnce(recipe));
             Assert.AreEqual(1, CountOf(food), "失敗時は素材を減らさない");
             Assert.AreEqual(1, CountOf(gear));
         }
@@ -162,7 +158,7 @@ namespace CreativeAI.Tests.EditMode
             _inv.AddItem(w1, 1);
             _inv.AddItem(w2, 1);
 
-            Assert.IsFalse(_craft.TryCraft(recipe, 1));
+            Assert.IsFalse(CraftOnce(recipe));
             Assert.AreEqual(1, CountOf(w1));
         }
 
@@ -176,7 +172,7 @@ namespace CreativeAI.Tests.EditMode
             _inv.AddItem(k1, 1);
             _inv.AddItem(k2, 1);
 
-            Assert.IsFalse(_craft.TryCraft(recipe, 1));
+            Assert.IsFalse(CraftOnce(recipe));
             Assert.AreEqual(1, CountOf(k1));
         }
 
@@ -187,7 +183,7 @@ namespace CreativeAI.Tests.EditMode
             var recipe = MakeRecipe(a, a, Make<FoodData>(3106));
             _inv.AddItem(a, 5);
 
-            Assert.IsFalse(_craft.TryCraft(recipe, 1));
+            Assert.IsFalse(CraftOnce(recipe));
             Assert.AreEqual(5, CountOf(a));
         }
 
@@ -203,7 +199,7 @@ namespace CreativeAI.Tests.EditMode
             _inv.AddItem(b, 1);
             StackOf(a).IsEquipped = true;
 
-            Assert.IsFalse(_craft.TryCraft(recipe, 1), "装備中の装備品は素材にできない");
+            Assert.IsFalse(CraftOnce(recipe), "装備中の装備品は素材にできない");
             Assert.AreEqual(1, CountOf(a));
             Assert.AreEqual(1, CountOf(b));
         }
@@ -218,128 +214,39 @@ namespace CreativeAI.Tests.EditMode
             _inv.AddItem(b, 1);
             Assert.IsTrue(_inv.SetQuickFood(0, StackOf(a)));
 
-            Assert.IsFalse(
-                _craft.TryCraft(recipe, 1),
-                "即時使用にセット済みの食材は素材にできない"
-            );
+            Assert.IsFalse(CraftOnce(recipe), "即時使用にセット済みの食材は素材にできない");
             Assert.AreEqual(1, StackOf(a).Count);
-        }
-
-        // --- 作れない理由(画面の警告の出し分け) ---
-
-        [Test]
-        public void GetBlockReason_EnoughMaterials_IsNone()
-        {
-            var a = Make<FoodData>(3001);
-            var b = Make<FoodData>(3002);
-            var recipe = MakeRecipe(a, b, Make<FoodData>(3108));
-            _inv.AddItem(a, 2);
-            _inv.AddItem(b, 2);
-
-            Assert.AreEqual(CraftBlockReason.None, _craft.GetBlockReason(recipe, 2));
-            Assert.AreEqual(CraftBlockReason.MissingMaterials, _craft.GetBlockReason(recipe, 3));
-            Assert.AreEqual(2, _craft.GetMaximumCraftable(recipe));
-        }
-
-        [Test]
-        public void GetBlockReason_OnlyEquippedMaterial_IsEquippedMaterial()
-        {
-            var a = Make<EquipmentData>(2001);
-            var b = Make<EquipmentData>(2002);
-            var recipe = MakeRecipe(a, b, Make<EquipmentData>(2102));
-            _inv.AddItem(a, 1);
-            _inv.AddItem(b, 1);
-            StackOf(a).IsEquipped = true;
-
-            Assert.AreEqual(CraftBlockReason.EquippedMaterial, _craft.GetBlockReason(recipe, 1));
-        }
-
-        [Test]
-        public void GetBlockReason_EnoughOnlyWithQuickFood_IsQuickFoodMaterial()
-        {
-            var a = Make<FoodData>(3001);
-            var b = Make<FoodData>(3002);
-            var recipe = MakeRecipe(a, b, Make<FoodData>(3109));
-            _inv.AddItem(a, 1);
-            _inv.AddItem(b, 1);
-            Assert.IsTrue(_inv.SetQuickFood(0, StackOf(a)));
-
-            Assert.AreEqual(CraftBlockReason.QuickFoodMaterial, _craft.GetBlockReason(recipe, 1));
-        }
-
-        [Test]
-        public void GetBlockReason_QuickFoodButOtherMaterialMissing_IsMissingMaterials()
-        {
-            var a = Make<FoodData>(3001);
-            var b = Make<FoodData>(3002);
-            var recipe = MakeRecipe(a, b, Make<FoodData>(3110));
-            _inv.AddItem(a, 1);
-            Assert.IsTrue(_inv.SetQuickFood(0, StackOf(a)));
-
-            Assert.AreEqual(CraftBlockReason.MissingMaterials, _craft.GetBlockReason(recipe, 1));
-        }
-
-        [Test]
-        public void GetOwnedCount_IncludesEquippedStacks()
-        {
-            var a = Make<EquipmentData>(2001);
-            _inv.AddItem(a, 1);
-            _inv.AddItem(a, 1);
-            StackOf(a).IsEquipped = true;
-
-            Assert.AreEqual(2, _craft.GetOwnedCount(a));
         }
 
         // --- 原子性(素材を消費し結果を付与、を1回で確定) ---
 
         [Test]
-        public void TryCraft_InsufficientMaterial_LeavesInventoryUntouched()
+        public void TryCraft_MissingMaterial_LeavesInventoryUntouched()
         {
             var a = Make<FoodData>(3001);
             var b = Make<FoodData>(3002);
             var result = Make<FoodData>(3108);
             var recipe = MakeRecipe(a, b, result);
-            _inv.AddItem(a, 3);
-            _inv.AddItem(b, 1); // b が足りない
+            _inv.AddItem(a, 3); // b を持っていない
 
-            Assert.IsFalse(_craft.CanCraft(recipe, 2));
-            Assert.IsFalse(_craft.TryCraft(recipe, 2));
+            Assert.IsFalse(CanCraftOnce(recipe));
+            Assert.IsFalse(CraftOnce(recipe));
 
             Assert.AreEqual(3, CountOf(a), "片方だけ消える半端な状態にならない");
-            Assert.AreEqual(1, CountOf(b));
             Assert.AreEqual(0, CountOf(result));
         }
 
         [Test]
-        public void TryCraft_NullRecipeOrZeroQuantity_IsRejected()
+        public void TryCraft_NullRecipe_IsRejected()
         {
             var a = Make<FoodData>(3001);
             var b = Make<FoodData>(3002);
-            var recipe = MakeRecipe(a, b, Make<FoodData>(3109));
             _inv.AddItem(a, 1);
             _inv.AddItem(b, 1);
 
-            Assert.IsFalse(_craft.TryCraft(null, 1));
-            Assert.IsFalse(_craft.TryCraft(recipe, 0));
-            Assert.IsFalse(_craft.TryCraft(recipe, -1));
+            Assert.IsFalse(_craft.TryCraft(null, StackOf(a), StackOf(b), out var crafted));
+            Assert.IsNull(crafted);
             Assert.AreEqual(2, _inv.GetAllItems().Count);
-        }
-
-        [Test]
-        public void TryCraft_MultipleQuantity_ConsumesAndGrantsThatMany()
-        {
-            var a = Make<FoodData>(3001);
-            var b = Make<FoodData>(3002);
-            var result = Make<FoodData>(3110);
-            var recipe = MakeRecipe(a, b, result);
-            _inv.AddItem(a, 3);
-            _inv.AddItem(b, 3);
-
-            Assert.IsTrue(_craft.TryCraft(recipe, 2));
-
-            Assert.AreEqual(1, CountOf(a));
-            Assert.AreEqual(1, CountOf(b));
-            Assert.AreEqual(2, StackOf(result).Count);
         }
 
         [Test]

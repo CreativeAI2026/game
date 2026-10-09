@@ -42,7 +42,6 @@ namespace CreativeAI.Tests.PlayMode
             DestroyResident<ProgressManager>();
             DestroyResident<GameModeManager>();
             DestroyResident<InventoryManager>();
-            DestroyResident<RecipeBookManager>();
             DestroyResident<EventPlayer>();
             Object.Destroy(_titleGo);
             Object.Destroy(_sceneControllerGo);
@@ -93,7 +92,6 @@ namespace CreativeAI.Tests.PlayMode
             Assert.AreEqual(1, CountOf<ProgressManager>(), "連打・再入場で二重生成しない");
             Assert.AreEqual(1, CountOf<GameModeManager>());
             Assert.AreEqual(1, CountOf<InventoryManager>());
-            Assert.AreEqual(1, CountOf<RecipeBookManager>());
             Assert.AreEqual(1, CountOf<EventPlayer>());
         }
 
