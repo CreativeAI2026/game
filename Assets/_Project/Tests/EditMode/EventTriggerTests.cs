@@ -80,8 +80,10 @@ namespace CreativeAI.Tests.EditMode
         [TearDown]
         public void TearDown()
         {
+            TestReflection.Invoke(_trigger, "OnDisable");
             EventPlayerService.Current = null;
             ItemGiverService.Current = null;
+            EventPlaybackService.SetPlaying(false);
             SetInstance<ProgressManager>(null);
             SetInstance<GameModeManager>(null);
             UnityEngine.Object.DestroyImmediate(_playerGo);
@@ -97,6 +99,18 @@ namespace CreativeAI.Tests.EditMode
                 .GetType()
                 .GetMethod("OnTriggerEnter", BindingFlags.Instance | BindingFlags.NonPublic)
                 .Invoke(_trigger, new object[] { _playerCollider });
+
+        private void ExitTrigger() =>
+            TestReflection.Invoke(_trigger, "OnTriggerExit", _playerCollider);
+
+        // EditMode では OnEnable が走らないので、進行度・再生状態の購読を明示的に行う。
+        private void Subscribe() => TestReflection.Invoke(_trigger, "OnEnable");
+
+        // 条件の見直しは次フレーム(Update)で行うので、1フレーム進める代わりに直接叩く。
+        private void NextFrame() => TestReflection.Invoke(_trigger, "Update");
+
+        private static EventDefinition NextEvent() =>
+            EventDefinition.Create("robot_arrives", EventCondition.Progress(1));
 
         private static EventDefinition FiringEvent() =>
             EventDefinition.Create("cave_encounter", EventCondition.Progress(0));
@@ -155,6 +169,93 @@ namespace CreativeAI.Tests.EditMode
             {
                 UnityEngine.Object.DestroyImmediate(other);
             }
+        }
+
+        [Test]
+        public void OnTriggerEnter_DuringEventPlayback_DoesNotFire()
+        {
+            AssignEvent(FiringEvent());
+            EventPlaybackService.SetPlaying(true); // 会話中にトリガーへ入り直した
+
+            EnterTrigger();
+
+            CollectionAssert.IsEmpty(_player.Played, "再生中は二重発火しない");
+        }
+
+        [Test]
+        public void PlayerInside_PreviousEventEnds_NextEventFires()
+        {
+            // 同じ場所で続けて起きるイベント。前のイベントの終了で進行度が 1 になり、出入りし直さずに発火する。
+            AssignEvent(NextEvent());
+            Subscribe();
+            EnterTrigger(); // 進行度 0 なのでまだ発火しない
+
+            EventPlaybackService.SetPlaying(true); // 前のイベントを再生中
+            _pm.AdvanceTo(1); // 前のイベントの終わりで進行度が進む(まだ再生中なので弾かれる)
+            CollectionAssert.IsEmpty(_player.Played, "再生中は発火しない");
+
+            EventPlaybackService.SetPlaying(false); // 前のイベントの再生が終わった
+            CollectionAssert.IsEmpty(_player.Played, "終了通知の配信中には始めない");
+
+            NextFrame();
+
+            CollectionAssert.AreEqual(new[] { "robot_arrives" }, _player.Played);
+        }
+
+        [Test]
+        public void NextEvent_StartsAfterEndNotificationIsDelivered()
+        {
+            // 他の購読者(HUD 等)に「終了」が最後に届いて表示が崩れないよう、通知を配り終えてから次を始める。
+            AssignEvent(NextEvent());
+            Subscribe();
+            EnterTrigger();
+            var received = new List<bool>();
+            EventPlaybackService.SetPlaying(true);
+            _pm.AdvanceTo(1);
+            EventPlaybackService.PlayingChanged += received.Add;
+
+            EventPlaybackService.SetPlaying(false);
+
+            CollectionAssert.AreEqual(new[] { false }, received, "配信中に次の開始が割り込まない");
+            EventPlaybackService.PlayingChanged -= received.Add;
+        }
+
+        [Test]
+        public void PlayerInside_ProgressChangedOutsidePlayback_Fires()
+        {
+            AssignEvent(NextEvent());
+            Subscribe();
+            EnterTrigger();
+
+            _pm.AdvanceTo(1);
+            NextFrame();
+
+            CollectionAssert.AreEqual(new[] { "robot_arrives" }, _player.Played);
+        }
+
+        [Test]
+        public void PlayerLeft_ProgressChanged_DoesNotFire()
+        {
+            AssignEvent(NextEvent());
+            Subscribe();
+            EnterTrigger();
+            ExitTrigger();
+
+            _pm.AdvanceTo(1);
+            NextFrame();
+
+            CollectionAssert.IsEmpty(_player.Played, "外に出たあとは発火しない");
+        }
+
+        [Test]
+        public void Reset_MakesColliderTrigger()
+        {
+            var col = _triggerGo.GetComponent<Collider>();
+            col.isTrigger = false;
+
+            TestReflection.Invoke(_trigger, "Reset"); // コンポーネント追加時に呼ばれる
+
+            Assert.IsTrue(col.isTrigger, "付け忘れるとただの壁になって発火しない");
         }
 
         [Test]
