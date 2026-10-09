@@ -345,7 +345,12 @@ namespace CreativeAI.EditorTools
 
             if (ok)
                 report.Events.Add(
-                    EventDefinition.Create(id, conditions.ToArray(), steps.ToArray(), nextProgress)
+                    EventDefinition.Create(
+                        id,
+                        conditions.ToArray(),
+                        steps.ToArray(),
+                        nextProgress.Value
+                    )
                 );
         }
 

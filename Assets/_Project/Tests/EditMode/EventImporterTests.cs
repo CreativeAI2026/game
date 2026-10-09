@@ -58,7 +58,6 @@ namespace CreativeAI.Tests.EditMode
             Assert.AreEqual("錆びた鎌を手に入れた。", def.Steps[8].Message);
             Assert.AreEqual("girl_choice", def.Steps[9].FlagKey);
             Assert.AreEqual(2, def.Steps[9].Options.Count);
-            Assert.IsTrue(def.HasNextProgress);
             Assert.AreEqual(6, def.NextProgress);
         }
 

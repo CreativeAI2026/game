@@ -7,7 +7,6 @@ namespace CreativeAI.Core
     /// <summary>
     /// 1イベントの定義(条件 + 会話ステップ + 終了時進行度)。
     /// </summary>
-    [CreateAssetMenu(menuName = "CreativeAI/Event Definition", fileName = "Event")]
     public sealed class EventDefinition : ScriptableObject
     {
         [SerializeField]
@@ -20,17 +19,13 @@ namespace CreativeAI.Core
         private EventStep[] _steps = Array.Empty<EventStep>();
 
         [SerializeField]
-        private bool _hasNextProgress; // nextProgress を JSON に書いたか(省略時は進めない)
-
-        [SerializeField]
         private int _nextProgress;
 
         public string Id => _id;
         public IReadOnlyList<EventCondition> Conditions => _conditions;
         public IReadOnlyList<EventStep> Steps => _steps;
 
-        /// <summary>終了時に進行度を進めるか(nextProgress 省略時は false)。</summary>
-        public bool HasNextProgress => _hasNextProgress;
+        /// <summary>終了時に進める進行度(Importer が必須として検証済み)。</summary>
         public int NextProgress => _nextProgress;
 
         /// <summary>
@@ -68,15 +63,14 @@ namespace CreativeAI.Core
             string id,
             EventCondition[] conditions,
             EventStep[] steps,
-            int? nextProgress
+            int nextProgress
         )
         {
             var def = CreateInstance<EventDefinition>();
             def._id = id;
             def._conditions = conditions ?? Array.Empty<EventCondition>();
             def._steps = steps ?? Array.Empty<EventStep>();
-            def._hasNextProgress = nextProgress.HasValue;
-            def._nextProgress = nextProgress ?? 0;
+            def._nextProgress = nextProgress;
             return def;
         }
     }
@@ -115,7 +109,7 @@ namespace CreativeAI.Core
 
     /// <summary>
     /// 会話の1ステップ。kind に応じて使うフィールドが変わる(union 的)。
-    /// ファクトリはテスト・将来の Importer が構築に使う。
+    /// ファクトリはテスト・Importer が構築に使う。
     /// </summary>
     [Serializable]
     public sealed class EventStep

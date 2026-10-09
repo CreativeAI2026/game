@@ -2,6 +2,7 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.SceneManagement;
 
 namespace CreativeAI.Core
 {
@@ -31,53 +32,43 @@ namespace CreativeAI.Core
             Instance = this;
             DontDestroyOnLoad(gameObject);
             EventPlayerService.Current = this; // EventTrigger の発火先 seam に自身を登録
+            SceneManager.activeSceneChanged += OnActiveSceneChanged;
         }
 
         private void OnDestroy()
         {
+            SceneManager.activeSceneChanged -= OnActiveSceneChanged;
             if (Instance == this)
                 Instance = null;
             if (ReferenceEquals(EventPlayerService.Current, this))
                 EventPlayerService.Current = null;
         }
 
-        [SerializeField]
-        private ProgressManager _progress; // 未設定なら ProgressManager.Instance にフォールバック
+        // シーンが切り替わるたびに進む番号。再生開始時から変わっていたら、そのイベントは打ち切る。
+        // 常駐なので再生中のコルーチンはシーンをまたいで生き残る。戦闘に負けてセーブ再開(シーン再読込)すると
+        // 敵が消えて battle が抜け、そのまま続きを流して進行度を進めてしまうのを防ぐ。
+        private int _sceneGeneration;
 
-        [SerializeField]
-        private MonoBehaviour _dialogueView; // IDialogueView を実装する MonoBehaviour(UI 側)
+        private void OnActiveSceneChanged(Scene previous, Scene next) => _sceneGeneration++;
 
-        [SerializeField]
-        private MonoBehaviour _itemGiver; // IItemGiver 実装。未設定なら ItemGiverService.Current(= InventoryManager)にフォールバック
-
-        [SerializeField]
-        private MonoBehaviour _weaponGiver; // IWeaponGiver 実装。未設定なら WeaponGiverService.Current(= WeaponManager)にフォールバック。未実装なら giveWeapon はスキップ
-
-        [SerializeField]
-        private MonoBehaviour _battleRunner; // IBattleRunner 実装。未設定なら BattleRunnerService.Current(= BattleRunner)にフォールバック
-
-        [SerializeField]
-        private GameModeManager _gameMode; // 未設定なら GameModeManager.Instance にフォールバック
-
+        // Inject されたものを優先し、無ければ各 seam / Instance にフォールバックする。
+        private ProgressManager _progress;
+        private GameModeManager _gameMode;
         private IDialogueView _view;
         private IItemGiver _items;
         private IWeaponGiver _weapons;
         private IBattleRunner _battle;
 
-        private IDialogueView View =>
-            _view ??= (_dialogueView as IDialogueView) ?? DialogueViewService.Current;
-        private IItemGiver Items =>
-            _items ??= (_itemGiver as IItemGiver) ?? ItemGiverService.Current;
-        private IWeaponGiver Weapons =>
-            _weapons ??= (_weaponGiver as IWeaponGiver) ?? WeaponGiverService.Current;
-        private IBattleRunner BattleRunner =>
-            _battle ??= (_battleRunner as IBattleRunner) ?? BattleRunnerService.Current;
+        private IDialogueView View => _view ??= DialogueViewService.Current;
+        private IItemGiver Items => _items ??= ItemGiverService.Current;
+        private IWeaponGiver Weapons => _weapons ??= WeaponGiverService.Current;
+        private IBattleRunner BattleRunner => _battle ??= BattleRunnerService.Current;
         private ProgressManager Progress =>
             _progress != null ? _progress : ProgressManager.Instance;
         private GameModeManager GameModes =>
             _gameMode != null ? _gameMode : GameModeManager.Instance;
 
-        /// <summary>Inspector 配線の代わりに依存を注入する(ランタイム bootstrap / テスト用)。</summary>
+        /// <summary>seam の代わりに依存を注入する(プレビュー / テスト用)。</summary>
         public void Inject(
             ProgressManager progress,
             IDialogueView view,
@@ -112,13 +103,23 @@ namespace CreativeAI.Core
             if (ev == null)
                 yield break;
 
+            // 同時に再生できるのは1本だけ。2本目が会話UIを取り合い、先に終わった側が再生中フラグを戻してしまうため弾く。
+            if (EventPlaybackService.IsPlaying)
+            {
+                Debug.LogWarning(
+                    $"[EventPlayer] 別のイベントを再生中のため '{ev.Id}' を無視しました。"
+                );
+                yield break;
+            }
+
             if (View == null)
                 Debug.LogWarning(
                     $"[EventPlayer] IDialogueView 未設定 (event={ev.Id}). 会話は表示されません。"
                 );
 
             // 会話イベント中は操作不能。右上ナビ(セーブ/インベ入口)を隠すため再生中フラグを立てる。
-            // 中断されても finally で必ず戻す。
+            // 途中で打ち切っても finally で必ず戻す。
+            int generation = _sceneGeneration;
             EventPlaybackService.SetPlaying(true);
             try
             {
@@ -126,6 +127,10 @@ namespace CreativeAI.Core
                 {
                     if (step == null)
                         continue;
+
+                    // 戦闘中に会話ウィンドウが残らないよう、battle の前に閉じる。
+                    if (step.Kind == StepKind.Battle && View != null)
+                        yield return View.Close();
 
                     switch (step.Kind)
                     {
@@ -143,7 +148,12 @@ namespace CreativeAI.Core
                             break;
 
                         case StepKind.GiveItem:
-                            Items?.Give(step.ItemKey);
+                            if (Items == null)
+                                Debug.LogWarning(
+                                    $"[EventPlayer] IItemGiver 未登録 (event={ev.Id}). giveItem '{step.ItemKey}' は演出だけで所持品には入りません。"
+                                );
+                            else
+                                Items.Give(step.ItemKey);
                             // 入手演出は会話UI側(絵と名前は itemKey から UI が引く)。
                             // 会話UIが無い場面(テスト等)は在庫に入るだけで演出は出ない。
                             if (View != null)
@@ -153,8 +163,8 @@ namespace CreativeAI.Core
                         case StepKind.GiveWeapon:
                             if (Weapons == null)
                                 Debug.LogWarning(
-                                    $"[EventPlayer] IWeaponGiver 未実装 (event={ev.Id}). giveWeapon '{step.WeaponKey}' をスキップ。"
-                                        + " プレイヤーリグの WeaponManager が IWeaponGiver を実装するまで武器は渡されません。"
+                                    $"[EventPlayer] IWeaponGiver 未登録 (event={ev.Id}). giveWeapon '{step.WeaponKey}' をスキップ。"
+                                        + " プレイヤーリグ(WeaponManager)が居ないシーンでは武器は渡されません。"
                                 );
                             else
                                 Weapons.GiveWeapon(step.WeaponKey);
@@ -184,10 +194,22 @@ namespace CreativeAI.Core
                                 yield return View.RunCommand(step.CommandName, step.Arg);
                             break;
                     }
+
+                    if (generation != _sceneGeneration)
+                    {
+                        Debug.LogWarning(
+                            $"[EventPlayer] 再生中にシーンが切り替わったため '{ev.Id}' を打ち切りました(進行度は進めない)。"
+                        );
+                        if (View != null)
+                            yield return View.Close();
+                        yield break;
+                    }
                 }
 
-                if (ev.HasNextProgress)
-                    Progress?.AdvanceTo(ev.NextProgress);
+                // 最後の台詞を出したまま終わらないよう、会話ウィンドウを閉じてから進行度を進める。
+                if (View != null)
+                    yield return View.Close();
+                Progress?.AdvanceTo(ev.NextProgress);
             }
             finally
             {
@@ -198,7 +220,6 @@ namespace CreativeAI.Core
 
     /// <summary>
     /// 会話イベント再生の指揮役。EventTrigger が条件成立時に発火を託す。
-    /// 実際の非同期シグネチャ(UniTask / CancellationToken)は EventPlayer 実装時に確定する。
     /// </summary>
     public interface IEventPlayer
     {
@@ -229,12 +250,53 @@ namespace CreativeAI.Core
         public static bool IsPlaying { get; private set; }
         public static event System.Action<bool> PlayingChanged;
 
+        /// <summary>
+        /// プレイヤー操作を止めるべきか。再生中でも battle ステップ(Battle モード)の間は戦うので止めない。
+        /// PlayerInputHandler が入力を捨てる判定に使う。
+        /// </summary>
+        public static bool BlocksPlayerControl
+        {
+            get
+            {
+                if (!IsPlaying)
+                    return false;
+                var mode = GameModeManager.Instance;
+                return mode == null || mode.CurrentMode != GameMode.Battle;
+            }
+        }
+
         public static void SetPlaying(bool playing)
         {
             if (IsPlaying == playing)
                 return;
             IsPlaying = playing;
             PlayingChanged?.Invoke(playing);
+        }
+
+        /// <summary>購読者には通知せずに初期状態へ戻す(<see cref="EventStatics"/> 用)。</summary>
+        internal static void ResetState()
+        {
+            IsPlaying = false;
+            PlayingChanged = null;
+        }
+    }
+
+    /// <summary>
+    /// このプロジェクトは Editor の Enter Play Mode で Domain Reload を切っているため、static な値が前回の Play から持ち越される。
+    /// 会話の途中で Play を止めると再生中フラグが立ったまま残り、次の Play で HUD が出ない・動けない・発火しない状態になるので、
+    /// Play 開始時に Event 関連の static(再生中フラグ・各 seam)を初期化する。ビルドでは起動時に1回走るだけで無害。
+    /// </summary>
+    public static class EventStatics
+    {
+        [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
+        public static void ResetForPlaySession()
+        {
+            EventPlaybackService.ResetState();
+            EventPlayerService.Current = null;
+            DialogueViewService.Current = null;
+            BattleRunnerService.Current = null;
+            ItemGiverService.Current = null;
+            WeaponGiverService.Current = null;
         }
     }
 
@@ -265,6 +327,11 @@ namespace CreativeAI.Core
         /// command ステップの演出コマンド(window.hide / portrait.left.shake / wait など)を実行する。
         /// </summary>
         IEnumerator RunCommand(string command, string argument);
+
+        /// <summary>
+        /// 会話ウィンドウを閉じる。イベント終了時と battle の直前に EventPlayer が呼ぶ。既に閉じていれば何もしない。
+        /// </summary>
+        IEnumerator Close();
     }
 
     /// <summary>
@@ -308,7 +375,7 @@ namespace CreativeAI.Core
 
     /// <summary>
     /// 実行時の IBattleRunner を登録する seam。Core は Gameplay を参照できず drag 配線もできないため、
-    /// Title フローで登録し、EventPlayer は Inspector 未配線時のフォールバックとして見る。
+    /// GameSession が登録し、EventPlayer は Inspector 未配線時のフォールバックとして見る。
     /// </summary>
     public static class BattleRunnerService
     {
@@ -342,7 +409,7 @@ namespace CreativeAI.Core
 
     /// <summary>
     /// giveWeapon ステップの seam(実体は WeaponManager、<see cref="IItemGiver"/> と対称)。
-    /// 実装が無い間は EventPlayer が警告してスキップする。
+    /// 未登録(プレイヤーリグが居ない)なら EventPlayer が警告してスキップする。
     /// </summary>
     public interface IWeaponGiver
     {
