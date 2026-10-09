@@ -12,17 +12,22 @@ namespace CreativeAI.EditorTools
     /// 小物を複数人で同時に置くための段取り。マップ(<see cref="MapLayoutBuilder"/> の生成物)は触らず、各担当は
     /// 自分の小物シーンだけを Additive で重ねて編集する(同じ .unity を触らないので git 競合が起きない)。
     /// 手順: `雛形を作成` → `実行時に重ねる設定`(<see cref="PropSceneSetup"/>) → `1F を開く` → 置いて保存。
+    /// 本棟と研究棟は同じマップシーンに入っているが、小物シーンは建物 × 階で分ける。
     /// 競合が復活するので1枚に畳む手段は置かない。マップがずれても `Rebuild Field_Area01` は `Map` ルートだけ作り直す。
     /// </summary>
     public static class PropSceneWorkflow
     {
         const string SceneDir = "Assets/_Project/Scenes/Field";
         const string Prefix = "Field_Area01_Props_";
-        static readonly string[] Floors = { "1F", "2F", "3F" };
 
-        static string ScenePath(string floor) => $"{SceneDir}/{Prefix}{floor}.unity";
+        // 小物シーンの区切り(シーン名・ルート名に入るキー)。本棟は作成済みのシーン名を変えないよう建物名を付けない
+        public static readonly string[] Parts = { "1F", "2F", "3F", "Lab_1F", "Lab_2F", "Lab_3F" };
 
-        static string RootName(string floor) => $"Props_{floor}";
+        public static string SceneName(string part) => $"{Prefix}{part}";
+
+        public static string ScenePath(string part) => $"{SceneDir}/{SceneName(part)}.unity";
+
+        static string RootName(string part) => $"Props_{part}";
 
         // ------------------------------------------------------------------ 雛形
 
@@ -38,9 +43,9 @@ namespace CreativeAI.EditorTools
                 EditorSceneManager.OpenScene(MapLayoutBuilder.MapScenePath, OpenSceneMode.Single);
 
             var created = 0;
-            foreach (var floor in Floors)
+            foreach (var part in Parts)
             {
-                var path = ScenePath(floor);
+                var path = ScenePath(part);
                 if (File.Exists(path))
                     continue;
 
@@ -50,7 +55,7 @@ namespace CreativeAI.EditorTools
                     NewSceneSetup.EmptyScene,
                     NewSceneMode.Additive
                 );
-                var root = new GameObject(RootName(floor));
+                var root = new GameObject(RootName(part));
                 SceneManager.MoveGameObjectToScene(root, scene); // 新規 GO はアクティブなシーンに入るため
                 Directory.CreateDirectory(SceneDir);
                 EditorSceneManager.SaveScene(scene, path);
@@ -61,7 +66,7 @@ namespace CreativeAI.EditorTools
             AssetDatabase.Refresh();
             Debug.Log(
                 created == 0
-                    ? "[PropScene] 小物シーンは3階ぶんとも作成済みです。"
+                    ? "[PropScene] 小物シーンはすべて作成済みです。"
                     : $"[PropScene] 小物シーンを {created} 枚作成しました({SceneDir}/{Prefix}*.unity)。"
             );
         }
@@ -77,13 +82,22 @@ namespace CreativeAI.EditorTools
         [MenuItem("Tools/CreativeAI/Map/小物シーン/3F を開く")]
         public static void Open3F() => OpenForWork("3F");
 
+        [MenuItem("Tools/CreativeAI/Map/小物シーン/研究棟/1F を開く")]
+        public static void OpenLab1F() => OpenForWork("Lab_1F");
+
+        [MenuItem("Tools/CreativeAI/Map/小物シーン/研究棟/2F を開く")]
+        public static void OpenLab2F() => OpenForWork("Lab_2F");
+
+        [MenuItem("Tools/CreativeAI/Map/小物シーン/研究棟/3F を開く")]
+        public static void OpenLab3F() => OpenForWork("Lab_3F");
+
         /// <summary>
-        /// マップ + 指定階の小物シーンを開き、小物シーンをアクティブにする(しないと小物がマップ側に入る)。
+        /// マップ + 指定した区切りの小物シーンを開き、小物シーンをアクティブにする(しないと小物がマップ側に入る)。
         /// `Map` ルートはピッキング無効にして壁や床を掴めないようにする。
         /// </summary>
-        public static void OpenForWork(string floor)
+        public static void OpenForWork(string part)
         {
-            var propPath = ScenePath(floor);
+            var propPath = ScenePath(part);
             if (!File.Exists(propPath))
             {
                 Debug.LogError(
@@ -103,7 +117,7 @@ namespace CreativeAI.EditorTools
             LockMap(map);
 
             Debug.Log(
-                $"[PropScene] {floor} の小物シーンを開きました。\n"
+                $"[PropScene] {part} の小物シーンを開きました。\n"
                     + $"・新しく置いたものは「{props.name}」に入ります(アクティブ)。\n"
                     + "・マップは掴めないようにしてあります(Hierarchy の手のアイコンで解除可)。\n"
                     + "・保存(Ctrl+S)すると、変更したシーンだけが保存されます。"
