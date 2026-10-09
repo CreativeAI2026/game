@@ -17,7 +17,6 @@ MonoBehaviour:
   key: clock_fluorescent_light
   itemName: "\u61D0\u4E2D\u6642\u8A08\u3068\u86CD\u5149\u706F"
   category: 1
-  effect: 
   description: 
   _maxStack: 1
   attack: 0

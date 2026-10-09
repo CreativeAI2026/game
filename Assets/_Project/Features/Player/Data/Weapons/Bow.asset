@@ -18,7 +18,6 @@ MonoBehaviour:
   itemName: "弓"
   category: 0
   description:
-  effect: "攻撃% +25% / 会心率 +50%"
   attack: 25
   defense: 0
   criticalDamage: 0

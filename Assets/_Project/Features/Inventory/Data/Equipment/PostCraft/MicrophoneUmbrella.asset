@@ -17,7 +17,6 @@ MonoBehaviour:
   key: microphone_umbrella
   itemName: "\u30DE\u30A4\u30AF\u3068\u5098"
   category: 1
-  effect: 
   description: 
   _maxStack: 1
   attack: 0

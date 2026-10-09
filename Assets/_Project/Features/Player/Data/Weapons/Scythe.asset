@@ -18,7 +18,6 @@ MonoBehaviour:
   itemName: "鎌"
   category: 0
   description:
-  effect: "会心率 +50% / 会心ダメージ +50%"
   attack: 0
   defense: 0
   criticalDamage: 50

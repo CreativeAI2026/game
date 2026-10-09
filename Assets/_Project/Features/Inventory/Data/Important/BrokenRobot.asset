@@ -17,6 +17,5 @@ MonoBehaviour:
   key: broken_robot
   itemName: "\u58CA\u308C\u305F\u30ED\u30DC\u30C3\u30C8"
   category: 3
-  effect:
   description:
   _maxStack: 1

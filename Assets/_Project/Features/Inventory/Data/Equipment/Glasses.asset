@@ -17,7 +17,6 @@ MonoBehaviour:
   key: glasses
   itemName: "メガネ"
   category: 1
-  effect: "効果   会心率 +5%"
   description:
   _maxStack: 1
   attack: 0

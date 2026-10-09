@@ -17,7 +17,6 @@ MonoBehaviour:
   key: full_body_tights
   itemName: "全身タイツ"
   category: 1
-  effect: "効果   防御力 +10%"
   description:
   _maxStack: 1
   attack: 0

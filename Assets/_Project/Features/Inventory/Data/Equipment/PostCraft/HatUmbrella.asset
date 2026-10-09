@@ -17,7 +17,6 @@ MonoBehaviour:
   key: hat_umbrella
   itemName: "\u5E3D\u5B50\u3068\u5098"
   category: 1
-  effect: 
   description: 
   _maxStack: 1
   attack: 0

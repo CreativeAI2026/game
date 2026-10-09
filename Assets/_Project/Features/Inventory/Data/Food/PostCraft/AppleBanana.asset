@@ -17,7 +17,6 @@ MonoBehaviour:
   key: apple_banana
   itemName: "\u308A\u3093\u3054\u3068\u30D0\u30CA\u30CA"
   category: 2
-  effect: 
   description: 
   _maxStack: 1
   _craftedResult: 1

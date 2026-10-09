@@ -17,7 +17,6 @@ MonoBehaviour:
   key: balloon_clock
   itemName: "\u98A8\u8239\u3068\u61D0\u4E2D\u6642\u8A08"
   category: 1
-  effect: 
   description: 
   _maxStack: 1
   attack: 0

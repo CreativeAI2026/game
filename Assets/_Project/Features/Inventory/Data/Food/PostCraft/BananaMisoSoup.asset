@@ -17,7 +17,6 @@ MonoBehaviour:
   key: banana_miso_soup
   itemName: "\u30D0\u30CA\u30CA\u3068\u5473\u564C\u6C41"
   category: 2
-  effect: 
   description: 
   _maxStack: 1
   _craftedResult: 1

@@ -17,7 +17,6 @@ MonoBehaviour:
   key: fluorescent_light_full_body_tights
   itemName: "\u86CD\u5149\u706F\u3068\u5168\u8EAB\u30BF\u30A4\u30C4"
   category: 1
-  effect: 
   description: 
   _maxStack: 1
   attack: 0

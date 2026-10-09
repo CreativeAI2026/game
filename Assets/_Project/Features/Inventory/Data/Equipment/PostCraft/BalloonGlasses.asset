@@ -17,7 +17,6 @@ MonoBehaviour:
   key: balloon_glasses
   itemName: "\u98A8\u8239\u3068\u30E1\u30AC\u30CD"
   category: 1
-  effect: 
   description: 
   _maxStack: 1
   attack: 0

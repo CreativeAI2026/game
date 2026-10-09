@@ -21,9 +21,6 @@ namespace CreativeAI.Gameplay
         public string key; // events.json の giveItem/itemKey が参照する文字列キー(任意。大事なもの等で使用)
         public string itemName; // アイテム名
         public ItemCategory category; // カテゴリ
-
-        [HideInInspector]
-        public string effect; // 互換用: Stats表示はItemStatTextFormatterを使う
         public string description; // 説明
 
         [SerializeField, Min(1)]

@@ -17,7 +17,6 @@ MonoBehaviour:
   key: coffee_miso_soup
   itemName: "\u30B3\u30FC\u30D2\u30FC\u3068\u5473\u564C\u6C41"
   category: 2
-  effect: 
   description: 
   _maxStack: 1
   _craftedResult: 1

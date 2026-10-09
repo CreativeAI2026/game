@@ -17,7 +17,6 @@ MonoBehaviour:
   key: strawberry_jelly_white_rice
   itemName: "\u3044\u3061\u3054\u30BC\u30EA\u30FC\u3068\u767D\u7C73"
   category: 2
-  effect: 
   description: 
   _maxStack: 1
   _craftedResult: 1

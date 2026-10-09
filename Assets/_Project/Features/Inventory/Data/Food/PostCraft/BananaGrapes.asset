@@ -17,7 +17,6 @@ MonoBehaviour:
   key: banana_grapes
   itemName: "\u30D0\u30CA\u30CA\u3068\u3076\u3069\u3046"
   category: 2
-  effect: 
   description: 
   _maxStack: 1
   _craftedResult: 1

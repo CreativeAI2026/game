@@ -17,7 +17,6 @@ MonoBehaviour:
   key: note_umbrella
   itemName: "\u30CE\u30FC\u30C8\u3068\u5098"
   category: 1
-  effect: 
   description: 
   _maxStack: 1
   attack: 0

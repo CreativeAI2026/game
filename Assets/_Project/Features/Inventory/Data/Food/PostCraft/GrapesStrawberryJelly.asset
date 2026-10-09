@@ -17,7 +17,6 @@ MonoBehaviour:
   key: grapes_strawberry_jelly
   itemName: "\u3076\u3069\u3046\u3068\u3044\u3061\u3054\u30BC\u30EA\u30FC"
   category: 2
-  effect: 
   description: 
   _maxStack: 1
   _craftedResult: 1

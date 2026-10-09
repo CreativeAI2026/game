@@ -17,7 +17,6 @@ MonoBehaviour:
   key: peach_white_rice
   itemName: "\u6843\u3068\u767D\u7C73"
   category: 2
-  effect: 
   description: 
   _maxStack: 1
   _craftedResult: 1
