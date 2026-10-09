@@ -633,23 +633,16 @@ namespace CreativeAI.UI
         )
         {
             _isCrafting = true;
-            bool crafted = false;
+            ItemStack crafted = null;
             try
             {
                 UpdateCraftButton();
                 yield return RunCraftFlow(
-                    () =>
-                        crafted =
-                            InventoryManager.Instance?.TryCraft(
-                                recipe,
-                                firstMaterial,
-                                secondMaterial
-                            ) ?? false,
-                    recipe.resultItem,
+                    () => crafted = Craft(recipe, firstMaterial, secondMaterial),
                     OnResultClosed
                 );
 
-                if (crafted)
+                if (crafted != null)
                 {
                     yield return null;
                     ResetMaterialAssignments(resetSelection: false);
@@ -662,6 +655,20 @@ namespace CreativeAI.UI
                 _isCrafting = false;
                 UpdateCraftButton();
             }
+        }
+
+        private static ItemStack Craft(
+            CraftRecipe recipe,
+            ItemStack firstMaterial,
+            ItemStack secondMaterial
+        )
+        {
+            var inventory = InventoryManager.Instance;
+            return
+                inventory != null
+                && inventory.TryCraft(recipe, firstMaterial, secondMaterial, out var crafted)
+                ? crafted
+                : null;
         }
 
         private void OnResultClosed()
@@ -712,11 +719,10 @@ namespace CreativeAI.UI
 
         // --- 実行フロー ---
 
-        public IEnumerator RunCraftFlow(
-            Func<bool> craftAction,
-            ItemData resultItem,
-            Action onResultClosed
-        )
+        /// <summary>
+        /// ローディング → 調合 → 結果パネルの流れ。craftAction は作られた1個分を返し、失敗なら null。
+        /// </summary>
+        public IEnumerator RunCraftFlow(Func<ItemStack> craftAction, Action onResultClosed)
         {
             if (craftAction == null || _isCraftFlowRunning || !HasCraftFlowReferences())
                 yield break;
@@ -730,9 +736,9 @@ namespace CreativeAI.UI
                 ShowLoading();
                 yield return new WaitForSecondsRealtime(Mathf.Max(0f, _craftFlowDurationSeconds));
 
-                bool crafted = craftAction();
+                ItemStack crafted = craftAction();
                 HideLoading();
-                if (!crafted)
+                if (crafted == null)
                 {
                     HideResultImmediately();
                     yield break;
@@ -755,7 +761,7 @@ namespace CreativeAI.UI
                     }
                 }
 
-                ShowResult(resultItem, CompleteResult);
+                ShowResult(crafted, CompleteResult);
                 awaitingResultClose = true;
             }
             finally
@@ -804,17 +810,18 @@ namespace CreativeAI.UI
 
         // --- 結果パネル ---
 
-        public void ShowResult(ItemData resultItem, Action closeAction)
+        public void ShowResult(ItemStack crafted, Action closeAction)
         {
             if (!ValidateRequiredReference(_resultCanvasGroup, nameof(_resultCanvasGroup)))
                 return;
 
             HideWarning();
             _resultClosedAction = closeAction;
+            var item = crafted?.Data;
             SetResultContent(
-                resultItem != null ? resultItem.icon : null,
-                resultItem != null ? resultItem.itemName : string.Empty,
-                ItemStatTextFormatter.BuildStatsText(resultItem)
+                item != null ? item.icon : null,
+                item != null ? item.itemName : string.Empty,
+                ItemStatTextFormatter.BuildStatsText(crafted)
             );
             if (_resultCloseOnClick != null)
                 _resultCloseOnClick.SetClickAction(HideResult);

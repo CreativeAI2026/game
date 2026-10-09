@@ -31,9 +31,18 @@ namespace CreativeAI.Gameplay
                 && recipe.MatchesMaterials(materialA.Data, materialB.Data);
         }
 
-        /// <summary>素材を1個ずつ消費して完成品を1つ付与する。作れなければ何も変えずに false。</summary>
-        public bool TryCraft(CraftRecipe recipe, ItemStack materialA, ItemStack materialB)
+        /// <summary>
+        /// 素材を1個ずつ消費して完成品を1つ付与する。作れなければ何も変えずに false。
+        /// crafted は完成品が入った在庫のスタック(装備品はロール済み個体)。
+        /// </summary>
+        public bool TryCraft(
+            CraftRecipe recipe,
+            ItemStack materialA,
+            ItemStack materialB,
+            out ItemStack crafted
+        )
         {
+            crafted = null;
             if (!CanCraft(recipe, materialA, materialB))
                 return false;
 
@@ -43,14 +52,14 @@ namespace CreativeAI.Gameplay
             )
                 return false;
 
-            GrantResult(recipe);
+            crafted = GrantResult(recipe);
             return true;
         }
 
         /// <summary>
         /// 結果アイテムを1つ付与する。装備品は個体差ロールした個体を作り、食材など非装備品はそのまま追加する。
         /// </summary>
-        private void GrantResult(CraftRecipe recipe)
+        private ItemStack GrantResult(CraftRecipe recipe)
         {
             if (recipe.resultItem is EquipmentData)
             {
@@ -59,12 +68,13 @@ namespace CreativeAI.Gameplay
                     EquipmentData.ToStatVector(recipe.material2 as EquipmentData),
                     new SystemRandomSource()
                 );
-                _inventoryService.AddInstance(recipe.resultItem, RolledStat.FromVector(rolled));
+                return _inventoryService.AddInstance(
+                    recipe.resultItem,
+                    RolledStat.FromVector(rolled)
+                );
             }
-            else
-            {
-                _inventoryService.AddItem(recipe.resultItem, 1);
-            }
+
+            return _inventoryService.AddItem(recipe.resultItem, 1);
         }
 
         private bool CanUseAsMaterial(ItemStack stack)

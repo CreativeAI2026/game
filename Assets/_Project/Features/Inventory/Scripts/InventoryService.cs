@@ -27,19 +27,22 @@ namespace CreativeAI.Gameplay
         /// </summary>
         public event Action QuickFoodChanged;
 
-        public void AddItem(ItemData data, int count = 1)
+        /// <summary>count 個を既存スタックへ積み、溢れた分は新しいスタックにする。最後に積んだスタックを返す。</summary>
+        public ItemStack AddItem(ItemData data, int count = 1)
         {
             if (data == null || count <= 0)
-                return;
+                return null;
 
             int remaining = count;
             int maxStack = data.MaxStack;
+            ItemStack lastStack = null;
 
             foreach (var stack in GetStacksWithRoom(data, maxStack))
             {
                 int addCount = Math.Min(remaining, maxStack - stack.Count);
                 stack.Count += addCount;
                 remaining -= addCount;
+                lastStack = stack;
 
                 if (remaining <= 0)
                     break;
@@ -48,11 +51,13 @@ namespace CreativeAI.Gameplay
             while (remaining > 0)
             {
                 int stackCount = Math.Min(remaining, maxStack);
-                _items.Add(new ItemStack(data, stackCount));
+                lastStack = new ItemStack(data, stackCount);
+                _items.Add(lastStack);
                 remaining -= stackCount;
             }
 
             InventoryChanged?.Invoke();
+            return lastStack;
         }
 
         public ItemStack AddInstance(ItemData data, IReadOnlyList<RolledStat> rolledStats)

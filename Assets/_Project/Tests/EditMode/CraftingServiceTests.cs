@@ -63,7 +63,7 @@ namespace CreativeAI.Tests.EditMode
             _craft.CanCraft(r, StackOf(r.material1), StackOf(r.material2));
 
         private bool CraftOnce(CraftRecipe r) =>
-            _craft.TryCraft(r, StackOf(r.material1), StackOf(r.material2));
+            _craft.TryCraft(r, StackOf(r.material1), StackOf(r.material2), out _);
 
         /// <summary>在庫にあるその品の総数(スタックごと消えていれば 0)。</summary>
         private int CountOf(ItemData data) =>
@@ -81,8 +81,9 @@ namespace CreativeAI.Tests.EditMode
             _inv.AddItem(grapes, 1);
             _inv.AddItem(miso, 1);
 
-            Assert.IsTrue(CraftOnce(recipe));
+            Assert.IsTrue(_craft.TryCraft(recipe, StackOf(grapes), StackOf(miso), out var crafted));
 
+            Assert.AreSame(StackOf(soup), crafted, "完成品が入った在庫のスタックを返す");
             Assert.AreEqual(0, CountOf(grapes), "素材は消費される");
             Assert.AreEqual(0, CountOf(miso));
             var result = StackOf(soup);
@@ -103,10 +104,11 @@ namespace CreativeAI.Tests.EditMode
             _inv.AddItem(a, 1);
             _inv.AddItem(b, 1);
 
-            Assert.IsTrue(CraftOnce(recipe));
+            Assert.IsTrue(_craft.TryCraft(recipe, StackOf(a), StackOf(b), out var crafted));
 
             var made = StackOf(result);
             Assert.IsNotNull(made);
+            Assert.AreSame(made, crafted, "作った個体そのもの(結果表示に使う)を返す");
             Assert.IsTrue(made.IsInstance, "装備品は端末でロールした個体になる");
             Assert.IsNotNull(made.RolledStats);
             Assert.LessOrEqual(made.RolledStats.Count, 2, "付与数は最大2つ");
@@ -122,7 +124,7 @@ namespace CreativeAI.Tests.EditMode
             _inv.AddItem(a, 3);
             _inv.AddItem(b, 2);
 
-            Assert.IsTrue(_craft.TryCraft(recipe, StackOf(a), StackOf(b)));
+            Assert.IsTrue(_craft.TryCraft(recipe, StackOf(a), StackOf(b), out _));
 
             Assert.AreEqual(2, CountOf(a));
             Assert.AreEqual(1, CountOf(b));
@@ -242,7 +244,8 @@ namespace CreativeAI.Tests.EditMode
             _inv.AddItem(a, 1);
             _inv.AddItem(b, 1);
 
-            Assert.IsFalse(_craft.TryCraft(null, StackOf(a), StackOf(b)));
+            Assert.IsFalse(_craft.TryCraft(null, StackOf(a), StackOf(b), out var crafted));
+            Assert.IsNull(crafted);
             Assert.AreEqual(2, _inv.GetAllItems().Count);
         }
 

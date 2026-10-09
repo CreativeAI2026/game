@@ -202,9 +202,14 @@ namespace CreativeAI.Gameplay
             return CraftingService.CanCraft(recipe, materialA, materialB);
         }
 
-        public bool TryCraft(CraftRecipe recipe, ItemStack materialA, ItemStack materialB)
+        public bool TryCraft(
+            CraftRecipe recipe,
+            ItemStack materialA,
+            ItemStack materialB,
+            out ItemStack crafted
+        )
         {
-            return CraftingService.TryCraft(recipe, materialA, materialB);
+            return CraftingService.TryCraft(recipe, materialA, materialB, out crafted);
         }
 
         /// <summary>装備品の同時装備上限。</summary>
