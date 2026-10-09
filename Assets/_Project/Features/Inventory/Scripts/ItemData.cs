@@ -148,15 +148,6 @@ namespace CreativeAI.Gameplay
                 AddPercent(lines, CriticalRateLabel, equipment.criticalRate);
                 AddPercent(lines, HpLabel, equipment.maxHP);
             }
-            else if (item is WeaponData weapon)
-            {
-                AddPercent(lines, AttackLabel, weapon.attack);
-                AddPercent(lines, DefenseLabel, weapon.defense);
-                AddPercent(lines, CriticalDamageLabel, weapon.criticalDamage);
-                AddPercent(lines, CriticalRateLabel, weapon.criticalRate);
-                AddPercent(lines, HpLabel, weapon.maxHP);
-            }
-
             return string.Join("\n", lines);
         }
 

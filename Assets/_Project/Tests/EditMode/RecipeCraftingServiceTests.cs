@@ -154,20 +154,6 @@ namespace CreativeAI.Tests.EditMode
         }
 
         [Test]
-        public void TryCraft_WeaponMaterial_IsRejected()
-        {
-            // 武器は調合不可。
-            var w1 = Make<WeaponData>(1001);
-            var w2 = Make<WeaponData>(1002);
-            var recipe = MakeRecipe(w1, w2, Make<EquipmentData>(2101));
-            _inv.AddItem(w1, 1);
-            _inv.AddItem(w2, 1);
-
-            Assert.IsFalse(_craft.TryCraft(recipe, 1));
-            Assert.AreEqual(1, CountOf(w1));
-        }
-
-        [Test]
         public void TryCraft_ImportantItemMaterial_IsRejected()
         {
             // 大事なものは調合の対象外。

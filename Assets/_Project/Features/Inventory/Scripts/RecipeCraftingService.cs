@@ -215,10 +215,8 @@ namespace CreativeAI.Gameplay
             if (materials.Count != 2 || materials.Any(material => material == null))
                 return false;
 
-            // 調合は「装備品同士 / 食材同士」のみ(武器・大事なもの・カテゴリ跨ぎは不可)。
+            // 調合は「装備品同士 / 食材同士」のみ(大事なもの・カテゴリ跨ぎは不可)。
             // UI 非経由の直呼びも弾くためサービス層で明示ガードする。
-            if (materials[0] is WeaponData || materials[1] is WeaponData)
-                return false;
             if (materials[0].category != materials[1].category)
                 return false;
             if (

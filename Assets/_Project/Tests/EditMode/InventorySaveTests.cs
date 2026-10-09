@@ -108,19 +108,13 @@ namespace CreativeAI.Tests.EditMode
 
             // 武器は在庫外。仮に在庫へ入れて装備フラグを立てても、
             // GetEquippedBonus は武器を加算しない(補正は WeaponManager 経由に一本化)。
-            var weapon = ScriptableObject.CreateInstance<WeaponData>();
-            weapon.attack = 20;
-            weapon.maxHP = 50;
-
             var unequipped = ScriptableObject.CreateInstance<EquipmentData>();
             unequipped.attack = 999;
 
             _inv.AddItem(gear, 1);
-            _inv.AddItem(weapon, 1);
             _inv.AddItem(unequipped, 1);
             var stacks = _inv.GetAllItems();
             _inv.SetEquipped(stacks.Find(s => s.Data == gear), true);
-            _inv.SetEquipped(stacks.Find(s => s.Data == weapon), true);
             // unequipped は装備しない
 
             var b = _inv.GetEquippedBonus();

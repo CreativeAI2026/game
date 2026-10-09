@@ -264,7 +264,6 @@ namespace CreativeAI.Gameplay
             {
                 if (stack == null || !stack.IsEquipped)
                     continue;
-                // 武器(WeaponData)は在庫外・WeaponManager 管理なので意図的に加算しない。
                 if (stack.Data is not EquipmentData e)
                     continue;
 
@@ -345,11 +344,8 @@ namespace CreativeAI.Gameplay
             if (ItemDB.Instance == null)
                 return;
 
-            // 武器はインベントリ管理の対象外。ItemDB はフォルダ一括同期で武器も拾うため、ここで除外する。
             var testItems = ItemDB
-                .Instance.Items.Where(item =>
-                    item != null && !(item is WeaponData) && HasZeroSecondDigit(item)
-                )
+                .Instance.Items.Where(item => item != null && HasZeroSecondDigit(item))
                 .ToList();
             foreach (var item in testItems)
             {
