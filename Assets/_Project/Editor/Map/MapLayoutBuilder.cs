@@ -44,21 +44,25 @@ namespace CreativeAI.EditorTools
                 Kit.Standard,
                 perimeter: true
             ),
-            // 研究棟。3F の入口通路の東端(col 68)が Area01 3F の西端 `X`(col 0 / row 37〜38)に接する。
-            // 全階で原点が同じ(上下の階が真上に重なる)。外周は図に壁を描いてあるので外周壁は作らない。
+            // 研究棟。図は列見出し付きの書き方(<see cref="LoadRulerMap"/>)で、全階が真上に重なる。
+            // 地上(3F)の東端 `X`(列見出し 0 / 行 4〜5)が Area01 3F の西端 `X`(col 0 / row 37〜38)の西隣に
+            // 来るよう、「列見出し 0・行 0」のマスの中心を (-222, 182) に置く(Area01 3F の row 37 は Z=198)。
+            // 各階の原点の X/Z は図の範囲から読み込み時に決まるので、ここでは Y だけを使う。
+            // 外周は図に壁を描いてあるので外周壁は作らない。
             // 階高は 16u(8u〜12u だと広い部屋に対して壁が低く見える)。3F を Area01 の 3F に揃え、下の階を下げている。
             new Building(
-                "Area04",
-                "MapLayout_Area04.md",
+                "Lab",
+                "MapLayout_Lab.md",
                 new[]
                 {
-                    new FloorDef("1F", new Vector3(-494f, -60.8f, -114f)),
-                    new FloorDef("2F", new Vector3(-494f, -44.8f, -114f)),
-                    new FloorDef("3F", new Vector3(-494f, -28.8f, -114f)),
+                    new FloorDef("1F", new Vector3(0f, -60.8f, 0f)),
+                    new FloorDef("2F", new Vector3(0f, -44.8f, 0f)),
+                    new FloorDef("3F", new Vector3(0f, -28.8f, 0f)),
                 },
                 16f,
                 Kit.Lab,
-                perimeter: false
+                perimeter: false,
+                rulerAnchor: new Vector2(-222f, 182f)
             ),
         };
 
@@ -82,7 +86,9 @@ namespace CreativeAI.EditorTools
 
         // ガラス壁 `$`。モデルは 1マス幅(4.00u)なので横は等倍で1マス1枚置き、縦は壁の高さへ合わせる。
         // 当たりは薄い箱にする(`#` のように4u厚だとガラスの手前で止まって見える)。
+        // `&` は格子の壁(研究棟)。`$` と同じ線状の壁として列にまとめ、モデルだけ記号ごとに替える
         const char Glass = '$';
+        const char Lattice = '&';
         const char Fence = '-'; // 柵。ガラスと同じく列にまとめ、縁へ寄せ、角で継ぐ
         const float GlassColliderThickness = 0.4f;
         const float GlassPanelDepth = 0.14f; // モデルの厚み(袖壁を作る幅の計算に使う)
@@ -133,6 +139,25 @@ namespace CreativeAI.EditorTools
 
         static bool IsDoor(char c) => Doors.Any(d => d.Symbol == c);
 
+        /// <summary>
+        /// 扉が乗っている板の壁の記号。壁の向きに沿った隣のマスから取り、無ければ `$`
+        /// (扉の周りはこのモデルを開口の外だけ切り出して埋める)。
+        /// </summary>
+        static char PanelAlong(char[,] grid, int rows, int cols, int row, int col, bool horizontal)
+        {
+            foreach (var side in new[] { -1, 1 })
+            {
+                var r = row + (horizontal ? 0 : side);
+                var c = col + (horizontal ? side : 0);
+                if (r >= 0 && c >= 0 && r < rows && c < cols && IsPanel(grid[r, c]))
+                    return grid[r, c];
+            }
+            return Glass;
+        }
+
+        /// <summary>線状の板の壁(`$` ガラス / `&` 格子)か。</summary>
+        static bool IsPanel(char c) => c == Glass || c == Lattice;
+
         readonly struct FloorDef
         {
             public readonly string Name;
@@ -154,13 +179,18 @@ namespace CreativeAI.EditorTools
             public readonly Kit Kit;
             public readonly bool Perimeter; // 全階を貫く1枚の外周壁で縁を覆うか
 
+            // 図を列見出し付きの書き方で読むときの、「列見出し 0・行 0」のマスの中心(ワールド X, Z)。
+            // null なら ```text の書き方(行・列とも 0 始まり、原点は Floors の X/Z)
+            public readonly Vector2? RulerAnchor;
+
             public Building(
                 string name,
                 string doc,
                 FloorDef[] floors,
                 float storeyHeight,
                 Kit kit,
-                bool perimeter
+                bool perimeter,
+                Vector2? rulerAnchor = null
             )
             {
                 Name = name;
@@ -169,18 +199,19 @@ namespace CreativeAI.EditorTools
                 StoreyHeight = storeyHeight;
                 Kit = kit;
                 Perimeter = perimeter;
+                RulerAnchor = rulerAnchor;
             }
 
             // 壁は上の階の床板の下面で止める。階高いっぱいだと壁の上面が上の階の床面と重なってちらつく
             public float WallHeight => StoreyHeight - FloorSlabThickness;
-
-            /// <summary>全階の原点が同じ(上下の階が真上に重なる)か。</summary>
-            public bool Stacked =>
-                Floors.All(f =>
-                    Mathf.Approximately(f.Origin.x, Floors[0].Origin.x)
-                    && Mathf.Approximately(f.Origin.z, Floors[0].Origin.z)
-                );
         }
+
+        /// <summary>全階の原点が同じ(上下の階が真上に重なる)か。</summary>
+        static bool IsStacked(FloorDef[] floors) =>
+            floors.All(f =>
+                Mathf.Approximately(f.Origin.x, floors[0].Origin.x)
+                && Mathf.Approximately(f.Origin.z, floors[0].Origin.z)
+            );
 
         /// <summary>建物の見た目の部品一式。形(図)とは独立に差し替えられる。</summary>
         sealed class Kit
@@ -193,12 +224,19 @@ namespace CreativeAI.EditorTools
             // 床の色分け(```floor の図の記号 → マテリアル)。既にあるマテリアルは色を上書きしない
             public (char Symbol, string Material, Color Color)[] FloorColors = { };
 
-            // `$` のモデル。複数あればマスごとに決まった順で使い分ける(同じ柄が並ぶのを避ける)
-            public string[] GlassAssets;
-            public float GlassModelHeight; // モデルの実寸の高さ(壁の高さへ伸縮する)
+            // `$` `&` のモデル(記号ごと)。複数あればマスごとに決まった順で使い分ける(同じ柄が並ぶのを避ける)。
+            // ModelHeight はモデルの実寸の高さ(壁の高さへ伸縮する)
+            public (char Symbol, string[] Assets, float ModelHeight)[] Panels;
 
             public float HandrailScale = 1f; // 手すりの高さ・太さの倍率(長さはマスに合わせる)
             public StairsModel Stairs;
+
+            // 透明なガラス `$`。旧階高ぴったり(9.6u)で作ってある
+            static readonly (char, string[], float) GlassPanel = (
+                Glass,
+                new[] { "Structure/GlassWall-V.glb" },
+                9.6f
+            );
 
             public static readonly Kit Standard = new Kit
             {
@@ -206,8 +244,7 @@ namespace CreativeAI.EditorTools
                 WallColor = new Color(0.72f, 0.72f, 0.70f),
                 FloorMaterial = "Map_Floor",
                 FloorColor = new Color(0.42f, 0.44f, 0.47f),
-                GlassAssets = new[] { "Structure/GlassWall-V.glb" },
-                GlassModelHeight = 9.6f, // 旧階高ぴったりで作ってある
+                Panels = new[] { GlassPanel },
                 // 階段は「歩ける面」の寸法を使う。バウンディングボックス(高さ5.045 / 奥行6.736)は
                 // 手すりの上端と踏面のはみ出しを含むので、それで割ると踏面が上階の床に届かない。
                 Stairs = new StairsModel(
@@ -234,22 +271,23 @@ namespace CreativeAI.EditorTools
                     ('R', "LabRed 1", new Color(0.547f, 0.194f, 0.246f)),
                     ('Y', "Lab_FloorYellow", new Color(0.62f, 0.612f, 0.243f)),
                 },
-                GlassAssets = new[]
+                Panels = new[]
                 {
-                    "Structure/Lab/LabLatticeWall_A.glb",
-                    "Structure/Lab/LabLatticeWall_B.glb",
-                    "Structure/Lab/LabLatticeWall_C.glb",
+                    GlassPanel,
+                    (
+                        Lattice,
+                        new[]
+                        {
+                            "Structure/Lab/LabLatticeWall_A.glb",
+                            "Structure/Lab/LabLatticeWall_B.glb",
+                            "Structure/Lab/LabLatticeWall_C.glb",
+                        },
+                        12f // 1u タイル 12段(壁の高さへ縦に伸ばす)
+                    ),
                 },
-                GlassModelHeight = 12f, // 1u タイル 12段(壁の高さへ縦に伸ばす)
                 HandrailScale = 2.26f, // 元のシーンが Handrail.glb を 2.26 倍で置いていた
-                Stairs = new StairsModel(
-                    "Structure/Lab/LabStairs.glb",
-                    width: 5.876f,
-                    rise: 8f,
-                    run: 8.211f,
-                    steps: 19,
-                    railTop: 0.5f // 段板の脇の帯の高さ
-                ),
+                // 階段は Area01 と同じ白い Stairs.glb(元の研究棟の LabStairs.glb は暗い色で床に沈んで見える)
+                Stairs = Standard.Stairs,
             };
         }
 
@@ -281,22 +319,28 @@ namespace CreativeAI.EditorTools
             }
         }
 
-        /// <summary>`$` のモデル一式(柄違いの複数枚と、その実寸の高さ)。</summary>
+        /// <summary>`$` `&` のモデル一式(記号ごとに柄違いの複数枚と、その実寸の高さ)。</summary>
         sealed class GlassParts
         {
-            public GameObject[] Prefabs;
-            public float ModelHeight;
+            public readonly Dictionary<char, (GameObject[] Prefabs, float ModelHeight)> Kinds =
+                new Dictionary<char, (GameObject[], float)>();
 
-            public GameObject Pick(int row, int col) =>
-                Prefabs.Length == 0 ? null : Prefabs[Mathf.Abs(row * 7 + col * 3) % Prefabs.Length];
+            public (GameObject Prefab, float ModelHeight) Pick(char symbol, int row, int col)
+            {
+                if (!Kinds.TryGetValue(symbol, out var k) || k.Prefabs.Length == 0)
+                    return (null, 1f);
+                return (k.Prefabs[Mathf.Abs(row * 7 + col * 3) % k.Prefabs.Length], k.ModelHeight);
+            }
         }
 
         /// <summary>1つの建物について .md から読んだ図。</summary>
         sealed class BuildingMap
         {
             public Building Building;
+            public FloorDef[] Floors; // 原点は図の範囲で決まることがあるので Building.Floors ではなくこちらを使う
             public List<char[,]> Grids;
             public List<char[,]> FloorColors; // 階ごと。```floor が無い階は null
+            public Dictionary<char, StairDir> StairDirs; // 本文で向きを指定した階段(上る向き)
         }
 
         [MenuItem("Tools/CreativeAI/Map/Build Field_Area01 From MapLayout")]
@@ -431,6 +475,8 @@ namespace CreativeAI.EditorTools
                 Debug.LogError($"[MapLayoutBuilder] {b.Name}: マップ定義が見つかりません: {path}");
                 return null;
             }
+            if (b.RulerAnchor.HasValue)
+                return LoadRulerMap(b, path, b.RulerAnchor.Value);
 
             var maps = new List<Dictionary<int, string>>();
             var colors = new List<Dictionary<int, string>>();
@@ -487,9 +533,148 @@ namespace CreativeAI.EditorTools
             return new BuildingMap
             {
                 Building = b,
+                Floors = b.Floors,
                 Grids = grids,
                 FloorColors = floorColors,
+                StairDirs = ReadStairDirs(b, path),
             };
+        }
+
+        /// <summary>
+        /// 列見出し付きの書き方の .md を読む(研究棟)。```plain のブロックが階の図で、**上の階から順**。
+        /// 行ラベルは北が大きい行番号(負もある)。列はブロック頭の3段の列見出しで決まり、X の絶対値を縦に3桁で書く
+        /// (X は負で、東ほど 0 に近い)。列見出しの無いブロックは直前のブロックの列見出しを使う。
+        /// どの階も同じ行・列 = 同じ場所(上下の階が真上に重なる)。床の色分けは無い(全部既定の床)。
+        /// </summary>
+        static BuildingMap LoadRulerMap(Building b, string path, Vector2 anchor)
+        {
+            var rowPattern = new Regex(@"^\s*(-?\d+)\|");
+            var blocks = new List<Dictionary<(int Row, int X), char>>();
+            List<string> lines = null;
+            List<string> ruler = null;
+
+            foreach (var raw in File.ReadAllLines(path))
+            {
+                var line = raw.TrimEnd();
+                if (lines == null)
+                {
+                    if (line.Trim() == "```plain")
+                        lines = new List<string>();
+                    continue;
+                }
+                if (line.Trim() != "```")
+                {
+                    lines.Add(line);
+                    continue;
+                }
+
+                // ブロックの終わり。行ラベルより前の空でない行が3つあれば、それが列見出し
+                var heads = lines
+                    .TakeWhile(l => !rowPattern.IsMatch(l))
+                    .Where(l => l.Trim().Length > 0)
+                    .ToList();
+                if (heads.Count == 3)
+                    ruler = heads;
+                var cells = new Dictionary<(int, int), char>();
+                foreach (var l in lines)
+                {
+                    var m = rowPattern.Match(l);
+                    if (!m.Success)
+                        continue;
+                    var row = int.Parse(m.Groups[1].Value);
+                    // 列見出しとは「テキスト上の同じ桁」で対応させる(行ラベルの幅に左右されない)
+                    for (var t = m.Length; t < l.Length; t++)
+                    {
+                        if (l[t] == Void)
+                            continue;
+                        if (ruler == null || ruler.Any(h => t >= h.Length || !char.IsDigit(h[t])))
+                        {
+                            Debug.LogWarning(
+                                $"[MapLayoutBuilder] {b.Name}: 行 {row} の {t - m.Length + 1} 字目 `{l[t]}` に"
+                                    + "列見出しがありません。とばします。"
+                            );
+                            continue;
+                        }
+                        var x = -int.Parse($"{ruler[0][t]}{ruler[1][t]}{ruler[2][t]}");
+                        cells[(row, x)] = l[t];
+                    }
+                }
+                if (cells.Count > 0)
+                    blocks.Add(cells);
+                lines = null;
+            }
+
+            if (blocks.Count != b.Floors.Length)
+            {
+                Debug.LogError(
+                    $"[MapLayoutBuilder] {b.Name}: 図が {blocks.Count} 枚読めました(必要: {b.Floors.Length})。"
+                );
+                return null;
+            }
+            blocks.Reverse(); // 図は上の階から、Floors は下の階から
+
+            var all = blocks.SelectMany(d => d.Keys).ToList();
+            var minRow = all.Min(k => k.Row);
+            var minX = all.Min(k => k.X);
+            var rows = all.Max(k => k.Row) - minRow + 1;
+            var cols = all.Max(k => k.X) - minX + 1;
+            var origin = new Vector2(anchor.x + Cell * minX, anchor.y + Cell * minRow);
+
+            var floors = new FloorDef[b.Floors.Length];
+            var grids = new List<char[,]>();
+            for (var f = 0; f < floors.Length; f++)
+            {
+                var def = b.Floors[f];
+                floors[f] = new FloorDef(def.Name, new Vector3(origin.x, def.Origin.y, origin.y));
+                var grid = new char[rows, cols];
+                for (var r = 0; r < rows; r++)
+                for (var c = 0; c < cols; c++)
+                    grid[r, c] = blocks[f].TryGetValue((r + minRow, c + minX), out var ch)
+                        ? ch
+                        : Void;
+                grids.Add(grid);
+                Debug.Log(
+                    $"[MapLayoutBuilder] {b.Name} {def.Name}: {blocks[f].Count} マスを読みました"
+                        + $"(全階で 行 {minRow}〜{minRow + rows - 1} / X {minX}〜{minX + cols - 1})。"
+                );
+            }
+
+            return new BuildingMap
+            {
+                Building = b,
+                Floors = floors,
+                Grids = grids,
+                FloorColors = grids.Select(_ => (char[,])null).ToList(),
+                StairDirs = ReadStairDirs(b, path),
+            };
+        }
+
+        /// <summary>
+        /// 本文の「階段(e)は ← の方向」「階段(f, g)は ↓ の方向」から階段の向きを読む。矢印は**下る向き**なので、
+        /// 上る向きはその逆。書いていない階段は図の描き方から向きを決める(<see cref="CollectStairs"/>)。
+        /// </summary>
+        static Dictionary<char, StairDir> ReadStairDirs(Building b, string path)
+        {
+            var pattern = new Regex(@"階段\s*[（(]([a-z ,、]+)[）)]\s*は\s*([←→↑↓])");
+            var result = new Dictionary<char, StairDir>();
+            foreach (Match m in pattern.Matches(File.ReadAllText(path)))
+            {
+                var up = m.Groups[2].Value switch
+                {
+                    "←" => StairDir.East,
+                    "→" => StairDir.West,
+                    "↑" => StairDir.South,
+                    _ => StairDir.North,
+                };
+                foreach (var letter in m.Groups[1].Value.Where(char.IsLetter))
+                {
+                    result[letter] = up;
+                    Debug.Log(
+                        $"[MapLayoutBuilder] {b.Name}: 階段 '{letter}' は {up} へ上る(本文の指定)。"
+                    );
+                }
+            }
+            return result;
         }
 
         /// <summary>行番号 → 文字列 の表を、足りない所を「床なし」で埋めた矩形にする。</summary>
@@ -585,7 +770,7 @@ namespace CreativeAI.EditorTools
         {
             var b = map.Building;
             var kit = b.Kit;
-            var floors = b.Floors;
+            var floors = map.Floors;
             var grids = map.Grids;
 
             var wallMat = GetOrCreateMaterial(kit.WallMaterial, kit.WallColor);
@@ -598,16 +783,19 @@ namespace CreativeAI.EditorTools
                 doorGlassMat = wallMat;
 
             var stairs = LoadModel(kit.Stairs.Asset, "階段は生成しません。");
-            var glass = new GlassParts
+            var glass = new GlassParts();
+            foreach (var (symbol, assets, modelHeight) in kit.Panels)
             {
-                Prefabs = kit
-                    .GlassAssets.Select(a => LoadModel(a, "`$` のこの柄は使いません。"))
+                var prefabs = assets
+                    .Select(a => LoadModel(a, $"`{symbol}` のこの柄は使いません。"))
                     .Where(p => p != null)
-                    .ToArray(),
-                ModelHeight = kit.GlassModelHeight,
-            };
-            if (glass.Prefabs.Length == 0)
-                Debug.LogWarning($"[MapLayoutBuilder] {b.Name}: `$` は当たりだけになります。");
+                    .ToArray();
+                if (prefabs.Length == 0)
+                    Debug.LogWarning(
+                        $"[MapLayoutBuilder] {b.Name}: `{symbol}` は当たりだけになります。"
+                    );
+                glass.Kinds[symbol] = (prefabs, modelHeight);
+            }
 
             var buildingRoot = new GameObject(b.Name);
             buildingRoot.transform.SetParent(mapRoot, false);
@@ -620,7 +808,7 @@ namespace CreativeAI.EditorTools
                 floorRoots[f] = go.transform;
             }
 
-            var stairCells = CollectStairs(grids, floors, b.Name);
+            var stairCells = CollectStairs(grids, floors, map.StairDirs, b.Name);
 
             var rowOffsets = WorldRowOffsets(floors);
             var worldRows = Enumerable
@@ -655,23 +843,22 @@ namespace CreativeAI.EditorTools
                 var nc = g.GetLength(1);
 
                 // 空白は床なし。上の階に着く階段のマスも床を抜く(階段の吹き抜け)。
-                // 抜くのは「上の階の図での」マスなので Upper* を使う(下の階の row とずれることがある)
+                // 抜くのは「上の階の図での」マスなので Hole を使う(下の階の row とずれることがある)
                 var mask = new bool[nr, nc];
                 for (var r = 0; r < nr; r++)
                 for (var c = 0; c < nc; c++)
                     mask[r, c] = g[r, c] != Void;
                 foreach (var s in stairCells.Where(s => s.UpperFloor == f))
-                    for (var r = s.UpperRow0; r <= s.UpperRow1; r++)
-                    for (var c = s.UpperCol0; c <= s.UpperCol1; c++)
-                        mask[r, c] = false;
+                foreach (var cell in s.Hole.Where(v => v.y >= 0 && v.y < nr && v.x < nc))
+                    mask[cell.y, cell.x] = false;
 
                 floorMasks[f] = mask;
-                fenceLayouts[f] = LineLayout.Build(g, mask, nr, nc, Fence);
-                glassLayouts[f] = LineLayout.Build(g, mask, nr, nc, Glass);
+                fenceLayouts[f] = LineLayout.Build(g, mask, nr, nc, ch => ch == Fence);
+                glassLayouts[f] = LineLayout.Build(g, mask, nr, nc, IsPanel);
             }
             // 上下の階が真上に重なる建物は横の列も同じ世界行なので揃える
-            AlignAcrossFloors(glassLayouts, "ガラス", b.Stacked);
-            AlignAcrossFloors(fenceLayouts, "柵", b.Stacked);
+            AlignAcrossFloors(glassLayouts, "ガラス", IsStacked(floors));
+            AlignAcrossFloors(fenceLayouts, "柵", IsStacked(floors));
             for (var f = 0; f < floors.Length; f++)
                 FlushToCorridor(glassLayouts[f], grids[f], floorMasks[f]);
 
@@ -762,7 +949,7 @@ namespace CreativeAI.EditorTools
                 // ガラス壁: 見た目は1マス1枚の等倍、当たりは run ごとの薄い箱
                 for (var r = 0; r < rows; r++)
                 for (var c = 0; c < cols; c++)
-                    if (grid[r, c] == Glass && perimeter[r + rowOffsets[f], c])
+                    if (IsPanel(grid[r, c]) && perimeter[r + rowOffsets[f], c])
                         Debug.LogWarning(
                             $"[MapLayoutBuilder] {where} row {r} col {c}: "
                                 + "`$` が建物の外周にあります。外周は1枚の壁で覆われるのでガラスは埋まります。"
@@ -780,6 +967,7 @@ namespace CreativeAI.EditorTools
                             rows,
                             cols,
                             glassLayout,
+                            fenceLayouts[f],
                             i,
                             wallMat,
                             RunCells(glassLayout, i).All(rc => OpenAbove(rc.Row, rc.Col))
@@ -817,6 +1005,7 @@ namespace CreativeAI.EditorTools
                         FacesPositive(grid, rows, cols, r, c, eastWest),
                         doorGlassMat,
                         glass,
+                        PanelAlong(grid, rows, cols, r, c, eastWest),
                         WallOffsetAt(glassLayout, rows, cols, r, c, eastWest),
                         OpenAbove(r, c) ? openHeight : wallHeight
                     );
@@ -1204,22 +1393,40 @@ namespace CreativeAI.EditorTools
                 var col = run.Col + (horizontal ? i : 0);
                 var axis = horizontal ? Cell * row : Cell * col;
 
+                // 列の端のマスが直交する列の角になっているときは、相手の列の面で止める。
+                // マスの端まで置くと、相手が縁へ寄っているぶん角の外へはみ出す(最大1マス)
+                var from = -Cell * 0.5f;
+                var to = Cell * 0.5f;
+                if (run.Length > 1 && (i == 0 || i == run.Length - 1))
+                {
+                    var perp = PerpendicularRun(layout, grid, rows, cols, row, col, horizontal);
+                    if (perp >= 0)
+                    {
+                        if (i == 0)
+                            from = layout.Offsets[perp];
+                        else
+                            to = layout.Offsets[perp];
+                    }
+                }
+
                 // 1マス = 1本。列の長さいっぱいに1本を引き伸ばすと、区間ごとに桟の間隔が
                 // まるで変わってしまう(南の縁 256u = 42倍 / 吹き抜け 52u = 8.5倍 …)。
                 // マス単位に切って全部同じ縮尺(4 / 6.09)で置けば、どこも同じ見た目になる。
-                CreateHandrail(
-                    parent,
-                    prefab,
-                    scale,
-                    $"Handrail_{row}_{col}",
-                    new Vector3(
-                        Cell * col + (horizontal ? 0f : offset),
-                        0f,
-                        Cell * row + (horizontal ? offset : 0f)
-                    ),
-                    horizontal,
-                    Cell
-                );
+                var along = (from + to) * 0.5f;
+                if (to - from > 0.01f)
+                    CreateHandrail(
+                        parent,
+                        prefab,
+                        scale,
+                        $"Handrail_{row}_{col}",
+                        new Vector3(
+                            Cell * col + (horizontal ? along : offset),
+                            0f,
+                            Cell * row + (horizontal ? offset : along)
+                        ),
+                        horizontal,
+                        to - from
+                    );
 
                 foreach (var side in new[] { -1, 1 })
                 {
@@ -1251,6 +1458,30 @@ namespace CreativeAI.EditorTools
                     );
                 }
             }
+        }
+
+        /// <summary>マスの直交方向の隣(横の列なら南北)にある、向きの違う柵の列の番号(無ければ -1)。</summary>
+        static int PerpendicularRun(
+            LineLayout layout,
+            char[,] grid,
+            int rows,
+            int cols,
+            int row,
+            int col,
+            bool horizontal
+        )
+        {
+            foreach (var side in new[] { -1, 1 })
+            {
+                var nr = row + (horizontal ? side : 0);
+                var nc = col + (horizontal ? 0 : side);
+                if (nr < 0 || nc < 0 || nr >= rows || nc >= cols || grid[nr, nc] != Fence)
+                    continue;
+                var other = layout.RunOfCell[nr, nc];
+                if (other >= 0 && layout.Horizontals[other] != horizontal)
+                    return other;
+            }
+            return -1;
         }
 
         static void CreateHandrail(
@@ -1310,7 +1541,7 @@ namespace CreativeAI.EditorTools
                 if (y < 0 || x < 0 || y >= rows || x >= cols)
                     return true;
                 var ch = grid[y, x];
-                return ch == '#' || ch == Glass || IsDoor(ch);
+                return ch == '#' || IsPanel(ch) || IsDoor(ch);
             }
 
             if (WallLike(r, c - 1) && WallLike(r, c + 1))
@@ -1343,10 +1574,10 @@ namespace CreativeAI.EditorTools
                 bool[,] hasFloor,
                 int rows,
                 int cols,
-                char symbol
+                System.Func<char, bool> match
             )
             {
-                var runs = SymbolRuns(grid, rows, cols, symbol);
+                var runs = SymbolRuns(grid, rows, cols, match);
                 var offsets = new float[runs.Count];
                 var horizontals = new bool[runs.Count];
                 var runOfCell = new int[rows, cols];
@@ -1534,6 +1765,7 @@ namespace CreativeAI.EditorTools
             int rows,
             int cols,
             LineLayout layout,
+            LineLayout fences,
             int runIndex,
             Material wallMat,
             float wallHeight
@@ -1543,6 +1775,33 @@ namespace CreativeAI.EditorTools
             var horizontal = layout.Horizontals[runIndex];
             var offset = layout.Offsets[runIndex];
             var yaw = horizontal ? 0f : 90f;
+
+            // 列の端のマスが直交する壁・柵の角になっているときは、相手の面で止める(マス中心からの位置)。
+            // マスの端まで置くと、相手が縁へ寄っているぶん角の外へはみ出す(最大1マス)
+            float EndLine(int row, int col, float whenFree)
+            {
+                foreach (var side in new[] { -1, 1 })
+                {
+                    var nr = row + (horizontal ? side : 0);
+                    var nc = col + (horizontal ? 0 : side);
+                    if (nr < 0 || nc < 0 || nr >= rows || nc >= cols)
+                        continue;
+                    var other =
+                        IsPanel(grid[nr, nc]) ? layout
+                        : grid[nr, nc] == Fence ? fences
+                        : (LineLayout?)null;
+                    if (other == null)
+                        continue;
+                    var idx = other.Value.RunOfCell[nr, nc];
+                    if (idx >= 0 && other.Value.Horizontals[idx] != horizontal)
+                        return other.Value.Offsets[idx];
+                }
+                return whenFree;
+            }
+            var first = run.Length > 1 ? EndLine(run.Row, run.Col, -Cell * 0.5f) : -Cell * 0.5f;
+            var lastRow = run.Row + (horizontal ? 0 : run.Length - 1);
+            var lastCol = run.Col + (horizontal ? run.Length - 1 : 0);
+            var last = run.Length > 1 ? EndLine(lastRow, lastCol, Cell * 0.5f) : Cell * 0.5f;
 
             Vector3 Place(int row, int col, float along) =>
                 new Vector3(
@@ -1555,13 +1814,25 @@ namespace CreativeAI.EditorTools
             {
                 var row = run.Row + (horizontal ? 0 : i);
                 var col = run.Col + (horizontal ? i : 0);
-                var prefab = glass.Pick(row, col);
+                var from = i == 0 ? first : -Cell * 0.5f;
+                var to = i == run.Length - 1 ? last : Cell * 0.5f;
+                if (to - from < 0.01f)
+                    continue;
+                var (prefab, modelHeight) = glass.Pick(grid[row, col], row, col);
                 if (prefab == null)
                     continue;
                 var go = (GameObject)PrefabUtility.InstantiatePrefab(prefab, parent);
                 go.name = $"GlassWall_{row}_{col}";
-                PlaceModel(go, prefab, Place(row, col, 0f), Quaternion.Euler(0f, yaw, 0f));
-                FitToWallHeight(go, glass.ModelHeight, wallHeight);
+                PlaceModel(
+                    go,
+                    prefab,
+                    Place(row, col, (from + to) * 0.5f),
+                    Quaternion.Euler(0f, yaw, 0f)
+                );
+                FitToWallHeight(go, modelHeight, wallHeight);
+                var scale = go.transform.localScale;
+                scale.x *= (to - from) / Cell; // 端で止めたぶん板の幅(モデルのローカル X)を縮める
+                go.transform.localScale = scale;
             }
 
             for (var i = 0; i < run.Length; i++)
@@ -1585,7 +1856,7 @@ namespace CreativeAI.EditorTools
                     var mid = (start + end) * 0.5f;
 
                     var neighbour = grid[nr, nc];
-                    if (neighbour == Glass)
+                    if (IsPanel(neighbour))
                     {
                         // ガラスが直角に折れる角。相手の列の面まで届くガラスを1枚足して、
                         // 縦の面と横の面の先端を突き合わせる(塞ぐと角だけ不透明になる)。
@@ -1594,6 +1865,7 @@ namespace CreativeAI.EditorTools
                             CreateGlassCorner(
                                 parent,
                                 glass,
+                                grid[row, col],
                                 row,
                                 col,
                                 horizontal,
@@ -1613,6 +1885,7 @@ namespace CreativeAI.EditorTools
                             CreateGlassCorner(
                                 parent,
                                 glass,
+                                grid[row, col],
                                 row,
                                 col,
                                 horizontal,
@@ -1649,12 +1922,12 @@ namespace CreativeAI.EditorTools
                 }
             }
 
-            var length = Cell * run.Length;
+            var length = Cell * (run.Length - 1) + last - first;
             var colliderHeight = wallHeight + FloorSlabThickness;
             var collider = new GameObject($"GlassWallCollider_{run.Row}_{run.Col}");
             collider.transform.SetParent(parent, false);
             collider.transform.localPosition =
-                Place(run.Row, run.Col, Cell * (run.Length - 1) * 0.5f)
+                Place(run.Row, run.Col, (first + Cell * (run.Length - 1) + last) * 0.5f)
                 + new Vector3(0f, colliderHeight * 0.5f, 0f);
             var box = collider.AddComponent<BoxCollider>();
             box.size = horizontal
@@ -1703,6 +1976,7 @@ namespace CreativeAI.EditorTools
             bool facesPositive,
             Material glassMat,
             GlassParts glass,
+            char panel,
             float wallOffset,
             float wallHeight
         )
@@ -1734,9 +2008,9 @@ namespace CreativeAI.EditorTools
 
             var half = Cell * 0.5f;
 
-            // 見た目は隣の `$` と同じモデルを開口の外だけ残して置く(方立・無目の線が隣と揃う)。
+            // 見た目は隣の `$` `&` と同じモデルを開口の外だけ残して置く(方立・無目の線が隣と揃う)。
             // モデルが無ければ下の袖・垂れ壁の箱をガラスの板として見せる
-            var glassPrefab = glass.Pick(row, col);
+            var (glassPrefab, glassModelHeight) = glass.Pick(panel, row, col);
             if (glassPrefab != null)
             {
                 void Clip(string name, Vector2 min, Vector2 max) =>
@@ -1744,7 +2018,7 @@ namespace CreativeAI.EditorTools
                         root.transform,
                         name,
                         glassPrefab,
-                        glass.ModelHeight,
+                        glassModelHeight,
                         wallHeight,
                         min,
                         max
@@ -1909,7 +2183,7 @@ namespace CreativeAI.EditorTools
             return count;
         }
 
-        static bool IsStair(char c) => c >= 'a' && c <= 'd';
+        static bool IsStair(char c) => c >= 'a' && c <= 'z';
 
         /// <summary>
         /// ガラスが直角に折れる角を、幅 0.5 倍のガラスの半コマで隣の列の面まで継ぐ(板はマス中心に立つので角で 2u 足りない)。
@@ -1918,6 +2192,7 @@ namespace CreativeAI.EditorTools
         static void CreateGlassCorner(
             Transform parent,
             GlassParts glass,
+            char symbol,
             int row,
             int col,
             bool horizontal,
@@ -1934,13 +2209,13 @@ namespace CreativeAI.EditorTools
                 ? new Vector3(Cell * col + otherOffset, 0f, mid)
                 : new Vector3(mid, 0f, Cell * row + otherOffset);
 
-            var prefab = glass.Pick(row, col);
+            var (prefab, modelHeight) = glass.Pick(symbol, row, col);
             if (prefab != null)
             {
                 var go = (GameObject)PrefabUtility.InstantiatePrefab(prefab, parent);
                 go.name = $"GlassCorner_{row}_{col}";
                 PlaceModel(go, prefab, center, Quaternion.Euler(0f, yaw, 0f));
-                FitToWallHeight(go, glass.ModelHeight, wallHeight);
+                FitToWallHeight(go, modelHeight, wallHeight);
                 var scale = go.transform.localScale;
                 scale.x *= span / Cell; // 板の幅方向(モデルのローカル X)を継ぐ長さに合わせる
                 go.transform.localScale = scale;
@@ -2037,24 +2312,32 @@ namespace CreativeAI.EditorTools
         {
             var go = (GameObject)PrefabUtility.InstantiatePrefab(prefab, parent);
             go.name = $"Stairs_{s.Letter}";
-            var width = Cell * (s.LowerCol1 - s.LowerCol0 + 1);
-            var run = Cell * (s.LowerRow1 - s.LowerRow0 + 1);
+            var alongRows = s.Dir == StairDir.North || s.Dir == StairDir.South;
+            var rowCells = s.Row1 - s.Row0 + 1;
+            var colCells = s.Col1 - s.Col0 + 1;
+            var width = Cell * (alongRows ? colCells : rowCells);
+            var run = Cell * (alongRows ? rowCells : colCells);
 
-            // 南端(下側)の床にピボットを置き、Y180 で +Z へ登らせる(モデルは -Z へ登る)
-            var basePos = new Vector3(
-                Cell * (s.LowerCol0 + s.LowerCol1) * 0.5f,
-                0f,
-                Cell * s.LowerRow0 - Cell * 0.5f
-            );
+            // 上り始めの端(下側)の床にピボットを置き、上る向きへ回す。モデルは -Z へ登るので、さらに Y180
+            var cx = Cell * (s.Col0 + s.Col1) * 0.5f;
+            var cz = Cell * (s.Row0 + s.Row1) * 0.5f;
+            var basePos = s.Dir switch
+            {
+                StairDir.North => new Vector3(cx, 0f, Cell * s.Row0 - Cell * 0.5f),
+                StairDir.South => new Vector3(cx, 0f, Cell * s.Row1 + Cell * 0.5f),
+                StairDir.East => new Vector3(Cell * s.Col0 - Cell * 0.5f, 0f, cz),
+                _ => new Vector3(Cell * s.Col1 + Cell * 0.5f, 0f, cz),
+            };
+            var heading = Quaternion.Euler(0f, 90f * (int)s.Dir, 0f);
             var yScale = rise / model.Rise;
             go.transform.localPosition = basePos;
-            go.transform.localRotation = Quaternion.Euler(0f, 180f, 0f);
+            go.transform.localRotation = heading * Quaternion.Euler(0f, 180f, 0f);
             go.transform.localScale = new Vector3(width / model.Width, yScale, run / model.Run);
 
             // モデルは見た目だけ。当たりは斜面の箱で別に作る
             foreach (var col in go.GetComponentsInChildren<Collider>())
                 Object.DestroyImmediate(col);
-            CreateStairsRamp(parent, model, s, basePos, width, run, rise, yScale);
+            CreateStairsRamp(parent, model, s, basePos, heading, width, run, rise, yScale);
         }
 
         /// <summary>
@@ -2067,15 +2350,18 @@ namespace CreativeAI.EditorTools
             StairsModel model,
             StairCells s,
             Vector3 basePos,
+            Quaternion heading,
             float width,
             float run,
             float rise,
             float yScale
         )
         {
+            // 以下はローカルの +Z を上る向きとして組む
             var root = new GameObject($"StairsRamp_{s.Letter}");
             root.transform.SetParent(parent, false);
             root.transform.localPosition = basePos;
+            root.transform.localRotation = heading;
 
             var tread = run / model.Steps;
 
@@ -2185,11 +2471,16 @@ namespace CreativeAI.EditorTools
         }
 
         /// <summary>同じ記号のマスを矩形ではなく線分にまとめる。まず東西、残りを南北、最後に1マスずつ。</summary>
-        static List<FenceRun> SymbolRuns(char[,] grid, int rows, int cols, char symbol)
+        static List<FenceRun> SymbolRuns(
+            char[,] grid,
+            int rows,
+            int cols,
+            System.Func<char, bool> match
+        )
         {
             var used = new bool[rows, cols];
             var runs = new List<FenceRun>();
-            bool IsFence(int r, int c) => grid[r, c] == symbol && !used[r, c];
+            bool IsFence(int r, int c) => match(grid[r, c]) && !used[r, c];
 
             for (var r = 0; r < rows; r++)
             for (var c = 0; c < cols; c++)
@@ -2222,120 +2513,296 @@ namespace CreativeAI.EditorTools
             return runs;
         }
 
+        /// <summary>階段を上る向き。値 × 90° がその向きのヨー(北 = +Z = 0°)。</summary>
+        enum StairDir
+        {
+            North = 0,
+            East = 1,
+            South = 2,
+            West = 3,
+        }
+
         /// <summary>
-        /// 1本の階段。同じワールド位置でも階ごとに図の row が違う(階のZ原点がずれているため)ので、
-        /// 下の階の座標(階段本体を置く)と上の階の座標(床を抜く)を別々に持つ。
+        /// 1本の階段。本体を置く範囲(下の階の図の座標)と上る向き、上の階で床を抜くマス(上の階の図の座標。
+        /// 階ごとにZ原点がずれている建物では row が下の階とずれる)を持つ。
         /// </summary>
         readonly struct StairCells
         {
             public readonly char Letter;
             public readonly int LowerFloor,
                 UpperFloor;
-            public readonly int LowerRow0,
-                LowerRow1,
-                LowerCol0,
-                LowerCol1;
-            public readonly int UpperRow0,
-                UpperRow1,
-                UpperCol0,
-                UpperCol1;
+            public readonly int Row0,
+                Row1,
+                Col0,
+                Col1;
+            public readonly StairDir Dir;
+            public readonly List<Vector2Int> Hole; // x = col, y = row
 
             public StairCells(
                 char letter,
                 int lower,
                 int upper,
-                int lowerRow0,
-                int lowerRow1,
-                int lowerCol0,
-                int lowerCol1,
-                int upperRow0,
-                int upperRow1,
-                int upperCol0,
-                int upperCol1
+                RectInt cells,
+                StairDir dir,
+                List<Vector2Int> hole
             )
             {
                 Letter = letter;
                 LowerFloor = lower;
                 UpperFloor = upper;
-                LowerRow0 = lowerRow0;
-                LowerRow1 = lowerRow1;
-                LowerCol0 = lowerCol0;
-                LowerCol1 = lowerCol1;
-                UpperRow0 = upperRow0;
-                UpperRow1 = upperRow1;
-                UpperCol0 = upperCol0;
-                UpperCol1 = upperCol1;
+                Row0 = cells.yMin;
+                Row1 = cells.yMax - 1;
+                Col0 = cells.xMin;
+                Col1 = cells.xMax - 1;
+                Dir = dir;
+                Hole = hole;
             }
         }
 
-        /// <summary>同じ文字が2つの階に出てくるのが1本の階段。若い階が下、もう一方が上。</summary>
-        static List<StairCells> CollectStairs(List<char[,]> grids, FloorDef[] floors, string where)
+        /// <summary>
+        /// 同じ文字が1本の階段。書き方は3通り:
+        /// <list type="bullet">
+        /// <item>2つの階の同じ場所 — 本文の向き(無ければ北)へ上る。下の階が本体、上の階は床を抜く。</item>
+        /// <item>2つの階で並んだ場所 — 2つを合わせた長さの1本。向きは本文の指定(<see cref="ReadStairDirs"/>)、
+        /// 無ければ下の階のぶんから上の階のぶんへ上る。上り切る側の半分の真上の床を抜く。</item>
+        /// <item>1つの階だけ — その階から1つ上の階へ。長い向きに上り、向きは本文の指定、
+        /// 無ければ上り切った先が上の階で歩ける端を上端にする。
+        /// 真上のマスは全部床を抜く。</item>
+        /// </list>
+        /// </summary>
+        static List<StairCells> CollectStairs(
+            List<char[,]> grids,
+            FloorDef[] floors,
+            Dictionary<char, StairDir> dirs,
+            string where
+        )
         {
             var result = new List<StairCells>();
 
+            // 図の座標 → 別の階の図の座標(row だけずれる)
+            int RowShift(int from, int to) =>
+                Mathf.RoundToInt((floors[from].Origin.z - floors[to].Origin.z) / Cell);
+
             for (var letter = 'a'; letter <= 'z'; letter++)
             {
-                var found = new List<(int Floor, int R0, int R1, int C0, int C1)>();
+                var found = new List<(int Floor, RectInt Rect, List<Vector2Int> Cells)>();
                 for (var f = 0; f < grids.Count; f++)
                 {
                     var grid = grids[f];
-                    int r0 = int.MaxValue,
-                        r1 = -1,
-                        c0 = int.MaxValue,
-                        c1 = -1;
+                    var cells = new List<Vector2Int>();
                     for (var r = 0; r < grid.GetLength(0); r++)
                     for (var c = 0; c < grid.GetLength(1); c++)
-                    {
-                        if (grid[r, c] != letter)
-                            continue;
-                        r0 = Mathf.Min(r0, r);
-                        r1 = Mathf.Max(r1, r);
-                        c0 = Mathf.Min(c0, c);
-                        c1 = Mathf.Max(c1, c);
-                    }
-                    if (r1 >= 0)
-                        found.Add((f, r0, r1, c0, c1));
+                        if (grid[r, c] == letter)
+                            cells.Add(new Vector2Int(c, r));
+                    if (cells.Count > 0)
+                        found.Add((f, Bounds(cells), cells));
                 }
 
                 if (found.Count == 0)
                     continue;
-                if (found.Count != 2)
+                if (found.Count > 2)
                 {
                     Debug.LogWarning(
-                        $"[MapLayoutBuilder] {where}: 階段 '{letter}' が {found.Count} 階に出ています(2階ぶん必要)。とばします。"
+                        $"[MapLayoutBuilder] {where}: 階段 '{letter}' が {found.Count} 階に出ています(1〜2階ぶん)。とばします。"
                     );
                     continue;
                 }
 
                 var lower = found[0];
-                var upper = found[1];
-                var rowOffset = Mathf.RoundToInt(
-                    (floors[upper.Floor].Origin.z - floors[lower.Floor].Origin.z) / Cell
-                );
-                if (lower.R0 != upper.R0 + rowOffset || lower.C0 != upper.C0)
+                if (found.Count == 2)
+                {
+                    var upper = found[1];
+                    var shift = RowShift(upper.Floor, lower.Floor);
+                    var upperRect = new RectInt(
+                        upper.Rect.x,
+                        upper.Rect.y + shift,
+                        upper.Rect.width,
+                        upper.Rect.height
+                    );
+                    if (upperRect.Equals(lower.Rect))
+                    {
+                        // 向きは本文の指定、無ければ北(Area01)
+                        result.Add(
+                            new StairCells(
+                                letter,
+                                lower.Floor,
+                                upper.Floor,
+                                lower.Rect,
+                                dirs.TryGetValue(letter, out var sameDir)
+                                    ? sameDir
+                                    : StairDir.North,
+                                upper.Cells
+                            )
+                        );
+                        continue;
+                    }
+
+                    var eastWest =
+                        upperRect.y == lower.Rect.y
+                        && upperRect.height == lower.Rect.height
+                        && (upperRect.xMax == lower.Rect.xMin || lower.Rect.xMax == upperRect.xMin);
+                    var northSouth =
+                        upperRect.x == lower.Rect.x
+                        && upperRect.width == lower.Rect.width
+                        && (upperRect.yMax == lower.Rect.yMin || lower.Rect.yMax == upperRect.yMin);
+                    if (!eastWest && !northSouth)
+                    {
+                        Debug.LogWarning(
+                            $"[MapLayoutBuilder] {where}: 階段 '{letter}': 上下の階のマスが同じ場所でも、"
+                                + "同じ幅で隣り合ってもいません。とばします。"
+                        );
+                        continue;
+                    }
+
+                    // 向きは本文の指定、無ければ下の階のぶんから上の階のぶんへ
+                    var dir = eastWest
+                        ? (upperRect.x < lower.Rect.x ? StairDir.West : StairDir.East)
+                        : (upperRect.y < lower.Rect.y ? StairDir.South : StairDir.North);
+                    if (dirs.TryGetValue(letter, out var given))
+                    {
+                        var alongX = given == StairDir.East || given == StairDir.West;
+                        if (alongX == eastWest)
+                            dir = given;
+                        else
+                            Debug.LogWarning(
+                                $"[MapLayoutBuilder] {where}: 階段 '{letter}': 本文の向き({given})が図の並びと直交しています。"
+                                    + $"{dir} へ上る向きにします。"
+                            );
+                    }
+
+                    var body = eastWest
+                        ? new RectInt(
+                            Mathf.Min(upperRect.x, lower.Rect.x),
+                            lower.Rect.y,
+                            upperRect.width + lower.Rect.width,
+                            lower.Rect.height
+                        )
+                        : new RectInt(
+                            lower.Rect.x,
+                            Mathf.Min(upperRect.y, lower.Rect.y),
+                            lower.Rect.width,
+                            upperRect.height + lower.Rect.height
+                        );
+
+                    // 床を抜くのは上り切る側の半分の真上(上の階の図でどちらに描いてあっても)。
+                    // 下り始めの側は上の階の床が天井になる(階高の半分以上の頭上が空く)
+                    var topIsUpper = dir switch
+                    {
+                        StairDir.East => upperRect.x > lower.Rect.x,
+                        StairDir.West => upperRect.x < lower.Rect.x,
+                        StairDir.North => upperRect.y > lower.Rect.y,
+                        _ => upperRect.y < lower.Rect.y,
+                    };
+                    var topCells = topIsUpper
+                        ? upper.Cells
+                        : lower.Cells.Select(v => new Vector2Int(v.x, v.y - shift)).ToList();
+                    result.Add(
+                        new StairCells(letter, lower.Floor, upper.Floor, body, dir, topCells)
+                    );
+                    continue;
+                }
+
+                // 1つの階だけ: 1つ上の階(Y が次に高い階)へ
+                var above = Enumerable
+                    .Range(0, floors.Length)
+                    .Where(g => floors[g].Origin.y > floors[lower.Floor].Origin.y + 0.01f)
+                    .OrderBy(g => floors[g].Origin.y)
+                    .DefaultIfEmpty(-1)
+                    .First();
+                if (above < 0)
+                {
                     Debug.LogWarning(
-                        $"[MapLayoutBuilder] {where}: 階段 '{letter}': 上下の階でワールド座標が合っていません"
-                            + $"(下 row {lower.R0}〜{lower.R1} / 上 row {upper.R0}〜{upper.R1})。"
+                        $"[MapLayoutBuilder] {where}: 階段 '{letter}' の上の階がありません。とばします。"
+                    );
+                    continue;
+                }
+
+                var up = grids[above];
+                var rowShift = RowShift(lower.Floor, above);
+                bool Walkable(int r, int c)
+                {
+                    var ur = r + rowShift;
+                    if (ur < 0 || c < 0 || ur >= up.GetLength(0) || c >= up.GetLength(1))
+                        return false;
+                    var ch = up[ur, c];
+                    return ch != Void && ch != '#' && !IsPanel(ch) && ch != Fence;
+                }
+                bool EdgeWalkable(int r0, int r1, int c0, int c1)
+                {
+                    for (var r = r0; r <= r1; r++)
+                    for (var c = c0; c <= c1; c++)
+                        if (!Walkable(r, c))
+                            return false;
+                    return true;
+                }
+
+                var rect = lower.Rect;
+                var (r0, r1, c0, c1) = (rect.yMin, rect.yMax - 1, rect.xMin, rect.xMax - 1);
+                StairDir single;
+                bool fwd,
+                    back;
+                if (rect.height >= rect.width)
+                {
+                    fwd = EdgeWalkable(r1 + 1, r1 + 1, c0, c1); // 北の先
+                    back = EdgeWalkable(r0 - 1, r0 - 1, c0, c1); // 南の先
+                    single = fwd || !back ? StairDir.North : StairDir.South;
+                }
+                else
+                {
+                    fwd = EdgeWalkable(r0, r1, c1 + 1, c1 + 1); // 東の先
+                    back = EdgeWalkable(r0, r1, c0 - 1, c0 - 1); // 西の先
+                    single = fwd || !back ? StairDir.East : StairDir.West;
+                }
+                if (dirs.TryGetValue(letter, out var givenSingle))
+                {
+                    var alongRows = givenSingle == StairDir.North || givenSingle == StairDir.South;
+                    if (alongRows == rect.height >= rect.width)
+                    {
+                        var ok =
+                            givenSingle == StairDir.North || givenSingle == StairDir.East
+                                ? fwd
+                                : back;
+                        if (!ok)
+                            Debug.LogWarning(
+                                $"[MapLayoutBuilder] {where}: 階段 '{letter}': 本文の向き({givenSingle})だと"
+                                    + "上り切った先が上の階で歩けません。"
+                            );
+                        single = givenSingle;
+                    }
+                    else
+                        Debug.LogWarning(
+                            $"[MapLayoutBuilder] {where}: 階段 '{letter}': 本文の向き({givenSingle})が図の長い向きと直交しています。"
+                                + $"{single} へ上る向きにします。"
+                        );
+                }
+                else if (!fwd && !back)
+                    Debug.LogWarning(
+                        $"[MapLayoutBuilder] {where}: 階段 '{letter}': 上り切った先が上の階のどちらの端でも歩けません。"
+                            + $"{single} へ上る向きにします。"
+                    );
+                else if (fwd && back)
+                    Debug.LogWarning(
+                        $"[MapLayoutBuilder] {where}: 階段 '{letter}': 上の階で両端とも歩けるので向きが決まりません。"
+                            + $"{single} へ上る向きにします。"
                     );
 
-                result.Add(
-                    new StairCells(
-                        letter,
-                        lower.Floor,
-                        upper.Floor,
-                        lower.R0,
-                        lower.R1,
-                        lower.C0,
-                        lower.C1,
-                        upper.R0,
-                        upper.R1,
-                        upper.C0,
-                        upper.C1
-                    )
-                );
+                var hole = lower.Cells.Select(v => new Vector2Int(v.x, v.y + rowShift)).ToList();
+                result.Add(new StairCells(letter, lower.Floor, above, rect, single, hole));
             }
 
             return result;
+        }
+
+        static RectInt Bounds(List<Vector2Int> cells)
+        {
+            var xMin = cells.Min(v => v.x);
+            var yMin = cells.Min(v => v.y);
+            return new RectInt(
+                xMin,
+                yMin,
+                cells.Max(v => v.x) - xMin + 1,
+                cells.Max(v => v.y) - yMin + 1
+            );
         }
     }
 }
