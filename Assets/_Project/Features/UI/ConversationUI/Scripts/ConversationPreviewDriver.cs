@@ -37,6 +37,9 @@ namespace CreativeAI.UI
         [SerializeField]
         private bool _loop = true; // プレビューを繰り返す
 
+        [SerializeField]
+        private EventDefinition _event; // 割当時は組み込みデモの代わりに、このイベント(events.json 由来)を EventPlayer で再生
+
         private IEnumerator Start()
         {
             IDialogueView view = _view != null ? _view : DialogueViewService.Current;
@@ -45,6 +48,19 @@ namespace CreativeAI.UI
                 Debug.LogWarning(
                     "[ConversationPreviewDriver] ConversationView が見つかりません。シーンに配置してください。"
                 );
+                yield break;
+            }
+
+            if (_event != null)
+            {
+                // 本番と同じ再生経路。在庫・進行度の常駐が無いシーンなので giveItem は演出のみ、フラグ/進行は記録されない。
+                var player = EventPlayer.EnsureResident();
+                player.Inject(null, view, null);
+                do
+                {
+                    yield return player.PlayRoutine(_event); // 終了時のウィンドウは EventPlayer が閉じる
+                    yield return new WaitForSecondsRealtime(0.4f);
+                } while (_loop);
                 yield break;
             }
 
