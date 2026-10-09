@@ -3,6 +3,7 @@ using System;
 using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
+using System.Text.RegularExpressions;
 using CreativeAI.Core;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
@@ -83,6 +84,15 @@ namespace CreativeAI.EditorTools
         /// </summary>
         public const int MinChoiceOptions = 2;
         public const int MaxChoiceOptions = 3;
+
+        /// <summary>
+        /// id の書式(小文字英字・数字・_ の snake_case)。id はそのまま .asset のファイル名になるため、
+        /// 大文字違い(Mac は区別しないので Boss と boss が同じファイルになり黙って上書き)や / などを弾く。
+        /// </summary>
+        private static readonly Regex IdPattern = new("^[a-z0-9_]+$");
+
+        /// <summary>wait の秒数の上限。会話UIは範囲外を黙って 0〜10 秒に丸めるので、書き間違いに気づけるよう取り込み時に弾く。</summary>
+        public const float MaxWaitSeconds = 10f;
 
         private static bool IsKnownCommand(string command) =>
             CommandNames.Contains(command)
@@ -227,6 +237,14 @@ namespace CreativeAI.EditorTools
             {
                 report.Error(label, "id が未指定です(必須)。");
                 return; // id が無いと以降の診断・出力先を確定できない
+            }
+            if (!IdPattern.IsMatch(id))
+            {
+                report.Error(
+                    id,
+                    "id は小文字の英字・数字・_ だけで書いてください(例: cave_encounter)。"
+                );
+                return;
             }
             if (!seenIds.Add(id))
             {
@@ -582,18 +600,31 @@ namespace CreativeAI.EditorTools
                     }
                     var arg = (step["arg"] as JValue)?.Value?.ToString();
                     // wait だけは秒数が要る(欠けると何も待たずに素通りする)。
-                    if (
-                        command == "wait"
-                        && !float.TryParse(
-                            arg,
-                            NumberStyles.Float,
-                            CultureInfo.InvariantCulture,
-                            out _
-                        )
-                    )
+                    if (command == "wait")
                     {
-                        report.Error(id, $"steps[{i}] command 'wait' は arg に秒数(数値)が必須。");
-                        return null;
+                        if (
+                            !float.TryParse(
+                                arg,
+                                NumberStyles.Float,
+                                CultureInfo.InvariantCulture,
+                                out var seconds
+                            )
+                        )
+                        {
+                            report.Error(
+                                id,
+                                $"steps[{i}] command 'wait' は arg に秒数(数値)が必須。"
+                            );
+                            return null;
+                        }
+                        if (seconds < 0f || seconds > MaxWaitSeconds)
+                        {
+                            report.Error(
+                                id,
+                                $"steps[{i}] command 'wait' の秒数 {arg} は 0〜{MaxWaitSeconds} の範囲にしてください。"
+                            );
+                            return null;
+                        }
                     }
                     return EventStep.Command(command, arg);
                 }

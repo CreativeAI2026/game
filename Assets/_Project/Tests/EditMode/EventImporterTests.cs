@@ -389,6 +389,89 @@ namespace CreativeAI.Tests.EditMode
             Assert.IsTrue(report.HasErrors);
         }
 
+        [TestCase("Boss")]
+        [TestCase("boss/1")]
+        [TestCase("boss battle")]
+        [TestCase("ボス戦")]
+        public void Parse_IdNotSnakeCase_IsError(string id)
+        {
+            // id は .asset のファイル名になる。Mac は大文字小文字を区別しないので Boss と boss が同じファイルになり、
+            // 片方が黙って上書きされる。/ などはファイル名として書き出せない。
+            var json =
+                @"{ ""events"": [ {
+                    ""id"": """
+                + id
+                + @""",
+                    ""conditions"": [ { ""type"": ""progress"", ""value"": 1 } ],
+                    ""steps"": [ { ""kind"": ""line"", ""text"": ""……。"" } ],
+                    ""nextProgress"": 2
+                } ] }";
+
+            var report = EventImporter.Parse(json);
+
+            Assert.IsTrue(report.HasErrors);
+            CollectionAssert.IsEmpty(report.Events);
+        }
+
+        [Test]
+        public void Parse_IdSnakeCaseWithDigits_IsOk()
+        {
+            const string json =
+                @"{ ""events"": [ {
+                    ""id"": ""cave_encounter_2"",
+                    ""conditions"": [ { ""type"": ""progress"", ""value"": 1 } ],
+                    ""steps"": [ { ""kind"": ""line"", ""text"": ""……。"" } ],
+                    ""nextProgress"": 2
+                } ] }";
+
+            var report = EventImporter.Parse(json);
+
+            Assert.IsFalse(report.HasErrors, string.Join("\n", report.Diagnostics));
+        }
+
+        [TestCase("-0.5")]
+        [TestCase("10.5")]
+        [TestCase("30")]
+        public void Parse_Command_WaitOutOfRange_IsError(string seconds)
+        {
+            // 会話UIは範囲外を黙って 0〜10 秒に丸めるので、書いた人が気づけるよう取り込み時に弾く。
+            var json =
+                @"{ ""events"": [ {
+                    ""id"": ""long_wait"",
+                    ""conditions"": [ { ""type"": ""progress"", ""value"": 1 } ],
+                    ""steps"": [ { ""kind"": ""command"", ""command"": ""wait"", ""arg"": """
+                + seconds
+                + @""" } ],
+                    ""nextProgress"": 2
+                } ] }";
+
+            var report = EventImporter.Parse(json);
+
+            Assert.IsTrue(report.HasErrors);
+        }
+
+        [TestCase("0")]
+        [TestCase("10")]
+        public void Parse_Command_WaitAtBoundary_IsOk(string seconds)
+        {
+            var json =
+                @"{ ""events"": [ {
+                    ""id"": ""edge_wait"",
+                    ""conditions"": [ { ""type"": ""progress"", ""value"": 1 } ],
+                    ""steps"": [
+                        { ""kind"": ""command"", ""command"": ""wait"", ""arg"": """
+                + seconds
+                + @""" },
+                        { ""kind"": ""line"", ""text"": ""……。"" }
+                    ],
+                    ""nextProgress"": 2
+                } ] }";
+
+            var report = EventImporter.Parse(json);
+
+            Assert.IsFalse(report.HasErrors, string.Join("\n", report.Diagnostics));
+        }
+
         [Test]
         public void Parse_GiveItem_Message_IsCarried()
         {
