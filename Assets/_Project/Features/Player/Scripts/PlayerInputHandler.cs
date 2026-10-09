@@ -1,4 +1,5 @@
 using System;
+using CreativeAI.Core;
 using UnityEngine;
 using UnityEngine.InputSystem;
 
@@ -8,6 +9,7 @@ namespace CreativeAI.Gameplay
     /// Input Systemからの入力イベントを受け取り、各フィールドに保持する。
     /// 攻撃入力はConsumeパターン（1回消費）を採用し、
     /// 武器コントローラー側が任意のタイミングで入力を読み取れるようにしている。
+    /// 会話イベント中(<see cref="EventPlaybackService.BlocksPlayerControl"/>)は入力を捨てて操作不能にする。
     /// </summary>
     public class PlayerInputHandler : MonoBehaviour
     {
@@ -31,6 +33,50 @@ namespace CreativeAI.Gameplay
         private bool _attackPending = false;
 
         public bool HasAttackInput => _attackPending;
+
+        private GameModeManager _gameMode;
+
+        private void OnEnable()
+        {
+            EventPlaybackService.PlayingChanged += OnPlayingChanged;
+            _gameMode = GameModeManager.Instance;
+            if (_gameMode != null)
+                _gameMode.OnModeChanged += OnModeChanged;
+            OnControlStateChanged();
+        }
+
+        private void OnDisable()
+        {
+            EventPlaybackService.PlayingChanged -= OnPlayingChanged;
+            if (_gameMode != null)
+                _gameMode.OnModeChanged -= OnModeChanged;
+            _gameMode = null;
+        }
+
+        private void OnPlayingChanged(bool _) => OnControlStateChanged();
+
+        private void OnModeChanged(GameMode _) => OnControlStateChanged();
+
+        // 操作不能になった瞬間に押しっぱなしの入力を捨てる(会話中に歩き続けたり、解除直後に攻撃が出たりしないように)。
+        private void OnControlStateChanged()
+        {
+            if (EventPlaybackService.BlocksPlayerControl)
+                ClearInputs();
+        }
+
+        private void ClearInputs()
+        {
+            move = Vector2.zero;
+            look = Vector2.zero;
+            jump = false;
+            sprint = false;
+            subAction = false;
+            weaponNext = false;
+            weaponPrev = false;
+            _attackPending = false;
+        }
+
+        private static bool Blocked => EventPlaybackService.BlocksPlayerControl;
 
         /// <summary>
         /// 攻撃入力を消費する。1回の入力に対して1回だけtrueを返す。
@@ -76,6 +122,8 @@ namespace CreativeAI.Gameplay
 
         public void OnSubAction(InputValue value)
         {
+            if (Blocked)
+                return;
             bool pressed = value.isPressed;
             if (pressed && !subAction)
             {
@@ -102,41 +150,57 @@ namespace CreativeAI.Gameplay
 
         public void MoveInput(Vector2 newMoveDirection)
         {
+            if (Blocked)
+                return;
             move = newMoveDirection;
         }
 
         public void LookInput(Vector2 newLookDirection)
         {
+            if (Blocked)
+                return;
             look = newLookDirection;
         }
 
         public void JumpInput(bool newJumpState)
         {
+            if (Blocked)
+                return;
             jump = newJumpState;
         }
 
         public void SprintInput(bool newSprintState)
         {
+            if (Blocked)
+                return;
             sprint = newSprintState;
         }
 
         public void SubActionInput(bool newSubActionState)
         {
+            if (Blocked)
+                return;
             subAction = newSubActionState;
         }
 
         public void AttackInput()
         {
+            if (Blocked)
+                return;
             _attackPending = true;
         }
 
         public void WeaponNextInput(bool newWeaponNextState)
         {
+            if (Blocked)
+                return;
             weaponNext = newWeaponNextState;
         }
 
         public void WeaponPrevInput(bool newWeaponPrevState)
         {
+            if (Blocked)
+                return;
             weaponPrev = newWeaponPrevState;
         }
 
