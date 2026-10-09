@@ -88,7 +88,7 @@ namespace CreativeAI.Tests.EditMode
         public void TearDown()
         {
             EventPlaybackService.SetPlaying(false);
-            ItemDB.InjectForTests(null);
+            ItemCatalog.InjectForTests(null);
             TestReflection.SetStaticProperty<ProgressManager>("Instance", null);
             TestReflection.SetStaticProperty<InventoryManager>("Instance", null);
             TestReflection.SetStaticProperty<GameModeManager>("Instance", null);
@@ -184,7 +184,7 @@ namespace CreativeAI.Tests.EditMode
             var apple = MakeFood(3001);
             var gear = MakeEquipment(2001);
             var rolledGear = MakeEquipment(2002);
-            ItemDB.InjectForTests(new ItemData[] { apple, gear, rolledGear });
+            ItemCatalog.InjectForTests(new ItemData[] { apple, gear, rolledGear });
 
             _inv.AddItem(apple, 4);
             _inv.AddItem(gear, 1);
@@ -268,16 +268,16 @@ namespace CreativeAI.Tests.EditMode
         public void Load_ItemMissingFromCatalog_IsSkippedWithWarning()
         {
             var apple = MakeFood(3001);
-            ItemDB.InjectForTests(new ItemData[] { apple });
+            ItemCatalog.InjectForTests(new ItemData[] { apple });
             _inv.AddItem(apple, 1);
             SaveService.Save();
 
             // カタログから消えた状態で復元する(アセット削除を模す)。
-            ItemDB.InjectForTests(new ItemData[] { });
+            ItemCatalog.InjectForTests(new ItemData[] { });
             _inv.Clear();
             LogAssert.Expect(
                 LogType.Warning,
-                new System.Text.RegularExpressions.Regex("ItemDB に無し")
+                new System.Text.RegularExpressions.Regex("ItemCatalog に無し")
             );
 
             SaveService.Load();

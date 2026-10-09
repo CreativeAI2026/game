@@ -8,11 +8,11 @@ namespace CreativeAI.Gameplay
     /// CraftRecipe のレシピで調合する。素材はインベントリのアイテムとして消費するだけで、
     /// アイテム使用時の効果は発動しない。
     /// </summary>
-    public class RecipeCraftingService
+    public class CraftingService
     {
         private readonly InventoryService _inventoryService;
 
-        public RecipeCraftingService(InventoryService inventoryService)
+        public CraftingService(InventoryService inventoryService)
         {
             _inventoryService =
                 inventoryService ?? throw new ArgumentNullException(nameof(inventoryService));

@@ -5,7 +5,7 @@ using System.Linq;
 namespace CreativeAI.Gameplay
 {
     // 装備品の能力値(型・値・装備補正)と、その抽選(調合・フィールド拾得の両方)で共通に使う型をまとめる。
-    // 調合だけの抽選は RecipeCraftingService、拾得だけの抽選は FieldItemPickup にある。
+    // 調合だけの抽選は CraftingService、拾得だけの抽選は FieldItemPickup にある。
 
     /// <summary>
     /// 付与ステータスの型。装備品/武器は MaxHpPct、食材は HealAmount を持つ(排他)。

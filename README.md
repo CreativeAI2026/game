@@ -38,7 +38,7 @@ game/                          ← リポジトリルート
 │   │   ├── Audio/             BGM・SE のファイル
 │   │   ├── Scenes/            シーン（Title / Field / Battle / UI プレビュー）
 │   │   ├── Settings/          URP / Input System 等の設定
-│   │   ├── Resources/         実行時ロードするアセット（ItemDB・CraftRecipeDB・常駐生成の設定）
+│   │   ├── Resources/         実行時ロードするアセット（ItemCatalog・CraftRecipeCatalog・常駐生成の設定）
 │   │   ├── Editor/            Editor 拡張（Tools メニュー・UI バリデータ・CSV / イベント取り込み）
 │   │   └── Tests/             EditMode / PlayMode テスト
 │   ├── Plugins/               外部アセット（DOTween 等）

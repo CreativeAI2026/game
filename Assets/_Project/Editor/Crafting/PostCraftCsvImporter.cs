@@ -9,66 +9,110 @@ using UnityEngine;
 
 namespace CreativeAI.EditorTools
 {
-    public static class PostCraftEquipmentCsvImporter
+    /// <summary>
+    /// 調合結果(合成後アイテム)を CSV から作り、レシピ・アイテムのカタログへ同期する。
+    /// 装備品と食材で CSV・出力先・完成品の型・素材の条件だけが違う。
+    /// </summary>
+    public static class PostCraftCsvImporter
     {
-        private const string CsvPath = "Assets/_Project/Editor/Crafting/PostCraftEquipment.csv";
-        private const string ItemOutputDirectory =
-            "Assets/_Project/Features/Inventory/Data/Equipment/PostCraft";
-        private const string RecipeDatabasePath =
-            "Assets/_Project/Resources/Crafting/CraftRecipeDB.asset";
-        private const string ItemDatabasePath = "Assets/_Project/Resources/ItemDB.asset";
+        private const string RecipeCatalogPath =
+            "Assets/_Project/Resources/Crafting/CraftRecipeCatalog.asset";
+        private const string ItemCatalogPath = "Assets/_Project/Resources/ItemCatalog.asset";
         private const string InventoryDataDirectory = "Assets/_Project/Features/Inventory/Data";
 
-        [MenuItem("Tools/CreativeAI/Crafting/PostCraft CSVを検証")]
-        public static void ValidateMenu()
+        private static readonly Kind Equipment = new(
+            name: "Equipment",
+            csvPath: "Assets/_Project/Editor/Crafting/PostCraftEquipment.csv",
+            itemOutputDirectory: "Assets/_Project/Features/Inventory/Data/Equipment/PostCraft",
+            category: ItemCategory.Equipment,
+            loadOrCreate: LoadOrCreate<EquipmentData>,
+            isValidMaterial: item => item is EquipmentData,
+            materialDescription: "EquipmentData",
+            applyResult: item =>
+            {
+                // 調合結果の能力値は素材からロールするので、完成品の固定値は持たない。
+                var equipment = (EquipmentData)item;
+                equipment.attack = 0;
+                equipment.defense = 0;
+                equipment.criticalDamage = 0;
+                equipment.criticalRate = 0;
+                equipment.maxHP = 0;
+            }
+        );
+
+        private static readonly Kind Food = new(
+            name: "Food",
+            csvPath: "Assets/_Project/Editor/Crafting/PostCraftFood.csv",
+            itemOutputDirectory: "Assets/_Project/Features/Inventory/Data/Food/PostCraft",
+            category: ItemCategory.Food,
+            loadOrCreate: LoadOrCreate<FoodData>,
+            isValidMaterial: item => item is FoodData food && !food.IsCraftedResult,
+            materialDescription: "合成前FoodData",
+            applyResult: item =>
+            {
+                var serialized = new SerializedObject(item);
+                serialized.FindProperty("_craftedResult").boolValue = true;
+                serialized.ApplyModifiedPropertiesWithoutUndo();
+            }
+        );
+
+        [MenuItem("Tools/CreativeAI/Crafting/PostCraft Equipment CSVを検証")]
+        public static void ValidateEquipmentMenu() => ValidateMenu(Equipment);
+
+        [MenuItem("Tools/CreativeAI/Crafting/PostCraft EquipmentをCSVから同期")]
+        public static void ImportEquipmentMenu() => ImportMenu(Equipment);
+
+        [MenuItem("Tools/CreativeAI/Crafting/PostCraft Food CSVを検証")]
+        public static void ValidateFoodMenu() => ValidateMenu(Food);
+
+        [MenuItem("Tools/CreativeAI/Crafting/PostCraft FoodをCSVから同期")]
+        public static void ImportFoodMenu() => ImportMenu(Food);
+
+        private static void ValidateMenu(Kind kind)
         {
-            if (!TryLoadRows(out List<Row> rows))
+            if (!TryLoadRows(kind, out List<Row> rows))
                 return;
 
-            List<string> errors = Validate(rows);
+            List<string> errors = Validate(kind, rows);
             if (errors.Count == 0)
-                Debug.Log($"[PostCraft CSV] 検証成功: {rows.Count}件");
+                Debug.Log($"{kind.LogTag} 検証成功: {rows.Count}件");
             else
-                Debug.LogError(BuildErrorMessage(errors));
+                Debug.LogError(BuildErrorMessage(kind, errors));
         }
 
-        [MenuItem("Tools/CreativeAI/Crafting/PostCraftをCSVから同期")]
-        public static void ImportMenu()
+        private static void ImportMenu(Kind kind)
         {
-            if (!TryLoadRows(out List<Row> rows))
+            if (!TryLoadRows(kind, out List<Row> rows))
                 return;
 
-            List<string> errors = Validate(rows);
+            List<string> errors = Validate(kind, rows);
             if (errors.Count > 0)
             {
-                Debug.LogError(BuildErrorMessage(errors));
+                Debug.LogError(BuildErrorMessage(kind, errors));
                 return;
             }
 
-            EnsureDirectory(ItemOutputDirectory);
+            EnsureDirectory(kind.ItemOutputDirectory);
 
             int spriteChanges = 0;
-            int createdItems = 0;
-            int updatedItems = 0;
-            var importedRecipes = new List<CraftRecipe>();
-
             foreach (Row row in rows)
             {
                 if (ConfigureSprite(row.ImagePath))
                     spriteChanges++;
             }
 
+            int createdItems = 0;
+            int updatedItems = 0;
+            var importedRecipes = new List<CraftRecipe>();
+
             AssetDatabase.StartAssetEditing();
             try
             {
                 foreach (Row row in rows)
                 {
-                    EquipmentData result = LoadOrCreate<EquipmentData>(
-                        $"{ItemOutputDirectory}/{row.AssetName}.asset",
-                        out bool itemCreated
-                    );
-                    ApplyItem(row, result);
-                    if (itemCreated)
+                    ItemData result = kind.LoadOrCreate(GetItemPath(kind, row), out bool created);
+                    ApplyItem(kind, row, result);
+                    if (created)
                         createdItems++;
                     else
                         updatedItems++;
@@ -81,24 +125,24 @@ namespace CreativeAI.EditorTools
                 AssetDatabase.StopAssetEditing();
             }
 
-            SyncRecipeDatabase(importedRecipes);
-            SyncItemDatabase();
+            SyncRecipeCatalog(importedRecipes);
+            SyncItemCatalog();
             AssetDatabase.SaveAssets();
             AssetDatabase.Refresh();
             Debug.Log(
-                $"[PostCraft CSV] 同期完了: Sprite変更={spriteChanges}, "
+                $"{kind.LogTag} 同期完了: Sprite変更={spriteChanges}, "
                     + $"ItemData 作成={createdItems}/更新={updatedItems}, "
                     + $"Recipe 同期={importedRecipes.Count}"
             );
         }
 
-        private static bool TryLoadRows(out List<Row> rows)
+        private static bool TryLoadRows(Kind kind, out List<Row> rows)
         {
             rows = new List<Row>();
-            string absolutePath = Path.GetFullPath(CsvPath);
+            string absolutePath = Path.GetFullPath(kind.CsvPath);
             if (!File.Exists(absolutePath))
             {
-                Debug.LogError($"[PostCraft CSV] CSVがありません: {CsvPath}");
+                Debug.LogError($"{kind.LogTag} CSVがありません: {kind.CsvPath}");
                 return false;
             }
 
@@ -116,13 +160,13 @@ namespace CreativeAI.EditorTools
                 }
                 catch (FormatException exception)
                 {
-                    Debug.LogError($"[PostCraft CSV] {i + 1}行目: {exception.Message}");
+                    Debug.LogError($"{kind.LogTag} {i + 1}行目: {exception.Message}");
                     return false;
                 }
                 if (columns.Count != 8)
                 {
                     Debug.LogError(
-                        $"[PostCraft CSV] {i + 1}行目: 列数は8列必要です。現在={columns.Count}"
+                        $"{kind.LogTag} {i + 1}行目: 列数は8列必要です。現在={columns.Count}"
                     );
                     return false;
                 }
@@ -136,7 +180,7 @@ namespace CreativeAI.EditorTools
                     )
                 )
                 {
-                    Debug.LogError($"[PostCraft CSV] {i + 1}行目: idが整数ではありません。");
+                    Debug.LogError($"{kind.LogTag} {i + 1}行目: idが整数ではありません。");
                     return false;
                 }
 
@@ -158,7 +202,7 @@ namespace CreativeAI.EditorTools
             return true;
         }
 
-        private static List<string> Validate(IReadOnlyList<Row> rows)
+        private static List<string> Validate(Kind kind, IReadOnlyList<Row> rows)
         {
             var errors = new List<string>();
             if (rows.Count == 0)
@@ -177,13 +221,8 @@ namespace CreativeAI.EditorTools
             ValidateDuplicates(rows, row => row.AssetName, "assetName", errors);
             ValidateDuplicates(rows, row => row.ImagePath, "imagePath", errors);
 
-            var sourceItems = AssetDatabase
-                .FindAssets("t:ItemData", new[] { InventoryDataDirectory })
-                .Select(AssetDatabase.GUIDToAssetPath)
-                .Select(AssetDatabase.LoadAssetAtPath<ItemData>)
-                .Where(item => item != null)
-                .ToList();
-            var sourceByKey = sourceItems
+            List<ItemData> allItems = LoadAllItems();
+            var itemsByKey = allItems
                 .Where(item => !string.IsNullOrWhiteSpace(item.key))
                 .GroupBy(item => item.key)
                 .ToDictionary(group => group.Key, group => group.ToList());
@@ -201,19 +240,18 @@ namespace CreativeAI.EditorTools
                 if (!File.Exists(Path.GetFullPath(row.ImagePath)))
                     errors.Add($"{row.LineNumber}行目: 画像がありません: {row.ImagePath}");
 
-                ValidateMaterial(row, row.Material1Key, sourceByKey, errors);
-                ValidateMaterial(row, row.Material2Key, sourceByKey, errors);
+                ValidateMaterial(kind, row, row.Material1Key, itemsByKey, errors);
+                ValidateMaterial(kind, row, row.Material2Key, itemsByKey, errors);
 
-                foreach (ItemData other in sourceItems)
+                foreach (ItemData other in allItems)
                 {
                     string otherPath = AssetDatabase.GetAssetPath(other);
-                    bool isThisGeneratedAsset =
-                        otherPath == $"{ItemOutputDirectory}/{row.AssetName}.asset";
-                    if (!isThisGeneratedAsset && other.id == row.Id)
+                    bool isTarget = otherPath == GetItemPath(kind, row);
+                    if (!isTarget && other.id == row.Id)
                         errors.Add(
                             $"{row.LineNumber}行目: id={row.Id} は {otherPath} と重複しています。"
                         );
-                    if (!isThisGeneratedAsset && other.key == row.Key)
+                    if (!isTarget && other.key == row.Key)
                         errors.Add(
                             $"{row.LineNumber}行目: key={row.Key} は {otherPath} と重複しています。"
                         );
@@ -238,13 +276,14 @@ namespace CreativeAI.EditorTools
         }
 
         private static void ValidateMaterial(
+            Kind kind,
             Row row,
             string key,
-            IReadOnlyDictionary<string, List<ItemData>> sourceByKey,
+            IReadOnlyDictionary<string, List<ItemData>> itemsByKey,
             ICollection<string> errors
         )
         {
-            if (!sourceByKey.TryGetValue(key, out List<ItemData> matches) || matches.Count != 1)
+            if (!itemsByKey.TryGetValue(key, out List<ItemData> matches) || matches.Count != 1)
             {
                 errors.Add(
                     $"{row.LineNumber}行目: 素材key={key}に一致するItemDataが1件ではありません。"
@@ -252,8 +291,10 @@ namespace CreativeAI.EditorTools
                 return;
             }
 
-            if (matches[0] is not EquipmentData)
-                errors.Add($"{row.LineNumber}行目: 素材key={key}はEquipmentDataではありません。");
+            if (!kind.IsValidMaterial(matches[0]))
+                errors.Add(
+                    $"{row.LineNumber}行目: 素材key={key}は{kind.MaterialDescription}ではありません。"
+                );
         }
 
         private static bool ConfigureSprite(string path)
@@ -275,24 +316,20 @@ namespace CreativeAI.EditorTools
             return true;
         }
 
-        private static void ApplyItem(Row row, EquipmentData item)
+        private static void ApplyItem(Kind kind, Row row, ItemData item)
         {
             Undo.RecordObject(item, "PostCraft ItemDataを同期");
             item.icon = AssetDatabase.LoadAssetAtPath<Sprite>(row.ImagePath);
             item.id = row.Id;
             item.key = row.Key;
             item.itemName = row.ItemName;
-            item.category = ItemCategory.Equipment;
+            item.category = kind.Category;
             item.description = row.Description;
-            item.attack = 0;
-            item.defense = 0;
-            item.criticalDamage = 0;
-            item.criticalRate = 0;
-            item.maxHP = 0;
+            kind.ApplyResult(item);
             EditorUtility.SetDirty(item);
         }
 
-        private static CraftRecipe CreateRecipe(Row row, EquipmentData result) =>
+        private static CraftRecipe CreateRecipe(Row row, ItemData result) =>
             new()
             {
                 resultItem = result,
@@ -301,14 +338,21 @@ namespace CreativeAI.EditorTools
             };
 
         private static ItemData FindItem(string key) =>
+            LoadAllItems().Single(item => item != null && item.key == key);
+
+        private static List<ItemData> LoadAllItems() =>
             AssetDatabase
                 .FindAssets("t:ItemData", new[] { InventoryDataDirectory })
                 .Select(AssetDatabase.GUIDToAssetPath)
                 .Select(AssetDatabase.LoadAssetAtPath<ItemData>)
-                .Single(item => item != null && item.key == key);
+                .Where(item => item != null)
+                .ToList();
 
-        private static T LoadOrCreate<T>(string path, out bool created)
-            where T : ScriptableObject
+        private static string GetItemPath(Kind kind, Row row) =>
+            $"{kind.ItemOutputDirectory}/{row.AssetName}.asset";
+
+        private static ItemData LoadOrCreate<T>(string path, out bool created)
+            where T : ItemData
         {
             T asset = AssetDatabase.LoadAssetAtPath<T>(path);
             created = asset == null;
@@ -320,30 +364,27 @@ namespace CreativeAI.EditorTools
             return asset;
         }
 
-        private static void SyncRecipeDatabase(IReadOnlyCollection<CraftRecipe> importedRecipes)
+        private static void SyncRecipeCatalog(IReadOnlyCollection<CraftRecipe> importedRecipes)
         {
-            CraftRecipeDB database = AssetDatabase.LoadAssetAtPath<CraftRecipeDB>(
-                RecipeDatabasePath
+            CraftRecipeCatalog catalog = AssetDatabase.LoadAssetAtPath<CraftRecipeCatalog>(
+                RecipeCatalogPath
             );
-            if (database == null)
+            if (catalog == null)
                 throw new InvalidOperationException(
-                    $"CraftRecipeDBがありません: {RecipeDatabasePath}"
+                    $"CraftRecipeCatalogがありません: {RecipeCatalogPath}"
                 );
 
-            Undo.RecordObject(database, "CraftRecipeDBを同期");
-            foreach (CraftRecipe recipe in importedRecipes)
-                database.SetRecipe(recipe);
-            EditorUtility.SetDirty(database);
+            CraftRecipeCatalogWriter.SetRecipes(catalog, importedRecipes);
         }
 
-        private static void SyncItemDatabase()
+        private static void SyncItemCatalog()
         {
-            ItemDB database = AssetDatabase.LoadAssetAtPath<ItemDB>(ItemDatabasePath);
-            if (database == null)
-                throw new InvalidOperationException($"ItemDBがありません: {ItemDatabasePath}");
+            ItemCatalog catalog = AssetDatabase.LoadAssetAtPath<ItemCatalog>(ItemCatalogPath);
+            if (catalog == null)
+                throw new InvalidOperationException($"ItemCatalogがありません: {ItemCatalogPath}");
 
-            database.SyncFromInventoryDataFolder();
-            EditorUtility.SetDirty(database);
+            catalog.SyncFromInventoryDataFolder();
+            EditorUtility.SetDirty(catalog);
         }
 
         private static void EnsureDirectory(string path)
@@ -358,8 +399,44 @@ namespace CreativeAI.EditorTools
             }
         }
 
-        private static string BuildErrorMessage(IEnumerable<string> errors) =>
-            "[PostCraft CSV] 同期を中止しました:\n- " + string.Join("\n- ", errors);
+        private static string BuildErrorMessage(Kind kind, IEnumerable<string> errors) =>
+            $"{kind.LogTag} 同期を中止しました:\n- " + string.Join("\n- ", errors);
+
+        private delegate ItemData LoadOrCreateItem(string path, out bool created);
+
+        /// <summary>装備品・食材ごとに違う部分。</summary>
+        private sealed class Kind
+        {
+            public string LogTag { get; }
+            public string CsvPath { get; }
+            public string ItemOutputDirectory { get; }
+            public ItemCategory Category { get; }
+            public LoadOrCreateItem LoadOrCreate { get; }
+            public Func<ItemData, bool> IsValidMaterial { get; }
+            public string MaterialDescription { get; }
+            public Action<ItemData> ApplyResult { get; }
+
+            public Kind(
+                string name,
+                string csvPath,
+                string itemOutputDirectory,
+                ItemCategory category,
+                LoadOrCreateItem loadOrCreate,
+                Func<ItemData, bool> isValidMaterial,
+                string materialDescription,
+                Action<ItemData> applyResult
+            )
+            {
+                LogTag = $"[PostCraft {name} CSV]";
+                CsvPath = csvPath;
+                ItemOutputDirectory = itemOutputDirectory;
+                Category = category;
+                LoadOrCreate = loadOrCreate;
+                IsValidMaterial = isValidMaterial;
+                MaterialDescription = materialDescription;
+                ApplyResult = applyResult;
+            }
+        }
 
         private sealed class Row
         {

@@ -11,17 +11,17 @@ namespace CreativeAI.Tests.EditMode
     /// 装備品はロール個体 / 食材は固定。
     /// MonoBehaviour を挟まない純粋サービスなので InventoryService を直接組んで叩く。
     /// </summary>
-    public class RecipeCraftingServiceTests
+    public class CraftingServiceTests
     {
         private InventoryService _inv;
-        private RecipeCraftingService _craft;
+        private CraftingService _craft;
         private readonly List<Object> _assets = new();
 
         [SetUp]
         public void SetUp()
         {
             _inv = new InventoryService();
-            _craft = new RecipeCraftingService(_inv);
+            _craft = new CraftingService(_inv);
         }
 
         [TearDown]

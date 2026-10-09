@@ -489,7 +489,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 3bda362a337147c48db0206d8849160d, type: 3}
   m_Name: 
   m_EditorClassIdentifier: CreativeAI.UI::CreativeAI.UI.CraftingUI.CraftPanel
-  _recipeDB: {fileID: 11400000, guid: aa34528df09845938528196f495e75a2, type: 2}
+  _recipeCatalog: {fileID: 11400000, guid: aa34528df09845938528196f495e75a2, type: 2}
   _closeButton: {fileID: 2072709094699775840}
   _craftFlowDurationSeconds: 1
   _inventory: {fileID: 5682205800677061742}

@@ -37,7 +37,7 @@ namespace CreativeAI.UI
         }
 
         [SerializeField]
-        private CraftRecipeDB _recipeDB;
+        private CraftRecipeCatalog _recipeCatalog;
 
         [SerializeField]
         private Button _closeButton;
@@ -178,7 +178,7 @@ namespace CreativeAI.UI
         private bool Initialize()
         {
             bool valid = HasCraftFlowReferences();
-            valid &= ValidateRequiredReference(_recipeDB, nameof(_recipeDB));
+            valid &= ValidateRequiredReference(_recipeCatalog, nameof(_recipeCatalog));
             valid &= ValidateRequiredReference(_inventory, nameof(_inventory));
             valid &= ValidateRequiredReference(_craftedItemSlot, nameof(_craftedItemSlot));
             valid &= ValidateRequiredReference(_craftButton, nameof(_craftButton));
@@ -560,7 +560,7 @@ namespace CreativeAI.UI
         private CraftRecipe FindAssignedRecipe()
         {
             return HasAllMaterials()
-                ? _recipeDB?.FindRecipe(_materials[0].Data, _materials[1].Data)
+                ? _recipeCatalog?.FindRecipe(_materials[0].Data, _materials[1].Data)
                 : null;
         }
 

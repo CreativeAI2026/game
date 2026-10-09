@@ -157,9 +157,9 @@ namespace CreativeAI.Gameplay
             if (inv != null)
             {
                 inv.Clear();
-                var db = ItemDB.Instance;
-                if (data.items != null && db != null)
-                    RestoreItems(inv, db, data.items);
+                var catalog = ItemCatalog.Instance;
+                if (data.items != null && catalog != null)
+                    RestoreItems(inv, catalog, data.items);
             }
 
             Debug.Log($"[SaveService] 復元しました: {FilePath}");
@@ -194,15 +194,19 @@ namespace CreativeAI.Gameplay
                 status.RestoreHp(data.currentHp);
         }
 
-        private static void RestoreItems(InventoryManager inv, ItemDB db, List<ItemEntry> entries)
+        private static void RestoreItems(
+            InventoryManager inv,
+            ItemCatalog catalog,
+            List<ItemEntry> entries
+        )
         {
             foreach (var e in entries)
             {
-                var itemData = db.GetItemById(e.itemId);
+                var itemData = catalog.GetItemById(e.itemId);
                 if (itemData == null)
                 {
                     Debug.LogWarning(
-                        $"[SaveService] itemId {e.itemId} は ItemDB に無し。スキップ。"
+                        $"[SaveService] itemId {e.itemId} は ItemCatalog に無し。スキップ。"
                     );
                     continue;
                 }

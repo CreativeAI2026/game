@@ -26,10 +26,10 @@ namespace CreativeAI.Gameplay
     /// レシピの一覧。(素材A, 素材B) → レシピ の Map として引ける。読み取り専用のカタログ。
     /// </summary>
     [CreateAssetMenu(
-        fileName = "CraftRecipeDB",
-        menuName = "Scriptable Objects/Crafting/Craft Recipe DB"
+        fileName = "CraftRecipeCatalog",
+        menuName = "Scriptable Objects/Crafting/Craft Recipe Catalog"
     )]
-    public class CraftRecipeDB : ScriptableObject
+    public class CraftRecipeCatalog : ScriptableObject
     {
         [SerializeField]
         private List<CraftRecipe> _recipes = new();
@@ -70,18 +70,5 @@ namespace CreativeAI.Gameplay
         {
             _recipeByMaterials = null;
         }
-
-#if UNITY_EDITOR
-        /// <summary>CSV 取り込み用。同じ完成品のレシピがあれば置き換え、無ければ追加する。</summary>
-        public void SetRecipe(CraftRecipe recipe)
-        {
-            int index = _recipes.FindIndex(existing => existing?.resultItem == recipe.resultItem);
-            if (index >= 0)
-                _recipes[index] = recipe;
-            else
-                _recipes.Add(recipe);
-            _recipeByMaterials = null;
-        }
-#endif
     }
 }

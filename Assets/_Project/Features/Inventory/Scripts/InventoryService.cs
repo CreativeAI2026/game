@@ -7,7 +7,7 @@ namespace CreativeAI.Gameplay
 {
     /// <summary>
     /// 所持品の中身(アイテムの束 + 即時使用食材スロット)と、その追加・消費・検索・食材の使用。
-    /// 調合のルールは RecipeCraftingService 側に置く。
+    /// 調合のルールは CraftingService 側に置く。
     /// </summary>
     public class InventoryService
     {

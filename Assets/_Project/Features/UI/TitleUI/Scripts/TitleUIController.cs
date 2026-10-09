@@ -67,7 +67,7 @@ namespace CreativeAI.UI
             if (!EnsureSessionAndPlayer())
                 return;
 
-            // 進行度・フラグ・所持品はここで同期復元される(ItemDB は Resources 経由でシーン非依存)。
+            // 進行度・フラグ・所持品はここで同期復元される(ItemCatalog は Resources 経由でシーン非依存)。
             var data = SaveService.Load();
 
             // 座標・現在HP はシーンロード後でないと配置できないため、完了コールバックで復元する。

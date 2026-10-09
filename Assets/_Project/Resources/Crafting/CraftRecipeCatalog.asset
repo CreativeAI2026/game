@@ -10,8 +10,8 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 6dbb1c45ce5444f2a926fe7f4c0d97c8, type: 3}
-  m_Name: CraftRecipeDB
-  m_EditorClassIdentifier: CreativeAI.Gameplay::CreativeAI.Gameplay.CraftRecipeDB
+  m_Name: CraftRecipeCatalog
+  m_EditorClassIdentifier: CreativeAI.Gameplay::CreativeAI.Gameplay.CraftRecipeCatalog
   _recipes:
   - material1: {fileID: 11400000, guid: 2eb5d3fd27304bd9910bb746953d70a5, type: 2}
     material2: {fileID: 11400000, guid: b451bc339ee442319638382ca5c2766a, type: 2}
