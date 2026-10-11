@@ -14,7 +14,7 @@ namespace CreativeAI.UI
         private Button _continueButton; // 「続きから」(セーブ復元)。未割当なら続きから導線は無効
 
         [SerializeField]
-        private string _nextSceneName = SceneNames.FieldArea00;
+        private string _nextSceneName = SceneNames.FieldArea01;
 
         [SerializeField]
         private GameObject _playerRigPrefab; // 「はじめる/続きから」で生成するプレイヤーリグ。未割当なら警告してプレイヤーは出ない
