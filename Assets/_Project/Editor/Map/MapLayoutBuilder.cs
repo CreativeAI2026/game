@@ -360,6 +360,7 @@ namespace CreativeAI.EditorTools
             Debug.Log(
                 $"[MapLayoutBuilder] {ScenePath} を作成しました。Build Settings への登録は手動で行ってください。"
             );
+            BakeOcclusion(scene);
         }
 
         /// <summary>Field_Area01 を開いて Map ルートだけ作り直し、保存する(Map の外は触らない)。</summary>
@@ -387,6 +388,8 @@ namespace CreativeAI.EditorTools
             EditorSceneManager.SaveScene(scene);
             AssetDatabase.Refresh();
             Debug.Log($"[MapLayoutBuilder] {ScenePath} の Map ルートを作り直しました。");
+            // 作り直すと古いオクルージョンデータが壁と食い違い、見えるはずの所が消えるので焼き直す
+            BakeOcclusion(scene);
         }
 
         /// <summary>いま開いているシーンの Map ルートだけを作り直す(Map の外は触らない)。</summary>
@@ -402,7 +405,9 @@ namespace CreativeAI.EditorTools
                 target = SceneManager.GetActiveScene();
             BuildInto(maps, target);
             EditorSceneManager.MarkSceneDirty(target);
-            Debug.Log($"[MapLayoutBuilder] {target.name} の Map ルートを作り直しました。");
+            Debug.Log(
+                $"[MapLayoutBuilder] {target.name} の Map ルートを作り直しました。保存後に Bake Occlusion Field_Area01 で焼き直してください。"
+            );
         }
 
         /// <summary>開いているシーンからパスで探す(見つからなければ IsValid() == false)。</summary>
@@ -1164,28 +1169,70 @@ namespace CreativeAI.EditorTools
         const float OcclusionSmallestOccluder = 4f;
         const float OcclusionSmallestHole = 0.25f;
 
-        /// <summary>
-        /// Field_Area01 だけを開いてオクルージョンカリングを焼く。小物は Static でないので焼く対象に要らず、
-        /// 小物シーンを一緒に開くとそちらにも参照が書き込まれて担当者と競合する。Rebuild したら焼き直す。
-        /// </summary>
+        /// <summary>Field_Area01 のオクルージョンカリングを焼き直す。Build / Rebuild の最後にも自動で走る。</summary>
         [MenuItem("Tools/CreativeAI/Map/Bake Occlusion Field_Area01")]
         public static void BakeOcclusionArea01()
         {
             if (!EditorSceneManager.SaveCurrentModifiedScenesIfUserWantsTo())
                 return;
-            var scene = EditorSceneManager.OpenScene(ScenePath, OpenSceneMode.Single);
+            var scene = FindOpenScene(ScenePath);
+            if (!scene.IsValid())
+                scene = EditorSceneManager.OpenScene(ScenePath, OpenSceneMode.Single);
+            BakeOcclusion(scene);
+        }
 
-            StaticOcclusionCulling.smallestOccluder = OcclusionSmallestOccluder;
-            StaticOcclusionCulling.smallestHole = OcclusionSmallestHole;
-            StaticOcclusionCulling.backfaceThreshold = 100f;
-            if (!StaticOcclusionCulling.Compute())
+        /// <summary>
+        /// そのシーンだけでオクルージョンカリングを焼いて保存する。小物は Static でないので焼く対象に要らず、
+        /// 小物シーンを開いたまま焼くとそちらにも参照が書き込まれて担当者と競合するため、
+        /// 他のシーンは一時的に閉じて焼き終わったら開き直す。
+        /// </summary>
+        static bool BakeOcclusion(Scene scene)
+        {
+            var others = new List<string>();
+            for (var i = 0; i < SceneManager.sceneCount; i++)
             {
-                Debug.LogError("[MapLayoutBuilder] オクルージョンカリングのベイクに失敗しました。");
-                return;
+                var s = SceneManager.GetSceneAt(i);
+                if (s != scene && s.isLoaded)
+                    others.Add(s.path);
             }
+            if (
+                others.Count > 0
+                && !EditorSceneManager.SaveModifiedScenesIfUserWantsTo(
+                    others.Select(p => SceneManager.GetSceneByPath(p)).ToArray()
+                )
+            )
+            {
+                Debug.LogWarning(
+                    "[MapLayoutBuilder] オクルージョンカリングを焼きませんでした。Bake Occlusion Field_Area01 で焼き直してください。"
+                );
+                return false;
+            }
+            foreach (var path in others)
+                EditorSceneManager.CloseScene(SceneManager.GetSceneByPath(path), false);
 
-            EditorSceneManager.SaveScene(scene);
-            Debug.Log("[MapLayoutBuilder] オクルージョンカリングを焼きました。");
+            var ok = false;
+            try
+            {
+                StaticOcclusionCulling.smallestOccluder = OcclusionSmallestOccluder;
+                StaticOcclusionCulling.smallestHole = OcclusionSmallestHole;
+                StaticOcclusionCulling.backfaceThreshold = 100f;
+                ok = StaticOcclusionCulling.Compute();
+                if (ok)
+                {
+                    EditorSceneManager.SaveScene(scene);
+                    Debug.Log("[MapLayoutBuilder] オクルージョンカリングを焼きました。");
+                }
+                else
+                    Debug.LogError(
+                        "[MapLayoutBuilder] オクルージョンカリングのベイクに失敗しました。"
+                    );
+            }
+            finally
+            {
+                foreach (var path in others)
+                    EditorSceneManager.OpenScene(path, OpenSceneMode.Additive);
+            }
+            return ok;
         }
 
         static bool IsSeeThrough(Renderer renderer) =>
