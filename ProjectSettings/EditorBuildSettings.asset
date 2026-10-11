@@ -20,6 +20,15 @@ EditorBuildSettings:
   - enabled: 1
     path: Assets/_Project/Scenes/Field/Field_Area01_Props_3F.unity
     guid: 34ad80b472856ccb363f24d8a00f150a
+  - enabled: 1
+    path: Assets/_Project/Scenes/Field/Field_Area01_Props_Lab_1F.unity
+    guid: d6c4d97af0c204fe1878ce1b9654c38e
+  - enabled: 1
+    path: Assets/_Project/Scenes/Field/Field_Area01_Props_Lab_2F.unity
+    guid: fc241c45ed62e4d85b9226864898ea50
+  - enabled: 1
+    path: Assets/_Project/Scenes/Field/Field_Area01_Props_Lab_3F.unity
+    guid: 5effe7f50bbcf413eb5a2396c65c3301
   m_configObjects:
     com.unity.dt.app-ui: {fileID: 11400000, guid: 1b1c20d82303e4b5781c3ef50ac1449f, type: 2}
     com.unity.input.settings: {fileID: 11400000, guid: 9e7be553448fa2546aea5752021cbcf7, type: 2}
