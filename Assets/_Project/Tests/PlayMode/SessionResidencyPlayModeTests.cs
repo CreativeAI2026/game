@@ -131,7 +131,7 @@ namespace CreativeAI.Tests.PlayMode
             var progress = ProgressManager.Instance;
             var inventory = InventoryManager.Instance;
 
-            yield return UnityEngine.SceneManagement.SceneManager.LoadSceneAsync("01_Title");
+            yield return UnityEngine.SceneManagement.SceneManager.LoadSceneAsync("Title");
 
             Assert.AreSame(progress, ProgressManager.Instance, "進行度はシーンをまたいで生き残る");
             Assert.AreSame(inventory, InventoryManager.Instance, "所持品もまたぐ");

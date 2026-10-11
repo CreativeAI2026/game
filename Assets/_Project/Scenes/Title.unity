@@ -353,7 +353,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: CreativeAI.UI::CreativeAI.UI.TitleUI.TitleUIController
   _tapToStartButton: {fileID: 1560239932}
   _continueButton: {fileID: 0}
-  _nextSceneName: Field_Area00
+  _nextSceneName: Field_Area01
   _playerRigPrefab: {fileID: 0}
   _uiRootPrefab: {fileID: 7357621368793443196, guid: d0c8f5a2fab99460a9cbf61536da8406, type: 3}
 --- !u!114 &410022266
