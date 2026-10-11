@@ -257,7 +257,7 @@ namespace CreativeAI.EditorTools
                 ),
             };
 
-            // 研究棟(Field_Area04 のモデル)から切り出した部品。Tools/Blender/build_lab_kit.py で作る。
+            // 研究棟のモデルから切り出した部品。
             // 色は元のモデルが Unity で付いていた色に合わせる(赤だけは元のシーンが使っている LabRed 1)。
             public static readonly Kit Lab = new Kit
             {
@@ -278,15 +278,15 @@ namespace CreativeAI.EditorTools
                         Lattice,
                         new[]
                         {
-                            "Structure/Lab/LabLatticeWall_A.glb",
-                            "Structure/Lab/LabLatticeWall_B.glb",
-                            "Structure/Lab/LabLatticeWall_C.glb",
+                            "Structure/LabLatticeWall_A.glb",
+                            "Structure/LabLatticeWall_B.glb",
+                            "Structure/LabLatticeWall_C.glb",
                         },
                         12f // 1u タイル 12段(壁の高さへ縦に伸ばす)
                     ),
                 },
                 HandrailScale = 2.26f, // 元のシーンが Handrail.glb を 2.26 倍で置いていた
-                // 階段は Area01 と同じ白い Stairs.glb(元の研究棟の LabStairs.glb は暗い色で床に沈んで見える)
+                // 階段は Area01 と同じ白い Stairs.glb(元の研究棟の階段は暗い色で床に沈んで見える)
                 Stairs = Standard.Stairs,
             };
         }
