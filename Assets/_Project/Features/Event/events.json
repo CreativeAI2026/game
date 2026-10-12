@@ -3,7 +3,7 @@
     {
       "id": "sample_preview",
       "conditions": [
-        { "type": "progress", "value": 1 }
+        { "type": "progress", "value": 0 }
       ],
       "steps": [
         { "kind": "line", "text": "（仮）雨音の向こうで、古いレコードが途切れ途切れに鳴っている。" },
@@ -35,7 +35,7 @@
         { "kind": "line", "portrait": "hero_smile", "text": "ありがとう。助かるよ。" },
         { "kind": "line", "portrait": "hero_anger", "text": "必ず、ここから出てみせる。" }
       ],
-      "nextProgress": 2
+      "nextProgress": 1
     }
   ]
 }
