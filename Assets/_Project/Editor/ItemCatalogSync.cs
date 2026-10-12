@@ -257,6 +257,13 @@ namespace CreativeAI.EditorTools
                         continue;
                     }
 
+                    if (AssetImporter.GetAtPath(path) is TextureImporter importer)
+                    {
+                        importer.GetSourceTextureWidthAndHeight(out int width, out int height);
+                        if (width != height)
+                            errors.Add($"画像が正方形ではありません: {path}({width}×{height})");
+                    }
+
                     entries.Add(
                         new Entry(
                             group,
