@@ -52,20 +52,21 @@ namespace CreativeAI.Gameplay
             )
                 return false;
 
-            crafted = GrantResult(recipe);
+            crafted = GrantResult(recipe, materialA, materialB);
             return true;
         }
 
         /// <summary>
         /// 結果アイテムを1つ付与する。装備品は個体差ロールした個体を作り、食材など非装備品はそのまま追加する。
         /// </summary>
-        private ItemStack GrantResult(CraftRecipe recipe)
+        private ItemStack GrantResult(CraftRecipe recipe, ItemStack materialA, ItemStack materialB)
         {
-            if (recipe.resultItem is EquipmentData)
+            if (recipe.resultItem.category == ItemCategory.Equipment)
             {
+                // 素材にした2つの個体の能力値を元にする。
                 var rolled = RollCraftedStats(
-                    EquipmentData.ToStatVector(recipe.material1 as EquipmentData),
-                    EquipmentData.ToStatVector(recipe.material2 as EquipmentData),
+                    RolledStat.ToVector(materialA.RolledStats),
+                    RolledStat.ToVector(materialB.RolledStats),
                     new SystemRandomSource()
                 );
                 return _inventoryService.AddInstance(
@@ -174,6 +175,121 @@ namespace CreativeAI.Gameplay
                 return bas;
 
             return bas + headroom * (1.0 - Math.Exp(-p.Beta * sub / headroom));
+        }
+    }
+
+    /// <summary>
+    /// 調合の能力値抽選の調整ノブ。値はバランス調整用。
+    /// </summary>
+    public sealed class StatRollParameters
+    {
+        /// <summary>β: ボーナス係数。弱い方の素材が上乗せする成長量。</summary>
+        public double Beta { get; set; } = 0.5;
+
+        /// <summary>C_cap: 総パワー上限。連鎖インフレを止める天井。</summary>
+        public double PowerCap { get; set; } = 100.0;
+
+        /// <summary>σ: シナジー強度。両親が共通で持つ型の増幅率。</summary>
+        public double Synergy { get; set; } = 0.5;
+
+        /// <summary>α0: 集中度。小さいほど尖り(当たり/はずれ)、大きいほど均等。</summary>
+        public double Alpha0 { get; set; } = 6.0;
+
+        /// <summary>ε: 切り捨て下限。これ未満の型は捨てて実質1型扱いにする。</summary>
+        public double Epsilon { get; set; } = 1.0;
+
+        /// <summary>付与数の上限(固定で2)。</summary>
+        public int MaxStatCount => 2;
+
+        /// <summary>型ごとの値の上限(例: 会心率 ≤ 100%)。未登録の型は無制限。</summary>
+        public IReadOnlyDictionary<StatType, float> Caps { get; set; } =
+            new Dictionary<StatType, float> { { StatType.CritRate, 100f } };
+
+        public static StatRollParameters Default => new StatRollParameters();
+
+        /// <summary>
+        /// 総パワー budget を配分 shares で各型に割り振る。ε 未満は捨て、型ごとの上限でクランプする。
+        /// </summary>
+        public StatVector Distribute(
+            IReadOnlyList<StatType> types,
+            IReadOnlyList<double> shares,
+            double budget
+        )
+        {
+            var result = new Dictionary<StatType, float>();
+            for (int i = 0; i < types.Count; i++)
+            {
+                double value = budget * shares[i];
+                if (value < Epsilon)
+                    continue; // 実質1型扱い: 微小成分は捨てる
+
+                if (Caps.TryGetValue(types[i], out var cap))
+                    value = Math.Min(value, cap);
+
+                result[types[i]] = (float)value;
+            }
+            return new StatVector(result);
+        }
+    }
+
+    /// <summary>配分の抽選で使う確率分布のサンプラ(ガンマ → ディリクレ)。</summary>
+    public static class ProbabilityDistributions
+    {
+        /// <summary>形状 shape(&gt;0)・尺度1 のガンマ分布から標本を1つ得る(Marsaglia &amp; Tsang 法)。</summary>
+        public static double SampleGamma(double shape, IRandomSource rng)
+        {
+            if (shape <= 0.0)
+                throw new ArgumentOutOfRangeException(nameof(shape), "shape must be > 0");
+
+            // shape < 1 はブースト変換で shape+1 に帰着させる。
+            if (shape < 1.0)
+            {
+                double u = rng.NextDouble();
+                while (u <= double.Epsilon)
+                    u = rng.NextDouble();
+                return SampleGamma(shape + 1.0, rng) * Math.Pow(u, 1.0 / shape);
+            }
+
+            double d = shape - 1.0 / 3.0;
+            double c = 1.0 / Math.Sqrt(9.0 * d);
+            while (true)
+            {
+                double x = rng.NextGaussian();
+                double v = 1.0 + c * x;
+                if (v <= 0.0)
+                    continue;
+                v = v * v * v;
+                double u = rng.NextDouble();
+                double x2 = x * x;
+                if (u < 1.0 - 0.0331 * x2 * x2)
+                    return d * v;
+                if (Math.Log(u) < 0.5 * x2 + d * (1.0 - v + Math.Log(v)))
+                    return d * v;
+            }
+        }
+
+        /// <summary>ディリクレ分布 Dirichlet(alpha) から確率ベクトルを抽選する。</summary>
+        public static double[] SampleDirichlet(double[] alpha, IRandomSource rng)
+        {
+            var samples = new double[alpha.Length];
+            double sum = 0.0;
+            for (int i = 0; i < alpha.Length; i++)
+            {
+                samples[i] = SampleGamma(alpha[i], rng);
+                sum += samples[i];
+            }
+
+            if (sum <= 0.0)
+            {
+                // 退化ケース(全標本が0)。均等配分にフォールバック。
+                for (int i = 0; i < samples.Length; i++)
+                    samples[i] = 1.0 / samples.Length;
+                return samples;
+            }
+
+            for (int i = 0; i < samples.Length; i++)
+                samples[i] /= sum;
+            return samples;
         }
     }
 }

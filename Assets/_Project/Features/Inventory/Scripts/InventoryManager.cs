@@ -137,7 +137,23 @@ namespace CreativeAI.Gameplay
                 );
                 return;
             }
-            AddItem(data, 1);
+            AddAcquired(data, 1);
+        }
+
+        /// <summary>
+        /// 入手したアイテムを追加する(フィールドで拾う・イベントでもらう共通)。装備品は1個ずつ能力値を抽選した個体、それ以外は数量ぶん積む。
+        /// </summary>
+        public void AddAcquired(ItemData data, int count)
+        {
+            if (data.category != ItemCategory.Equipment)
+            {
+                AddItem(data, count);
+                return;
+            }
+
+            var random = new SystemRandomSource();
+            for (int i = 0; i < count; i++)
+                AddInstance(data, RolledStat.FromVector(DropStatRoller.RollDropStats(random)));
         }
 
         /// <summary>
@@ -222,7 +238,7 @@ namespace CreativeAI.Gameplay
             // 装備品は最大3つまで。上限に達していたら装着を拒否する(武器は在庫外なので数えない)。
             if (
                 equipped
-                && stack.Data is EquipmentData
+                && stack.Data.category == ItemCategory.Equipment
                 && CountEquippedEquipment() >= MaxEquippedEquipment
             )
             {
@@ -235,15 +251,15 @@ namespace CreativeAI.Gameplay
             EquipmentChanged?.Invoke(); // 最終ステータス再計算のトリガー
         }
 
-        /// <summary>現在装備中の装備品(EquipmentData)の数。武器は在庫外なので数えない。</summary>
+        /// <summary>現在装備中の装備品の数。武器は在庫外なので数えない。</summary>
         private int CountEquippedEquipment() =>
             InventoryService
                 .GetAllItems()
-                .Count(s => s != null && s.IsEquipped && s.Data is EquipmentData);
+                .Count(s => s != null && s.IsEquipped && s.Data.category == ItemCategory.Equipment);
 
         /// <summary>
         /// 装備中の装備品の補正合計(武器は WeaponManager 側で別合算)。
-        /// 調合・拾得の個体(RolledStats あり)はロール値を、固定 SO は EquipmentData の値を使う。
+        /// 装備品の能力値は個体ごとのロール値(RolledStats)だけ。ロールされていない装備品は補正なし。
         /// </summary>
         public EquipmentBonus GetEquippedBonus()
         {
@@ -253,23 +269,8 @@ namespace CreativeAI.Gameplay
                 if (stack == null || !stack.IsEquipped)
                     continue;
                 // 武器(WeaponData)は在庫外・WeaponManager 管理なので意図的に加算しない。
-                if (stack.Data is not EquipmentData e)
-                    continue;
-
-                if (stack.RolledStats != null && stack.RolledStats.Count > 0)
-                {
-                    // 調合でロールされた個体(個体差あり)。
+                if (stack.Data.category == ItemCategory.Equipment)
                     b.Add(stack.RolledStats);
-                }
-                else
-                {
-                    // 固定 SO の装備品(素材など未ロール)。
-                    b.attackPct += e.attack;
-                    b.defensePct += e.defense;
-                    b.maxHpPct += e.maxHP;
-                    b.criticalChance += e.criticalRate;
-                    b.criticalDamage += e.criticalDamage;
-                }
             }
             return b;
         }
@@ -301,11 +302,8 @@ namespace CreativeAI.Gameplay
             if (ItemCatalog.Instance == null)
                 return;
 
-            // 武器はインベントリ管理の対象外。ItemCatalog はフォルダ一括同期で武器も拾うため、ここで除外する。
             var testItems = ItemCatalog
-                .Instance.Items.Where(item =>
-                    item != null && !(item is WeaponData) && HasZeroSecondDigit(item)
-                )
+                .Instance.Items.Where(item => item != null && HasZeroSecondDigit(item))
                 .ToList();
             foreach (var item in testItems)
             {
@@ -313,7 +311,7 @@ namespace CreativeAI.Gameplay
                     item.MaxStack > 1
                         ? Random.Range(InitialTestItemMinCount, InitialTestItemMaxCountExclusive)
                         : 1;
-                AddItem(item, count);
+                AddAcquired(item, count);
             }
         }
 
