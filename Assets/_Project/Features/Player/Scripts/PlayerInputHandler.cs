@@ -40,6 +40,8 @@ namespace CreativeAI.Gameplay
         private bool _attackPending = false;
         private float _attackPressedTime;
 
+        public bool HasAttackInput => _attackPending;
+
         private bool IsAttackInputExpired => Time.time - _attackPressedTime > _attackBufferSeconds;
 
         private GameModeManager _gameMode;
