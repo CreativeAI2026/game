@@ -78,6 +78,9 @@ namespace CreativeAI.EditorTools
         const float HandrailLength = 6.09f;
         const float HandrailHeight = 1.25f;
 
+        // 柵の高さ(全建物共通)。プレイヤー(仮リグの背丈 4.5u)の胸くらい
+        const float FenceHeight = 3.4f;
+
         // 階段の当たりは段形状ではなく斜面にする(段の蹴上げが CharacterController の
         // StepOffset を超えるため。歩ける面は斜面、見た目は段々のまま)。
         const float RampThickness = 1f; // 斜面コライダーの厚み(すり抜け防止)
@@ -228,7 +231,7 @@ namespace CreativeAI.EditorTools
             // ModelHeight はモデルの実寸の高さ(壁の高さへ伸縮する)
             public (char Symbol, string[] Assets, float ModelHeight)[] Panels;
 
-            public float HandrailScale = 1f; // 手すりの高さ・太さの倍率(長さはマスに合わせる)
+            public float HandrailScale = 1f; // 手すりの太さの倍率(長さはマスに、高さは FenceHeight に合わせる)
             public StairsModel Stairs;
 
             // 透明なガラス `$`。旧階高ぴったり(9.6u)で作ってある
@@ -240,10 +243,11 @@ namespace CreativeAI.EditorTools
 
             public static readonly Kit Standard = new Kit
             {
-                WallMaterial = "Map_Wall",
-                WallColor = new Color(0.72f, 0.72f, 0.70f),
-                FloorMaterial = "Map_Floor",
-                FloorColor = new Color(0.42f, 0.44f, 0.47f),
+                // 壁と床は研究棟と同じマテリアルを共有する(色を変えるときは両方そろって変わる)
+                WallMaterial = "Lab_Wall",
+                WallColor = new Color(0.906f, 0.906f, 0.906f),
+                FloorMaterial = "Lab_Floor",
+                FloorColor = new Color(0.24f, 0.24f, 0.24f),
                 Panels = new[] { GlassPanel },
                 // 階段は「歩ける面」の寸法を使う。バウンディングボックス(高さ5.045 / 奥行6.736)は
                 // 手すりの上端と踏面のはみ出しを含むので、それで割ると踏面が上階の床に届かない。
@@ -753,6 +757,7 @@ namespace CreativeAI.EditorTools
                 BuildBuilding(root.transform, map, handrail, doorPrefabs, doorGlassMat);
 
             ApplyStaticFlags(root);
+            ApplyLayers(root);
             Selection.activeGameObject = root;
         }
 
@@ -975,9 +980,7 @@ namespace CreativeAI.EditorTools
                             fenceLayouts[f],
                             i,
                             wallMat,
-                            RunCells(glassLayout, i).All(rc => OpenAbove(rc.Row, rc.Col))
-                                ? openHeight
-                                : wallHeight
+                            (r, c) => OpenAbove(r, c) ? openHeight : wallHeight
                         );
                 }
 
@@ -1163,6 +1166,81 @@ namespace CreativeAI.EditorTools
                 $"[MapLayoutBuilder] Static を付けました: 固定物 {solid}(うちUV2なしでプローブ受光 {probeLit})"
                     + $" / 透ける物 {seeThrough} / 動く扉板 {skipped}"
             );
+        }
+
+        // ---------------------------------------------------------------- Layer
+
+        // 床と階段は Ground、それ以外の当たりは Obstacle。プレイヤーの接地判定・カメラの壁避け・
+        // 敵の突進や弾の壁判定がこの2つで床と壁を見分ける
+        const string GroundLayerName = "Ground";
+        const string ObstacleLayerName = "Obstacle";
+
+        /// <summary>Field_Area01 を作り直さずに、今の Map へレイヤーだけ当てて保存する。</summary>
+        [MenuItem("Tools/CreativeAI/Map/Apply Layers To Field_Area01")]
+        public static void ApplyLayersToArea01()
+        {
+            var scene = FindOpenScene(ScenePath);
+            if (!scene.IsValid())
+                scene = EditorSceneManager.OpenScene(ScenePath, OpenSceneMode.Single);
+            var root = FindMapRoot(scene);
+            if (root == null)
+            {
+                Debug.LogError($"[MapLayoutBuilder] {ScenePath} に {MapRootName} がありません。");
+                return;
+            }
+            ApplyLayers(root);
+            EditorSceneManager.SaveScene(scene);
+        }
+
+        /// <summary>
+        /// Map 配下の当たりにレイヤーを付ける。トリガー(扉の反応範囲)は Default のまま残す
+        /// (カメラや弾が見えない球に当たらないように)。
+        /// </summary>
+        static void ApplyLayers(GameObject root)
+        {
+            var ground = LayerMask.NameToLayer(GroundLayerName);
+            var obstacle = LayerMask.NameToLayer(ObstacleLayerName);
+            if (ground < 0 || obstacle < 0)
+            {
+                Debug.LogError(
+                    $"[MapLayoutBuilder] レイヤー {GroundLayerName} / {ObstacleLayerName} が Tags and Layers にありません。"
+                );
+                return;
+            }
+
+            int groundCount = 0,
+                obstacleCount = 0;
+            var done = new HashSet<GameObject>();
+            foreach (var collider in root.GetComponentsInChildren<Collider>(true))
+            {
+                var go = collider.gameObject;
+                if (collider.isTrigger || !done.Add(go))
+                    continue;
+
+                var isGround = IsUnder(
+                    go.transform,
+                    t => t.name == "Floor" || t.name.StartsWith("StairsRamp_")
+                );
+                go.layer = isGround ? ground : obstacle;
+                if (isGround)
+                    groundCount++;
+                else
+                    obstacleCount++;
+                // Prefab インスタンス(扉板・手すり)は記録しないとシーン保存時に上書きが残らない
+                PrefabUtility.RecordPrefabInstancePropertyModifications(go);
+            }
+
+            Debug.Log(
+                $"[MapLayoutBuilder] レイヤーを付けました: {GroundLayerName} {groundCount} / {ObstacleLayerName} {obstacleCount}"
+            );
+        }
+
+        static bool IsUnder(Transform t, System.Func<Transform, bool> match)
+        {
+            for (; t != null; t = t.parent)
+                if (match(t))
+                    return true;
+            return false;
         }
 
         // 1マス(4u)の壁片が遮蔽物として残るように、既定の 5 から下げる
@@ -1544,8 +1622,12 @@ namespace CreativeAI.EditorTools
             var go = (GameObject)PrefabUtility.InstantiatePrefab(prefab, parent);
             go.name = name;
             PlaceModel(go, prefab, center, Quaternion.Euler(0f, horizontal ? 0f : 90f, 0f));
-            // 長さはマスに合わせて伸ばし、高さ・太さは建物ごとの倍率。PlaceModel が入れたプレハブのスケールを上書きする。
-            go.transform.localScale = new Vector3(length / HandrailLength, scale, scale);
+            // 長さはマスに合わせて伸ばし、高さは全建物共通、太さは建物ごとの倍率。PlaceModel が入れたプレハブのスケールを上書きする。
+            go.transform.localScale = new Vector3(
+                length / HandrailLength,
+                FenceHeight / HandrailHeight,
+                scale
+            );
 
             var box = go.AddComponent<BoxCollider>();
             box.center = new Vector3(0f, HandrailHeight * 0.5f, 0f);
@@ -1756,14 +1838,6 @@ namespace CreativeAI.EditorTools
             return (voidMinus, voidPlus);
         }
 
-        static IEnumerable<(int Row, int Col)> RunCells(LineLayout layout, int runIndex)
-        {
-            var run = layout.Runs[runIndex];
-            var horizontal = layout.Horizontals[runIndex];
-            for (var k = 0; k < run.Length; k++)
-                yield return (run.Row + (horizontal ? 0 : k), run.Col + (horizontal ? k : 0));
-        }
-
         /// <summary>
         /// 両側に床があって中心に立つガラスを、廊下側(歩ける床が広い側)の `#` の面へ寄せる。
         /// 中心のままだと 4u 厚の `#` に対して薄い板が 2u 引っ込み、壁の面がそろわない。
@@ -1804,6 +1878,7 @@ namespace CreativeAI.EditorTools
         /// <summary>
         /// ガラス壁。1マス × 階高のモデルを等倍で1枚ずつ置き(引き伸ばすと歪む)、床の縁に接していれば縁へ寄せる。
         /// 当たりは列全体で1つの薄い箱(4u厚だとガラスの2u手前で止まる)。
+        /// 高さはマスごとに決める(上に床があるマスと吹き抜けのマスが1列に混ざることがある)。
         /// </summary>
         static void CreateGlassWall(
             Transform parent,
@@ -1815,7 +1890,7 @@ namespace CreativeAI.EditorTools
             LineLayout fences,
             int runIndex,
             Material wallMat,
-            float wallHeight
+            System.Func<int, int, float> heightAt
         )
         {
             var run = layout.Runs[runIndex];
@@ -1876,7 +1951,7 @@ namespace CreativeAI.EditorTools
                     Place(row, col, (from + to) * 0.5f),
                     Quaternion.Euler(0f, yaw, 0f)
                 );
-                FitToWallHeight(go, modelHeight, wallHeight);
+                FitToWallHeight(go, modelHeight, heightAt(row, col));
                 var scale = go.transform.localScale;
                 scale.x *= (to - from) / Cell; // 端で止めたぶん板の幅(モデルのローカル X)を縮める
                 go.transform.localScale = scale;
@@ -1887,6 +1962,7 @@ namespace CreativeAI.EditorTools
                 var row = run.Row + (horizontal ? 0 : i);
                 var col = run.Col + (horizontal ? i : 0);
                 var axis = horizontal ? Cell * row : Cell * col; // 直交方向のマス中心
+                var wallHeight = heightAt(row, col);
                 foreach (var side in new[] { -1, 1 })
                 {
                     var nr = row + (horizontal ? side : 0);
@@ -1969,17 +2045,30 @@ namespace CreativeAI.EditorTools
                 }
             }
 
-            var length = Cell * (run.Length - 1) + last - first;
-            var colliderHeight = wallHeight + FloorSlabThickness;
-            var collider = new GameObject($"GlassWallCollider_{run.Row}_{run.Col}");
-            collider.transform.SetParent(parent, false);
-            collider.transform.localPosition =
-                Place(run.Row, run.Col, (first + Cell * (run.Length - 1) + last) * 0.5f)
-                + new Vector3(0f, colliderHeight * 0.5f, 0f);
-            var box = collider.AddComponent<BoxCollider>();
-            box.size = horizontal
-                ? new Vector3(length, colliderHeight, GlassColliderThickness)
-                : new Vector3(GlassColliderThickness, colliderHeight, length);
+            // 当たりは同じ高さが続く区間ごとに1つの箱にする
+            float HeightOf(int k) =>
+                heightAt(run.Row + (horizontal ? 0 : k), run.Col + (horizontal ? k : 0));
+            for (int from = 0, to = 1; to <= run.Length; to++)
+            {
+                if (to < run.Length && Mathf.Approximately(HeightOf(to), HeightOf(from)))
+                    continue;
+                var startAlong = Cell * from + (from == 0 ? first : -Cell * 0.5f);
+                var endAlong = Cell * (to - 1) + (to == run.Length ? last : Cell * 0.5f);
+                var length = endAlong - startAlong;
+                var colliderHeight = HeightOf(from) + FloorSlabThickness;
+                var row = run.Row + (horizontal ? 0 : from);
+                var col = run.Col + (horizontal ? from : 0);
+                var collider = new GameObject($"GlassWallCollider_{row}_{col}");
+                collider.transform.SetParent(parent, false);
+                collider.transform.localPosition =
+                    Place(run.Row, run.Col, (startAlong + endAlong) * 0.5f)
+                    + new Vector3(0f, colliderHeight * 0.5f, 0f);
+                var box = collider.AddComponent<BoxCollider>();
+                box.size = horizontal
+                    ? new Vector3(length, colliderHeight, GlassColliderThickness)
+                    : new Vector3(GlassColliderThickness, colliderHeight, length);
+                from = to;
+            }
         }
 
         /// <summary>
