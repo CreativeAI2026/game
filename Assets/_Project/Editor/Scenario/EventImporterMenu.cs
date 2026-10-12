@@ -20,7 +20,7 @@ namespace CreativeAI.EditorTools
     {
         private const string DefaultSource = "Assets/_Project/Features/Event/events.json";
         private const string OutputDir = "Assets/_Project/Features/Event/Data";
-        private const string ItemDataDir = "Assets/_Project/Features/Inventory/Data";
+        private const string ItemCatalogPath = "Assets/_Project/Resources/ItemCatalog.asset";
         private const string CharacterDataDir =
             "Assets/_Project/Features/UI/ConversationUI/Data/Characters";
 
@@ -130,10 +130,8 @@ namespace CreativeAI.EditorTools
         /// </summary>
         private static EventImporter.ImportCatalog BuildCatalog()
         {
-            var keyed = AssetDatabase
-                .FindAssets("t:ItemData", new[] { ItemDataDir })
-                .Select(AssetDatabase.GUIDToAssetPath)
-                .Select(AssetDatabase.LoadAssetAtPath<ItemData>)
+            var catalog = AssetDatabase.LoadAssetAtPath<ItemCatalog>(ItemCatalogPath);
+            var keyed = (catalog != null ? catalog.Items : Array.Empty<ItemData>())
                 .Where(i => i != null && !string.IsNullOrEmpty(i.key))
                 .ToList();
 

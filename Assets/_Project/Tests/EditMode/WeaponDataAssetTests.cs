@@ -81,13 +81,7 @@ namespace CreativeAI.Tests.EditMode
         [Test]
         public void Weapons_AreOutsideInventoryCatalog()
         {
-            // 武器はインベントリ管理の対象外。ItemCatalog は Inventory/Data フォルダを同期するので、
-            // 武器アセットがそこに置かれていないこと(= giveItem のカタログに混ざらないこと)を守る。
-            Assert.IsFalse(
-                WeaponDir.StartsWith("Assets/_Project/Features/Inventory/Data"),
-                "武器アセットを Inventory/Data に置くと ItemCatalog / giveItem カタログに混入する"
-            );
-
+            // 武器はインベントリ管理の対象外。giveItem のカタログに混ざらないことを守る。
             foreach (var name in new[] { "Sword", "Bow", "Scythe" })
             {
                 var w = LoadRequired(name);
