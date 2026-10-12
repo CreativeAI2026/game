@@ -4,37 +4,33 @@ using UnityEngine;
 namespace CreativeAI.Gameplay
 {
     /// <summary>
-    /// 被弾時の怯み演出を管理する。怯み中は全操作をロックし、
-    /// 各武器コントローラーを安全な初期状態にリセットしてから
-    /// 怯みアニメーションの完了を待つ。
+    /// 被弾時の怯み演出を管理する。怯み中は全操作を制限し、
+    /// 装備中の武器を中立状態に戻してから、怯みクリップの ActionEnd イベントまで待つ。
+    ///
+    /// 怯みの長さは怯みクリップの ActionEnd の位置で決まり、スクリプトは秒数を持たない。
+    /// ActionEnd が無い場合は、Animator が怯みステートを抜けた時点で終える(警告を出す)。
     /// </summary>
+    [RequireComponent(typeof(PlayerController))]
+    [RequireComponent(typeof(WeaponManager))]
     public class PlayerFlinchHandler : MonoBehaviour
     {
-        [Tooltip("Animator の怯みTriggerパラメータ名")]
+        [Tooltip(
+            "Trigger を送ったのに怯みステートへ入れなかった場合(遷移の設定漏れ等)に、怯みを打ち切るまでの猶予（秒）"
+        )]
         [SerializeField]
-        private string _flinchTriggerName = "PlayerFlinch";
-
-        [Tooltip("Animator の怯みステート名")]
-        [SerializeField]
-        private string _flinchStateName = "PlayerFlinch";
-
-        [Tooltip("怯みアニメーションステートに入れなかった場合のタイムアウト（秒）")]
-        [SerializeField]
-        private float _flinchTimeout = 2.0f;
+        private float _enterFlinchTimeout = 1.0f;
 
         private PlayerController _playerController;
+        private WeaponManager _weaponManager;
         private Animator _animator;
-        private SwordController _swordController;
-        private BowController _bowController;
         private Coroutine _flinchCoroutine;
+        private bool _actionEndReceived;
 
         private void Awake()
         {
             _playerController = GetComponent<PlayerController>();
-            _animator = GetComponent<Animator>();
-
-            _swordController = GetComponentInChildren<SwordController>(includeInactive: true);
-            _bowController = GetComponentInChildren<BowController>(includeInactive: true);
+            _weaponManager = GetComponent<WeaponManager>();
+            _animator = PlayerModel.Of(this).Animator;
         }
 
         /// <summary>
@@ -44,9 +40,6 @@ namespace CreativeAI.Gameplay
         /// </summary>
         public void TriggerFlinch()
         {
-            if (_playerController == null)
-                return;
-
             if (_playerController.IsFlinching || _playerController.IsGrabbed)
                 return;
 
@@ -56,70 +49,96 @@ namespace CreativeAI.Gameplay
             _flinchCoroutine = StartCoroutine(FlinchCoroutine());
         }
 
+        /// <summary>怯みクリップの ActionEnd イベント(PlayerAnimationEventRelay 経由)。</summary>
+        public void OnActionEnd(AnimatorStateInfo sourceState)
+        {
+            if (
+                _flinchCoroutine != null
+                && sourceState.shortNameHash == PlayerAnimatorStates.Flinch
+            )
+                _actionEndReceived = true;
+        }
+
         private IEnumerator FlinchCoroutine()
         {
             _playerController.IsFlinching = true;
-            _playerController.CanMove = false;
-            _playerController.CanChangeWeapon = false;
+            _playerController.Locks.Set(this, PlayerLock.All);
+            _actionEndReceived = false;
 
-            // コンボ中・ガード中・パリィ中・エイム中でも安全に抜けられるようリセットする
-            _swordController?.ForceReset();
-            _bowController?.ForceReset();
+            // コンボ中・ガード中・パリィ中・エイム中でも安全に抜けられるよう、装備中の武器を中立状態に戻す。
+            // 武器が自分の制限を外しても、怯みの制限(owner = this)は残る
+            _weaponManager.ResetEquippedWeapon();
 
-            // ForceReset内のStateFree.Enter()がCanChangeWeapon = trueにリセットするため、
-            // 怯み中は武器切り替えを禁止するよう再度上書きする
-            _playerController.CanChangeWeapon = false;
+            // 直前の行動の「移動へ戻る」指示が残っていると、怯みステートに入った直後に抜けてしまう
+            _animator.ResetTrigger(PlayerAnimatorParams.ReturnToLocomotion);
+            _animator.SetTrigger(PlayerAnimatorParams.Flinch);
 
-            if (_animator != null)
-                _animator.SetTrigger(_flinchTriggerName);
+            yield return WaitForFlinchEnd();
 
-            // SetTrigger直後はAnimatorがまだ遷移前のステートにいるため、
-            // 2フレーム待ってから怯みステートの監視を開始する
-            yield return null;
-            yield return null;
+            _animator.SetTrigger(PlayerAnimatorParams.ReturnToLocomotion);
+            _playerController.IsFlinching = false;
+            _playerController.Locks.Release(this);
+            _flinchCoroutine = null;
+        }
 
-            float elapsed = 0f;
-            bool hasEnteredFlinch = false;
+        /// <summary>
+        /// 怯みステートに入り、ActionEnd を受け取るまで待つ。
+        /// ActionEnd が無いまま怯みステートを抜けた場合もそこで終える。
+        /// </summary>
+        private IEnumerator WaitForFlinchEnd()
+        {
+            float waitedForEnter = 0f;
+            bool hasEntered = false;
 
-            while (true)
+            while (!_actionEndReceived)
             {
-                if (_animator == null)
-                    break;
-
-                AnimatorStateInfo stateInfo = _animator.GetCurrentAnimatorStateInfo(0);
-                bool isPlayingFlinch = stateInfo.IsName(_flinchStateName);
-                bool isTransitioningToFlinch =
+                bool isPlaying =
+                    _animator.GetCurrentAnimatorStateInfo(0).shortNameHash
+                    == PlayerAnimatorStates.Flinch;
+                bool isTransitioningIn =
                     _animator.IsInTransition(0)
-                    && _animator.GetNextAnimatorStateInfo(0).IsName(_flinchStateName);
+                    && _animator.GetNextAnimatorStateInfo(0).shortNameHash
+                        == PlayerAnimatorStates.Flinch;
 
-                if (isPlayingFlinch || isTransitioningToFlinch)
-                    hasEnteredFlinch = true;
-
-                if (
-                    hasEnteredFlinch
-                    && isPlayingFlinch
-                    && stateInfo.normalizedTime >= 1.0f
-                    && !_animator.IsInTransition(0)
-                )
-                    break;
-
-                // Animatorの遷移設定ミス等で怯みステートに入れなかった場合の無限ループ防止
-                elapsed += Time.deltaTime;
-                if (elapsed >= _flinchTimeout)
+                if (isPlaying || isTransitioningIn)
+                {
+                    hasEntered = true;
+                }
+                else if (hasEntered)
                 {
                     Debug.LogWarning(
-                        "[PlayerFlinchHandler] 怯みアニメーションがタイムアウトしました。強制終了します。"
+                        "[PlayerFlinchHandler] 怯みクリップの ActionEnd イベントを受信しないまま怯みステートを抜けました。"
+                            + "クリップに ActionEnd を追加してください。"
                     );
-                    break;
+                    yield break;
+                }
+                else
+                {
+                    waitedForEnter += Time.deltaTime;
+                    if (waitedForEnter >= _enterFlinchTimeout)
+                    {
+                        Debug.LogWarning(
+                            "[PlayerFlinchHandler] 怯みステート「Flinch」に入れませんでした。Animator の遷移とステート名を確認してください。"
+                        );
+                        _animator.ResetTrigger(PlayerAnimatorParams.Flinch);
+                        yield break;
+                    }
                 }
 
                 yield return null;
             }
+        }
 
-            _playerController.IsFlinching = false;
-            _playerController.CanMove = true;
-            _playerController.CanChangeWeapon = true;
+        /// <summary>死亡時など、怯みを途中で打ち切る。</summary>
+        public void Cancel()
+        {
+            if (_flinchCoroutine == null)
+                return;
+
+            StopCoroutine(_flinchCoroutine);
             _flinchCoroutine = null;
+            _playerController.IsFlinching = false;
+            _playerController.Locks.Release(this);
         }
     }
 }

@@ -14,7 +14,7 @@ namespace CreativeAI.Gameplay
     /// - 最終ステータスに乗るのは<b>選択中の1本の補正だけ</b>。0本なら補正は 0。
     /// - 所持本数の変化は <see cref="OnOwnedCountChanged"/> で武器切替UIへ通知する(0本で非表示)。
     ///
-    /// 武器切り替え時に Animator.Rebind() で状態を完全リセットし、
+    /// 武器切り替え時に武器ごとの AnimatorController へ差し替えてから Animator.Rebind() で状態を完全リセットし、
     /// 前の武器のアニメーショントリガーやステートが残留するのを防ぐ。
     /// </summary>
     public class WeaponManager : MonoBehaviour, IWeaponGiver
@@ -23,25 +23,47 @@ namespace CreativeAI.Gameplay
         public const int NoWeapon = -1;
 
         /// <summary>
-        /// events.json の weaponKey と
-        /// <see cref="_weapons"/> / <see cref="_weaponStats"/> の index の対応。並び順が契約。
+        /// events.json の weaponKey(documents/ScenarioReference.md「武器カタログ」)と
+        /// <see cref="_slots"/> の index の対応。並び順が契約。
         /// </summary>
         public static readonly IReadOnlyList<string> WeaponKeys = new[]
         {
             "sword",
             "bow",
             "scythe",
+            "hammer",
         };
 
-        [Header("武器リスト(0:剣, 1:弓, 2:鎌 = WeaponKeys と同順)")]
-        [Tooltip("子オブジェクトにある各武器のルートオブジェクトを登録します")]
-        [SerializeField]
-        private GameObject[] _weapons;
+        /// <summary>
+        /// 切り替えの順番(E = 次の武器 で進む向き)。Q はこの逆順。
+        /// WeaponKeys の番号はセーブ・events.json との契約なので並べ替えず、切り替え順はここで別に持つ。
+        /// 武器切替 HUD の輪の並びもこの順(選択中を上に置き、反時計回りに次の武器)。
+        /// </summary>
+        private static readonly string[] SwitchOrderKeys = { "sword", "scythe", "hammer", "bow" };
 
-        [Header("武器ごとのステータス補正(_weapons と同じ index 順で登録)")]
-        [Tooltip("選択中の1本の補正のみが最終ステータスに乗る")]
+        /// <summary>武器1本分の設定。以前は3本の配列に分かれていて、並びを揃え損ねると別の武器の値が使われていた。</summary>
+        [Serializable]
+        private struct WeaponSlot
+        {
+            [Tooltip("武器のルートオブジェクト(Player/Weapons の下)。モデル未配線なら空欄")]
+            public GameObject weapon;
+
+            [Tooltip(
+                "ステータス補正。選択中の1本の補正のみが最終ステータスに乗る(Specification.md「アイテムカテゴリと付与ステータス」)"
+            )]
+            public WeaponData stats;
+
+            [Tooltip(
+                "選択時に Animator へ差し替える Controller(ベース Controller または Animator Override Controller)。"
+                    + "空欄なら Animator に最初から設定されている Controller を使う"
+            )]
+            public RuntimeAnimatorController animatorController;
+        }
+
+        [Header("武器の一覧(並び順 = WeaponKeys: 0 剣 / 1 弓 / 2 鎌 / 3 ハンマー)")]
+        [Tooltip("ステータス補正の Key が並び順と合っていないと、Inspector 編集時に警告が出る")]
         [SerializeField]
-        private WeaponData[] _weaponStats;
+        private WeaponSlot[] _slots = Array.Empty<WeaponSlot>();
 
         [Header("プロトタイプ用")]
         [Tooltip(
@@ -51,12 +73,13 @@ namespace CreativeAI.Gameplay
         [SerializeField]
         private bool _startWithAllWeapons;
 
-        // 入手ずみ武器の index。昇順を保つ(切替順 = 剣→弓→鎌)。
+        // 入手ずみ武器の index。切り替え順(SwitchOrderKeys = 剣→鎌→ハンマー→弓)に並べておく。
         private readonly List<int> _owned = new();
         private int _currentWeaponIndex = NoWeapon;
 
         private PlayerInputHandler _input;
         private Animator _animator;
+        private RuntimeAnimatorController _defaultAnimatorController;
         private PlayerController _playerController;
 
         /// <summary>武器を切り替えたときに通知。true: prev(左回転) / false: next(右回転)。</summary>
@@ -70,14 +93,59 @@ namespace CreativeAI.Gameplay
         /// <summary>選択中の武器 index。1本も持っていなければ <see cref="NoWeapon"/>。</summary>
         public int CurrentWeaponIndex => _currentWeaponIndex;
 
+        /// <summary>
+        /// 選択中の武器のルートオブジェクト。1本も持っていない・未登録なら null。
+        /// PlayerAnimationEventRelay が AnimationEvent の届け先を探すのに使う。
+        /// </summary>
+        public GameObject CurrentWeaponObject =>
+            _currentWeaponIndex >= 0 && _currentWeaponIndex < _slots.Length
+                ? _slots[_currentWeaponIndex].weapon
+                : null;
+
+        /// <summary>
+        /// 装備中の武器の行動を強制的に打ち切って中立状態へ戻す(怯み・死亡時)。
+        /// しまっている武器は OnDisable で後始末済みなので対象外。
+        /// </summary>
+        public void ResetEquippedWeapon()
+        {
+            GameObject weapon = CurrentWeaponObject;
+            if (weapon != null && weapon.TryGetComponent(out IResettableWeapon resettable))
+                resettable.ForceReset();
+        }
+
         /// <summary>登録されている武器の総数。WeaponHUDController がパネル数の決定に使用する。</summary>
-        public int WeaponCount => _weapons != null ? _weapons.Length : 0;
+        public int WeaponCount => _slots.Length;
+
+        /// <summary>
+        /// 武器のアイコン(ステータス補正アセット WeaponData の Icon)。未設定なら null。
+        /// HUD はこれを使ってパネルとアイコンを武器ごとに対応させる。
+        /// </summary>
+        public Sprite GetIcon(int index)
+        {
+            if (index < 0 || index >= _slots.Length)
+                return null;
+            WeaponData stats = _slots[index].stats;
+            return stats != null ? stats.icon : null; // ステータス補正が未設定の枠
+        }
 
         /// <summary>入手ずみの本数。</summary>
         public int OwnedCount => _owned.Count;
 
-        /// <summary>入手ずみ武器の index(昇順)。</summary>
+        /// <summary>入手ずみ武器の index。切り替え順(E で進む順)に並んでいる。</summary>
         public IReadOnlyList<int> OwnedIndices => _owned;
+
+        /// <summary>入手ずみの一覧を切り替え順に並べ直す。</summary>
+        private void SortOwnedBySwitchOrder()
+        {
+            _owned.Sort((a, b) => SwitchOrderOf(a).CompareTo(SwitchOrderOf(b)));
+        }
+
+        private static int SwitchOrderOf(int weaponIndex)
+        {
+            int order = Array.IndexOf(SwitchOrderKeys, WeaponKeys[weaponIndex]);
+            // 切り替え順に載っていない武器は末尾(番号順)に回す
+            return order >= 0 ? order : SwitchOrderKeys.Length + weaponIndex;
+        }
 
         public bool IsOwned(int index) => _owned.Contains(index);
 
@@ -99,7 +167,7 @@ namespace CreativeAI.Gameplay
         // --- IWeaponGiver: イベントの giveWeapon から呼ばれる ---
 
         /// <summary>
-        /// weaponKey(sword/bow/scythe)の武器を1本入手する。既に所持なら何もしない。
+        /// weaponKey(WeaponKeys のいずれか)の武器を1本入手する。既に所持なら何もしない。
         /// 最初の1本なら自動で選択状態にし、補正を最終ステータスへ反映させる。
         /// </summary>
         public void GiveWeapon(string weaponKey)
@@ -108,7 +176,7 @@ namespace CreativeAI.Gameplay
             if (index < 0)
             {
                 Debug.LogWarning(
-                    $"[WeaponManager] 未知の weaponKey '{weaponKey}'(sword / bow / scythe のみ)。入手をスキップしました。"
+                    $"[WeaponManager] 未知の weaponKey '{weaponKey}'({string.Join(" / ", WeaponKeys)} のみ)。入手をスキップしました。"
                 );
                 return;
             }
@@ -123,7 +191,7 @@ namespace CreativeAI.Gameplay
                 return; // 既に所持
 
             _owned.Add(index);
-            _owned.Sort();
+            SortOwnedBySwitchOrder();
 
             bool isFirst = _owned.Count == 1;
             if (isFirst)
@@ -144,19 +212,15 @@ namespace CreativeAI.Gameplay
         public EquipmentBonus GetSelectedBonus()
         {
             var b = new EquipmentBonus();
-            if (
-                _currentWeaponIndex < 0
-                || _weaponStats == null
-                || _currentWeaponIndex >= _weaponStats.Length
-            )
+            if (_currentWeaponIndex < 0 || _currentWeaponIndex >= _slots.Length)
             {
                 return b;
             }
 
-            var w = _weaponStats[_currentWeaponIndex];
+            var w = _slots[_currentWeaponIndex].stats;
             if (w == null)
             {
-                return b;
+                return b; // ステータス補正が未設定の枠
             }
 
             b.attackPct += w.attack;
@@ -196,7 +260,7 @@ namespace CreativeAI.Gameplay
                         _owned.Add(index);
                 }
             }
-            _owned.Sort();
+            SortOwnedBySwitchOrder();
 
             int selected = _owned.Contains(selectedWeaponIndex)
                 ? selectedWeaponIndex
@@ -210,7 +274,13 @@ namespace CreativeAI.Gameplay
         private void Awake()
         {
             _input = GetComponent<PlayerInputHandler>();
-            _animator = GetComponent<Animator>();
+            // EditMode テストでは WeaponManager 単体で生成されモデル層が無いため、無ければ Animator 操作をしない
+            PlayerModel model = GetComponentInChildren<PlayerModel>(true);
+            if (model != null)
+            {
+                _animator = model.Animator;
+                _defaultAnimatorController = _animator.runtimeAnimatorController;
+            }
             _playerController = GetComponent<PlayerController>();
 
             // giveWeapon の届け先として自身を登録する(IItemGiver / InventoryManager と同じ思想)。
@@ -228,10 +298,10 @@ namespace CreativeAI.Gameplay
             if (_startWithAllWeapons)
             {
                 // モデルが配線されている武器だけを持たせる(未配線の枠を選ぶと武器が消えて見えるため)。
-                int slots = _weapons != null ? Mathf.Min(_weapons.Length, WeaponKeys.Count) : 0;
+                int slots = Mathf.Min(_slots.Length, WeaponKeys.Count);
                 for (int i = 0; i < slots; i++)
                 {
-                    if (_weapons[i] != null)
+                    if (_slots[i].weapon != null)
                         GiveWeaponAt(i);
                 }
             }
@@ -245,11 +315,6 @@ namespace CreativeAI.Gameplay
 
         private void Update()
         {
-            if (_input == null || _playerController == null)
-            {
-                return;
-            }
-
             if (!_playerController.CanChangeWeapon)
             {
                 return;
@@ -312,26 +377,57 @@ namespace CreativeAI.Gameplay
         {
             _currentWeaponIndex = index;
 
-            if (_weapons != null)
+            // 先に全部しまってから選択中だけ出す。同じオブジェクトが複数の枠に入っていても、選択中が消えないように
+            foreach (var slot in _slots)
             {
-                for (int i = 0; i < _weapons.Length; i++)
-                {
-                    if (_weapons[i] != null)
-                    {
-                        _weapons[i].SetActive(i == index);
-                    }
-                }
+                if (slot.weapon != null)
+                    slot.weapon.SetActive(false);
             }
+            GameObject selected = CurrentWeaponObject;
+            if (selected != null)
+                selected.SetActive(true);
 
             if (_animator != null && index >= 0)
             {
+                // 武器ごとの移動・攻撃モーションは Override Controller のクリップ差し替えで切り替える。
+                // ステート構成は全武器で共通なので、武器固有のステートへは各武器が送る専用 Trigger でしか入らない。
+                _animator.runtimeAnimatorController = ResolveAnimatorController(index);
+
                 // Rebindで全パラメータ・遷移・トリガーをリセットし、
                 // 前の武器のアニメーション状態が新しい武器に漏れるのを防ぐ
                 _animator.Rebind();
-
-                // RebindによってWeaponTypeもリセットされるため、再設定が必要
-                _animator.SetInteger("WeaponType", index);
             }
         }
+
+        private RuntimeAnimatorController ResolveAnimatorController(int index)
+        {
+            RuntimeAnimatorController controller =
+                index < _slots.Length ? _slots[index].animatorController : null;
+            // 空欄の枠は Animator に最初から設定されている Controller を使う
+            return controller != null ? controller : _defaultAnimatorController;
+        }
+
+#if UNITY_EDITOR
+        /// <summary>並び順の契約(WeaponKeys)とステータス補正の Key が食い違っていたら、編集時に警告する。</summary>
+        private void OnValidate()
+        {
+            if (_slots.Length != WeaponKeys.Count)
+                Debug.LogWarning(
+                    $"{name}: 武器の一覧は {WeaponKeys.Count} 枠(並び順 {string.Join(" / ", WeaponKeys)})にしてください",
+                    this
+                );
+
+            int count = Mathf.Min(_slots.Length, WeaponKeys.Count);
+            for (int i = 0; i < count; i++)
+            {
+                WeaponData stats = _slots[i].stats;
+                if (stats != null && stats.key != WeaponKeys[i])
+                    Debug.LogWarning(
+                        $"{name}: 武器の一覧 [{i}] は「{WeaponKeys[i]}」の枠ですが、ステータス補正の Key が「{stats.key}」です",
+                        this
+                    );
+            }
+        }
+#endif
     }
 }

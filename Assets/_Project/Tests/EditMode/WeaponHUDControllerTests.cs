@@ -41,10 +41,11 @@ namespace CreativeAI.Tests.EditMode
 
             var stats = new[] { MakeWeaponData(25), MakeWeaponData(25), MakeWeaponData(0) };
             var so = new SerializedObject(_weapons);
-            var prop = so.FindProperty("_weaponStats");
+            var prop = so.FindProperty("_slots");
             prop.arraySize = stats.Length;
             for (int i = 0; i < stats.Length; i++)
-                prop.GetArrayElementAtIndex(i).objectReferenceValue = stats[i];
+                prop.GetArrayElementAtIndex(i).FindPropertyRelative("stats").objectReferenceValue =
+                    stats[i];
             so.ApplyModifiedPropertiesWithoutUndo();
 
             // EditMode では Awake/OnEnable が走らないので、Awake が解決する参照を入れて OnEnable を叩く。

@@ -68,6 +68,7 @@ namespace CreativeAI.Gameplay
 
         private void OnGetArrow(ArrowProjectile arrow)
         {
+            arrow.ResetForHold();
             arrow.gameObject.SetActive(true);
         }
 

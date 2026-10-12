@@ -5,10 +5,6 @@ namespace CreativeAI.Gameplay
 {
     public class TBossCapturedState : TBossBaseState
     {
-        private const string GrabbedTrigger = "Grabbed";
-        private const string EscapedTrigger = "Escaped";
-        private const string NeckBoneName = "Neck";
-
         private const float WaitBeforePullDuration = 0.5f;
         private const float WaitBeforeDamageDuration = 0.5f;
 
@@ -58,12 +54,18 @@ namespace CreativeAI.Gameplay
             _playerController = boss.Player.GetComponent<PlayerController>();
             _playerInput = boss.Player.GetComponent<PlayerInputHandler>();
             _playerStatus = boss.Player.GetComponent<PlayerStatus>();
-            _playerAnimator = boss.Player.GetComponent<Animator>();
             _playerCC = boss.Player.GetComponent<CharacterController>();
             _playerRb = boss.Player.GetComponent<Rigidbody>();
             _headLookController = boss.Player.GetComponent<HeadLookController>();
 
-            _neckBone = FindBone(boss.Player.transform, NeckBoneName);
+            // Animator と首のボーンはプレイヤーのモデル層から取る(モデル差し替えでボーン名が変わっても辿れる)。
+            // 仮リグ(PlayerRig_Dummy)にはモデル層が無いので、その場合は演出を省く
+            PlayerModel playerModel = boss.Player.GetComponentInChildren<PlayerModel>();
+            if (playerModel != null)
+            {
+                _playerAnimator = playerModel.Animator;
+                _neckBone = playerModel.GetBone(HumanBodyBones.Neck);
+            }
 
             if (boss.Agent != null)
             {
@@ -74,8 +76,8 @@ namespace CreativeAI.Gameplay
             if (_playerController != null)
             {
                 _playerController.IsGrabbed = true;
-                _playerController.CanMove = false;
-                _playerController.CanChangeWeapon = false;
+                // 掴んでいる間の制限はこのステートが owner として持つ(解除は Exit で自分の分だけ)
+                _playerController.Locks.Set(this, PlayerLock.All);
             }
             if (_playerInput != null)
             {
@@ -94,7 +96,7 @@ namespace CreativeAI.Gameplay
 
             if (_playerAnimator != null)
             {
-                _playerAnimator.SetTrigger(GrabbedTrigger);
+                _playerAnimator.SetTrigger(PlayerAnimatorParams.Grabbed);
             }
 
             _timer = 0f;
@@ -204,8 +206,7 @@ namespace CreativeAI.Gameplay
             if (_playerController != null)
             {
                 _playerController.IsGrabbed = false;
-                _playerController.CanMove = true;
-                _playerController.CanChangeWeapon = true;
+                _playerController.Locks.Release(this);
             }
             if (_playerInput != null)
             {
@@ -323,7 +324,7 @@ namespace CreativeAI.Gameplay
             boss.IsAlerted = true;
 
             if (_playerAnimator != null)
-                _playerAnimator.SetTrigger(EscapedTrigger);
+                _playerAnimator.SetTrigger(PlayerAnimatorParams.Escaped);
 
             GrabEscapeEvents.OnCameraEscape?.Invoke();
             StopElectricEffect();
@@ -459,19 +460,6 @@ namespace CreativeAI.Gameplay
             if (prev < 0f && current > 0f)
                 return true;
             return false;
-        }
-
-        private static Transform FindBone(Transform root, string boneName)
-        {
-            if (root.name == boneName)
-                return root;
-            foreach (Transform child in root)
-            {
-                Transform found = FindBone(child, boneName);
-                if (found != null)
-                    return found;
-            }
-            return null;
         }
     }
 }

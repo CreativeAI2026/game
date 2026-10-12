@@ -16,6 +16,7 @@ namespace CreativeAI.Gameplay
     ///   エリア内にいる限り毒が維持される。
     /// - IsPoisoned プロパティと OnPoisonChanged イベントで UI 等と連携できる。
     /// </summary>
+    [RequireComponent(typeof(PlayerStatus))]
     public class PlayerStatusEffectHandler : MonoBehaviour
     {
         /// <summary>現在毒状態かどうか。</summary>
@@ -34,12 +35,6 @@ namespace CreativeAI.Gameplay
         private void Awake()
         {
             _playerStatus = GetComponent<PlayerStatus>();
-            if (_playerStatus == null)
-            {
-                Debug.LogError(
-                    "[PlayerStatusEffectHandler] PlayerStatus が同一 GameObject に存在しません。"
-                );
-            }
         }
 
         /// <summary>
@@ -75,15 +70,8 @@ namespace CreativeAI.Gameplay
                 if (tickTimer >= _currentTickInterval)
                 {
                     tickTimer = 0f;
-                    if (_playerStatus != null)
-                    {
-                        // 毒ダメージはひるみを発生させない
-                        _playerStatus.TakeDamage(
-                            _currentDamagePerTick,
-                            false,
-                            suppressFlinch: true
-                        );
-                    }
+                    // 毒ダメージはひるみを発生させない
+                    _playerStatus.TakeDamage(_currentDamagePerTick, false, suppressFlinch: true);
                 }
 
                 yield return null;

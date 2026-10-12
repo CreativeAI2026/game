@@ -1,21 +1,22 @@
 using System;
 using UnityEngine;
-using UnityEngine.UI;
+using UnityEngine.Assertions;
 using Random = UnityEngine.Random;
 
 namespace CreativeAI.Gameplay
 {
     /// <summary>
-    /// 弓の状態管理・弦表現・矢の生成/射出を統括するコンポーネント。
-    /// ステートマシン（BowStates.cs）と密接に連携し、各ステートから
-    /// 内部フィールドへ直接アクセスするため、フィールドをpublicにしている。
+    /// 弓の状態管理・弦表現・矢の生成/射出を統括するコンポーネント。ステートは BowStates.cs。
+    ///
+    /// タイミングはアニメーションイベントで決まり、スクリプトは秒数を持たない:
+    /// - 構えクリップ(UpperBody の Aim ステート)の DrawComplete : 引き切り。矢をつがえて発射可能にする
+    /// - 発射クリップ(UpperBody の Fire ステート)の ReleaseEnd   : 発射の戻りが終わり、次の矢を引ける
+    /// 弦の中点は手元の矢に追従する(アニメーションで手が動けば弦も引かれる)。
+    /// 照準の表示はシーン側の CrosshairView が PlayerController.IsAiming を見て行う。
     /// </summary>
-    public class BowController : MonoBehaviour
+    [RequireComponent(typeof(AudioSource))]
+    public class BowController : MonoBehaviour, IResettableWeapon, IWeaponAnimationEventHandler
     {
-        [Header("武器管理")]
-        [Tooltip("WeaponManagerで弓が割り当てられているインデックス (通常は 1)")]
-        public int weaponIndex = 1;
-
         [Header("弓の参照（弓Prefab内の各Transform）")]
         [Tooltip("矢がセットされる点（弓Prefab内の空GO・引き切ったときの矢の位置）")]
         [SerializeField]
@@ -33,24 +34,12 @@ namespace CreativeAI.Gameplay
         [SerializeField]
         private Transform _stringBottomPoint;
 
-        [Tooltip("弦を引いていない時の中点（弓Prefab内の空GO）")]
+        [Tooltip("弦を引いていない時の中点（任意。空欄なら上端と下端の中点）")]
         [SerializeField]
         private Transform _stringRestMidPoint;
 
-        [Tooltip("弦を引く手のTransform（右手ボーンなど）。引いているとき弦の中点がここに寄る")]
-        [SerializeField]
-        private Transform _stringPullTarget;
-
         [Header("矢の設定")]
-        [Tooltip("矢のPrefab（ArrowProjectileコンポーネント必須・PivotはNock端）")]
-        [SerializeField]
-        private GameObject _arrowPrefab;
-
-        [Tooltip("矢がAim開始時に最初に現れる位置（引く手のボーンや空GO）")]
-        [SerializeField]
-        private Transform _arrowHandHoldPoint;
-
-        [Tooltip("矢の飛翔速度 (m/s)")]
+        [Tooltip("矢の飛翔速度 (m/s)。矢の Prefab はシーンの ArrowPool に設定する")]
         [SerializeField]
         private float _arrowSpeed = 50f;
 
@@ -58,83 +47,35 @@ namespace CreativeAI.Gameplay
         [SerializeField]
         private float _maxRange = 200f;
 
-        [Header("引き・戻し")]
-        [Tooltip("弦を引ききるまでの時間（秒）。引き動作アニメーションに合わせて調整する")]
-        [SerializeField]
-        public float _drawDuration = 0.5f;
-
-        [Tooltip("発射後に弦が元に戻るまでの時間（秒）")]
-        [SerializeField]
-        public float _releaseDuration = 0.15f;
-
-        [Header("アニメーション")]
-        [Tooltip("発射アニメーションのTriggerパラメータ名")]
-        [SerializeField]
-        private string _fireTriggerName = "Fire";
-
-        [Header("AimHUD")]
-        [Tooltip("Aim時に表示されるクロスヘアー")]
-        [SerializeField]
-        private Image crossHairImage;
-
-        [Header("弓の構え角度補正")]
-        [Tooltip("回転させる弓のルートオブジェクト（手の子になっている弓本体）")]
-        [SerializeField]
-        private Transform _bowRootTransform;
-
-        [Header("弓の構え角度補正")]
-        [Tooltip("エイム中（構え時）の弓のローカル角度。今の完璧な角度を入れます")]
-        [SerializeField]
-        private Vector3 _aimLocalRotation = Vector3.zero;
-
-        [Tooltip(
-            "待機中（走っている時など）の弓のローカル角度。串刺しにならない自然な角度を探して入れます"
-        )]
-        [SerializeField]
-        private Vector3 _idleLocalRotation = new Vector3(90f, 0f, 0f);
-
-        [Tooltip("角度が切り替わるスピード")]
-        [SerializeField]
-        private float _rotationSpeed = 15f;
-
         [Header("SE設定")]
         [Tooltip("弦を引く音")]
         [SerializeField]
         private AudioClip _drawSound;
-        public AudioClip DrawSound => _drawSound;
 
         [Tooltip("矢が発射される音")]
         [SerializeField]
         private AudioClip _shootSound;
-        public AudioClip ShootSound => _shootSound;
 
         private AudioSource _audioSource;
-        public AudioSource ASource => _audioSource;
-
-        // BowStates.cs の各ステートクラスから直接アクセスするため、publicにしている
-        [HideInInspector]
-        public PlayerInputHandler _input;
-
-        [HideInInspector]
-        public PlayerController _playerController;
-
-        [HideInInspector]
-        public Animator _animator;
-
-        [HideInInspector]
-        public float _drawProgress = 0f;
-
-        [HideInInspector]
-        public bool _isArrowAtNock = false;
-
         private WeaponManager _weaponManager;
+        private PlayerStatus _owner;
+        private Transform _arrowHandHoldPoint;
+        private MockWeaponPose _mockPose;
         private Camera _mainCamera;
         private BowState _currentState;
         private GameObject _nockedArrow;
+        private int _upperBodyLayer;
 
-        public float DrawProgress => _drawProgress;
-        public bool IsAiming => _currentState is StateAim;
-        public bool CanFire => _isArrowAtNock;
+        // --- ステート(BowStates.cs)から使う参照と状態 ---
+        public PlayerInputHandler Input { get; private set; }
+        public PlayerController Player { get; private set; }
+        public Animator Animator { get; private set; }
+
+        /// <summary>矢をつがえ終わり、発射できる状態か。</summary>
+        public bool IsArrowNocked { get; private set; }
+
+        /// <summary>構えている(引いている)最中か。</summary>
+        public bool IsAiming => _currentState is BowStateAim;
 
         /// <summary>
         /// 矢が発射された瞬間に発火する静的イベント。
@@ -144,131 +85,136 @@ namespace CreativeAI.Gameplay
 
         private void Awake()
         {
-            _input = GetComponentInParent<PlayerInputHandler>();
-            _animator = GetComponentInParent<Animator>();
-            _playerController = GetComponentInParent<PlayerController>();
+            Input = GetComponentInParent<PlayerInputHandler>();
+            Player = GetComponentInParent<PlayerController>();
             _weaponManager = GetComponentInParent<WeaponManager>();
+            _owner = GetComponentInParent<PlayerStatus>();
             _audioSource = GetComponent<AudioSource>();
 
-            if (_bowRootTransform == null)
-                _bowRootTransform = transform;
+            PlayerModel model = PlayerModel.Of(this);
+            Animator = model.Animator;
+            _upperBodyLayer = Animator.GetLayerIndex(PlayerAnimatorStates.UpperBodyLayerName);
+            // 矢が最初に現れる位置(引き手)はモデルごとに違うので、モデル側のソケットから取る
+            _arrowHandHoldPoint = model.GetSocket(PlayerSocketId.ArrowHold);
+
+            // 仮モデル専用の見た目補正。本番アニメーションで向きが付いたら外す(無ければ何もしない)
+            TryGetComponent(out _mockPose);
+
+            Assert.IsTrue(
+                _upperBodyLayer >= 0,
+                $"{name}: Animator に「{PlayerAnimatorStates.UpperBodyLayerName}」レイヤーがありません"
+            );
+            Assert.IsNotNull(_owner, $"{name}: 親階層に PlayerStatus が見つかりません");
+            Assert.IsNotNull(_arrowNockPoint, $"{name}: _arrowNockPoint が未設定です");
+            Assert.IsNotNull(_bowStringRenderer, $"{name}: _bowStringRenderer が未設定です");
+            Assert.IsNotNull(_stringTopPoint, $"{name}: _stringTopPoint が未設定です");
+            Assert.IsNotNull(_stringBottomPoint, $"{name}: _stringBottomPoint が未設定です");
         }
 
         private void Start()
         {
             _mainCamera = Camera.main;
-            InitBowString();
-            HideCrossHair();
+            Assert.IsNotNull(_mainCamera, $"{name}: MainCamera タグのカメラが見つかりません");
+            Assert.IsNotNull(ArrowPool.Instance, $"{name}: シーンに ArrowPool がありません");
+            _bowStringRenderer.positionCount = 3;
+            _bowStringRenderer.useWorldSpace = true;
+            UpdateBowString();
         }
 
         private void OnEnable()
         {
-            ChangeState(new StateFree(this));
+            ChangeState(new BowStateFree(this));
         }
 
         private void OnDisable()
         {
             // 武器をしまったら現在の行動を強制終了し、プレイヤーのロックを解除する
-            _currentState?.Exit();
-            if (_playerController != null)
-            {
-                _playerController.IsAiming = false;
-                _playerController.CanChangeWeapon = true;
-            }
+            _currentState.Exit();
+            Player.IsAiming = false;
+            Player.Locks.Release(this);
 
             // 弓のトリガーが残ったまま別武器に切り替わると誤発動するためリセット
-            if (_animator != null && !string.IsNullOrEmpty(_fireTriggerName))
-            {
-                _animator.ResetTrigger(_fireTriggerName);
-            }
+            Animator.ResetTrigger(PlayerAnimatorParams.Fire);
 
             DestroyArrow();
-            _drawProgress = 0f;
-            UpdateBowString(0f);
+            UpdateBowString();
         }
 
         private void Update()
         {
-            if (_input == null || _playerController == null)
-                return;
+            bool canAct =
+                !Player.IsFlinching
+                && !Player.IsGrabbed
+                // 番号ではなく「選択中の武器オブジェクトが自分か」で判定する(Inspector で番号を合わせる必要はない)
+                && _weaponManager.CurrentWeaponObject == gameObject;
 
-            if (_playerController.IsFlinching || _playerController.IsGrabbed)
+            if (!canAct)
             {
-                if (_currentState is not StateFree)
-                    ChangeState(new StateFree(this));
-                UpdateBowString(0f);
-                return;
+                if (_currentState is not BowStateFree)
+                    ChangeState(new BowStateFree(this));
+            }
+            else
+            {
+                _currentState.Update();
             }
 
-            if (_weaponManager != null && _weaponManager.CurrentWeaponIndex != weaponIndex)
-            {
-                if (_currentState is not StateFree)
-                    ChangeState(new StateFree(this));
-                UpdateBowString(0f);
-                return;
-            }
+            UpdateBowString();
 
-            _currentState?.Update();
-            UpdateBowString(_drawProgress);
-
-            if (_bowRootTransform != null)
-            {
-                Vector3 targetEuler = _playerController.IsAiming
-                    ? _aimLocalRotation
-                    : _idleLocalRotation;
-                _bowRootTransform.localRotation = Quaternion.Slerp(
-                    _bowRootTransform.localRotation,
-                    Quaternion.Euler(targetEuler),
-                    Time.deltaTime * _rotationSpeed
-                );
-            }
+            if (_mockPose != null)
+                _mockPose.SetPose(Player.IsAiming ? MockWeaponPoseKey.Aim : MockWeaponPoseKey.Idle);
         }
 
         public void ChangeState(BowState newState)
         {
+            // 初回(OnEnable)は前のステートが無い
             _currentState?.Exit();
             _currentState = newState;
-            _currentState?.Enter();
+            _currentState.Enter();
         }
+
+        public void OnWeaponAnimationEvent(
+            WeaponAnimationEventType type,
+            AnimatorStateInfo sourceState
+        )
+        {
+            _currentState.OnAnimationEvent(type, sourceState);
+        }
+
+        /// <summary>UpperBody レイヤーで、指定のステートを再生中か、そこへ遷移中か。</summary>
+        public bool IsInUpperBodyState(int stateHash) =>
+            Animator.GetCurrentAnimatorStateInfo(_upperBodyLayer).shortNameHash == stateHash
+            || (
+                Animator.IsInTransition(_upperBodyLayer)
+                && Animator.GetNextAnimatorStateInfo(_upperBodyLayer).shortNameHash == stateHash
+            );
+
+        /// <summary>UpperBody レイヤーで現在再生中のステートの進み具合(1 で1周)。</summary>
+        public float UpperBodyNormalizedTime =>
+            Animator.GetCurrentAnimatorStateInfo(_upperBodyLayer).normalizedTime;
 
         public void SpawnArrowInHand()
         {
             if (_nockedArrow != null)
                 return;
-            if (_arrowPrefab == null)
-                return;
 
-            Transform spawnParent =
-                _arrowHandHoldPoint != null ? _arrowHandHoldPoint : _arrowNockPoint;
-            if (spawnParent == null)
-                return;
-
-            // ArrowPoolが存在すればプールから取得し、なければInstantiateにフォールバック
-            if (ArrowPool.Instance != null)
-            {
-                ArrowProjectile pooledArrow = ArrowPool.Instance.Get();
-                pooledArrow.transform.SetParent(spawnParent);
-                pooledArrow.transform.localPosition = Vector3.zero;
-                pooledArrow.transform.localRotation = Quaternion.identity;
-                _nockedArrow = pooledArrow.gameObject;
-            }
-            else
-            {
-                _nockedArrow = Instantiate(_arrowPrefab, spawnParent);
-                _nockedArrow.transform.localPosition = Vector3.zero;
-                _nockedArrow.transform.localRotation = Quaternion.identity;
-            }
+            ArrowProjectile arrow = ArrowPool.Instance.Get();
+            arrow.transform.SetParent(_arrowHandHoldPoint);
+            arrow.transform.localPosition = Vector3.zero;
+            arrow.transform.localRotation = Quaternion.identity;
+            _nockedArrow = arrow.gameObject;
         }
 
-        public void MoveArrowToNock()
+        /// <summary>手元の矢を弓につがえて発射可能にする(DrawComplete イベント)。</summary>
+        public void NockArrow()
         {
-            if (_nockedArrow != null && _arrowNockPoint != null)
-            {
-                _nockedArrow.transform.SetParent(_arrowNockPoint, false);
-                _nockedArrow.transform.localPosition = Vector3.zero;
-                _nockedArrow.transform.localRotation = Quaternion.identity;
-                _isArrowAtNock = true;
-            }
+            if (_nockedArrow == null || IsArrowNocked)
+                return;
+
+            _nockedArrow.transform.SetParent(_arrowNockPoint, false);
+            _nockedArrow.transform.localPosition = Vector3.zero;
+            _nockedArrow.transform.localRotation = Quaternion.identity;
+            IsArrowNocked = true;
+            PlayOneShotWithRandomPitch(_drawSound);
         }
 
         public void FireArrow()
@@ -279,46 +225,34 @@ namespace CreativeAI.Gameplay
             Vector3 direction = GetShootDirection();
             _nockedArrow.transform.SetParent(null);
 
-            ArrowProjectile proj = _nockedArrow.GetComponent<ArrowProjectile>();
-            if (proj != null)
-            {
-                proj.Launch(direction, _arrowSpeed);
-            }
-            else
-            {
-                Rigidbody rb = _nockedArrow.AddComponent<Rigidbody>();
-                rb.useGravity = false;
-                rb.linearVelocity = direction * _arrowSpeed;
-                _nockedArrow.transform.rotation = Quaternion.LookRotation(direction);
-                Destroy(_nockedArrow, 5f);
-            }
+            _nockedArrow.GetComponent<ArrowProjectile>().Launch(direction, _arrowSpeed, _owner);
 
             _nockedArrow = null;
-            _isArrowAtNock = false;
+            IsArrowNocked = false;
 
             OnFired?.Invoke();
 
-            if (_animator != null && !string.IsNullOrEmpty(_fireTriggerName))
-                _animator.SetTrigger(_fireTriggerName);
+            Animator.SetTrigger(PlayerAnimatorParams.Fire);
+            PlayOneShotWithRandomPitch(_shootSound);
         }
 
         public void DestroyArrow()
         {
             if (_nockedArrow != null)
             {
-                // ArrowProjectileがあればプールへ返却、なければDestroyにフォールバック
-                ArrowProjectile proj = _nockedArrow.GetComponent<ArrowProjectile>();
-                if (proj != null)
-                {
-                    proj.ReturnToPool();
-                }
-                else
-                {
-                    Destroy(_nockedArrow);
-                }
+                _nockedArrow.GetComponent<ArrowProjectile>().ReturnToPool();
                 _nockedArrow = null;
             }
-            _isArrowAtNock = false;
+            IsArrowNocked = false;
+        }
+
+        private void PlayOneShotWithRandomPitch(AudioClip clip)
+        {
+            // SE は任意項目。未設定なら鳴らさない
+            if (clip == null)
+                return;
+            _audioSource.pitch = Random.Range(0.8f, 1.2f);
+            _audioSource.PlayOneShot(clip);
         }
 
         /// <summary>
@@ -328,83 +262,48 @@ namespace CreativeAI.Gameplay
         /// </summary>
         private Vector3 GetShootDirection()
         {
-            if (_mainCamera == null)
-                return transform.parent != null ? transform.parent.forward : transform.forward;
-
             Ray ray = _mainCamera.ViewportPointToRay(new Vector2(0.5f, 0.5f));
             Vector3 targetPoint = Physics.Raycast(ray, out RaycastHit hit, _maxRange)
                 ? hit.point
                 : ray.GetPoint(_maxRange);
 
-            if (_arrowNockPoint != null)
-            {
-                Vector3 dir = targetPoint - _arrowNockPoint.position;
-                // 着弾点と矢の位置がほぼ一致する場合（ゼロ除算防止）はカメラの方向をフォールバックとする
-                return dir.sqrMagnitude < 0.0001f ? ray.direction : dir.normalized;
-            }
-            return ray.direction;
-        }
-
-        private void InitBowString()
-        {
-            if (_bowStringRenderer == null)
-                return;
-            _bowStringRenderer.positionCount = 3;
-            _bowStringRenderer.useWorldSpace = true;
-            UpdateBowString(0f);
+            Vector3 dir = targetPoint - _arrowNockPoint.position;
+            // 着弾点と矢の位置がほぼ一致する場合（ゼロ除算防止）はカメラの方向をフォールバックとする
+            return dir.sqrMagnitude < 0.0001f ? ray.direction : dir.normalized;
         }
 
         /// <summary>
-        /// 弦のLineRendererを弓の引き度合い（0〜1）に応じて更新する。
-        /// 3点（上端・中点・下端）で弦を表現し、中点を引く手の位置に補間で寄せることで
-        /// 弓を引くビジュアルを実現している。
+        /// 弦の LineRenderer を更新する。3点（上端・中点・下端）で弦を表し、
+        /// 矢を持っている間は中点を矢の後端(手元またはノック位置)に合わせる。
+        /// 引く速さは構えアニメーションの手の動きで決まり、秒数の設定は持たない。
         /// </summary>
-        private void UpdateBowString(float progress)
+        private void UpdateBowString()
         {
-            if (_bowStringRenderer == null || _stringTopPoint == null || _stringBottomPoint == null)
-                return;
-
-            Vector3 restMid =
-                _stringRestMidPoint != null
-                    ? _stringRestMidPoint.position
-                    : Vector3.Lerp(_stringTopPoint.position, _stringBottomPoint.position, 0.5f);
-            Vector3 pulledMid = _stringPullTarget != null ? _stringPullTarget.position : restMid;
-            Vector3 midPoint = Vector3.Lerp(restMid, pulledMid, progress);
+            Vector3 midPoint;
+            if (_nockedArrow != null)
+                midPoint = _nockedArrow.transform.position;
+            else if (_stringRestMidPoint != null)
+                midPoint = _stringRestMidPoint.position;
+            else
+                midPoint = Vector3.Lerp(
+                    _stringTopPoint.position,
+                    _stringBottomPoint.position,
+                    0.5f
+                );
 
             _bowStringRenderer.SetPosition(0, _stringTopPoint.position);
             _bowStringRenderer.SetPosition(1, midPoint);
             _bowStringRenderer.SetPosition(2, _stringBottomPoint.position);
         }
 
-        public void ShowCrossHair()
-        {
-            if (crossHairImage != null)
-            {
-                crossHairImage.enabled = true;
-            }
-        }
-
-        public void HideCrossHair()
-        {
-            if (crossHairImage != null)
-            {
-                crossHairImage.enabled = false;
-            }
-        }
-
         /// <summary>
-        /// PlayerFlinchHandler から呼ばれ、弓のステートを安全にリセットする。
-        /// 呼び出し後に FlinchHandler が CanChangeWeapon = false に上書きするため、
-        /// ここでは CanChangeWeapon には触れない。
+        /// 怯み・死亡時(WeaponManager.ResetEquippedWeapon 経由)に、弓のステートを待機へ戻す。
+        /// 行動制限は owner ごとに管理されるので、待機の Enter で弓の分を外しても怯み側の制限は残る。
         /// </summary>
         public void ForceReset()
         {
-            _currentState?.Exit();
-            _currentState = new StateFree(this);
-            _currentState.Enter();
-
-            _drawProgress = 0f;
-            UpdateBowString(0f);
+            ChangeState(new BowStateFree(this));
+            UpdateBowString();
         }
     }
 }
