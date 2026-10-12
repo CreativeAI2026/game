@@ -1,0 +1,41 @@
+{
+  "events": [
+    {
+      "id": "sample_preview",
+      "conditions": [
+        { "type": "progress", "value": 1 }
+      ],
+      "steps": [
+        { "kind": "line", "text": "（仮）雨音の向こうで、古いレコードが途切れ途切れに鳴っている。" },
+        { "kind": "line", "portrait": "hero_surprised", "text": "……知らない天井だ。ここはどこだ？" },
+        { "kind": "line", "portrait": "robot_normal", "text": "覚醒ヲ確認。外傷ナシ。" },
+
+        { "kind": "command", "command": "portrait.right.obscure" },
+        { "kind": "line", "speaker": "？？？", "portrait": "girl_fear", "text": "<whisper>あの……大丈夫、ですか？</whisper>" },
+        { "kind": "command", "command": "portrait.right.reveal" },
+        { "kind": "line", "portrait": "girl_wry_smile", "text": "ご、ごめんなさい。驚かせるつもりはなかったんです。" },
+
+        { "kind": "command", "command": "portrait.left.jump" },
+        { "kind": "line", "portrait": "hero_question", "text": "<wait=0.25><shake><shout>人がいたのか！</shout></shake>" },
+
+        { "kind": "choice", "flag": "sample_choice", "options": [
+          { "text": "ここがどこか尋ねる", "value": "ask" },
+          { "text": "出口を教えてもらう", "value": "exit" }
+        ]},
+        { "kind": "line", "portrait": "girl_smile", "text": "ここは<emphasis>使われなくなった駅</emphasis>です。" },
+
+        { "kind": "command", "command": "window.hide" },
+        { "kind": "command", "command": "wait", "arg": "0.45" },
+        { "kind": "command", "command": "window.show" },
+        { "kind": "line", "text": "少女が倉庫から何かを運んできた。" },
+
+        { "kind": "giveItem", "itemKey": "apple", "message": "傷のあるりんごを手に入れた。" },
+        { "kind": "giveWeapon", "weaponKey": "sword" },
+        { "kind": "line", "portrait": "hero_confused", "text": "……これを、俺に？" },
+        { "kind": "line", "portrait": "hero_smile", "text": "ありがとう。助かるよ。" },
+        { "kind": "line", "portrait": "hero_anger", "text": "必ず、ここから出てみせる。" }
+      ],
+      "nextProgress": 2
+    }
+  ]
+}

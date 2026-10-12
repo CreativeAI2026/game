@@ -8506,6 +8506,8 @@ MonoBehaviour:
   - Field_Area01_Props_Lab_1F
   - Field_Area01_Props_Lab_2F
   - Field_Area01_Props_Lab_3F
+  - Field_Area01_Items
+  - Field_Area01_Events
   _skipAlreadyLoaded: 1
 --- !u!4 &146072784
 Transform:
