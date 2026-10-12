@@ -15,7 +15,7 @@ MonoBehaviour:
   _id: sample_preview
   _conditions:
   - _type: 0
-    _progressValue: 1
+    _progressValue: 0
     _flagKey: 
     _flagValue: 
     _itemKey: 
@@ -244,4 +244,4 @@ MonoBehaviour:
     _message: 
     _command: 
     _arg: 
-  _nextProgress: 2
+  _nextProgress: 1
