@@ -140,7 +140,8 @@ namespace CreativeAI.Tests.EditMode
         [Test]
         public void Show_NonFood_StaysClosed()
         {
-            var gear = ScriptableObject.CreateInstance<EquipmentData>();
+            var gear = ScriptableObject.CreateInstance<ItemData>();
+            gear.category = ItemCategory.Equipment;
             gear.id = 2001;
             _assets.Add(gear);
             _inv.AddItem(gear, 1);
