@@ -31,7 +31,9 @@ namespace CreativeAI.Gameplay
         [SerializeField]
         private float _outboundSpeed = 20f;
 
-        [Tooltip("折り返し地点での速度(行きの速度に対する割合 0〜1)。小さいほど折り返しで溜めが出る")]
+        [Tooltip(
+            "折り返し地点での速度(行きの速度に対する割合 0〜1)。小さいほど折り返しで溜めが出る"
+        )]
         [SerializeField]
         [Range(0.05f, 1f)]
         private float _apexSpeedRatio = 0.25f;
@@ -40,7 +42,9 @@ namespace CreativeAI.Gameplay
         [SerializeField]
         private float _returnSpeed = 12f;
 
-        [Tooltip("折り返してから帰りの最高速度に達するまでの時間(秒)。折り返し地点の速度から徐々に加速する")]
+        [Tooltip(
+            "折り返してから帰りの最高速度に達するまでの時間(秒)。折り返し地点の速度から徐々に加速する"
+        )]
         [SerializeField]
         private float _returnAccelerationTime = 0.6f;
 
@@ -58,7 +62,9 @@ namespace CreativeAI.Gameplay
         private float _obstacleProbeRadius = 0.3f;
 
         [Header("見た目の回転")]
-        [Tooltip("回転させるオブジェクト(モデルの親など。ルートでもよい)。行き・帰りとも回し続ける")]
+        [Tooltip(
+            "回転させるオブジェクト(モデルの親など。ルートでもよい)。行き・帰りとも回し続ける"
+        )]
         [SerializeField]
         private Transform _spinRoot;
 
@@ -166,12 +172,19 @@ namespace CreativeAI.Gameplay
         {
             // 折り返し地点の速度から、帰りの最高速度まで徐々に加速する
             _returnElapsed += Time.deltaTime;
-            float t = _returnAccelerationTime > 0f ? Mathf.Clamp01(_returnElapsed / _returnAccelerationTime) : 1f;
+            float t =
+                _returnAccelerationTime > 0f
+                    ? Mathf.Clamp01(_returnElapsed / _returnAccelerationTime)
+                    : 1f;
             float speed = Mathf.Lerp(ApexSpeed, _returnSpeed, t);
 
             // 向き(回転)は書き換えない。書き換えると見た目の回転(_spinRoot)が打ち消される
             Vector3 target = _returnTarget.position;
-            transform.position = Vector3.MoveTowards(transform.position, target, speed * Time.deltaTime);
+            transform.position = Vector3.MoveTowards(
+                transform.position,
+                target,
+                speed * Time.deltaTime
+            );
 
             if (Vector3.Distance(transform.position, target) <= _catchDistance)
                 Catch();

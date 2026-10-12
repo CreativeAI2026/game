@@ -91,7 +91,10 @@ namespace CreativeAI.Gameplay
             AnimatorStateInfo sourceState
         )
         {
-            if (type == WeaponAnimationEventType.ThrowRelease && sourceState.shortNameHash == ThrowHash)
+            if (
+                type == WeaponAnimationEventType.ThrowRelease
+                && sourceState.shortNameHash == ThrowHash
+            )
             {
                 Release();
             }

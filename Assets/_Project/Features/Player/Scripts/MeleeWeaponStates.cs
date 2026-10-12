@@ -196,7 +196,11 @@ namespace CreativeAI.Gameplay
                 _isComboQueued = true;
             }
 
-            if (_isComboWindowOpen && _isComboQueued && ctx.ComboStep < MeleeWeaponController.MaxComboStep)
+            if (
+                _isComboWindowOpen
+                && _isComboQueued
+                && ctx.ComboStep < MeleeWeaponController.MaxComboStep
+            )
             {
                 ContinueCombo();
                 return;

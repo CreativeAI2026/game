@@ -147,7 +147,8 @@ namespace CreativeAI.Gameplay
             }
 
             bool isInParry =
-                sword.Animator.GetCurrentAnimatorStateInfo(0).shortNameHash == PlayerAnimatorStates.Parry
+                sword.Animator.GetCurrentAnimatorStateInfo(0).shortNameHash
+                    == PlayerAnimatorStates.Parry
                 || (
                     sword.Animator.IsInTransition(0)
                     && sword.Animator.GetNextAnimatorStateInfo(0).shortNameHash

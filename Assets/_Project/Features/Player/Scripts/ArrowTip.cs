@@ -92,7 +92,10 @@ namespace CreativeAI.Gameplay
             if (collision.gameObject.TryGetComponent(out IDamageable enemy))
             {
                 // ダメージ計算はPlayerStatusに委譲し、装備やバフの影響を一元管理する
-                float finalDamage = _projectile.Owner.RollDamage(_bowMultiplier, out bool isCritical);
+                float finalDamage = _projectile.Owner.RollDamage(
+                    _bowMultiplier,
+                    out bool isCritical
+                );
                 enemy.TakeDamage(finalDamage, isCritical);
             }
 

@@ -16,7 +16,9 @@ namespace CreativeAI.Gameplay
         // これ未満の視点入力は無視する(スティックの遊び・微小なマウス移動でカメラが揺れないように)
         private const float LookInputThreshold = 0.01f;
 
-        [Tooltip("Cinemachine Camera の Tracking Target に設定する、プレイヤー配下の空オブジェクト(PlayerCameraRoot)")]
+        [Tooltip(
+            "Cinemachine Camera の Tracking Target に設定する、プレイヤー配下の空オブジェクト(PlayerCameraRoot)"
+        )]
         public GameObject CinemachineCameraTarget;
 
         [Tooltip("カメラを上方向に動かせる最大角度（度）")]
@@ -25,7 +27,9 @@ namespace CreativeAI.Gameplay
         [Tooltip("カメラを下方向に動かせる最小角度（度）")]
         public float BottomClamp = -30.0f;
 
-        [Tooltip("カメラをオーバーライドする追加の角度。カメラ固定時にカメラ位置を微調整するための変数")]
+        [Tooltip(
+            "カメラをオーバーライドする追加の角度。カメラ固定時にカメラ位置を微調整するための変数"
+        )]
         public float CameraAngleOverride = 0.0f;
 
         [Tooltip("すべての軸でカメラ位置を固定する")]
@@ -47,7 +51,10 @@ namespace CreativeAI.Gameplay
             _playerController = GetComponent<PlayerController>();
             _input = GetComponent<PlayerInputHandler>();
             _playerInput = GetComponent<PlayerInput>();
-            Assert.IsNotNull(CinemachineCameraTarget, $"{name}: CinemachineCameraTarget が未設定です");
+            Assert.IsNotNull(
+                CinemachineCameraTarget,
+                $"{name}: CinemachineCameraTarget が未設定です"
+            );
         }
 
         private void Start()

@@ -37,7 +37,8 @@ namespace CreativeAI.Gameplay
                 return;
 
             // ボーンのローカル軸はモデルごとに違うため、キャラクターの右方向(ワールド)を軸に回す
-            _spine.rotation = Quaternion.AngleAxis(_camera.Pitch, transform.right) * _spine.rotation;
+            _spine.rotation =
+                Quaternion.AngleAxis(_camera.Pitch, transform.right) * _spine.rotation;
         }
     }
 }

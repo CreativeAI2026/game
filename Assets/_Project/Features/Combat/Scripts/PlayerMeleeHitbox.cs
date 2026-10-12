@@ -121,7 +121,10 @@ namespace CreativeAI.Gameplay
 
         public void EnableHitbox()
         {
-            Assert.IsNotNull(_playerStatus, $"{name}: 持ち主の PlayerStatus がありません(親階層に無い場合は SetOwner で渡す)");
+            Assert.IsNotNull(
+                _playerStatus,
+                $"{name}: 持ち主の PlayerStatus がありません(親階層に無い場合は SetOwner で渡す)"
+            );
             _alreadyHitTargets.Clear();
             // 軌跡判定の起点を記録し、最初のフレームで正しくSphereCastできるようにする
             _previousPosition = transform.position;

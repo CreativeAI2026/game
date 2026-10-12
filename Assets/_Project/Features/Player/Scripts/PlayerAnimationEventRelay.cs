@@ -27,7 +27,10 @@ namespace CreativeAI.Gameplay
             _flinchHandler = GetComponentInParent<PlayerFlinchHandler>();
             Assert.IsNotNull(_weaponManager, $"{name}: 親階層に WeaponManager が見つかりません");
             Assert.IsNotNull(_footstep, $"{name}: 親階層に PlayerFootstep が見つかりません");
-            Assert.IsNotNull(_flinchHandler, $"{name}: 親階層に PlayerFlinchHandler が見つかりません");
+            Assert.IsNotNull(
+                _flinchHandler,
+                $"{name}: 親階層に PlayerFlinchHandler が見つかりません"
+            );
         }
 
         // --- 攻撃系。関数名は既存の Slash1〜3.anim に設定済みのもの(旧 AnimationEventReceiver)を引き継いでいる ---

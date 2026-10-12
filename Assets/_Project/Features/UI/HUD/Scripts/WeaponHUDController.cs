@@ -115,9 +115,13 @@ namespace CreativeAI.UI
         private void Start()
         {
             Assert.IsNotNull(_panelTemplate, $"{name}: パネルの雛形(_panelTemplate)が未設定です");
-            Assert.IsNotNull(_templateIcon, $"{name}: 雛形のアイコン Image(_templateIcon)が未設定です");
+            Assert.IsNotNull(
+                _templateIcon,
+                $"{name}: 雛形のアイコン Image(_templateIcon)が未設定です"
+            );
             Assert.IsTrue(
-                _templateIcon.transform != _panelTemplate && _templateIcon.transform.IsChildOf(_panelTemplate),
+                _templateIcon.transform != _panelTemplate
+                    && _templateIcon.transform.IsChildOf(_panelTemplate),
                 $"{name}: _templateIcon は雛形(_panelTemplate)の子孫(雛形自身以外)にしてください"
             );
             _panelTemplate.gameObject.SetActive(false);
@@ -213,7 +217,10 @@ namespace CreativeAI.UI
             for (int i = 0; i < _weaponManager.WeaponCount; i++)
             {
                 RectTransform rect = Instantiate(_panelTemplate, _panelTemplate.parent);
-                rect.name = i < WeaponManager.WeaponKeys.Count ? $"Panel_{WeaponManager.WeaponKeys[i]}" : $"Panel_{i}";
+                rect.name =
+                    i < WeaponManager.WeaponKeys.Count
+                        ? $"Panel_{WeaponManager.WeaponKeys[i]}"
+                        : $"Panel_{i}";
 
                 // 複製したパネルの中で、雛形のアイコンと同じ位置にある Image にこの武器のアイコンを入れる
                 Image icon = rect.Find(iconPath).GetComponent<Image>();
@@ -282,7 +289,8 @@ namespace CreativeAI.UI
             _layoutVersion++;
             if (animate)
             {
-                AnimatePanels(startAngles, endAngles, _layoutVersion, destroyCancellationToken).Forget();
+                AnimatePanels(startAngles, endAngles, _layoutVersion, destroyCancellationToken)
+                    .Forget();
             }
             else
             {
@@ -318,7 +326,11 @@ namespace CreativeAI.UI
                     if (panel.wasShown)
                         SetAngle(
                             panel,
-                            Mathf.Lerp(startAngles[panel.weaponIndex], endAngles[panel.weaponIndex], smoothT)
+                            Mathf.Lerp(
+                                startAngles[panel.weaponIndex],
+                                endAngles[panel.weaponIndex],
+                                smoothT
+                            )
                         );
                 }
                 ApplyDepthOrder();
@@ -346,7 +358,8 @@ namespace CreativeAI.UI
         }
 
         /// <summary>slot 番目の角度。slot 0 = 上(π/2)、そこから反時計回りに等間隔(4本なら 上→左→下→右)。</summary>
-        private static float SlotAngle(int slot, int count) => Mathf.PI * 0.5f + slot * (2f * Mathf.PI / count);
+        private static float SlotAngle(int slot, int count) =>
+            Mathf.PI * 0.5f + slot * (2f * Mathf.PI / count);
 
         /// <summary>
         /// start から target へ、指定の向きに 1 周未満で回る角度を返す(target ± 2π の中から選ぶ)。

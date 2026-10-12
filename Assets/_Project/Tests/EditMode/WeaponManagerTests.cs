@@ -146,7 +146,11 @@ namespace CreativeAI.Tests.EditMode
             _weapons.GiveWeapon("scythe");
             _weapons.GiveWeapon("hammer");
 
-            CollectionAssert.AreEqual(new[] { 0, 2, 3, 1 }, _weapons.OwnedIndices, "入手順に関係なく切り替え順に並ぶ");
+            CollectionAssert.AreEqual(
+                new[] { 0, 2, 3, 1 },
+                _weapons.OwnedIndices,
+                "入手順に関係なく切り替え順に並ぶ"
+            );
 
             _weapons.SelectNext();
             Assert.AreEqual(2, _weapons.CurrentWeaponIndex, "E: 剣 → 鎌");

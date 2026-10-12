@@ -38,7 +38,9 @@ namespace CreativeAI.Gameplay
         [SerializeField]
         private SocketEntry[] _sockets = Array.Empty<SocketEntry>();
 
-        [Tooltip("頭の注視ターゲット(Animation Rigging の Multi-Aim の Source)。HeadLookController が毎フレーム動かす")]
+        [Tooltip(
+            "頭の注視ターゲット(Animation Rigging の Multi-Aim の Source)。HeadLookController が毎フレーム動かす"
+        )]
         [SerializeField]
         private Transform _lookAtTarget;
 
@@ -48,7 +50,8 @@ namespace CreativeAI.Gameplay
         private Vector3 _baseLocalPosition;
 
         // ロジック層の Awake から呼ばれることがあり、このコンポーネントの Awake より先になりうるため遅延取得する
-        public Animator Animator => _animator != null ? _animator : _animator = GetComponent<Animator>();
+        public Animator Animator =>
+            _animator != null ? _animator : _animator = GetComponent<Animator>();
 
         public Transform LookAtTarget => _lookAtTarget;
 
@@ -57,7 +60,10 @@ namespace CreativeAI.Gameplay
             _baseLocalPosition = transform.localPosition;
             Assert.IsNotNull(Animator.avatar, $"{name}: Animator に Avatar が設定されていません");
             Assert.IsTrue(Animator.avatar.isHuman, $"{name}: Avatar が Humanoid ではありません");
-            Assert.IsNotNull(_lookAtTarget, $"{name}: 頭の注視ターゲット(_lookAtTarget)が未設定です");
+            Assert.IsNotNull(
+                _lookAtTarget,
+                $"{name}: 頭の注視ターゲット(_lookAtTarget)が未設定です"
+            );
             ValidateAnimatorParameters();
         }
 
@@ -107,7 +113,10 @@ namespace CreativeAI.Gameplay
         public Transform GetBone(HumanBodyBones bone)
         {
             Transform t = Animator.GetBoneTransform(bone);
-            Assert.IsNotNull(t, $"{name}: Humanoid ボーン {bone} が Avatar に割り当てられていません");
+            Assert.IsNotNull(
+                t,
+                $"{name}: Humanoid ボーン {bone} が Avatar に割り当てられていません"
+            );
             return t;
         }
 
@@ -137,7 +146,11 @@ namespace CreativeAI.Gameplay
                 PlayerSocketId.ScytheGrip => "Weapon_Root",
                 PlayerSocketId.ArrowHold => "Arrow_Root",
                 PlayerSocketId.HammerGrip => "Weapon_Root",
-                _ => throw new ArgumentOutOfRangeException(nameof(id), id, "既定の武器リグボーンが未定義です"),
+                _ => throw new ArgumentOutOfRangeException(
+                    nameof(id),
+                    id,
+                    "既定の武器リグボーンが未定義です"
+                ),
             };
 
         /// <summary>武器リグのボーンが無いモデルで、ソケットを自動生成するときの親ボーン。</summary>
@@ -149,7 +162,11 @@ namespace CreativeAI.Gameplay
                 PlayerSocketId.ScytheGrip => HumanBodyBones.RightHand,
                 PlayerSocketId.ArrowHold => HumanBodyBones.RightHand,
                 PlayerSocketId.HammerGrip => HumanBodyBones.RightHand,
-                _ => throw new ArgumentOutOfRangeException(nameof(id), id, "既定の親ボーンが未定義です"),
+                _ => throw new ArgumentOutOfRangeException(
+                    nameof(id),
+                    id,
+                    "既定の親ボーンが未定義です"
+                ),
             };
 
 #if UNITY_EDITOR
@@ -164,7 +181,9 @@ namespace CreativeAI.Gameplay
             Animator animator = GetComponent<Animator>();
             if (animator.avatar == null || !animator.avatar.isHuman)
             {
-                Debug.LogError($"{name}: Humanoid の Avatar を Animator に設定してから実行してください");
+                Debug.LogError(
+                    $"{name}: Humanoid の Avatar を Animator に設定してから実行してください"
+                );
                 return;
             }
 
@@ -181,7 +200,9 @@ namespace CreativeAI.Gameplay
                     bone = animator.GetBoneTransform(DefaultBoneOf(id));
                     if (bone == null)
                     {
-                        Debug.LogError($"{name}: {DefaultBoneOf(id)} ボーンが見つからないため {id} を作れませんでした");
+                        Debug.LogError(
+                            $"{name}: {DefaultBoneOf(id)} ボーンが見つからないため {id} を作れませんでした"
+                        );
                         continue;
                     }
                     Debug.LogWarning(
@@ -203,7 +224,10 @@ namespace CreativeAI.Gameplay
                     Undo.RegisterCreatedObjectUndo(go, "Create Player Sockets");
                     go.transform.SetParent(bone, false);
                     socket = go.transform;
-                    Debug.Log($"{name}: ソケット {socketName} を {bone.name} の下に作成しました", socket);
+                    Debug.Log(
+                        $"{name}: ソケット {socketName} を {bone.name} の下に作成しました",
+                        socket
+                    );
                 }
 
                 entries.RemoveAll(e => e.id == id);

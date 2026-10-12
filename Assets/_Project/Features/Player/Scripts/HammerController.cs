@@ -23,7 +23,9 @@ namespace CreativeAI.Gameplay
         [SerializeField]
         private float _maxLeapDistance = 8f;
 
-        [Tooltip("跳躍の最高点の高さ（m）。見た目(モデル)だけを持ち上げ、接地・被弾判定はルートの位置(地面)に残す")]
+        [Tooltip(
+            "跳躍の最高点の高さ（m）。見た目(モデル)だけを持ち上げ、接地・被弾判定はルートの位置(地面)に残す"
+        )]
         [SerializeField]
         private float _leapHeight = 1.8f;
 

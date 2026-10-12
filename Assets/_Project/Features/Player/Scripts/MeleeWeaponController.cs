@@ -19,13 +19,17 @@ namespace CreativeAI.Gameplay
         public const int MaxComboStep = 3;
 
         [Header("設定")]
-        [Tooltip("攻撃・投擲の狙いを探す半径（m）。敵のレイヤーは PlayerTargetManager で一元管理する")]
+        [Tooltip(
+            "攻撃・投擲の狙いを探す半径（m）。敵のレイヤーは PlayerTargetManager で一元管理する"
+        )]
         public float searchRadius = 8f;
         public float attackRange = 3f;
         public float dashSpeed = 20f;
 
         [Header("攻撃判定")]
-        [Tooltip("この武器の子にある PlayerMeleeHitbox。AnimationEvent の TriggerEnableHitbox / TriggerDisableHitbox で ON/OFF する")]
+        [Tooltip(
+            "この武器の子にある PlayerMeleeHitbox。AnimationEvent の TriggerEnableHitbox / TriggerDisableHitbox で ON/OFF する"
+        )]
         [SerializeField]
         private PlayerMeleeHitbox _hitbox;
 
@@ -137,7 +141,10 @@ namespace CreativeAI.Gameplay
             _currentState.Enter();
         }
 
-        public void OnWeaponAnimationEvent(WeaponAnimationEventType type, AnimatorStateInfo sourceState)
+        public void OnWeaponAnimationEvent(
+            WeaponAnimationEventType type,
+            AnimatorStateInfo sourceState
+        )
         {
             _currentState.OnAnimationEvent(type, sourceState);
         }

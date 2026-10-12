@@ -19,7 +19,8 @@ namespace CreativeAI.EditorTools
     /// </summary>
     public static class AnimationClipExtractor
     {
-        private const string MenuPath = "Assets/CreativeAI/FBXのクリップを .anim に書き出す(イベント保持)";
+        private const string MenuPath =
+            "Assets/CreativeAI/FBXのクリップを .anim に書き出す(イベント保持)";
 
         // FBX に含まれる、Unity が内部で使うプレビュー用クリップの名前の接頭辞
         private const string PreviewClipPrefix = "__preview__";
@@ -62,7 +63,10 @@ namespace CreativeAI.EditorTools
             string modelPath = AssetDatabase.GetAssetPath(source);
             // Ctrl+D で複製したときと同じ命名("Armature|Slash_01" → "Armature_Slash_01.anim")
             string clipName = source.name.Replace('|', '_');
-            string path = $"{System.IO.Path.GetDirectoryName(modelPath)}/{clipName}.anim".Replace('\\', '/');
+            string path = $"{System.IO.Path.GetDirectoryName(modelPath)}/{clipName}.anim".Replace(
+                '\\',
+                '/'
+            );
 
             var existing = AssetDatabase.LoadAssetAtPath<AnimationClip>(path);
             if (existing == null)
@@ -88,7 +92,9 @@ namespace CreativeAI.EditorTools
         }
 
         /// <summary>全 AnimatorController のステート・Blend Tree で、元の FBX クリップを書き出した .anim に差し替える。</summary>
-        private static void ReplaceControllerReferences(Dictionary<AnimationClip, AnimationClip> replacements)
+        private static void ReplaceControllerReferences(
+            Dictionary<AnimationClip, AnimationClip> replacements
+        )
         {
             foreach (string guid in AssetDatabase.FindAssets("t:AnimatorController"))
             {
@@ -112,7 +118,10 @@ namespace CreativeAI.EditorTools
             foreach (ChildAnimatorState child in stateMachine.states)
             {
                 AnimatorState state = child.state;
-                if (state.motion is AnimationClip clip && replacements.TryGetValue(clip, out AnimationClip replaced))
+                if (
+                    state.motion is AnimationClip clip
+                    && replacements.TryGetValue(clip, out AnimationClip replaced)
+                )
                 {
                     Undo.RecordObject(state, "Replace Motion");
                     state.motion = replaced;
@@ -143,7 +152,10 @@ namespace CreativeAI.EditorTools
             bool changed = false;
             for (int i = 0; i < children.Length; i++)
             {
-                if (children[i].motion is AnimationClip clip && replacements.TryGetValue(clip, out AnimationClip replaced))
+                if (
+                    children[i].motion is AnimationClip clip
+                    && replacements.TryGetValue(clip, out AnimationClip replaced)
+                )
                 {
                     children[i].motion = replaced;
                     changed = true;

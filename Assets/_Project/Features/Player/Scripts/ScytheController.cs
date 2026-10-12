@@ -30,7 +30,10 @@ namespace CreativeAI.Gameplay
         {
             base.Awake();
             Assert.IsNotNull(_heldModel, $"{name}: 手元の鎌モデル(_heldModel)が未設定です");
-            Assert.IsNotNull(_boomerangPrefab, $"{name}: 投擲用プレハブ(_boomerangPrefab)が未設定です");
+            Assert.IsNotNull(
+                _boomerangPrefab,
+                $"{name}: 投擲用プレハブ(_boomerangPrefab)が未設定です"
+            );
 
             // プレイヤーの移動・回転に引きずられないよう、親なし(シーン直下)で生成する
             _boomerang = Instantiate(_boomerangPrefab);
@@ -63,9 +66,7 @@ namespace CreativeAI.Gameplay
 
         /// <summary>鎌が飛んでいる間は「帰還待ち」が中立状態(怯みが明けても移動・再投擲させない)。</summary>
         public override MeleeWeaponState CreateNeutralState() =>
-            _boomerang.IsFlying
-                ? new ScytheStateWaitReturn(this)
-                : new ScytheStateFree(this);
+            _boomerang.IsFlying ? new ScytheStateWaitReturn(this) : new ScytheStateFree(this);
 
         /// <summary>
         /// 投擲方向を決める。索敵範囲内に敵がいればその方向、いなければキャラクターの正面。

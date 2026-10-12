@@ -5,7 +5,6 @@ namespace CreativeAI.Gameplay
 {
     public class TBossCapturedState : TBossBaseState
     {
-
         private const float WaitBeforePullDuration = 0.5f;
         private const float WaitBeforeDamageDuration = 0.5f;
 

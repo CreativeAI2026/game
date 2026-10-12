@@ -172,7 +172,10 @@ namespace CreativeAI.Gameplay
             _currentState.Enter();
         }
 
-        public void OnWeaponAnimationEvent(WeaponAnimationEventType type, AnimatorStateInfo sourceState)
+        public void OnWeaponAnimationEvent(
+            WeaponAnimationEventType type,
+            AnimatorStateInfo sourceState
+        )
         {
             _currentState.OnAnimationEvent(type, sourceState);
         }
@@ -282,7 +285,11 @@ namespace CreativeAI.Gameplay
             else if (_stringRestMidPoint != null)
                 midPoint = _stringRestMidPoint.position;
             else
-                midPoint = Vector3.Lerp(_stringTopPoint.position, _stringBottomPoint.position, 0.5f);
+                midPoint = Vector3.Lerp(
+                    _stringTopPoint.position,
+                    _stringBottomPoint.position,
+                    0.5f
+                );
 
             _bowStringRenderer.SetPosition(0, _stringTopPoint.position);
             _bowStringRenderer.SetPosition(1, midPoint);

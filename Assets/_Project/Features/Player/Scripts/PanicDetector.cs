@@ -36,7 +36,9 @@ namespace CreativeAI.Gameplay
         private WeaponManager _weaponManager;
 
         [Header("逃避 設定")]
-        [Tooltip("逃避検知を有効にするか(イベント中などに SetFlightDetectionEnabled で切り替えられる)")]
+        [Tooltip(
+            "逃避検知を有効にするか(イベント中などに SetFlightDetectionEnabled で切り替えられる)"
+        )]
         [SerializeField]
         private bool _enableFlightDetection = true;
 

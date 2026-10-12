@@ -52,7 +52,10 @@ namespace CreativeAI.Gameplay
         /// <summary>怯みクリップの ActionEnd イベント(PlayerAnimationEventRelay 経由)。</summary>
         public void OnActionEnd(AnimatorStateInfo sourceState)
         {
-            if (_flinchCoroutine != null && sourceState.shortNameHash == PlayerAnimatorStates.Flinch)
+            if (
+                _flinchCoroutine != null
+                && sourceState.shortNameHash == PlayerAnimatorStates.Flinch
+            )
                 _actionEndReceived = true;
         }
 
@@ -90,10 +93,12 @@ namespace CreativeAI.Gameplay
             while (!_actionEndReceived)
             {
                 bool isPlaying =
-                    _animator.GetCurrentAnimatorStateInfo(0).shortNameHash == PlayerAnimatorStates.Flinch;
+                    _animator.GetCurrentAnimatorStateInfo(0).shortNameHash
+                    == PlayerAnimatorStates.Flinch;
                 bool isTransitioningIn =
                     _animator.IsInTransition(0)
-                    && _animator.GetNextAnimatorStateInfo(0).shortNameHash == PlayerAnimatorStates.Flinch;
+                    && _animator.GetNextAnimatorStateInfo(0).shortNameHash
+                        == PlayerAnimatorStates.Flinch;
 
                 if (isPlaying || isTransitioningIn)
                 {

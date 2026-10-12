@@ -13,11 +13,14 @@ namespace CreativeAI.Gameplay
         [Tooltip("毎フレーム追う「最寄りの敵」の索敵半径（m）")]
         public float searchRadius = 10f;
 
-        [Tooltip("敵のレイヤー。Enemy のみにする(敵の攻撃判定・弾のレイヤーを含めると、それを敵として狙ってしまう)")]
+        [Tooltip(
+            "敵のレイヤー。Enemy のみにする(敵の攻撃判定・弾のレイヤーを含めると、それを敵として狙ってしまう)"
+        )]
         public LayerMask enemyLayer;
 
         /// <summary>現在の最寄りの敵(searchRadius 以内)。いなければ null。</summary>
-        public Transform CurrentTarget => CurrentTargetCollider != null ? CurrentTargetCollider.transform : null;
+        public Transform CurrentTarget =>
+            CurrentTargetCollider != null ? CurrentTargetCollider.transform : null;
 
         /// <summary>現在の最寄りの敵のコライダー。</summary>
         public Collider CurrentTargetCollider { get; private set; }
@@ -49,7 +52,10 @@ namespace CreativeAI.Gameplay
 
             foreach (var hitCollider in hitColliders)
             {
-                float distance = Vector3.Distance(transform.position, hitCollider.transform.position);
+                float distance = Vector3.Distance(
+                    transform.position,
+                    hitCollider.transform.position
+                );
                 if (distance < minDistance)
                 {
                     minDistance = distance;

@@ -28,18 +28,25 @@ namespace CreativeAI.EditorTools
         private const string LogPrefix = "[HammerImpactEffectBuilder]";
 
         private const string OutputPath = "Assets/_Project/Art/VFX/Hit/HammerImpact.prefab";
-        private const string PlayerPrefabPath = "Assets/_Project/Features/Player/Prefabs/PlayerArmature.prefab";
+        private const string PlayerPrefabPath =
+            "Assets/_Project/Features/Player/Prefabs/PlayerArmature.prefab";
 
-        private const string ShockwaveTexturePath = "Assets/_Project/Art/VFX/Textures/HammerShockwave.png";
-        private const string CraterAlbedoPath = "Assets/_Project/Art/VFX/Textures/HammerCrater_Albedo.png";
-        private const string CraterNormalPath = "Assets/_Project/Art/VFX/Textures/HammerCrater_Normal.png";
-        private const string ShockwaveMaterialPath = "Assets/_Project/Art/Materials/Particles/HammerShockwave.mat";
-        private const string CraterMaterialPath = "Assets/_Project/Art/Materials/Particles/HammerCrater.mat";
+        private const string ShockwaveTexturePath =
+            "Assets/_Project/Art/VFX/Textures/HammerShockwave.png";
+        private const string CraterAlbedoPath =
+            "Assets/_Project/Art/VFX/Textures/HammerCrater_Albedo.png";
+        private const string CraterNormalPath =
+            "Assets/_Project/Art/VFX/Textures/HammerCrater_Normal.png";
+        private const string ShockwaveMaterialPath =
+            "Assets/_Project/Art/Materials/Particles/HammerShockwave.mat";
+        private const string CraterMaterialPath =
+            "Assets/_Project/Art/Materials/Particles/HammerCrater.mat";
 
         // 新規マテリアルの元(シェーダー設定済みのものを複製してテクスチャだけ差し替える)
         private const string FadeParticleTemplatePath =
             "Assets/PurchasedAssets/Hovl Studio/Magic effects pack/Materials/Smoke26.mat";
-        private const string LitParticleTemplatePath = "Assets/_Project/Art/Materials/Particles/BloodDrop.mat";
+        private const string LitParticleTemplatePath =
+            "Assets/_Project/Art/Materials/Particles/BloodDrop.mat";
 
         private const string DustMaterialPath = FadeParticleTemplatePath;
         private const string DebrisMaterialPath =
@@ -77,7 +84,15 @@ namespace CreativeAI.EditorTools
             Material debris = LoadAsset<Material>(DebrisMaterialPath);
             Material shockwave = CreateShockwaveMaterial();
             Material crater = CreateCraterMaterial();
-            if (hovl == null || cfxr == null || mirza == null || dust == null || debris == null || shockwave == null || crater == null)
+            if (
+                hovl == null
+                || cfxr == null
+                || mirza == null
+                || dust == null
+                || debris == null
+                || shockwave == null
+                || crater == null
+            )
                 return;
 
             var root = new GameObject("HammerImpact");
@@ -85,15 +100,53 @@ namespace CreativeAI.EditorTools
             {
                 BuildCrater(root, crater);
 
-                if (!AddFlash(root, hovl) || !AddImpactSpikes(root, cfxr) || !AddDistortion(root, mirza))
+                if (
+                    !AddFlash(root, hovl)
+                    || !AddImpactSpikes(root, cfxr)
+                    || !AddDistortion(root, mirza)
+                )
                     return;
 
-                AddShockwaveDisc(root, shockwave, "Shockwave", delay: 0f, lifetime: 0.4f, diameter: SlamRadius * 2.1f, alpha: 0.95f);
-                AddShockwaveDisc(root, shockwave, "ShockwaveTrail", delay: 0.07f, lifetime: 0.6f, diameter: SlamRadius * 2.6f, alpha: 0.45f);
+                AddShockwaveDisc(
+                    root,
+                    shockwave,
+                    "Shockwave",
+                    delay: 0f,
+                    lifetime: 0.4f,
+                    diameter: SlamRadius * 2.1f,
+                    alpha: 0.95f
+                );
+                AddShockwaveDisc(
+                    root,
+                    shockwave,
+                    "ShockwaveTrail",
+                    delay: 0.07f,
+                    lifetime: 0.6f,
+                    diameter: SlamRadius * 2.6f,
+                    alpha: 0.45f
+                );
                 AddDustPlume(root, dust);
                 AddDustRing(root, dust);
-                AddDebris(root, debris, "Rocks", count: 16, size: (0.22f, 0.5f), speed: (6f, 11f), coneAngle: 30f, lifetime: (2f, 3f));
-                AddDebris(root, debris, "Pebbles", count: 40, size: (0.05f, 0.14f), speed: (8f, 15f), coneAngle: 50f, lifetime: (1f, 1.8f));
+                AddDebris(
+                    root,
+                    debris,
+                    "Rocks",
+                    count: 16,
+                    size: (0.22f, 0.5f),
+                    speed: (6f, 11f),
+                    coneAngle: 30f,
+                    lifetime: (2f, 3f)
+                );
+                AddDebris(
+                    root,
+                    debris,
+                    "Pebbles",
+                    count: 40,
+                    size: (0.05f, 0.14f),
+                    speed: (8f, 15f),
+                    coneAngle: 50f,
+                    lifetime: (1f, 1.8f)
+                );
 
                 GameObject prefab = PrefabUtility.SaveAsPrefabAsset(root, OutputPath);
                 Debug.Log($"{LogPrefix} {OutputPath} を生成しました", prefab);
@@ -129,7 +182,9 @@ namespace CreativeAI.EditorTools
                 return null;
             }
 
-            importer.textureType = isNormalMap ? TextureImporterType.NormalMap : TextureImporterType.Default;
+            importer.textureType = isNormalMap
+                ? TextureImporterType.NormalMap
+                : TextureImporterType.Default;
             importer.alphaIsTransparency = !isNormalMap;
             importer.wrapMode = TextureWrapMode.Clamp;
             importer.mipmapEnabled = true;
@@ -214,16 +269,17 @@ namespace CreativeAI.EditorTools
             SetColorOverLifetime(ps, Color.white, (0f, 1f), (CraterFadeStartRatio, 1f), (1f, 0f));
 
             // 法線マップでライティングするため、法線・接線を頂点に流す
-            ps.GetComponent<ParticleSystemRenderer>().SetActiveVertexStreams(
-                new List<ParticleSystemVertexStream>
-                {
-                    ParticleSystemVertexStream.Position,
-                    ParticleSystemVertexStream.Normal,
-                    ParticleSystemVertexStream.Tangent,
-                    ParticleSystemVertexStream.Color,
-                    ParticleSystemVertexStream.UV,
-                }
-            );
+            ps.GetComponent<ParticleSystemRenderer>()
+                .SetActiveVertexStreams(
+                    new List<ParticleSystemVertexStream>
+                    {
+                        ParticleSystemVertexStream.Position,
+                        ParticleSystemVertexStream.Normal,
+                        ParticleSystemVertexStream.Tangent,
+                        ParticleSystemVertexStream.Color,
+                        ParticleSystemVertexStream.UV,
+                    }
+                );
         }
 
         // ------------------------------------------------------------------
@@ -259,7 +315,10 @@ namespace CreativeAI.EditorTools
             ConfigureFlatOnGround(groundSpikes, GroundOffset * 2f);
             ParticleSystem.MainModule groundMain = groundSpikes.main;
             groundMain.startColor = ImpactLightColor;
-            groundMain.startSize = new ParticleSystem.MinMaxCurve(SlamRadius * 1.5f, SlamRadius * 1.9f);
+            groundMain.startSize = new ParticleSystem.MinMaxCurve(
+                SlamRadius * 1.5f,
+                SlamRadius * 1.9f
+            );
             groundMain.startRotation = new ParticleSystem.MinMaxCurve(0f, Mathf.PI * 2f);
 
             ParticleSystem.MainModule linesMain = lines.main;
@@ -269,7 +328,12 @@ namespace CreativeAI.EditorTools
 
         private static bool AddDistortion(GameObject root, GameObject mirza)
         {
-            ParticleSystem distortion = CopySystem(root, mirza, "Particle Shockwave 1", "Distortion");
+            ParticleSystem distortion = CopySystem(
+                root,
+                mirza,
+                "Particle Shockwave 1",
+                "Distortion"
+            );
             if (distortion == null)
                 return false;
 
@@ -307,7 +371,13 @@ namespace CreativeAI.EditorTools
 
             // 一気に広がって、外へ行くほど減速する
             SetSizeOverLifetime(ps, (0f, 0.12f), (0.3f, 0.78f), (1f, 1f));
-            SetColorOverLifetime(ps, ImpactLightColor, (0f, alpha), (0.45f, alpha * 0.65f), (1f, 0f));
+            SetColorOverLifetime(
+                ps,
+                ImpactLightColor,
+                (0f, alpha),
+                (0.45f, alpha * 0.65f),
+                (1f, 0f)
+            );
         }
 
         // ------------------------------------------------------------------
@@ -339,7 +409,14 @@ namespace CreativeAI.EditorTools
             SetDrag(ps, 1.5f);
             SetSpin(ps, 0.6f);
             SetSizeOverLifetime(ps, (0f, 0.5f), (0.3f, 1.2f), (1f, 2f));
-            SetColorOverLifetime(ps, Color.white, (0f, 0f), (0.08f, 0.75f), (0.5f, 0.45f), (1f, 0f));
+            SetColorOverLifetime(
+                ps,
+                Color.white,
+                (0f, 0f),
+                (0.08f, 0.75f),
+                (0.5f, 0.45f),
+                (1f, 0f)
+            );
         }
 
         /// <summary>地面を這って外へ広がる塵の輪。</summary>
@@ -426,23 +503,28 @@ namespace CreativeAI.EditorTools
             collision.radiusScale = 0.5f;
 
             // 法線マップ付きの岩片をライティングするため、法線・接線を頂点に流す
-            ps.GetComponent<ParticleSystemRenderer>().SetActiveVertexStreams(
-                new List<ParticleSystemVertexStream>
-                {
-                    ParticleSystemVertexStream.Position,
-                    ParticleSystemVertexStream.Normal,
-                    ParticleSystemVertexStream.Tangent,
-                    ParticleSystemVertexStream.Color,
-                    ParticleSystemVertexStream.UV,
-                }
-            );
+            ps.GetComponent<ParticleSystemRenderer>()
+                .SetActiveVertexStreams(
+                    new List<ParticleSystemVertexStream>
+                    {
+                        ParticleSystemVertexStream.Position,
+                        ParticleSystemVertexStream.Normal,
+                        ParticleSystemVertexStream.Tangent,
+                        ParticleSystemVertexStream.Color,
+                        ParticleSystemVertexStream.UV,
+                    }
+                );
         }
 
         // ------------------------------------------------------------------
         // 共通
         // ------------------------------------------------------------------
 
-        private static ParticleSystem CreateChildSystem(GameObject root, string name, Material material)
+        private static ParticleSystem CreateChildSystem(
+            GameObject root,
+            string name,
+            Material material
+        )
         {
             var go = new GameObject(name);
             go.transform.SetParent(root.transform, false);
@@ -486,19 +568,30 @@ namespace CreativeAI.EditorTools
             shape.radius = 0.0001f;
             shape.position = new Vector3(0f, height, 0f);
 
-            ps.GetComponent<ParticleSystemRenderer>().renderMode = ParticleSystemRenderMode.HorizontalBillboard;
+            ps.GetComponent<ParticleSystemRenderer>().renderMode =
+                ParticleSystemRenderMode.HorizontalBillboard;
         }
 
         /// <summary>
         /// 購入アセットの Prefab 内のパーティクル(childName)の設定を、root の子の新しいオブジェクトへ複製する。
         /// 位置・回転は引き継がない(使う側で必要な向きに設定する)。
         /// </summary>
-        private static ParticleSystem CopySystem(GameObject root, GameObject sourcePrefab, string childName, string newName)
+        private static ParticleSystem CopySystem(
+            GameObject root,
+            GameObject sourcePrefab,
+            string childName,
+            string newName
+        )
         {
-            Transform source = sourcePrefab.name == childName ? sourcePrefab.transform : FindDeep(sourcePrefab.transform, childName);
+            Transform source =
+                sourcePrefab.name == childName
+                    ? sourcePrefab.transform
+                    : FindDeep(sourcePrefab.transform, childName);
             if (source == null || !source.TryGetComponent(out ParticleSystem sourceSystem))
             {
-                Debug.LogError($"{LogPrefix} {AssetDatabase.GetAssetPath(sourcePrefab)} にパーティクル {childName} が見つかりません");
+                Debug.LogError(
+                    $"{LogPrefix} {AssetDatabase.GetAssetPath(sourcePrefab)} にパーティクル {childName} が見つかりません"
+                );
                 return null;
             }
 
@@ -506,7 +599,10 @@ namespace CreativeAI.EditorTools
             go.transform.SetParent(root.transform, false);
             var ps = go.AddComponent<ParticleSystem>();
             EditorUtility.CopySerialized(sourceSystem, ps);
-            EditorUtility.CopySerialized(source.GetComponent<ParticleSystemRenderer>(), go.GetComponent<ParticleSystemRenderer>());
+            EditorUtility.CopySerialized(
+                source.GetComponent<ParticleSystemRenderer>(),
+                go.GetComponent<ParticleSystemRenderer>()
+            );
 
             // 元素材の他のパーティクルを参照するサブエミッターや、元素材のスクリプト向けの停止通知は持ち込まない
             ParticleSystem.SubEmittersModule subEmitters = ps.subEmitters;
@@ -542,7 +638,10 @@ namespace CreativeAI.EditorTools
             rotation.z = new ParticleSystem.MinMaxCurve(-maxAngularSpeed, maxAngularSpeed);
         }
 
-        private static void SetSizeOverLifetime(ParticleSystem ps, params (float time, float value)[] keys)
+        private static void SetSizeOverLifetime(
+            ParticleSystem ps,
+            params (float time, float value)[] keys
+        )
         {
             var curve = new AnimationCurve();
             foreach (var (time, value) in keys)
@@ -553,14 +652,21 @@ namespace CreativeAI.EditorTools
             size.size = new ParticleSystem.MinMaxCurve(1f, curve);
         }
 
-        private static void SetColorOverLifetime(ParticleSystem ps, Color color, params (float time, float alpha)[] alphaKeys)
+        private static void SetColorOverLifetime(
+            ParticleSystem ps,
+            Color color,
+            params (float time, float alpha)[] alphaKeys
+        )
         {
             var alphas = new GradientAlphaKey[alphaKeys.Length];
             for (int i = 0; i < alphaKeys.Length; i++)
                 alphas[i] = new GradientAlphaKey(alphaKeys[i].alpha, alphaKeys[i].time);
 
             var gradient = new Gradient();
-            gradient.SetKeys(new[] { new GradientColorKey(color, 0f), new GradientColorKey(color, 1f) }, alphas);
+            gradient.SetKeys(
+                new[] { new GradientColorKey(color, 0f), new GradientColorKey(color, 1f) },
+                alphas
+            );
 
             ParticleSystem.ColorOverLifetimeModule colorModule = ps.colorOverLifetime;
             colorModule.enabled = true;
@@ -576,7 +682,9 @@ namespace CreativeAI.EditorTools
                 var hammer = contents.GetComponentInChildren<HammerController>(true);
                 if (hammer == null)
                 {
-                    Debug.LogError($"{LogPrefix} {PlayerPrefabPath} に HammerController が見つかりません");
+                    Debug.LogError(
+                        $"{LogPrefix} {PlayerPrefabPath} に HammerController が見つかりません"
+                    );
                     return;
                 }
 

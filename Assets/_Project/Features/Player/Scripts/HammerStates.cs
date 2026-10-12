@@ -247,7 +247,11 @@ namespace CreativeAI.Gameplay
         /// </summary>
         private void UpdateLeap(float slamNormalizedTime)
         {
-            float t = Mathf.InverseLerp(_leapStartNormalizedTime, _impactNormalizedTime, slamNormalizedTime);
+            float t = Mathf.InverseLerp(
+                _leapStartNormalizedTime,
+                _impactNormalizedTime,
+                slamNormalizedTime
+            );
 
             Vector3 desired = Vector3.Lerp(_leapStart, _leapEnd, t);
             Vector3 delta = desired - hammer.PlayerTransform.position;
