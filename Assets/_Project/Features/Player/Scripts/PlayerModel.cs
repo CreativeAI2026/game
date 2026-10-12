@@ -44,6 +44,9 @@ namespace CreativeAI.Gameplay
 
         private Animator _animator;
 
+        // 見た目の高さオフセットの基準(モデルの元の置き位置)
+        private Vector3 _baseLocalPosition;
+
         // ロジック層の Awake から呼ばれることがあり、このコンポーネントの Awake より先になりうるため遅延取得する
         public Animator Animator => _animator != null ? _animator : _animator = GetComponent<Animator>();
 
@@ -51,6 +54,7 @@ namespace CreativeAI.Gameplay
 
         private void Awake()
         {
+            _baseLocalPosition = transform.localPosition;
             Assert.IsNotNull(Animator.avatar, $"{name}: Animator に Avatar が設定されていません");
             Assert.IsTrue(Animator.avatar.isHuman, $"{name}: Avatar が Humanoid ではありません");
             Assert.IsNotNull(_lookAtTarget, $"{name}: 頭の注視ターゲット(_lookAtTarget)が未設定です");
@@ -89,6 +93,16 @@ namespace CreativeAI.Gameplay
             return model;
         }
 
+        /// <summary>
+        /// 見た目(モデル)だけを元の位置から上へずらす。0 で元に戻る。
+        /// ルート(CharacterController)は動かさないので、接地判定・被弾判定・重力には影響しない。
+        /// 跳躍演出のように、物理的に浮かせると接地判定と干渉する動きに使う。
+        /// </summary>
+        public void SetVisualHeightOffset(float height)
+        {
+            transform.localPosition = _baseLocalPosition + Vector3.up * height;
+        }
+
         /// <summary>Humanoid のボーンを取得する(ボーン名に依存しない)。</summary>
         public Transform GetBone(HumanBodyBones bone)
         {
@@ -110,7 +124,23 @@ namespace CreativeAI.Gameplay
             return null;
         }
 
-        /// <summary>ソケットを自動生成するときの既定の親ボーン。</summary>
+        /// <summary>
+        /// ソケットを自動生成するときの既定の親(武器リグのボーン名)。
+        /// 武器リグのボーンはアニメーションで手からの角度が付くため、その子に置けば武器がアニメーション通りに振られる。
+        /// モデルにこの名前のボーンが無い場合は <see cref="DefaultBoneOf"/> の手のボーンへ置く。
+        /// </summary>
+        public static string DefaultRigBoneNameOf(PlayerSocketId id) =>
+            id switch
+            {
+                PlayerSocketId.SwordGrip => "Weapon_Root",
+                PlayerSocketId.BowGrip => "Bow_Root",
+                PlayerSocketId.ScytheGrip => "Weapon_Root",
+                PlayerSocketId.ArrowHold => "Arrow_Root",
+                PlayerSocketId.HammerGrip => "Weapon_Root",
+                _ => throw new ArgumentOutOfRangeException(nameof(id), id, "既定の武器リグボーンが未定義です"),
+            };
+
+        /// <summary>武器リグのボーンが無いモデルで、ソケットを自動生成するときの親ボーン。</summary>
         public static HumanBodyBones DefaultBoneOf(PlayerSocketId id) =>
             id switch
             {
@@ -118,12 +148,15 @@ namespace CreativeAI.Gameplay
                 PlayerSocketId.BowGrip => HumanBodyBones.LeftHand,
                 PlayerSocketId.ScytheGrip => HumanBodyBones.RightHand,
                 PlayerSocketId.ArrowHold => HumanBodyBones.RightHand,
+                PlayerSocketId.HammerGrip => HumanBodyBones.RightHand,
                 _ => throw new ArgumentOutOfRangeException(nameof(id), id, "既定の親ボーンが未定義です"),
             };
 
 #if UNITY_EDITOR
         /// <summary>
-        /// 未登録のソケットを既定の親ボーンの直下(位置・回転ゼロ)に作って登録する。登録済みのものは触らない。
+        /// 未登録のソケットを既定の親(武器リグのボーン。無ければ手のボーン)の直下に位置・回転ゼロで作って登録する。
+        /// 親の直下に同名({id}Socket)のオブジェクトが既にあれば、作らずにそれを位置・回転ごと登録する。
+        /// 登録済みのものは触らない。
         /// </summary>
         [ContextMenu("不足しているソケットを自動生成")]
         private void CreateMissingSockets()
@@ -142,23 +175,55 @@ namespace CreativeAI.Gameplay
                 if (entries.Exists(e => e.id == id && e.socket != null))
                     continue;
 
-                Transform bone = animator.GetBoneTransform(DefaultBoneOf(id));
+                Transform bone = FindDescendant(transform, DefaultRigBoneNameOf(id));
                 if (bone == null)
                 {
-                    Debug.LogError($"{name}: {DefaultBoneOf(id)} ボーンが見つからないため {id} を作れませんでした");
-                    continue;
+                    bone = animator.GetBoneTransform(DefaultBoneOf(id));
+                    if (bone == null)
+                    {
+                        Debug.LogError($"{name}: {DefaultBoneOf(id)} ボーンが見つからないため {id} を作れませんでした");
+                        continue;
+                    }
+                    Debug.LogWarning(
+                        $"{name}: 武器リグのボーン {DefaultRigBoneNameOf(id)} が無いため、{id} を {bone.name} の下に作ります。"
+                            + "武器はアニメーションで振られません",
+                        bone
+                    );
                 }
 
-                var go = new GameObject($"{id}Socket");
-                Undo.RegisterCreatedObjectUndo(go, "Create Player Sockets");
-                go.transform.SetParent(bone, false);
+                string socketName = $"{id}Socket";
+                Transform socket = bone.Find(socketName);
+                if (socket != null)
+                {
+                    Debug.Log($"{name}: 既存の {socketName} を {id} として登録しました", socket);
+                }
+                else
+                {
+                    var go = new GameObject(socketName);
+                    Undo.RegisterCreatedObjectUndo(go, "Create Player Sockets");
+                    go.transform.SetParent(bone, false);
+                    socket = go.transform;
+                    Debug.Log($"{name}: ソケット {socketName} を {bone.name} の下に作成しました", socket);
+                }
 
                 entries.RemoveAll(e => e.id == id);
-                entries.Add(new SocketEntry { id = id, socket = go.transform });
-                Debug.Log($"{name}: ソケット {go.name} を {bone.name} の下に作成しました", go);
+                entries.Add(new SocketEntry { id = id, socket = socket });
             }
             _sockets = entries.ToArray();
             EditorUtility.SetDirty(this);
+        }
+
+        private static Transform FindDescendant(Transform parent, string childName)
+        {
+            foreach (Transform child in parent)
+            {
+                if (child.name == childName)
+                    return child;
+                Transform found = FindDescendant(child, childName);
+                if (found != null)
+                    return found;
+            }
+            return null;
         }
 #endif
     }

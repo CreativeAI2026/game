@@ -4,7 +4,8 @@ namespace CreativeAI.Gameplay
     /// モデル側に置く取り付け点(ソケット)の種類。武器や生成位置はこの ID でソケットを引く。
     /// ソケットの位置・向きはモデルごとに <see cref="PlayerModel"/> 側で調整するので、
     /// 武器側はモデル(ボーン名・ボーンの軸)を知らなくてよい。
-    /// 新しい武器を足すときはここに ID を追加し、<see cref="PlayerModel.DefaultBoneOf"/> に既定の親ボーンを追加する。
+    /// 新しい武器を足すときはここに ID を追加し、<see cref="PlayerModel.DefaultRigBoneNameOf"/>(武器リグのボーン名)と
+    /// <see cref="PlayerModel.DefaultBoneOf"/>(武器リグが無いモデル用の手のボーン)に既定の親を追加する。
     /// </summary>
     public enum PlayerSocketId
     {
@@ -19,5 +20,8 @@ namespace CreativeAI.Gameplay
 
         /// <summary>弓を構えたときに矢が最初に現れる位置(引き手 = 右手)。</summary>
         ArrowHold,
+
+        /// <summary>ハンマーの持ち手(右手)。</summary>
+        HammerGrip,
     }
 }

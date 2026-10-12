@@ -29,5 +29,14 @@ namespace CreativeAI.Gameplay
 
         /// <summary>弓の発射後の戻りが終わった。次の矢を引ける(関数名: ReleaseEnd)。</summary>
         ReleaseEnd,
+
+        /// <summary>ハンマーの噴射エフェクトを出し始める(関数名: ThrustStart)。</summary>
+        ThrustStart,
+
+        /// <summary>ハンマーの叩きつけで、敵の近くへ跳んで移動し始める(関数名: LeapStart)。</summary>
+        LeapStart,
+
+        /// <summary>ハンマーを地面に叩きつけた瞬間。衝撃エフェクトと範囲攻撃判定を出す(関数名: SlamImpact)。</summary>
+        SlamImpact,
     }
 }

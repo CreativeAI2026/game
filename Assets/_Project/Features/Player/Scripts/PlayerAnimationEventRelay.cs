@@ -53,6 +53,15 @@ namespace CreativeAI.Gameplay
         public void ReleaseEnd(AnimationEvent evt) =>
             RelayToWeapon(WeaponAnimationEventType.ReleaseEnd, evt);
 
+        public void ThrustStart(AnimationEvent evt) =>
+            RelayToWeapon(WeaponAnimationEventType.ThrustStart, evt);
+
+        public void LeapStart(AnimationEvent evt) =>
+            RelayToWeapon(WeaponAnimationEventType.LeapStart, evt);
+
+        public void SlamImpact(AnimationEvent evt) =>
+            RelayToWeapon(WeaponAnimationEventType.SlamImpact, evt);
+
         /// <summary>
         /// 行動の終わり。攻撃・パリィ・投擲は武器へ、怯みは PlayerFlinchHandler へ渡す
         /// (どちらも発火元のステートで自分宛てか判定するので、両方に渡してよい)。

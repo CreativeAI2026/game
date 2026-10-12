@@ -30,6 +30,7 @@ namespace CreativeAI.Gameplay
         public static readonly int Approach = Animator.StringToHash("Approach");
         public static readonly int Parry = Animator.StringToHash("Parry");
         public static readonly int Throw = Animator.StringToHash("Throw");
+        public static readonly int Slam = Animator.StringToHash("Slam");
         public static readonly int Fire = Animator.StringToHash("Fire");
         public static readonly int IsGuarding = Animator.StringToHash("IsGuarding");
 
@@ -58,6 +59,7 @@ namespace CreativeAI.Gameplay
             ("Approach", AnimatorControllerParameterType.Trigger),
             ("Parry", AnimatorControllerParameterType.Trigger),
             ("Throw", AnimatorControllerParameterType.Trigger),
+            ("Slam", AnimatorControllerParameterType.Trigger),
             ("Fire", AnimatorControllerParameterType.Trigger),
             ("IsGuarding", AnimatorControllerParameterType.Bool),
             ("ReturnToLocomotion", AnimatorControllerParameterType.Trigger),
@@ -81,6 +83,7 @@ namespace CreativeAI.Gameplay
         public static readonly int Guard = Animator.StringToHash("Guard");
         public static readonly int Parry = Animator.StringToHash("Parry");
         public static readonly int Throw = Animator.StringToHash("Throw");
+        public static readonly int Slam = Animator.StringToHash("Slam");
         public static readonly int Flinch = Animator.StringToHash("Flinch");
 
         /// <summary>弓の構え・発射を再生する上半身レイヤーの名前。</summary>
