@@ -23,6 +23,7 @@ namespace CreativeAI.EditorTools
         public const string TextsPath = "Assets/_Project/Features/Inventory/items.json";
         private const string ImageRoot = "Assets/_Project/Art/UI/Items";
         private const string LogTag = "[ItemCatalogSync]";
+        private const int IconMaxSize = 512;
 
         private static readonly Regex NamePart = new("^[a-z0-9]+(-[a-z0-9]+)*$");
 
@@ -368,6 +369,7 @@ namespace CreativeAI.EditorTools
             }
         }
 
+        /// <summary>アイコンのインポート設定をそろえる。最大表示(4Kの入手演出で512px)に足りる512に縮めて圧縮する。</summary>
         private static void ConfigureSprite(string path)
         {
             var importer = AssetImporter.GetAtPath(path) as TextureImporter;
@@ -376,12 +378,18 @@ namespace CreativeAI.EditorTools
                 || (
                     importer.textureType == TextureImporterType.Sprite
                     && importer.spriteImportMode == SpriteImportMode.Single
+                    && importer.maxTextureSize == IconMaxSize
+                    && importer.textureCompression == TextureImporterCompression.Compressed
+                    && importer.mipmapEnabled
                 )
             )
                 return;
 
             importer.textureType = TextureImporterType.Sprite;
             importer.spriteImportMode = SpriteImportMode.Single;
+            importer.maxTextureSize = IconMaxSize;
+            importer.textureCompression = TextureImporterCompression.Compressed;
+            importer.mipmapEnabled = true;
             importer.SaveAndReimport();
         }
 
