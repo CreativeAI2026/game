@@ -365,6 +365,7 @@ namespace CreativeAI.EditorTools
                 $"[MapLayoutBuilder] {ScenePath} を作成しました。Build Settings への登録は手動で行ってください。"
             );
             AreaOcclusionBaker.Bake(scene);
+            AreaNavMeshBaker.Bake(scene);
         }
 
         /// <summary>Field_Area01 を開いて Map ルートだけ作り直し、保存する(Map の外は触らない)。</summary>
@@ -394,6 +395,8 @@ namespace CreativeAI.EditorTools
             Debug.Log($"[MapLayoutBuilder] {ScenePath} の Map ルートを作り直しました。");
             // 作り直すと古いオクルージョンデータが壁と食い違い、見えるはずの所が消えるので焼き直す
             AreaOcclusionBaker.Bake(scene);
+            // NavMesh も同じく古い壁のままだと敵が壁に向かって歩くので焼き直す
+            AreaNavMeshBaker.Bake(scene);
         }
 
         /// <summary>いま開いているシーンの Map ルートだけを作り直す(Map の外は触らない)。</summary>
@@ -410,7 +413,7 @@ namespace CreativeAI.EditorTools
             BuildInto(maps, target);
             EditorSceneManager.MarkSceneDirty(target);
             Debug.Log(
-                $"[MapLayoutBuilder] {target.name} の Map ルートを作り直しました。保存後に Bake Occlusion Field_Area01 で焼き直してください。"
+                $"[MapLayoutBuilder] {target.name} の Map ルートを作り直しました。保存後に Bake Occlusion Field_Area01 と Bake NavMesh Field_Area01 で焼き直してください。"
             );
         }
 
