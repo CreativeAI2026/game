@@ -1,0 +1,247 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 858f11bf7ac04ef1a88f80026e740e0f, type: 3}
+  m_Name: sample_preview
+  m_EditorClassIdentifier: CreativeAI.Core::CreativeAI.Core.EventDefinition
+  _id: sample_preview
+  _conditions:
+  - _type: 0
+    _progressValue: 1
+    _flagKey: 
+    _flagValue: 
+    _itemKey: 
+  _steps:
+  - _kind: 0
+    _speaker: 
+    _portrait: 
+    _text: "\uFF08\u4EEE\uFF09\u96E8\u97F3\u306E\u5411\u3053\u3046\u3067\u3001\u53E4\u3044\u30EC\u30B3\u30FC\u30C9\u304C\u9014\u5207\u308C\u9014\u5207\u308C\u306B\u9CF4\u3063\u3066\u3044\u308B\u3002"
+    _flagKey: 
+    _options: []
+    _itemKey: 
+    _weaponKey: 
+    _message: 
+    _command: 
+    _arg: 
+  - _kind: 0
+    _speaker: 
+    _portrait: hero_surprised
+    _text: "\u2026\u2026\u77E5\u3089\u306A\u3044\u5929\u4E95\u3060\u3002\u3053\u3053\u306F\u3069\u3053\u3060\uFF1F"
+    _flagKey: 
+    _options: []
+    _itemKey: 
+    _weaponKey: 
+    _message: 
+    _command: 
+    _arg: 
+  - _kind: 0
+    _speaker: 
+    _portrait: robot_normal
+    _text: "\u899A\u9192\u30F2\u78BA\u8A8D\u3002\u5916\u50B7\u30CA\u30B7\u3002"
+    _flagKey: 
+    _options: []
+    _itemKey: 
+    _weaponKey: 
+    _message: 
+    _command: 
+    _arg: 
+  - _kind: 5
+    _speaker: 
+    _portrait: 
+    _text: 
+    _flagKey: 
+    _options: []
+    _itemKey: 
+    _weaponKey: 
+    _message: 
+    _command: portrait.right.obscure
+    _arg: 
+  - _kind: 0
+    _speaker: "\uFF1F\uFF1F\uFF1F"
+    _portrait: girl_fear
+    _text: "<whisper>\u3042\u306E\u2026\u2026\u5927\u4E08\u592B\u3001\u3067\u3059\u304B\uFF1F</whisper>"
+    _flagKey: 
+    _options: []
+    _itemKey: 
+    _weaponKey: 
+    _message: 
+    _command: 
+    _arg: 
+  - _kind: 5
+    _speaker: 
+    _portrait: 
+    _text: 
+    _flagKey: 
+    _options: []
+    _itemKey: 
+    _weaponKey: 
+    _message: 
+    _command: portrait.right.reveal
+    _arg: 
+  - _kind: 0
+    _speaker: 
+    _portrait: girl_wry_smile
+    _text: "\u3054\u3001\u3054\u3081\u3093\u306A\u3055\u3044\u3002\u9A5A\u304B\u305B\u308B\u3064\u3082\u308A\u306F\u306A\u304B\u3063\u305F\u3093\u3067\u3059\u3002"
+    _flagKey: 
+    _options: []
+    _itemKey: 
+    _weaponKey: 
+    _message: 
+    _command: 
+    _arg: 
+  - _kind: 5
+    _speaker: 
+    _portrait: 
+    _text: 
+    _flagKey: 
+    _options: []
+    _itemKey: 
+    _weaponKey: 
+    _message: 
+    _command: portrait.left.jump
+    _arg: 
+  - _kind: 0
+    _speaker: 
+    _portrait: hero_question
+    _text: "<wait=0.25><shake><shout>\u4EBA\u304C\u3044\u305F\u306E\u304B\uFF01</shout></shake>"
+    _flagKey: 
+    _options: []
+    _itemKey: 
+    _weaponKey: 
+    _message: 
+    _command: 
+    _arg: 
+  - _kind: 1
+    _speaker: 
+    _portrait: 
+    _text: 
+    _flagKey: sample_choice
+    _options:
+    - _text: "\u3053\u3053\u304C\u3069\u3053\u304B\u5C0B\u306D\u308B"
+      _value: ask
+    - _text: "\u51FA\u53E3\u3092\u6559\u3048\u3066\u3082\u3089\u3046"
+      _value: exit
+    _itemKey: 
+    _weaponKey: 
+    _message: 
+    _command: 
+    _arg: 
+  - _kind: 0
+    _speaker: 
+    _portrait: girl_smile
+    _text: "\u3053\u3053\u306F<emphasis>\u4F7F\u308F\u308C\u306A\u304F\u306A\u3063\u305F\u99C5</emphasis>\u3067\u3059\u3002"
+    _flagKey: 
+    _options: []
+    _itemKey: 
+    _weaponKey: 
+    _message: 
+    _command: 
+    _arg: 
+  - _kind: 5
+    _speaker: 
+    _portrait: 
+    _text: 
+    _flagKey: 
+    _options: []
+    _itemKey: 
+    _weaponKey: 
+    _message: 
+    _command: window.hide
+    _arg: 
+  - _kind: 5
+    _speaker: 
+    _portrait: 
+    _text: 
+    _flagKey: 
+    _options: []
+    _itemKey: 
+    _weaponKey: 
+    _message: 
+    _command: wait
+    _arg: 0.45
+  - _kind: 5
+    _speaker: 
+    _portrait: 
+    _text: 
+    _flagKey: 
+    _options: []
+    _itemKey: 
+    _weaponKey: 
+    _message: 
+    _command: window.show
+    _arg: 
+  - _kind: 0
+    _speaker: 
+    _portrait: 
+    _text: "\u5C11\u5973\u304C\u5009\u5EAB\u304B\u3089\u4F55\u304B\u3092\u904B\u3093\u3067\u304D\u305F\u3002"
+    _flagKey: 
+    _options: []
+    _itemKey: 
+    _weaponKey: 
+    _message: 
+    _command: 
+    _arg: 
+  - _kind: 2
+    _speaker: 
+    _portrait: 
+    _text: 
+    _flagKey: 
+    _options: []
+    _itemKey: apple
+    _weaponKey: 
+    _message: "\u50B7\u306E\u3042\u308B\u308A\u3093\u3054\u3092\u624B\u306B\u5165\u308C\u305F\u3002"
+    _command: 
+    _arg: 
+  - _kind: 3
+    _speaker: 
+    _portrait: 
+    _text: 
+    _flagKey: 
+    _options: []
+    _itemKey: 
+    _weaponKey: sword
+    _message: 
+    _command: 
+    _arg: 
+  - _kind: 0
+    _speaker: 
+    _portrait: hero_confused
+    _text: "\u2026\u2026\u3053\u308C\u3092\u3001\u4FFA\u306B\uFF1F"
+    _flagKey: 
+    _options: []
+    _itemKey: 
+    _weaponKey: 
+    _message: 
+    _command: 
+    _arg: 
+  - _kind: 0
+    _speaker: 
+    _portrait: hero_smile
+    _text: "\u3042\u308A\u304C\u3068\u3046\u3002\u52A9\u304B\u308B\u3088\u3002"
+    _flagKey: 
+    _options: []
+    _itemKey: 
+    _weaponKey: 
+    _message: 
+    _command: 
+    _arg: 
+  - _kind: 0
+    _speaker: 
+    _portrait: hero_anger
+    _text: "\u5FC5\u305A\u3001\u3053\u3053\u304B\u3089\u51FA\u3066\u307F\u305B\u308B\u3002"
+    _flagKey: 
+    _options: []
+    _itemKey: 
+    _weaponKey: 
+    _message: 
+    _command: 
+    _arg: 
+  _nextProgress: 2
