@@ -13,7 +13,7 @@ namespace CreativeAI.UI
     {
         /// <summary>
         /// 常駐を生成順どおりに作る。既に在るものはそのまま使う。
-        /// 順番: マネージャ → 所持品 → レシピ解禁 → UI → 戦闘
+        /// 順番: マネージャ → 所持品 → UI → 戦闘
         /// (UI は GameModeManager / InventoryManager を購読し、会話UIは生成時に DialogueViewService へ自己登録するため)。
         /// プレイヤーリグは配置の仕方が呼び出し側で違うので <see cref="EnsurePlayerRig"/> を別に呼ぶ。
         /// </summary>
@@ -27,7 +27,6 @@ namespace CreativeAI.UI
             EventPlayer.EnsureResident();
 
             InventoryManager.EnsureResident();
-            RecipeBookManager.EnsureResident();
             UIRoot.EnsureResident(uiRootPrefab);
             BattleRunnerService.Current ??= new BattleRunner();
         }

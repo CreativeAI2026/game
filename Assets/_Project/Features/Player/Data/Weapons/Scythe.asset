@@ -17,9 +17,7 @@ MonoBehaviour:
   key: scythe
   itemName: "\u938C"
   category: 0
-  effect: "\u4F1A\u5FC3\u7387 +50% / \u4F1A\u5FC3\u30C0\u30E1\u30FC\u30B8 +50%"
-  description: 
-  _maxStack: 1
+  description:
   attack: 0
   defense: 0
   criticalDamage: 50

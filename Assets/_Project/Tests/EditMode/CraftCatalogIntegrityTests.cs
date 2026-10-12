@@ -7,14 +7,14 @@ using UnityEditor;
 namespace CreativeAI.Tests.EditMode
 {
     /// <summary>
-    /// 調合カタログ(ItemDB / CraftRecipeDB)の整合性 — ID 重複・参照切れ・登録漏れが無いことの検証。
+    /// 調合カタログ(ItemCatalog / CraftRecipeCatalog)の整合性 — ID 重複・参照切れ・登録漏れが無いことの検証。
     /// </summary>
     public sealed class CraftCatalogIntegrityTests
     {
         private const string InventoryDataPath = "Assets/_Project/Features/Inventory/Data";
-        private const string ItemDatabasePath = "Assets/_Project/Resources/ItemDB.asset";
-        private const string RecipeDatabasePath =
-            "Assets/_Project/Resources/Crafting/CraftRecipeDB.asset";
+        private const string ItemCatalogPath = "Assets/_Project/Resources/ItemCatalog.asset";
+        private const string RecipeCatalogPath =
+            "Assets/_Project/Resources/Crafting/CraftRecipeCatalog.asset";
 
         [Test]
         public void ItemCatalog_HasUniqueIdsAndKeys_AndContainsEveryInventoryItem()
@@ -25,38 +25,38 @@ namespace CreativeAI.Tests.EditMode
             AssertNoDuplicates(items, item => item.id, "ItemData.id");
             AssertNoDuplicates(items, item => item.key, "ItemData.key");
 
-            ItemDB database = AssetDatabase.LoadAssetAtPath<ItemDB>(ItemDatabasePath);
-            Assert.That(database, Is.Not.Null, ItemDatabasePath);
-            var serialized = new SerializedObject(database);
+            ItemCatalog catalog = AssetDatabase.LoadAssetAtPath<ItemCatalog>(ItemCatalogPath);
+            Assert.That(catalog, Is.Not.Null, ItemCatalogPath);
+            var serialized = new SerializedObject(catalog);
             SerializedProperty entries = serialized.FindProperty("items");
             var registered = new HashSet<ItemData>();
             for (int i = 0; i < entries.arraySize; i++)
             {
                 var item = entries.GetArrayElementAtIndex(i).objectReferenceValue as ItemData;
-                Assert.That(item, Is.Not.Null, $"ItemDB.items[{i}] が参照切れです。");
-                Assert.That(registered.Add(item), Is.True, $"ItemDB内で重複: {item.name}");
+                Assert.That(item, Is.Not.Null, $"ItemCatalog.items[{i}] が参照切れです。");
+                Assert.That(registered.Add(item), Is.True, $"ItemCatalog内で重複: {item.name}");
             }
 
             CollectionAssert.AreEquivalent(
                 items,
                 registered,
-                "ItemDBがInventory/Dataと一致しません。"
+                "ItemCatalogがInventory/Dataと一致しません。"
             );
         }
 
         [Test]
         public void RecipeCatalog_HasValidReferencesAndUniquePairs()
         {
-            CraftRecipeDB database = AssetDatabase.LoadAssetAtPath<CraftRecipeDB>(
-                RecipeDatabasePath
+            CraftRecipeCatalog catalog = AssetDatabase.LoadAssetAtPath<CraftRecipeCatalog>(
+                RecipeCatalogPath
             );
-            Assert.That(database, Is.Not.Null, RecipeDatabasePath);
-            Assert.That(database.Recipes, Is.Not.Empty);
+            Assert.That(catalog, Is.Not.Null, RecipeCatalogPath);
+            Assert.That(catalog.Recipes, Is.Not.Empty);
 
             var pairs = new HashSet<string>();
-            for (int i = 0; i < database.Recipes.Count; i++)
+            for (int i = 0; i < catalog.Recipes.Count; i++)
             {
-                CraftRecipe recipe = database.Recipes[i];
+                CraftRecipe recipe = catalog.Recipes[i];
                 string label = $"_recipes[{i}]";
                 Assert.That(recipe.resultItem, Is.Not.Null, $"{label}: resultItem");
                 Assert.That(recipe.material1, Is.Not.Null, $"{label}: material1");
@@ -69,7 +69,7 @@ namespace CreativeAI.Tests.EditMode
                         : $"{recipe.material2.key}|{recipe.material1.key}";
                 Assert.That(pairs.Add(pair), Is.True, $"素材ペアが重複しています: {pair}");
                 Assert.That(
-                    database.FindRecipe(recipe.material2, recipe.material1),
+                    catalog.FindRecipe(recipe.material2, recipe.material1),
                     Is.SameAs(recipe),
                     $"{label}: 素材を逆順にしても引けること"
                 );

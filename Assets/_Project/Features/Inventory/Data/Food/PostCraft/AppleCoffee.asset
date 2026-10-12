@@ -17,7 +17,6 @@ MonoBehaviour:
   key: apple_coffee
   itemName: "\u308A\u3093\u3054\u3068\u30B3\u30FC\u30D2\u30FC"
   category: 2
-  effect: 
   description: 
   _maxStack: 1
   _craftedResult: 1

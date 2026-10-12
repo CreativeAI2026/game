@@ -17,7 +17,6 @@ MonoBehaviour:
   key: full_body_tights_note
   itemName: "\u5168\u8EAB\u30BF\u30A4\u30C4\u3068\u30CE\u30FC\u30C8"
   category: 1
-  effect: 
   description: 
   _maxStack: 1
   attack: 0

@@ -17,7 +17,6 @@ MonoBehaviour:
   key: balloon_note
   itemName: "\u98A8\u8239\u3068\u30CE\u30FC\u30C8"
   category: 1
-  effect: 
   description: 
   _maxStack: 1
   attack: 0

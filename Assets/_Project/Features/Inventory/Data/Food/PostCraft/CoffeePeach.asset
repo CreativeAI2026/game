@@ -17,7 +17,6 @@ MonoBehaviour:
   key: coffee_peach
   itemName: "\u30B3\u30FC\u30D2\u30FC\u3068\u6843"
   category: 2
-  effect: 
   description: 
   _maxStack: 1
   _craftedResult: 1

@@ -9,7 +9,7 @@ using UnityEngine.UI;
 namespace CreativeAI.Tests.EditMode
 {
     /// <summary>
-    /// タイトルの「はじめる / 続きから」で常駐一式(マネージャ → Inventory → RecipeBook → UIRoot → プレイヤーの順)を組み立てる生成契約の検証。
+    /// タイトルの「はじめる / 続きから」で常駐一式(マネージャ → Inventory → UIRoot → プレイヤーの順)を組み立てる生成契約の検証。
     /// シーンロードと冪等性ガードは TitleFlowPlayModeTests 側。
     /// </summary>
     public class TitleFlowTests
@@ -39,7 +39,6 @@ namespace CreativeAI.Tests.EditMode
             DestroyResident<ProgressManager>();
             DestroyResident<GameModeManager>();
             DestroyResident<InventoryManager>();
-            DestroyResident<RecipeBookManager>();
             DestroyResident<EventPlayer>();
             Object.DestroyImmediate(_titleGo);
             Object.DestroyImmediate(_sceneControllerGo);
@@ -75,7 +74,6 @@ namespace CreativeAI.Tests.EditMode
             Assert.AreEqual(1, CountOf<GameModeManager>(), "① モード");
             Assert.AreEqual(1, CountOf<EventPlayer>(), "① 会話イベント指揮役");
             Assert.AreEqual(1, CountOf<InventoryManager>(), "② 所持品");
-            Assert.AreEqual(1, CountOf<RecipeBookManager>(), "②' レシピ解禁");
             Assert.IsNotNull(BattleRunnerService.Current, "④ 戦闘実行の seam");
         }
 

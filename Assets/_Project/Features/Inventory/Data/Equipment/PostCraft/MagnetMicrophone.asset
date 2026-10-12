@@ -17,7 +17,6 @@ MonoBehaviour:
   key: magnet_microphone
   itemName: "\u78C1\u77F3\u3068\u30DE\u30A4\u30AF"
   category: 1
-  effect: 
   description: 
   _maxStack: 1
   attack: 0

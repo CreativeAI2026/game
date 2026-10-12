@@ -18,8 +18,8 @@ namespace CreativeAI.EditorTools
     /// </summary>
     public static class EventImporterMenu
     {
-        private const string DefaultSource = "Assets/_Project/Features/Scenario/events.json";
-        private const string OutputDir = "Assets/_Project/Features/Scenario/Data/Dialogues";
+        private const string DefaultSource = "Assets/_Project/Features/Event/events.json";
+        private const string OutputDir = "Assets/_Project/Features/Event/Data";
         private const string ItemDataDir = "Assets/_Project/Features/Inventory/Data";
         private const string CharacterDataDir =
             "Assets/_Project/Features/UI/ConversationUI/Data/Characters";
@@ -39,12 +39,18 @@ namespace CreativeAI.EditorTools
         /// <summary>バッチ実行の入口。既定パスの events.json を取り込む。</summary>
         public static void Run() => RunImport(DefaultSource);
 
-        private static void RunImport(string path)
+        private static void RunImport(string path) => ImportInto(path, OutputDir);
+
+        /// <summary>
+        /// events.json を検証し、<paramref name="outputDir"/>(Assets 相対)へ 1イベント = 1 .asset で書き出す。
+        /// 1件でもエラーがあれば何も書き出さず false。出力先を指定できるのはテストのため。
+        /// </summary>
+        public static bool ImportInto(string path, string outputDir)
         {
             if (!File.Exists(path))
             {
                 Debug.LogError($"[EventImporter] ファイルが見つかりません: {path}");
-                return;
+                return false;
             }
 
             var report = EventImporter.Parse(File.ReadAllText(path), BuildCatalog());
@@ -62,16 +68,17 @@ namespace CreativeAI.EditorTools
                 Debug.LogError(
                     $"[EventImporter] エラー {report.ErrorCount} 件のため中止しました(1件も書き出していません)。"
                 );
-                return;
+                return false;
             }
 
-            EnsureFolder(OutputDir);
+            EnsureFolder(outputDir);
 
             int created = 0,
                 updated = 0;
             foreach (var built in report.Events)
             {
-                var assetPath = $"{OutputDir}/{built.Id}.asset";
+                var assetPath = $"{outputDir}/{built.Id}.asset";
+                built.name = built.Id; // アセット名をファイル名と揃える(空だと Unity が警告する)
                 var existing = AssetDatabase.LoadAssetAtPath<EventDefinition>(assetPath);
                 if (existing != null)
                 {
@@ -89,8 +96,31 @@ namespace CreativeAI.EditorTools
 
             AssetDatabase.SaveAssets();
             AssetDatabase.Refresh();
+            WarnLeftoverAssets(outputDir, report.Events.Select(e => e.Id));
             Debug.Log(
-                $"[EventImporter] 完了: 新規 {created} / 更新 {updated}(警告 {report.WarningCount} 件)→ {OutputDir}"
+                $"[EventImporter] 完了: 新規 {created} / 更新 {updated}(警告 {report.WarningCount} 件)→ {outputDir}"
+            );
+            return true;
+        }
+
+        /// <summary>
+        /// events.json から消えた(id を変えた)イベントの .asset は自動では消さない(シーンの参照を勝手に壊すため)。
+        /// 古い台詞のまま残り、トリガーが参照していると黙って流れ続けるので、警告で一覧を出す。
+        /// </summary>
+        private static void WarnLeftoverAssets(string outputDir, IEnumerable<string> importedIds)
+        {
+            var ids = importedIds.ToHashSet(StringComparer.Ordinal);
+            var leftovers = AssetDatabase
+                .FindAssets("t:EventDefinition", new[] { outputDir })
+                .Select(AssetDatabase.GUIDToAssetPath)
+                .Where(p => !ids.Contains(Path.GetFileNameWithoutExtension(p)))
+                .ToList();
+            if (leftovers.Count == 0)
+                return;
+            Debug.LogWarning(
+                $"[EventImporter] events.json に無いイベントの .asset が残っています({leftovers.Count} 件)。"
+                    + " id を変えた・消した場合は、シーンのトリガーの割り当てを確認してから削除してください: "
+                    + string.Join(", ", leftovers)
             );
         }
 

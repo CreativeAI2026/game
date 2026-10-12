@@ -7,6 +7,7 @@
         "CreativeAI.Gameplay",
         "Unity.InputSystem",
         "Unity.TextMeshPro",
+        "Unity.AI.Navigation",
         "UnityEditor.TestRunner"
     ],
     "includePlatforms": [

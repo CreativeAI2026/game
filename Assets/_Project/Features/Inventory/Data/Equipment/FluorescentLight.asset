@@ -17,7 +17,6 @@ MonoBehaviour:
   key: fluorescent_light
   itemName: "蛍光灯"
   category: 1
-  effect: "効果   会心ダメージ +10%"
   description:
   _maxStack: 1
   attack: 0

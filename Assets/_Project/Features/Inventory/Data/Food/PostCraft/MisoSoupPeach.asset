@@ -17,7 +17,6 @@ MonoBehaviour:
   key: miso_soup_peach
   itemName: "\u5473\u564C\u6C41\u3068\u6843"
   category: 2
-  effect: 
   description: 
   _maxStack: 1
   _craftedResult: 1

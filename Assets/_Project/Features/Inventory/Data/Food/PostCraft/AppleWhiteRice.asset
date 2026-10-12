@@ -17,7 +17,6 @@ MonoBehaviour:
   key: apple_white_rice
   itemName: "\u308A\u3093\u3054\u3068\u767D\u7C73"
   category: 2
-  effect: 
   description: 
   _maxStack: 1
   _craftedResult: 1

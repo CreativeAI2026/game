@@ -78,7 +78,7 @@ namespace CreativeAI.Tests.EditMode
             var b = MakeEquipment(2103, seedPower: 10);
 
             var rolled = RolledStat.FromVector(
-                RecipeCraftingService.RollCraftedStats(
+                CraftingService.RollCraftedStats(
                     EquipmentData.ToStatVector(a),
                     EquipmentData.ToStatVector(b),
                     new SystemRandomSource(2)

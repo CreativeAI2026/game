@@ -17,9 +17,7 @@ MonoBehaviour:
   key: sword
   itemName: "\u5263"
   category: 0
-  effect: "\u653B\u6483% +25% / \u4F1A\u5FC3\u30C0\u30E1\u30FC\u30B8 +50%"
-  description: 
-  _maxStack: 1
+  description:
   attack: 25
   defense: 0
   criticalDamage: 50

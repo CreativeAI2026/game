@@ -121,6 +121,23 @@ namespace CreativeAI.Tests.EditMode
         }
 
         [Test]
+        public void Show_Food_ShowsHealPercentFromItsData()
+        {
+            var apple = MakeFood(3001, "りんご");
+            var crafted = MakeFood(3101, "りんごとバナナ");
+            TestReflection.SetField(crafted, "_craftedResult", true);
+            _inv.AddItem(apple, 1);
+            _inv.AddItem(crafted, 1);
+            var effectText = TestReflection.GetField<TMP_Text>(_panel, "_itemEffectText");
+
+            _panel.Show(StackOf(apple));
+            Assert.AreEqual("効果　最大HPの20%を回復", effectText.text);
+
+            _panel.Show(StackOf(crafted));
+            Assert.AreEqual("効果　最大HPの50%を回復", effectText.text, "合成後は回復量が増える");
+        }
+
+        [Test]
         public void Show_NonFood_StaysClosed()
         {
             var gear = ScriptableObject.CreateInstance<EquipmentData>();

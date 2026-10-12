@@ -17,7 +17,6 @@ MonoBehaviour:
   key: brown_rice_cream_cookie_white_rice
   itemName: "\u30AF\u30EA\u30FC\u30E0\u7384\u7C73\u30AF\u30C3\u30AD\u30FC\u3068\u767D\u7C73"
   category: 2
-  effect: 
   description: 
   _maxStack: 1
   _craftedResult: 1

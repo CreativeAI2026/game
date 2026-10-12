@@ -17,6 +17,5 @@ MonoBehaviour:
   key: keepsake_accessory
   itemName: "\u5F62\u898B\u306E\u30A2\u30AF\u30BB\u30B5\u30EA\u30FC"
   category: 3
-  effect:
   description:
   _maxStack: 1

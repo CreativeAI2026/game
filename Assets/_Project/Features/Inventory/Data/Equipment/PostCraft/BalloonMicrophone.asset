@@ -17,7 +17,6 @@ MonoBehaviour:
   key: balloon_microphone
   itemName: "\u98A8\u8239\u3068\u30DE\u30A4\u30AF"
   category: 1
-  effect: 
   description: 
   _maxStack: 1
   attack: 0

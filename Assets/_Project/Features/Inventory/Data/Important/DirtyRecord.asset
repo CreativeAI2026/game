@@ -17,6 +17,5 @@ MonoBehaviour:
   key: dirty_record
   itemName: "\u6C5A\u308C\u305F\u8A18\u9332"
   category: 3
-  effect:
   description:
   _maxStack: 1

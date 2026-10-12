@@ -42,7 +42,6 @@ namespace CreativeAI.Tests.PlayMode
             DestroyResident<ProgressManager>();
             DestroyResident<GameModeManager>();
             DestroyResident<InventoryManager>();
-            DestroyResident<RecipeBookManager>();
             DestroyResident<EventPlayer>();
             Object.Destroy(_titleGo);
             Object.Destroy(_sceneControllerGo);
@@ -93,7 +92,6 @@ namespace CreativeAI.Tests.PlayMode
             Assert.AreEqual(1, CountOf<ProgressManager>(), "連打・再入場で二重生成しない");
             Assert.AreEqual(1, CountOf<GameModeManager>());
             Assert.AreEqual(1, CountOf<InventoryManager>());
-            Assert.AreEqual(1, CountOf<RecipeBookManager>());
             Assert.AreEqual(1, CountOf<EventPlayer>());
         }
 
@@ -133,7 +131,7 @@ namespace CreativeAI.Tests.PlayMode
             var progress = ProgressManager.Instance;
             var inventory = InventoryManager.Instance;
 
-            yield return UnityEngine.SceneManagement.SceneManager.LoadSceneAsync("01_Title");
+            yield return UnityEngine.SceneManagement.SceneManager.LoadSceneAsync("Title");
 
             Assert.AreSame(progress, ProgressManager.Instance, "進行度はシーンをまたいで生き残る");
             Assert.AreSame(inventory, InventoryManager.Instance, "所持品もまたぐ");

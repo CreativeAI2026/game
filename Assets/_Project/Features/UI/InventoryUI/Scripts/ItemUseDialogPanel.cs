@@ -187,7 +187,7 @@ namespace CreativeAI.UI
         {
             var item = stack.Data;
             string itemName = GetItemName(stack);
-            string effectText = GetEffectText(item);
+            string effectText = GetEffectText((FoodData)item);
 
             if (_itemIconImage != null)
             {
@@ -213,14 +213,11 @@ namespace CreativeAI.UI
             return stack.Data.name;
         }
 
-        private string GetEffectText(ItemData item)
+        // 回復量は FoodData の割合から作る(手書きの説明文は数値とずれるため持たない)。
+        private static string GetEffectText(FoodData food)
         {
-            if (!string.IsNullOrWhiteSpace(item.effect))
-                return item.effect;
-            if (!string.IsNullOrWhiteSpace(item.description))
-                return item.description;
-
-            return string.Empty;
+            int percent = Mathf.RoundToInt(food.HealFraction * 100f);
+            return $"効果　最大HPの{percent}%を回復";
         }
 
 #if UNITY_EDITOR

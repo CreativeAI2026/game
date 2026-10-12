@@ -17,7 +17,6 @@ MonoBehaviour:
   key: clock_full_body_tights
   itemName: "\u61D0\u4E2D\u6642\u8A08\u3068\u5168\u8EAB\u30BF\u30A4\u30C4"
   category: 1
-  effect: 
   description: 
   _maxStack: 1
   attack: 0

@@ -17,7 +17,6 @@ MonoBehaviour:
   key: microphone
   itemName: "\u30DE\u30A4\u30AF"
   category: 1
-  effect: "効果   会心率 +5%"
   description:
   _maxStack: 1
   attack: 0

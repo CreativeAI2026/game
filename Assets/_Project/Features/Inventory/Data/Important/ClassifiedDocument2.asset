@@ -17,6 +17,5 @@ MonoBehaviour:
   key: classified_document_2
   itemName: "\u6A5F\u5BC6\u6587\u66F82"
   category: 3
-  effect:
   description:
   _maxStack: 1

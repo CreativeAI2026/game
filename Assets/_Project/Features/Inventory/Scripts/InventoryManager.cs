@@ -33,13 +33,13 @@ namespace CreativeAI.Gameplay
         private bool _addTestItemsOnAwake = true;
 
         private InventoryService _inventoryService;
-        private RecipeCraftingService _recipeCraftingService;
+        private CraftingService _craftingService;
         private PlayerStatus _playerStatus;
 
         public InventoryService InventoryService => _inventoryService ??= CreateInventoryService();
 
-        public RecipeCraftingService RecipeCraftingService =>
-            _recipeCraftingService ??= new RecipeCraftingService(InventoryService);
+        public CraftingService CraftingService =>
+            _craftingService ??= new CraftingService(InventoryService);
 
         /// <summary>
         /// セッション常駐の Inventory を1つだけ生成する(既存ならそれを返す)。Core から Gameplay は参照できないため Core ではなくここに置き、
@@ -124,15 +124,16 @@ namespace CreativeAI.Gameplay
 
         /// <summary>
         /// IItemGiver。EventPlayer の giveItem ステップから文字列キーで呼ばれ、1個追加する。
-        /// キーが ItemDB に無ければ警告して無視(打ち間違い検出は Importer 側が本命)。
+        /// キーが ItemCatalog に無ければ警告して無視(打ち間違い検出は Importer 側が本命)。
         /// </summary>
         public void Give(string itemKey)
         {
-            var data = ItemDB.Instance != null ? ItemDB.Instance.GetItemByKey(itemKey) : null;
+            var data =
+                ItemCatalog.Instance != null ? ItemCatalog.Instance.GetItemByKey(itemKey) : null;
             if (data == null)
             {
                 Debug.LogWarning(
-                    $"[InventoryManager] Give: itemKey '{itemKey}' が ItemDB に見つかりません。"
+                    $"[InventoryManager] Give: itemKey '{itemKey}' が ItemCatalog に見つかりません。"
                 );
                 return;
             }
@@ -141,16 +142,17 @@ namespace CreativeAI.Gameplay
 
         /// <summary>
         /// IItemGiver。hasItem 条件から呼ばれ、itemKey の「大事なもの」を1つ以上持つかを返す。
-        /// itemKey を ItemDB で引き、カテゴリが 大事なもの のときだけ所持数を見る。
+        /// itemKey を ItemCatalog で引き、カテゴリが 大事なもの のときだけ所持数を見る。
         /// 未登録キー・大事なもの以外(装備品/食材/武器)は対象外で false(警告つき)。
         /// </summary>
         public bool HasImportantItem(string itemKey)
         {
-            var data = ItemDB.Instance != null ? ItemDB.Instance.GetItemByKey(itemKey) : null;
+            var data =
+                ItemCatalog.Instance != null ? ItemCatalog.Instance.GetItemByKey(itemKey) : null;
             if (data == null)
             {
                 Debug.LogWarning(
-                    $"[InventoryManager] HasImportantItem: itemKey '{itemKey}' が ItemDB に見つかりません。"
+                    $"[InventoryManager] HasImportantItem: itemKey '{itemKey}' が ItemCatalog に見つかりません。"
                 );
                 return false;
             }
@@ -195,29 +197,19 @@ namespace CreativeAI.Gameplay
             return InventoryService.GetItemCount(data);
         }
 
-        public bool CanCraft(CraftRecipe recipe, int quantity = 1)
-        {
-            return RecipeCraftingService.CanCraft(recipe, quantity);
-        }
-
         public bool CanCraft(CraftRecipe recipe, ItemStack materialA, ItemStack materialB)
         {
-            return RecipeCraftingService.CanCraft(recipe, materialA, materialB);
+            return CraftingService.CanCraft(recipe, materialA, materialB);
         }
 
-        public int GetMaximumCraftable(CraftRecipe recipe)
+        public bool TryCraft(
+            CraftRecipe recipe,
+            ItemStack materialA,
+            ItemStack materialB,
+            out ItemStack crafted
+        )
         {
-            return RecipeCraftingService.GetMaximumCraftable(recipe);
-        }
-
-        public bool TryCraft(CraftRecipe recipe, int quantity)
-        {
-            return RecipeCraftingService.TryCraft(recipe, quantity);
-        }
-
-        public bool TryCraft(CraftRecipe recipe, ItemStack materialA, ItemStack materialB)
-        {
-            return RecipeCraftingService.TryCraft(recipe, materialA, materialB);
+            return CraftingService.TryCraft(recipe, materialA, materialB, out crafted);
         }
 
         /// <summary>装備品の同時装備上限。</summary>
@@ -282,40 +274,8 @@ namespace CreativeAI.Gameplay
             return b;
         }
 
-        public bool IsEquipped(ItemStack stack) => stack?.IsEquipped ?? false;
-
-        public bool IsItemEquipped(ItemData data)
-        {
-            return data != null
-                && InventoryService
-                    .GetAllItems()
-                    .Any(stack => stack.Data == data && stack.IsEquipped);
-        }
-
-        public bool HasEquippedMaterial(IEnumerable<ItemData> materials)
-        {
-            return materials != null && materials.Any(IsItemEquipped);
-        }
-
         /// <summary>stack が即時使用食材スロットにセットされているか(調合の素材から除外・警告に使う)。</summary>
         public bool IsInQuickFood(ItemStack stack) => InventoryService.IsInQuickFood(stack);
-
-        /// <summary>data の在庫スタックのいずれかが即時使用食材にセットされているか。</summary>
-        public bool IsItemInQuickFood(ItemData data)
-        {
-            if (data == null)
-                return false;
-            foreach (var slot in InventoryService.GetQuickFoodSlots())
-                if (slot != null && slot.Data == data)
-                    return true;
-            return false;
-        }
-
-        /// <summary>materials のいずれかが即時使用食材にセットされているか(レシピ調合の可否判定用)。</summary>
-        public bool HasQuickFoodMaterial(IEnumerable<ItemData> materials)
-        {
-            return materials != null && materials.Any(IsItemInQuickFood);
-        }
 
         public List<ItemStack> GetItemsByCategory(ItemCategory category)
         {
@@ -338,11 +298,11 @@ namespace CreativeAI.Gameplay
 
         private void AddTestItems()
         {
-            if (ItemDB.Instance == null)
+            if (ItemCatalog.Instance == null)
                 return;
 
-            // 武器はインベントリ管理の対象外。ItemDB はフォルダ一括同期で武器も拾うため、ここで除外する。
-            var testItems = ItemDB
+            // 武器はインベントリ管理の対象外。ItemCatalog はフォルダ一括同期で武器も拾うため、ここで除外する。
+            var testItems = ItemCatalog
                 .Instance.Items.Where(item =>
                     item != null && !(item is WeaponData) && HasZeroSecondDigit(item)
                 )

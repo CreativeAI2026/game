@@ -17,7 +17,6 @@ MonoBehaviour:
   key: fluorescent_light_note
   itemName: "\u86CD\u5149\u706F\u3068\u30CE\u30FC\u30C8"
   category: 1
-  effect: 
   description: 
   _maxStack: 1
   attack: 0

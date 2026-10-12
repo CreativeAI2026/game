@@ -17,7 +17,6 @@ MonoBehaviour:
   key: magnet_note
   itemName: "\u78C1\u77F3\u3068\u30CE\u30FC\u30C8"
   category: 1
-  effect: 
   description: 
   _maxStack: 1
   attack: 0

@@ -58,7 +58,7 @@ namespace CreativeAI.EditorTools
             }
 
             var panelControllers = FindAll<InventoryPanelController>(scene);
-            var freeCraftControllers = FindAll<FreeCraftPanelController>(scene);
+            var craftControllers = FindAll<CraftPanelController>(scene);
             var equipmentControllers = FindAll<EquipmentViewController>(scene);
             var quickFoodControllers = FindAll<QuickFoodViewController>(scene);
             var inventories = FindAll<InventoryView>(scene);
@@ -78,7 +78,7 @@ namespace CreativeAI.EditorTools
             ValidateInventoryDataProviders(
                 inventories,
                 panelControllers,
-                freeCraftControllers,
+                craftControllers,
                 equipmentControllers,
                 quickFoodControllers,
                 report
@@ -88,7 +88,7 @@ namespace CreativeAI.EditorTools
         private static void ValidateInventoryDataProviders(
             InventoryView[] inventories,
             InventoryPanelController[] panelControllers,
-            FreeCraftPanelController[] freeCraftControllers,
+            CraftPanelController[] craftControllers,
             EquipmentViewController[] equipmentControllers,
             QuickFoodViewController[] quickFoodControllers,
             UIValidationReport report
@@ -101,8 +101,8 @@ namespace CreativeAI.EditorTools
 
             foreach (var controller in panelControllers)
                 AddProvider(controller, "_inventory", nameof(InventoryPanelController));
-            foreach (var controller in freeCraftControllers)
-                AddProvider(controller, "_inventory", nameof(FreeCraftPanelController));
+            foreach (var controller in craftControllers)
+                AddProvider(controller, "_inventory", nameof(CraftPanelController));
             foreach (var controller in equipmentControllers)
                 AddProvider(controller, "_inventory", nameof(EquipmentViewController));
             foreach (var controller in quickFoodControllers)

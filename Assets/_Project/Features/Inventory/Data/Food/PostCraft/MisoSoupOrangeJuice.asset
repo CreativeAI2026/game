@@ -17,7 +17,6 @@ MonoBehaviour:
   key: miso_soup_orange_juice
   itemName: "\u5473\u564C\u6C41\u3068\u307F\u304B\u3093\u30B8\u30E5\u30FC\u30B9"
   category: 2
-  effect: 
   description: 
   _maxStack: 1
   _craftedResult: 1

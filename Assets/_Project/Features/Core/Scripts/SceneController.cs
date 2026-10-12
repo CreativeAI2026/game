@@ -97,7 +97,7 @@ namespace CreativeAI.Core
 
     public static class SceneNames
     {
-        /// <summary>スカフォールド用の仮フィールド(ライト・カメラ・地面だけ)。Title の遷移先の初期値。</summary>
-        public const string FieldArea00 = "Field_Area00";
+        /// <summary>Title の遷移先の初期値。</summary>
+        public const string FieldArea01 = "Field_Area01";
     }
 }

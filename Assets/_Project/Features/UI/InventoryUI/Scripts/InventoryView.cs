@@ -400,7 +400,7 @@ namespace CreativeAI.UI
                 _currentSelectedSlot = selectedSlot;
                 _selectedStack = selectedSlot.Stack;
                 selectedSlot.Select();
-                _detailPanel?.Show(selectedSlot.Item);
+                _detailPanel?.Show(selectedSlot.Stack);
                 return;
             }
 
@@ -515,7 +515,7 @@ namespace CreativeAI.UI
             slot.Select();
             _currentSelectedSlot = slot;
             _selectedStack = slot.Stack;
-            _detailPanel?.Show(slot.Item);
+            _detailPanel?.Show(slot.Stack);
 
             DisableNavigationOnce();
         }

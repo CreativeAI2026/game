@@ -17,7 +17,6 @@ MonoBehaviour:
   key: full_body_tights_umbrella
   itemName: "\u5168\u8EAB\u30BF\u30A4\u30C4\u3068\u5098"
   category: 1
-  effect: 
   description: 
   _maxStack: 1
   attack: 0

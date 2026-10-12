@@ -17,7 +17,6 @@ MonoBehaviour:
   key: grapes_miso_soup
   itemName: "\u3076\u3069\u3046\u5473\u564C\u6C41"
   category: 2
-  effect: "\u52B9\u679C\u3000\u6700\u5927HP\u306E50%\u3092\u56DE\u5FA9"
   description: 
   _maxStack: 99
   _craftedResult: 1

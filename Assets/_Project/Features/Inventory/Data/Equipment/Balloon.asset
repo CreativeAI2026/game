@@ -17,7 +17,6 @@ MonoBehaviour:
   key: balloon
   itemName: "\u98A8\u8239"
   category: 1
-  effect: "効果   最大HP +20"
   description:
   _maxStack: 1
   attack: 0

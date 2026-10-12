@@ -17,7 +17,6 @@ MonoBehaviour:
   key: glasses_note
   itemName: "\u30E1\u30AC\u30CD\u3068\u30CE\u30FC\u30C8"
   category: 1
-  effect: 
   description: 
   _maxStack: 1
   attack: 0

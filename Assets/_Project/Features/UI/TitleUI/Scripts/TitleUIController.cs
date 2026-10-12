@@ -14,7 +14,7 @@ namespace CreativeAI.UI
         private Button _continueButton; // 「続きから」(セーブ復元)。未割当なら続きから導線は無効
 
         [SerializeField]
-        private string _nextSceneName = SceneNames.FieldArea00;
+        private string _nextSceneName = SceneNames.FieldArea01;
 
         [SerializeField]
         private GameObject _playerRigPrefab; // 「はじめる/続きから」で生成するプレイヤーリグ。未割当なら警告してプレイヤーは出ない
@@ -67,7 +67,7 @@ namespace CreativeAI.UI
             if (!EnsureSessionAndPlayer())
                 return;
 
-            // 進行度・フラグ・所持品はここで同期復元される(ItemDB は Resources 経由でシーン非依存)。
+            // 進行度・フラグ・所持品はここで同期復元される(ItemCatalog は Resources 経由でシーン非依存)。
             var data = SaveService.Load();
 
             // 座標・現在HP はシーンロード後でないと配置できないため、完了コールバックで復元する。

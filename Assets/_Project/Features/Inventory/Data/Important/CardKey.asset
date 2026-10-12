@@ -17,6 +17,5 @@ MonoBehaviour:
   key: card_key
   itemName: "\u30AB\u30FC\u30C9\u30AD\u30FC"
   category: 3
-  effect:
   description:
   _maxStack: 1

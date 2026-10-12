@@ -17,7 +17,6 @@ MonoBehaviour:
   key: balloon_magnet
   itemName: "\u98A8\u8239\u3068\u78C1\u77F3"
   category: 1
-  effect: 
   description: 
   _maxStack: 1
   attack: 0

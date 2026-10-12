@@ -17,7 +17,6 @@ MonoBehaviour:
   key: magnet
   itemName: "磁石"
   category: 1
-  effect: "効果   攻撃力 +10%"
   description:
   _maxStack: 1
   attack: 10
