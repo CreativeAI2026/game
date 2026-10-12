@@ -146,9 +146,9 @@ namespace CreativeAI.Tests.EditMode
         [Test]
         public void ShowResult_RolledEquipment_ShowsRolledParameters()
         {
-            var equipment = ScriptableObject.CreateInstance<EquipmentData>();
+            var equipment = ScriptableObject.CreateInstance<ItemData>();
+            equipment.category = ItemCategory.Equipment;
             equipment.itemName = "Test Equipment";
-            equipment.defense = 10; // 固定値はロール個体の表示に混ざらない
             var rolled = new ItemStack(
                 equipment,
                 new List<RolledStat> { new("AttackPct", 12.5f), new("CritRate", 4f) }
@@ -166,31 +166,6 @@ namespace CreativeAI.Tests.EditMode
                 StringAssert.Contains("攻撃 +12.5%", parameters.text);
                 StringAssert.Contains("会心率 +4%", parameters.text);
                 StringAssert.DoesNotContain("防御", parameters.text);
-                Assert.AreEqual(2, parameters.text.Split('\n').Length);
-            }
-            finally
-            {
-                Object.DestroyImmediate(equipment);
-            }
-        }
-
-        [Test]
-        public void ShowResult_FixedEquipment_ShowsItemParameters()
-        {
-            var equipment = ScriptableObject.CreateInstance<EquipmentData>();
-            equipment.itemName = "Test Equipment";
-            equipment.defense = 10;
-            equipment.criticalDamage = 10f;
-
-            try
-            {
-                _controller.ShowResult(new ItemStack(equipment), null);
-
-                var parameters = TestReflection.GetField<TMP_Text>(
-                    _controller,
-                    "_resultItemParameters"
-                );
-                StringAssert.Contains("防御 +10%", parameters.text);
                 Assert.AreEqual(2, parameters.text.Split('\n').Length);
             }
             finally

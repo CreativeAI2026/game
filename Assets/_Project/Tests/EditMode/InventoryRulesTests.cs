@@ -28,11 +28,11 @@ namespace CreativeAI.Tests.EditMode
             ItemCatalog.InjectForTests(null); // 注入を解除して実カタログに戻す
         }
 
-        private static EquipmentData MakeEquipment(int id)
+        private static ItemData MakeEquipment(int id)
         {
-            var d = ScriptableObject.CreateInstance<EquipmentData>(); // OnEnable が category=Equipment を設定
+            var d = ScriptableObject.CreateInstance<ItemData>();
+            d.category = ItemCategory.Equipment;
             d.id = id;
-            d.attack = 1;
             return d;
         }
 
@@ -142,6 +142,22 @@ namespace CreativeAI.Tests.EditMode
             _inv.Give("apple"); // giveItem は1ステップ1個。並べたぶんだけ増える
 
             Assert.AreEqual(2, _inv.GetItemCount(apple));
+        }
+
+        [Test]
+        public void Give_Equipment_AddsRolledInstance()
+        {
+            // イベントでもらった装備品も、拾ったときと同じく能力値を抽選した個体になる。
+            var gear = MakeEquipment(912);
+            gear.key = "hat";
+            ItemCatalog.InjectForTests(new ItemData[] { gear });
+
+            _inv.Give("hat");
+
+            var stack = _inv.GetAllItems().Single(s => s.Data == gear);
+            Assert.IsTrue(stack.IsInstance);
+            Assert.That(stack.RolledStats.Count, Is.InRange(1, 2));
+            Object.DestroyImmediate(gear);
         }
 
         [Test]
