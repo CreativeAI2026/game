@@ -14,7 +14,7 @@ namespace CreativeAI.Tests.EditMode
             StatVector b,
             IRandomSource rng,
             StatRollParameters parameters = null
-        ) => RecipeCraftingService.RollCraftedStats(a, b, rng, parameters);
+        ) => CraftingService.RollCraftedStats(a, b, rng, parameters);
 
         [Test]
         public void Roll_NeverProducesMoreThanTwoStats()

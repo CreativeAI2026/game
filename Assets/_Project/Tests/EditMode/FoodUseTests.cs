@@ -99,17 +99,18 @@ namespace CreativeAI.Tests.EditMode
             _status.SetEquipment(new EquipmentBonus { maxHpPct = 100f }); // 最大HP 2000
             var apple = MakeFood(3001);
             _inv.AddItem(apple, 1);
-            _status.RestoreHp(0f);
+            _status.RestoreHp(100f); // HP0 は死亡扱いで回復を受け付けないため、生存状態から開始
 
             Assert.IsTrue(_inv.TryUseFood(StackOf(apple), _status));
 
-            Assert.AreEqual(400f, _status.CurrentHp, 1e-2f, "最大HP2000 の 20% = 400");
+            Assert.AreEqual(500f, _status.CurrentHp, 1e-2f, "最大HP2000 の 20% = 400 回復");
         }
 
         [Test]
         public void TryUse_NonFood_IsRejected()
         {
-            var gear = ScriptableObject.CreateInstance<EquipmentData>();
+            var gear = ScriptableObject.CreateInstance<ItemData>();
+            gear.category = ItemCategory.Equipment;
             gear.id = 2001;
             _assets.Add(gear);
             _inv.AddItem(gear, 1);

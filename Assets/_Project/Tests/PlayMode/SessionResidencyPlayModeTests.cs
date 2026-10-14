@@ -42,7 +42,6 @@ namespace CreativeAI.Tests.PlayMode
             DestroyResident<ProgressManager>();
             DestroyResident<GameModeManager>();
             DestroyResident<InventoryManager>();
-            DestroyResident<RecipeBookManager>();
             DestroyResident<EventPlayer>();
             Object.Destroy(_titleGo);
             Object.Destroy(_sceneControllerGo);
@@ -62,14 +61,11 @@ namespace CreativeAI.Tests.PlayMode
                 .GetField(name, BindingFlags.Instance | BindingFlags.NonPublic)
                 .SetValue(target, value);
 
-        private bool EnsureSessionAndPlayer() =>
+        private bool EnsureSession() =>
             (bool)
                 _title
                     .GetType()
-                    .GetMethod(
-                        "EnsureSessionAndPlayer",
-                        BindingFlags.Instance | BindingFlags.NonPublic
-                    )
+                    .GetMethod("EnsureSession", BindingFlags.Instance | BindingFlags.NonPublic)
                     .Invoke(_title, null);
 
         private static int CountOf<T>()
@@ -77,23 +73,17 @@ namespace CreativeAI.Tests.PlayMode
             Object.FindObjectsByType<T>(FindObjectsInactive.Exclude).Length;
 
         [UnityTest]
-        public IEnumerator EnsureSessionAndPlayer_IsIdempotent()
+        public IEnumerator EnsureSession_IsIdempotent()
         {
-            // PlayerRig Prefab 未割当なのでプレイヤー生成だけは警告してスキップされる(呼ぶたび1回)。
             for (int i = 0; i < 2; i++)
             {
-                LogAssert.Expect(
-                    LogType.Warning,
-                    new System.Text.RegularExpressions.Regex("playerRigPrefab が未割当")
-                );
-                Assert.IsTrue(EnsureSessionAndPlayer());
+                Assert.IsTrue(EnsureSession());
                 yield return null;
             }
 
             Assert.AreEqual(1, CountOf<ProgressManager>(), "連打・再入場で二重生成しない");
             Assert.AreEqual(1, CountOf<GameModeManager>());
             Assert.AreEqual(1, CountOf<InventoryManager>());
-            Assert.AreEqual(1, CountOf<RecipeBookManager>());
             Assert.AreEqual(1, CountOf<EventPlayer>());
         }
 
@@ -133,7 +123,7 @@ namespace CreativeAI.Tests.PlayMode
             var progress = ProgressManager.Instance;
             var inventory = InventoryManager.Instance;
 
-            yield return UnityEngine.SceneManagement.SceneManager.LoadSceneAsync("01_Title");
+            yield return UnityEngine.SceneManagement.SceneManager.LoadSceneAsync("Title");
 
             Assert.AreSame(progress, ProgressManager.Instance, "進行度はシーンをまたいで生き残る");
             Assert.AreSame(inventory, InventoryManager.Instance, "所持品もまたぐ");

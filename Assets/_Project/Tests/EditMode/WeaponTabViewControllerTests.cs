@@ -1,6 +1,8 @@
 using System.Collections.Generic;
 using System.Reflection;
+using CreativeAI.Gameplay;
 using CreativeAI.UI;
+using CreativeAI.UI.CharacterUI;
 using NUnit.Framework;
 using UnityEngine;
 using UnityEngine.UI;
@@ -49,6 +51,94 @@ namespace CreativeAI.Tests.EditMode
             InvokePrivate(controller, "OnEnable");
 
             Assert.AreNotEqual("pending", GetText(weaponName));
+        }
+
+        [Test]
+        public void PlacedMenuTabs_SwitchPanelsAndWeaponPresentation()
+        {
+            var root = Track(new GameObject("CharacterPanel", typeof(RectTransform)));
+            root.SetActive(false);
+
+            Transform header = CreateChild(root.transform, "Header");
+            Transform tabBar = CreateChild(header, "TabBar");
+            MenuTabButton characterTab = CreateMenuTabButton(tabBar, "CharacterTab");
+            MenuTabButton loadoutTab = CreateMenuTabButton(tabBar, "LoadoutTab");
+
+            Transform contentArea = CreateChild(root.transform, "ContentArea");
+            GameObject loadoutView = CreateChild(contentArea, "LoadoutView").gameObject;
+            GameObject characterView = CreateChild(contentArea, "CharacterView").gameObject;
+            Transform weaponBar = CreateChild(characterView.transform, "WeaponChangeBar");
+            var weaponTabs = new List<MenuTabButton>();
+            for (int i = 0; i < 4; i++)
+                weaponTabs.Add(CreateMenuTabButton(weaponBar, $"WeaponTab{i}"));
+
+            var viewTabGroup = tabBar.gameObject.AddComponent<MenuTabPanelGroup>();
+            SetField(
+                viewTabGroup,
+                "_tabs",
+                new List<MenuTabPanelBinding>
+                {
+                    new(characterTab, characterView),
+                    new(loadoutTab, loadoutView),
+                }
+            );
+
+            var weaponNameObject = new GameObject("WeaponName", typeof(RectTransform));
+            weaponNameObject.transform.SetParent(characterView.transform, false);
+            weaponNameObject.AddComponent<CanvasRenderer>();
+            var textType = System.Type.GetType("TMPro.TextMeshProUGUI, Unity.TextMeshPro");
+            Assert.IsNotNull(textType);
+            var weaponName = weaponNameObject.AddComponent(textType);
+            var weaponSelector = characterView.AddComponent<CharacterWeaponSelector>();
+            SetField(weaponSelector, "_weaponName", weaponName);
+            WeaponData blade = CreateWeaponData("カッターブレード");
+            WeaponData bow = CreateWeaponData("イーゼルボウ");
+            WeaponData scythe = CreateWeaponData("アンブレラサイス");
+            WeaponData hammer = CreateWeaponData("消火器ハンマー");
+            SetField(
+                weaponSelector,
+                "_weapons",
+                new List<CharacterWeaponSelection>
+                {
+                    new(weaponTabs[0], blade),
+                    new(weaponTabs[1], bow),
+                    new(weaponTabs[2], scythe),
+                    new(weaponTabs[3], hammer),
+                }
+            );
+
+            root.SetActive(true);
+            InvokePrivate(characterTab, "OnEnable");
+            InvokePrivate(loadoutTab, "OnEnable");
+            foreach (MenuTabButton weaponTab in weaponTabs)
+                InvokePrivate(weaponTab, "OnEnable");
+            InvokePrivate(viewTabGroup, "OnEnable");
+            InvokePrivate(weaponSelector, "OnEnable");
+
+            Assert.AreEqual(0, viewTabGroup.CurrentIndex);
+            Assert.AreEqual(0, weaponSelector.CurrentIndex);
+            Assert.IsTrue(characterView.activeSelf);
+            Assert.IsFalse(loadoutView.activeSelf);
+            Assert.IsTrue(characterTab.IsSelected);
+            Assert.IsFalse(loadoutTab.IsSelected);
+            Assert.IsTrue(weaponTabs[0].IsSelected);
+
+            loadoutTab.Button.onClick.Invoke();
+
+            Assert.AreEqual(1, viewTabGroup.CurrentIndex);
+            Assert.IsFalse(characterView.activeSelf);
+            Assert.IsTrue(loadoutView.activeSelf);
+            Assert.IsFalse(characterTab.IsSelected);
+            Assert.IsTrue(loadoutTab.IsSelected);
+
+            characterTab.Button.onClick.Invoke();
+            weaponTabs[2].Button.onClick.Invoke();
+
+            Assert.IsTrue(characterView.activeSelf);
+            Assert.AreEqual(2, weaponSelector.CurrentIndex);
+            Assert.AreEqual("アンブレラサイス", GetText(weaponName));
+            for (int i = 0; i < weaponTabs.Count; i++)
+                Assert.AreEqual(i == 2, weaponTabs[i].IsSelected);
         }
 
         private RevolverTabGroup CreateRevolverGroup()
@@ -101,8 +191,43 @@ namespace CreativeAI.Tests.EditMode
             return controller;
         }
 
+        private static Transform CreateChild(Transform parent, string name)
+        {
+            var child = new GameObject(name, typeof(RectTransform));
+            child.transform.SetParent(parent, false);
+            return child.transform;
+        }
+
+        private static MenuTabButton CreateMenuTabButton(Transform parent, string name)
+        {
+            var buttonObject = new GameObject(
+                name,
+                typeof(RectTransform),
+                typeof(CanvasRenderer),
+                typeof(Image),
+                typeof(Button)
+            );
+            buttonObject.SetActive(false);
+            buttonObject.transform.SetParent(parent, false);
+
+            var underline = new GameObject("Underline", typeof(RectTransform));
+            underline.transform.SetParent(buttonObject.transform, false);
+
+            var menuTabButton = buttonObject.AddComponent<MenuTabButton>();
+            buttonObject.SetActive(true);
+            return menuTabButton;
+        }
+
         private static string GetText(Component text) =>
             (string)text.GetType().GetProperty("text").GetValue(text);
+
+        private WeaponData CreateWeaponData(string itemName)
+        {
+            var data = Track(ScriptableObject.CreateInstance<WeaponData>());
+            data.itemName = itemName;
+            data.description = $"{itemName}の説明";
+            return data;
+        }
 
         private static void SetText(Component text, string value)
         {

@@ -1,9 +1,16 @@
-// セットアップ: AimCamera の GameObject にアタッチする。_aimCamera は同じ GameObject の CinemachineCamera から自動取得、
-//   _bowController は未設定なら FindAnyObjectByType で自動検索する。
-// 動作: エイム中は FOV を _zoomedFov へ徐々にズーム、発射時はデフォルトへ即リセット、エイム解除時は滑らかに戻す。
+// ■ セットアップ手順
+//   1. AimCamera の GameObject にこのスクリプトをアタッチする
+//   2. _aimCamera フィールドは同じ GameObject の CinemachineCamera から自動取得される
+//   3. プレイヤーは PlayerRegistry から実行時に受け取る(設定不要)
+//
+// ■ 動作仕様
+//   - エイム中（IsAiming = true）: FOV を _zoomedFov まで徐々にズームイン
+//   - 発射時                    : FOV をデフォルトに即座にスナップリセット
+//   - エイム解除時              : FOV を滑らかにデフォルトへ戻す
 
 using Unity.Cinemachine;
 using UnityEngine;
+using UnityEngine.Assertions;
 
 namespace CreativeAI.Gameplay
 {
@@ -12,10 +19,6 @@ namespace CreativeAI.Gameplay
         [Tooltip("FOVを制御する AimCamera の CinemachineCamera（未設定なら同じ GO から自動取得）")]
         [SerializeField]
         private CinemachineCamera _aimCamera;
-
-        [Tooltip("BowController（未設定なら FindAnyObjectByType で自動検索）")]
-        [SerializeField]
-        private BowController _bowController;
 
         [Tooltip("エイム中に到達するズーム後の FOV（度）。小さいほどズームイン。")]
         [SerializeField]
@@ -39,12 +42,9 @@ namespace CreativeAI.Gameplay
         {
             if (_aimCamera == null)
                 _aimCamera = GetComponent<CinemachineCamera>();
+            Assert.IsNotNull(_aimCamera, $"{name}: CinemachineCamera が見つかりません");
 
-            if (_bowController == null)
-                _bowController = FindAnyObjectByType<BowController>(FindObjectsInactive.Exclude);
-
-            if (_aimCamera != null)
-                _defaultFov = _aimCamera.Lens.FieldOfView;
+            _defaultFov = _aimCamera.Lens.FieldOfView;
 
             // 発射イベントを購読
             BowController.OnFired += HandleFired;
@@ -63,9 +63,6 @@ namespace CreativeAI.Gameplay
 
         private void LateUpdate()
         {
-            if (_aimCamera == null || _bowController == null)
-                return;
-
             // 発射直後はスナップリセット
             if (_snapToDefault)
             {
@@ -74,9 +71,9 @@ namespace CreativeAI.Gameplay
                 return;
             }
 
-            bool isAiming =
-                _bowController._playerController != null
-                && _bowController._playerController.IsAiming;
+            // プレイヤーがまだ生成されていない間は null
+            PlayerController player = PlayerRegistry.Current;
+            bool isAiming = player != null && player.IsAiming;
 
             float targetFov = isAiming ? _zoomedFov : _defaultFov;
             float speed = isAiming ? _zoomInSpeed : _zoomOutSpeed;

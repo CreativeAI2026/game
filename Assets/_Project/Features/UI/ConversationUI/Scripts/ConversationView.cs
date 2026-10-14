@@ -693,7 +693,8 @@ namespace CreativeAI.UI
         /// </summary>
         public IEnumerator ShowItemGet(string itemKey, string message)
         {
-            var data = ItemDB.Instance != null ? ItemDB.Instance.GetItemByKey(itemKey) : null;
+            var data =
+                ItemCatalog.Instance != null ? ItemCatalog.Instance.GetItemByKey(itemKey) : null;
             string body =
                 !string.IsNullOrWhiteSpace(message) ? message
                 : data != null && !string.IsNullOrEmpty(data.itemName)
@@ -715,6 +716,13 @@ namespace CreativeAI.UI
         /// <summary>IDialogueView 実装: command ステップの演出コマンド。</summary>
         public IEnumerator RunCommand(string command, string argument) =>
             RunPresentationCommand(command, argument);
+
+        public IEnumerator Close()
+        {
+            if (State == ConversationState.Hidden)
+                yield break;
+            yield return HideAnimated();
+        }
 
         private void SetChoicesActive(bool active)
         {

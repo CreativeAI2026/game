@@ -1,0 +1,21 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: fa05067c46c7d2048a12a0a8b225df33, type: 3}
+  m_Name: Hammer
+  m_EditorClassIdentifier: CreativeAI.Gameplay::CreativeAI.Gameplay.WeaponData
+  icon: {fileID: 21300000, guid: 5058734c5bce03f469e8443536c6dd99, type: 3}
+  id: 1004
+  itemName: "\u6D88\u706B\u5668\u30CF\u30F3\u30DE\u30FC"
+  description: "\u6D88\u706B\u5668\u306E\u91CD\u91CF\u3092\u751F\u304B\u3057\u3066\u53E9\u304D\u3064\u3051\u308B\u30CF\u30F3\u30DE\u30FC\u3002"
+  attack: 0
+  criticalDamage: 100
+  criticalRate: 0

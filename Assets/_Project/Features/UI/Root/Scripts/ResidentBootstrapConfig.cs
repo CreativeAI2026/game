@@ -20,8 +20,14 @@ namespace CreativeAI.UI
 
         [Tooltip(
             "プレイヤーリグ Prefab。Title を経由しない直接 Play(FieldDevBootstrap)で生成する。"
-                + "本番 Title フローは 01_Title の TitleUIController のスロットを使うので、そちらとは別枠"
+                + "本番 Title フローは Title シーンの TitleUIController のスロットを使うので、そちらとは別枠"
         )]
         public GameObject playerRigPrefab;
+
+        [Tooltip(
+            "カメラリグ Prefab(Main Camera + Brain、通常/エイムカメラ)。プレイヤーリグとは別に常駐させる。"
+                + "本番 Title フローは TitleUIController のスロットを使う"
+        )]
+        public GameObject cameraRigPrefab;
     }
 }

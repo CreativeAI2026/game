@@ -1,11 +1,12 @@
 using UnityEngine;
-using UnityEngine.InputSystem;
+using UnityEngine.Assertions;
 
 namespace CreativeAI.Gameplay
 {
     /// <summary>
-    /// プレイヤーの移動・ジャンプ・カメラ回転・接地判定を統合管理するコンポーネント。
+    /// プレイヤーの移動・ジャンプ・接地判定と、行動制限・状態フラグの保持を担当する。
     /// エイム中は体の向きをカメラに固定し、8方向ストレイフ移動に切り替える。
+    /// カメラの回転は <see cref="PlayerCameraController"/>、エイム時の背骨の曲げは <see cref="PlayerAimSpineBend"/> が担う。
     /// </summary>
     [RequireComponent(typeof(CharacterController))]
     [RequireComponent(typeof(PlayerInputHandler))]
@@ -25,20 +26,6 @@ namespace CreativeAI.Gameplay
         [Tooltip("加速と減速の速さ")]
         public float SpeedChangeRate = 10.0f;
 
-        public AudioSource AudioFootsteps;
-        public AudioSource LandingAudio;
-        public AudioSource AudioFoley;
-        public AudioClip LandingAudioClip;
-        public AudioClip[] FootstepAudioClips;
-
-        [Range(0, 1)]
-        public float FootstepAudioVolume = 0.5f;
-
-        [Tooltip(
-            "足音・SoundEventBus発行を担当するコンポーネント。足のオブジェクトにアタッチしてここに設定する。"
-        )]
-        public PlayerFootstep PlayerFootstep;
-
         [Space(10)]
         [Tooltip("プレイヤーのジャンプの高さ")]
         public float JumpHeight = 1.2f;
@@ -56,11 +43,6 @@ namespace CreativeAI.Gameplay
         public float FallTimeout = 0.15f;
 
         [Header("プレイヤーの接地判定")]
-        [Tooltip(
-            "キャラクターが接地しているかどうか。CharacterControllerに組み込まれている接地判定(Grounded)とは異なる。"
-        )]
-        public bool Grounded = true;
-
         [Tooltip("凹凸のある地面の判定調整用オフセット")]
         public float GroundedOffset = -0.14f;
 
@@ -70,32 +52,6 @@ namespace CreativeAI.Gameplay
         [Tooltip("キャラクターが地面として認識するレイヤー")]
         public LayerMask GroundLayers;
 
-        [Header("Cinemachine")]
-        [Tooltip(
-            "Cinemachine Virtual Cameraに設定される、カメラが追従するターゲットのゲームオブジェクト"
-        )]
-        public GameObject CinemachineCameraTarget;
-
-        [Tooltip("カメラを上方向に動かせる最大角度（度）")]
-        public float TopClamp = 70.0f;
-
-        [Tooltip("カメラを下方向に動かせる最小角度（度）")]
-        public float BottomClamp = -30.0f;
-
-        [Tooltip(
-            "カメラをオーバーライドする追加の角度。カメラ固定時にカメラ位置を微調整するための変数"
-        )]
-        public float CameraAngleOverride = 0.0f;
-
-        [Tooltip("すべての軸でカメラ位置を固定する")]
-        public bool LockCameraPosition = false;
-
-        [Header("アニメーションRig制御")]
-        [Tooltip("背骨（ChestやSpine）のTransform")]
-        public Transform SpineBone;
-
-        private float _cinemachineTargetYaw;
-        private float _cinemachineTargetPitch;
         private float _speed;
         private float _animationBlend;
         private float _targetRotation = 0.0f;
@@ -106,52 +62,50 @@ namespace CreativeAI.Gameplay
         private float _jumpTimeoutDelta;
         private float _fallTimeoutDelta;
 
-        private int _animIDSpeed;
-        private int _animIDGrounded;
-        private int _animIDJump;
-        private int _animIDFreeFall;
-        private int _animIDMotionSpeed;
-
-        private PlayerInput _playerInput;
         private Animator _animator;
         private CharacterController _controller;
         private PlayerInputHandler _input;
         private GameObject _mainCamera;
-        private const float _threshold = 0.01f;
 
-        public bool CanMove = true;
-        public bool CanChangeWeapon = true;
-        public bool IsAiming = false;
-        public bool IsFlinching = false;
-        public bool IsGrabbed = false;
+        /// <summary>接地しているか(CharacterController 組み込みの isGrounded とは別に、球判定で求める)。</summary>
+        public bool Grounded { get; private set; } = true;
 
-        private bool IsCurrentDeviceMouse
-        {
-            get
-            {
-                return _playerInput != null && _playerInput.currentControlScheme == "KeyboardMouse";
-            }
-        }
+        /// <summary>行動制限の要求。制限を掛ける側は Set(this, …) / Release(this) で自分の分だけを出し入れする。</summary>
+        public PlayerActionLocks Locks { get; } = new PlayerActionLocks();
+
+        public bool CanMove => !Locks.IsLocked(PlayerLock.Move);
+        public bool CanChangeWeapon => !Locks.IsLocked(PlayerLock.ChangeWeapon);
+
+        // 実行時の状態。シーンに保存されないようプロパティにしている(書き手はそれぞれ1か所)
+        /// <summary>弓を構えているか(書き手: 弓)。</summary>
+        public bool IsAiming { get; set; }
+
+        /// <summary>怯み中か(書き手: PlayerFlinchHandler)。</summary>
+        public bool IsFlinching { get; set; }
+
+        /// <summary>敵に掴まれているか(書き手: 掴み攻撃を行う敵)。</summary>
+        public bool IsGrabbed { get; set; }
 
         private void Awake()
         {
-            if (_mainCamera == null)
-            {
-                _mainCamera = GameObject.FindGameObjectWithTag("MainCamera");
-            }
+            _mainCamera = GameObject.FindGameObjectWithTag("MainCamera");
+            Assert.IsNotNull(_mainCamera, $"{name}: MainCamera タグのカメラが見つかりません");
+
+            _animator = PlayerModel.Of(this).Animator;
+            _controller = GetComponent<CharacterController>();
+            _input = GetComponent<PlayerInputHandler>();
+
+            // UI・カメラなどシーン側がプレイヤーを受け取れるよう登録する
+            PlayerRegistry.Register(this);
+        }
+
+        private void OnDestroy()
+        {
+            PlayerRegistry.Unregister(this);
         }
 
         private void Start()
         {
-            _cinemachineTargetYaw = CinemachineCameraTarget.transform.rotation.eulerAngles.y;
-
-            _animator = GetComponent<Animator>();
-            _controller = GetComponent<CharacterController>();
-            _input = GetComponent<PlayerInputHandler>();
-            _playerInput = GetComponent<PlayerInput>();
-
-            AssignAnimationIDs();
-
             _jumpTimeoutDelta = JumpTimeout;
             _fallTimeoutDelta = FallTimeout;
         }
@@ -161,26 +115,6 @@ namespace CreativeAI.Gameplay
             JumpAndGravity();
             GroundedCheck();
             Move();
-        }
-
-        private void LateUpdate()
-        {
-            CameraRotation();
-
-            // エイム中に背骨をカメラのピッチ角に連動させることで、上下方向のエイムを体の姿勢に反映する
-            if (IsAiming && SpineBone != null)
-            {
-                SpineBone.localEulerAngles += new Vector3(0, 0, _cinemachineTargetPitch);
-            }
-        }
-
-        private void AssignAnimationIDs()
-        {
-            _animIDSpeed = Animator.StringToHash("Speed");
-            _animIDGrounded = Animator.StringToHash("Grounded");
-            _animIDJump = Animator.StringToHash("Jump");
-            _animIDFreeFall = Animator.StringToHash("FreeFall");
-            _animIDMotionSpeed = Animator.StringToHash("MotionSpeed");
         }
 
         private void GroundedCheck()
@@ -197,52 +131,21 @@ namespace CreativeAI.Gameplay
                 QueryTriggerInteraction.Ignore
             );
 
-            _animator.SetBool(_animIDGrounded, Grounded);
-        }
-
-        private void CameraRotation()
-        {
-            // 掴み中はカメラ制御を vcam に完全に委ねる。
-            // CinemachineCameraTarget への強制書き込みを続けると、vcam の Follow/LookAt 設定や
-            // Animation Rigging の IK と競合して首骨で涙物る原因になる。
-            if (IsGrabbed)
-                return;
-
-            if (_input.look.sqrMagnitude >= _threshold && !LockCameraPosition)
-            {
-                // マウスの移動量は「前フレームからのピクセル移動量（Delta）」であり既にフレーム間の差分を含んでいるため、
-                // 重複してTime.deltaTimeを乗算するとフレームレート依存のバグが生じる。
-                // 一方、ゲームパッドのスティックは「傾き（速度）」のため乗算が必要。
-                float deltaTimeMultiplier = IsCurrentDeviceMouse ? 1.0f : Time.deltaTime;
-
-                _cinemachineTargetYaw += _input.look.x * deltaTimeMultiplier;
-                _cinemachineTargetPitch += _input.look.y * deltaTimeMultiplier;
-            }
-
-            // 累積角度が±360を超えるとfloat精度が劣化するため、範囲内に収める
-            _cinemachineTargetYaw = ClampAngle(
-                _cinemachineTargetYaw,
-                float.MinValue,
-                float.MaxValue
-            );
-            _cinemachineTargetPitch = ClampAngle(_cinemachineTargetPitch, BottomClamp, TopClamp);
-
-            CinemachineCameraTarget.transform.rotation = Quaternion.Euler(
-                _cinemachineTargetPitch + CameraAngleOverride,
-                _cinemachineTargetYaw,
-                0.0f
-            );
+            _animator.SetBool(PlayerAnimatorParams.Grounded, Grounded);
         }
 
         private void Move()
         {
+            // 移動できない間(怯み等)もエイム解除を Animator に伝えるため、移動可否より先に反映する
+            _animator.SetBool(PlayerAnimatorParams.Aim, IsAiming);
+
             if (!CanMove)
             {
                 _speed = 0f;
                 _animationBlend = 0f;
                 _controller.Move(new Vector3(0.0f, _verticalVelocity, 0.0f) * Time.deltaTime);
-                _animator.SetFloat(_animIDSpeed, 0f);
-                _animator.SetFloat(_animIDMotionSpeed, 0f);
+                _animator.SetFloat(PlayerAnimatorParams.Speed, 0f);
+                _animator.SetFloat(PlayerAnimatorParams.MotionSpeed, 0f);
                 return;
             }
 
@@ -340,11 +243,10 @@ namespace CreativeAI.Gameplay
                     + new Vector3(0.0f, _verticalVelocity, 0.0f) * Time.deltaTime
             );
 
-            _animator.SetFloat(_animIDSpeed, _animationBlend);
-            _animator.SetFloat(_animIDMotionSpeed, inputMagnitude);
-            _animator.SetBool("Aim", IsAiming);
-            _animator.SetFloat("StrafeX", _input.move.x);
-            _animator.SetFloat("StrafeZ", _input.move.y);
+            _animator.SetFloat(PlayerAnimatorParams.Speed, _animationBlend);
+            _animator.SetFloat(PlayerAnimatorParams.MotionSpeed, inputMagnitude);
+            _animator.SetFloat(PlayerAnimatorParams.StrafeX, _input.move.x);
+            _animator.SetFloat(PlayerAnimatorParams.StrafeZ, _input.move.y);
         }
 
         private void JumpAndGravity()
@@ -353,8 +255,8 @@ namespace CreativeAI.Gameplay
             {
                 _fallTimeoutDelta = FallTimeout;
 
-                _animator.SetBool(_animIDJump, false);
-                _animator.SetBool(_animIDFreeFall, false);
+                _animator.SetBool(PlayerAnimatorParams.Jump, false);
+                _animator.SetBool(PlayerAnimatorParams.FreeFall, false);
 
                 // 接地中は速度を-2fに保つ。0fだとCheckSphereとの判定タイミング次第で
                 // 接地→浮遊を繰り返すジッターが発生するため、わずかに地面に押し付ける
@@ -363,12 +265,13 @@ namespace CreativeAI.Gameplay
                     _verticalVelocity = -2f;
                 }
 
-                if (_input.jump && _jumpTimeoutDelta <= 0.0f)
+                // 攻撃・怯み・掴まれ中などはジャンプさせない
+                if (_input.jump && _jumpTimeoutDelta <= 0.0f && !Locks.IsLocked(PlayerLock.Jump))
                 {
                     // 運動方程式 v = √(2gh) から、指定した高さに到達するための初速を算出
                     _verticalVelocity = Mathf.Sqrt(JumpHeight * -2f * Gravity);
 
-                    _animator.SetBool(_animIDJump, true);
+                    _animator.SetBool(PlayerAnimatorParams.Jump, true);
                 }
 
                 if (_jumpTimeoutDelta >= 0.0f)
@@ -386,7 +289,7 @@ namespace CreativeAI.Gameplay
                 }
                 else
                 {
-                    _animator.SetBool(_animIDFreeFall, true);
+                    _animator.SetBool(PlayerAnimatorParams.FreeFall, true);
                 }
 
                 // 空中でのジャンプ入力を無効化する（二段ジャンプ防止）
@@ -398,15 +301,6 @@ namespace CreativeAI.Gameplay
             {
                 _verticalVelocity += Gravity * Time.deltaTime;
             }
-        }
-
-        private static float ClampAngle(float lfAngle, float lfMin, float lfMax)
-        {
-            if (lfAngle < -360f)
-                lfAngle += 360f;
-            if (lfAngle > 360f)
-                lfAngle -= 360f;
-            return Mathf.Clamp(lfAngle, lfMin, lfMax);
         }
 
         private void OnDrawGizmosSelected()
@@ -427,30 +321,6 @@ namespace CreativeAI.Gameplay
                 ),
                 GroundedRadius
             );
-        }
-
-        private void OnFootstep(AnimationEvent animationEvent)
-        {
-            if (animationEvent.animatorClipInfo.weight > 0.5f)
-            {
-                if (AudioFootsteps != null)
-                    AudioFootsteps.Play();
-                if (AudioFoley != null)
-                    AudioFoley.Play();
-
-                // 足音クリップの再生とSoundEventBusへの発行はPlayerFootstepに委譲する
-                if (PlayerFootstep != null)
-                    PlayerFootstep.PlayFootstep(_input.sprint && !IsAiming);
-            }
-        }
-
-        private void OnLand(AnimationEvent animationEvent)
-        {
-            if (animationEvent.animatorClipInfo.weight > 0.5f)
-            {
-                if (LandingAudio != null)
-                    LandingAudio.Play();
-            }
         }
     }
 }

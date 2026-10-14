@@ -91,28 +91,21 @@ namespace CreativeAI.EditorTools
 
             var inventories = FindAll<InventoryView>(scene);
             var panelControllers = FindAll<InventoryPanelController>(scene);
-            var freeCraftControllers = FindAll<FreeCraftPanelController>(scene);
+            var craftControllers = FindAll<CraftPanelController>(scene);
             var equipmentControllers = FindAll<EquipmentViewController>(scene);
             var quickFoodControllers = FindAll<QuickFoodViewController>(scene);
             var weaponTabControllers = FindAll<WeaponTabViewController>(scene);
             var characterControllers = FindAll<CharacterUIController>(scene);
-            var recipeCraftPanels = FindAll<RecipeCraftPanelController>(scene);
             var tabGroups = FindAll<TabGroup>(scene);
 
             ValidateCount(inventories, ExpectedInventoryCount, nameof(InventoryView), report);
             ValidateCount(panelControllers, 1, nameof(InventoryPanelController), report);
-            ValidateCount(freeCraftControllers, 1, nameof(FreeCraftPanelController), report);
+            ValidateCount(craftControllers, 1, nameof(CraftPanelController), report);
             ValidateCount(equipmentControllers, 2, nameof(EquipmentViewController), report);
             ValidateCount(quickFoodControllers, 0, nameof(QuickFoodViewController), report);
             ValidateCount(characterControllers, 1, nameof(CharacterUIController), report);
             ValidateAllTabDefinitions(tabGroups, report);
-            ValidateViewSwitchTabGroups(
-                tabGroups,
-                inventories,
-                recipeCraftPanels,
-                weaponTabControllers,
-                report
-            );
+            ValidateViewSwitchTabGroups(tabGroups, inventories, weaponTabControllers, report);
             foreach (var controller in characterControllers)
                 ValidateCharacterTabContract(controller, report);
 
@@ -123,8 +116,8 @@ namespace CreativeAI.EditorTools
 
             foreach (var controller in panelControllers)
                 AddProvider(controller, "_inventory", nameof(InventoryPanelController));
-            foreach (var controller in freeCraftControllers)
-                AddProvider(controller, "_inventory", nameof(FreeCraftPanelController));
+            foreach (var controller in craftControllers)
+                AddProvider(controller, "_inventory", nameof(CraftPanelController));
             foreach (var controller in equipmentControllers)
                 AddEquipmentProvider(controller);
             foreach (var controller in quickFoodControllers)
@@ -152,7 +145,7 @@ namespace CreativeAI.EditorTools
                 inventoryProviders.Add(providerName);
                 ValidateProviderHierarchy(controller, inventory, providerName, report);
                 ItemCategory[] expectedCategories =
-                    controller is FreeCraftPanelController
+                    controller is CraftPanelController
                         ? new[] { ItemCategory.Equipment, ItemCategory.Food }
                         : new[]
                         {
@@ -208,7 +201,6 @@ namespace CreativeAI.EditorTools
         private static void ValidateViewSwitchTabGroups(
             IEnumerable<TabGroup> tabGroups,
             IEnumerable<InventoryView> inventories,
-            IEnumerable<RecipeCraftPanelController> recipeCraftPanels,
             IEnumerable<WeaponTabViewController> weaponTabControllers,
             UIValidationReport report
         )
@@ -219,14 +211,6 @@ namespace CreativeAI.EditorTools
             {
                 var serializedInventory = new SerializedObject(inventory);
                 var tabGroup = GetReference<TabGroup>(serializedInventory, "_tabGroup");
-                if (tabGroup != null)
-                    categoryTabGroups.Add(tabGroup);
-            }
-
-            foreach (var recipePanel in recipeCraftPanels)
-            {
-                var serializedPanel = new SerializedObject(recipePanel);
-                var tabGroup = GetReference<TabGroup>(serializedPanel, "_categoryTabGroup");
                 if (tabGroup != null)
                     categoryTabGroups.Add(tabGroup);
             }
@@ -424,7 +408,7 @@ namespace CreativeAI.EditorTools
                 report.Error(
                     inventory.name,
                     "_tabGroup",
-                    "通常InventoryとFreeCraftにはTabGroupを設定してください。",
+                    "通常Inventoryと調合画面にはTabGroupを設定してください。",
                     inventory
                 );
                 return;

@@ -32,7 +32,7 @@ namespace CreativeAI.UI
         [SerializeField, Min(1f)]
         private float _charactersPerSecond = 24f;
 
-        private ItemData _displayedItem;
+        private ItemStack _displayedStack;
         private bool _hasDisplayedContent;
         private string _displayedEmptyLabel;
         private FontStyles _defaultNameFontStyle;
@@ -48,7 +48,7 @@ namespace CreativeAI.UI
         {
             ResolveReferences();
             KillTweens();
-            _displayedItem = null;
+            _displayedStack = null;
             _hasDisplayedContent = false;
             _displayedEmptyLabel = null;
 
@@ -66,23 +66,26 @@ namespace CreativeAI.UI
             SetTextImmediately(_description, string.Empty);
         }
 
-        public void Show(ItemData item)
+        // 個体ごとにロール値が違うので、ItemData ではなく所持品1つ分(ItemStack)を表示する。
+        public void Show(ItemStack stack)
         {
-            Show(item, DefaultEmptyLabel);
+            Show(stack, DefaultEmptyLabel);
         }
 
-        public void Show(ItemData item, string emptyLabel)
+        public void Show(ItemStack stack, string emptyLabel)
         {
-            Show(item, emptyLabel, false);
+            Show(stack, emptyLabel, false);
         }
 
-        public void Show(ItemData item, string emptyLabel, bool forceTextRefresh)
+        public void Show(ItemStack stack, string emptyLabel, bool forceTextRefresh)
         {
             ResolveReferences();
-            bool hasItem = item != null;
+            if (stack?.Data == null)
+                stack = null;
+            bool hasItem = stack != null;
             ApplyNameUnderline(hasItem);
 
-            if (!forceTextRefresh && IsSameDisplay(item, emptyLabel))
+            if (!forceTextRefresh && IsSameDisplay(stack, emptyLabel))
             {
                 if (hasItem)
                     PlayIconSpin();
@@ -90,22 +93,22 @@ namespace CreativeAI.UI
             }
 
             KillTweens();
-            _displayedItem = item;
+            _displayedStack = stack;
             _hasDisplayedContent = true;
-            _displayedEmptyLabel = item == null ? emptyLabel : null;
+            _displayedEmptyLabel = stack == null ? emptyLabel : null;
 
-            RefreshIcon(item);
-            RefreshTexts(item, emptyLabel);
+            RefreshIcon(stack?.Data);
+            RefreshTexts(stack, emptyLabel);
         }
 
-        private bool IsSameDisplay(ItemData item, string emptyLabel)
+        private bool IsSameDisplay(ItemStack stack, string emptyLabel)
         {
-            bool hasItem = item != null;
-            bool sameItem = hasItem && item == _displayedItem;
+            bool hasItem = stack != null;
+            bool sameItem = hasItem && stack == _displayedStack;
             bool sameEmptyState =
                 !hasItem
                 && _hasDisplayedContent
-                && _displayedItem == null
+                && _displayedStack == null
                 && _displayedEmptyLabel == emptyLabel;
 
             return sameItem || sameEmptyState;
@@ -126,15 +129,16 @@ namespace CreativeAI.UI
                 _icon.rectTransform.localRotation = Quaternion.identity;
         }
 
-        private void RefreshTexts(ItemData item, string emptyLabel)
+        private void RefreshTexts(ItemStack stack, string emptyLabel)
         {
+            var item = stack?.Data;
             bool hasItem = item != null;
             SetTextImmediately(_name, hasItem ? item.itemName : emptyLabel);
             SetTextImmediately(
                 _category,
                 hasItem ? $"[{item.category.ToDisplayName()}]" : string.Empty
             );
-            TypeText(_stats, hasItem ? ItemStatTextFormatter.BuildStatsText(item) : string.Empty);
+            TypeText(_stats, hasItem ? ItemStatTextFormatter.BuildStatsText(stack) : string.Empty);
             TypeText(_description, hasItem ? RemoveLineBreaks(item.description) : string.Empty);
             RebuildLayout();
         }

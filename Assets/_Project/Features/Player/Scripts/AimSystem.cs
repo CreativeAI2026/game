@@ -4,45 +4,31 @@ using UnityEngine;
 namespace CreativeAI.Gameplay
 {
     /// <summary>
-    /// 弓エイム時のカメラ切り替えを担当する。
-    /// 剣のsubAction（防御）でもカメラが切り替わるのを防ぐため、
-    /// 武器インデックスが弓の場合にのみエイムカメラを有効化する設計。
+    /// 弓エイム時のカメラ切り替えを担当する。**エイム用の CinemachineCamera と同じ GameObject に置く**(シーン側)。
+    ///
+    /// プレイヤーは Prefab から実行時に生成されるため、プレイヤー側からシーンのカメラを参照せず、
+    /// カメラ側が PlayerRegistry からプレイヤーを受け取る。
+    /// PlayerController.IsAiming を立てるのは弓だけなので、剣のガード(subAction)でカメラが切り替わることはない。
     /// </summary>
+    [RequireComponent(typeof(CinemachineCamera))]
     public class AimSystem : MonoBehaviour
     {
-        [SerializeField]
+        // 通常カメラ(Priority=0)より高い値。Cinemachineは最も高いPriorityのカメラをアクティブにする
+        private const int AimCameraPriority = 20;
+
         private CinemachineCamera _aimCam;
-
-        [Tooltip(
-            "弓に割り当てられているWeaponManagerのインデックス（BowControllerのweaponIndexと合わせる）"
-        )]
-        [SerializeField]
-        private int _bowWeaponIndex = 1;
-
-        private PlayerInputHandler _input;
-        private WeaponManager _weaponManager;
-        private PlayerController _playerController;
 
         void Awake()
         {
-            _input = GetComponent<PlayerInputHandler>();
-            _weaponManager = GetComponent<WeaponManager>();
-            _playerController = GetComponent<PlayerController>();
+            _aimCam = GetComponent<CinemachineCamera>();
         }
 
         void Update()
         {
-            if (_aimCam == null)
-                return;
-
-            bool isBowEquipped =
-                _weaponManager == null || _weaponManager.CurrentWeaponIndex == _bowWeaponIndex;
-
-            bool shouldAim =
-                isBowEquipped && _playerController != null && _playerController.IsAiming;
-
-            // 20はデフォルトカメラ(Priority=0)より高い値として設定。Cinemachineは最も高いPriorityのカメラをアクティブにする
-            _aimCam.Priority = shouldAim ? 20 : 0;
+            // プレイヤーがまだ生成されていない間は null
+            PlayerController player = PlayerRegistry.Current;
+            bool isAiming = player != null && player.IsAiming;
+            _aimCam.Priority = isAiming ? AimCameraPriority : 0;
         }
     }
 }

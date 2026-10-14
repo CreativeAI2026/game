@@ -3,24 +3,19 @@ using UnityEngine;
 namespace CreativeAI.Gameplay
 {
     /// <summary>
-    /// 剣のステートマシンの基底クラス。
-    /// Free → Guard/Dash/Attack の遷移を管理し、
+    /// 剣固有のステートの基底クラス。
+    /// Free → Guard / (共通の)Dash・Attack の遷移を管理し、
     /// パリィ成功時はGuardまたはParry → Attack への反撃遷移も可能。
     /// </summary>
-    public abstract class SwordState
+    public abstract class SwordState : MeleeWeaponState
     {
-        protected SwordController ctx;
+        protected readonly SwordController sword;
 
-        public SwordState(SwordController context)
+        protected SwordState(SwordController context)
+            : base(context)
         {
-            ctx = context;
+            sword = context;
         }
-
-        public virtual void Enter() { }
-
-        public virtual void Update() { }
-
-        public virtual void Exit() { }
     }
 
     /// <summary>
@@ -32,42 +27,27 @@ namespace CreativeAI.Gameplay
         public SwordStateFree(SwordController context)
             : base(context) { }
 
+        public override bool IsNeutral => true;
+
         public override void Enter()
         {
-            if (!ctx.playerController.IsGrabbed)
-            {
-                ctx.playerController.CanMove = true;
-                ctx.playerController.CanChangeWeapon = true;
-            }
-
-            ctx.comboStep = 0;
-            ctx.guardHitCount = 0;
-
-            if (ctx.weaponMeshRoot != null)
-            {
-                ctx.weaponMeshRoot.localRotation = Quaternion.Euler(ctx.normalSwordRotation);
-            }
+            sword.ReleaseControlLocks();
+            sword.GuardHitCount = 0;
+            sword.SetMockPose(MockWeaponPoseKey.Idle);
         }
 
         public override void Update()
         {
-            if (ctx.input.subAction)
+            if (sword.Input.subAction)
             {
-                ctx.ChangeState(new SwordStateGuard(ctx));
+                sword.ChangeState(new SwordStateGuard(sword));
                 return;
             }
 
-            if (ctx.input.ConsumeAttack())
+            // 空中では消費せず先行入力として残す(着地後、期限内なら攻撃が出る)
+            if (sword.CanStartGroundAction && sword.Input.ConsumeAttack())
             {
-                ctx.targetEnemy = ctx.FindNearestEnemy();
-                if (
-                    ctx.targetEnemy != null
-                    && Vector3.Distance(ctx.playerTransform.position, ctx.targetEnemy.position)
-                        > ctx.attackRange
-                )
-                    ctx.ChangeState(new SwordStateDash(ctx));
-                else
-                    ctx.ChangeState(new SwordStateAttack(ctx));
+                sword.BeginAttack();
             }
         }
     }
@@ -78,299 +58,142 @@ namespace CreativeAI.Gameplay
     /// </summary>
     public class SwordStateGuard : SwordState
     {
-        private bool _isConsecutiveGuard;
-
-        public SwordStateGuard(SwordController context, bool isConsecutive = false)
-            : base(context)
-        {
-            _isConsecutiveGuard = isConsecutive;
-        }
+        public SwordStateGuard(SwordController context)
+            : base(context) { }
 
         public override void Enter()
         {
-            ctx.playerController.CanMove = false;
-            ctx.playerController.CanChangeWeapon = false;
-            ctx.animator.SetBool("IsGuarding", true);
+            sword.LockControls();
+            sword.Animator.SetBool(PlayerAnimatorParams.IsGuarding, true);
 
-            ctx.guardHitCount = 0;
+            sword.GuardHitCount = 0;
 
-            if (ctx.weaponMeshRoot != null)
-            {
-                ctx.weaponMeshRoot.localRotation = Quaternion.Euler(ctx.guardSwordRotation);
-            }
+            sword.SetMockPose(MockWeaponPoseKey.Guard);
         }
 
         public override void Update()
         {
-            ctx.input.ConsumeAttack();
+            sword.Input.ConsumeAttack();
 
-            if (!ctx.input.subAction)
+            if (!sword.Input.subAction)
             {
-                ctx.ChangeState(new SwordStateFree(ctx));
+                sword.ChangeState(new SwordStateFree(sword));
             }
         }
 
         public override void Exit()
         {
-            ctx.animator.SetBool("IsGuarding", false);
+            sword.Animator.SetBool(PlayerAnimatorParams.IsGuarding, false);
 
-            if (ctx.weaponMeshRoot != null)
-            {
-                ctx.weaponMeshRoot.localRotation = Quaternion.Euler(ctx.normalSwordRotation);
-            }
+            sword.SetMockPose(MockWeaponPoseKey.Idle);
         }
     }
 
     /// <summary>
     /// パリィ成功（弾き返し）ステート。
     /// パリィモーション中に攻撃入力があれば、即座に反撃としてAttackステートへ遷移する。
+    /// 終わりはパリィクリップの ActionEnd イベントで決まる。
     /// </summary>
     public class SwordStateParry : SwordState
     {
-        private float _startTime;
+        // Trigger を送ったのにパリィステートへ入れない(遷移の設定漏れ等)ときに打ち切るまでの猶予
+        private const float EnterParryTimeout = 1.0f;
+
+        private float _requestTime;
+        private bool _hasStarted;
+        private bool _isActionEnded;
 
         public SwordStateParry(SwordController context)
             : base(context) { }
 
         public override void Enter()
         {
-            ctx.playerController.CanMove = false;
-            ctx.playerController.CanChangeWeapon = false;
+            sword.LockControls();
 
-            if (ctx.weaponMeshRoot != null)
-            {
-                ctx.weaponMeshRoot.localRotation = Quaternion.Euler(ctx.attackSwordRotation);
-            }
+            sword.SetMockPose(MockWeaponPoseKey.Attack);
+            sword.StartAnimatorAction(PlayerAnimatorParams.Parry);
 
-            // ★注意：Animatorに「Parry」というTriggerパラメータを作成し、
-            // 弾き返しアニメーションのステート名も「Parry」に設定してください。
-            ctx.animator.SetTrigger("Parry");
+            _requestTime = Time.time;
+            _hasStarted = false;
+            _isActionEnded = false;
+        }
 
-            _startTime = Time.time;
+        public override void OnAnimationEvent(
+            WeaponAnimationEventType type,
+            AnimatorStateInfo sourceState
+        )
+        {
+            if (
+                type == WeaponAnimationEventType.ActionEnd
+                && sourceState.shortNameHash == PlayerAnimatorStates.Parry
+            )
+                _isActionEnded = true;
         }
 
         public override void Update()
         {
             // パリィモーション中の攻撃入力で即反撃へ移行（キャンセル攻撃）
-            if (ctx.input.ConsumeAttack())
+            if (sword.Input.ConsumeAttack())
             {
-                ctx.targetEnemy = ctx.FindNearestEnemy();
-                ctx.ChangeState(new SwordStateAttack(ctx));
+                sword.TargetEnemy = sword.FindNearestEnemy();
+                sword.ChangeState(new MeleeStateAttack(sword));
                 return;
             }
 
-            AnimatorStateInfo state = ctx.animator.GetCurrentAnimatorStateInfo(0);
-
-            bool isPlayingParry = state.IsName("Parry");
-
-            // 0.1fの猶予は、Animatorの遷移にかかるフレーム数分だけ待つため
-            if (!isPlayingParry && !ctx.animator.IsInTransition(0) && Time.time > _startTime + 0.1f)
+            if (_isActionEnded)
             {
-                // ガードボタンを押しっぱなしならGuardに戻り、離していればFreeに戻る
-                if (ctx.input.subAction)
-                {
-                    ctx.ChangeState(new SwordStateGuard(ctx, true));
-                }
-                else
-                {
-                    ctx.ChangeState(new SwordStateFree(ctx));
-                }
+                Finish();
+                return;
+            }
+
+            bool isInParry =
+                sword.Animator.GetCurrentAnimatorStateInfo(0).shortNameHash
+                    == PlayerAnimatorStates.Parry
+                || (
+                    sword.Animator.IsInTransition(0)
+                    && sword.Animator.GetNextAnimatorStateInfo(0).shortNameHash
+                        == PlayerAnimatorStates.Parry
+                );
+
+            if (isInParry)
+            {
+                _hasStarted = true;
+            }
+            else if (_hasStarted)
+            {
+                Debug.LogWarning(
+                    $"[{sword.name}] パリィクリップの ActionEnd イベントを受信しないままパリィステートを抜けました。"
+                        + "クリップに ActionEnd を追加してください。"
+                );
+                Finish();
+            }
+            else if (Time.time - _requestTime > EnterParryTimeout)
+            {
+                Debug.LogWarning(
+                    $"[{sword.name}] Parry ステートへ遷移できませんでした。Animator の遷移設定を確認してください。"
+                );
+                sword.Animator.ResetTrigger(PlayerAnimatorParams.Parry);
+                Finish();
+            }
+        }
+
+        private void Finish()
+        {
+            // ガードボタンを押しっぱなしならGuardに戻り(IsGuarding で Animator もガードへ)、離していればFreeに戻る
+            if (sword.Input.subAction)
+            {
+                sword.ChangeState(new SwordStateGuard(sword));
+            }
+            else
+            {
+                sword.ReturnAnimatorToLocomotion();
+                sword.ChangeState(new SwordStateFree(sword));
             }
         }
 
         public override void Exit()
         {
-            if (ctx.weaponMeshRoot != null)
-            {
-                ctx.weaponMeshRoot.localRotation = Quaternion.Euler(ctx.normalSwordRotation);
-            }
-        }
-    }
-
-    /// <summary>
-    /// ダッシュステート（敵への自動接近）。
-    /// 攻撃範囲外の敵に対して自動で接近し、射程内に入るか壁等で前進不能になった時点で攻撃に移行する。
-    /// </summary>
-    public class SwordStateDash : SwordState
-    {
-        public SwordStateDash(SwordController context)
-            : base(context) { }
-
-        public override void Enter()
-        {
-            ctx.playerController.CanMove = false;
-            ctx.playerController.CanChangeWeapon = false;
-            ctx.animator.SetTrigger("DashTrigger");
-        }
-
-        public override void Update()
-        {
-            if (ctx.targetEnemy == null)
-            {
-                ctx.ChangeState(new SwordStateFree(ctx));
-                return;
-            }
-
-            Vector3 dir = ctx.targetEnemy.position - ctx.playerTransform.position;
-            dir.y = 0f;
-
-            if (dir.sqrMagnitude > 0.01f)
-                ctx.playerTransform.rotation = Quaternion.Slerp(
-                    ctx.playerTransform.rotation,
-                    Quaternion.LookRotation(dir),
-                    // 15fは高速な回転補間。ダッシュ中に敵の方向を向き続けるため速めに設定
-                    Time.deltaTime * 15f
-                );
-
-            Vector3 beforePos = ctx.playerTransform.position;
-            ctx.characterController.Move(dir.normalized * ctx.dashSpeed * Time.deltaTime);
-            Vector3 afterPos = ctx.playerTransform.position;
-
-            // 射程内に入った、または壁等に引っかかって物理的に前進不能になった場合に攻撃へ移行。
-            // 移動距離が期待値の10%以下なら「前進不能」と判定する
-            if (
-                dir.magnitude <= ctx.attackRange
-                || Vector3.Distance(beforePos, afterPos) < (ctx.dashSpeed * Time.deltaTime * 0.1f)
-            )
-            {
-                ctx.ChangeState(new SwordStateAttack(ctx));
-            }
-        }
-    }
-
-    /// <summary>
-    /// 攻撃ステート（3段コンボシーケンス）。
-    /// 先行入力を受け付け、アニメーション後半でコンボをキャンセルして次段へ繋ぐ。
-    /// 移動入力があればリカバリーモーションをキャンセルして即座に操作に復帰できる。
-    /// </summary>
-    public class SwordStateAttack : SwordState
-    {
-        private float _lastTriggerTime;
-        private bool _hasStartedAction;
-        private float _stateEnterTime;
-        private string _expectedSlashName;
-        private bool _isComboQueued;
-
-        public SwordStateAttack(SwordController context)
-            : base(context) { }
-
-        public override void Enter()
-        {
-            ctx.playerController.CanMove = false;
-            ctx.playerController.CanChangeWeapon = false;
-            ctx.lastAttackTime = Time.time;
-
-            ctx.comboStep++;
-            if (ctx.comboStep > 3)
-                ctx.comboStep = 1;
-
-            _expectedSlashName = "Slash" + ctx.comboStep;
-            ctx.animator.SetTrigger(_expectedSlashName);
-
-            _lastTriggerTime = Time.time;
-            _stateEnterTime = Time.time;
-            _hasStartedAction = false;
-            _isComboQueued = false;
-            if (ctx.weaponMeshRoot != null)
-            {
-                ctx.weaponMeshRoot.localRotation = Quaternion.Euler(ctx.attackSwordRotation);
-            }
-        }
-
-        public override void Update()
-        {
-            AnimatorStateInfo state = ctx.animator.GetCurrentAnimatorStateInfo(0);
-            bool isTransitioningToSlash =
-                ctx.animator.IsInTransition(0)
-                && ctx.animator.GetNextAnimatorStateInfo(0).IsName(_expectedSlashName);
-            bool isPlayingSlash = state.IsName(_expectedSlashName);
-
-            if (!_hasStartedAction)
-            {
-                if (isPlayingSlash || isTransitioningToSlash)
-                {
-                    _hasStartedAction = true;
-                }
-                else
-                {
-                    // ダッシュ等のトランジション中にトリガーが消費されてしまう場合があるため、
-                    // 攻撃ステートに確実に遷移するまでトリガーを送り続ける
-                    ctx.animator.SetTrigger(_expectedSlashName);
-
-                    // 遷移設定が存在しない場合の無限ループ防止（ダッシュ完了を待つため2秒と長めに設定）
-                    if (Time.time - _stateEnterTime > 2.0f)
-                    {
-                        ctx.comboStep = 0;
-                        ctx.ChangeState(new SwordStateFree(ctx));
-                    }
-                    return;
-                }
-            }
-
-            // 先行入力の受付。0.1秒の最小間隔はダブルクリックによる二重消費を防ぐため
-            if (ctx.input.ConsumeAttack() && Time.time - _lastTriggerTime > 0.1f)
-            {
-                _isComboQueued = true;
-            }
-
-            // normalizedTime > 0.3f で攻撃判定が終了した直後からコンボ入力を処理する。
-            // モーションを早めにキャンセルすることで、テンポの良いコンボ体験を実現する
-            if (_hasStartedAction && isPlayingSlash && state.normalizedTime > 0.3f)
-            {
-                if (_isComboQueued && ctx.comboStep < 3)
-                {
-                    // ターゲットが撃破済み（非アクティブ）なら見失い防止のため再索敵する
-                    if (ctx.targetEnemy != null && !ctx.targetEnemy.gameObject.activeInHierarchy)
-                    {
-                        ctx.targetEnemy = null;
-                    }
-                    if (ctx.targetEnemy == null)
-                    {
-                        ctx.targetEnemy = ctx.FindNearestEnemy();
-                    }
-
-                    // コンボ中に敵が射程外に移動した場合、再度ダッシュで接近する。
-                    // +0.5fの余裕は、攻撃モーション中の微小な距離変動での不要なダッシュを防ぐため
-                    if (
-                        ctx.targetEnemy != null
-                        && Vector3.Distance(ctx.playerTransform.position, ctx.targetEnemy.position)
-                            > ctx.attackRange + 0.5f
-                    )
-                    {
-                        ctx.ChangeState(new SwordStateDash(ctx));
-                        return;
-                    }
-
-                    ctx.comboStep++;
-                    _expectedSlashName = "Slash" + ctx.comboStep;
-                    ctx.animator.SetTrigger(_expectedSlashName);
-                    _lastTriggerTime = Time.time;
-                    ctx.lastAttackTime = Time.time;
-                    _hasStartedAction = false;
-                    _stateEnterTime = Time.time;
-                    _isComboQueued = false;
-                    return;
-                }
-                else if (!_isComboQueued && ctx.input.move.sqrMagnitude > 0.01f)
-                {
-                    // コンボ入力がなく移動入力がある場合、リカバリーモーションをキャンセルして即座に動けるようにする
-                    ctx.comboStep = 0;
-                    ctx.ChangeState(new SwordStateFree(ctx));
-                    return;
-                }
-            }
-
-            // 攻撃アニメーションが完全に終了し、次のステートへの遷移も完了した場合
-            if (
-                _hasStartedAction
-                && !isPlayingSlash
-                && !isTransitioningToSlash
-                && !ctx.animator.IsInTransition(0)
-            )
-            {
-                ctx.comboStep = 0;
-                ctx.ChangeState(new SwordStateFree(ctx));
-            }
+            sword.SetMockPose(MockWeaponPoseKey.Idle);
         }
     }
 }

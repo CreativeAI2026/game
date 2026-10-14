@@ -55,24 +55,14 @@ namespace CreativeAI.Tests.EditMode
         }
 
         [Test]
-        public void CharacterPanel_PreservesConfiguredRadiiAndValidPlacement()
+        public void CharacterPanel_UsesPlacedMenuTabsInsteadOfRevolverTabs()
         {
             var prefab = AssetDatabase.LoadAssetAtPath<GameObject>(
                 "Assets/_Project/Features/UI/CharacterUI/Prefabs/CharacterPanel.prefab"
             );
             Assert.IsNotNull(prefab);
-            var group = prefab.GetComponentInChildren<RevolverTabGroup>(true);
-            Assert.IsNotNull(group);
-
-            var serializedObject = new SerializedObject(group);
-            var layout = serializedObject.FindProperty("_layout");
-            Assert.AreEqual(180f, layout.FindPropertyRelative("_tangentRadius").floatValue);
-            Assert.AreEqual(80f, layout.FindPropertyRelative("_arcDepth").floatValue);
-            int placement = layout.FindPropertyRelative("_placement").enumValueIndex;
-            Assert.That(
-                placement,
-                Is.InRange((int)RevolverArcPlacement.Top, (int)RevolverArcPlacement.Right)
-            );
+            Assert.IsNull(prefab.GetComponentInChildren<RevolverTabGroup>(true));
+            Assert.IsNotNull(prefab.GetComponentInChildren<MenuTabPanelGroup>(true));
         }
 
         [Test]

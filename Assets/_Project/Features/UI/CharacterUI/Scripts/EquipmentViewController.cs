@@ -352,7 +352,7 @@ namespace CreativeAI.UI
                 return;
 
             _selectedInventoryStack = stack;
-            _detailPanel?.Show(stack.Data);
+            _detailPanel?.Show(stack);
         }
 
         private void OnInventorySlotDoubleClicked(ItemStack stack)
@@ -378,7 +378,7 @@ namespace CreativeAI.UI
             }
 
             _selectedInventoryStack = stack;
-            _detailPanel?.Show(stack.Data);
+            _detailPanel?.Show(stack);
             EquipSelectedItem();
         }
 
@@ -397,7 +397,7 @@ namespace CreativeAI.UI
                 return;
 
             SelectAndRotateSlot(targetSlotIndex);
-            _detailPanel?.Show(stack.Data);
+            _detailPanel?.Show(stack);
         }
 
         private void EquipSelectedItem()
@@ -413,7 +413,7 @@ namespace CreativeAI.UI
             InventoryManager.Instance?.SetEquipped(_selectedInventoryStack, true);
 
             _inventory?.UpdateItemEquippedState(_selectedInventoryStack, true, true);
-            _detailPanel?.Show(_selectedInventoryStack.Data);
+            _detailPanel?.Show(_selectedInventoryStack);
 
             SelectNextEmptySlot();
             RefreshDetailFromCurrentSlot();
@@ -665,7 +665,7 @@ namespace CreativeAI.UI
                 && previousSlot != selectedSlot
                 && previousSlot.Stack == null
                 && selectedSlot.Stack == null;
-            _detailPanel?.Show(selectedSlot.Item, _emptyLabel, changedBetweenEmptySlots);
+            _detailPanel?.Show(selectedSlot.Stack, _emptyLabel, changedBetweenEmptySlots);
         }
 
         private void OnEquipmentSlotDoubleClicked(EquipmentSlot slot)
@@ -747,7 +747,7 @@ namespace CreativeAI.UI
             if (_detailPanel == null || CurrentSlot == null)
                 return;
 
-            _detailPanel.Show(CurrentSlot.Item, _emptyLabel);
+            _detailPanel.Show(CurrentSlot.Stack, _emptyLabel);
         }
 
         private void BindQuickFoodChangedEvent()

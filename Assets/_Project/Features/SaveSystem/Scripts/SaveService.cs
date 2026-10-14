@@ -67,10 +67,6 @@ namespace CreativeAI.Gameplay
                 }
             }
 
-            var book = RecipeBookManager.Instance;
-            if (book != null)
-                data.revealedRecipes = new List<int>(book.CaptureRevealed());
-
             CapturePlayer(data);
 
             File.WriteAllText(FilePath, JsonUtility.ToJson(data, true));
@@ -161,12 +157,10 @@ namespace CreativeAI.Gameplay
             if (inv != null)
             {
                 inv.Clear();
-                var db = ItemDB.Instance;
-                if (data.items != null && db != null)
-                    RestoreItems(inv, db, data.items);
+                var catalog = ItemCatalog.Instance;
+                if (data.items != null && catalog != null)
+                    RestoreItems(inv, catalog, data.items);
             }
-
-            RecipeBookManager.Instance?.RestoreRevealed(data.revealedRecipes);
 
             Debug.Log($"[SaveService] 復元しました: {FilePath}");
             return data;
@@ -200,15 +194,19 @@ namespace CreativeAI.Gameplay
                 status.RestoreHp(data.currentHp);
         }
 
-        private static void RestoreItems(InventoryManager inv, ItemDB db, List<ItemEntry> entries)
+        private static void RestoreItems(
+            InventoryManager inv,
+            ItemCatalog catalog,
+            List<ItemEntry> entries
+        )
         {
             foreach (var e in entries)
             {
-                var itemData = db.GetItemById(e.itemId);
+                var itemData = catalog.GetItemById(e.itemId);
                 if (itemData == null)
                 {
                     Debug.LogWarning(
-                        $"[SaveService] itemId {e.itemId} は ItemDB に無し。スキップ。"
+                        $"[SaveService] itemId {e.itemId} は ItemCatalog に無し。スキップ。"
                     );
                     continue;
                 }
@@ -255,12 +253,6 @@ namespace CreativeAI.Gameplay
         public int progress;
         public List<FlagEntry> flags = new();
         public List<ItemEntry> items = new();
-
-        /// <summary>
-        /// 解禁(発見)済みレシピのキー(= 結果アイテムの id)。実体は RecipeBookManager(セッション常駐)。
-        /// 旧セーブに無ければ空=解禁なしで復元される(showInRecipeCraft のレシピは常に表示)。
-        /// </summary>
-        public List<int> revealedRecipes = new();
 
         // プレイヤー状態(現在HP・座標を保存 → 死亡時は直近セーブから再開)。
         // hasPlayerState=false の場合(リグ未実装・旧セーブ)は復元をスキップし、既定スポーン/満タンで開始する。
