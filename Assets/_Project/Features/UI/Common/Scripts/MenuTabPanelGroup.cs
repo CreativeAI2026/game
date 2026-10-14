@@ -81,7 +81,7 @@ namespace CreativeAI.UI
 
         private void Initialize()
         {
-            if (_initialized)
+            if (_initialized || _tabs.Count == 0)
                 return;
 
             foreach (MenuTabPanelBinding tab in _tabs)

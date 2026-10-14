@@ -118,7 +118,7 @@ namespace CreativeAI.UI.CharacterUI
 
         private void Initialize()
         {
-            if (_initialized)
+            if (_initialized || _weapons.Count == 0)
                 return;
 
             foreach (CharacterWeaponSelection weapon in _weapons)
