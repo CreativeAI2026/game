@@ -8,6 +8,9 @@ namespace CreativeAI.UI
     [RequireComponent(typeof(RectTransform), typeof(CanvasGroup))]
     public sealed class RevolverTabItemView : MonoBehaviour, IMoveHandler, ISubmitHandler
     {
+        private static readonly Color SelectedIconColor = new Color32(0xa9, 0xb2, 0xda, 0xff);
+        private static readonly Color UnselectedIconColor = new Color32(0x51, 0x56, 0x6a, 0xff);
+
         [SerializeField]
         private TabButton _tabButton;
 
@@ -78,6 +81,8 @@ namespace CreativeAI.UI
             CacheComponents();
             _rectTransform.anchoredPosition = layout.AnchoredPosition;
             _rectTransform.localScale = Vector3.one * layout.Scale;
+            if (_tabButton?.Icon != null)
+                _tabButton.Icon.rectTransform.localScale = Vector3.one * layout.IconScale;
             _canvasGroup.alpha = layout.Alpha;
             bool canReceivePointer =
                 interactionEnabled
@@ -92,7 +97,14 @@ namespace CreativeAI.UI
 
         public void SetSelected(bool selected)
         {
-            _tabButton?.SetActive(selected, 0f, true, false);
+            _tabButton?.SetActive(
+                selected,
+                0f,
+                true,
+                false,
+                SelectedIconColor,
+                UnselectedIconColor
+            );
         }
 
         private void CacheComponents()

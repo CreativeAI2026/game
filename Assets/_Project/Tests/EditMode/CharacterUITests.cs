@@ -80,9 +80,10 @@ namespace CreativeAI.Tests.EditMode
         private void SelectView(GameObject selected) =>
             TestReflection.Invoke(_ui, "OnSelectionChanged", 0, null, selected);
 
-        private EquipmentData MakeEquipment(int id)
+        private ItemData MakeEquipment(int id)
         {
-            var e = ScriptableObject.CreateInstance<EquipmentData>();
+            var e = ScriptableObject.CreateInstance<ItemData>();
+            e.category = ItemCategory.Equipment;
             e.id = id;
             _assets.Add(e);
             return e;
@@ -219,6 +220,25 @@ namespace CreativeAI.Tests.EditMode
             _inv.ClearQuickFood(2);
 
             Assert.IsNull(_inv.GetQuickFoodSlots()[2]);
+        }
+
+        [Test]
+        public void QuickFoodTab_SwapSlots_PreservesBothItemsAndOrder()
+        {
+            var apple = MakeFood(3001);
+            var banana = MakeFood(3002);
+            _inv.AddItem(apple, 1);
+            _inv.AddItem(banana, 1);
+            ItemStack appleStack = StackOf(apple);
+            ItemStack bananaStack = StackOf(banana);
+            _inv.SetQuickFood(0, appleStack);
+            _inv.SetQuickFood(1, bananaStack);
+
+            Assert.IsTrue(_inv.SwapQuickFood(0, 1));
+
+            var slots = _inv.GetQuickFoodSlots();
+            Assert.AreSame(bananaStack, slots[0]);
+            Assert.AreSame(appleStack, slots[1]);
         }
 
         [Test]

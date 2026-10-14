@@ -235,24 +235,23 @@ namespace CreativeAI.UI
             if (frameView == null || frameView.Role != SlotFrameRole.Custom)
                 return;
 
-            var equipmentSlot = slot.GetComponent<EquipmentSlot>();
-            if (equipmentSlot != null)
-            {
-                equipmentSlot.ApplyCustomFrameOrientation(
-                    position.x > 0f,
-                    animated ? _animationDuration : 0f
-                );
-                return;
-            }
-
             RectTransform frameRect = frameView.FrameRect;
             if (frameRect == null)
                 return;
 
+            frameRect.anchoredPosition = Vector2.zero;
             Vector3 scale = frameRect.localScale;
             float scaleMagnitude = Mathf.Abs(scale.x);
-            scale.x = position.x > 0f ? -scaleMagnitude : scaleMagnitude;
-            frameRect.localScale = scale;
+            float targetScaleX = position.x > 0f ? -scaleMagnitude : scaleMagnitude;
+            frameRect.DOKill();
+
+            if (animated && Application.isPlaying)
+                frameRect.DOScaleX(targetScaleX, _animationDuration).SetEase(Ease.InOutSine);
+            else
+            {
+                scale.x = targetScaleX;
+                frameRect.localScale = scale;
+            }
         }
 
 #if UNITY_EDITOR

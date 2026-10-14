@@ -110,9 +110,10 @@ namespace CreativeAI.Tests.EditMode
             return f;
         }
 
-        private EquipmentData MakeEquipment(int id)
+        private ItemData MakeEquipment(int id)
         {
-            var e = MakeAsset<EquipmentData>();
+            var e = MakeAsset<ItemData>();
+            e.category = ItemCategory.Equipment;
             e.id = id;
             return e;
         }

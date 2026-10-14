@@ -182,16 +182,38 @@ namespace CreativeAI.UI
             bool allowSelectedBounce
         )
         {
-            var targetColor = isActive || !dimInactive ? ActiveColor : InactiveColor;
+            SetActive(
+                isActive,
+                duration,
+                dimInactive,
+                allowSelectedBounce,
+                ActiveColor,
+                InactiveColor
+            );
+        }
+
+        public void SetActive(
+            bool isActive,
+            float duration,
+            bool dimInactive,
+            bool allowSelectedBounce,
+            Color activeColor,
+            Color inactiveColor
+        )
+        {
+            var targetColor = isActive || !dimInactive ? activeColor : inactiveColor;
 
             AnimateSelectionVisuals(isActive);
 
             if (_icon != null)
             {
                 _icon.DOKill();
-                DOTween
-                    .To(() => _icon.color, x => _icon.color = x, targetColor, duration)
-                    .SetEase(Ease.OutQuad);
+                if (duration <= 0f)
+                    _icon.color = targetColor;
+                else
+                    DOTween
+                        .To(() => _icon.color, x => _icon.color = x, targetColor, duration)
+                        .SetEase(Ease.OutQuad);
             }
 
             _hoverScale?.SetBounceAllowed(_hasVisualHoverTarget && allowSelectedBounce);

@@ -15,7 +15,8 @@ namespace CreativeAI.UI
         /// 常駐を生成順どおりに作る。既に在るものはそのまま使う。
         /// 順番: マネージャ → 所持品 → UI → 戦闘
         /// (UI は GameModeManager / InventoryManager を購読し、会話UIは生成時に DialogueViewService へ自己登録するため)。
-        /// プレイヤーリグは配置の仕方が呼び出し側で違うので <see cref="EnsurePlayerRig"/> を別に呼ぶ。
+        /// カメラリグ・プレイヤーリグはタイトルのカメラと重ならないようフィールドに入ってから
+        /// <see cref="EnsureCameraRig"/> → <see cref="EnsurePlayerRig"/> の順で別に呼ぶ。
         /// </summary>
         public static void EnsureResidents(GameObject uiRootPrefab)
         {
@@ -34,7 +35,8 @@ namespace CreativeAI.UI
         /// <summary>
         /// プレイヤーリグを1体だけ生成して常駐させ、それを返す。Player タグが既に居ればそれを返す。
         /// Prefab 未割当なら警告して null(フィールドは読み込めるがプレイヤーは出ない)。
-        /// 常駐の後に呼ぶ(プレイヤーは GameModeManager を購読し、Start で Inventory を読むため)。
+        /// 常駐とカメラリグの後に呼ぶ(プレイヤーは GameModeManager を購読し、Start で Inventory を読み、
+        /// Awake で MainCamera を探すため)。
         /// </summary>
         public static GameObject EnsurePlayerRig(GameObject prefab, string playerTag = "Player")
         {
@@ -55,6 +57,32 @@ namespace CreativeAI.UI
             if (Application.isPlaying)
                 Object.DontDestroyOnLoad(player); // EditMode では呼べない
             return player;
+        }
+
+        /// <summary>
+        /// カメラリグを1つだけ生成して常駐させ、それを返す。既に在ればそれを返す。
+        /// プレイヤーとは独立しているので、プレイヤーが居なくても出せる(プレイヤーは PlayerRegistry 経由で後から追う)。
+        /// Prefab 未割当なら警告して null(画面にカメラが無くなる)。
+        /// </summary>
+        public static CameraRig EnsureCameraRig(GameObject prefab)
+        {
+            var existing = Object.FindAnyObjectByType<CameraRig>();
+            if (existing != null)
+                return existing;
+
+            if (prefab == null)
+            {
+                Debug.LogWarning(
+                    "[GameSession] cameraRigPrefab が未割当です。CameraRig Prefab を Inspector にドラッグしてください。"
+                );
+                return null;
+            }
+
+            var rig = Object.Instantiate(prefab);
+            rig.name = prefab.name;
+            if (Application.isPlaying)
+                Object.DontDestroyOnLoad(rig);
+            return rig.GetComponent<CameraRig>();
         }
     }
 }

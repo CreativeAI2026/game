@@ -354,7 +354,8 @@ MonoBehaviour:
   _tapToStartButton: {fileID: 1560239932}
   _continueButton: {fileID: 2060239932}
   _nextSceneName: Field_Area01
-  _playerRigPrefab: {fileID: 4424343746394782264, guid: bc2e5624b5d5444ceb5acdfda6255a07, type: 3}
+  _playerRigPrefab: {fileID: 4235723320897624909, guid: 5da431e804bc64f49a096f629169acd9, type: 3}
+  _cameraRigPrefab: {fileID: 6134488537555452566, guid: f86b88e95ba29433e9cc7e0828d2134e, type: 3}
   _uiRootPrefab: {fileID: 7357621368793443196, guid: d0c8f5a2fab99460a9cbf61536da8406, type: 3}
 --- !u!114 &410022266
 MonoBehaviour:

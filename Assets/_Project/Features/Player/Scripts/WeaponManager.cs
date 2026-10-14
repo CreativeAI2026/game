@@ -34,6 +34,8 @@ namespace CreativeAI.Gameplay
             "hammer",
         };
 
+        private static readonly IReadOnlyList<int> WeaponIds = new[] { 1001, 1002, 1003, 1004 };
+
         /// <summary>
         /// 切り替えの順番(E = 次の武器 で進む向き)。Q はこの逆順。
         /// WeaponKeys の番号はセーブ・events.json との契約なので並べ替えず、切り替え順はここで別に持つ。
@@ -224,8 +226,6 @@ namespace CreativeAI.Gameplay
             }
 
             b.attackPct += w.attack;
-            b.defensePct += w.defense;
-            b.maxHpPct += w.maxHP;
             b.criticalChance += w.criticalRate;
             b.criticalDamage += w.criticalDamage;
             return b;
@@ -421,9 +421,9 @@ namespace CreativeAI.Gameplay
             for (int i = 0; i < count; i++)
             {
                 WeaponData stats = _slots[i].stats;
-                if (stats != null && stats.key != WeaponKeys[i])
+                if (stats != null && stats.id != WeaponIds[i])
                     Debug.LogWarning(
-                        $"{name}: 武器の一覧 [{i}] は「{WeaponKeys[i]}」の枠ですが、ステータス補正の Key が「{stats.key}」です",
+                        $"{name}: 武器の一覧 [{i}] は「{WeaponKeys[i]}」の枠ですが、武器IDが「{stats.id}」です（期待値: {WeaponIds[i]}）",
                         this
                     );
             }

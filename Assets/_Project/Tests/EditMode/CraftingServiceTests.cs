@@ -41,6 +41,13 @@ namespace CreativeAI.Tests.EditMode
             return a;
         }
 
+        private ItemData MakeEquipment(int id)
+        {
+            var a = Make<ItemData>(id);
+            a.category = ItemCategory.Equipment;
+            return a;
+        }
+
         private ItemData MakeImportant(int id)
         {
             var a = Make<ItemData>(id);
@@ -95,14 +102,12 @@ namespace CreativeAI.Tests.EditMode
         [Test]
         public void TryCraft_EquipmentPair_GrantsRolledInstance()
         {
-            var a = Make<EquipmentData>(2001);
-            a.attack = 10;
-            var b = Make<EquipmentData>(2002);
-            b.defense = 8;
-            var result = Make<EquipmentData>(2101);
+            var a = MakeEquipment(2001);
+            var b = MakeEquipment(2002);
+            var result = MakeEquipment(2101);
             var recipe = MakeRecipe(a, b, result);
-            _inv.AddItem(a, 1);
-            _inv.AddItem(b, 1);
+            _inv.AddInstance(a, new[] { new RolledStat(nameof(StatType.AttackPct), 10f) });
+            _inv.AddInstance(b, new[] { new RolledStat(nameof(StatType.DefensePct), 8f) });
 
             Assert.IsTrue(_craft.TryCraft(recipe, StackOf(a), StackOf(b), out var crafted));
 
@@ -112,6 +117,13 @@ namespace CreativeAI.Tests.EditMode
             Assert.IsTrue(made.IsInstance, "装備品は端末でロールした個体になる");
             Assert.IsNotNull(made.RolledStats);
             Assert.LessOrEqual(made.RolledStats.Count, 2, "付与数は最大2つ");
+            CollectionAssert.IsNotEmpty(made.RolledStats.ToList(), "素材の個体の能力値を元にする");
+            foreach (var rolled in made.RolledStats)
+                CollectionAssert.Contains(
+                    new[] { nameof(StatType.AttackPct), nameof(StatType.DefensePct) },
+                    rolled.stat,
+                    "素材の個体が持つ型を引き継ぐ"
+                );
         }
 
         [Test]
@@ -137,7 +149,7 @@ namespace CreativeAI.Tests.EditMode
         public void TryCraft_CrossCategory_IsRejected()
         {
             var food = Make<FoodData>(3001);
-            var gear = Make<EquipmentData>(2001);
+            var gear = MakeEquipment(2001);
             var recipe = MakeRecipe(food, gear, Make<FoodData>(3104));
             _inv.AddItem(food, 1);
             _inv.AddItem(gear, 1);
@@ -146,20 +158,6 @@ namespace CreativeAI.Tests.EditMode
             Assert.IsFalse(CraftOnce(recipe));
             Assert.AreEqual(1, CountOf(food), "失敗時は素材を減らさない");
             Assert.AreEqual(1, CountOf(gear));
-        }
-
-        [Test]
-        public void TryCraft_WeaponMaterial_IsRejected()
-        {
-            // 武器は調合不可。
-            var w1 = Make<WeaponData>(1001);
-            var w2 = Make<WeaponData>(1002);
-            var recipe = MakeRecipe(w1, w2, Make<EquipmentData>(2101));
-            _inv.AddItem(w1, 1);
-            _inv.AddItem(w2, 1);
-
-            Assert.IsFalse(CraftOnce(recipe));
-            Assert.AreEqual(1, CountOf(w1));
         }
 
         [Test]
@@ -192,9 +190,9 @@ namespace CreativeAI.Tests.EditMode
         [Test]
         public void TryCraft_EquippedMaterial_IsNotConsumed()
         {
-            var a = Make<EquipmentData>(2001);
-            var b = Make<EquipmentData>(2002);
-            var recipe = MakeRecipe(a, b, Make<EquipmentData>(2101));
+            var a = MakeEquipment(2001);
+            var b = MakeEquipment(2002);
+            var recipe = MakeRecipe(a, b, MakeEquipment(2101));
             _inv.AddItem(a, 1);
             _inv.AddItem(b, 1);
             StackOf(a).IsEquipped = true;

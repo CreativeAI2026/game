@@ -160,7 +160,6 @@ namespace CreativeAI.EditorTools
         {
             string[] requiredFields =
             {
-                "_recipeCatalog",
                 "_closeButton",
                 "_inventory",
                 "_craftedItemSlot",

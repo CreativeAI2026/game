@@ -19,21 +19,21 @@ namespace CreativeAI.UI
 
         [SerializeField]
         [Tooltip(
-            "直接 Play 時にプレイヤーリグも出す。フィールドシーンだけ ON にする"
-                + "(UI 確認シーンでは要らないし、リグのカメラが二重になるので既定 OFF)。"
+            "直接 Play 時にプレイヤーリグとカメラリグも出す。フィールドシーンだけ ON にする"
+                + "(UI 確認シーンは自前のカメラを持つので、二重にならないよう既定 OFF)。"
         )]
         private bool _spawnPlayerRig;
 
         [SerializeField]
-        [Tooltip("リグを出す位置の SpawnPoint ID。本番の Start Spawn / Dest Spawn と同じ仕組み。")]
-        private string _spawnPointId = "start";
+        [Tooltip("リグを出す位置の SpawnPoint ID。本番の「はじめる」と同じ開始位置が既定。")]
+        private string _spawnPointId = SpawnPoint.StartId;
 
         private DevState _devState;
 
         private void Awake()
         {
             // Title 経由で既に常駐が生成済みなら何もしない(UIRoot の有無で判定)。
-            if (UIRoot.Instance != null)
+            if (UIRoot.Instance != null && InventoryManager.Instance != null)
                 return;
 
             var config = Resources.Load<ResidentBootstrapConfig>(nameof(ResidentBootstrapConfig));
@@ -48,8 +48,10 @@ namespace CreativeAI.UI
             GameSession.EnsureResidents(config != null ? config.uiRootPrefab : null);
 
             // プレイヤーリグも Title と同じ経路で出し、配置も本番と同じ SpawnPoint 経由にする。
+            // プレイヤーは Awake で MainCamera を探すので、カメラリグを先に出す。
             if (_spawnPlayerRig)
             {
+                GameSession.EnsureCameraRig(config != null ? config.cameraRigPrefab : null);
                 var player = GameSession.EnsurePlayerRig(
                     config != null ? config.playerRigPrefab : null
                 );

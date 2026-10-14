@@ -99,35 +99,36 @@ namespace CreativeAI.Tests.EditMode
         [Test]
         public void GetEquippedBonus_SumsEquippedOnly()
         {
-            var gear = ScriptableObject.CreateInstance<EquipmentData>();
-            gear.attack = 10;
-            gear.defense = 5;
-            gear.maxHP = 100;
-            gear.criticalRate = 3f;
-            gear.criticalDamage = 0.5f;
+            var gear = ScriptableObject.CreateInstance<ItemData>();
+            gear.category = ItemCategory.Equipment;
 
-            // 武器は在庫外。仮に在庫へ入れて装備フラグを立てても、
-            // GetEquippedBonus は武器を加算しない(補正は WeaponManager 経由に一本化)。
-            var weapon = ScriptableObject.CreateInstance<WeaponData>();
-            weapon.attack = 20;
-            weapon.maxHP = 50;
+            var unequipped = ScriptableObject.CreateInstance<ItemData>();
+            unequipped.category = ItemCategory.Equipment;
 
-            var unequipped = ScriptableObject.CreateInstance<EquipmentData>();
-            unequipped.attack = 999;
-
-            _inv.AddItem(gear, 1);
-            _inv.AddItem(weapon, 1);
-            _inv.AddItem(unequipped, 1);
+            _inv.AddInstance(
+                gear,
+                new[]
+                {
+                    new RolledStat(nameof(StatType.AttackPct), 10f),
+                    new RolledStat(nameof(StatType.DefensePct), 5f),
+                    new RolledStat(nameof(StatType.MaxHpPct), 100f),
+                    new RolledStat(nameof(StatType.CritRate), 3f),
+                    new RolledStat(nameof(StatType.CritDamage), 0.5f),
+                }
+            );
+            _inv.AddInstance(
+                unequipped,
+                new[] { new RolledStat(nameof(StatType.AttackPct), 999f) }
+            );
             var stacks = _inv.GetAllItems();
             _inv.SetEquipped(stacks.Find(s => s.Data == gear), true);
-            _inv.SetEquipped(stacks.Find(s => s.Data == weapon), true);
             // unequipped は装備しない
 
             var b = _inv.GetEquippedBonus();
 
-            Assert.AreEqual(10f, b.attackPct); // gear のみ(武器20・unequipped999 は除外)
+            Assert.AreEqual(10f, b.attackPct); // gear のみ(unequipped999 は除外)
             Assert.AreEqual(5f, b.defensePct);
-            Assert.AreEqual(100f, b.maxHpPct); // gear のみ(武器50 は除外)
+            Assert.AreEqual(100f, b.maxHpPct);
             Assert.AreEqual(3f, b.criticalChance);
             Assert.AreEqual(0.5f, b.criticalDamage);
         }
