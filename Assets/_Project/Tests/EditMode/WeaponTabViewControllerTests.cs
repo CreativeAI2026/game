@@ -108,6 +108,7 @@ namespace CreativeAI.Tests.EditMode
             );
 
             root.SetActive(true);
+            InvokePrivate(viewTabGroup, "OnEnable");
             InvokePrivate(weaponSelector, "OnEnable");
 
             Assert.AreEqual(0, viewTabGroup.CurrentIndex);
