@@ -1,5 +1,5 @@
 using System.Linq;
-using CreativeAI.StatRoll;
+using CreativeAI.Gameplay;
 using NUnit.Framework;
 
 namespace CreativeAI.Tests.EditMode

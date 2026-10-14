@@ -20,3 +20,18 @@ MonoBehaviour:
   - PortraitKey: hero_normal
     Sprite: {fileID: 21300000, guid: ff43a2005de176c4bb05dba7542a4003, type: 3}
     Icon: {fileID: 21300000, guid: 10800000000000000000000000000001, type: 3}
+  - PortraitKey: hero_surprised
+    Sprite: {fileID: 21300000, guid: 96597d9f5b6241dfb8a6fb2564dfddd1, type: 3}
+    Icon: {fileID: 21300000, guid: 75d6b09646544a369d8ec88836f9baef, type: 3}
+  - PortraitKey: hero_question
+    Sprite: {fileID: 21300000, guid: 8051c0492ad3413899094579fda36446, type: 3}
+    Icon: {fileID: 21300000, guid: 24c2f210d4ba415f8b28d5c2918cbd1c, type: 3}
+  - PortraitKey: hero_smile
+    Sprite: {fileID: 21300000, guid: 73e439088ef647ff80ba079149527938, type: 3}
+    Icon: {fileID: 21300000, guid: 3af74cd6349341b7b73dbfee44ccd7bf, type: 3}
+  - PortraitKey: hero_confused
+    Sprite: {fileID: 21300000, guid: 1baaff6a6da64f11a36003d6d5fe7679, type: 3}
+    Icon: {fileID: 21300000, guid: 44d919d081ef48dca4e036f1ba864dfe, type: 3}
+  - PortraitKey: hero_anger
+    Sprite: {fileID: 21300000, guid: 8534afc259f648c4bc01375fbf315e4d, type: 3}
+    Icon: {fileID: 21300000, guid: e6047bd089994b4482475612ff2e615d, type: 3}

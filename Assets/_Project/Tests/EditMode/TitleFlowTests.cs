@@ -1,8 +1,6 @@
 using CreativeAI.Core;
-using CreativeAI.Core.EventSystem;
-using CreativeAI.Core.SceneManagement;
 using CreativeAI.Gameplay;
-using CreativeAI.UI.TitleUI;
+using CreativeAI.UI;
 using NUnit.Framework;
 using UnityEngine;
 using UnityEngine.TestTools;
@@ -11,7 +9,7 @@ using UnityEngine.UI;
 namespace CreativeAI.Tests.EditMode
 {
     /// <summary>
-    /// タイトルの「はじめる / 続きから」で常駐一式(マネージャ → Inventory → RecipeBook → UIRoot → プレイヤーの順)を組み立てる生成契約の検証。
+    /// タイトルの「はじめる / 続きから」で常駐一式(マネージャ → Inventory → UIRoot → プレイヤーの順)を組み立てる生成契約の検証。
     /// シーンロードと冪等性ガードは TitleFlowPlayModeTests 側。
     /// </summary>
     public class TitleFlowTests
@@ -19,8 +17,6 @@ namespace CreativeAI.Tests.EditMode
         private GameObject _titleGo;
         private TitleUIController _title;
         private GameObject _sceneControllerGo;
-        private GameObject _starterGo;
-        private GameStarter _starter;
 
         [SetUp]
         public void SetUp()
@@ -29,14 +25,10 @@ namespace CreativeAI.Tests.EditMode
             var controller = _sceneControllerGo.AddComponent<SceneController>();
             TestReflection.SetStaticProperty("Instance", controller);
 
-            _starterGo = new GameObject("GameStarter");
-            _starter = _starterGo.AddComponent<GameStarter>();
-
             _titleGo = new GameObject("TitleUI");
             _title = _titleGo.AddComponent<TitleUIController>();
             var button = _titleGo.AddComponent<Button>();
             TestReflection.SetField(_title, "_tapToStartButton", button);
-            TestReflection.SetField(_title, "_gameStarter", _starter);
         }
 
         [TearDown]
@@ -47,10 +39,8 @@ namespace CreativeAI.Tests.EditMode
             DestroyResident<ProgressManager>();
             DestroyResident<GameModeManager>();
             DestroyResident<InventoryManager>();
-            DestroyResident<RecipeBookManager>();
             DestroyResident<EventPlayer>();
             Object.DestroyImmediate(_titleGo);
-            Object.DestroyImmediate(_starterGo);
             Object.DestroyImmediate(_sceneControllerGo);
         }
 
@@ -84,7 +74,6 @@ namespace CreativeAI.Tests.EditMode
             Assert.AreEqual(1, CountOf<GameModeManager>(), "① モード");
             Assert.AreEqual(1, CountOf<EventPlayer>(), "① 会話イベント指揮役");
             Assert.AreEqual(1, CountOf<InventoryManager>(), "② 所持品");
-            Assert.AreEqual(1, CountOf<RecipeBookManager>(), "②' レシピ解禁");
             Assert.IsNotNull(BattleRunnerService.Current, "④ 戦闘実行の seam");
         }
 
@@ -103,7 +92,7 @@ namespace CreativeAI.Tests.EditMode
             Assert.AreEqual(0, CountOf<InventoryManager>());
         }
 
-        // --- GameStarter(⑤ プレイヤーリグ) ---
+        // --- プレイヤーリグ ---
 
         [Test]
         public void EnsurePlayer_DoesNotSpawnASecondPlayer()
@@ -111,10 +100,8 @@ namespace CreativeAI.Tests.EditMode
             var prefab = new GameObject("PlayerRig") { tag = "Player" };
             try
             {
-                TestReflection.SetField(_starter, "_playerRigPrefab", prefab);
-
-                var first = _starter.EnsurePlayer();
-                var second = _starter.EnsurePlayer();
+                var first = GameSession.EnsurePlayerRig(prefab);
+                var second = GameSession.EnsurePlayerRig(prefab);
 
                 Assert.IsNotNull(first);
                 Assert.AreSame(

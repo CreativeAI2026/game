@@ -1,8 +1,9 @@
+using CreativeAI.Gameplay;
 using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
 
-namespace CreativeAI.Gameplay
+namespace CreativeAI.UI
 {
     /// <summary>
     /// PlayerStatusのHP変動イベントを購読し、UIスライダーとテキストに反映する。
@@ -65,9 +66,7 @@ namespace CreativeAI.Gameplay
         [SerializeField]
         private EkgPhase[] _ekgPhases;
 
-        [Header("参照")]
-        [Tooltip("プレイヤーのステータス")]
-        [SerializeField]
+        // プレイヤーは Prefab から実行時に生成されるので、PlayerRegistry から受け取る(未生成の間は null)
         private PlayerStatus _playerStatus;
 
         private void Awake()
@@ -93,18 +92,14 @@ namespace CreativeAI.Gameplay
 
         void OnEnable()
         {
-            if (_playerStatus != null)
-            {
-                _playerStatus.OnHpChanged += UpdateUI;
-            }
+            PlayerRegistry.Changed += Bind;
+            Bind(PlayerRegistry.Current);
         }
 
         private void OnDisable()
         {
-            if (_playerStatus != null)
-            {
-                _playerStatus.OnHpChanged -= UpdateUI;
-            }
+            PlayerRegistry.Changed -= Bind;
+            Bind(null);
         }
 
         private void Start()
@@ -113,6 +108,22 @@ namespace CreativeAI.Gameplay
             // OnHpChangedの発火を受け取れないため、Start()で明示的に初期UIを更新する。
             if (_playerStatus != null)
             {
+                UpdateUI(_playerStatus.CurrentHp, _playerStatus.CurrentMaxHp);
+            }
+        }
+
+        /// <summary>購読先のプレイヤーを切り替える(未生成・破棄時は null)。</summary>
+        private void Bind(PlayerController player)
+        {
+            if (_playerStatus != null)
+                _playerStatus.OnHpChanged -= UpdateUI;
+
+            _playerStatus = player != null ? player.GetComponent<PlayerStatus>() : null;
+
+            if (_playerStatus != null)
+            {
+                _playerStatus.OnHpChanged += UpdateUI;
+                // 後から生成されたプレイヤーでも、購読した時点の値で表示を合わせる
                 UpdateUI(_playerStatus.CurrentHp, _playerStatus.CurrentMaxHp);
             }
         }

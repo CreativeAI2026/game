@@ -4,7 +4,7 @@ using System.Text;
 using UnityEditor;
 using UnityEngine;
 
-namespace CreativeAI.EditorTools.Art
+namespace CreativeAI.EditorTools
 {
     /// <summary>
     /// アイテムアイコンPNG(Art/UI/Items 配下)の透過・白フチ(ハロー)残りを一括チェックし Console に出す。

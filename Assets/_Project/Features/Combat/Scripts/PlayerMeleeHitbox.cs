@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.Assertions;
 
 namespace CreativeAI.Gameplay
 {
@@ -33,11 +34,15 @@ namespace CreativeAI.Gameplay
 
         private void Awake()
         {
-            GameObject player = GameObject.FindGameObjectWithTag("Player");
-            if (player != null)
-            {
-                _playerStatus = player.GetComponent<PlayerStatus>();
-            }
+            // 武器に付いている判定は、親階層のプレイヤーが持ち主。
+            // 投げた鎌のようにプレイヤーの外にある判定は、投げる側が SetOwner で渡す
+            _playerStatus = GetComponentInParent<PlayerStatus>();
+        }
+
+        /// <summary>ダメージ計算に使う持ち主を設定する(プレイヤーの階層の外で使う判定用)。</summary>
+        public void SetOwner(PlayerStatus owner)
+        {
+            _playerStatus = owner;
         }
 
         private void Update()
@@ -116,6 +121,10 @@ namespace CreativeAI.Gameplay
 
         public void EnableHitbox()
         {
+            Assert.IsNotNull(
+                _playerStatus,
+                $"{name}: 持ち主の PlayerStatus がありません(親階層に無い場合は SetOwner で渡す)"
+            );
             _alreadyHitTargets.Clear();
             // 軌跡判定の起点を記録し、最初のフレームで正しくSphereCastできるようにする
             _previousPosition = transform.position;

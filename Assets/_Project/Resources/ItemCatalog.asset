@@ -1,0 +1,2732 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &-8915961382156157531
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: f6220288b2fd34b40bb3d8432012533a, type: 3}
+  m_Name: MysteriousNote1
+  m_EditorClassIdentifier: CreativeAI.Gameplay::CreativeAI.Gameplay.ItemData
+  icon: {fileID: 21300000, guid: c19ed0abca4be4a43bcacb5e791d56e4, type: 3}
+  id: 4009
+  key: mysterious_note_1
+  itemName: "\u8B0E\u306E\u624B\u8A18\uFF11"
+  category: 3
+  description: 
+  material1: {fileID: 0}
+  material2: {fileID: 0}
+  _maxStack: 1
+--- !u!114 &-8646190955341666459
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 4c17053f8385ac14f9af901a292ffab6, type: 3}
+  m_Name: BrownRiceCreamCookieMisoSoup
+  m_EditorClassIdentifier: CreativeAI.Gameplay::CreativeAI.Gameplay.FoodData
+  icon: {fileID: 21300000, guid: e6ad66fffe2bb9f45b716906fa59a19e, type: 3}
+  id: 3121
+  key: brown_rice_cream_cookie_miso_soup
+  itemName: "\u30AF\u30EA\u30FC\u30E0\u7384\u7C73\u30AF\u30C3\u30AD\u30FC\u3068\u5473\u564C\u6C41"
+  category: 2
+  description: 
+  material1: {fileID: -3201117879322543463}
+  material2: {fileID: -3828202121546107835}
+  _maxStack: 1
+  _craftedResult: 1
+--- !u!114 &-7875201064841803251
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: f6220288b2fd34b40bb3d8432012533a, type: 3}
+  m_Name: ClockFluorescentLight
+  m_EditorClassIdentifier: CreativeAI.Gameplay::CreativeAI.Gameplay.ItemData
+  icon: {fileID: 21300000, guid: ea8669df40db5b441b35f067151e0afe, type: 3}
+  id: 2110
+  key: clock_fluorescent_light
+  itemName: "\u61D0\u4E2D\u6642\u8A08\u3068\u86CD\u5149\u706F"
+  category: 1
+  description: 
+  material1: {fileID: 957348972317786013}
+  material2: {fileID: -263205480878404495}
+  _maxStack: 1
+--- !u!114 &-7822687782585050773
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: f6220288b2fd34b40bb3d8432012533a, type: 3}
+  m_Name: Magnet
+  m_EditorClassIdentifier: CreativeAI.Gameplay::CreativeAI.Gameplay.ItemData
+  icon: {fileID: 21300000, guid: 456742bbc8e04736ab774c12b3431a46, type: 3}
+  id: 2010
+  key: magnet
+  itemName: "\u78C1\u77F3"
+  category: 1
+  description: 
+  material1: {fileID: 0}
+  material2: {fileID: 0}
+  _maxStack: 1
+--- !u!114 &-7696928682053945725
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: f6220288b2fd34b40bb3d8432012533a, type: 3}
+  m_Name: BalloonMagnet
+  m_EditorClassIdentifier: CreativeAI.Gameplay::CreativeAI.Gameplay.ItemData
+  icon: {fileID: 21300000, guid: f0c9c16245c84624286f4921f82ad42e, type: 3}
+  id: 2106
+  key: balloon_magnet
+  itemName: "\u98A8\u8239\u3068\u78C1\u77F3"
+  category: 1
+  description: 
+  material1: {fileID: -7287126184965246600}
+  material2: {fileID: -7822687782585050773}
+  _maxStack: 1
+--- !u!114 &-7556588895893103871
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 4c17053f8385ac14f9af901a292ffab6, type: 3}
+  m_Name: MisoSoupWhiteRice
+  m_EditorClassIdentifier: CreativeAI.Gameplay::CreativeAI.Gameplay.FoodData
+  icon: {fileID: 21300000, guid: 41931a9cbade7314aa80048d1c228451, type: 3}
+  id: 3139
+  key: miso_soup_white_rice
+  itemName: "\u5473\u564C\u6C41\u3068\u767D\u7C73"
+  category: 2
+  description: 
+  material1: {fileID: -3828202121546107835}
+  material2: {fileID: -1353312657710663384}
+  _maxStack: 1
+  _craftedResult: 1
+--- !u!114 &-7287126184965246600
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: f6220288b2fd34b40bb3d8432012533a, type: 3}
+  m_Name: Balloon
+  m_EditorClassIdentifier: CreativeAI.Gameplay::CreativeAI.Gameplay.ItemData
+  icon: {fileID: 21300000, guid: 121961bb968baf847899a17e54ffff29, type: 3}
+  id: 2001
+  key: balloon
+  itemName: "\u98A8\u8239"
+  category: 1
+  description: 
+  material1: {fileID: 0}
+  material2: {fileID: 0}
+  _maxStack: 1
+--- !u!114 &-7219981475053901071
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: f6220288b2fd34b40bb3d8432012533a, type: 3}
+  m_Name: ClockMagnet
+  m_EditorClassIdentifier: CreativeAI.Gameplay::CreativeAI.Gameplay.ItemData
+  icon: {fileID: 21300000, guid: 3166d165ef2895f4a8137163b4c77b5d, type: 3}
+  id: 2114
+  key: clock_magnet
+  itemName: "\u61D0\u4E2D\u6642\u8A08\u3068\u78C1\u77F3"
+  category: 1
+  description: 
+  material1: {fileID: 957348972317786013}
+  material2: {fileID: -7822687782585050773}
+  _maxStack: 1
+--- !u!114 &-7209103825163294352
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 4c17053f8385ac14f9af901a292ffab6, type: 3}
+  m_Name: StrawberryJelly
+  m_EditorClassIdentifier: CreativeAI.Gameplay::CreativeAI.Gameplay.FoodData
+  icon: {fileID: 21300000, guid: a3521690decc4702baef6703f15a1b87, type: 3}
+  id: 3008
+  key: strawberry_jelly
+  itemName: "\u3044\u3061\u3054\u30BC\u30EA\u30FC"
+  category: 2
+  description: 
+  material1: {fileID: 0}
+  material2: {fileID: 0}
+  _maxStack: 99
+  _craftedResult: 0
+--- !u!114 &-7209048631323264530
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: f6220288b2fd34b40bb3d8432012533a, type: 3}
+  m_Name: MagnetNote
+  m_EditorClassIdentifier: CreativeAI.Gameplay::CreativeAI.Gameplay.ItemData
+  icon: {fileID: 21300000, guid: 156c75b21e7ddc44fb6644e3c69e0665, type: 3}
+  id: 2141
+  key: magnet_note
+  itemName: "\u78C1\u77F3\u3068\u30CE\u30FC\u30C8"
+  category: 1
+  description: 
+  material1: {fileID: -7822687782585050773}
+  material2: {fileID: 1491394875471116521}
+  _maxStack: 1
+--- !u!114 &-7151258950564331069
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 4c17053f8385ac14f9af901a292ffab6, type: 3}
+  m_Name: GrapesPeach
+  m_EditorClassIdentifier: CreativeAI.Gameplay::CreativeAI.Gameplay.FoodData
+  icon: {fileID: 21300000, guid: 247f83672e3268846acc13ff7e3dde4b, type: 3}
+  id: 3133
+  key: grapes_peach
+  itemName: "\u3076\u3069\u3046\u3068\u6843"
+  category: 2
+  description: 
+  material1: {fileID: -5554650038091774464}
+  material2: {fileID: 2510756971122629955}
+  _maxStack: 1
+  _craftedResult: 1
+--- !u!114 &-7144490374526594860
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: f6220288b2fd34b40bb3d8432012533a, type: 3}
+  m_Name: ClockGlasses
+  m_EditorClassIdentifier: CreativeAI.Gameplay::CreativeAI.Gameplay.ItemData
+  icon: {fileID: 21300000, guid: 5e7c3b807262eea43afa60485545bd48, type: 3}
+  id: 2112
+  key: clock_glasses
+  itemName: "\u61D0\u4E2D\u6642\u8A08\u3068\u30E1\u30AC\u30CD"
+  category: 1
+  description: 
+  material1: {fileID: 957348972317786013}
+  material2: {fileID: 6717797442590564354}
+  _maxStack: 1
+--- !u!114 &-6822521455514549771
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 4c17053f8385ac14f9af901a292ffab6, type: 3}
+  m_Name: GrapesStrawberryJelly
+  m_EditorClassIdentifier: CreativeAI.Gameplay::CreativeAI.Gameplay.FoodData
+  icon: {fileID: 21300000, guid: aed8e2c1cada84d4cb221e29c16d72b5, type: 3}
+  id: 3134
+  key: grapes_strawberry_jelly
+  itemName: "\u3076\u3069\u3046\u3068\u3044\u3061\u3054\u30BC\u30EA\u30FC"
+  category: 2
+  description: 
+  material1: {fileID: -5554650038091774464}
+  material2: {fileID: -7209103825163294352}
+  _maxStack: 1
+  _craftedResult: 1
+--- !u!114 &-6815356426529351407
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 4c17053f8385ac14f9af901a292ffab6, type: 3}
+  m_Name: MisoSoupOrangeJuice
+  m_EditorClassIdentifier: CreativeAI.Gameplay::CreativeAI.Gameplay.FoodData
+  icon: {fileID: 21300000, guid: 2ad8e93cb263e1944bc9a325e6f43afc, type: 3}
+  id: 3136
+  key: miso_soup_orange_juice
+  itemName: "\u5473\u564C\u6C41\u3068\u307F\u304B\u3093\u30B8\u30E5\u30FC\u30B9"
+  category: 2
+  description: 
+  material1: {fileID: -3828202121546107835}
+  material2: {fileID: -6523541574003027713}
+  _maxStack: 1
+  _craftedResult: 1
+--- !u!114 &-6593431625258734413
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: f6220288b2fd34b40bb3d8432012533a, type: 3}
+  m_Name: GlassesMagnet
+  m_EditorClassIdentifier: CreativeAI.Gameplay::CreativeAI.Gameplay.ItemData
+  icon: {fileID: 21300000, guid: 6bce25c0827433944a37dcbaf2dcc749, type: 3}
+  id: 2132
+  key: glasses_magnet
+  itemName: "\u30E1\u30AC\u30CD\u3068\u78C1\u77F3"
+  category: 1
+  description: 
+  material1: {fileID: 6717797442590564354}
+  material2: {fileID: -7822687782585050773}
+  _maxStack: 1
+--- !u!114 &-6523541574003027713
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 4c17053f8385ac14f9af901a292ffab6, type: 3}
+  m_Name: OrangeJuice
+  m_EditorClassIdentifier: CreativeAI.Gameplay::CreativeAI.Gameplay.FoodData
+  icon: {fileID: 21300000, guid: 8cde9b3485854a8ca4be08c5f5db4221, type: 3}
+  id: 3007
+  key: orange_juice
+  itemName: "\u307F\u304B\u3093\u30B8\u30E5\u30FC\u30B9"
+  category: 2
+  description: 
+  material1: {fileID: 0}
+  material2: {fileID: 0}
+  _maxStack: 99
+  _craftedResult: 0
+--- !u!114 &-6167850202062327220
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 4c17053f8385ac14f9af901a292ffab6, type: 3}
+  m_Name: PeachStrawberryJelly
+  m_EditorClassIdentifier: CreativeAI.Gameplay::CreativeAI.Gameplay.FoodData
+  icon: {fileID: 21300000, guid: 24df83a50e495894eb4071d4c99799fd, type: 3}
+  id: 3143
+  key: peach_strawberry_jelly
+  itemName: "\u6843\u3068\u3044\u3061\u3054\u30BC\u30EA\u30FC"
+  category: 2
+  description: 
+  material1: {fileID: 2510756971122629955}
+  material2: {fileID: -7209103825163294352}
+  _maxStack: 1
+  _craftedResult: 1
+--- !u!114 &-5554650038091774464
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 4c17053f8385ac14f9af901a292ffab6, type: 3}
+  m_Name: Grapes
+  m_EditorClassIdentifier: CreativeAI.Gameplay::CreativeAI.Gameplay.FoodData
+  icon: {fileID: 21300000, guid: 0589d4bcaf69ace4cbf94180842083b1, type: 3}
+  id: 3003
+  key: grapes
+  itemName: "\u3076\u3069\u3046"
+  category: 2
+  description: 
+  material1: {fileID: 0}
+  material2: {fileID: 0}
+  _maxStack: 99
+  _craftedResult: 0
+--- !u!114 &-5554381930040861709
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: f6220288b2fd34b40bb3d8432012533a, type: 3}
+  m_Name: ClassifiedDocument3
+  m_EditorClassIdentifier: CreativeAI.Gameplay::CreativeAI.Gameplay.ItemData
+  icon: {fileID: 21300000, guid: 47174aa7aa9647c4a89e9f311347a8bb, type: 3}
+  id: 4005
+  key: classified_document_3
+  itemName: "\u6A5F\u5BC6\u66F8\u985E\uFF13"
+  category: 3
+  description: 
+  material1: {fileID: 0}
+  material2: {fileID: 0}
+  _maxStack: 1
+--- !u!114 &-5527330494723496056
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: f6220288b2fd34b40bb3d8432012533a, type: 3}
+  m_Name: ClockUmbrella
+  m_EditorClassIdentifier: CreativeAI.Gameplay::CreativeAI.Gameplay.ItemData
+  icon: {fileID: 21300000, guid: c4b271788a60f3b4f9d37dcd62d222e3, type: 3}
+  id: 2117
+  key: clock_umbrella
+  itemName: "\u61D0\u4E2D\u6642\u8A08\u3068\u5098"
+  category: 1
+  description: 
+  material1: {fileID: 957348972317786013}
+  material2: {fileID: -181082550691912316}
+  _maxStack: 1
+--- !u!114 &-5488544371302167384
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 4c17053f8385ac14f9af901a292ffab6, type: 3}
+  m_Name: StrawberryJellyWhiteRice
+  m_EditorClassIdentifier: CreativeAI.Gameplay::CreativeAI.Gameplay.FoodData
+  icon: {fileID: 21300000, guid: 548a943080271814fa5c18e842ec6eb7, type: 3}
+  id: 3145
+  key: strawberry_jelly_white_rice
+  itemName: "\u3044\u3061\u3054\u30BC\u30EA\u30FC\u3068\u767D\u7C73"
+  category: 2
+  description: 
+  material1: {fileID: -7209103825163294352}
+  material2: {fileID: -1353312657710663384}
+  _maxStack: 1
+  _craftedResult: 1
+--- !u!114 &-5452963127977007407
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: f6220288b2fd34b40bb3d8432012533a, type: 3}
+  m_Name: BalloonGlasses
+  m_EditorClassIdentifier: CreativeAI.Gameplay::CreativeAI.Gameplay.ItemData
+  icon: {fileID: 21300000, guid: 84dbe8dd151226d4197da800b2ecd1e0, type: 3}
+  id: 2104
+  key: balloon_glasses
+  itemName: "\u98A8\u8239\u3068\u30E1\u30AC\u30CD"
+  category: 1
+  description: 
+  material1: {fileID: -7287126184965246600}
+  material2: {fileID: 6717797442590564354}
+  _maxStack: 1
+--- !u!114 &-5232592737924120389
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: f6220288b2fd34b40bb3d8432012533a, type: 3}
+  m_Name: BalloonHat
+  m_EditorClassIdentifier: CreativeAI.Gameplay::CreativeAI.Gameplay.ItemData
+  icon: {fileID: 21300000, guid: 053309fcab2e4ee4d9bdb86ffdd83341, type: 3}
+  id: 2105
+  key: balloon_hat
+  itemName: "\u98A8\u8239\u3068\u5E3D\u5B50"
+  category: 1
+  description: 
+  material1: {fileID: -7287126184965246600}
+  material2: {fileID: 5905387601538661209}
+  _maxStack: 1
+--- !u!114 &-4957436143111774418
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: f6220288b2fd34b40bb3d8432012533a, type: 3}
+  m_Name: GlassesNote
+  m_EditorClassIdentifier: CreativeAI.Gameplay::CreativeAI.Gameplay.ItemData
+  icon: {fileID: 21300000, guid: 139a2e7365e8bf84a9b8115a1f0b0394, type: 3}
+  id: 2134
+  key: glasses_note
+  itemName: "\u30E1\u30AC\u30CD\u3068\u30CE\u30FC\u30C8"
+  category: 1
+  description: 
+  material1: {fileID: 6717797442590564354}
+  material2: {fileID: 1491394875471116521}
+  _maxStack: 1
+--- !u!114 &-4854567179277690954
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 4c17053f8385ac14f9af901a292ffab6, type: 3}
+  m_Name: GrapesOrangeJuice
+  m_EditorClassIdentifier: CreativeAI.Gameplay::CreativeAI.Gameplay.FoodData
+  icon: {fileID: 21300000, guid: 479bc9af41458514cb0b9eb469a2a7b8, type: 3}
+  id: 3132
+  key: grapes_orange_juice
+  itemName: "\u3076\u3069\u3046\u3068\u307F\u304B\u3093\u30B8\u30E5\u30FC\u30B9"
+  category: 2
+  description: 
+  material1: {fileID: -5554650038091774464}
+  material2: {fileID: -6523541574003027713}
+  _maxStack: 1
+  _craftedResult: 1
+--- !u!114 &-4687406855055425733
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 4c17053f8385ac14f9af901a292ffab6, type: 3}
+  m_Name: BananaWhiteRice
+  m_EditorClassIdentifier: CreativeAI.Gameplay::CreativeAI.Gameplay.FoodData
+  icon: {fileID: 21300000, guid: c8af1c62872df4c4cb1194926584b0d8, type: 3}
+  id: 3118
+  key: banana_white_rice
+  itemName: "\u30D0\u30CA\u30CA\u3068\u767D\u7C73"
+  category: 2
+  description: 
+  material1: {fileID: -725015441715178452}
+  material2: {fileID: -1353312657710663384}
+  _maxStack: 1
+  _craftedResult: 1
+--- !u!114 &-4500340855248024297
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 4c17053f8385ac14f9af901a292ffab6, type: 3}
+  m_Name: AppleBanana
+  m_EditorClassIdentifier: CreativeAI.Gameplay::CreativeAI.Gameplay.FoodData
+  icon: {fileID: 21300000, guid: d3ede3827c79d984d8e9144a08fbf865, type: 3}
+  id: 3102
+  key: apple_banana
+  itemName: "\u308A\u3093\u3054\u3068\u30D0\u30CA\u30CA"
+  category: 2
+  description: 
+  material1: {fileID: 8561165396911074249}
+  material2: {fileID: -725015441715178452}
+  _maxStack: 1
+  _craftedResult: 1
+--- !u!114 &-4481318259841526497
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 4c17053f8385ac14f9af901a292ffab6, type: 3}
+  m_Name: BrownRiceCreamCookiePeach
+  m_EditorClassIdentifier: CreativeAI.Gameplay::CreativeAI.Gameplay.FoodData
+  icon: {fileID: 21300000, guid: 82e3e465a883a6a459585a94a2e048d4, type: 3}
+  id: 3123
+  key: brown_rice_cream_cookie_peach
+  itemName: "\u30AF\u30EA\u30FC\u30E0\u7384\u7C73\u30AF\u30C3\u30AD\u30FC\u3068\u6843"
+  category: 2
+  description: 
+  material1: {fileID: -3201117879322543463}
+  material2: {fileID: 2510756971122629955}
+  _maxStack: 1
+  _craftedResult: 1
+--- !u!114 &-4102681549297173602
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 4c17053f8385ac14f9af901a292ffab6, type: 3}
+  m_Name: BrownRiceCreamCookieWhiteRice
+  m_EditorClassIdentifier: CreativeAI.Gameplay::CreativeAI.Gameplay.FoodData
+  icon: {fileID: 21300000, guid: f436c234888d1714496293b2c9ef1d80, type: 3}
+  id: 3125
+  key: brown_rice_cream_cookie_white_rice
+  itemName: "\u30AF\u30EA\u30FC\u30E0\u7384\u7C73\u30AF\u30C3\u30AD\u30FC\u3068\u767D\u7C73"
+  category: 2
+  description: 
+  material1: {fileID: -3201117879322543463}
+  material2: {fileID: -1353312657710663384}
+  _maxStack: 1
+  _craftedResult: 1
+--- !u!114 &-4026701072460703379
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: f6220288b2fd34b40bb3d8432012533a, type: 3}
+  m_Name: BalloonFullBodyTights
+  m_EditorClassIdentifier: CreativeAI.Gameplay::CreativeAI.Gameplay.ItemData
+  icon: {fileID: 21300000, guid: 2d7318dc5a11aa443a1b3ba2e3a40f6c, type: 3}
+  id: 2103
+  key: balloon_full_body_tights
+  itemName: "\u98A8\u8239\u3068\u5168\u8EAB\u30BF\u30A4\u30C4"
+  category: 1
+  description: 
+  material1: {fileID: -7287126184965246600}
+  material2: {fileID: 8829090763925122756}
+  _maxStack: 1
+--- !u!114 &-3828202121546107835
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 4c17053f8385ac14f9af901a292ffab6, type: 3}
+  m_Name: MisoSoup
+  m_EditorClassIdentifier: CreativeAI.Gameplay::CreativeAI.Gameplay.FoodData
+  icon: {fileID: 21300000, guid: 650b169de7de8a0448680adb1188aaa7, type: 3}
+  id: 3004
+  key: miso_soup
+  itemName: "\u5473\u564C\u6C41"
+  category: 2
+  description: 
+  material1: {fileID: 0}
+  material2: {fileID: 0}
+  _maxStack: 99
+  _craftedResult: 0
+--- !u!114 &-3703795954772151344
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: f6220288b2fd34b40bb3d8432012533a, type: 3}
+  m_Name: BalloonUmbrella
+  m_EditorClassIdentifier: CreativeAI.Gameplay::CreativeAI.Gameplay.ItemData
+  icon: {fileID: 21300000, guid: 85fe6ecdf0138fb4b8d915a3f246a7d2, type: 3}
+  id: 2109
+  key: balloon_umbrella
+  itemName: "\u98A8\u8239\u3068\u5098"
+  category: 1
+  description: 
+  material1: {fileID: -7287126184965246600}
+  material2: {fileID: -181082550691912316}
+  _maxStack: 1
+--- !u!114 &-3655791590440459113
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 4c17053f8385ac14f9af901a292ffab6, type: 3}
+  m_Name: CoffeeMisoSoup
+  m_EditorClassIdentifier: CreativeAI.Gameplay::CreativeAI.Gameplay.FoodData
+  icon: {fileID: 21300000, guid: 07ee879342e41fc4ba83c4c588c4fb70, type: 3}
+  id: 3127
+  key: coffee_miso_soup
+  itemName: "\u30B3\u30FC\u30D2\u30FC\u3068\u5473\u564C\u6C41"
+  category: 2
+  description: 
+  material1: {fileID: -792122127041355525}
+  material2: {fileID: -3828202121546107835}
+  _maxStack: 1
+  _craftedResult: 1
+--- !u!114 &-3461154329600486292
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: f6220288b2fd34b40bb3d8432012533a, type: 3}
+  m_Name: BalloonFluorescentLight
+  m_EditorClassIdentifier: CreativeAI.Gameplay::CreativeAI.Gameplay.ItemData
+  icon: {fileID: 21300000, guid: 91124f52fcb89414ba90893b9cd371b0, type: 3}
+  id: 2102
+  key: balloon_fluorescent_light
+  itemName: "\u98A8\u8239\u3068\u86CD\u5149\u706F"
+  category: 1
+  description: 
+  material1: {fileID: -7287126184965246600}
+  material2: {fileID: -263205480878404495}
+  _maxStack: 1
+--- !u!114 &-3295083415862882537
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 4c17053f8385ac14f9af901a292ffab6, type: 3}
+  m_Name: BananaPeach
+  m_EditorClassIdentifier: CreativeAI.Gameplay::CreativeAI.Gameplay.FoodData
+  icon: {fileID: 21300000, guid: a86cb9af0251ce1448c0d36a902fffd1, type: 3}
+  id: 3116
+  key: banana_peach
+  itemName: "\u30D0\u30CA\u30CA\u3068\u6843"
+  category: 2
+  description: 
+  material1: {fileID: -725015441715178452}
+  material2: {fileID: 2510756971122629955}
+  _maxStack: 1
+  _craftedResult: 1
+--- !u!114 &-3285615056003520683
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: f6220288b2fd34b40bb3d8432012533a, type: 3}
+  m_Name: CardKey
+  m_EditorClassIdentifier: CreativeAI.Gameplay::CreativeAI.Gameplay.ItemData
+  icon: {fileID: 21300000, guid: d05cd15c5ac7f884996037ee8f4837e6, type: 3}
+  id: 4002
+  key: card_key
+  itemName: "\u30AB\u30FC\u30C9\u30AD\u30FC"
+  category: 3
+  description: 
+  material1: {fileID: 0}
+  material2: {fileID: 0}
+  _maxStack: 1
+--- !u!114 &-3201117879322543463
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 4c17053f8385ac14f9af901a292ffab6, type: 3}
+  m_Name: BrownRiceCreamCookie
+  m_EditorClassIdentifier: CreativeAI.Gameplay::CreativeAI.Gameplay.FoodData
+  icon: {fileID: 21300000, guid: a1d7f2dd1d1444448497774badd7973c, type: 3}
+  id: 3009
+  key: brown_rice_cream_cookie
+  itemName: "\u30AF\u30EA\u30FC\u30E0\u7384\u7C73\u30AF\u30C3\u30AD\u30FC"
+  category: 2
+  description: 
+  material1: {fileID: 0}
+  material2: {fileID: 0}
+  _maxStack: 99
+  _craftedResult: 0
+--- !u!114 &-3164235445684247959
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: f6220288b2fd34b40bb3d8432012533a, type: 3}
+  m_Name: ClassifiedDocument2
+  m_EditorClassIdentifier: CreativeAI.Gameplay::CreativeAI.Gameplay.ItemData
+  icon: {fileID: 21300000, guid: 9849b8827dd66ed4b9adbb882a818e9a, type: 3}
+  id: 4004
+  key: classified_document_2
+  itemName: "\u6A5F\u5BC6\u66F8\u985E\uFF12"
+  category: 3
+  description: 
+  material1: {fileID: 0}
+  material2: {fileID: 0}
+  _maxStack: 1
+--- !u!114 &-2911360948050043520
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: f6220288b2fd34b40bb3d8432012533a, type: 3}
+  m_Name: GlassesUmbrella
+  m_EditorClassIdentifier: CreativeAI.Gameplay::CreativeAI.Gameplay.ItemData
+  icon: {fileID: 21300000, guid: 9a61d75a56b2bef4699f0b369c71151f, type: 3}
+  id: 2135
+  key: glasses_umbrella
+  itemName: "\u30E1\u30AC\u30CD\u3068\u5098"
+  category: 1
+  description: 
+  material1: {fileID: 6717797442590564354}
+  material2: {fileID: -181082550691912316}
+  _maxStack: 1
+--- !u!114 &-2890090790332908615
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 4c17053f8385ac14f9af901a292ffab6, type: 3}
+  m_Name: CoffeeWhiteRice
+  m_EditorClassIdentifier: CreativeAI.Gameplay::CreativeAI.Gameplay.FoodData
+  icon: {fileID: 21300000, guid: 1e1af615272ad124eaa2726d18db4395, type: 3}
+  id: 3131
+  key: coffee_white_rice
+  itemName: "\u30B3\u30FC\u30D2\u30FC\u3068\u767D\u7C73"
+  category: 2
+  description: 
+  material1: {fileID: -792122127041355525}
+  material2: {fileID: -1353312657710663384}
+  _maxStack: 1
+  _craftedResult: 1
+--- !u!114 &-2265525630596043812
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: f6220288b2fd34b40bb3d8432012533a, type: 3}
+  m_Name: ClockNote
+  m_EditorClassIdentifier: CreativeAI.Gameplay::CreativeAI.Gameplay.ItemData
+  icon: {fileID: 21300000, guid: b069a202b23556647aacbbff62531772, type: 3}
+  id: 2116
+  key: clock_note
+  itemName: "\u61D0\u4E2D\u6642\u8A08\u3068\u30CE\u30FC\u30C8"
+  category: 1
+  description: 
+  material1: {fileID: 957348972317786013}
+  material2: {fileID: 1491394875471116521}
+  _maxStack: 1
+--- !u!114 &-1770416292459581724
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: f6220288b2fd34b40bb3d8432012533a, type: 3}
+  m_Name: MicrophoneUmbrella
+  m_EditorClassIdentifier: CreativeAI.Gameplay::CreativeAI.Gameplay.ItemData
+  icon: {fileID: 21300000, guid: f98314a56ad3934489c3311a1b49dff5, type: 3}
+  id: 2144
+  key: microphone_umbrella
+  itemName: "\u30DE\u30A4\u30AF\u3068\u5098"
+  category: 1
+  description: 
+  material1: {fileID: 7372939191468712669}
+  material2: {fileID: -181082550691912316}
+  _maxStack: 1
+--- !u!114 &-1602635520431383242
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 4c17053f8385ac14f9af901a292ffab6, type: 3}
+  m_Name: BananaCoffee
+  m_EditorClassIdentifier: CreativeAI.Gameplay::CreativeAI.Gameplay.FoodData
+  icon: {fileID: 21300000, guid: 2d608def38a99ad49b3ec9143768585f, type: 3}
+  id: 3112
+  key: banana_coffee
+  itemName: "\u30D0\u30CA\u30CA\u3068\u30B3\u30FC\u30D2\u30FC"
+  category: 2
+  description: 
+  material1: {fileID: -725015441715178452}
+  material2: {fileID: -792122127041355525}
+  _maxStack: 1
+  _craftedResult: 1
+--- !u!114 &-1550066538349931610
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 4c17053f8385ac14f9af901a292ffab6, type: 3}
+  m_Name: AppleWhiteRice
+  m_EditorClassIdentifier: CreativeAI.Gameplay::CreativeAI.Gameplay.FoodData
+  icon: {fileID: 21300000, guid: bea7577c5558a9945a18538d7e5dba88, type: 3}
+  id: 3110
+  key: apple_white_rice
+  itemName: "\u308A\u3093\u3054\u3068\u767D\u7C73"
+  category: 2
+  description: 
+  material1: {fileID: 8561165396911074249}
+  material2: {fileID: -1353312657710663384}
+  _maxStack: 1
+  _craftedResult: 1
+--- !u!114 &-1545988724839918456
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: f6220288b2fd34b40bb3d8432012533a, type: 3}
+  m_Name: FluorescentLightNote
+  m_EditorClassIdentifier: CreativeAI.Gameplay::CreativeAI.Gameplay.ItemData
+  icon: {fileID: 21300000, guid: 71a9286b4f9ffad4d9ec2868b55c0155, type: 3}
+  id: 2123
+  key: fluorescent_light_note
+  itemName: "\u86CD\u5149\u706F\u3068\u30CE\u30FC\u30C8"
+  category: 1
+  description: 
+  material1: {fileID: -263205480878404495}
+  material2: {fileID: 1491394875471116521}
+  _maxStack: 1
+--- !u!114 &-1529064083422081683
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: f6220288b2fd34b40bb3d8432012533a, type: 3}
+  m_Name: MysteriousKey
+  m_EditorClassIdentifier: CreativeAI.Gameplay::CreativeAI.Gameplay.ItemData
+  icon: {fileID: 21300000, guid: 2486ffee5931fee48bea044f51af90b9, type: 3}
+  id: 4008
+  key: mysterious_key
+  itemName: "\u8B0E\u306E\u9375"
+  category: 3
+  description: 
+  material1: {fileID: 0}
+  material2: {fileID: 0}
+  _maxStack: 1
+--- !u!114 &-1527757911685337003
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 4c17053f8385ac14f9af901a292ffab6, type: 3}
+  m_Name: BrownRiceCreamCookieOrangeJuice
+  m_EditorClassIdentifier: CreativeAI.Gameplay::CreativeAI.Gameplay.FoodData
+  icon: {fileID: 21300000, guid: 4de7b234d92919345a1de81e2bc318e7, type: 3}
+  id: 3122
+  key: brown_rice_cream_cookie_orange_juice
+  itemName: "\u30AF\u30EA\u30FC\u30E0\u7384\u7C73\u30AF\u30C3\u30AD\u30FC\u3068\u307F\u304B\u3093\u30B8\u30E5\u30FC\u30B9"
+  category: 2
+  description: 
+  material1: {fileID: -3201117879322543463}
+  material2: {fileID: -6523541574003027713}
+  _maxStack: 1
+  _craftedResult: 1
+--- !u!114 &-1509882000384224015
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: f6220288b2fd34b40bb3d8432012533a, type: 3}
+  m_Name: DirtyRecord
+  m_EditorClassIdentifier: CreativeAI.Gameplay::CreativeAI.Gameplay.ItemData
+  icon: {fileID: 21300000, guid: 6ea9026abeaa65347ac7891ab402ac46, type: 3}
+  id: 4006
+  key: dirty_record
+  itemName: "\u6C5A\u308C\u305F\u30EC\u30B3\u30FC\u30C9"
+  category: 3
+  description: 
+  material1: {fileID: 0}
+  material2: {fileID: 0}
+  _maxStack: 1
+--- !u!114 &-1353312657710663384
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 4c17053f8385ac14f9af901a292ffab6, type: 3}
+  m_Name: WhiteRice
+  m_EditorClassIdentifier: CreativeAI.Gameplay::CreativeAI.Gameplay.FoodData
+  icon: {fileID: 21300000, guid: 3860aaed0470f6a4882915d297d17cc8, type: 3}
+  id: 3005
+  key: white_rice
+  itemName: "\u767D\u7C73"
+  category: 2
+  description: 
+  material1: {fileID: 0}
+  material2: {fileID: 0}
+  _maxStack: 99
+  _craftedResult: 0
+--- !u!114 &-1000033901142307350
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: f6220288b2fd34b40bb3d8432012533a, type: 3}
+  m_Name: FluorescentLightHat
+  m_EditorClassIdentifier: CreativeAI.Gameplay::CreativeAI.Gameplay.ItemData
+  icon: {fileID: 21300000, guid: cca8535d8f4ed1c4693bf19e463176b4, type: 3}
+  id: 2120
+  key: fluorescent_light_hat
+  itemName: "\u86CD\u5149\u706F\u3068\u5E3D\u5B50"
+  category: 1
+  description: 
+  material1: {fileID: -263205480878404495}
+  material2: {fileID: 5905387601538661209}
+  _maxStack: 1
+--- !u!114 &-872518988535113340
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 4c17053f8385ac14f9af901a292ffab6, type: 3}
+  m_Name: AppleStrawberryJelly
+  m_EditorClassIdentifier: CreativeAI.Gameplay::CreativeAI.Gameplay.FoodData
+  icon: {fileID: 21300000, guid: 120fedc95da464b439280d7c64a1e7be, type: 3}
+  id: 3109
+  key: apple_strawberry_jelly
+  itemName: "\u308A\u3093\u3054\u3068\u3044\u3061\u3054\u30BC\u30EA\u30FC"
+  category: 2
+  description: 
+  material1: {fileID: 8561165396911074249}
+  material2: {fileID: -7209103825163294352}
+  _maxStack: 1
+  _craftedResult: 1
+--- !u!114 &-854547161951043308
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: f6220288b2fd34b40bb3d8432012533a, type: 3}
+  m_Name: BalloonNote
+  m_EditorClassIdentifier: CreativeAI.Gameplay::CreativeAI.Gameplay.ItemData
+  icon: {fileID: 21300000, guid: 813235865f8134d498e2a208348d6a94, type: 3}
+  id: 2108
+  key: balloon_note
+  itemName: "\u98A8\u8239\u3068\u30CE\u30FC\u30C8"
+  category: 1
+  description: 
+  material1: {fileID: -7287126184965246600}
+  material2: {fileID: 1491394875471116521}
+  _maxStack: 1
+--- !u!114 &-792122127041355525
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 4c17053f8385ac14f9af901a292ffab6, type: 3}
+  m_Name: Coffee
+  m_EditorClassIdentifier: CreativeAI.Gameplay::CreativeAI.Gameplay.FoodData
+  icon: {fileID: 21300000, guid: 234f85522c3946a1b816ae042e0a131a, type: 3}
+  id: 3006
+  key: coffee
+  itemName: "\u30B3\u30FC\u30D2\u30FC"
+  category: 2
+  description: 
+  material1: {fileID: 0}
+  material2: {fileID: 0}
+  _maxStack: 99
+  _craftedResult: 0
+--- !u!114 &-725015441715178452
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 4c17053f8385ac14f9af901a292ffab6, type: 3}
+  m_Name: Banana
+  m_EditorClassIdentifier: CreativeAI.Gameplay::CreativeAI.Gameplay.FoodData
+  icon: {fileID: 21300000, guid: 3781383fcbeb35848a9d7684ed36486b, type: 3}
+  id: 3002
+  key: banana
+  itemName: "\u30D0\u30CA\u30CA"
+  category: 2
+  description: 
+  material1: {fileID: 0}
+  material2: {fileID: 0}
+  _maxStack: 99
+  _craftedResult: 0
+--- !u!114 &-454674779473143831
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 4c17053f8385ac14f9af901a292ffab6, type: 3}
+  m_Name: BananaStrawberryJelly
+  m_EditorClassIdentifier: CreativeAI.Gameplay::CreativeAI.Gameplay.FoodData
+  icon: {fileID: 21300000, guid: d762b78ef8ec0634a96e99fd3b124a49, type: 3}
+  id: 3117
+  key: banana_strawberry_jelly
+  itemName: "\u30D0\u30CA\u30CA\u3068\u3044\u3061\u3054\u30BC\u30EA\u30FC"
+  category: 2
+  description: 
+  material1: {fileID: -725015441715178452}
+  material2: {fileID: -7209103825163294352}
+  _maxStack: 1
+  _craftedResult: 1
+--- !u!114 &-398929416112840376
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: f6220288b2fd34b40bb3d8432012533a, type: 3}
+  m_Name: FluorescentLightMicrophone
+  m_EditorClassIdentifier: CreativeAI.Gameplay::CreativeAI.Gameplay.ItemData
+  icon: {fileID: 21300000, guid: 0b1c4371ca9134d4cb8008b9bf7b6c54, type: 3}
+  id: 2122
+  key: fluorescent_light_microphone
+  itemName: "\u86CD\u5149\u706F\u3068\u30DE\u30A4\u30AF"
+  category: 1
+  description: 
+  material1: {fileID: -263205480878404495}
+  material2: {fileID: 7372939191468712669}
+  _maxStack: 1
+--- !u!114 &-328907665192182098
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 4c17053f8385ac14f9af901a292ffab6, type: 3}
+  m_Name: AppleGrapes
+  m_EditorClassIdentifier: CreativeAI.Gameplay::CreativeAI.Gameplay.FoodData
+  icon: {fileID: 21300000, guid: 4f302a014c115df449b1b6b358932525, type: 3}
+  id: 3105
+  key: apple_grapes
+  itemName: "\u308A\u3093\u3054\u3068\u3076\u3069\u3046"
+  category: 2
+  description: 
+  material1: {fileID: 8561165396911074249}
+  material2: {fileID: -5554650038091774464}
+  _maxStack: 1
+  _craftedResult: 1
+--- !u!114 &-263205480878404495
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: f6220288b2fd34b40bb3d8432012533a, type: 3}
+  m_Name: FluorescentLight
+  m_EditorClassIdentifier: CreativeAI.Gameplay::CreativeAI.Gameplay.ItemData
+  icon: {fileID: 21300000, guid: 6bd72ab147b34fbc99b47a51807e4c40, type: 3}
+  id: 2006
+  key: fluorescent_light
+  itemName: "\u86CD\u5149\u706F"
+  category: 1
+  description: 
+  material1: {fileID: 0}
+  material2: {fileID: 0}
+  _maxStack: 1
+--- !u!114 &-181082550691912316
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: f6220288b2fd34b40bb3d8432012533a, type: 3}
+  m_Name: Umbrella
+  m_EditorClassIdentifier: CreativeAI.Gameplay::CreativeAI.Gameplay.ItemData
+  icon: {fileID: 21300000, guid: c1d17e0aa74f4d0c8cea80d7893e8c68, type: 3}
+  id: 2011
+  key: umbrella
+  itemName: "\u5098"
+  category: 1
+  description: 
+  material1: {fileID: 0}
+  material2: {fileID: 0}
+  _maxStack: 1
+--- !u!114 &-8376776186227395
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: f6220288b2fd34b40bb3d8432012533a, type: 3}
+  m_Name: ClockHat
+  m_EditorClassIdentifier: CreativeAI.Gameplay::CreativeAI.Gameplay.ItemData
+  icon: {fileID: 21300000, guid: 1e34ed5e5a6ac2541aa41afeeeea6cb4, type: 3}
+  id: 2113
+  key: clock_hat
+  itemName: "\u61D0\u4E2D\u6642\u8A08\u3068\u5E3D\u5B50"
+  category: 1
+  description: 
+  material1: {fileID: 957348972317786013}
+  material2: {fileID: 5905387601538661209}
+  _maxStack: 1
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: e1bf1653fbb00d84bbe67daf4d1c5c8a, type: 3}
+  m_Name: ItemCatalog
+  m_EditorClassIdentifier: CreativeAI.Gameplay::CreativeAI.Gameplay.ItemCatalog
+  items:
+  - {fileID: -7287126184965246600}
+  - {fileID: 957348972317786013}
+  - {fileID: 7372939191468712669}
+  - {fileID: 1491394875471116521}
+  - {fileID: -263205480878404495}
+  - {fileID: 8829090763925122756}
+  - {fileID: 6717797442590564354}
+  - {fileID: 5905387601538661209}
+  - {fileID: -7822687782585050773}
+  - {fileID: -181082550691912316}
+  - {fileID: 4510121819378496928}
+  - {fileID: -3461154329600486292}
+  - {fileID: -4026701072460703379}
+  - {fileID: -5452963127977007407}
+  - {fileID: -5232592737924120389}
+  - {fileID: -7696928682053945725}
+  - {fileID: 8715171132194124482}
+  - {fileID: -854547161951043308}
+  - {fileID: -3703795954772151344}
+  - {fileID: -7875201064841803251}
+  - {fileID: 1462835544985513793}
+  - {fileID: -7144490374526594860}
+  - {fileID: -8376776186227395}
+  - {fileID: -7219981475053901071}
+  - {fileID: 8303234618874048848}
+  - {fileID: -2265525630596043812}
+  - {fileID: -5527330494723496056}
+  - {fileID: 2849707181064893915}
+  - {fileID: 6401494734126284406}
+  - {fileID: -1000033901142307350}
+  - {fileID: 786327939311382931}
+  - {fileID: -398929416112840376}
+  - {fileID: -1545988724839918456}
+  - {fileID: 3179674092597059597}
+  - {fileID: 2218734045144225878}
+  - {fileID: 8910818099885315786}
+  - {fileID: 4956952278493378832}
+  - {fileID: 8434162520786934589}
+  - {fileID: 5867754658087610546}
+  - {fileID: 1604084481843028439}
+  - {fileID: 628760387340086612}
+  - {fileID: -6593431625258734413}
+  - {fileID: 7081302860122723695}
+  - {fileID: -4957436143111774418}
+  - {fileID: -2911360948050043520}
+  - {fileID: 1570920018496406432}
+  - {fileID: 6347792515565171776}
+  - {fileID: 3964869848126844184}
+  - {fileID: 5664360273888621444}
+  - {fileID: 156014011059072131}
+  - {fileID: -7209048631323264530}
+  - {fileID: 4244876691802142716}
+  - {fileID: 7014479008903250010}
+  - {fileID: -1770416292459581724}
+  - {fileID: 4146657232508585527}
+  - {fileID: 8561165396911074249}
+  - {fileID: -725015441715178452}
+  - {fileID: -5554650038091774464}
+  - {fileID: -3828202121546107835}
+  - {fileID: -1353312657710663384}
+  - {fileID: -792122127041355525}
+  - {fileID: -6523541574003027713}
+  - {fileID: -7209103825163294352}
+  - {fileID: -3201117879322543463}
+  - {fileID: 2510756971122629955}
+  - {fileID: 2331040594814541805}
+  - {fileID: -4500340855248024297}
+  - {fileID: 6751836207200061038}
+  - {fileID: 2553268808699322262}
+  - {fileID: -328907665192182098}
+  - {fileID: 5237264642481277470}
+  - {fileID: 1313001153971328821}
+  - {fileID: 323511757077452361}
+  - {fileID: -872518988535113340}
+  - {fileID: -1550066538349931610}
+  - {fileID: 2584660831174066737}
+  - {fileID: -1602635520431383242}
+  - {fileID: 250970027853099221}
+  - {fileID: 8563123787040156155}
+  - {fileID: 6557672020862040975}
+  - {fileID: -3295083415862882537}
+  - {fileID: -454674779473143831}
+  - {fileID: -4687406855055425733}
+  - {fileID: 2959819209918370784}
+  - {fileID: 4242431949249164510}
+  - {fileID: -8646190955341666459}
+  - {fileID: -1527757911685337003}
+  - {fileID: -4481318259841526497}
+  - {fileID: 4967486941914372216}
+  - {fileID: -4102681549297173602}
+  - {fileID: 3547136465509874368}
+  - {fileID: -3655791590440459113}
+  - {fileID: 1255666685105302567}
+  - {fileID: 6804220564497898098}
+  - {fileID: 1788904173668758852}
+  - {fileID: -2890090790332908615}
+  - {fileID: -4854567179277690954}
+  - {fileID: -7151258950564331069}
+  - {fileID: -6822521455514549771}
+  - {fileID: 8213032896582650990}
+  - {fileID: -6815356426529351407}
+  - {fileID: 1653491227728720833}
+  - {fileID: 2037280688758345246}
+  - {fileID: -7556588895893103871}
+  - {fileID: 1580048203237951825}
+  - {fileID: 1583997916462320167}
+  - {fileID: 1158243548665243523}
+  - {fileID: -6167850202062327220}
+  - {fileID: 7823367950198849727}
+  - {fileID: -5488544371302167384}
+  - {fileID: 245455951231252983}
+  - {fileID: -3285615056003520683}
+  - {fileID: 160536297539091246}
+  - {fileID: -3164235445684247959}
+  - {fileID: -5554381930040861709}
+  - {fileID: -1509882000384224015}
+  - {fileID: 103381126898428066}
+  - {fileID: -1529064083422081683}
+  - {fileID: -8915961382156157531}
+  - {fileID: 625787395348563315}
+  - {fileID: 3212865929743539824}
+--- !u!114 &103381126898428066
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: f6220288b2fd34b40bb3d8432012533a, type: 3}
+  m_Name: KeepsakeAccessory
+  m_EditorClassIdentifier: CreativeAI.Gameplay::CreativeAI.Gameplay.ItemData
+  icon: {fileID: 21300000, guid: 94d9a3e58530a324b954f0ccafb309a6, type: 3}
+  id: 4007
+  key: keepsake_accessory
+  itemName: "\u5F62\u898B\u306E\u30A2\u30AF\u30BB\u30B5\u30EA\u30FC"
+  category: 3
+  description: 
+  material1: {fileID: 0}
+  material2: {fileID: 0}
+  _maxStack: 1
+--- !u!114 &156014011059072131
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: f6220288b2fd34b40bb3d8432012533a, type: 3}
+  m_Name: MagnetMicrophone
+  m_EditorClassIdentifier: CreativeAI.Gameplay::CreativeAI.Gameplay.ItemData
+  icon: {fileID: 21300000, guid: 8014ac725fa9cca449112e8b39a1243e, type: 3}
+  id: 2140
+  key: magnet_microphone
+  itemName: "\u78C1\u77F3\u3068\u30DE\u30A4\u30AF"
+  category: 1
+  description: 
+  material1: {fileID: -7822687782585050773}
+  material2: {fileID: 7372939191468712669}
+  _maxStack: 1
+--- !u!114 &160536297539091246
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: f6220288b2fd34b40bb3d8432012533a, type: 3}
+  m_Name: ClassifiedDocument1
+  m_EditorClassIdentifier: CreativeAI.Gameplay::CreativeAI.Gameplay.ItemData
+  icon: {fileID: 21300000, guid: 4d41b66dafcbad94e9625ef4299bfb82, type: 3}
+  id: 4003
+  key: classified_document_1
+  itemName: "\u6A5F\u5BC6\u66F8\u985E\uFF11"
+  category: 3
+  description: 
+  material1: {fileID: 0}
+  material2: {fileID: 0}
+  _maxStack: 1
+--- !u!114 &245455951231252983
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: f6220288b2fd34b40bb3d8432012533a, type: 3}
+  m_Name: BrokenRobot
+  m_EditorClassIdentifier: CreativeAI.Gameplay::CreativeAI.Gameplay.ItemData
+  icon: {fileID: 21300000, guid: 8104966acaa7e314eaf6b29c5b145f40, type: 3}
+  id: 4001
+  key: broken_robot
+  itemName: "\u58CA\u308C\u305F\u30ED\u30DC\u30C3\u30C8"
+  category: 3
+  description: 
+  material1: {fileID: 0}
+  material2: {fileID: 0}
+  _maxStack: 1
+--- !u!114 &250970027853099221
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 4c17053f8385ac14f9af901a292ffab6, type: 3}
+  m_Name: BananaGrapes
+  m_EditorClassIdentifier: CreativeAI.Gameplay::CreativeAI.Gameplay.FoodData
+  icon: {fileID: 21300000, guid: e03ec454b79482f44b9e8384a051b543, type: 3}
+  id: 3113
+  key: banana_grapes
+  itemName: "\u30D0\u30CA\u30CA\u3068\u3076\u3069\u3046"
+  category: 2
+  description: 
+  material1: {fileID: -725015441715178452}
+  material2: {fileID: -5554650038091774464}
+  _maxStack: 1
+  _craftedResult: 1
+--- !u!114 &323511757077452361
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 4c17053f8385ac14f9af901a292ffab6, type: 3}
+  m_Name: ApplePeach
+  m_EditorClassIdentifier: CreativeAI.Gameplay::CreativeAI.Gameplay.FoodData
+  icon: {fileID: 21300000, guid: 8c073040bcf55ff47afd089d730dabae, type: 3}
+  id: 3108
+  key: apple_peach
+  itemName: "\u308A\u3093\u3054\u3068\u6843"
+  category: 2
+  description: 
+  material1: {fileID: 8561165396911074249}
+  material2: {fileID: 2510756971122629955}
+  _maxStack: 1
+  _craftedResult: 1
+--- !u!114 &625787395348563315
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: f6220288b2fd34b40bb3d8432012533a, type: 3}
+  m_Name: MysteriousNote2
+  m_EditorClassIdentifier: CreativeAI.Gameplay::CreativeAI.Gameplay.ItemData
+  icon: {fileID: 21300000, guid: 788492bc4cd7f2a42a2bab0720d0c970, type: 3}
+  id: 4010
+  key: mysterious_note_2
+  itemName: "\u8B0E\u306E\u624B\u8A18\uFF12"
+  category: 3
+  description: 
+  material1: {fileID: 0}
+  material2: {fileID: 0}
+  _maxStack: 1
+--- !u!114 &628760387340086612
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: f6220288b2fd34b40bb3d8432012533a, type: 3}
+  m_Name: GlassesHat
+  m_EditorClassIdentifier: CreativeAI.Gameplay::CreativeAI.Gameplay.ItemData
+  icon: {fileID: 21300000, guid: b6bad8ac63a849e44a7547be4348c0cb, type: 3}
+  id: 2131
+  key: glasses_hat
+  itemName: "\u30E1\u30AC\u30CD\u3068\u5E3D\u5B50"
+  category: 1
+  description: 
+  material1: {fileID: 6717797442590564354}
+  material2: {fileID: 5905387601538661209}
+  _maxStack: 1
+--- !u!114 &786327939311382931
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: f6220288b2fd34b40bb3d8432012533a, type: 3}
+  m_Name: FluorescentLightMagnet
+  m_EditorClassIdentifier: CreativeAI.Gameplay::CreativeAI.Gameplay.ItemData
+  icon: {fileID: 21300000, guid: b255a66ed4dfd6743b497ee64633ecb5, type: 3}
+  id: 2121
+  key: fluorescent_light_magnet
+  itemName: "\u86CD\u5149\u706F\u3068\u78C1\u77F3"
+  category: 1
+  description: 
+  material1: {fileID: -263205480878404495}
+  material2: {fileID: -7822687782585050773}
+  _maxStack: 1
+--- !u!114 &957348972317786013
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: f6220288b2fd34b40bb3d8432012533a, type: 3}
+  m_Name: Clock
+  m_EditorClassIdentifier: CreativeAI.Gameplay::CreativeAI.Gameplay.ItemData
+  icon: {fileID: 21300000, guid: 5fdccfaa7a48b4c718541844851a1cf1, type: 3}
+  id: 2002
+  key: clock
+  itemName: "\u61D0\u4E2D\u6642\u8A08"
+  category: 1
+  description: 
+  material1: {fileID: 0}
+  material2: {fileID: 0}
+  _maxStack: 1
+--- !u!114 &1158243548665243523
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 4c17053f8385ac14f9af901a292ffab6, type: 3}
+  m_Name: OrangeJuiceWhiteRice
+  m_EditorClassIdentifier: CreativeAI.Gameplay::CreativeAI.Gameplay.FoodData
+  icon: {fileID: 21300000, guid: 0c0e7c09d72a5ba48b49c8e86f9bcc0b, type: 3}
+  id: 3142
+  key: orange_juice_white_rice
+  itemName: "\u307F\u304B\u3093\u30B8\u30E5\u30FC\u30B9\u3068\u767D\u7C73"
+  category: 2
+  description: 
+  material1: {fileID: -6523541574003027713}
+  material2: {fileID: -1353312657710663384}
+  _maxStack: 1
+  _craftedResult: 1
+--- !u!114 &1255666685105302567
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 4c17053f8385ac14f9af901a292ffab6, type: 3}
+  m_Name: CoffeeOrangeJuice
+  m_EditorClassIdentifier: CreativeAI.Gameplay::CreativeAI.Gameplay.FoodData
+  icon: {fileID: 21300000, guid: b1ffd36195b002d428364889aba633ea, type: 3}
+  id: 3128
+  key: coffee_orange_juice
+  itemName: "\u30B3\u30FC\u30D2\u30FC\u3068\u307F\u304B\u3093\u30B8\u30E5\u30FC\u30B9"
+  category: 2
+  description: 
+  material1: {fileID: -792122127041355525}
+  material2: {fileID: -6523541574003027713}
+  _maxStack: 1
+  _craftedResult: 1
+--- !u!114 &1313001153971328821
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 4c17053f8385ac14f9af901a292ffab6, type: 3}
+  m_Name: AppleOrangeJuice
+  m_EditorClassIdentifier: CreativeAI.Gameplay::CreativeAI.Gameplay.FoodData
+  icon: {fileID: 21300000, guid: 22d85d0d177152e48bc0fda5459c7380, type: 3}
+  id: 3107
+  key: apple_orange_juice
+  itemName: "\u308A\u3093\u3054\u3068\u307F\u304B\u3093\u30B8\u30E5\u30FC\u30B9"
+  category: 2
+  description: 
+  material1: {fileID: 8561165396911074249}
+  material2: {fileID: -6523541574003027713}
+  _maxStack: 1
+  _craftedResult: 1
+--- !u!114 &1462835544985513793
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: f6220288b2fd34b40bb3d8432012533a, type: 3}
+  m_Name: ClockFullBodyTights
+  m_EditorClassIdentifier: CreativeAI.Gameplay::CreativeAI.Gameplay.ItemData
+  icon: {fileID: 21300000, guid: 169ad041d1fca1a45a52b62f6467d341, type: 3}
+  id: 2111
+  key: clock_full_body_tights
+  itemName: "\u61D0\u4E2D\u6642\u8A08\u3068\u5168\u8EAB\u30BF\u30A4\u30C4"
+  category: 1
+  description: 
+  material1: {fileID: 957348972317786013}
+  material2: {fileID: 8829090763925122756}
+  _maxStack: 1
+--- !u!114 &1491394875471116521
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: f6220288b2fd34b40bb3d8432012533a, type: 3}
+  m_Name: Note
+  m_EditorClassIdentifier: CreativeAI.Gameplay::CreativeAI.Gameplay.ItemData
+  icon: {fileID: 21300000, guid: 226eb0cae467f4e439069b63d7c66953, type: 3}
+  id: 2004
+  key: note
+  itemName: "\u30CE\u30FC\u30C8"
+  category: 1
+  description: 
+  material1: {fileID: 0}
+  material2: {fileID: 0}
+  _maxStack: 1
+--- !u!114 &1570920018496406432
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: f6220288b2fd34b40bb3d8432012533a, type: 3}
+  m_Name: HatMagnet
+  m_EditorClassIdentifier: CreativeAI.Gameplay::CreativeAI.Gameplay.ItemData
+  icon: {fileID: 21300000, guid: b6e167a73a0e3e74c8da1f1e28187432, type: 3}
+  id: 2136
+  key: hat_magnet
+  itemName: "\u5E3D\u5B50\u3068\u78C1\u77F3"
+  category: 1
+  description: 
+  material1: {fileID: 5905387601538661209}
+  material2: {fileID: -7822687782585050773}
+  _maxStack: 1
+--- !u!114 &1580048203237951825
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 4c17053f8385ac14f9af901a292ffab6, type: 3}
+  m_Name: OrangeJuicePeach
+  m_EditorClassIdentifier: CreativeAI.Gameplay::CreativeAI.Gameplay.FoodData
+  icon: {fileID: 21300000, guid: 781e9017241bcaa49a05edc8ab0fe13e, type: 3}
+  id: 3140
+  key: orange_juice_peach
+  itemName: "\u307F\u304B\u3093\u30B8\u30E5\u30FC\u30B9\u3068\u6843"
+  category: 2
+  description: 
+  material1: {fileID: -6523541574003027713}
+  material2: {fileID: 2510756971122629955}
+  _maxStack: 1
+  _craftedResult: 1
+--- !u!114 &1583997916462320167
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 4c17053f8385ac14f9af901a292ffab6, type: 3}
+  m_Name: OrangeJuiceStrawberryJelly
+  m_EditorClassIdentifier: CreativeAI.Gameplay::CreativeAI.Gameplay.FoodData
+  icon: {fileID: 21300000, guid: 7932aacb78b42aa4b908c6555ed5bde9, type: 3}
+  id: 3141
+  key: orange_juice_strawberry_jelly
+  itemName: "\u307F\u304B\u3093\u30B8\u30E5\u30FC\u30B9\u3068\u3044\u3061\u3054\u30BC\u30EA\u30FC"
+  category: 2
+  description: 
+  material1: {fileID: -6523541574003027713}
+  material2: {fileID: -7209103825163294352}
+  _maxStack: 1
+  _craftedResult: 1
+--- !u!114 &1604084481843028439
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: f6220288b2fd34b40bb3d8432012533a, type: 3}
+  m_Name: FullBodyTightsUmbrella
+  m_EditorClassIdentifier: CreativeAI.Gameplay::CreativeAI.Gameplay.ItemData
+  icon: {fileID: 21300000, guid: fd8dea77e5e178d44a2adc6ba1c01c15, type: 3}
+  id: 2130
+  key: full_body_tights_umbrella
+  itemName: "\u5168\u8EAB\u30BF\u30A4\u30C4\u3068\u5098"
+  category: 1
+  description: 
+  material1: {fileID: 8829090763925122756}
+  material2: {fileID: -181082550691912316}
+  _maxStack: 1
+--- !u!114 &1653491227728720833
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 4c17053f8385ac14f9af901a292ffab6, type: 3}
+  m_Name: MisoSoupPeach
+  m_EditorClassIdentifier: CreativeAI.Gameplay::CreativeAI.Gameplay.FoodData
+  icon: {fileID: 21300000, guid: 77f0de4e215035b4bb181459ca254e8c, type: 3}
+  id: 3137
+  key: miso_soup_peach
+  itemName: "\u5473\u564C\u6C41\u3068\u6843"
+  category: 2
+  description: 
+  material1: {fileID: -3828202121546107835}
+  material2: {fileID: 2510756971122629955}
+  _maxStack: 1
+  _craftedResult: 1
+--- !u!114 &1788904173668758852
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 4c17053f8385ac14f9af901a292ffab6, type: 3}
+  m_Name: CoffeeStrawberryJelly
+  m_EditorClassIdentifier: CreativeAI.Gameplay::CreativeAI.Gameplay.FoodData
+  icon: {fileID: 21300000, guid: 4f67243e84dd2734d94b632d0cfe0f5f, type: 3}
+  id: 3130
+  key: coffee_strawberry_jelly
+  itemName: "\u30B3\u30FC\u30D2\u30FC\u3068\u3044\u3061\u3054\u30BC\u30EA\u30FC"
+  category: 2
+  description: 
+  material1: {fileID: -792122127041355525}
+  material2: {fileID: -7209103825163294352}
+  _maxStack: 1
+  _craftedResult: 1
+--- !u!114 &2037280688758345246
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 4c17053f8385ac14f9af901a292ffab6, type: 3}
+  m_Name: MisoSoupStrawberryJelly
+  m_EditorClassIdentifier: CreativeAI.Gameplay::CreativeAI.Gameplay.FoodData
+  icon: {fileID: 21300000, guid: 0486101f21ac8084b8ff450c21872420, type: 3}
+  id: 3138
+  key: miso_soup_strawberry_jelly
+  itemName: "\u5473\u564C\u6C41\u3068\u3044\u3061\u3054\u30BC\u30EA\u30FC"
+  category: 2
+  description: 
+  material1: {fileID: -3828202121546107835}
+  material2: {fileID: -7209103825163294352}
+  _maxStack: 1
+  _craftedResult: 1
+--- !u!114 &2218734045144225878
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: f6220288b2fd34b40bb3d8432012533a, type: 3}
+  m_Name: FullBodyTightsGlasses
+  m_EditorClassIdentifier: CreativeAI.Gameplay::CreativeAI.Gameplay.ItemData
+  icon: {fileID: 21300000, guid: 3614bbc5d8794b949832e5adcfc24c40, type: 3}
+  id: 2125
+  key: full_body_tights_glasses
+  itemName: "\u5168\u8EAB\u30BF\u30A4\u30C4\u3068\u30E1\u30AC\u30CD"
+  category: 1
+  description: 
+  material1: {fileID: 8829090763925122756}
+  material2: {fileID: 6717797442590564354}
+  _maxStack: 1
+--- !u!114 &2331040594814541805
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 4c17053f8385ac14f9af901a292ffab6, type: 3}
+  m_Name: GrapesMisoSoup
+  m_EditorClassIdentifier: CreativeAI.Gameplay::CreativeAI.Gameplay.FoodData
+  icon: {fileID: 21300000, guid: 0c0da76e40f44ec40bbbb02fcee5e24a, type: 3}
+  id: 3101
+  key: grapes_miso_soup
+  itemName: "\u3076\u3069\u3046\u5473\u564C\u6C41"
+  category: 2
+  description: 
+  material1: {fileID: -5554650038091774464}
+  material2: {fileID: -3828202121546107835}
+  _maxStack: 99
+  _craftedResult: 1
+--- !u!114 &2510756971122629955
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 4c17053f8385ac14f9af901a292ffab6, type: 3}
+  m_Name: Peach
+  m_EditorClassIdentifier: CreativeAI.Gameplay::CreativeAI.Gameplay.FoodData
+  icon: {fileID: 21300000, guid: 4c56a5ccfdde48a3851c0810b4cec0f7, type: 3}
+  id: 3010
+  key: peach
+  itemName: "\u6843"
+  category: 2
+  description: 
+  material1: {fileID: 0}
+  material2: {fileID: 0}
+  _maxStack: 99
+  _craftedResult: 0
+--- !u!114 &2553268808699322262
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 4c17053f8385ac14f9af901a292ffab6, type: 3}
+  m_Name: AppleCoffee
+  m_EditorClassIdentifier: CreativeAI.Gameplay::CreativeAI.Gameplay.FoodData
+  icon: {fileID: 21300000, guid: aa724122e76cee249952ae1a6f732231, type: 3}
+  id: 3104
+  key: apple_coffee
+  itemName: "\u308A\u3093\u3054\u3068\u30B3\u30FC\u30D2\u30FC"
+  category: 2
+  description: 
+  material1: {fileID: 8561165396911074249}
+  material2: {fileID: -792122127041355525}
+  _maxStack: 1
+  _craftedResult: 1
+--- !u!114 &2584660831174066737
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 4c17053f8385ac14f9af901a292ffab6, type: 3}
+  m_Name: BananaBrownRiceCreamCookie
+  m_EditorClassIdentifier: CreativeAI.Gameplay::CreativeAI.Gameplay.FoodData
+  icon: {fileID: 21300000, guid: c346e7f63af792e4e82b622b3e9d7650, type: 3}
+  id: 3111
+  key: banana_brown_rice_cream_cookie
+  itemName: "\u30D0\u30CA\u30CA\u3068\u30AF\u30EA\u30FC\u30E0\u7384\u7C73\u30AF\u30C3\u30AD\u30FC"
+  category: 2
+  description: 
+  material1: {fileID: -725015441715178452}
+  material2: {fileID: -3201117879322543463}
+  _maxStack: 1
+  _craftedResult: 1
+--- !u!114 &2849707181064893915
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: f6220288b2fd34b40bb3d8432012533a, type: 3}
+  m_Name: FluorescentLightFullBodyTights
+  m_EditorClassIdentifier: CreativeAI.Gameplay::CreativeAI.Gameplay.ItemData
+  icon: {fileID: 21300000, guid: 5616a2fafa7fad848a06dd1f625e57af, type: 3}
+  id: 2118
+  key: fluorescent_light_full_body_tights
+  itemName: "\u86CD\u5149\u706F\u3068\u5168\u8EAB\u30BF\u30A4\u30C4"
+  category: 1
+  description: 
+  material1: {fileID: -263205480878404495}
+  material2: {fileID: 8829090763925122756}
+  _maxStack: 1
+--- !u!114 &2959819209918370784
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 4c17053f8385ac14f9af901a292ffab6, type: 3}
+  m_Name: BrownRiceCreamCookieCoffee
+  m_EditorClassIdentifier: CreativeAI.Gameplay::CreativeAI.Gameplay.FoodData
+  icon: {fileID: 21300000, guid: a1896be9f23029c4590dc9b21482eb86, type: 3}
+  id: 3119
+  key: brown_rice_cream_cookie_coffee
+  itemName: "\u30AF\u30EA\u30FC\u30E0\u7384\u7C73\u30AF\u30C3\u30AD\u30FC\u3068\u30B3\u30FC\u30D2\u30FC"
+  category: 2
+  description: 
+  material1: {fileID: -3201117879322543463}
+  material2: {fileID: -792122127041355525}
+  _maxStack: 1
+  _craftedResult: 1
+--- !u!114 &3179674092597059597
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: f6220288b2fd34b40bb3d8432012533a, type: 3}
+  m_Name: FluorescentLightUmbrella
+  m_EditorClassIdentifier: CreativeAI.Gameplay::CreativeAI.Gameplay.ItemData
+  icon: {fileID: 21300000, guid: 9465750aa2017354a8885a997351b2ba, type: 3}
+  id: 2124
+  key: fluorescent_light_umbrella
+  itemName: "\u86CD\u5149\u706F\u3068\u5098"
+  category: 1
+  description: 
+  material1: {fileID: -263205480878404495}
+  material2: {fileID: -181082550691912316}
+  _maxStack: 1
+--- !u!114 &3212865929743539824
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: f6220288b2fd34b40bb3d8432012533a, type: 3}
+  m_Name: MysteriousNote3
+  m_EditorClassIdentifier: CreativeAI.Gameplay::CreativeAI.Gameplay.ItemData
+  icon: {fileID: 21300000, guid: 165263eba70bb5e4f9273a64b7ac323d, type: 3}
+  id: 4011
+  key: mysterious_note_3
+  itemName: "\u8B0E\u306E\u624B\u8A18\uFF13"
+  category: 3
+  description: 
+  material1: {fileID: 0}
+  material2: {fileID: 0}
+  _maxStack: 1
+--- !u!114 &3547136465509874368
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 4c17053f8385ac14f9af901a292ffab6, type: 3}
+  m_Name: CoffeeGrapes
+  m_EditorClassIdentifier: CreativeAI.Gameplay::CreativeAI.Gameplay.FoodData
+  icon: {fileID: 21300000, guid: a82cb1135a7e9f24aaaaa25fe8cbc133, type: 3}
+  id: 3126
+  key: coffee_grapes
+  itemName: "\u30B3\u30FC\u30D2\u30FC\u3068\u3076\u3069\u3046"
+  category: 2
+  description: 
+  material1: {fileID: -792122127041355525}
+  material2: {fileID: -5554650038091774464}
+  _maxStack: 1
+  _craftedResult: 1
+--- !u!114 &3964869848126844184
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: f6220288b2fd34b40bb3d8432012533a, type: 3}
+  m_Name: HatNote
+  m_EditorClassIdentifier: CreativeAI.Gameplay::CreativeAI.Gameplay.ItemData
+  icon: {fileID: 21300000, guid: 9a1a7ed9e6e18f241896ec29fe50bd9d, type: 3}
+  id: 2138
+  key: hat_note
+  itemName: "\u5E3D\u5B50\u3068\u30CE\u30FC\u30C8"
+  category: 1
+  description: 
+  material1: {fileID: 5905387601538661209}
+  material2: {fileID: 1491394875471116521}
+  _maxStack: 1
+--- !u!114 &4146657232508585527
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: f6220288b2fd34b40bb3d8432012533a, type: 3}
+  m_Name: NoteUmbrella
+  m_EditorClassIdentifier: CreativeAI.Gameplay::CreativeAI.Gameplay.ItemData
+  icon: {fileID: 21300000, guid: c3678bb490de6b5489b2eed346c32e8a, type: 3}
+  id: 2145
+  key: note_umbrella
+  itemName: "\u30CE\u30FC\u30C8\u3068\u5098"
+  category: 1
+  description: 
+  material1: {fileID: 1491394875471116521}
+  material2: {fileID: -181082550691912316}
+  _maxStack: 1
+--- !u!114 &4242431949249164510
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 4c17053f8385ac14f9af901a292ffab6, type: 3}
+  m_Name: BrownRiceCreamCookieGrapes
+  m_EditorClassIdentifier: CreativeAI.Gameplay::CreativeAI.Gameplay.FoodData
+  icon: {fileID: 21300000, guid: 4c3b30da7bd0b904eaa5b2a2efce3b13, type: 3}
+  id: 3120
+  key: brown_rice_cream_cookie_grapes
+  itemName: "\u30AF\u30EA\u30FC\u30E0\u7384\u7C73\u30AF\u30C3\u30AD\u30FC\u3068\u3076\u3069\u3046"
+  category: 2
+  description: 
+  material1: {fileID: -3201117879322543463}
+  material2: {fileID: -5554650038091774464}
+  _maxStack: 1
+  _craftedResult: 1
+--- !u!114 &4244876691802142716
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: f6220288b2fd34b40bb3d8432012533a, type: 3}
+  m_Name: MagnetUmbrella
+  m_EditorClassIdentifier: CreativeAI.Gameplay::CreativeAI.Gameplay.ItemData
+  icon: {fileID: 21300000, guid: 96dabfa3bb01bc04cb034028ccd3aa8b, type: 3}
+  id: 2142
+  key: magnet_umbrella
+  itemName: "\u78C1\u77F3\u3068\u5098"
+  category: 1
+  description: 
+  material1: {fileID: -7822687782585050773}
+  material2: {fileID: -181082550691912316}
+  _maxStack: 1
+--- !u!114 &4510121819378496928
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: f6220288b2fd34b40bb3d8432012533a, type: 3}
+  m_Name: BalloonClock
+  m_EditorClassIdentifier: CreativeAI.Gameplay::CreativeAI.Gameplay.ItemData
+  icon: {fileID: 21300000, guid: 4d4bf3916baa98242a4d5f8992f7bb31, type: 3}
+  id: 2101
+  key: balloon_clock
+  itemName: "\u98A8\u8239\u3068\u61D0\u4E2D\u6642\u8A08"
+  category: 1
+  description: 
+  material1: {fileID: -7287126184965246600}
+  material2: {fileID: 957348972317786013}
+  _maxStack: 1
+--- !u!114 &4956952278493378832
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: f6220288b2fd34b40bb3d8432012533a, type: 3}
+  m_Name: FullBodyTightsMagnet
+  m_EditorClassIdentifier: CreativeAI.Gameplay::CreativeAI.Gameplay.ItemData
+  icon: {fileID: 21300000, guid: 6d83690e729ea5648ad0e53471ea0165, type: 3}
+  id: 2127
+  key: full_body_tights_magnet
+  itemName: "\u5168\u8EAB\u30BF\u30A4\u30C4\u3068\u78C1\u77F3"
+  category: 1
+  description: 
+  material1: {fileID: 8829090763925122756}
+  material2: {fileID: -7822687782585050773}
+  _maxStack: 1
+--- !u!114 &4967486941914372216
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 4c17053f8385ac14f9af901a292ffab6, type: 3}
+  m_Name: BrownRiceCreamCookieStrawberryJelly
+  m_EditorClassIdentifier: CreativeAI.Gameplay::CreativeAI.Gameplay.FoodData
+  icon: {fileID: 21300000, guid: 639da3dcc3792c84597f7977bb6e017f, type: 3}
+  id: 3124
+  key: brown_rice_cream_cookie_strawberry_jelly
+  itemName: "\u30AF\u30EA\u30FC\u30E0\u7384\u7C73\u30AF\u30C3\u30AD\u30FC\u3068\u3044\u3061\u3054\u30BC\u30EA\u30FC"
+  category: 2
+  description: 
+  material1: {fileID: -3201117879322543463}
+  material2: {fileID: -7209103825163294352}
+  _maxStack: 1
+  _craftedResult: 1
+--- !u!114 &5237264642481277470
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 4c17053f8385ac14f9af901a292ffab6, type: 3}
+  m_Name: AppleMisoSoup
+  m_EditorClassIdentifier: CreativeAI.Gameplay::CreativeAI.Gameplay.FoodData
+  icon: {fileID: 21300000, guid: a3e717833116a884097c0d705ef7dbab, type: 3}
+  id: 3106
+  key: apple_miso_soup
+  itemName: "\u308A\u3093\u3054\u3068\u5473\u564C\u6C41"
+  category: 2
+  description: 
+  material1: {fileID: 8561165396911074249}
+  material2: {fileID: -3828202121546107835}
+  _maxStack: 1
+  _craftedResult: 1
+--- !u!114 &5664360273888621444
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: f6220288b2fd34b40bb3d8432012533a, type: 3}
+  m_Name: HatUmbrella
+  m_EditorClassIdentifier: CreativeAI.Gameplay::CreativeAI.Gameplay.ItemData
+  icon: {fileID: 21300000, guid: b8edee5965208b942b70962551ebbe87, type: 3}
+  id: 2139
+  key: hat_umbrella
+  itemName: "\u5E3D\u5B50\u3068\u5098"
+  category: 1
+  description: 
+  material1: {fileID: 5905387601538661209}
+  material2: {fileID: -181082550691912316}
+  _maxStack: 1
+--- !u!114 &5867754658087610546
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: f6220288b2fd34b40bb3d8432012533a, type: 3}
+  m_Name: FullBodyTightsNote
+  m_EditorClassIdentifier: CreativeAI.Gameplay::CreativeAI.Gameplay.ItemData
+  icon: {fileID: 21300000, guid: f76eeb7fca94004499aae54a99b965e1, type: 3}
+  id: 2129
+  key: full_body_tights_note
+  itemName: "\u5168\u8EAB\u30BF\u30A4\u30C4\u3068\u30CE\u30FC\u30C8"
+  category: 1
+  description: 
+  material1: {fileID: 8829090763925122756}
+  material2: {fileID: 1491394875471116521}
+  _maxStack: 1
+--- !u!114 &5905387601538661209
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: f6220288b2fd34b40bb3d8432012533a, type: 3}
+  m_Name: Hat
+  m_EditorClassIdentifier: CreativeAI.Gameplay::CreativeAI.Gameplay.ItemData
+  icon: {fileID: 21300000, guid: a54db78ba8a14d32841ee8a6759869cd, type: 3}
+  id: 2009
+  key: hat
+  itemName: "\u5E3D\u5B50"
+  category: 1
+  description: 
+  material1: {fileID: 0}
+  material2: {fileID: 0}
+  _maxStack: 1
+--- !u!114 &6347792515565171776
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: f6220288b2fd34b40bb3d8432012533a, type: 3}
+  m_Name: HatMicrophone
+  m_EditorClassIdentifier: CreativeAI.Gameplay::CreativeAI.Gameplay.ItemData
+  icon: {fileID: 21300000, guid: 5c58f9cdb14fcce4aab80f5ee358ee58, type: 3}
+  id: 2137
+  key: hat_microphone
+  itemName: "\u5E3D\u5B50\u3068\u30DE\u30A4\u30AF"
+  category: 1
+  description: 
+  material1: {fileID: 5905387601538661209}
+  material2: {fileID: 7372939191468712669}
+  _maxStack: 1
+--- !u!114 &6401494734126284406
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: f6220288b2fd34b40bb3d8432012533a, type: 3}
+  m_Name: FluorescentLightGlasses
+  m_EditorClassIdentifier: CreativeAI.Gameplay::CreativeAI.Gameplay.ItemData
+  icon: {fileID: 21300000, guid: 786a1c940d15bc0499030cd4e01d39a7, type: 3}
+  id: 2119
+  key: fluorescent_light_glasses
+  itemName: "\u86CD\u5149\u706F\u3068\u30E1\u30AC\u30CD"
+  category: 1
+  description: 
+  material1: {fileID: -263205480878404495}
+  material2: {fileID: 6717797442590564354}
+  _maxStack: 1
+--- !u!114 &6557672020862040975
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 4c17053f8385ac14f9af901a292ffab6, type: 3}
+  m_Name: BananaOrangeJuice
+  m_EditorClassIdentifier: CreativeAI.Gameplay::CreativeAI.Gameplay.FoodData
+  icon: {fileID: 21300000, guid: 9f1436a00d13b9d42a35619f75692cea, type: 3}
+  id: 3115
+  key: banana_orange_juice
+  itemName: "\u30D0\u30CA\u30CA\u3068\u307F\u304B\u3093\u30B8\u30E5\u30FC\u30B9"
+  category: 2
+  description: 
+  material1: {fileID: -725015441715178452}
+  material2: {fileID: -6523541574003027713}
+  _maxStack: 1
+  _craftedResult: 1
+--- !u!114 &6717797442590564354
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: f6220288b2fd34b40bb3d8432012533a, type: 3}
+  m_Name: Glasses
+  m_EditorClassIdentifier: CreativeAI.Gameplay::CreativeAI.Gameplay.ItemData
+  icon: {fileID: 21300000, guid: c0ab33a30d19436bb58d0e77796481f4, type: 3}
+  id: 2008
+  key: glasses
+  itemName: "\u30E1\u30AC\u30CD"
+  category: 1
+  description: 
+  material1: {fileID: 0}
+  material2: {fileID: 0}
+  _maxStack: 1
+--- !u!114 &6751836207200061038
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 4c17053f8385ac14f9af901a292ffab6, type: 3}
+  m_Name: AppleBrownRiceCreamCookie
+  m_EditorClassIdentifier: CreativeAI.Gameplay::CreativeAI.Gameplay.FoodData
+  icon: {fileID: 21300000, guid: 8ba5ba174e73f84499aa862b08dee548, type: 3}
+  id: 3103
+  key: apple_brown_rice_cream_cookie
+  itemName: "\u308A\u3093\u3054\u3068\u30AF\u30EA\u30FC\u30E0\u7384\u7C73\u30AF\u30C3\u30AD\u30FC"
+  category: 2
+  description: 
+  material1: {fileID: 8561165396911074249}
+  material2: {fileID: -3201117879322543463}
+  _maxStack: 1
+  _craftedResult: 1
+--- !u!114 &6804220564497898098
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 4c17053f8385ac14f9af901a292ffab6, type: 3}
+  m_Name: CoffeePeach
+  m_EditorClassIdentifier: CreativeAI.Gameplay::CreativeAI.Gameplay.FoodData
+  icon: {fileID: 21300000, guid: dd32a51126a6ace43b123a6877196baf, type: 3}
+  id: 3129
+  key: coffee_peach
+  itemName: "\u30B3\u30FC\u30D2\u30FC\u3068\u6843"
+  category: 2
+  description: 
+  material1: {fileID: -792122127041355525}
+  material2: {fileID: 2510756971122629955}
+  _maxStack: 1
+  _craftedResult: 1
+--- !u!114 &7014479008903250010
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: f6220288b2fd34b40bb3d8432012533a, type: 3}
+  m_Name: MicrophoneNote
+  m_EditorClassIdentifier: CreativeAI.Gameplay::CreativeAI.Gameplay.ItemData
+  icon: {fileID: 21300000, guid: f947692dd0d00a14a9d515c9ec6ab62a, type: 3}
+  id: 2143
+  key: microphone_note
+  itemName: "\u30DE\u30A4\u30AF\u3068\u30CE\u30FC\u30C8"
+  category: 1
+  description: 
+  material1: {fileID: 7372939191468712669}
+  material2: {fileID: 1491394875471116521}
+  _maxStack: 1
+--- !u!114 &7081302860122723695
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: f6220288b2fd34b40bb3d8432012533a, type: 3}
+  m_Name: GlassesMicrophone
+  m_EditorClassIdentifier: CreativeAI.Gameplay::CreativeAI.Gameplay.ItemData
+  icon: {fileID: 21300000, guid: 91ea41c5cf064b84185bf9d3f2549e4d, type: 3}
+  id: 2133
+  key: glasses_microphone
+  itemName: "\u30E1\u30AC\u30CD\u3068\u30DE\u30A4\u30AF"
+  category: 1
+  description: 
+  material1: {fileID: 6717797442590564354}
+  material2: {fileID: 7372939191468712669}
+  _maxStack: 1
+--- !u!114 &7372939191468712669
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: f6220288b2fd34b40bb3d8432012533a, type: 3}
+  m_Name: Microphone
+  m_EditorClassIdentifier: CreativeAI.Gameplay::CreativeAI.Gameplay.ItemData
+  icon: {fileID: 21300000, guid: e246387537dcfa140becd430188a93ac, type: 3}
+  id: 2003
+  key: microphone
+  itemName: "\u30DE\u30A4\u30AF"
+  category: 1
+  description: 
+  material1: {fileID: 0}
+  material2: {fileID: 0}
+  _maxStack: 1
+--- !u!114 &7823367950198849727
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 4c17053f8385ac14f9af901a292ffab6, type: 3}
+  m_Name: PeachWhiteRice
+  m_EditorClassIdentifier: CreativeAI.Gameplay::CreativeAI.Gameplay.FoodData
+  icon: {fileID: 21300000, guid: 24b4338a30fe2f140861b9d56a257ccc, type: 3}
+  id: 3144
+  key: peach_white_rice
+  itemName: "\u6843\u3068\u767D\u7C73"
+  category: 2
+  description: 
+  material1: {fileID: 2510756971122629955}
+  material2: {fileID: -1353312657710663384}
+  _maxStack: 1
+  _craftedResult: 1
+--- !u!114 &8213032896582650990
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 4c17053f8385ac14f9af901a292ffab6, type: 3}
+  m_Name: GrapesWhiteRice
+  m_EditorClassIdentifier: CreativeAI.Gameplay::CreativeAI.Gameplay.FoodData
+  icon: {fileID: 21300000, guid: a5850748c4586c04b9a8fa2925635176, type: 3}
+  id: 3135
+  key: grapes_white_rice
+  itemName: "\u3076\u3069\u3046\u3068\u767D\u7C73"
+  category: 2
+  description: 
+  material1: {fileID: -5554650038091774464}
+  material2: {fileID: -1353312657710663384}
+  _maxStack: 1
+  _craftedResult: 1
+--- !u!114 &8303234618874048848
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: f6220288b2fd34b40bb3d8432012533a, type: 3}
+  m_Name: ClockMicrophone
+  m_EditorClassIdentifier: CreativeAI.Gameplay::CreativeAI.Gameplay.ItemData
+  icon: {fileID: 21300000, guid: fe74b3c8ef032ad4a97cf623d1b095a0, type: 3}
+  id: 2115
+  key: clock_microphone
+  itemName: "\u61D0\u4E2D\u6642\u8A08\u3068\u30DE\u30A4\u30AF"
+  category: 1
+  description: 
+  material1: {fileID: 957348972317786013}
+  material2: {fileID: 7372939191468712669}
+  _maxStack: 1
+--- !u!114 &8434162520786934589
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: f6220288b2fd34b40bb3d8432012533a, type: 3}
+  m_Name: FullBodyTightsMicrophone
+  m_EditorClassIdentifier: CreativeAI.Gameplay::CreativeAI.Gameplay.ItemData
+  icon: {fileID: 21300000, guid: 1be2496c3832dc44786de7d56e233f86, type: 3}
+  id: 2128
+  key: full_body_tights_microphone
+  itemName: "\u5168\u8EAB\u30BF\u30A4\u30C4\u3068\u30DE\u30A4\u30AF"
+  category: 1
+  description: 
+  material1: {fileID: 8829090763925122756}
+  material2: {fileID: 7372939191468712669}
+  _maxStack: 1
+--- !u!114 &8561165396911074249
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 4c17053f8385ac14f9af901a292ffab6, type: 3}
+  m_Name: Apple
+  m_EditorClassIdentifier: CreativeAI.Gameplay::CreativeAI.Gameplay.FoodData
+  icon: {fileID: 21300000, guid: 444e96c3eb88f41788b965b228e9cc8e, type: 3}
+  id: 3001
+  key: apple
+  itemName: "\u308A\u3093\u3054"
+  category: 2
+  description: 
+  material1: {fileID: 0}
+  material2: {fileID: 0}
+  _maxStack: 99
+  _craftedResult: 0
+--- !u!114 &8563123787040156155
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 4c17053f8385ac14f9af901a292ffab6, type: 3}
+  m_Name: BananaMisoSoup
+  m_EditorClassIdentifier: CreativeAI.Gameplay::CreativeAI.Gameplay.FoodData
+  icon: {fileID: 21300000, guid: 9e50437bf4d519c42935721764a63088, type: 3}
+  id: 3114
+  key: banana_miso_soup
+  itemName: "\u30D0\u30CA\u30CA\u3068\u5473\u564C\u6C41"
+  category: 2
+  description: 
+  material1: {fileID: -725015441715178452}
+  material2: {fileID: -3828202121546107835}
+  _maxStack: 1
+  _craftedResult: 1
+--- !u!114 &8715171132194124482
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: f6220288b2fd34b40bb3d8432012533a, type: 3}
+  m_Name: BalloonMicrophone
+  m_EditorClassIdentifier: CreativeAI.Gameplay::CreativeAI.Gameplay.ItemData
+  icon: {fileID: 21300000, guid: dd4b4fe83fc5b094dbe9cba0ed5190bc, type: 3}
+  id: 2107
+  key: balloon_microphone
+  itemName: "\u98A8\u8239\u3068\u30DE\u30A4\u30AF"
+  category: 1
+  description: 
+  material1: {fileID: -7287126184965246600}
+  material2: {fileID: 7372939191468712669}
+  _maxStack: 1
+--- !u!114 &8829090763925122756
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: f6220288b2fd34b40bb3d8432012533a, type: 3}
+  m_Name: FullBodyTights
+  m_EditorClassIdentifier: CreativeAI.Gameplay::CreativeAI.Gameplay.ItemData
+  icon: {fileID: 21300000, guid: 639226a8151a48ba8f96f209699ed646, type: 3}
+  id: 2007
+  key: full_body_tights
+  itemName: "\u5168\u8EAB\u30BF\u30A4\u30C4"
+  category: 1
+  description: 
+  material1: {fileID: 0}
+  material2: {fileID: 0}
+  _maxStack: 1
+--- !u!114 &8910818099885315786
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: f6220288b2fd34b40bb3d8432012533a, type: 3}
+  m_Name: FullBodyTightsHat
+  m_EditorClassIdentifier: CreativeAI.Gameplay::CreativeAI.Gameplay.ItemData
+  icon: {fileID: 21300000, guid: 3ca6ebec373b2ab4e92c8613b6a9ff9a, type: 3}
+  id: 2126
+  key: full_body_tights_hat
+  itemName: "\u5168\u8EAB\u30BF\u30A4\u30C4\u3068\u5E3D\u5B50"
+  category: 1
+  description: 
+  material1: {fileID: 8829090763925122756}
+  material2: {fileID: 5905387601538661209}
+  _maxStack: 1

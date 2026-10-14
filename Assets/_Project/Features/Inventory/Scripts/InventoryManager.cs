@@ -1,6 +1,6 @@
 using System.Collections.Generic;
 using System.Linq;
-using CreativeAI.Core.EventSystem;
+using CreativeAI.Core;
 using UnityEngine;
 
 namespace CreativeAI.Gameplay
@@ -32,21 +32,17 @@ namespace CreativeAI.Gameplay
         [SerializeField]
         private bool _addTestItemsOnAwake = true;
 
-        private readonly InventoryStorage _storage = new();
         private InventoryService _inventoryService;
-        private RecipeCraftingService _recipeCraftingService;
-        private ItemUseService _itemUseService;
+        private CraftingService _craftingService;
+        private PlayerStatus _playerStatus;
 
         public InventoryService InventoryService => _inventoryService ??= CreateInventoryService();
 
-        public RecipeCraftingService RecipeCraftingService =>
-            _recipeCraftingService ??= new RecipeCraftingService(InventoryService);
-
-        public ItemUseService ItemUseService =>
-            _itemUseService ??= new ItemUseService(InventoryService);
+        public CraftingService CraftingService =>
+            _craftingService ??= new CraftingService(InventoryService);
 
         /// <summary>
-        /// セッション常駐の Inventory を1つだけ生成する(既存ならそれを返す)。循環参照のため SessionBootstrap ではなくここに置き、
+        /// セッション常駐の Inventory を1つだけ生成する(既存ならそれを返す)。Core から Gameplay は参照できないため Core ではなくここに置き、
         /// Title フローから マネージャ生成の後・プレイヤー生成の前に呼ぶ。
         /// </summary>
         public static InventoryManager EnsureResident()
@@ -98,9 +94,7 @@ namespace CreativeAI.Gameplay
         /// </summary>
         public void SeedTestItems()
         {
-            // Domain Reload / Scene Reload 無効時は、前回の開発用 Manager が空のまま残ることがある。
-            // 所持品が空なら再投入を許可し、同じ内容を重複追加することだけを防ぐ。
-            if (_testItemsSeeded && GetAllItems().Count > 0)
+            if (_testItemsSeeded)
                 return;
             _testItemsSeeded = true;
             AddTestItems();
@@ -111,11 +105,6 @@ namespace CreativeAI.Gameplay
         public void AddItem(ItemData data, int count = 1)
         {
             InventoryService.AddItem(data, count);
-        }
-
-        public void AddEquipmentItem(EquipmentData data, EquipmentInstance instance)
-        {
-            InventoryService.AddEquipmentItem(data, instance);
         }
 
         /// <summary>
@@ -135,33 +124,51 @@ namespace CreativeAI.Gameplay
 
         /// <summary>
         /// IItemGiver。EventPlayer の giveItem ステップから文字列キーで呼ばれ、1個追加する。
-        /// キーが ItemDB に無ければ警告して無視(打ち間違い検出は Importer 側が本命)。
+        /// キーが ItemCatalog に無ければ警告して無視(打ち間違い検出は Importer 側が本命)。
         /// </summary>
         public void Give(string itemKey)
         {
-            var data = ItemDB.Instance != null ? ItemDB.Instance.GetItemByKey(itemKey) : null;
+            var data =
+                ItemCatalog.Instance != null ? ItemCatalog.Instance.GetItemByKey(itemKey) : null;
             if (data == null)
             {
                 Debug.LogWarning(
-                    $"[InventoryManager] Give: itemKey '{itemKey}' が ItemDB に見つかりません。"
+                    $"[InventoryManager] Give: itemKey '{itemKey}' が ItemCatalog に見つかりません。"
                 );
                 return;
             }
-            AddItem(data, 1);
+            AddAcquired(data, 1);
+        }
+
+        /// <summary>
+        /// 入手したアイテムを追加する(フィールドで拾う・イベントでもらう共通)。装備品は1個ずつ能力値を抽選した個体、それ以外は数量ぶん積む。
+        /// </summary>
+        public void AddAcquired(ItemData data, int count)
+        {
+            if (data.category != ItemCategory.Equipment)
+            {
+                AddItem(data, count);
+                return;
+            }
+
+            var random = new SystemRandomSource();
+            for (int i = 0; i < count; i++)
+                AddInstance(data, RolledStat.FromVector(DropStatRoller.RollDropStats(random)));
         }
 
         /// <summary>
         /// IItemGiver。hasItem 条件から呼ばれ、itemKey の「大事なもの」を1つ以上持つかを返す。
-        /// itemKey を ItemDB で引き、カテゴリが 大事なもの のときだけ所持数を見る。
+        /// itemKey を ItemCatalog で引き、カテゴリが 大事なもの のときだけ所持数を見る。
         /// 未登録キー・大事なもの以外(装備品/食材/武器)は対象外で false(警告つき)。
         /// </summary>
         public bool HasImportantItem(string itemKey)
         {
-            var data = ItemDB.Instance != null ? ItemDB.Instance.GetItemByKey(itemKey) : null;
+            var data =
+                ItemCatalog.Instance != null ? ItemCatalog.Instance.GetItemByKey(itemKey) : null;
             if (data == null)
             {
                 Debug.LogWarning(
-                    $"[InventoryManager] HasImportantItem: itemKey '{itemKey}' が ItemDB に見つかりません。"
+                    $"[InventoryManager] HasImportantItem: itemKey '{itemKey}' が ItemCatalog に見つかりません。"
                 );
                 return false;
             }
@@ -188,7 +195,12 @@ namespace CreativeAI.Gameplay
 
         public bool TryUse(ItemStack stack)
         {
-            return ItemUseService.TryUse(stack);
+            if (_playerStatus == null)
+            {
+                var player = GameObject.FindGameObjectWithTag("Player");
+                _playerStatus = player != null ? player.GetComponent<PlayerStatus>() : null;
+            }
+            return InventoryService.TryUseFood(stack, _playerStatus);
         }
 
         public bool HasItem(ItemData data, int count = 1)
@@ -201,29 +213,19 @@ namespace CreativeAI.Gameplay
             return InventoryService.GetItemCount(data);
         }
 
-        public bool CanCraft(CraftRecipeData recipe, int quantity = 1)
+        public bool CanCraft(CraftRecipe recipe, ItemStack materialA, ItemStack materialB)
         {
-            return RecipeCraftingService.CanCraft(recipe, quantity);
+            return CraftingService.CanCraft(recipe, materialA, materialB);
         }
 
-        public bool CanCraft(CraftRecipeData recipe, ItemStack materialA, ItemStack materialB)
+        public bool TryCraft(
+            CraftRecipe recipe,
+            ItemStack materialA,
+            ItemStack materialB,
+            out ItemStack crafted
+        )
         {
-            return RecipeCraftingService.CanCraft(recipe, materialA, materialB);
-        }
-
-        public int GetMaximumCraftable(CraftRecipeData recipe)
-        {
-            return RecipeCraftingService.GetMaximumCraftable(recipe);
-        }
-
-        public bool TryCraft(CraftRecipeData recipe, int quantity)
-        {
-            return RecipeCraftingService.TryCraft(recipe, quantity);
-        }
-
-        public bool TryCraft(CraftRecipeData recipe, ItemStack materialA, ItemStack materialB)
-        {
-            return RecipeCraftingService.TryCraft(recipe, materialA, materialB);
+            return CraftingService.TryCraft(recipe, materialA, materialB, out crafted);
         }
 
         /// <summary>装備品の同時装備上限。</summary>
@@ -236,7 +238,7 @@ namespace CreativeAI.Gameplay
             // 装備品は最大3つまで。上限に達していたら装着を拒否する(武器は在庫外なので数えない)。
             if (
                 equipped
-                && stack.Data is EquipmentData
+                && stack.Data.category == ItemCategory.Equipment
                 && CountEquippedEquipment() >= MaxEquippedEquipment
             )
             {
@@ -249,15 +251,15 @@ namespace CreativeAI.Gameplay
             EquipmentChanged?.Invoke(); // 最終ステータス再計算のトリガー
         }
 
-        /// <summary>現在装備中の装備品(EquipmentData)の数。武器は在庫外なので数えない。</summary>
+        /// <summary>現在装備中の装備品の数。武器は在庫外なので数えない。</summary>
         private int CountEquippedEquipment() =>
             InventoryService
                 .GetAllItems()
-                .Count(s => s != null && s.IsEquipped && s.Data is EquipmentData);
+                .Count(s => s != null && s.IsEquipped && s.Data.category == ItemCategory.Equipment);
 
         /// <summary>
         /// 装備中の装備品の補正合計(武器は WeaponManager 側で別合算)。
-        /// 調合個体(RolledStats あり)はロール値を CraftStatBridge 経由で、固定 SO は EquipmentData の値を使う。
+        /// 装備品の能力値は個体ごとのロール値(RolledStats)だけ。ロールされていない装備品は補正なし。
         /// </summary>
         public EquipmentBonus GetEquippedBonus()
         {
@@ -266,61 +268,18 @@ namespace CreativeAI.Gameplay
             {
                 if (stack == null || !stack.IsEquipped)
                     continue;
-                if (stack.Data is not EquipmentData e)
-                    continue;
-
-                if (stack.RolledStats != null && stack.RolledStats.Count > 0)
-                {
-                    // 調合でロールされた個体(個体差あり)。
-                    CraftStatBridge.Accumulate(ref b, stack.RolledStats);
-                }
-                else
-                {
-                    // 固定 SO の装備品(素材など未ロール)。
-                    b.attackPct += e.attack;
-                    b.defensePct += e.defense;
-                    b.maxHpPct += e.maxHP;
-                    b.criticalChance += e.criticalRate;
-                    b.criticalDamage += e.criticalDamage;
-                }
+                // 武器(WeaponData)は在庫外・WeaponManager 管理なので意図的に加算しない。
+                if (stack.Data.category == ItemCategory.Equipment)
+                    b.Add(stack.RolledStats);
             }
             return b;
-        }
-
-        public bool IsEquipped(ItemStack stack) => stack?.IsEquipped ?? false;
-
-        public bool IsItemEquipped(ItemData data)
-        {
-            return data != null
-                && InventoryService
-                    .GetAllItems()
-                    .Any(stack => stack.Data == data && stack.IsEquipped);
-        }
-
-        public bool HasEquippedMaterial(IEnumerable<ItemData> materials)
-        {
-            return materials != null && materials.Any(IsItemEquipped);
         }
 
         /// <summary>stack が即時使用食材スロットにセットされているか(調合の素材から除外・警告に使う)。</summary>
         public bool IsInQuickFood(ItemStack stack) => InventoryService.IsInQuickFood(stack);
 
-        /// <summary>data の在庫スタックのいずれかが即時使用食材にセットされているか。</summary>
-        public bool IsItemInQuickFood(ItemData data)
-        {
-            if (data == null)
-                return false;
-            foreach (var slot in InventoryService.GetQuickFoodSlots())
-                if (slot != null && slot.Data == data)
-                    return true;
-            return false;
-        }
-
-        /// <summary>materials のいずれかが即時使用食材にセットされているか(レシピ調合の可否判定用)。</summary>
-        public bool HasQuickFoodMaterial(IEnumerable<ItemData> materials)
-        {
-            return materials != null && materials.Any(IsItemInQuickFood);
-        }
+        public bool SwapQuickFood(int firstSlot, int secondSlot) =>
+            InventoryService.SwapQuickFood(firstSlot, secondSlot);
 
         public List<ItemStack> GetItemsByCategory(ItemCategory category)
         {
@@ -341,16 +300,12 @@ namespace CreativeAI.Gameplay
         /// <summary>スロット slot を空にする。</summary>
         public void ClearQuickFood(int slot) => InventoryService.ClearQuickFood(slot);
 
-        /// <summary>即時使用食材スロット2枠の内容を入れ替える。</summary>
-        public bool SwapQuickFood(int firstSlot, int secondSlot) =>
-            InventoryService.SwapQuickFood(firstSlot, secondSlot);
-
         private void AddTestItems()
         {
-            if (ItemDB.Instance == null)
+            if (ItemCatalog.Instance == null)
                 return;
 
-            var testItems = ItemDB
+            var testItems = ItemCatalog
                 .Instance.Items.Where(item => item != null && HasZeroSecondDigit(item))
                 .ToList();
             foreach (var item in testItems)
@@ -359,7 +314,7 @@ namespace CreativeAI.Gameplay
                     item.MaxStack > 1
                         ? Random.Range(InitialTestItemMinCount, InitialTestItemMaxCountExclusive)
                         : 1;
-                AddItem(item, count);
+                AddAcquired(item, count);
             }
         }
 
@@ -387,7 +342,7 @@ namespace CreativeAI.Gameplay
 
         private InventoryService CreateInventoryService()
         {
-            var service = new InventoryService(_storage);
+            var service = new InventoryService();
             service.InventoryChanged += OnInventoryServiceChanged;
             service.QuickFoodChanged += OnQuickFoodChanged;
             return service;

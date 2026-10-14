@@ -2,12 +2,11 @@
     "name": "CreativeAI.Tests.EditMode",
     "rootNamespace": "CreativeAI.Tests.EditMode",
     "references": [
-        "CreativeAI.StatRoll",
         "CreativeAI.Core",
         "CreativeAI.Gameplay",
         "CreativeAI.UI",
         "Unity.TextMeshPro",
-        "CreativeAI.Scenario.Editor",
+        "CreativeAI.EditorTools",
         "UnityEngine.TestRunner",
         "UnityEditor.TestRunner"
     ],

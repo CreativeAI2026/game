@@ -25,14 +25,14 @@ namespace CreativeAI.Tests.EditMode
         public void TearDown()
         {
             Object.DestroyImmediate(_go);
-            ItemDB.InjectForTests(null); // 注入を解除して実カタログに戻す
+            ItemCatalog.InjectForTests(null); // 注入を解除して実カタログに戻す
         }
 
-        private static EquipmentData MakeEquipment(int id)
+        private static ItemData MakeEquipment(int id)
         {
-            var d = ScriptableObject.CreateInstance<EquipmentData>(); // OnEnable が category=Equipment を設定
+            var d = ScriptableObject.CreateInstance<ItemData>();
+            d.category = ItemCategory.Equipment;
             d.id = id;
-            d.attack = 1;
             return d;
         }
 
@@ -89,7 +89,7 @@ namespace CreativeAI.Tests.EditMode
             keyItem.id = 900;
             keyItem.key = "mysterious_key";
             keyItem.category = ItemCategory.Important;
-            ItemDB.InjectForTests(new[] { keyItem });
+            ItemCatalog.InjectForTests(new[] { keyItem });
 
             Assert.IsFalse(_inv.HasImportantItem("mysterious_key"), "未所持なら false");
 
@@ -107,7 +107,7 @@ namespace CreativeAI.Tests.EditMode
             var food = ScriptableObject.CreateInstance<FoodData>(); // OnEnable が category=Food
             food.id = 902;
             food.key = "apple";
-            ItemDB.InjectForTests(new ItemData[] { gear, food });
+            ItemCatalog.InjectForTests(new ItemData[] { gear, food });
 
             _inv.AddItem(gear, 1);
             _inv.AddItem(food, 1);
@@ -123,12 +123,12 @@ namespace CreativeAI.Tests.EditMode
             keyItem.id = 903;
             keyItem.key = "card_key";
             keyItem.category = ItemCategory.Important;
-            ItemDB.InjectForTests(new[] { keyItem });
+            ItemCatalog.InjectForTests(new[] { keyItem });
 
             Assert.IsFalse(_inv.HasImportantItem("mysterious_ky"), "打ち間違いキーは false");
         }
 
-        // --- giveItem は itemKey で ItemDB を引いて1個渡す ---
+        // --- giveItem は itemKey で ItemCatalog を引いて1個渡す ---
 
         [Test]
         public void Give_AddsOneItemResolvedByKey()
@@ -136,7 +136,7 @@ namespace CreativeAI.Tests.EditMode
             var apple = ScriptableObject.CreateInstance<FoodData>(); // OnEnable が category=Food
             apple.id = 910;
             apple.key = "apple";
-            ItemDB.InjectForTests(new ItemData[] { apple });
+            ItemCatalog.InjectForTests(new ItemData[] { apple });
 
             _inv.Give("apple");
             _inv.Give("apple"); // giveItem は1ステップ1個。並べたぶんだけ増える
@@ -145,12 +145,28 @@ namespace CreativeAI.Tests.EditMode
         }
 
         [Test]
+        public void Give_Equipment_AddsRolledInstance()
+        {
+            // イベントでもらった装備品も、拾ったときと同じく能力値を抽選した個体になる。
+            var gear = MakeEquipment(912);
+            gear.key = "hat";
+            ItemCatalog.InjectForTests(new ItemData[] { gear });
+
+            _inv.Give("hat");
+
+            var stack = _inv.GetAllItems().Single(s => s.Data == gear);
+            Assert.IsTrue(stack.IsInstance);
+            Assert.That(stack.RolledStats.Count, Is.InRange(1, 2));
+            Object.DestroyImmediate(gear);
+        }
+
+        [Test]
         public void Give_UnknownKey_IsIgnored()
         {
             var apple = ScriptableObject.CreateInstance<FoodData>();
             apple.id = 911;
             apple.key = "apple";
-            ItemDB.InjectForTests(new ItemData[] { apple });
+            ItemCatalog.InjectForTests(new ItemData[] { apple });
             UnityEngine.TestTools.LogAssert.Expect(
                 LogType.Warning,
                 new System.Text.RegularExpressions.Regex("appl")

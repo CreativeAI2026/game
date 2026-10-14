@@ -2,17 +2,13 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using CreativeAI.UI;
-using CreativeAI.UI.CharacterUI;
-using CreativeAI.UI.Common;
-using CreativeAI.UI.CraftingUI;
-using CreativeAI.UI.InventoryUI;
 using UnityEditor;
 using UnityEditor.SceneManagement;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 using UnityEngine.UI;
 
-namespace CreativeAI.EditorTools.UI
+namespace CreativeAI.EditorTools
 {
     public static class InventoryUIValidator
     {
@@ -62,7 +58,7 @@ namespace CreativeAI.EditorTools.UI
             }
 
             var panelControllers = FindAll<InventoryPanelController>(scene);
-            var freeCraftControllers = FindAll<FreeCraftPanelController>(scene);
+            var craftControllers = FindAll<CraftPanelController>(scene);
             var equipmentControllers = FindAll<EquipmentViewController>(scene);
             var quickFoodControllers = FindAll<QuickFoodViewController>(scene);
             var inventories = FindAll<InventoryView>(scene);
@@ -82,7 +78,7 @@ namespace CreativeAI.EditorTools.UI
             ValidateInventoryDataProviders(
                 inventories,
                 panelControllers,
-                freeCraftControllers,
+                craftControllers,
                 equipmentControllers,
                 quickFoodControllers,
                 report
@@ -92,7 +88,7 @@ namespace CreativeAI.EditorTools.UI
         private static void ValidateInventoryDataProviders(
             InventoryView[] inventories,
             InventoryPanelController[] panelControllers,
-            FreeCraftPanelController[] freeCraftControllers,
+            CraftPanelController[] craftControllers,
             EquipmentViewController[] equipmentControllers,
             QuickFoodViewController[] quickFoodControllers,
             UIValidationReport report
@@ -105,8 +101,8 @@ namespace CreativeAI.EditorTools.UI
 
             foreach (var controller in panelControllers)
                 AddProvider(controller, "_inventory", nameof(InventoryPanelController));
-            foreach (var controller in freeCraftControllers)
-                AddProvider(controller, "_inventory", nameof(FreeCraftPanelController));
+            foreach (var controller in craftControllers)
+                AddProvider(controller, "_inventory", nameof(CraftPanelController));
             foreach (var controller in equipmentControllers)
                 AddProvider(controller, "_inventory", nameof(EquipmentViewController));
             foreach (var controller in quickFoodControllers)

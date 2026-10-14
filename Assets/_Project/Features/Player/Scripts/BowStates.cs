@@ -4,15 +4,18 @@ namespace CreativeAI.Gameplay
 {
     /// <summary>
     /// 弓のステートマシンの基底クラス。
-    /// StateFree → StateAim → StateFire → StateRelease のサイクルで遷移する。
+    /// Free → Aim → Fire → Release のサイクルで遷移する。
     /// </summary>
     public abstract class BowState
     {
-        protected BowController ctx;
+        // Trigger・Bool を送ったのに UpperBody のステートへ入れない(遷移の設定漏れ等)ときに諦めるまでの猶予
+        protected const float EnterStateTimeout = 1.0f;
 
-        public BowState(BowController context)
+        protected readonly BowController bow;
+
+        protected BowState(BowController context)
         {
-            ctx = context;
+            bow = context;
         }
 
         public virtual void Enter() { }
@@ -20,163 +23,206 @@ namespace CreativeAI.Gameplay
         public virtual void Update() { }
 
         public virtual void Exit() { }
+
+        /// <summary>クリップの AnimationEvent を受け取る。自分が再生中のステート由来かは受け側で判定する。</summary>
+        public virtual void OnAnimationEvent(
+            WeaponAnimationEventType type,
+            AnimatorStateInfo sourceState
+        ) { }
     }
 
-    /// <summary>
-    /// 弓の待機ステート。エイムしていない通常状態。
-    /// </summary>
-    public class StateFree : BowState
+    /// <summary>弓の待機ステート。エイムしていない通常状態。</summary>
+    public class BowStateFree : BowState
     {
-        public StateFree(BowController context)
+        public BowStateFree(BowController context)
             : base(context) { }
 
         public override void Enter()
         {
-            if (!ctx._playerController.IsGrabbed)
-            {
-                ctx._playerController.IsAiming = false;
-                ctx._playerController.CanChangeWeapon = true;
-            }
-            ctx._drawProgress = 0f;
-            ctx.DestroyArrow();
-            ctx.HideCrossHair();
+            bow.Player.IsAiming = false;
+            bow.Player.Locks.Release(bow);
+            bow.DestroyArrow();
         }
 
         public override void Update()
         {
-            if (ctx._input.subAction)
+            if (bow.Input.subAction)
             {
-                ctx.ChangeState(new StateAim(ctx));
+                bow.ChangeState(new BowStateAim(bow));
             }
 
             // 待機中に攻撃入力が残っていると、次にAimに入った瞬間に暴発するため消費しておく
-            if (ctx._input.ConsumeAttack()) { }
+            bow.Input.ConsumeAttack();
         }
     }
 
     /// <summary>
-    /// 弓のエイムステート。弦を引き絞り、射撃入力を待つ状態。
+    /// 弓のエイムステート。矢を手に持って引き、構えクリップの DrawComplete で矢をつがえる。
+    /// つがえた後に攻撃入力で発射する。
     /// </summary>
-    public class StateAim : BowState
+    public class BowStateAim : BowState
     {
-        public StateAim(BowController context)
+        private float _enterTime;
+        private bool _hasEntered;
+
+        public BowStateAim(BowController context)
             : base(context) { }
 
         public override void Enter()
         {
-            ctx._playerController.IsAiming = true;
-            ctx._playerController.CanChangeWeapon = false;
-            ctx._isArrowAtNock = false;
-            ctx.SpawnArrowInHand();
-            ctx.ShowCrossHair();
+            bow.Player.IsAiming = true;
+            // 構えたまま移動はできる。武器の持ち替えだけ禁止する
+            bow.Player.Locks.Set(bow, PlayerLock.ChangeWeapon);
+            bow.SpawnArrowInHand();
+            _enterTime = Time.time;
+            _hasEntered = false;
+        }
+
+        public override void OnAnimationEvent(
+            WeaponAnimationEventType type,
+            AnimatorStateInfo sourceState
+        )
+        {
+            if (
+                type == WeaponAnimationEventType.DrawComplete
+                && sourceState.shortNameHash == PlayerAnimatorStates.Aim
+            )
+                bow.NockArrow();
         }
 
         public override void Update()
         {
-            if (!ctx._input.subAction)
+            if (!bow.Input.subAction)
             {
-                ctx.ChangeState(new StateRelease(ctx));
+                // 撃たずに構えを解いた(キャンセル)
+                bow.ChangeState(new BowStateFree(bow));
                 return;
             }
 
-            if (ctx._drawProgress < 1f)
-            {
-                ctx._drawProgress += Time.deltaTime / ctx._drawDuration;
-                if (ctx._drawProgress >= 1f)
-                {
-                    ctx._drawProgress = 1f;
-                }
-            }
+            if (!bow.IsArrowNocked)
+                CheckDrawEventMissing();
 
-            if (ctx._drawProgress >= 1f && !ctx._isArrowAtNock)
+            if (bow.Input.ConsumeAttack() && bow.IsArrowNocked)
             {
-                ctx.MoveArrowToNock();
-                ctx.ASource.pitch = Random.Range(0.8f, 1.2f);
-                ctx.ASource.PlayOneShot(ctx.DrawSound);
-            }
-
-            if (ctx._input.ConsumeAttack())
-            {
-                if (ctx._isArrowAtNock)
-                {
-                    ctx.ChangeState(new StateFire(ctx));
-                }
+                bow.ChangeState(new BowStateFire(bow));
             }
         }
 
-        public override void Exit()
+        /// <summary>
+        /// DrawComplete が届かないまま構えクリップが最後まで再生された、または構えステートに入れなかった場合は、
+        /// 撃てないまま固まらないよう、その時点でつがえて警告する。
+        /// </summary>
+        private void CheckDrawEventMissing()
         {
-            // IsAiming = false はここでは行わない。
-            // StateFire（発射中）→ StateRelease（弦戻し中）はまだエイム継続のため。
-            // IsAiming は StateFree.Enter() で確実に false にリセットされる。
-            ctx.HideCrossHair();
+            if (bow.IsInUpperBodyState(PlayerAnimatorStates.Aim))
+            {
+                _hasEntered = true;
+                if (bow.UpperBodyNormalizedTime < 1f)
+                    return;
+
+                Debug.LogWarning(
+                    $"[{bow.name}] 構えクリップの DrawComplete イベントを受信しないまま最後まで再生されました。"
+                        + "構えクリップに DrawComplete を追加してください。"
+                );
+                bow.NockArrow();
+            }
+            else if (!_hasEntered && Time.time - _enterTime > EnterStateTimeout)
+            {
+                Debug.LogWarning(
+                    $"[{bow.name}] UpperBody の Aim ステートへ遷移できませんでした。Animator の遷移設定を確認してください。"
+                );
+                bow.NockArrow();
+            }
         }
     }
 
-    /// <summary>
-    /// 弓の発射ステート。即座にFireArrowを呼び、StateReleaseへ遷移する一瞬のステート。
-    /// </summary>
-    public class StateFire : BowState
+    /// <summary>弓の発射ステート。即座に矢を放ち、Release へ遷移する一瞬のステート。</summary>
+    public class BowStateFire : BowState
     {
-        public StateFire(BowController context)
+        public BowStateFire(BowController context)
             : base(context) { }
 
         public override void Enter()
         {
-            ctx.FireArrow();
-            ctx.ChangeState(new StateRelease(ctx));
-
-            ctx.ASource.pitch = Random.Range(0.8f, 1.2f);
-            ctx.ASource.PlayOneShot(ctx.ShootSound);
+            bow.FireArrow();
+            bow.ChangeState(new BowStateRelease(bow));
         }
     }
 
     /// <summary>
-    /// 弦の戻りアニメーションを管理するステート。
-    /// 戻りきった後、subActionが押しっぱなしなら次の矢を引く（連射対応）。
+    /// 発射後の戻りを待つステート。発射クリップの ReleaseEnd で終わる。
+    /// 終わった時点で subAction が押しっぱなしなら次の矢を引く（連射）。
     /// </summary>
-    public class StateRelease : BowState
+    public class BowStateRelease : BowState
     {
-        public StateRelease(BowController context)
+        private float _enterTime;
+        private bool _hasEntered;
+        private bool _isReleaseEnded;
+
+        public BowStateRelease(BowController context)
             : base(context) { }
 
         public override void Enter()
         {
-            // キャンセル（エイム解除）でここに来た場合、矢が手元に残っているため消す。
-            // Fire経由なら矢は既に飛んでおりnullになっているので安全
-            ctx.DestroyArrow();
-            if (ctx._input.ConsumeAttack()) { } // 弦の戻し中に攻撃入力が残っていると暴発するため消費
+            // 戻りの最中に攻撃入力が残っていると、次の構えで暴発するため消費する
+            bow.Input.ConsumeAttack();
+            _enterTime = Time.time;
+            _hasEntered = false;
+            _isReleaseEnded = false;
+        }
 
-            if (ctx._input.subAction)
-            {
-                ctx._playerController.IsAiming = true;
-                ctx.ShowCrossHair();
-            }
+        public override void OnAnimationEvent(
+            WeaponAnimationEventType type,
+            AnimatorStateInfo sourceState
+        )
+        {
+            if (
+                type == WeaponAnimationEventType.ReleaseEnd
+                && sourceState.shortNameHash == PlayerAnimatorStates.Fire
+            )
+                _isReleaseEnded = true;
         }
 
         public override void Update()
         {
-            if (!ctx._input.subAction && ctx._playerController.IsAiming)
+            // 戻りの途中で構えボタンを離したら、照準・カメラは先に解除する
+            if (!bow.Input.subAction)
+                bow.Player.IsAiming = false;
+
+            if (_isReleaseEnded)
             {
-                ctx._playerController.IsAiming = false;
-                ctx.HideCrossHair();
+                Finish();
+                return;
             }
 
-            ctx._drawProgress -= Time.deltaTime / ctx._releaseDuration;
-            if (ctx._drawProgress <= 0f)
+            if (bow.IsInUpperBodyState(PlayerAnimatorStates.Fire))
             {
-                ctx._drawProgress = 0f;
-
-                // 戻りきった時点でsubActionを押しっぱなしなら、次の矢を即座に引き始める（連射）
-                if (ctx._input.subAction)
-                {
-                    ctx.ChangeState(new StateAim(ctx));
-                }
-                else
-                {
-                    ctx.ChangeState(new StateFree(ctx));
-                }
+                _hasEntered = true;
             }
+            else if (_hasEntered)
+            {
+                Debug.LogWarning(
+                    $"[{bow.name}] 発射クリップの ReleaseEnd イベントを受信しないまま Fire ステートを抜けました。"
+                        + "発射クリップに ReleaseEnd を追加してください。"
+                );
+                Finish();
+            }
+            else if (Time.time - _enterTime > EnterStateTimeout)
+            {
+                Debug.LogWarning(
+                    $"[{bow.name}] UpperBody の Fire ステートへ遷移できませんでした。Animator の遷移設定を確認してください。"
+                );
+                bow.Animator.ResetTrigger(PlayerAnimatorParams.Fire);
+                Finish();
+            }
+        }
+
+        private void Finish()
+        {
+            if (bow.Input.subAction)
+                bow.ChangeState(new BowStateAim(bow));
+            else
+                bow.ChangeState(new BowStateFree(bow));
         }
     }
 }

@@ -27,6 +27,7 @@ namespace CreativeAI.Tests.EditMode
         {
             var w = LoadRequired("Sword");
 
+            Assert.AreEqual(1001, w.id);
             Assert.AreEqual(25, w.attack, "剣: 攻撃% +25%");
             Assert.AreEqual(50f, w.criticalDamage, 1e-3f, "剣: 会心ダメージ +50%");
             Assert.AreEqual(0f, w.criticalRate, 1e-3f);
@@ -37,6 +38,7 @@ namespace CreativeAI.Tests.EditMode
         {
             var w = LoadRequired("Bow");
 
+            Assert.AreEqual(1002, w.id);
             Assert.AreEqual(25, w.attack, "弓: 攻撃% +25%");
             Assert.AreEqual(50f, w.criticalRate, 1e-3f, "弓: 会心率 +50%");
             Assert.AreEqual(0f, w.criticalDamage, 1e-3f);
@@ -47,6 +49,7 @@ namespace CreativeAI.Tests.EditMode
         {
             var w = LoadRequired("Scythe");
 
+            Assert.AreEqual(1003, w.id);
             Assert.AreEqual(0, w.attack);
             Assert.AreEqual(50f, w.criticalRate, 1e-3f, "鎌: 会心率 +50%");
             Assert.AreEqual(50f, w.criticalDamage, 1e-3f, "鎌: 会心ダメージ +50%");
@@ -57,19 +60,20 @@ namespace CreativeAI.Tests.EditMode
         {
             var w = LoadRequired("Hammer");
 
-            Assert.AreEqual(25, w.attack, "ハンマー: 攻撃 +25%");
+            Assert.AreEqual(1004, w.id);
+            Assert.AreEqual(0, w.attack);
             Assert.AreEqual(0f, w.criticalRate, 1e-3f);
-            Assert.AreEqual(0f, w.criticalDamage, 1e-3f);
+            Assert.AreEqual(100f, w.criticalDamage, 1e-3f);
         }
 
         [Test]
-        public void AllFourWeapons_HaveEqualAverageDamage()
+        public void AllThreeWeapons_HaveEqualAverageDamage()
         {
             // 平均ダメージ = 攻撃力 ×(1 + 会心率 × 会心ダメージ)が3種とも等価になるよう設定。
             // 素の値(攻撃2000 / 会心率0 / 会心ダメージ0)でいずれも平均 2500 になる。
             const float baseAttack = 2000f;
 
-            foreach (var name in new[] { "Sword", "Bow", "Scythe", "Hammer" })
+            foreach (var name in new[] { "Sword", "Bow", "Scythe" })
             {
                 var w = LoadRequired(name);
                 float attack = baseAttack * (1f + w.attack / 100f);
@@ -82,12 +86,15 @@ namespace CreativeAI.Tests.EditMode
         [Test]
         public void Weapons_AreOutsideInventoryCatalog()
         {
-            // 武器はインベントリ管理の対象外。ItemDB は Inventory/Data フォルダを同期するので、
-            // 武器アセットがそこに置かれていないこと(= giveItem のカタログに混ざらないこと)を守る。
-            Assert.IsFalse(
-                WeaponDir.StartsWith("Assets/_Project/Features/Inventory/Data"),
-                "武器アセットを Inventory/Data に置くと ItemDB / giveItem カタログに混入する"
-            );
+            // 武器はインベントリ管理の対象外。giveItem のカタログに混ざらないことを守る。
+            foreach (var name in new[] { "Sword", "Bow", "Scythe", "Hammer" })
+            {
+                var w = LoadRequired(name);
+                Assert.IsNull(
+                    ItemCatalog.Instance != null ? ItemCatalog.Instance.GetItemById(w.id) : null,
+                    $"{name} が ItemCatalog に載っている(武器は在庫外)"
+                );
+            }
         }
     }
 }

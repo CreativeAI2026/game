@@ -1,5 +1,5 @@
 using System.Collections.Generic;
-using CreativeAI.StatRoll;
+using CreativeAI.Gameplay;
 
 namespace CreativeAI.Tests.EditMode
 {

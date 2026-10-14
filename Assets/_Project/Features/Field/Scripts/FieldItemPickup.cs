@@ -1,6 +1,4 @@
 using CreativeAI.Core;
-using CreativeAI.Core.EventSystem;
-using CreativeAI.StatRoll;
 using UnityEngine;
 
 namespace CreativeAI.Gameplay
@@ -83,18 +81,8 @@ namespace CreativeAI.Gameplay
                 return false;
             }
 
-            if (_item is EquipmentData equipment)
-            {
-                // 装備品は拾った瞬間にロール。個体差があるので1個ずつ別スタック。
-                var rng = new SystemRandomSource();
-                for (int i = 0; i < _count; i++)
-                    inventory.AddInstance(equipment, CraftStatBridge.RollDrop(equipment, rng));
-            }
-            else
-            {
-                // 食材(HP即時回復の固定ルール)・大事なもの。ロールは通さない。
-                inventory.AddItem(_item, _count);
-            }
+            // 装備品は拾った瞬間にロールし、1個ずつ別スタックになる。
+            inventory.AddAcquired(_item, _count);
 
             _picked = true;
             if (_sparkle != null)

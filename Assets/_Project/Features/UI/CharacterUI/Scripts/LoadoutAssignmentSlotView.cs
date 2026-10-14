@@ -1,6 +1,6 @@
 using System;
 using CreativeAI.Gameplay;
-using CreativeAI.UI.InventoryUI;
+using CreativeAI.UI;
 using TMPro;
 using UnityEngine;
 using UnityEngine.EventSystems;
@@ -254,7 +254,8 @@ namespace CreativeAI.UI.CharacterUI
             {
                 ItemSlotDragOrigin.Quick => payload.Stack?.Data?.category == ItemCategory.Food
                     && payload.Origin is ItemSlotDragOrigin.Inventory or ItemSlotDragOrigin.Quick,
-                ItemSlotDragOrigin.Equipment => payload.Stack?.Data is EquipmentData
+                ItemSlotDragOrigin.Equipment => payload.Stack?.Data?.category
+                    == ItemCategory.Equipment
                     && payload.Origin
                         is ItemSlotDragOrigin.Inventory
                             or ItemSlotDragOrigin.Equipment,

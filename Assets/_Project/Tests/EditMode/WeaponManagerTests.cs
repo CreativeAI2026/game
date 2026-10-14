@@ -42,10 +42,11 @@ namespace CreativeAI.Tests.EditMode
                 MakeWeaponData(0, 50f, 50f),
             };
             var so = new SerializedObject(_weapons);
-            var prop = so.FindProperty("_weaponStats");
+            var prop = so.FindProperty("_slots");
             prop.arraySize = stats.Length;
             for (int i = 0; i < stats.Length; i++)
-                prop.GetArrayElementAtIndex(i).objectReferenceValue = stats[i];
+                prop.GetArrayElementAtIndex(i).FindPropertyRelative("stats").objectReferenceValue =
+                    stats[i];
             so.ApplyModifiedPropertiesWithoutUndo();
         }
 
@@ -137,6 +138,34 @@ namespace CreativeAI.Tests.EditMode
         }
 
         [Test]
+        public void Select_FollowsSwitchOrder_NotKeyIndexOrder()
+        {
+            // 切り替え順は E = 剣→鎌→ハンマー→弓(Q はその逆)。WeaponKeys の番号順(剣/弓/鎌/ハンマー)ではない。
+            _weapons.GiveWeapon("sword");
+            _weapons.GiveWeapon("bow");
+            _weapons.GiveWeapon("scythe");
+            _weapons.GiveWeapon("hammer");
+
+            CollectionAssert.AreEqual(
+                new[] { 0, 2, 3, 1 },
+                _weapons.OwnedIndices,
+                "入手順に関係なく切り替え順に並ぶ"
+            );
+
+            _weapons.SelectNext();
+            Assert.AreEqual(2, _weapons.CurrentWeaponIndex, "E: 剣 → 鎌");
+            _weapons.SelectNext();
+            Assert.AreEqual(3, _weapons.CurrentWeaponIndex, "E: 鎌 → ハンマー");
+            _weapons.SelectNext();
+            Assert.AreEqual(1, _weapons.CurrentWeaponIndex, "E: ハンマー → 弓");
+            _weapons.SelectNext();
+            Assert.AreEqual(0, _weapons.CurrentWeaponIndex, "E: 弓 → 剣");
+
+            _weapons.SelectPrevious();
+            Assert.AreEqual(1, _weapons.CurrentWeaponIndex, "Q: 剣 → 弓");
+        }
+
+        [Test]
         public void Select_DoesNothing_WhenZeroOrOneWeapon()
         {
             Assert.IsFalse(_weapons.SelectNext(), "0本なら切り替わらない");
@@ -166,7 +195,7 @@ namespace CreativeAI.Tests.EditMode
             Assert.AreEqual(50f, bow.criticalChance, "選択中の1本の補正だけが乗る(合算しない)");
         }
 
-        // --- セーブ復元(IWeaponSaveState) ---
+        // --- セーブ復元 ---
 
         [Test]
         public void SaveState_RoundTrip_PreservesOwnedAndSelected()
@@ -228,7 +257,10 @@ namespace CreativeAI.Tests.EditMode
         [Test]
         public void WeaponKeys_MatchScenarioReferenceCatalogOrder()
         {
-            CollectionAssert.AreEqual(new[] { "sword", "bow", "scythe" }, WeaponManager.WeaponKeys);
+            CollectionAssert.AreEqual(
+                new[] { "sword", "bow", "scythe", "hammer" },
+                WeaponManager.WeaponKeys
+            );
         }
     }
 }

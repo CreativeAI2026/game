@@ -1,7 +1,7 @@
 using System.Collections;
 using UnityEngine;
 
-namespace CreativeAI.UI.CraftingUI
+namespace CreativeAI.UI
 {
     /// <summary>
     /// UI_CraftingPreview(調合UIの確認用シーン)専用のプレビュー駆動役。常駐 <see cref="UIRoot"/> 内の <see cref="UiRouter"/> を叩き、

@@ -1,0 +1,549 @@
+using System.Collections.Generic;
+using DG.Tweening;
+using UnityEngine;
+using UnityEngine.EventSystems;
+using UnityEngine.InputSystem;
+using UnityEngine.UI;
+
+namespace CreativeAI.UI
+{
+    [RequireComponent(typeof(RectTransform))]
+    public class HoverScaleOnPointer
+        : MonoBehaviour,
+            IPointerEnterHandler,
+            IPointerExitHandler,
+            IPointerClickHandler
+    {
+        [SerializeField]
+        private string _group = "default";
+
+        [SerializeField]
+        private bool _lockEnabled = true;
+
+        [SerializeField]
+        private bool _releaseLockOnOutsideClick = true;
+
+        [SerializeField]
+        private float _hoverScale = 1.2f;
+
+        [SerializeField]
+        private float _animationDuration = 0.2f;
+
+        [SerializeField]
+        private bool _hoverScaleEnabled = true;
+
+        [Header("Selected Bounce")]
+        [SerializeField]
+        private bool _bounceEnabled = true;
+
+        [SerializeField]
+        private float _bounceHeight = 8f;
+
+        [SerializeField]
+        private float _bounceDuration = 0.8f;
+
+        [SerializeField]
+        private RectTransform _targetRect;
+        private RectTransform _bounceTarget;
+        private readonly List<RectTransform> _linkedTargets = new();
+        private readonly List<Vector3> _linkedTargetBaseLocalPositions = new();
+        private readonly List<Vector3> _linkedTargetBaseLocalScales = new();
+        private readonly Dictionary<RectTransform, Vector3> _cachedBaseLocalScales = new();
+        private Tween _currentTween;
+        private Tween _bounceTween;
+        private Vector3 _baseLocalPosition;
+        private Vector3 _baseLocalScale = Vector3.one;
+        private Vector2 _bounceTargetBaseAnchoredPosition;
+        private bool _isLocked;
+        private bool _bounceAllowed = true;
+
+        public bool HoverScaleEnabled => _hoverScaleEnabled;
+        public bool BounceEnabled => _bounceEnabled;
+        public RectTransform Target => _targetRect;
+
+        private void Awake()
+        {
+            _targetRect ??= GetComponent<RectTransform>();
+            CacheBaseScale();
+            CacheBasePosition();
+        }
+
+        private void OnDestroy()
+        {
+            _currentTween?.Kill();
+            _bounceTween?.Kill();
+        }
+
+        public void SetTarget(RectTransform target)
+        {
+            if (_targetRect == target)
+            {
+                CacheBaseScale(true);
+                CacheBasePosition();
+                return;
+            }
+
+            StopBounce();
+            _targetRect = target;
+            CacheBaseScale();
+            CacheBasePosition();
+        }
+
+        public void SetGroup(string group) => _group = group;
+
+        public void SetHoverScale(float scale) => _hoverScale = Mathf.Max(1f, scale);
+
+        public void SetHoverScaleEnabled(bool enabled)
+        {
+            _hoverScaleEnabled = enabled;
+            if (_hoverScaleEnabled)
+                return;
+
+            _currentTween?.Kill();
+            _currentTween = null;
+            RestoreBaseScale();
+        }
+
+        public void SetLockEnabled(bool enabled) => _lockEnabled = enabled;
+
+        public void SetBounceEnabled(bool enabled)
+        {
+            _bounceEnabled = enabled;
+            if (!_bounceEnabled)
+                StopBounce();
+        }
+
+        public void SetBounceAllowed(bool allowed)
+        {
+            _bounceAllowed = allowed;
+            if (!_bounceAllowed)
+                StopBounce();
+        }
+
+        public void SetBounceHeight(float height)
+        {
+            _bounceHeight = Mathf.Max(0f, height);
+            if (_bounceHeight <= 0f)
+                StopBounce();
+        }
+
+        public void SetBounceTarget(RectTransform target)
+        {
+            StopBounce();
+            _bounceTarget = target;
+            CacheBasePosition();
+        }
+
+        public void SetLinkedTargets(params RectTransform[] targets)
+        {
+            StopBounce();
+            _linkedTargets.Clear();
+
+            if (targets != null)
+            {
+                foreach (var target in targets)
+                {
+                    if (target == null || target == _targetRect)
+                        continue;
+
+                    if (!_linkedTargets.Contains(target))
+                        _linkedTargets.Add(target);
+                }
+            }
+
+            CacheLinkedTargetBaseScales();
+            CacheBasePosition();
+        }
+
+        public void SetReleaseLockOnOutsideClick(bool release) =>
+            _releaseLockOnOutsideClick = release;
+
+        private void StartScale(float scaleMultiplier)
+        {
+            if (!_hoverScaleEnabled || _targetRect == null)
+                return;
+
+            _currentTween?.Kill();
+            var sequence = DOTween.Sequence().SetUpdate(true);
+            sequence.Join(
+                _targetRect
+                    .DOScale(_baseLocalScale * scaleMultiplier, _animationDuration)
+                    .SetEase(Ease.OutQuad)
+            );
+
+            for (int i = 0; i < _linkedTargets.Count; i++)
+            {
+                var linkedTarget = _linkedTargets[i];
+                if (linkedTarget == null)
+                    continue;
+
+                var baseScale =
+                    i < _linkedTargetBaseLocalScales.Count
+                        ? _linkedTargetBaseLocalScales[i]
+                        : linkedTarget.localScale;
+
+                sequence.Join(
+                    linkedTarget
+                        .DOScale(baseScale * scaleMultiplier, _animationDuration)
+                        .SetEase(Ease.OutQuad)
+                );
+            }
+
+            _currentTween = sequence.OnComplete(() => _currentTween = null);
+        }
+
+        private void RestoreBaseScale()
+        {
+            if (_targetRect != null)
+                _targetRect.localScale = _baseLocalScale;
+
+            for (int i = 0; i < _linkedTargets.Count; i++)
+            {
+                var linkedTarget = _linkedTargets[i];
+                if (linkedTarget == null)
+                    continue;
+
+                linkedTarget.localScale =
+                    i < _linkedTargetBaseLocalScales.Count
+                        ? _linkedTargetBaseLocalScales[i]
+                        : linkedTarget.localScale;
+            }
+        }
+
+        private void CacheBasePosition()
+        {
+            if (_targetRect != null)
+                _baseLocalPosition = _targetRect.localPosition;
+            if (_bounceTarget != null)
+                _bounceTargetBaseAnchoredPosition = _bounceTarget.anchoredPosition;
+
+            _linkedTargetBaseLocalPositions.Clear();
+            foreach (var linkedTarget in _linkedTargets)
+                _linkedTargetBaseLocalPositions.Add(
+                    linkedTarget != null ? linkedTarget.localPosition : Vector3.zero
+                );
+        }
+
+        private void CacheBaseScale(bool force = false)
+        {
+            if (_targetRect == null)
+                return;
+
+            if (force || !_cachedBaseLocalScales.TryGetValue(_targetRect, out _baseLocalScale))
+            {
+                _baseLocalScale = _targetRect.localScale;
+                _cachedBaseLocalScales[_targetRect] = _baseLocalScale;
+            }
+        }
+
+        private void CacheLinkedTargetBaseScales()
+        {
+            _linkedTargetBaseLocalScales.Clear();
+            foreach (var linkedTarget in _linkedTargets)
+            {
+                if (linkedTarget == null)
+                {
+                    _linkedTargetBaseLocalScales.Add(Vector3.one);
+                    continue;
+                }
+
+                if (!_cachedBaseLocalScales.TryGetValue(linkedTarget, out var baseScale))
+                {
+                    baseScale = linkedTarget.localScale;
+                    _cachedBaseLocalScales[linkedTarget] = baseScale;
+                }
+
+                _linkedTargetBaseLocalScales.Add(baseScale);
+            }
+        }
+
+        private void StartBounce()
+        {
+            if (
+                !_bounceEnabled
+                || !_bounceAllowed
+                || _targetRect == null
+                || _bounceHeight <= 0f
+                || _bounceDuration <= 0f
+            )
+                return;
+
+            StopBounce();
+            RebuildOwningGridLayout();
+            CacheBasePosition();
+            float direction = GetBounceDirection();
+
+            var sequence = DOTween.Sequence();
+            sequence.Append(
+                DOTween.To(
+                    () => _targetRect.localPosition.y,
+                    y =>
+                    {
+                        var position = _targetRect.localPosition;
+                        position.y = y;
+                        _targetRect.localPosition = position;
+                    },
+                    _baseLocalPosition.y + _bounceHeight * direction,
+                    _bounceDuration
+                )
+            );
+
+            if (_bounceTarget != null)
+            {
+                sequence.Join(
+                    DOTween.To(
+                        () => _bounceTarget.anchoredPosition.y,
+                        y =>
+                        {
+                            var position = _bounceTarget.anchoredPosition;
+                            position.y = y;
+                            _bounceTarget.anchoredPosition = position;
+                        },
+                        _bounceTargetBaseAnchoredPosition.y + _bounceHeight * direction,
+                        _bounceDuration
+                    )
+                );
+            }
+
+            for (int i = 0; i < _linkedTargets.Count; i++)
+            {
+                var linkedTarget = _linkedTargets[i];
+                if (linkedTarget == null)
+                    continue;
+
+                var basePosition =
+                    i < _linkedTargetBaseLocalPositions.Count
+                        ? _linkedTargetBaseLocalPositions[i]
+                        : linkedTarget.localPosition;
+
+                sequence.Join(
+                    DOTween.To(
+                        () => linkedTarget.localPosition.y,
+                        y =>
+                        {
+                            var position = linkedTarget.localPosition;
+                            position.y = y;
+                            linkedTarget.localPosition = position;
+                        },
+                        basePosition.y + _bounceHeight * direction,
+                        _bounceDuration
+                    )
+                );
+            }
+
+            _bounceTween = sequence
+                .SetEase(Ease.InOutSine)
+                .SetLoops(-1, LoopType.Yoyo)
+                .SetUpdate(true);
+        }
+
+        private void StopBounce()
+        {
+            bool wasBouncing = _bounceTween != null;
+            _bounceTween?.Kill();
+            _bounceTween = null;
+
+            if (!wasBouncing || _targetRect == null)
+                return;
+
+            bool layoutRebuilt = RebuildOwningGridLayout();
+            if (!layoutRebuilt)
+                _targetRect.localPosition = _baseLocalPosition;
+            if (_bounceTarget != null)
+                _bounceTarget.anchoredPosition = _bounceTargetBaseAnchoredPosition;
+
+            for (int i = 0; i < _linkedTargets.Count; i++)
+            {
+                if (_linkedTargets[i] == null || i >= _linkedTargetBaseLocalPositions.Count)
+                    continue;
+
+                _linkedTargets[i].localPosition = _linkedTargetBaseLocalPositions[i];
+            }
+        }
+
+        private bool RebuildOwningGridLayout()
+        {
+            var grid =
+                _targetRect != null ? _targetRect.GetComponentInParent<GridLayoutGroup>() : null;
+            if (grid == null || grid.transform is not RectTransform gridRect)
+                return false;
+
+            Canvas.ForceUpdateCanvases();
+            LayoutRebuilder.ForceRebuildLayoutImmediate(gridRect);
+            _targetRect.ForceUpdateRectTransforms();
+            return _targetRect.parent == grid.transform;
+        }
+
+        private float GetBounceDirection()
+        {
+            var mask = _targetRect.GetComponentInParent<RectMask2D>();
+            if (mask == null)
+                return 1f;
+
+            var grid = _targetRect.GetComponentInParent<GridLayoutGroup>();
+            if (IsInFirstGridRow(grid))
+                return -1f;
+
+            Canvas.ForceUpdateCanvases();
+            if (grid != null && grid.transform is RectTransform gridRect)
+                LayoutRebuilder.ForceRebuildLayoutImmediate(gridRect);
+            _targetRect.ForceUpdateRectTransforms();
+
+            var targetCorners = new Vector3[4];
+            var maskCorners = new Vector3[4];
+            _targetRect.GetWorldCorners(targetCorners);
+            mask.rectTransform.GetWorldCorners(maskCorners);
+            float scaledBounceHeight = _bounceHeight * _targetRect.lossyScale.y;
+
+            return targetCorners[1].y + scaledBounceHeight > maskCorners[1].y ? -1f : 1f;
+        }
+
+        private bool IsInFirstGridRow(GridLayoutGroup grid)
+        {
+            if (grid == null)
+                return false;
+
+            Transform slot = _targetRect;
+            while (slot.parent != null && slot.parent != grid.transform)
+                slot = slot.parent;
+
+            if (slot.parent != grid.transform)
+                return false;
+
+            int columnCount = grid.constraint switch
+            {
+                GridLayoutGroup.Constraint.FixedColumnCount => grid.constraintCount,
+                GridLayoutGroup.Constraint.FixedRowCount => Mathf.CeilToInt(
+                    (float)grid.transform.childCount / grid.constraintCount
+                ),
+                _ => Mathf.Max(
+                    1,
+                    Mathf.FloorToInt(
+                        (
+                            ((RectTransform)grid.transform).rect.width
+                            - grid.padding.horizontal
+                            + grid.spacing.x
+                        ) / (grid.cellSize.x + grid.spacing.x)
+                    )
+                ),
+            };
+
+            return slot.GetSiblingIndex() < columnCount;
+        }
+
+        private static readonly Dictionary<string, HoverScaleOnPointer> _lockedInstances = new();
+
+        public static HoverScaleOnPointer GetLockedInstance(string group) =>
+            _lockedInstances.TryGetValue(group, out var instance) ? instance : null;
+
+        public bool IsLocked() => _isLocked;
+
+        public void AcquireLock()
+        {
+            if (!_lockEnabled)
+                return;
+
+            LockSelection();
+        }
+
+        public void ReleaseLock() => ReleaseLockedState();
+
+        private void OnDisable()
+        {
+            if (_lockedInstances.TryGetValue(_group, out var current) && current == this)
+                _lockedInstances.Remove(_group);
+
+            _isLocked = false;
+            _currentTween?.Kill();
+            _currentTween = null;
+            StopBounce();
+
+            if (_hoverScaleEnabled)
+                RestoreBaseScale();
+        }
+
+        private void LockSelection()
+        {
+            if (_lockedInstances.TryGetValue(_group, out var current) && current != this)
+                current.ReleaseLockedState();
+
+            _lockedInstances[_group] = this;
+            _isLocked = true;
+            StartScale(_hoverScale);
+            StartBounce();
+        }
+
+        private void ReleaseLockedState()
+        {
+            if (_lockedInstances.TryGetValue(_group, out var current) && current == this)
+                _lockedInstances.Remove(_group);
+
+            _isLocked = false;
+            StartScale(1f);
+            StopBounce();
+        }
+
+        private void Update()
+        {
+            if (
+                !_releaseLockOnOutsideClick
+                || !_isLocked
+                || Mouse.current == null
+                || !Mouse.current.leftButton.wasPressedThisFrame
+                || IsPointerOverSelf()
+            )
+                return;
+
+            ReleaseLockedState();
+        }
+
+        public void OnPointerEnter(PointerEventData eventData)
+        {
+            if (_isLocked)
+                return;
+
+            StartScale(_hoverScale);
+        }
+
+        public void OnPointerExit(PointerEventData eventData)
+        {
+            if (_isLocked)
+                return;
+
+            StartScale(1f);
+        }
+
+        public void OnPointerClick(PointerEventData eventData)
+        {
+            if (!_lockEnabled)
+                return;
+
+            LockSelection();
+        }
+
+        private bool IsPointerOverSelf()
+        {
+            if (EventSystem.current == null || Mouse.current == null)
+                return false;
+
+            var eventData = new PointerEventData(EventSystem.current)
+            {
+                position = Mouse.current.position.ReadValue(),
+            };
+
+            var results = new List<RaycastResult>();
+            EventSystem.current.RaycastAll(eventData, results);
+
+            foreach (var result in results)
+            {
+                if (
+                    result.gameObject == gameObject
+                    || result.gameObject.transform.IsChildOf(transform)
+                )
+                    return true;
+            }
+
+            return false;
+        }
+    }
+}

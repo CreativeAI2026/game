@@ -2,7 +2,6 @@
     "name": "CreativeAI.Tests.PlayMode",
     "rootNamespace": "CreativeAI.Tests.PlayMode",
     "references": [
-        "CreativeAI.StatRoll",
         "CreativeAI.Core",
         "CreativeAI.Gameplay",
         "CreativeAI.UI",

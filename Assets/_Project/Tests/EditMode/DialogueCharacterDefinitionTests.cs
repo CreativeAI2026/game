@@ -1,4 +1,4 @@
-using CreativeAI.UI.ConversationUI;
+using CreativeAI.UI;
 using NUnit.Framework;
 using UnityEngine;
 
@@ -23,13 +23,6 @@ namespace CreativeAI.Tests.EditMode
                 TestReflection.SetField(definition, "_side", DialoguePortraitSide.Left);
                 TestReflection.SetField(
                     definition,
-                    "_idleMotion",
-                    DialoguePortraitIdleMotion.Float
-                );
-                TestReflection.SetField(definition, "_idleMotionAmplitude", 14f);
-                TestReflection.SetField(definition, "_idleMotionCycleDuration", 1.8f);
-                TestReflection.SetField(
-                    definition,
                     "_expressions",
                     new[]
                     {
@@ -51,9 +44,6 @@ namespace CreativeAI.Tests.EditMode
                 Assert.AreEqual("hero", definition.Id);
                 Assert.AreEqual("主人公", definition.DisplayName);
                 Assert.AreEqual(DialoguePortraitSide.Left, definition.Side);
-                Assert.AreEqual(DialoguePortraitIdleMotion.Float, definition.IdleMotion);
-                Assert.AreEqual(14f, definition.IdleMotionAmplitude);
-                Assert.AreEqual(1.8f, definition.IdleMotionCycleDuration);
                 Assert.IsFalse(definition.TryResolvePortrait("missing", out _));
             }
             finally

@@ -1,19 +1,20 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
-using CreativeAI.Core.EventSystem;
+using CreativeAI.Core;
+using CreativeAI.Gameplay;
 using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
 
-namespace CreativeAI.UI.ConversationUI
+namespace CreativeAI.UI
 {
     /// <summary>
     /// 会話UIの実体。<see cref="IDialogueView"/> を実装し、生成時に <see cref="DialogueViewService.Current"/> へ自身を登録する。
     /// UIRoot Prefab の子として同梱され、常駐・DDOL は <see cref="UIRoot"/> が担う。状態は保存しない。
     /// 再生時は Awake でウィンドウを隠し、編集時は Prefab の見た目がそのままプレビューになる。
     /// </summary>
-    public sealed partial class ConversationView : MonoBehaviour, IDialogueView
+    public sealed class ConversationView : MonoBehaviour, IDialogueView
     {
         public static ConversationView Instance { get; private set; }
         public event Action<string, string> ExternalPresentationCommandRequested;
@@ -40,6 +41,7 @@ namespace CreativeAI.UI.ConversationUI
         {
             Shake,
             Jump,
+            Fade,
         }
 
         public ConversationState State { get; private set; } = ConversationState.Hidden;
@@ -59,32 +61,11 @@ namespace CreativeAI.UI.ConversationUI
         [SerializeField]
         private Image _rightPortrait; // 実行時に _portrait から生成する右側スロット
 
-        [Header("立ち絵レイアウト")]
         [SerializeField]
-        [Range(0f, 1f)]
-        [Tooltip("左側に表示する立ち絵の横位置。0 が画面左端、1 が画面右端です。")]
-        private float _portraitLeftAnchorX = 0.1f; // 主人公など画面左側に立つキャラクター
+        private float _portraitLeftAnchorX = 0.12f; // 主人公など画面左側に立つキャラクター
 
         [SerializeField]
-        [Range(0f, 1f)]
-        [Tooltip("右側に表示する立ち絵の横位置。0 が画面左端、1 が画面右端です。")]
-        private float _portraitRightAnchorX = 0.9f; // 会話相手など画面右側に立つキャラクター
-
-        [SerializeField]
-        [Tooltip("すべての立ち絵に加える横方向の位置調整（px）。")]
-        private float _portraitHorizontalOffset;
-
-        [SerializeField]
-        [Range(-300f, 300f)]
-        [Tooltip("すべての立ち絵に加える高さ調整（px）。小さくすると下へ移動します。")]
-        private float _portraitHeightOffset = -30f;
-
-        [SerializeField]
-        [Range(0.25f, 2f)]
-        [Tooltip(
-            "すべての立ち絵に掛ける基本倍率。Active / Inactive Scale はこの値に乗算されます。"
-        )]
-        private float _portraitBaseScale = 1f;
+        private float _portraitRightAnchorX = 0.88f; // 会話相手など画面右側に立つキャラクター
 
         [SerializeField]
         private float _portraitActiveScale = 1.03f;
@@ -423,8 +404,6 @@ namespace CreativeAI.UI.ConversationUI
                 _rightPortrait,
                 _portraitLeftAnchorX,
                 _portraitRightAnchorX,
-                new Vector2(_portraitHorizontalOffset, _portraitHeightOffset),
-                _portraitBaseScale,
                 _portraitActiveScale,
                 _portraitInactiveScale,
                 _portraitInactiveBrightness,
@@ -458,7 +437,6 @@ namespace CreativeAI.UI.ConversationUI
 
         private void Update()
         {
-            _portraitPresenter?.Tick(Time.unscaledTime);
             _inputController?.Tick();
         }
 
@@ -625,6 +603,207 @@ namespace CreativeAI.UI.ConversationUI
             );
             _chromePresenter.StopBounce();
             State = ConversationState.Entering;
+        }
+
+        public void SetAutoMode(bool enabled)
+        {
+            if (IsAutoMode == enabled)
+                return;
+
+            IsAutoMode = enabled;
+            InitializePresenters();
+            _chromePresenter.SetAutoMode(enabled);
+            _controlsPresenter.SetAutoActive(enabled);
+        }
+
+        private void BindControlButtons()
+        {
+            _controlsPresenter.Bind(
+                () => SetAutoMode(!IsAutoMode),
+                () =>
+                {
+                    _skipMode = !_skipMode;
+                    _controlsPresenter.SetSkipActive(_skipMode);
+                },
+                () => SetTextSpeed((TextSpeed)(((int)_textSpeed + 1) % 4)),
+                () => SetWindowHidden(!_windowManuallyHidden)
+            );
+        }
+
+        public void SetWindowHidden(bool hidden)
+        {
+            _windowManuallyHidden = hidden;
+            InitializePresenters();
+            _chromePresenter.SetWindowHidden(hidden);
+            _controlsPresenter.SetHideActive(hidden);
+        }
+
+        public void SetTextSpeed(TextSpeed speed)
+        {
+            _textSpeed = speed;
+            InitializePresenters();
+            _chromePresenter.SetTextSpeed(speed);
+            _speedPresenter.SetSpeed(speed, true);
+        }
+
+        public bool IsLineRead(string speaker, string portrait, string text) =>
+            _sessionState.IsLineRead(speaker, portrait, text);
+
+        public void MarkLineRead(string speaker, string portrait, string text) =>
+            _sessionState.MarkLineRead(speaker, portrait, text);
+
+        public void ClearReadHistory() => _sessionState.ClearReadHistory();
+
+        public void SetPortraitVisible(DialoguePortraitSide side, bool visible)
+        {
+            InitializePresenters();
+            _portraitPresenter.SetVisible(side, visible);
+        }
+
+        public IEnumerator PlayPortraitEffect(
+            DialoguePortraitSide side,
+            PortraitEffect effect,
+            float duration = 0.28f
+        )
+        {
+            InitializePresenters();
+            yield return _portraitPresenter.PlayEffect(side, effect, duration);
+        }
+
+        public IEnumerator SetPortraitObscured(
+            DialoguePortraitSide side,
+            bool obscured,
+            float duration = 0.5f
+        )
+        {
+            InitializePresenters();
+            yield return _portraitPresenter.SetObscured(side, obscured, duration);
+        }
+
+        public IEnumerator RunPresentationCommand(string command, string argument = null)
+        {
+            InitializePresenters();
+            yield return _presentationCommandRouter.Execute(command, argument);
+        }
+
+        /// <summary>
+        /// IDialogueView 実装: giveItem ステップの入手演出。itemKey→アイコン/名前の解決はここで行う
+        /// (Core は Gameplay を参照しないため、EventPlayer はキーだけ渡す)。
+        /// message 省略時は「〜を手に入れた。」を名前から組み立てる。
+        /// </summary>
+        public IEnumerator ShowItemGet(string itemKey, string message)
+        {
+            var data =
+                ItemCatalog.Instance != null ? ItemCatalog.Instance.GetItemByKey(itemKey) : null;
+            string body =
+                !string.IsNullOrWhiteSpace(message) ? message
+                : data != null && !string.IsNullOrEmpty(data.itemName)
+                    ? $"{data.itemName}を手に入れた。"
+                : null;
+            yield return ShowItemGet(data != null ? data.icon : null, body);
+        }
+
+        /// <summary>
+        /// IDialogueView 実装: giveWeapon ステップの入手演出。3Dモデルは WeaponData がまだ参照を
+        /// 持たないため解決できず、Inspector のダミー(_weaponModelPrefab)にフォールバックする
+        /// (モデル参照は武器を持つ側=WeaponManager 班の担当)。
+        /// </summary>
+        public IEnumerator ShowWeaponGet(string weaponKey, string message)
+        {
+            yield return ShowWeaponGet((GameObject)null, message);
+        }
+
+        /// <summary>IDialogueView 実装: command ステップの演出コマンド。</summary>
+        public IEnumerator RunCommand(string command, string argument) =>
+            RunPresentationCommand(command, argument);
+
+        public IEnumerator Close()
+        {
+            if (State == ConversationState.Hidden)
+                yield break;
+            yield return HideAnimated();
+        }
+
+        private void SetChoicesActive(bool active)
+        {
+            _choicePresenter?.SetActive(active);
+            _chromePresenter?.SetChoiceGuide(active);
+        }
+
+        private void EnsureHistoryPanel()
+        {
+            if (_historyPanel == null)
+                _historyPanel = GetComponent<DialogueHistoryPanel>();
+            if (_historyPanel == null)
+                _historyPanel = gameObject.AddComponent<DialogueHistoryPanel>();
+
+            _historyPanel.Initialize(_nameText != null ? _nameText.font : null);
+            if (!_historyEventsBound)
+            {
+                _historyPanel.Closed += HandleHistoryClosed;
+                _historyEventsBound = true;
+            }
+        }
+
+        private void HandleHistoryClosed() => BlockAdvanceInput(0.12f);
+
+        private void BlockAdvanceInput(float duration)
+        {
+            _advanceBlockedUntil = Mathf.Max(
+                _advanceBlockedUntil,
+                Time.unscaledTime + Mathf.Max(0f, duration)
+            );
+        }
+
+        private IEnumerator ShowAnimated()
+        {
+            InitializePresenters();
+            yield return _chromePresenter.Show();
+        }
+
+        public IEnumerator HideAnimated(float duration = 0.2f)
+        {
+            State = ConversationState.Exiting;
+            InitializePresenters();
+            float textDuration = Mathf.Max(0.05f, duration * 0.35f);
+            float portraitDuration = Mathf.Max(0.06f, duration * 0.4f);
+            float windowDuration = Mathf.Max(0.07f, duration * 0.45f);
+            yield return _chromePresenter.HideLineText(textDuration);
+            yield return _portraitPresenter.FadeOutAll(portraitDuration);
+            yield return _chromePresenter.Hide(windowDuration);
+            _rewardPresenter.HideAll();
+            _choicePresenter.Clear();
+            _choicePresenter.SetActive(false);
+            ResetTransientModes();
+            State = ConversationState.Hidden;
+        }
+
+        private void HideImmediate()
+        {
+            State = ConversationState.Exiting;
+            _rewardPresenter?.HideAll();
+            SetChoicesActive(false);
+            ResetTransientModes();
+            _chromePresenter?.HideImmediate();
+            State = ConversationState.Hidden;
+        }
+
+        private void ResetTransientModes()
+        {
+            _rewardPresentationActive = false;
+            _skipMode = false;
+            _windowManuallyHidden = false;
+            _advanceBlockedUntil = 0f;
+            _controlsPresenter.SetSkipActive(false);
+            _controlsPresenter.SetHideActive(false);
+            if (_historyPanel != null && _historyPanel.IsOpen)
+                _historyPanel.SetOpen(false);
+        }
+
+        private void CancelRewardPresentation()
+        {
+            _rewardPresenter?.HideAll();
+            _rewardPresentationActive = false;
         }
     }
 }

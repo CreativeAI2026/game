@@ -1,7 +1,6 @@
 using System.Collections.Generic;
 using System.Linq;
 using CreativeAI.Gameplay;
-using CreativeAI.StatRoll;
 using NUnit.Framework;
 using UnityEngine;
 
@@ -9,13 +8,17 @@ namespace CreativeAI.Tests.EditMode
 {
     /// <summary>
     /// ロール済み個体(調合品・拾得品)の付与ステータスが最終ステータスまで届くかの検証。
-    /// 書き出し(CraftStatBridge)と読み取り(Accumulate)で <see cref="RolledStat.stat"/> の語彙がズレると補正が黙って 0 になる。
+    /// 書き出し(調合・拾得のロール)と読み取り(EquipmentBonus.Add)で <see cref="RolledStat.stat"/> の語彙がズレると補正が黙って 0 になる。
     /// </summary>
     public class RolledStatBonusTests
     {
         private GameObject _invGo;
         private InventoryManager _inv;
         private readonly List<Object> _created = new();
+
+        // 拾得と同じ経路でロールする。
+        private static IReadOnlyList<RolledStat> RollDrop(IRandomSource rng) =>
+            RolledStat.FromVector(DropStatRoller.RollDropStats(rng));
 
         [SetUp]
         public void SetUp()
@@ -33,16 +36,16 @@ namespace CreativeAI.Tests.EditMode
             _created.Clear();
         }
 
-        private EquipmentData MakeEquipment(int id, int attack = 0, int seedPower = 0)
+        private ItemData MakeEquipment(int id)
         {
-            var d = ScriptableObject.CreateInstance<EquipmentData>(); // OnEnable が category=Equipment
+            var d = ScriptableObject.CreateInstance<ItemData>();
+            d.category = ItemCategory.Equipment;
             d.id = id;
-            d.attack = attack + seedPower;
             _created.Add(d);
             return d;
         }
 
-        private ItemStack AddEquippedInstance(EquipmentData data, params RolledStat[] rolled)
+        private ItemStack AddEquippedInstance(ItemData data, params RolledStat[] rolled)
         {
             var stack = _inv.AddInstance(data, rolled);
             _inv.SetEquipped(stack, true);
@@ -54,25 +57,26 @@ namespace CreativeAI.Tests.EditMode
         [Test]
         public void RollDrop_WritesStatTypeNames()
         {
-            var seed = MakeEquipment(2101, seedPower: 20);
-
-            var rolled = CraftStatBridge.RollDrop(seed, new SystemRandomSource(1));
+            var rolled = RollDrop(new SystemRandomSource(1));
 
             CollectionAssert.IsNotEmpty(rolled.ToList());
             foreach (var r in rolled)
                 Assert.IsTrue(
                     System.Enum.TryParse<StatType>(r.stat, ignoreCase: false, out _),
-                    $"'{r.stat}' は StatType の名前ではない(Accumulate が読めない語彙)"
+                    $"'{r.stat}' は StatType の名前ではない(EquipmentBonus.Add が読めない語彙)"
                 );
         }
 
         [Test]
         public void RollEquipment_WritesStatTypeNames()
         {
-            var a = MakeEquipment(2102, seedPower: 10);
-            var b = MakeEquipment(2103, seedPower: 10);
-
-            var rolled = CraftStatBridge.RollEquipment(a, b, new SystemRandomSource(2));
+            var rolled = RolledStat.FromVector(
+                CraftingService.RollCraftedStats(
+                    StatVector.Of((StatType.AttackPct, 10f)),
+                    StatVector.Of((StatType.CritRate, 10f)),
+                    new SystemRandomSource(2)
+                )
+            );
 
             foreach (var r in rolled)
                 Assert.IsTrue(System.Enum.TryParse<StatType>(r.stat, ignoreCase: false, out _));
@@ -81,10 +85,9 @@ namespace CreativeAI.Tests.EditMode
         // --- 合算: ロール値が装備補正に乗る ---
 
         [Test]
-        public void EquippedInstance_AddsItsRolledValues_NotTheSeedValues()
+        public void EquippedInstance_AddsItsRolledValues()
         {
-            // 個体の補正はロール値で決まる。アセットの固定値(総パワーの宣言)は使わない。
-            var gear = MakeEquipment(2104, seedPower: 999);
+            var gear = MakeEquipment(2104);
             AddEquippedInstance(
                 gear,
                 new RolledStat(nameof(StatType.AttackPct), 12f),
@@ -95,7 +98,7 @@ namespace CreativeAI.Tests.EditMode
 
             Assert.AreEqual(12f, bonus.attackPct, 1e-3f);
             Assert.AreEqual(8f, bonus.criticalChance, 1e-3f);
-            Assert.AreEqual(0f, bonus.defensePct, 1e-3f, "アセットの固定値が混ざってはいけない");
+            Assert.AreEqual(0f, bonus.defensePct, 1e-3f);
         }
 
         [Test]
@@ -209,8 +212,8 @@ namespace CreativeAI.Tests.EditMode
                 Assert.AreEqual(2000f, status.CurrentAttackPower, 1e-3f); // 前提: 補正なし
 
                 // 拾得と同じ経路でロールした個体を在庫へ入れて装備する。
-                var seed = MakeEquipment(2120, seedPower: 20);
-                var rolled = CraftStatBridge.RollDrop(seed, new SystemRandomSource(5));
+                var seed = MakeEquipment(2120);
+                var rolled = RollDrop(new SystemRandomSource(5));
                 AddEquippedInstance(seed, rolled.ToArray());
 
                 status.SetEquipment(_inv.GetEquippedBonus());

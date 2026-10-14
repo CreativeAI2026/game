@@ -19,7 +19,7 @@ namespace CreativeAI.Tests.EditMode
         public void SetUp()
         {
             _helperType = Type.GetType(
-                "CreativeAI.EditorTools.UI.RevolverTabSetupHelper, CreativeAI.EditorTools"
+                "CreativeAI.EditorTools.RevolverTabSetupHelper, CreativeAI.EditorTools"
             );
             Assert.IsNotNull(_helperType);
         }

@@ -1,6 +1,6 @@
 using System.Collections;
 using System.Collections.Generic;
-using CreativeAI.Core.SceneManagement;
+using CreativeAI.Core;
 using NUnit.Framework;
 using UnityEngine;
 using UnityEngine.SceneManagement;
@@ -92,7 +92,7 @@ namespace CreativeAI.Tests.PlayMode
             string sceneAtArrival = null;
 
             _controller.LoadScene(
-                "01_Title",
+                "Title",
                 onSceneActivated: () =>
                 {
                     arrived = true;
@@ -113,17 +113,13 @@ namespace CreativeAI.Tests.PlayMode
                 "暗幕を出してからロードし、最後に解除する"
             );
             Assert.IsTrue(arrived, "到着コールバックが呼ばれる");
-            Assert.AreEqual(
-                "01_Title",
-                sceneAtArrival,
-                "到着処理はシーン有効化の後(暗幕の下)で走る"
-            );
+            Assert.AreEqual("Title", sceneAtArrival, "到着処理はシーン有効化の後(暗幕の下)で走る");
         }
 
         [UnityTest]
         public IEnumerator LoadScene_ReportsProgressUpTo100Percent()
         {
-            _controller.LoadScene("01_Title");
+            _controller.LoadScene("Title");
 
             float timeout = Time.realtimeSinceStartup + 20f;
             while (GetPrivate<bool>(_controller, "_isLoading"))
@@ -142,7 +138,7 @@ namespace CreativeAI.Tests.PlayMode
         public IEnumerator LoadScene_LoadsExactlyOneScene()
         {
             // 「常に1つだけロードされ互いに相互排他」。Single ロードなので加算されない。
-            _controller.LoadScene("01_Title");
+            _controller.LoadScene("Title");
 
             float timeout = Time.realtimeSinceStartup + 20f;
             while (GetPrivate<bool>(_controller, "_isLoading"))
@@ -162,8 +158,8 @@ namespace CreativeAI.Tests.PlayMode
                 new System.Text.RegularExpressions.Regex("already loading")
             );
 
-            _controller.LoadScene("01_Title");
-            _controller.LoadScene("01_Title"); // ロード中の2本目
+            _controller.LoadScene("Title");
+            _controller.LoadScene("Title"); // ロード中の2本目
 
             float timeout = Time.realtimeSinceStartup + 20f;
             while (GetPrivate<bool>(_controller, "_isLoading"))

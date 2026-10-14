@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
 using CreativeAI.Gameplay;
-using CreativeAI.UI.InventoryUI;
+using CreativeAI.UI;
 using TMPro;
 using UnityEngine;
 using UnityEngine.Events;
@@ -833,7 +833,7 @@ namespace CreativeAI.UI.CharacterUI
 
         private void DropIntoEquipmentSlot(int targetIndex, ItemSlotDragPayload payload)
         {
-            if (payload.Stack?.Data is not EquipmentData)
+            if (payload.Stack?.Data?.category != ItemCategory.Equipment)
                 return;
 
             _selectedEquipmentSlot = targetIndex;
@@ -936,7 +936,7 @@ namespace CreativeAI.UI.CharacterUI
             if (
                 _selectedEquipmentSlot < 0
                 || _selectedEquipmentSlot >= _equipmentAssignments.Length
-                || _selectedStack.Data is not EquipmentData
+                || _selectedStack.Data.category != ItemCategory.Equipment
             )
                 return;
 
@@ -1036,7 +1036,7 @@ namespace CreativeAI.UI.CharacterUI
 
             foreach (
                 ItemStack stack in allItems.Where(item =>
-                    item?.Data is EquipmentData && item.IsEquipped
+                    item?.Data?.category == ItemCategory.Equipment && item.IsEquipped
                 )
             )
             {
@@ -1081,7 +1081,7 @@ namespace CreativeAI.UI.CharacterUI
             if (_detailCount != null)
                 _detailCount.text = $"x{stack.Count}";
 
-            RefreshDetailParameters(item);
+            RefreshDetailParameters(stack);
             RefreshSlotAvailability(item);
             SetDetailAction(action, item);
         }
@@ -1126,10 +1126,11 @@ namespace CreativeAI.UI.CharacterUI
                 slot?.SetAvailable(equipmentAvailable);
         }
 
-        private void RefreshDetailParameters(ItemData item)
+        private void RefreshDetailParameters(ItemStack stack)
         {
+            ItemData item = stack?.Data;
             bool showsQuick = item is FoodData;
-            bool showsEquipment = item is EquipmentData;
+            bool showsEquipment = item?.category == ItemCategory.Equipment;
             _quickParameterPattern?.SetActive(showsQuick);
             _equipmentParameterPattern?.SetActive(showsEquipment);
 
@@ -1139,13 +1140,17 @@ namespace CreativeAI.UI.CharacterUI
                     _quickParameterLabel.text = "即時回復";
                 SetParameterValue(_quickParameterValue, food.HealFraction * 100f);
             }
-            else if (item is EquipmentData equipment)
+            else if (showsEquipment)
             {
-                SetParameterValue(_attackParameterValue, equipment.attack);
-                SetParameterValue(_defenseParameterValue, equipment.defense);
-                SetParameterValue(_maxHpParameterValue, equipment.maxHP);
-                SetParameterValue(_criticalRateParameterValue, equipment.criticalRate);
-                SetParameterValue(_criticalDamageParameterValue, equipment.criticalDamage);
+                var bonus = new EquipmentBonus();
+                if (stack.IsInstance)
+                    bonus.Add(stack.RolledStats);
+
+                SetParameterValue(_attackParameterValue, bonus.attackPct);
+                SetParameterValue(_defenseParameterValue, bonus.defensePct);
+                SetParameterValue(_maxHpParameterValue, bonus.maxHpPct);
+                SetParameterValue(_criticalRateParameterValue, bonus.criticalChance);
+                SetParameterValue(_criticalDamageParameterValue, bonus.criticalDamage);
             }
         }
 
@@ -1186,7 +1191,7 @@ namespace CreativeAI.UI.CharacterUI
                 _actionLabel.text = action switch
                 {
                     DetailAction.Assign when item is FoodData => "登録",
-                    DetailAction.Assign when item is EquipmentData => "装備",
+                    DetailAction.Assign when item?.category == ItemCategory.Equipment => "装備",
                     DetailAction.RemoveQuick => "解除",
                     DetailAction.RemoveEquipment => "解除",
                     _ => string.Empty,

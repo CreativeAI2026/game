@@ -2,7 +2,6 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using CreativeAI.Core;
-using CreativeAI.Core.EventSystem;
 using CreativeAI.Gameplay;
 using NUnit.Framework;
 using UnityEngine;
@@ -21,12 +20,10 @@ namespace CreativeAI.Tests.EditMode
         private string _backup;
         private GameObject _pmGo;
         private GameObject _invGo;
-        private GameObject _bookGo;
         private GameObject _gmmGo;
         private GameObject _playerGo;
         private ProgressManager _pm;
         private InventoryManager _inv;
-        private RecipeBookManager _book;
         private GameModeManager _gmm;
         private WeaponManager _weapons;
         private PlayerParameterData _playerData;
@@ -70,10 +67,6 @@ namespace CreativeAI.Tests.EditMode
             _inv = _invGo.AddComponent<InventoryManager>();
             TestReflection.SetStaticProperty("Instance", _inv);
 
-            _bookGo = new GameObject("BOOK");
-            _book = _bookGo.AddComponent<RecipeBookManager>();
-            TestReflection.SetStaticProperty("Instance", _book);
-
             _gmmGo = new GameObject("GMM");
             _gmm = _gmmGo.AddComponent<GameModeManager>();
             TestReflection.SetStaticProperty("Instance", _gmm);
@@ -95,14 +88,12 @@ namespace CreativeAI.Tests.EditMode
         public void TearDown()
         {
             EventPlaybackService.SetPlaying(false);
-            ItemDB.InjectForTests(null);
+            ItemCatalog.InjectForTests(null);
             TestReflection.SetStaticProperty<ProgressManager>("Instance", null);
             TestReflection.SetStaticProperty<InventoryManager>("Instance", null);
-            TestReflection.SetStaticProperty<RecipeBookManager>("Instance", null);
             TestReflection.SetStaticProperty<GameModeManager>("Instance", null);
             Object.DestroyImmediate(_playerGo);
             Object.DestroyImmediate(_gmmGo);
-            Object.DestroyImmediate(_bookGo);
             Object.DestroyImmediate(_invGo);
             Object.DestroyImmediate(_pmGo);
             foreach (var a in _assets)
@@ -119,9 +110,10 @@ namespace CreativeAI.Tests.EditMode
             return f;
         }
 
-        private EquipmentData MakeEquipment(int id)
+        private ItemData MakeEquipment(int id)
         {
-            var e = MakeAsset<EquipmentData>();
+            var e = MakeAsset<ItemData>();
+            e.category = ItemCategory.Equipment;
             e.id = id;
             return e;
         }
@@ -193,7 +185,7 @@ namespace CreativeAI.Tests.EditMode
             var apple = MakeFood(3001);
             var gear = MakeEquipment(2001);
             var rolledGear = MakeEquipment(2002);
-            ItemDB.InjectForTests(new ItemData[] { apple, gear, rolledGear });
+            ItemCatalog.InjectForTests(new ItemData[] { apple, gear, rolledGear });
 
             _inv.AddItem(apple, 4);
             _inv.AddItem(gear, 1);
@@ -222,23 +214,6 @@ namespace CreativeAI.Tests.EditMode
             Assert.IsTrue(restoredRolled.IsInstance, "ロール済み個体は個体のまま戻る");
             Assert.AreEqual("attackPct", restoredRolled.RolledStats[0].stat);
             Assert.AreEqual(12.5f, restoredRolled.RolledStats[0].value, 1e-4f);
-        }
-
-        [Test]
-        public void SaveThenLoad_RestoresRevealedRecipes()
-        {
-            var recipe = MakeAsset<CraftRecipeData>();
-            // 実カタログの初期解禁(showInRecipeCraft)と id がぶつからないよう、テスト専用の id を使う。
-            recipe.resultItem = MakeFood(990001);
-            Assert.IsTrue(_book.Reveal(recipe)); // 前提: 新規解禁
-
-            SaveService.Save();
-            _book.RestoreRevealed(new List<int>()); // 解禁を落としてから復元
-            Assert.IsFalse(_book.IsRevealed(recipe));
-
-            SaveService.Load();
-
-            Assert.IsTrue(_book.IsRevealed(recipe));
         }
 
         [Test]
@@ -294,16 +269,16 @@ namespace CreativeAI.Tests.EditMode
         public void Load_ItemMissingFromCatalog_IsSkippedWithWarning()
         {
             var apple = MakeFood(3001);
-            ItemDB.InjectForTests(new ItemData[] { apple });
+            ItemCatalog.InjectForTests(new ItemData[] { apple });
             _inv.AddItem(apple, 1);
             SaveService.Save();
 
             // カタログから消えた状態で復元する(アセット削除を模す)。
-            ItemDB.InjectForTests(new ItemData[] { });
+            ItemCatalog.InjectForTests(new ItemData[] { });
             _inv.Clear();
             LogAssert.Expect(
                 LogType.Warning,
-                new System.Text.RegularExpressions.Regex("ItemDB に無し")
+                new System.Text.RegularExpressions.Regex("ItemCatalog に無し")
             );
 
             SaveService.Load();

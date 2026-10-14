@@ -2,14 +2,12 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using CreativeAI.UI;
-using CreativeAI.UI.CraftingUI;
-using CreativeAI.UI.InventoryUI;
 using TMPro;
 using UnityEditor;
 using UnityEngine;
 using UnityEngine.UI;
 
-namespace CreativeAI.EditorTools.UI
+namespace CreativeAI.EditorTools
 {
     public static class SlotPrefabValidator
     {
@@ -19,8 +17,6 @@ namespace CreativeAI.EditorTools.UI
             "Assets/_Project/Features/UI/Common/Prefabs/HolderSlotBase.prefab";
         private const string ItemSlotPath =
             "Assets/_Project/Features/UI/InventoryUI/Prefabs/ItemSlot.prefab";
-        private const string RecipeSlotPath =
-            "Assets/_Project/Features/UI/CraftingUI/Prefabs/RecipeSlot.prefab";
         private const string MaterialSlotPath =
             "Assets/_Project/Features/UI/CraftingUI/Prefabs/MaterialSlot.prefab";
         private const string EquipmentSlotPath =
@@ -29,7 +25,6 @@ namespace CreativeAI.EditorTools.UI
         private static readonly Type[] DerivedSlotTypes =
         {
             typeof(ItemSlot),
-            typeof(RecipeSlot),
             typeof(MaterialSlot),
             typeof(EquipmentSlot),
         };
@@ -85,19 +80,6 @@ namespace CreativeAI.EditorTools.UI
                     typeof(SlotMarkerView),
                 },
                 new[] { typeof(SlotEmptyView) }
-            );
-            ValidateVariant(
-                RecipeSlotPath,
-                ItemLikeSlotBasePath,
-                report,
-                new[]
-                {
-                    typeof(RecipeSlot),
-                    typeof(SlotIconView),
-                    typeof(SlotHoverView),
-                    typeof(SlotFrameView),
-                },
-                new[] { typeof(SlotEmptyView), typeof(SlotCountBadgeView), typeof(SlotMarkerView) }
             );
             ValidateVariant(
                 MaterialSlotPath,
@@ -580,20 +562,6 @@ namespace CreativeAI.EditorTools.UI
                     "_hoverView",
                     "_frameView",
                     "_markerView"
-                );
-            }
-
-            var recipeSlot = root.GetComponent<RecipeSlot>();
-            if (recipeSlot != null)
-            {
-                ValidateLocalReferences(
-                    recipeSlot,
-                    root.transform,
-                    report,
-                    "_visualRootRect",
-                    "_iconView",
-                    "_hoverView",
-                    "_frameView"
                 );
             }
 

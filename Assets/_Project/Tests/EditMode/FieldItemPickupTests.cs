@@ -1,9 +1,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using CreativeAI.Core;
-using CreativeAI.Core.EventSystem;
 using CreativeAI.Gameplay;
-using CreativeAI.StatRoll;
 using NUnit.Framework;
 using UnityEngine;
 
@@ -82,7 +80,8 @@ namespace CreativeAI.Tests.EditMode
         [Test]
         public void Pickup_KeyItem_AddsToInventory()
         {
-            var keyItem = MakeItem<ImportantData>(4001);
+            var keyItem = MakeItem<ItemData>(4001);
+            keyItem.category = ItemCategory.Important;
             PlaceItem(keyItem);
 
             Assert.IsTrue(_pickup.TryPickup());
@@ -94,8 +93,8 @@ namespace CreativeAI.Tests.EditMode
         public void Pickup_Equipment_RollsOneInstancePerItem()
         {
             // 装備品は拾った瞬間にロールした「個体」として1個ずつ入る。
-            var gear = MakeItem<EquipmentData>(2001); // OnEnable が category=Equipment
-            gear.attack = 20; // 総パワー20の宣言(どの型に書いてあるかは結果に影響しない)
+            var gear = MakeItem<ItemData>(2001);
+            gear.category = ItemCategory.Equipment;
             PlaceItem(gear, 2);
 
             Assert.IsTrue(_pickup.TryPickup());
@@ -109,17 +108,19 @@ namespace CreativeAI.Tests.EditMode
                 Assert.IsNotNull(stack.RolledStats);
                 Assert.GreaterOrEqual(stack.RolledStats.Count, 1);
                 Assert.LessOrEqual(stack.RolledStats.Count, 2, "付与数は最大2つ");
-                Assert.LessOrEqual(
-                    stack.RolledStats.Sum(r => r.value),
-                    20f + 1e-3f,
-                    "付与量の合計はシードの総パワーを超えない"
-                );
                 foreach (var rolled in stack.RolledStats)
+                {
                     Assert.IsTrue(
                         System.Enum.TryParse<StatType>(rolled.stat, out var type)
-                            && type != StatType.HealAmount,
+                            && DropStatRoller.DropStatTiers.ContainsKey(type),
                         $"装備品に付かない型がロールされた: {rolled.stat}"
                     );
+                    CollectionAssert.Contains(
+                        DropStatRoller.DropStatTiers[type].ToList(),
+                        rolled.value,
+                        "値は型ごとの4段階のどれか"
+                    );
+                }
             }
         }
 
