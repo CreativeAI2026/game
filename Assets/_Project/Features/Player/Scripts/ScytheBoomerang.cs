@@ -76,6 +76,14 @@ namespace CreativeAI.Gameplay
         [SerializeField]
         private float _spinSpeed = 1080f;
 
+        [Header("軌跡")]
+        [Tooltip(
+            "飛行中の軌跡(子のパーティクルごと再生する)。投げた瞬間に再生し、受け取りで消す。"
+            + "Tools/CreativeAI/VFX/鎌の投擲軌跡を生成 で作られる"
+        )]
+        [SerializeField]
+        private ParticleSystem _trail;
+
         private PlayerMeleeHitbox _hitbox;
         private Phase _phase = Phase.Idle;
         private Vector3 _direction;
@@ -94,6 +102,7 @@ namespace CreativeAI.Gameplay
         {
             _hitbox = GetComponent<PlayerMeleeHitbox>();
             Assert.IsNotNull(_spinRoot, $"{name}: 回転させるモデル(_spinRoot)が未設定です");
+            Assert.IsNotNull(_trail, $"{name}: 軌跡(_trail)が未設定です");
         }
 
         /// <summary>
@@ -114,6 +123,7 @@ namespace CreativeAI.Gameplay
             _phase = Phase.Outbound;
 
             gameObject.SetActive(true);
+            _trail.Play(true);
             _hitbox.EnableHitbox();
         }
 
@@ -202,6 +212,8 @@ namespace CreativeAI.Gameplay
         {
             _phase = Phase.Idle;
             _hitbox.DisableHitbox();
+            // 停止したまま非表示にしておき、次に投げた瞬間に前回の粒が残っていないようにする
+            _trail.Stop(true, ParticleSystemStopBehavior.StopEmittingAndClear);
             gameObject.SetActive(false);
             Caught?.Invoke();
         }

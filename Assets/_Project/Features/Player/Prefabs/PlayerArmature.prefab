@@ -205,8 +205,8 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 65006418181837346}
   serializedVersion: 2
-  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalRotation: {x: 0.00000007078049, y: -0.000000029802312, z: -0.000000084750326, w: 1}
+  m_LocalPosition: {x: -0.00020546187, y: 0.35715318, z: 0.0003636796}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -1144,8 +1144,8 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1203584483946721191}
   serializedVersion: 2
-  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalRotation: {x: -0.6420451, y: 0.35888097, z: 0.4905455, w: -0.46727702}
+  m_LocalPosition: {x: 0.344, y: 0.765, z: 0.253}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children:
@@ -1169,7 +1169,7 @@ MonoBehaviour:
   attackRange: 3
   dashSpeed: 20
   _hitbox: {fileID: 699812971520842315}
-  _heldModel: {fileID: 0}
+  _heldModel: {fileID: 1418583596234355810}
   _boomerangPrefab: {fileID: 3005109670742047642, guid: 7cd0f4a981803704a9f317719d555b62, type: 3}
 --- !u!114 &2462219161215437537
 MonoBehaviour:
