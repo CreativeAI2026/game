@@ -291,8 +291,10 @@ namespace CreativeAI.UI.InventoryUI
                 return;
 
             _controller?.ClearSelection();
-            _dragCanvasGroup ??=
-                GetComponent<CanvasGroup>() ?? gameObject.AddComponent<CanvasGroup>();
+            if (_dragCanvasGroup == null)
+                _dragCanvasGroup = GetComponent<CanvasGroup>();
+            if (_dragCanvasGroup == null)
+                _dragCanvasGroup = gameObject.AddComponent<CanvasGroup>();
             _dragOriginalAlpha = _dragCanvasGroup.alpha;
             _dragCanvasGroup.alpha = 0.45f;
             _dragging = true;

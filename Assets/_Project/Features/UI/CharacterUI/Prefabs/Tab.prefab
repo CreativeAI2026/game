@@ -311,6 +311,8 @@ MonoBehaviour:
   _button: {fileID: 2660942142914587720}
   _selectedUnderline: {fileID: 3302043231378533337}
   _label: {fileID: 6872576371294395732}
+  _underlineShowDuration: 0.26
+  _underlineHideDuration: 0.12
 --- !u!1 &3302043231378533337
 GameObject:
   m_ObjectHideFlags: 0
@@ -328,7 +330,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!224 &721266554863700400
 RectTransform:
   m_ObjectHideFlags: 0
@@ -369,7 +371,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: UnityEngine.UI::UnityEngine.UI.Image
   m_Material: {fileID: 0}
-  m_Color: {r: 0.9372549, g: 0.7176471, b: 0.41960785, a: 1}
+  m_Color: {r: 1, g: 0.7647059, b: 0.27450982, a: 1}
   m_RaycastTarget: 1
   m_RaycastPadding: {x: 0, y: 0, z: 0, w: 0}
   m_Maskable: 1

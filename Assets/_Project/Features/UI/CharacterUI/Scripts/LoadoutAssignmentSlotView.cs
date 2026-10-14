@@ -1,6 +1,7 @@
 using System;
 using CreativeAI.Gameplay;
 using CreativeAI.UI.InventoryUI;
+using TMPro;
 using UnityEngine;
 using UnityEngine.EventSystems;
 using UnityEngine.UI;
@@ -29,16 +30,34 @@ namespace CreativeAI.UI.CharacterUI
         private Image _icon;
 
         [SerializeField]
-        private Color _normalColor = new(0f, 0f, 0f, 0.39f);
+        private GameObject _filledPattern;
 
         [SerializeField]
-        private Color _selectedColor = new(0.31f, 0.23f, 0.12f, 0.9f);
+        private GameObject _emptyPattern;
+
+        [SerializeField]
+        private TMP_Text _slotNumber;
+
+        [SerializeField]
+        private TMP_Text _emptyLabel;
+
+        [SerializeField]
+        private Sprite _normalBackgroundSprite;
+
+        [SerializeField]
+        private Sprite _selectedBackgroundSprite;
+
+        [SerializeField, Range(0f, 1f)]
+        private float _unavailableAlpha = 0.45f;
+
+        [SerializeField, Range(0f, 1f)]
+        private float _draggingAlpha = 0.45f;
 
         private Button _button;
         private ItemSlotDragOrigin _dragOrigin;
         private int _slotIndex = -1;
-        private CanvasGroup _dragCanvasGroup;
-        private float _dragOriginalAlpha = 1f;
+        private CanvasGroup _canvasGroup;
+        private bool _available = true;
         private bool _selected;
         private bool _dragHovered;
         private bool _dragging;
@@ -49,6 +68,7 @@ namespace CreativeAI.UI.CharacterUI
         public event Action<LoadoutAssignmentSlotView> Clicked;
         public event Action<LoadoutAssignmentSlotView> DoubleClicked;
         public event Action<LoadoutAssignmentSlotView, ItemSlotDragPayload> Dropped;
+        public event Action<LoadoutAssignmentSlotView, ItemSlotDragPayload> DropRejected;
         public event Action<LoadoutAssignmentSlotView, ItemSlotDragPayload> DragEntered;
         public event Action<LoadoutAssignmentSlotView> DragExited;
 
@@ -62,6 +82,7 @@ namespace CreativeAI.UI.CharacterUI
         {
             ItemSlotDragContext.Ended += OnDragEnded;
             RefreshBackground();
+            RefreshOpacity();
         }
 
         private void OnDisable()
@@ -70,12 +91,19 @@ namespace CreativeAI.UI.CharacterUI
             FinishDragging();
             _dragHovered = false;
             RefreshBackground();
+            RefreshOpacity();
         }
 
         public void ConfigureDragSource(ItemSlotDragOrigin origin, int slotIndex)
         {
             _dragOrigin = origin;
             _slotIndex = slotIndex;
+            ResolveReferences();
+            if (_slotNumber != null)
+                _slotNumber.text = (slotIndex + 1).ToString();
+            if (_emptyLabel != null)
+                _emptyLabel.text = origin == ItemSlotDragOrigin.Quick ? "ここに登録" : "ここに装備";
+            Refresh();
         }
 
         public void SetStack(ItemStack stack)
@@ -88,6 +116,12 @@ namespace CreativeAI.UI.CharacterUI
         {
             _selected = selected;
             RefreshBackground();
+        }
+
+        public void SetAvailable(bool available)
+        {
+            _available = available;
+            RefreshOpacity();
         }
 
         public void ShowPreview(ItemStack stack)
@@ -126,11 +160,8 @@ namespace CreativeAI.UI.CharacterUI
             if (!ItemSlotDragContext.Begin(Stack, _dragOrigin, this, eventData, _slotIndex))
                 return;
 
-            _dragCanvasGroup ??=
-                GetComponent<CanvasGroup>() ?? gameObject.AddComponent<CanvasGroup>();
-            _dragOriginalAlpha = _dragCanvasGroup.alpha;
-            _dragCanvasGroup.alpha = 0.45f;
             _dragging = true;
+            RefreshOpacity();
         }
 
         public void OnDrag(PointerEventData eventData)
@@ -143,10 +174,17 @@ namespace CreativeAI.UI.CharacterUI
 
         public void OnDrop(PointerEventData eventData)
         {
-            if (ItemSlotDragContext.TryGet(out ItemSlotDragPayload payload) && CanAccept(payload))
+            if (ItemSlotDragContext.TryGet(out ItemSlotDragPayload payload))
             {
-                DragExited?.Invoke(this);
-                Dropped?.Invoke(this, payload);
+                if (CanAccept(payload))
+                {
+                    DragExited?.Invoke(this);
+                    Dropped?.Invoke(this, payload);
+                }
+                else
+                {
+                    DropRejected?.Invoke(this, payload);
+                }
             }
 
             _dragHovered = false;
@@ -175,19 +213,39 @@ namespace CreativeAI.UI.CharacterUI
             ResolveReferences();
             ItemStack displayedStack = _hasPreview ? _previewStack : Stack;
             Sprite sprite = displayedStack?.Data?.icon;
-            if (_icon == null)
-                return;
+            bool hasItem = displayedStack?.Data != null;
 
-            _icon.sprite = sprite;
-            _icon.color = sprite != null ? Color.white : Color.clear;
-            _icon.preserveAspect = true;
+            _filledPattern?.SetActive(hasItem);
+            _emptyPattern?.SetActive(!hasItem);
+
+            if (_icon != null)
+            {
+                _icon.sprite = sprite;
+                _icon.color = hasItem ? Color.white : Color.clear;
+                _icon.preserveAspect = true;
+            }
         }
 
         private void ResolveReferences()
         {
-            _button ??= GetComponent<Button>();
-            _background ??= GetComponent<Image>();
-            _icon ??= transform.Find("Icon")?.GetComponent<Image>();
+            if (_button == null)
+                _button = GetComponent<Button>();
+            if (_background == null)
+                _background = GetComponent<Image>();
+            if (_filledPattern == null)
+                _filledPattern = transform.Find("FillPattern")?.gameObject;
+            if (_emptyPattern == null)
+                _emptyPattern =
+                    transform.Find("EmptyPattern")?.gameObject
+                    ?? transform.Find("EnptyPattern")?.gameObject;
+            if (_icon == null)
+                _icon = transform.Find("FillPattern/Icon")?.GetComponent<Image>();
+            if (_slotNumber == null)
+                _slotNumber = transform.Find("Superscript/Number")?.GetComponent<TMP_Text>();
+            if (_emptyLabel == null)
+                _emptyLabel =
+                    transform.Find("EmptyPattern/label")?.GetComponent<TMP_Text>()
+                    ?? transform.Find("EnptyPattern/label")?.GetComponent<TMP_Text>();
         }
 
         private bool CanAccept(ItemSlotDragPayload payload)
@@ -208,7 +266,26 @@ namespace CreativeAI.UI.CharacterUI
         {
             ResolveReferences();
             if (_background != null)
-                _background.color = _selected || _dragHovered ? _selectedColor : _normalColor;
+            {
+                Sprite backgroundSprite =
+                    _selected || _dragHovered ? _selectedBackgroundSprite : _normalBackgroundSprite;
+                if (backgroundSprite != null)
+                    _background.sprite = backgroundSprite;
+                _background.color = Color.white;
+            }
+        }
+
+        private void RefreshOpacity()
+        {
+            if (_canvasGroup == null)
+                _canvasGroup = GetComponent<CanvasGroup>();
+            if (_canvasGroup == null)
+                _canvasGroup = gameObject.AddComponent<CanvasGroup>();
+
+            _canvasGroup.alpha =
+                _dragging ? _draggingAlpha
+                : _available ? 1f
+                : _unavailableAlpha;
         }
 
         private void FinishDragging()
@@ -216,9 +293,8 @@ namespace CreativeAI.UI.CharacterUI
             if (!_dragging)
                 return;
 
-            if (_dragCanvasGroup != null)
-                _dragCanvasGroup.alpha = _dragOriginalAlpha;
             _dragging = false;
+            RefreshOpacity();
             ItemSlotDragContext.Clear();
         }
 
@@ -226,9 +302,8 @@ namespace CreativeAI.UI.CharacterUI
         {
             if (_dragging)
             {
-                if (_dragCanvasGroup != null)
-                    _dragCanvasGroup.alpha = _dragOriginalAlpha;
                 _dragging = false;
+                RefreshOpacity();
             }
 
             ClearPreview();

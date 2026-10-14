@@ -1,5 +1,6 @@
 using System.Collections;
 using System.Collections.Generic;
+using System.Globalization;
 using System.Linq;
 using CreativeAI.Gameplay;
 using CreativeAI.UI.InventoryUI;
@@ -41,7 +42,7 @@ namespace CreativeAI.UI.CharacterUI
         private Color _tabNormalTextColor = Color.white;
 
         [SerializeField]
-        private Color _tabSelectedTextColor = new(1f, 0.72f, 0.33f, 1f);
+        private Color _tabSelectedTextColor = new Color32(0xff, 0xc3, 0x46, 0xff);
 
         [Header("開発用プレビュー")]
         [SerializeField]
@@ -62,6 +63,8 @@ namespace CreativeAI.UI.CharacterUI
         private float _detailSectionDelay = 0.06f;
 
         private readonly List<Button> _filterButtons = new();
+        private readonly List<TMP_Text> _filterLabels = new();
+        private readonly List<TMP_Text> _filterCountLabels = new();
         private readonly List<UnityAction> _filterActions = new();
         private readonly List<LoadoutAssignmentSlotView> _quickSlots = new();
         private readonly List<LoadoutAssignmentSlotView> _equipmentSlots = new();
@@ -75,6 +78,16 @@ namespace CreativeAI.UI.CharacterUI
         private Button _actionButton;
         private TMP_Text _actionLabel;
         private TMP_Text _equipmentTitle;
+        private GameObject _quickParameterPattern;
+        private GameObject _equipmentParameterPattern;
+        private TMP_Text _quickParameterLabel;
+        private TMP_Text _quickParameterValue;
+        private TMP_Text _attackParameterValue;
+        private TMP_Text _defenseParameterValue;
+        private TMP_Text _maxHpParameterValue;
+        private TMP_Text _criticalRateParameterValue;
+        private TMP_Text _criticalDamageParameterValue;
+        private LoadoutDropErrorFeedback _dropErrorFeedback;
 
         private Filter _filter;
         private DetailAction _detailAction;
@@ -139,7 +152,7 @@ namespace CreativeAI.UI.CharacterUI
             _inventory?.SetSelectFirstSlotOnRefresh(false);
             _inventory?.SetShowItemCounts(true);
             if (_equipmentTitle != null)
-                _equipmentTitle.text = "EQUIPMENT";
+                _equipmentTitle.text = "装備";
 
             _selectedQuickSlot = 0;
             _selectedEquipmentSlot = 0;
@@ -196,25 +209,60 @@ namespace CreativeAI.UI.CharacterUI
                 .Find("InventoryArea/ScrollViewArea")
                 ?.GetComponentInChildren<InventoryView>(true);
             _detailIcon ??= transform
-                .Find("InventoryArea/DetailArea/ItemArea/Background/Icon")
+                .Find("InventoryArea/DetailArea/ItemRow/IconArea/Background/Icon")
                 ?.GetComponent<Image>();
             _detailName ??= transform
-                .Find("InventoryArea/DetailArea/DescriptionArea/Title")
+                .Find("InventoryArea/DetailArea/ItemRow/DescriptionArea/Title")
                 ?.GetComponent<TMP_Text>();
             _detailDescription ??= transform
-                .Find("InventoryArea/DetailArea/DescriptionArea/Description")
+                .Find("InventoryArea/DetailArea/ItemRow/DescriptionArea/Description")
                 ?.GetComponent<TMP_Text>();
             _detailCount ??= transform
-                .Find("InventoryArea/DetailArea/Text (TMP)")
+                .Find("InventoryArea/DetailArea/ItemRow/ButtonArea/Quantity")
                 ?.GetComponent<TMP_Text>();
             _actionButton ??= transform
-                .Find("InventoryArea/DetailArea/Button")
+                .Find("InventoryArea/DetailArea/ItemRow/ButtonArea/Button")
                 ?.GetComponent<Button>();
             _actionLabel ??= _actionButton?.GetComponentInChildren<TMP_Text>(true);
             _equipmentTitle ??= transform
                 .Find("EquipArea/TitleArea/Title")
                 ?.GetComponent<TMP_Text>();
+            _dropErrorFeedback ??= transform
+                .Find("DropErrorMessage")
+                ?.GetComponent<LoadoutDropErrorFeedback>();
+
+            Transform parameterRoot = transform.Find("InventoryArea/DetailArea/ParamaterRow");
+            _quickParameterPattern ??= parameterRoot?.Find("QuickItemPattern")?.gameObject;
+            _equipmentParameterPattern ??= parameterRoot?.Find("EquipPattern")?.gameObject;
+
+            Transform quickParameter = parameterRoot?.Find("QuickItemPattern/ItemParamaterArea");
+            _quickParameterLabel ??= quickParameter?.Find("Label")?.GetComponent<TMP_Text>();
+            _quickParameterValue ??= quickParameter?.Find("Value")?.GetComponent<TMP_Text>();
+
+            _attackParameterValue ??= FindParameterValue(
+                parameterRoot,
+                "EquipPattern/UpperArea/ATK"
+            );
+            _defenseParameterValue ??= FindParameterValue(
+                parameterRoot,
+                "EquipPattern/UpperArea/DEF"
+            );
+            _maxHpParameterValue ??= FindParameterValue(
+                parameterRoot,
+                "EquipPattern/UpperArea/MaxHP"
+            );
+            _criticalRateParameterValue ??= FindParameterValue(
+                parameterRoot,
+                "EquipPattern/LowerArea/CRTR"
+            );
+            _criticalDamageParameterValue ??= FindParameterValue(
+                parameterRoot,
+                "EquipPattern/LowerArea/CRTD"
+            );
         }
+
+        private static TMP_Text FindParameterValue(Transform root, string path) =>
+            root?.Find(path)?.Find("Value")?.GetComponent<TMP_Text>();
 
         private void ResolveFilterButtons()
         {
@@ -228,8 +276,14 @@ namespace CreativeAI.UI.CharacterUI
             for (int i = 0; i < root.childCount; i++)
             {
                 Button button = root.GetChild(i).GetComponentInChildren<Button>(true);
-                if (button != null)
-                    _filterButtons.Add(button);
+                if (button == null)
+                    continue;
+
+                _filterButtons.Add(button);
+                _filterLabels.Add(button.transform.Find("Label")?.GetComponent<TMP_Text>());
+                _filterCountLabels.Add(
+                    button.transform.Find("Image/Number")?.GetComponent<TMP_Text>()
+                );
             }
         }
 
@@ -288,6 +342,7 @@ namespace CreativeAI.UI.CharacterUI
                 slot.Clicked += OnQuickSlotClicked;
                 slot.DoubleClicked += OnQuickSlotDoubleClicked;
                 slot.Dropped += OnAssignmentSlotDropped;
+                slot.DropRejected += OnAssignmentSlotDropRejected;
                 slot.DragEntered += OnAssignmentSlotDragEntered;
                 slot.DragExited += OnAssignmentSlotDragExited;
             }
@@ -296,6 +351,7 @@ namespace CreativeAI.UI.CharacterUI
                 slot.Clicked += OnEquipmentSlotClicked;
                 slot.DoubleClicked += OnEquipmentSlotDoubleClicked;
                 slot.Dropped += OnAssignmentSlotDropped;
+                slot.DropRejected += OnAssignmentSlotDropRejected;
                 slot.DragEntered += OnAssignmentSlotDragEntered;
                 slot.DragExited += OnAssignmentSlotDragExited;
             }
@@ -308,6 +364,7 @@ namespace CreativeAI.UI.CharacterUI
             }
 
             ItemSlotDragContext.Started += OnItemDragStarted;
+            ItemSlotDragContext.Ended += OnItemDragEnded;
 
             _actionButton?.onClick.AddListener(ExecuteDetailAction);
             _eventsBound = true;
@@ -328,6 +385,7 @@ namespace CreativeAI.UI.CharacterUI
                     slot.Clicked -= OnQuickSlotClicked;
                     slot.DoubleClicked -= OnQuickSlotDoubleClicked;
                     slot.Dropped -= OnAssignmentSlotDropped;
+                    slot.DropRejected -= OnAssignmentSlotDropRejected;
                     slot.DragEntered -= OnAssignmentSlotDragEntered;
                     slot.DragExited -= OnAssignmentSlotDragExited;
                 }
@@ -339,6 +397,7 @@ namespace CreativeAI.UI.CharacterUI
                     slot.Clicked -= OnEquipmentSlotClicked;
                     slot.DoubleClicked -= OnEquipmentSlotDoubleClicked;
                     slot.Dropped -= OnAssignmentSlotDropped;
+                    slot.DropRejected -= OnAssignmentSlotDropRejected;
                     slot.DragEntered -= OnAssignmentSlotDragEntered;
                     slot.DragExited -= OnAssignmentSlotDragExited;
                 }
@@ -352,18 +411,22 @@ namespace CreativeAI.UI.CharacterUI
             }
 
             ItemSlotDragContext.Started -= OnItemDragStarted;
+            ItemSlotDragContext.Ended -= OnItemDragEnded;
 
             _actionButton?.onClick.RemoveListener(ExecuteDetailAction);
             _eventsBound = false;
         }
 
-        private void OnItemDragStarted(ItemSlotDragPayload _)
+        private void OnItemDragStarted(ItemSlotDragPayload payload)
         {
             _inventory?.ClearSelection();
             ClearAssignmentPreviews();
             SetSelectedSlot(_quickSlots, -1);
             SetSelectedSlot(_equipmentSlots, -1);
+            RefreshSlotAvailability(payload.Stack?.Data);
         }
+
+        private void OnItemDragEnded() => RefreshSlotAvailability(_selectedStack?.Data);
 
         private void BindDataEvents()
         {
@@ -442,6 +505,7 @@ namespace CreativeAI.UI.CharacterUI
 
         private void SyncAll()
         {
+            RefreshTabVisuals();
             RefreshInventory(InventoryView.ScrollRefreshMode.ScrollToTop);
             RefreshQuickSlots();
             SyncEquipmentAssignments();
@@ -471,9 +535,44 @@ namespace CreativeAI.UI.CharacterUI
                 if (button.targetGraphic is Image background)
                     background.color = selected ? _tabSelectedColor : _tabNormalColor;
 
-                TMP_Text label = button.GetComponentInChildren<TMP_Text>(true);
+                TMP_Text label = i < _filterLabels.Count ? _filterLabels[i] : null;
                 if (label != null)
                     label.color = selected ? _tabSelectedTextColor : _tabNormalTextColor;
+            }
+
+            RefreshFilterCounts();
+        }
+
+        private void RefreshFilterCounts()
+        {
+            IReadOnlyList<ItemStack> items = ActiveInventoryManager?.GetAllItems();
+            int allCount = 0;
+            int quickCount = 0;
+            int equipmentCount = 0;
+
+            if (items != null)
+            {
+                foreach (ItemStack stack in items)
+                {
+                    switch (stack?.Data?.category)
+                    {
+                        case ItemCategory.Food:
+                            quickCount++;
+                            allCount++;
+                            break;
+                        case ItemCategory.Equipment:
+                            equipmentCount++;
+                            allCount++;
+                            break;
+                    }
+                }
+            }
+
+            int[] counts = { allCount, quickCount, equipmentCount };
+            for (int i = 0; i < _filterCountLabels.Count && i < counts.Length; i++)
+            {
+                if (_filterCountLabels[i] != null)
+                    _filterCountLabels[i].text = counts[i].ToString(CultureInfo.InvariantCulture);
             }
         }
 
@@ -653,6 +752,19 @@ namespace CreativeAI.UI.CharacterUI
                 DropIntoEquipmentSlot(equipmentTarget, payload);
         }
 
+        private void OnAssignmentSlotDropRejected(
+            LoadoutAssignmentSlotView target,
+            ItemSlotDragPayload payload
+        )
+        {
+            string message =
+                _quickSlots.Contains(target) ? "クイックアイテムには回復アイテムのみ登録できます"
+                : _equipmentSlots.Contains(target) ? "装備スロットには装備品のみ登録できます"
+                : "このスロットには登録できません";
+
+            _dropErrorFeedback?.Show(message, target.transform as RectTransform);
+        }
+
         private void OnAssignmentSlotDragEntered(
             LoadoutAssignmentSlotView target,
             ItemSlotDragPayload payload
@@ -816,7 +928,7 @@ namespace CreativeAI.UI.CharacterUI
                 return;
 
             RefreshQuickSlots();
-            ShowDetail(_selectedStack, DetailAction.Assign);
+            ShowDetail(_selectedStack, DetailAction.RemoveQuick);
         }
 
         private void AssignEquipment()
@@ -857,7 +969,7 @@ namespace CreativeAI.UI.CharacterUI
             SyncEquipmentAssignments();
             RefreshEquipmentSlots();
             RefreshInventory(InventoryView.ScrollRefreshMode.KeepPosition);
-            ShowDetail(_selectedStack, DetailAction.Assign);
+            ShowDetail(_selectedStack, DetailAction.RemoveEquipment);
         }
 
         private void RemoveQuickItem()
@@ -969,7 +1081,9 @@ namespace CreativeAI.UI.CharacterUI
             if (_detailCount != null)
                 _detailCount.text = $"x{stack.Count}";
 
-            SetDetailAction(action);
+            RefreshDetailParameters(item);
+            RefreshSlotAvailability(item);
+            SetDetailAction(action, item);
         }
 
         private void ShowEmptyDetail()
@@ -985,36 +1099,103 @@ namespace CreativeAI.UI.CharacterUI
             if (_detailCount != null)
                 _detailCount.text = string.Empty;
 
-            SetDetailAction(DetailAction.None);
+            RefreshDetailParameters(null);
+            RefreshSlotAvailability(null);
+            SetDetailAction(DetailAction.None, null);
+        }
+
+        private void RefreshSlotAvailability(ItemData item)
+        {
+            bool quickAvailable;
+            bool equipmentAvailable;
+
+            if (item != null)
+            {
+                quickAvailable = item.category == ItemCategory.Food;
+                equipmentAvailable = item.category == ItemCategory.Equipment;
+            }
+            else
+            {
+                quickAvailable = _filter != Filter.Equipment;
+                equipmentAvailable = _filter != Filter.Quick;
+            }
+
+            foreach (LoadoutAssignmentSlotView slot in _quickSlots)
+                slot?.SetAvailable(quickAvailable);
+            foreach (LoadoutAssignmentSlotView slot in _equipmentSlots)
+                slot?.SetAvailable(equipmentAvailable);
+        }
+
+        private void RefreshDetailParameters(ItemData item)
+        {
+            bool showsQuick = item is FoodData;
+            bool showsEquipment = item is EquipmentData;
+            _quickParameterPattern?.SetActive(showsQuick);
+            _equipmentParameterPattern?.SetActive(showsEquipment);
+
+            if (item is FoodData food)
+            {
+                if (_quickParameterLabel != null)
+                    _quickParameterLabel.text = "即時回復";
+                SetParameterValue(_quickParameterValue, food.HealFraction * 100f);
+            }
+            else if (item is EquipmentData equipment)
+            {
+                SetParameterValue(_attackParameterValue, equipment.attack);
+                SetParameterValue(_defenseParameterValue, equipment.defense);
+                SetParameterValue(_maxHpParameterValue, equipment.maxHP);
+                SetParameterValue(_criticalRateParameterValue, equipment.criticalRate);
+                SetParameterValue(_criticalDamageParameterValue, equipment.criticalDamage);
+            }
+        }
+
+        private static void SetParameterValue(TMP_Text text, float value)
+        {
+            if (text == null)
+                return;
+
+            string sign = value > 0f ? "+" : string.Empty;
+            text.text = $"{sign}{value.ToString("0.##", CultureInfo.InvariantCulture)}%";
         }
 
         private void PlayDetailText(TMP_Text text, string value, int sectionIndex)
         {
+            if (text == null)
+                return;
+
+            string content = value ?? string.Empty;
+            if (text.text == content)
+                return;
+
             _typewriter ??= new TmpTypewriterPlayer(this);
             _typewriter.Play(
                 text,
-                value,
+                content,
                 _detailTextStartDelay + _detailSectionDelay * sectionIndex,
                 _detailCharacterInterval,
                 _animateDetailText
             );
         }
 
-        private void SetDetailAction(DetailAction action)
+        private void SetDetailAction(DetailAction action, ItemData item)
         {
             _detailAction = action;
             if (_actionButton != null)
                 _actionButton.interactable = action != DetailAction.None;
             if (_actionLabel != null)
-                _actionLabel.text = action
-                    is DetailAction.RemoveQuick
-                        or DetailAction.RemoveEquipment
-                    ? "REMOVE"
-                    : "SET";
+                _actionLabel.text = action switch
+                {
+                    DetailAction.Assign when item is FoodData => "登録",
+                    DetailAction.Assign when item is EquipmentData => "装備",
+                    DetailAction.RemoveQuick => "解除",
+                    DetailAction.RemoveEquipment => "解除",
+                    _ => string.Empty,
+                };
         }
 
         private void OnInventoryChanged()
         {
+            RefreshTabVisuals();
             RefreshInventory(InventoryView.ScrollRefreshMode.KeepPosition);
             RefreshQuickSlots();
             SyncEquipmentAssignments();
