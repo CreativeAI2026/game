@@ -33,7 +33,7 @@ namespace CreativeAI.UI
         private void Awake()
         {
             // Title 経由で既に常駐が生成済みなら何もしない(UIRoot の有無で判定)。
-            if (UIRoot.Instance != null)
+            if (UIRoot.Instance != null && InventoryManager.Instance != null)
                 return;
 
             var config = Resources.Load<ResidentBootstrapConfig>(nameof(ResidentBootstrapConfig));

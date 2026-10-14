@@ -278,6 +278,9 @@ namespace CreativeAI.Gameplay
         /// <summary>stack が即時使用食材スロットにセットされているか(調合の素材から除外・警告に使う)。</summary>
         public bool IsInQuickFood(ItemStack stack) => InventoryService.IsInQuickFood(stack);
 
+        public bool SwapQuickFood(int firstSlot, int secondSlot) =>
+            InventoryService.SwapQuickFood(firstSlot, secondSlot);
+
         public List<ItemStack> GetItemsByCategory(ItemCategory category)
         {
             return InventoryService.GetItemsByCategory(category);

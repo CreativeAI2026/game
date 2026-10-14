@@ -60,6 +60,20 @@ namespace CreativeAI.UI
         public TabDefinition CurrentDefinition => GetDefinition(_selectedIndex);
         public GameObject CurrentView => GetView(_selectedIndex);
 
+        public bool TryGetBackgroundLayout(
+            out RectTransform coordinateRoot,
+            out Sprite sprite,
+            out Vector2 circleCenter,
+            out float circleWidth
+        )
+        {
+            coordinateRoot = _itemRoot;
+            sprite = _layout?.BackgroundSprite;
+            circleCenter = _layout?.BackgroundCircleCenter ?? Vector2.zero;
+            circleWidth = _layout?.BackgroundCircleWidth ?? 0f;
+            return coordinateRoot != null && sprite != null && circleWidth > 0f;
+        }
+
         public event Action<int, TabDefinition, GameObject> SelectionChanged;
         public event Action<int, TabDefinition, GameObject> Submitted;
 

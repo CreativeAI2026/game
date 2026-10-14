@@ -6,6 +6,7 @@ namespace CreativeAI.UI
     {
         public RevolverTabLayout(
             Vector2 anchoredPosition,
+            float iconScale,
             float scale,
             float alpha,
             bool isVisible,
@@ -14,6 +15,7 @@ namespace CreativeAI.UI
         )
         {
             AnchoredPosition = anchoredPosition;
+            IconScale = iconScale;
             Scale = scale;
             Alpha = alpha;
             IsVisible = isVisible;
@@ -22,6 +24,7 @@ namespace CreativeAI.UI
         }
 
         public Vector2 AnchoredPosition { get; }
+        public float IconScale { get; }
         public float Scale { get; }
         public float Alpha { get; }
         public bool IsVisible { get; }
@@ -63,9 +66,14 @@ namespace CreativeAI.UI
             GetBasis(settings.Placement, out Vector2 tangent, out Vector2 inward);
             if (settings.ReverseOrder)
                 tangent = -tangent;
-            float tangentOffset = Mathf.Sin(angle) * settings.TangentRadius;
-            float inwardOffset = (1f - Mathf.Cos(angle)) * settings.ArcDepth;
-            Vector2 position = tangent * tangentOffset + inward * inwardOffset;
+            float circleRadius = Mathf.Max(
+                0f,
+                settings.BackgroundCircleWidth * 0.5f - settings.TabRadialPadding
+            );
+            Vector2 position =
+                settings.BackgroundCircleCenter
+                - inward * (Mathf.Cos(angle) * circleRadius)
+                + tangent * (Mathf.Sin(angle) * circleRadius);
 
             float scaleT = EvaluateCurve(settings.ScaleCurve, normalizedDistance);
             float alphaT = EvaluateCurve(settings.AlphaCurve, normalizedDistance);
@@ -89,6 +97,7 @@ namespace CreativeAI.UI
 
             return new RevolverTabLayout(
                 position,
+                settings.IconScale,
                 Sanitize(scale),
                 Mathf.Clamp01(Sanitize(alpha)),
                 isVisible,

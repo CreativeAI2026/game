@@ -12,14 +12,10 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: fa05067c46c7d2048a12a0a8b225df33, type: 3}
   m_Name: Sword
   m_EditorClassIdentifier: CreativeAI.Gameplay::CreativeAI.Gameplay.WeaponData
-  icon: {fileID: 21300000, guid: e582e5bf9e932844e85326499be3b211, type: 3}
+  icon: {fileID: 21300000, guid: a373e3d2258bd8f4882891ebaef90826, type: 3}
   id: 1001
-  key: sword
-  itemName: "\u5263"
-  category: 0
-  description:
+  itemName: "カッターブレード"
+  description: "カッター型の剣。金魚どもを駆逐せよ。"
   attack: 25
-  defense: 0
   criticalDamage: 50
   criticalRate: 0
-  maxHP: 0

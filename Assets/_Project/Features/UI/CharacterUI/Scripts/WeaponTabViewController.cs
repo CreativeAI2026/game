@@ -27,12 +27,7 @@ namespace CreativeAI.UI
         [SerializeField, Min(0f)]
         private float _fadeInDuration = 0.16f;
 
-        [SerializeField, Min(0f)]
-        private float _slideDistance = 18f;
-
         private Sequence _detailTransition;
-        private Vector2 _weaponNameBasePosition;
-        private Vector2 _weaponStatsBasePosition;
         private bool _hasDisplayedWeapon;
 
         // 剣/弓/鎌 の2つずつの固定補正。タブ順(剣→弓→鎌)に合わせる。
@@ -42,14 +37,6 @@ namespace CreativeAI.UI
             ("弓", "攻撃%              +25%\n\n会心率            +50%"),
             ("鎌", "会心率            +50%\n\n会心ダメージ      +50%"),
         };
-
-        private void Awake()
-        {
-            if (_weaponName != null)
-                _weaponNameBasePosition = _weaponName.rectTransform.anchoredPosition;
-            if (_weaponStats != null)
-                _weaponStatsBasePosition = _weaponStats.rectTransform.anchoredPosition;
-        }
 
         private void OnEnable()
         {
@@ -100,54 +87,18 @@ namespace CreativeAI.UI
 
             _detailTransition = DOTween.Sequence().SetUpdate(true).SetTarget(this);
             if (_weaponName != null)
-            {
                 _detailTransition.Join(_weaponName.DOFade(0f, _fadeOutDuration));
-                _detailTransition.Join(
-                    _weaponName.rectTransform.DOAnchorPosX(
-                        _weaponNameBasePosition.x - _slideDistance,
-                        _fadeOutDuration
-                    )
-                );
-            }
 
             if (_weaponStats != null)
-            {
                 _detailTransition.Join(_weaponStats.DOFade(0f, _fadeOutDuration));
-                _detailTransition.Join(
-                    _weaponStats.rectTransform.DOAnchorPosX(
-                        _weaponStatsBasePosition.x - _slideDistance,
-                        _fadeOutDuration
-                    )
-                );
-            }
 
-            _detailTransition.AppendCallback(() =>
-            {
-                ApplyText(index);
-                PrepareDetailEntrance();
-            });
+            _detailTransition.AppendCallback(() => ApplyText(index));
 
             if (_weaponName != null)
-            {
-                _detailTransition.Append(
-                    _weaponName.rectTransform.DOAnchorPosX(
-                        _weaponNameBasePosition.x,
-                        _fadeInDuration
-                    )
-                );
-                _detailTransition.Join(_weaponName.DOFade(1f, _fadeInDuration));
-            }
+                _detailTransition.Append(_weaponName.DOFade(1f, _fadeInDuration));
 
             if (_weaponStats != null)
-            {
-                _detailTransition.Join(
-                    _weaponStats.rectTransform.DOAnchorPosX(
-                        _weaponStatsBasePosition.x,
-                        _fadeInDuration
-                    )
-                );
                 _detailTransition.Join(_weaponStats.DOFade(1f, _fadeInDuration));
-            }
 
             _detailTransition.OnComplete(() => _detailTransition = null);
         }
@@ -160,23 +111,13 @@ namespace CreativeAI.UI
                 _weaponStats.text = Weapons[index].stats;
         }
 
-        private void PrepareDetailEntrance()
-        {
-            if (_weaponName != null)
-                _weaponName.rectTransform.anchoredPosition =
-                    _weaponNameBasePosition + Vector2.right * _slideDistance;
-            if (_weaponStats != null)
-                _weaponStats.rectTransform.anchoredPosition =
-                    _weaponStatsBasePosition + Vector2.right * _slideDistance;
-        }
-
         private void RestoreDetailVisuals()
         {
-            RestoreTextVisual(_weaponName, _weaponNameBasePosition);
-            RestoreTextVisual(_weaponStats, _weaponStatsBasePosition);
+            RestoreTextVisual(_weaponName);
+            RestoreTextVisual(_weaponStats);
         }
 
-        private static void RestoreTextVisual(TMP_Text text, Vector2 position)
+        private static void RestoreTextVisual(TMP_Text text)
         {
             if (text == null)
                 return;
@@ -184,7 +125,6 @@ namespace CreativeAI.UI
             text.DOKill();
             text.rectTransform.DOKill();
             text.alpha = 1f;
-            text.rectTransform.anchoredPosition = position;
         }
 
         private void KillDetailTransition()

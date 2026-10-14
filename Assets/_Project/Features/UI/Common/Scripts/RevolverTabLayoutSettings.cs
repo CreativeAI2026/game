@@ -22,67 +22,87 @@ namespace CreativeAI.UI
     [Serializable]
     public sealed class RevolverTabLayoutSettings
     {
-        [SerializeField, Min(1)]
+        [SerializeField, HideInInspector, Min(1)]
         private int _visibleItemCount = 5;
 
         [FormerlySerializedAs("_horizontalRadius")]
-        [SerializeField, Min(0f)]
+        [SerializeField, HideInInspector, Min(0f)]
         private float _tangentRadius = 300f;
 
         [FormerlySerializedAs("_verticalRadius")]
-        [SerializeField, Min(0f)]
+        [SerializeField, HideInInspector, Min(0f)]
         private float _arcDepth = 120f;
 
         [SerializeField, Range(0f, 180f)]
         private float _maxAngle = 90f;
 
-        [SerializeField]
+        [SerializeField, HideInInspector]
         private RevolverArcPlacement _placement = RevolverArcPlacement.Bottom;
 
-        [SerializeField]
+        [SerializeField, HideInInspector]
         private bool _reverseOrder;
 
+        [Header("Background")]
+        [SerializeField]
+        private Sprite _backgroundSprite;
+
+        [SerializeField]
+        private Vector2 _backgroundCircleCenter;
+
         [SerializeField, Min(0f)]
+        private float _backgroundCircleWidth;
+
+        [SerializeField, Min(0f)]
+        [Tooltip("背景円の端からタブ画像の中心を内側へ離す距離です。")]
+        private float _tabRadialPadding;
+
+        [Header("Tab Appearance")]
+        [SerializeField, Min(0f)]
+        [Tooltip("各タブのアイコン画像に適用する倍率です。")]
+        private float _iconScale = 0.58f;
+
+        [SerializeField, Min(0f)]
+        [Tooltip("選択中のタブ全体に適用する拡大率です。")]
         private float _selectedScale = 1.2f;
 
-        [SerializeField, Min(0f)]
+        [SerializeField, HideInInspector, Min(0f)]
         private float _edgeScale = 0.55f;
 
-        [SerializeField]
+        [SerializeField, HideInInspector]
         private AnimationCurve _scaleCurve = AnimationCurve.Linear(0f, 0f, 1f, 1f);
 
-        [SerializeField, Range(0f, 1f)]
+        [SerializeField, HideInInspector, Range(0f, 1f)]
         private float _selectedAlpha = 1f;
 
-        [SerializeField, Range(0f, 1f)]
+        [SerializeField, HideInInspector, Range(0f, 1f)]
         private float _edgeAlpha = 0.4f;
 
-        [SerializeField]
+        [SerializeField, HideInInspector]
         private AnimationCurve _alphaCurve = AnimationCurve.Linear(0f, 0f, 1f, 1f);
 
         [Header("Entry / Exit")]
         [Tooltip(
             "Distance from the selection at which entry/exit fading starts. A negative value uses Visible Item Count."
         )]
-        [SerializeField]
+        [SerializeField, HideInInspector]
         private float _visibleEdgeDistance = -1f;
 
         [Tooltip("Distance from the selection at which an item is fully hidden.")]
-        [SerializeField, Min(0f)]
+        [SerializeField, HideInInspector, Min(0f)]
         private float _fadeEndDistance = 2.6f;
 
         [Tooltip("Scale used when an item is fully hidden.")]
-        [SerializeField, Min(0f)]
+        [SerializeField, HideInInspector, Min(0f)]
         private float _hiddenScale = 0.4f;
 
         [Tooltip("Additional angle travelled after leaving the normal arc.")]
-        [SerializeField, Min(0f)]
+        [SerializeField, HideInInspector, Min(0f)]
         private float _exitAnglePadding = 20f;
 
-        [SerializeField]
+        [SerializeField, HideInInspector]
         private AnimationCurve _entryExitAlphaCurve = AnimationCurve.Linear(0f, 0f, 1f, 1f);
 
-        [SerializeField]
+        [SerializeField, HideInInspector]
         private AnimationCurve _entryExitScaleCurve = AnimationCurve.Linear(0f, 0f, 1f, 1f);
 
         public int VisibleItemCount
@@ -147,6 +167,36 @@ namespace CreativeAI.UI
         {
             get => _reverseOrder;
             set => _reverseOrder = value;
+        }
+
+        public Sprite BackgroundSprite
+        {
+            get => _backgroundSprite;
+            set => _backgroundSprite = value;
+        }
+
+        public Vector2 BackgroundCircleCenter
+        {
+            get => _backgroundCircleCenter;
+            set => _backgroundCircleCenter = value;
+        }
+
+        public float BackgroundCircleWidth
+        {
+            get => _backgroundCircleWidth;
+            set => _backgroundCircleWidth = Mathf.Max(0f, value);
+        }
+
+        public float TabRadialPadding
+        {
+            get => _tabRadialPadding;
+            set => _tabRadialPadding = Mathf.Max(0f, value);
+        }
+
+        public float IconScale
+        {
+            get => _iconScale;
+            set => _iconScale = Mathf.Max(0f, value);
         }
 
         public float SelectedScale

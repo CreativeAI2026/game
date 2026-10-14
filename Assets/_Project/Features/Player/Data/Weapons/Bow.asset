@@ -12,14 +12,10 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: fa05067c46c7d2048a12a0a8b225df33, type: 3}
   m_Name: Bow
   m_EditorClassIdentifier: CreativeAI.Gameplay::CreativeAI.Gameplay.WeaponData
-  icon: {fileID: 21300000, guid: 60ba5475d16e870439c5e853e727b097, type: 3}
+  icon: {fileID: 21300000, guid: 61ce13adf93f5f249a1f5dd3eb05582f, type: 3}
   id: 1002
-  key: bow
-  itemName: "\u5F13"
-  category: 0
-  description:
+  itemName: "イーゼルボウ"
+  description: "離れた相手を狙える、イーゼルを組み込んだ弓。"
   attack: 25
-  defense: 0
   criticalDamage: 0
   criticalRate: 50
-  maxHP: 0
