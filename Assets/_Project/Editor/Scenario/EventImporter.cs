@@ -576,12 +576,12 @@ namespace CreativeAI.EditorTools
                         report.Error(id, $"steps[{i}] giveWeapon は weaponKey が必須。");
                         return null;
                     }
-                    // 武器は剣/弓/鎌の3種で固定。それ以外は打ち間違いとして弾く。
+                    // 武器は剣/弓/鎌/ハンマーの4種で固定。それ以外は打ち間違いとして弾く。
                     if (!WeaponKeys.Contains(weaponKey))
                     {
                         report.Error(
                             id,
-                            $"steps[{i}] giveWeapon の weaponKey '{weaponKey}' は不正(sword / bow / scythe のみ)。"
+                            $"steps[{i}] giveWeapon の weaponKey '{weaponKey}' は不正(sword / bow / scythe / hammer のみ)。"
                         );
                         return null;
                     }
