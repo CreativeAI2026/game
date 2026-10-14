@@ -2676,7 +2676,7 @@ MonoBehaviour:
   - _button: {fileID: 8362430571088447078}
     _data: {fileID: 11400000, guid: 34829291ee714d0bad50fe2680dde16f, type: 2}
   - _button: {fileID: 8718998107027979568}
-    _data: {fileID: 11400000, guid: f40f5326546c40a0a2ec49f87048cdd2, type: 2}
+    _data: {fileID: 11400000, guid: 556ca783faa8ad84bbb25da497a86dce, type: 2}
   _initialIndex: 0
   _resetOnEnable: 1
   _animateText: 1
