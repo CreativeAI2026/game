@@ -108,6 +108,10 @@ namespace CreativeAI.Tests.EditMode
             );
 
             root.SetActive(true);
+            InvokePrivate(characterTab, "OnEnable");
+            InvokePrivate(loadoutTab, "OnEnable");
+            foreach (MenuTabButton weaponTab in weaponTabs)
+                InvokePrivate(weaponTab, "OnEnable");
             InvokePrivate(viewTabGroup, "OnEnable");
             InvokePrivate(weaponSelector, "OnEnable");
 
