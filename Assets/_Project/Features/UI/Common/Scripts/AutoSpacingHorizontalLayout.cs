@@ -82,12 +82,14 @@ namespace CreativeAI.UI
                 SetChildAlongAxis(child, 1, GetStartOffset(1, child.rect.height));
         }
 
+#if UNITY_EDITOR
         protected override void OnValidate()
         {
             _minSpacing = Mathf.Max(0f, _minSpacing);
             _maxSpacing = Mathf.Max(_minSpacing, _maxSpacing);
             base.OnValidate();
         }
+#endif
 
         private float GetChildrenWidth()
         {
