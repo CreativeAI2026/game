@@ -52,23 +52,16 @@ namespace CreativeAI.Tests.EditMode
             TestReflection.SetStaticProperty<T>("Instance", null);
         }
 
-        private bool EnsureSessionAndPlayer() =>
-            (bool)TestReflection.Invoke(_title, "EnsureSessionAndPlayer");
+        private bool EnsureSession() => (bool)TestReflection.Invoke(_title, "EnsureSession");
 
         private static int CountOf<T>()
             where T : MonoBehaviour =>
             Object.FindObjectsByType<T>(FindObjectsInactive.Exclude).Length;
 
         [Test]
-        public void EnsureSessionAndPlayer_CreatesEveryResidentSystem()
+        public void EnsureSession_CreatesEveryResidentSystem()
         {
-            // PlayerRig Prefab 未割当なので、プレイヤー生成だけは警告してスキップされる。
-            LogAssert.Expect(
-                LogType.Warning,
-                new System.Text.RegularExpressions.Regex("playerRigPrefab が未割当")
-            );
-
-            Assert.IsTrue(EnsureSessionAndPlayer());
+            Assert.IsTrue(EnsureSession());
 
             Assert.AreEqual(1, CountOf<ProgressManager>(), "① 進行度");
             Assert.AreEqual(1, CountOf<GameModeManager>(), "① モード");
@@ -78,7 +71,7 @@ namespace CreativeAI.Tests.EditMode
         }
 
         [Test]
-        public void EnsureSessionAndPlayer_WithoutSceneController_FailsWithoutCreatingAnything()
+        public void EnsureSession_WithoutSceneController_FailsWithoutCreatingAnything()
         {
             TestReflection.SetStaticProperty<SceneController>("Instance", null);
             LogAssert.Expect(
@@ -86,7 +79,7 @@ namespace CreativeAI.Tests.EditMode
                 new System.Text.RegularExpressions.Regex("SceneController.Instance is null")
             );
 
-            Assert.IsFalse(EnsureSessionAndPlayer());
+            Assert.IsFalse(EnsureSession());
 
             Assert.AreEqual(0, CountOf<ProgressManager>(), "遷移できないなら常駐も作らない");
             Assert.AreEqual(0, CountOf<InventoryManager>());

@@ -20,6 +20,9 @@ namespace CreativeAI.UI
         private GameObject _playerRigPrefab; // 「はじめる/続きから」で生成するプレイヤーリグ。未割当なら警告してプレイヤーは出ない
 
         [SerializeField]
+        private GameObject _cameraRigPrefab; // フィールドに入った時点で生成するカメラリグ。未割当なら警告して画面にカメラが無くなる
+
+        [SerializeField]
         private GameObject _uiRootPrefab; // セッション常駐の UI レイヤー(UIRoot Prefab)。会話UI・即時食材使用UI も UIRoot が束ねる。未割当なら UI は出ない
 
         private void Awake()
@@ -51,20 +54,23 @@ namespace CreativeAI.UI
             }
         }
 
-        /// <summary>「はじめる」: セッション常駐を新規生成してフィールドへ(所持品はまっさら)。</summary>
+        /// <summary>「はじめる」: セッション常駐を新規生成してフィールドへ(所持品はまっさら)。ロード後に開始位置へ置く。</summary>
         private void OnTapToStart()
         {
-            if (!EnsureSessionAndPlayer())
+            if (!EnsureSession())
                 return;
 
             _tapToStartButton.interactable = false;
-            SceneController.Instance.LoadScene(_nextSceneName);
+            SceneController.Instance.LoadScene(
+                _nextSceneName,
+                onSceneActivated: () => SpawnPoint.Place(SpawnRigs(), SpawnPoint.StartId)
+            );
         }
 
         /// <summary>「続きから」: セッション常駐を生成→セーブ復元→保存シーンへ。ロード後にプレイヤーを保存座標へ配置。</summary>
         private void OnContinue()
         {
-            if (!EnsureSessionAndPlayer())
+            if (!EnsureSession())
                 return;
 
             // 進行度・フラグ・所持品はここで同期復元される(ItemCatalog は Resources 経由でシーン非依存)。
@@ -79,14 +85,18 @@ namespace CreativeAI.UI
 
             SceneController.Instance.LoadScene(
                 scene,
-                onSceneActivated: () => SaveService.RestorePlayerState(data)
+                onSceneActivated: () =>
+                {
+                    SpawnRigs();
+                    SaveService.RestorePlayerState(data);
+                }
             );
         }
 
         /// <summary>
         /// SceneController の存在確認と、セッション常駐の生成を行う。
         /// </summary>
-        private bool EnsureSessionAndPlayer()
+        private bool EnsureSession()
         {
             if (SceneController.Instance == null)
             {
@@ -97,8 +107,17 @@ namespace CreativeAI.UI
             }
 
             GameSession.EnsureResidents(_uiRootPrefab);
-            GameSession.EnsurePlayerRig(_playerRigPrefab);
             return true;
+        }
+
+        /// <summary>
+        /// フィールドに入った時点でカメラリグ→プレイヤーリグの順に出し、プレイヤーを返す。
+        /// タイトルのカメラを掴まないようロード後に出す。プレイヤーは Awake で MainCamera を探すのでカメラが先。
+        /// </summary>
+        private GameObject SpawnRigs()
+        {
+            GameSession.EnsureCameraRig(_cameraRigPrefab);
+            return GameSession.EnsurePlayerRig(_playerRigPrefab);
         }
     }
 }

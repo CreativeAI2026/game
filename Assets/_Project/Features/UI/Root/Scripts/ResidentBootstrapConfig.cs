@@ -23,5 +23,11 @@ namespace CreativeAI.UI
                 + "本番 Title フローは Title シーンの TitleUIController のスロットを使うので、そちらとは別枠"
         )]
         public GameObject playerRigPrefab;
+
+        [Tooltip(
+            "カメラリグ Prefab(Main Camera + Brain、通常/エイムカメラ)。プレイヤーリグとは別に常駐させる。"
+                + "本番 Title フローは TitleUIController のスロットを使う"
+        )]
+        public GameObject cameraRigPrefab;
     }
 }
