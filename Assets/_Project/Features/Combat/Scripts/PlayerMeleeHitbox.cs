@@ -12,7 +12,7 @@ namespace CreativeAI.Gameplay
     {
         [Header("近接のダメージ倍率(1.0 = 100%)")]
         [SerializeField]
-        private float _meleeMultiplier = 1.5f;
+        private float _meleeMultiplier = 1.0f;
 
         [Header("ヒットエフェクト")]
         [SerializeField]

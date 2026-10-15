@@ -34,6 +34,9 @@ namespace CreativeAI.Gameplay
         public static readonly int Fire = Animator.StringToHash("Fire");
         public static readonly int IsGuarding = Animator.StringToHash("IsGuarding");
 
+        /// <summary>Throw ステートの再生速度の倍率。0 で投げモーションを止め、鎌を受け取ったら 1 に戻して続きを再生する。</summary>
+        public static readonly int ThrowSpeed = Animator.StringToHash("ThrowSpeed");
+
         /// <summary>行動ステートを抜けて移動へ戻す(ActionEnd イベント・硬直キャンセル時にスクリプトが送る)。</summary>
         public static readonly int ReturnToLocomotion = Animator.StringToHash("ReturnToLocomotion");
 
@@ -62,6 +65,7 @@ namespace CreativeAI.Gameplay
             ("Slam", AnimatorControllerParameterType.Trigger),
             ("Fire", AnimatorControllerParameterType.Trigger),
             ("IsGuarding", AnimatorControllerParameterType.Bool),
+            ("ThrowSpeed", AnimatorControllerParameterType.Float),
             ("ReturnToLocomotion", AnimatorControllerParameterType.Trigger),
             ("PlayerFlinch", AnimatorControllerParameterType.Trigger),
             ("Grabbed", AnimatorControllerParameterType.Trigger),

@@ -143,9 +143,9 @@ namespace CreativeAI.Gameplay
         [SerializeField]
         private Vector3 armStrikeEuler = new Vector3(60f, 0f, 0f);
 
-        [Tooltip("腕攻撃のダメージ量。")]
+        [Tooltip("腕攻撃ダメージの攻撃力倍率。実ダメージ = 敵攻撃力 × 倍率。")]
         [SerializeField]
-        private float armAttackDamage = 30f;
+        private float armAttackMultiplier = 1.0f;
 
         [Tooltip("腕のOverlapSphere半径。")]
         [SerializeField]
@@ -176,9 +176,9 @@ namespace CreativeAI.Gameplay
         [SerializeField]
         private float liquidFanAngle = 120f;
 
-        [Tooltip("液体弾のダメージ。")]
+        [Tooltip("液体弾ダメージの攻撃力倍率。実ダメージ = 敵攻撃力 × 倍率。")]
         [SerializeField]
-        private float liquidDamage = 100f;
+        private float liquidDamageMultiplier = 1.2f;
 
         [Tooltip("ダメージエリア持続時間（秒）。")]
         [SerializeField]
@@ -195,9 +195,9 @@ namespace CreativeAI.Gameplay
         [SerializeField]
         private float poisonDuration = 5f;
 
-        [Tooltip("毒の1tickあたりのダメージ量。")]
+        [Tooltip("毒の1tickあたりダメージの攻撃力倍率。実ダメージ = 敵攻撃力 × 倍率。")]
         [SerializeField]
-        private float poisonDamagePerTick = 5f;
+        private float poisonDamageMultiplier = 0.12f;
 
         [Tooltip("毒のダメージ間隔（秒）。")]
         [SerializeField]
@@ -212,9 +212,9 @@ namespace CreativeAI.Gameplay
         [SerializeField]
         private int minionCount = 5;
 
-        [Tooltip("手下のダメージ。")]
+        [Tooltip("手下ダメージの攻撃力倍率。実ダメージ = 敵攻撃力 × 倍率（整数に丸める）。")]
         [SerializeField]
-        private int minionDamage = 20;
+        private float minionDamageMultiplier = 0.4f;
 
         //  外部参照用プロパティ（ステートから読む）
         public float ChaseSpeed => chaseSpeed;
@@ -253,7 +253,7 @@ namespace CreativeAI.Gameplay
         public Transform ArmTransform => armTransform;
         public Vector3 ArmWindupEuler => armWindupEuler;
         public Vector3 ArmStrikeEuler => armStrikeEuler;
-        public float ArmAttackDamage => armAttackDamage;
+        public float ArmAttackDamage => Status.CurrentAttackPower * armAttackMultiplier;
         public float ArmHitRadius => armHitRadius;
 
         public Transform LiquidFirePos => liquidFirePos;
@@ -262,16 +262,17 @@ namespace CreativeAI.Gameplay
         public int LiquidShotMinCount => liquidShotMinCount;
         public int LiquidShotMaxCount => liquidShotMaxCount;
         public float LiquidFanAngle => liquidFanAngle;
-        public float LiquidDamage => liquidDamage;
+        public float LiquidDamage => Status.CurrentAttackPower * liquidDamageMultiplier;
         public float DamageAreaDuration => damageAreaDuration;
         public float DamageAreaInterval => damageAreaInterval;
         public float PoisonDuration => poisonDuration;
-        public float PoisonDamagePerTick => poisonDamagePerTick;
+        public float PoisonDamagePerTick => Status.CurrentAttackPower * poisonDamageMultiplier;
         public float PoisonTickInterval => poisonTickInterval;
 
         public GameObject MinionPrefab => minionPrefab;
         public int MinionCount => minionCount;
-        public int MinionDamage => minionDamage;
+        // MidBossMinionProjectile が int でダメージを受け取るため丸める
+        public int MinionDamage => Mathf.RoundToInt(Status.CurrentAttackPower * minionDamageMultiplier);
 
         protected override void Awake()
         {

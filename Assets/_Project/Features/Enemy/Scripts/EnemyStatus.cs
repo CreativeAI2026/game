@@ -21,6 +21,9 @@ namespace CreativeAI.Gameplay
         public event Action OnDeathTriggered;
         public float MaxHp => _enemyData.baseMaxLife;
 
+        /// <summary>HP が 0 になったか。死亡後は被ダメージを受け付けない(破棄までの間に当たっても怯み・警戒・死亡を再発火させない)。</summary>
+        public bool IsDead { get; private set; }
+
         public float CurrentAttackPower
         {
             get
@@ -46,8 +49,10 @@ namespace CreativeAI.Gameplay
 
         public void TakeDamage(float damage, bool isCritical, bool suppressFlinch = false)
         {
-            // プレイヤーの攻撃が完全に無効化され、進行不能やフィードバック喪失に陥るのを防ぐための保証値
-            float finalDamage = Mathf.Max(1f, damage - CurrentDefense);
+            if (IsDead)
+                return;
+
+            float finalDamage = DamageFormula.ApplyDefense(damage, CurrentDefense);
 
             _currentHp -= finalDamage;
 
@@ -93,6 +98,7 @@ namespace CreativeAI.Gameplay
 
         private void Die()
         {
+            IsDead = true;
             OnDeathTriggered?.Invoke();
             Debug.Log($"{_enemyData.characterName}は死んだ");
             Destroy(gameObject, 5.0f);

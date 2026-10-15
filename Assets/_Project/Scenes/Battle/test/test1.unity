@@ -7259,7 +7259,7 @@ MonoBehaviour:
   armTransform: {fileID: 1452162603}
   armWindupEuler: {x: -80, y: 0, z: 0}
   armStrikeEuler: {x: 60, y: 0, z: 0}
-  armAttackDamage: 30
+  armAttackMultiplier: 1
   armHitRadius: 1.2
   liquidFirePos: {fileID: 1033781070}
   liquidPrefab: {fileID: 1050297745941766994, guid: 5a11efd116c39e34e86663fcaa3ed9c0, type: 3}
@@ -7267,15 +7267,15 @@ MonoBehaviour:
   liquidShotMinCount: 3
   liquidShotMaxCount: 7
   liquidFanAngle: 90
-  liquidDamage: 100
+  liquidDamageMultiplier: 1.2
   damageAreaDuration: 10
   damageAreaInterval: 0.1
   poisonDuration: 5
-  poisonDamagePerTick: 10
+  poisonDamageMultiplier: 0.12
   poisonTickInterval: 0.5
   minionPrefab: {fileID: 7032056575478508562, guid: d9b87575ec8558b47bbb28cc6ef875ad, type: 3}
   minionCount: 5
-  minionDamage: 20
+  minionDamageMultiplier: 0.4
 --- !u!114 &1652517606
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -14164,7 +14164,7 @@ MonoBehaviour:
   obstacleLayer:
     serializedVersion: 2
     m_Bits: 65
-  grabDamagePerTick: 5
+  grabDamageMultiplier: 0.2
   grabDamageInterval: 0.5
   grabEscapeThreshold: 20
   grabEscapePerInput: 1

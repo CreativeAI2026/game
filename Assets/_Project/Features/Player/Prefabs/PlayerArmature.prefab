@@ -1323,7 +1323,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: fe89957db6c0ee54c8b2e36234733945, type: 3}
   m_Name: 
   m_EditorClassIdentifier: CreativeAI.Gameplay::CreativeAI.Gameplay.PlayerMeleeHitbox
-  _meleeMultiplier: 1.5
+  _meleeMultiplier: 1
   _hitEffect: {fileID: 1758473627833946668, guid: fe43ffc680021e449a8c86605ce01634, type: 3}
   _hitboxRadius: 0.5
   _targetLayer:
@@ -3421,7 +3421,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: fe89957db6c0ee54c8b2e36234733945, type: 3}
   m_Name: 
   m_EditorClassIdentifier: CreativeAI.Gameplay::CreativeAI.Gameplay.PlayerMeleeHitbox
-  _meleeMultiplier: 2
+  _meleeMultiplier: 1.5
   _hitEffect: {fileID: 0}
   _hitboxRadius: 3
   _targetLayer:
@@ -5417,7 +5417,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: fe89957db6c0ee54c8b2e36234733945, type: 3}
   m_Name: 
   m_EditorClassIdentifier: CreativeAI.Gameplay::CreativeAI.Gameplay.PlayerMeleeHitbox
-  _meleeMultiplier: 1.5
+  _meleeMultiplier: 1
   _hitEffect: {fileID: 1758473627833946668, guid: fe43ffc680021e449a8c86605ce01634, type: 3}
   _hitboxRadius: 0.5
   _targetLayer:
@@ -12512,7 +12512,7 @@ ParticleSystem:
   startDelay:
     serializedVersion: 2
     minMaxState: 0
-    scalar: 0
+    scalar: 0.3
     minScalar: 0
     maxCurve:
       serializedVersion: 2
@@ -17885,7 +17885,7 @@ ParticleSystem:
   startDelay:
     serializedVersion: 2
     minMaxState: 0
-    scalar: 0
+    scalar: 0.1
     minScalar: 0
     maxCurve:
       serializedVersion: 2
@@ -22741,7 +22741,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: fe89957db6c0ee54c8b2e36234733945, type: 3}
   m_Name: 
   m_EditorClassIdentifier: CreativeAI.Gameplay::CreativeAI.Gameplay.PlayerMeleeHitbox
-  _meleeMultiplier: 1.5
+  _meleeMultiplier: 1
   _hitEffect: {fileID: 1758473627833946668, guid: fe43ffc680021e449a8c86605ce01634, type: 3}
   _hitboxRadius: 0.5
   _targetLayer:

@@ -8,8 +8,9 @@ namespace CreativeAI.Gameplay
     /// ここでは subAction による投擲(ブーメラン)を担当する。
     ///
     /// 投擲の流れ: Throw ステート(投げモーション) → ThrowRelease イベントで手元の鎌を隠して
-    /// <see cref="ScytheBoomerang"/> を飛ばす → 戻ってきて受け取ったら手元の鎌を再表示。
-    /// 投げてから受け取るまで移動・攻撃・武器切替は不可。
+    /// <see cref="ScytheBoomerang"/> を飛ばす → ThrowHold イベントで投げモーションを止める
+    /// → 戻ってきて受け取ったら手元の鎌を再表示し、続き(受け取りモーション)を ActionEnd まで再生。
+    /// 投げてから受け取りモーションが終わるまで移動・攻撃・武器切替は不可。
     /// </summary>
     public class ScytheController : MeleeWeaponController
     {
@@ -60,6 +61,8 @@ namespace CreativeAI.Gameplay
                 _boomerang.ForceCatch();
 
             Animator.ResetTrigger(PlayerAnimatorParams.Throw);
+            // 止めたまま外れると、次に投げたときの Throw ステートが動かなくなる
+            SetThrowAnimationPaused(false);
 
             base.OnDisable();
         }
@@ -89,6 +92,26 @@ namespace CreativeAI.Gameplay
         {
             _heldModel.SetActive(false);
             _boomerang.Launch(transform.position, direction, transform);
+        }
+
+        /// <summary>
+        /// 投げモーション(Throw ステート)を止める/続きを再生する。
+        /// Animator.speed は全レイヤー・全ステートが止まる(怯みのモーションも動かなくなる)ため、
+        /// Throw ステートだけに効く速度倍率パラメータで止める。
+        /// </summary>
+        public void SetThrowAnimationPaused(bool paused) =>
+            Animator.SetFloat(PlayerAnimatorParams.ThrowSpeed, paused ? 0f : 1f);
+
+        /// <summary>
+        /// Animator が投げモーションを再生中か。遷移中は遷移先で判定する
+        /// (Throw へ入る途中は true、Throw から移動モーションへ戻る途中は false)。
+        /// </summary>
+        public bool IsThrowAnimationPlaying()
+        {
+            AnimatorStateInfo state = Animator.IsInTransition(0)
+                ? Animator.GetNextAnimatorStateInfo(0)
+                : Animator.GetCurrentAnimatorStateInfo(0);
+            return state.shortNameHash == PlayerAnimatorStates.Throw;
         }
 
         private void OnBoomerangCaught()

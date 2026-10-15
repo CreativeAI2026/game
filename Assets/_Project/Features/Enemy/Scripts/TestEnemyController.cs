@@ -56,13 +56,16 @@ namespace CreativeAI.Gameplay
         [SerializeField]
         private int needleCount = 5;
 
+        [Tooltip("針ダメージの攻撃力倍率。実ダメージ = 敵攻撃力 × 倍率（整数に丸める）。")]
         [SerializeField]
-        private int needleDamage = 50;
+        private float needleDamageMultiplier = 0.6f;
 
         public float NeedleAttackDistance => needleAttackDistance;
         public float NeedleAttackCooldown => needleAttackCooldown;
         public int NeedleCount => needleCount;
-        public int NeedleDamage => needleDamage;
+
+        // EnemyNeedleProjectile が int でダメージを受け取るため丸める
+        public int NeedleDamage => Mathf.RoundToInt(Status.CurrentAttackPower * needleDamageMultiplier);
 
         [HideInInspector]
         public float NeedleAttackTimer;

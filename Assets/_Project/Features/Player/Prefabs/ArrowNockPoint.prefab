@@ -68,7 +68,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 02339971ed92e3546aa40d9aa38147c1, type: 3}
   m_Name: 
   m_EditorClassIdentifier: CreativeAI.Gameplay::CreativeAI.Gameplay.ArrowTip
-  _bowMultiplier: 0.8
+  _bowMultiplier: 1
   _enemyLayerName: Enemy
   _obstacleLayerName: Obstacle
   _hitEffect: {fileID: 1758473627833946668, guid: fe43ffc680021e449a8c86605ce01634, type: 3}

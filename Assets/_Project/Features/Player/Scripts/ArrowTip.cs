@@ -14,7 +14,7 @@ namespace CreativeAI.Gameplay
     {
         [Header("弓のダメージ倍率(1.0 = 100%)")]
         [SerializeField]
-        private float _bowMultiplier = 0.8f;
+        private float _bowMultiplier = 1.0f;
 
         [Header("衝突設定")]
         [Tooltip("Enemy レイヤー名（プロジェクトの設定に合わせる）")]

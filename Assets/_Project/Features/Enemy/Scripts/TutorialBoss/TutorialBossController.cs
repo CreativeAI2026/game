@@ -214,9 +214,9 @@ namespace CreativeAI.Gameplay
         private LayerMask obstacleLayer;
 
         [Header("掴み（捕獲）設定")]
-        [Tooltip("電撃ダメージ（1ティックあたり）。")]
+        [Tooltip("電撃ダメージ（1ティックあたり）の攻撃力倍率。実ダメージ = 敵攻撃力 × 倍率。")]
         [SerializeField]
-        private float grabDamagePerTick = 5f;
+        private float grabDamageMultiplier = 0.2f;
 
         [Tooltip("電撃ダメージを与える間隔（秒）。")]
         [SerializeField]
@@ -283,7 +283,7 @@ namespace CreativeAI.Gameplay
         public bool ForceStraightWireByRig => forceStraightWireByRig;
         public float SoundReactRadius => soundReactRadius;
         public LayerMask ObstacleLayer => obstacleLayer;
-        public float GrabDamagePerTick => grabDamagePerTick;
+        public float GrabDamagePerTick => Status.CurrentAttackPower * grabDamageMultiplier;
         public float GrabDamageInterval => grabDamageInterval;
         public float GrabEscapeThreshold => grabEscapeThreshold;
         public float GrabEscapePerInput => grabEscapePerInput;

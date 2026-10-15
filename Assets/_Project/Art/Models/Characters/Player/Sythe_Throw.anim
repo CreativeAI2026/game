@@ -30416,12 +30416,12 @@ AnimationClip:
     m_HasAdditiveReferencePose: 0
     m_LoopTime: 0
     m_LoopBlend: 0
-    m_LoopBlendOrientation: 0
-    m_LoopBlendPositionY: 0
-    m_LoopBlendPositionXZ: 0
-    m_KeepOriginalOrientation: 0
+    m_LoopBlendOrientation: 1
+    m_LoopBlendPositionY: 1
+    m_LoopBlendPositionXZ: 1
+    m_KeepOriginalOrientation: 1
     m_KeepOriginalPositionY: 1
-    m_KeepOriginalPositionXZ: 0
+    m_KeepOriginalPositionXZ: 1
     m_HeightFromFeet: 0
     m_Mirror: 0
   m_EditorCurves:
@@ -59644,7 +59644,14 @@ AnimationClip:
     floatParameter: 0
     intParameter: 0
     messageOptions: 0
-  - time: 0.6166667
+  - time: 0.46666667
+    functionName: ThrowHold
+    data: 
+    objectReferenceParameter: {fileID: 0}
+    floatParameter: 0
+    intParameter: 0
+    messageOptions: 0
+  - time: 0.75
     functionName: ActionEnd
     data: 
     objectReferenceParameter: {fileID: 0}
