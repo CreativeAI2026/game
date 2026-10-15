@@ -413,7 +413,7 @@ namespace CreativeAI.Core
     /// </summary>
     public interface IWeaponGiver
     {
-        /// <summary>weaponKey(sword/bow/scythe)の武器を1本入手する。既に所持なら何もしない。</summary>
+        /// <summary>weaponKey(sword/bow/scythe/hammer)の武器を1本入手する。既に所持なら何もしない。</summary>
         void GiveWeapon(string weaponKey);
     }
 

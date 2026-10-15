@@ -136,7 +136,7 @@ namespace CreativeAI.Core
         private string _itemKey; // giveItem
 
         [SerializeField]
-        private string _weaponKey; // giveWeapon(剣/弓/鎌 = sword/bow/scythe)
+        private string _weaponKey; // giveWeapon(剣/弓/鎌/ハンマー = sword/bow/scythe/hammer)
 
         [SerializeField]
         private string _message; // giveItem / giveWeapon: 入手演出に出す文。省略時は UI 側が既定文を作る
@@ -175,7 +175,7 @@ namespace CreativeAI.Core
             };
 
         /// <summary>
-        /// 武器を渡すステップ。weaponKey は剣/弓/鎌(sword/bow/scythe)のいずれか。
+        /// 武器を渡すステップ。weaponKey は剣/弓/鎌/ハンマー(sword/bow/scythe/hammer)のいずれか。
         /// 実体はプレイヤーリグの WeaponManager(IWeaponGiver seam)で入手処理する。
         /// </summary>
         public static EventStep GiveWeapon(string weaponKey, string message = null) =>

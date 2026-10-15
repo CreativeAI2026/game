@@ -67,7 +67,7 @@ namespace CreativeAI.Tests.EditMode
         }
 
         [Test]
-        public void AllFourWeapons_HaveEqualAverageDamage()
+        public void AllWeapons_HaveEqualAverageDamage()
         {
             // 平均ダメージ = 攻撃力 ×(1 + 会心率 × 会心ダメージ)が4種とも等価になるよう設定。
             // 素の値(攻撃2000 / 会心率0 / 会心ダメージ0)でいずれも平均 2500 になる。
