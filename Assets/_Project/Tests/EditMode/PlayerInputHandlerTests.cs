@@ -8,6 +8,7 @@ namespace CreativeAI.Tests.EditMode
     /// <summary>
     /// 会話イベント中の操作不能の検証(入力を捨て、押しっぱなしも消す)。
     /// battle ステップ中は再生中でも戦えるよう入力を通す。
+    /// 操作で開くUI(キャラ / インベなど)の表示中も同じく操作不能にする。
     /// </summary>
     public class PlayerInputHandlerTests
     {
@@ -33,6 +34,7 @@ namespace CreativeAI.Tests.EditMode
         {
             TestReflection.Invoke(_input, "OnDisable");
             EventPlaybackService.SetPlaying(false);
+            UiPanelService.ResetState();
             TestReflection.SetStaticProperty<GameModeManager>("Instance", null);
             Object.DestroyImmediate(_go);
             Object.DestroyImmediate(_gmmGo);
@@ -104,6 +106,43 @@ namespace CreativeAI.Tests.EditMode
             _gmm.ExitBattle(); // 戦闘後に会話へ戻る
 
             Assert.AreEqual(Vector2.zero, _input.move);
+        }
+
+        [Test]
+        public void UiPanelOpens_ClearsHeldInputs()
+        {
+            _input.MoveInput(Vector2.up);
+            _input.AttackInput();
+
+            UiPanelService.SetOpen(true);
+
+            Assert.AreEqual(Vector2.zero, _input.move);
+            Assert.IsFalse(_input.HasAttackInput, "閉じた直後に攻撃が暴発しない");
+        }
+
+        [Test]
+        public void WhileUiPanelOpen_IgnoresInputs()
+        {
+            UiPanelService.SetOpen(true);
+
+            _input.MoveInput(Vector2.up);
+            _input.LookInput(Vector2.right);
+            _input.AttackInput();
+
+            Assert.AreEqual(Vector2.zero, _input.move);
+            Assert.AreEqual(Vector2.zero, _input.look, "パネル操作中に視点が回らない");
+            Assert.IsFalse(_input.HasAttackInput, "パネルのクリックで攻撃が出ない");
+        }
+
+        [Test]
+        public void AfterUiPanelClosed_AcceptsInputsAgain()
+        {
+            UiPanelService.SetOpen(true);
+            UiPanelService.SetOpen(false);
+
+            _input.MoveInput(Vector2.up);
+
+            Assert.AreEqual(Vector2.up, _input.move);
         }
     }
 }
