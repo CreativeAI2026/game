@@ -1,5 +1,6 @@
 using CreativeAI.Core;
 using UnityEngine;
+using UnityEngine.InputSystem;
 using UnityEngine.UI;
 
 namespace CreativeAI.UI
@@ -7,6 +8,7 @@ namespace CreativeAI.UI
     /// <summary>
     /// 画面右上の円形ナビ(キャラ / インベ / セーブ)。HP の HUD とは別 Canvas(HP は入力を受けず頻繁に更新されるため)。
     /// ボタンで <see cref="UiRouter.Toggle"/> を呼び、<see cref="GameModeManager.OnModeChanged"/> を購読して Field=表示 / Battle=非表示 を自分で切り替える。
+    /// 表示中はキーでも開ける(C=キャラ / I=インベ、Esc で閉じる)。隠れるとき(戦闘・会話の開始)は開いているパネルも閉じる。
     /// </summary>
     public sealed class HudIconBar : MonoBehaviour
     {
@@ -30,6 +32,7 @@ namespace CreativeAI.UI
         private GraphicRaycaster _raycaster;
 
         private GameModeManager _gameMode;
+        private bool _shown;
 
         private void Awake()
         {
@@ -68,6 +71,20 @@ namespace CreativeAI.UI
             button.onClick.AddListener(() => _router.Toggle(id));
         }
 
+        private void Update()
+        {
+            var keyboard = Keyboard.current;
+            if (!_shown || _router == null || keyboard == null)
+                return;
+
+            if (keyboard.cKey.wasPressedThisFrame)
+                _router.Toggle(UiRouter.UiId.Character);
+            else if (keyboard.iKey.wasPressedThisFrame)
+                _router.Toggle(UiRouter.UiId.Inventory);
+            else if (keyboard.escapeKey.wasPressedThisFrame && _router.IsAnyPanelOpen)
+                _router.CloseAll();
+        }
+
         private void OnModeChanged(GameMode mode) => ApplyCurrent();
 
         private void OnPlaybackChanged(bool playing) => ApplyCurrent();
@@ -86,6 +103,9 @@ namespace CreativeAI.UI
         private void Apply(GameMode mode)
         {
             bool show = mode == GameMode.Field && !EventPlaybackService.IsPlaying;
+            _shown = show;
+            if (!show && _router != null && _router.IsAnyPanelOpen)
+                _router.CloseAll();
             if (_canvas != null)
                 _canvas.enabled = show;
             if (_raycaster != null)
