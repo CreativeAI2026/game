@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using CreativeAI.Core;
 using UnityEngine;
 
 namespace CreativeAI.UI
@@ -6,6 +7,7 @@ namespace CreativeAI.UI
     /// <summary>
     /// 操作で開く UI(キャラ / インベ / セーブ / 調合)の排他表示を管理する薄いルート。常駐 <see cref="UIRoot"/> にアタッチする。
     /// 入口は Open / Toggle で、別のを開くと前のが閉じる。「今どれが開いているか」だけを持つ。
+    /// 開いているかどうかは <see cref="UiPanelService"/> に伝え、プレイヤー側が操作を止める・カーソルを出すのに使う。
     /// </summary>
     public sealed class UiRouter : MonoBehaviour
     {
@@ -54,6 +56,13 @@ namespace CreativeAI.UI
             CloseAll(); // 起動時は全て隠しておき、操作で開く
         }
 
+        // パネルは自分の戻るボタンで SetActive(false) して閉じることがあり、ここを通らないので毎フレーム実際の表示を見る。
+        private void Update() => SyncOpenState();
+
+        private void OnDisable() => UiPanelService.SetOpen(false);
+
+        private void SyncOpenState() => UiPanelService.SetOpen(IsAnyPanelOpen);
+
         private void Register(UiId id, GameObject panel)
         {
             if (panel != null)
@@ -65,6 +74,7 @@ namespace CreativeAI.UI
         {
             foreach (var kv in _panels)
                 kv.Value.SetActive(kv.Key == id);
+            SyncOpenState();
         }
 
         /// <summary>全て閉じる。</summary>
@@ -72,6 +82,7 @@ namespace CreativeAI.UI
         {
             foreach (var kv in _panels)
                 kv.Value.SetActive(false);
+            SyncOpenState();
         }
 
         /// <summary>
@@ -81,7 +92,10 @@ namespace CreativeAI.UI
         public void Toggle(UiId id)
         {
             if (_panels.TryGetValue(id, out var panel) && panel.activeSelf)
+            {
                 panel.SetActive(false);
+                SyncOpenState();
+            }
             else
                 Open(id);
         }
