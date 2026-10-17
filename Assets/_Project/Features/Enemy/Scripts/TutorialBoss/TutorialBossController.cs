@@ -287,10 +287,18 @@ namespace CreativeAI.Gameplay
         [SerializeField]
         private float grabRetractDuration = 0.4f;
 
+        [Header("焦りへの追い込み")]
+        [Tooltip("プレイヤーの焦り（PanicDetector）に応じて攻めを強める設定。段階・系統ごとの補正値と歯止め。")]
+        [SerializeField]
+        private TBossPanicPressureSettings panicPressureSettings = new TBossPanicPressureSettings();
+
         // 外部参照用
         public Transform FlashlightTransform => flashlightTransform;
         public Light FlashlightLight => flashlightLight;
         public float LostSightDuration => lostSightDuration;
+
+        /// <summary>プレイヤーが光から外れてから見失うまでの時間（秒）。焦りへの追い込み（逃げ腰）で長くなる。</summary>
+        public float EffectiveLostSightDuration => lostSightDuration * PanicPressure.LostSightDurationScale;
         public float CombatCloseSenseRadius => combatCloseSenseRadius;
 
         /// <summary>
@@ -310,6 +318,13 @@ namespace CreativeAI.Gameplay
         public float WatchDistanceMin => watchDistanceMin;
         public float WatchDistanceMax => watchDistanceMax;
         public float DirectAssaultChance => directAssaultChance;
+
+        /// <summary>
+        /// 追跡で間合いに入った時、様子見を挟まず突っ込む確率（焦りへの追い込みで補正済み）。
+        /// 追い込み開始の合図の直後は、プレイヤーが身構える間を取るため突っ込まない。
+        /// </summary>
+        public float EffectiveDirectAssaultChance =>
+            PanicPressure.IsInCueLead ? 0f : PanicPressure.AdjustDirectAssaultChance(directAssaultChance);
         public float SpecialAttackChance => specialAttackChance;
         public float NormalAttack2Chance => normalAttack2Chance;
         public float NormalAttackCooldown => normalAttackCooldown;
@@ -397,16 +412,38 @@ namespace CreativeAI.Gameplay
         /// <summary>交戦中で、次の攻撃を仕掛けてよい時刻を過ぎたか。</summary>
         public bool IsAttackDue => _combatTempo.IsAttackDue;
 
+        /// <summary>次の攻撃を仕掛けてよい時刻までの残り秒数（デバッグ表示・ログ用）。交戦の時計が動いていなければ負。</summary>
+        public float TimeUntilNextAttack =>
+            _combatTempo.IsScheduled ? Mathf.Max(0f, _combatTempo.NextAttackTime - Time.time) : -1f;
+
+        /// <summary>今のステートの名前（デバッグ表示・ログ用）。</summary>
+        public string CurrentStateName => currentState != null ? currentState.GetType().Name : "なし";
+
         /// <summary>追跡・様子見に入った時に呼ぶ。交戦の時計がまだ動いていなければ動かし始める。</summary>
-        public void BeginCombatTempo() => _combatTempo.EnsureScheduled(watchDuration);
+        public void BeginCombatTempo() => _combatTempo.EnsureScheduled(CurrentAttackInterval);
+
+        /// <summary>攻撃と攻撃の間隔の基準（秒）。焦りへの追い込み（短く）・息継ぎ（長く）で補正済み。</summary>
+        private float CurrentAttackInterval => watchDuration * PanicPressure.AttackIntervalScale;
 
         /// <summary>交戦が終わった時（巡回へ戻る等）に呼ぶ。次の交戦では待ち時間を新しく決める。</summary>
         public void EndCombatTempo() => _combatTempo.Clear();
 
         private PlayerStatus _playerStatus;
 
+        // プレイヤーの焦り度。無いプレイヤー（焦り度を持たないシーン）でもボスは追い込みなしで動く
+        private PanicDetector _playerPanic;
+
+        /// <summary>プレイヤーの焦りに応じた追い込みの判断。Awakeで生成される。</summary>
+        public TBossPanicPressure PanicPressure { get; private set; }
+
+        // 追い込み開始の合図（目の光）。無ければ音だけで合図する
+        private TBossEyeGlint _eyeGlint;
+
         // プレイヤー死亡時の交戦終了を一度だけ行うためのフラグ（復活した場合は解除する）
         private bool _hasDisengagedFromDeadPlayer;
+
+        // 今の掴みを、追い込みの歯止めの命中として数え済みか（掴みが終わったら戻す）
+        private bool _hasCountedCurrentCapture;
 
         /// <summary>プレイヤーが倒れているか。倒れたプレイヤーは知覚・攻撃の対象にしない。</summary>
         public bool IsPlayerDead => _playerStatus != null && _playerStatus.IsDead;
@@ -455,6 +492,22 @@ namespace CreativeAI.Gameplay
             {
                 _playerStatus = Player.GetComponent<PlayerStatus>();
                 Assert.IsNotNull(_playerStatus, $"{name}: プレイヤーに PlayerStatus がありません");
+
+                _playerPanic = Player.GetComponent<PanicDetector>();
+                if (_playerPanic == null)
+                {
+                    Debug.LogWarning($"{name}: プレイヤーに PanicDetector が無いため、焦りへの追い込みは行いません");
+                }
+            }
+
+            PanicPressure = new TBossPanicPressure(panicPressureSettings);
+            PanicPressure.PressureStarted += OnPressureStarted;
+            PanicPressure.PressureEnded += OnPressureEnded;
+
+            _eyeGlint = GetComponent<TBossEyeGlint>();
+            if (_eyeGlint == null)
+            {
+                Debug.LogWarning($"{name}: TBossEyeGlint が無いため、追い込み開始の合図は音だけになります");
             }
 
             Sounds = GetComponent<TutorialBossSounds>();
@@ -471,11 +524,41 @@ namespace CreativeAI.Gameplay
         protected override void OnEnable()
         {
             base.OnEnable();
+            if (_playerStatus != null)
+            {
+                _playerStatus.Damaged += OnPlayerDamaged;
+            }
         }
 
         protected override void OnDisable()
         {
             base.OnDisable();
+            if (_playerStatus != null)
+            {
+                _playerStatus.Damaged -= OnPlayerDamaged;
+            }
+        }
+
+        /// <summary>
+        /// プレイヤーが被弾した時に呼ばれる。このボスの攻撃・掴みによる被弾だけを、追い込みの歯止め（命中数）に数える。
+        /// 掴み中の電撃は一定間隔の継続ダメージなので、掴み1回を1命中として数える。
+        /// </summary>
+        private void OnPlayerDamaged()
+        {
+            if (currentState is TBossCapturedState)
+            {
+                if (_hasCountedCurrentCapture)
+                {
+                    return;
+                }
+                _hasCountedCurrentCapture = true;
+            }
+            else if (!IsAttacking)
+            {
+                return; // このボスの攻撃中ではない被弾（他の敵・地形など）は数えない
+            }
+
+            PanicPressure.NotifyBossHitPlayer();
         }
 
         protected override void Update()
@@ -486,6 +569,63 @@ namespace CreativeAI.Gameplay
             base.Update();
             UpdateAnimatorParameters();
             _perception.Tick(Time.deltaTime);
+            TickPanicPressure();
+
+            if (currentState is not TBossCapturedState)
+            {
+                _hasCountedCurrentCapture = false;
+            }
+        }
+
+        /// <summary>
+        /// プレイヤーの焦りの段階・系統から、追い込みの判断を1フレーム分進める。
+        /// 交戦していない（未発見・プレイヤー死亡・ボス死亡）間は追い込まない。
+        /// </summary>
+        private void TickPanicPressure()
+        {
+            if (_playerPanic == null)
+            {
+                return; // Awake で警告済み。追い込みなしで動く
+            }
+
+            bool isEngaged =
+                IsAlerted
+                && !IsPlayerDead
+                && _playerPanic.IsInCombat
+                && currentState is not TBossDeathState;
+            PanicPressure.Tick(_playerPanic.Level, _playerPanic.DominantCategory, isEngaged, Time.deltaTime);
+        }
+
+        /// <summary>
+        /// 追い込みを始めた瞬間の合図。目をギラッと光らせ、同時に音を鳴らす。追い込み中は目に残光を残す。
+        /// 背を向けて逃げているプレイヤーには目が見えないため、音も必ず鳴らす。
+        /// </summary>
+        private void OnPressureStarted(PanicCategory category)
+        {
+            Debug.Log($"[TutorialBoss] 追い込み開始（{category.ToDisplayName()}）");
+
+            Vector3 cuePosition = transform.position;
+            if (_eyeGlint != null)
+            {
+                _eyeGlint.Play();
+                _eyeGlint.SetSustain(true);
+                cuePosition = _eyeGlint.CuePosition;
+            }
+            Sounds.PlayPressureCue(cuePosition);
+
+            // 次の攻撃が遠ければ追い込みの間隔で前倒しする。合図から攻撃までは最低限の間を取る
+            _combatTempo.Expedite(CurrentAttackInterval, PanicPressure.CueLeadSeconds);
+        }
+
+        /// <summary>追い込みが終わった（息継ぎに入った・相手が落ち着いた）ら、目の残光を消す。</summary>
+        private void OnPressureEnded()
+        {
+            Debug.Log($"[TutorialBoss] 追い込み終了（{PanicPressure.Mode}）");
+
+            if (_eyeGlint != null)
+            {
+                _eyeGlint.SetSustain(false);
+            }
         }
 
         /// <summary>
@@ -832,6 +972,8 @@ namespace CreativeAI.Gameplay
         /// <summary>
         /// 選択可能な候補の中で、Inspectorの確率設定を重みとして正規化し抽選する。
         /// 通常攻撃は確率スライダーを持たないため基準枠（重み1）として扱う。
+        /// 焦っているプレイヤーには、焦りの系統に合わせて重みに倍率を掛ける（例: 逃げ腰には触手を選びやすく）。
+        /// 間合い・射線・クールダウンで候補を絞った後に掛けるので、届かない攻撃を無理に選ぶことは無い。
         /// </summary>
         private TBossAttackType ChooseWeightedAttack(
             bool normalEligible,
@@ -839,9 +981,9 @@ namespace CreativeAI.Gameplay
             bool specialEligible
         )
         {
-            float specialWeight = specialEligible ? specialAttackChance : 0f;
-            float normal2Weight = normal2Eligible ? normalAttack2Chance : 0f;
-            float normalWeight = normalEligible ? 1f : 0f;
+            float specialWeight = specialEligible ? specialAttackChance * PanicPressure.SpecialWeightScale : 0f;
+            float normal2Weight = normal2Eligible ? normalAttack2Chance * PanicPressure.Normal2WeightScale : 0f;
+            float normalWeight = normalEligible ? PanicPressure.NormalWeightScale : 0f;
 
             float total = specialWeight + normal2Weight + normalWeight;
             if (total <= 0f)
@@ -878,7 +1020,7 @@ namespace CreativeAI.Gameplay
         private void CommitAttack(TBossAttackType type)
         {
             // 次の攻撃までの待ち時間はここで決め直す（様子見・追跡のどちらから仕掛けても同じ時計で数える）
-            _combatTempo.Schedule(watchDuration);
+            _combatTempo.Schedule(CurrentAttackInterval);
 
             if (_lastAttackType == type)
             {

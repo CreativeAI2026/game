@@ -67,6 +67,14 @@ namespace CreativeAI.Gameplay
         [SerializeField]
         private SoundCue _escapeSound;
 
+        [Header("焦りへの追い込み")]
+        [Tooltip(
+            "追い込み開始の合図(目がギラッと光る瞬間)の音。背を向けて逃げているプレイヤーには目の光が見えず、"
+                + "この音だけが合図になるため、遠くまで届く設定にする"
+        )]
+        [SerializeField]
+        private SoundCue _pressureCueSound;
+
         /// <summary>電撃の鳴り続ける音。鳴らす位置(電撃エフェクト)は拘束ステートが用意する。</summary>
         public SoundCue ElectricLoopSound => _electricLoopSound;
 
@@ -96,6 +104,10 @@ namespace CreativeAI.Gameplay
         public void PlayGrab() => PlayAtSelf(_grabSound);
 
         public void PlayEscape() => PlayAtSelf(_escapeSound);
+
+        /// <summary>追い込み開始の合図の音を、目の位置から鳴らす。</summary>
+        public void PlayPressureCue(Vector3 position) =>
+            WorldSoundPlayer.Play(_pressureCueSound, position, this);
 
         private void PlayAtSelf(SoundCue cue)
         {

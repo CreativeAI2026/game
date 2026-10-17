@@ -16,6 +16,10 @@ namespace CreativeAI.Gameplay
         // プレイヤーが弓を構えている間は、より遠くまで「適正距離」とみなして距離を取る（間合いの外側に対する倍率）
         private const float WatchDistanceMaxScaleWhileAiming = 1.3f;
 
+        // 迷い・硬直の相手へ間合いを詰める時、間合いの内側（WatchDistanceMin）の何倍まで近づくか。
+        // TBossDemo の値（内側6m）で3.6m。体同士が触れる距離（中心間 約2m）より遠く、通常攻撃の射程（4m）には入る
+        private const float CloseInMinDistanceScale = 0.6f;
+
         // 間合いの外側のこの倍率より離れたら「振り切られた」とみなし、歩きの様子見をやめて走って追う
         private const float BreakAwayDistanceScale = 1.5f;
 
@@ -160,9 +164,19 @@ namespace CreativeAI.Gameplay
 
             bool playerAiming = _playerController != null && _playerController.IsAiming;
 
-            float tooCloseDistance = boss.WatchDistanceMin;
-            float tooFarDistance =
-                boss.WatchDistanceMax * (playerAiming ? WatchDistanceMaxScaleWhileAiming : 1f);
+            float tooCloseDistance;
+            float tooFarDistance;
+            if (boss.PanicPressure.ClosesIn)
+            {
+                // 迷い・硬直で焦っている相手には、弓を構えられても下がらず、間合いの内側よりさらに詰めて考える時間を与えない
+                tooCloseDistance = boss.WatchDistanceMin * CloseInMinDistanceScale;
+                tooFarDistance = boss.WatchDistanceMin;
+            }
+            else
+            {
+                tooCloseDistance = boss.WatchDistanceMin;
+                tooFarDistance = boss.WatchDistanceMax * (playerAiming ? WatchDistanceMaxScaleWhileAiming : 1f);
+            }
 
             // 1回の移動目標までの距離と壁チェック。スケール1の体格で調整した値なので体格に合わせる
             float step = SpacingStepDistance * boss.BodyScale;

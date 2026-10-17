@@ -20,6 +20,12 @@ namespace CreativeAI.Gameplay
         /// <summary>次の攻撃を仕掛けてよい時刻を過ぎたか。交戦に入っていなければ false。</summary>
         public bool IsAttackDue => _isScheduled && Time.time >= _nextAttackTime;
 
+        /// <summary>次の攻撃を仕掛けてよい時刻（Time.time 基準）。交戦に入っていなければ意味を持たない。</summary>
+        public float NextAttackTime => _nextAttackTime;
+
+        /// <summary>交戦に入っていて、攻撃の時計が動いているか。</summary>
+        public bool IsScheduled => _isScheduled;
+
         /// <summary>
         /// 交戦に入った時に呼ぶ。既に時計が動いていれば何もしない（追跡⇔様子見の往復で待ち時間を延ばさない）。
         /// </summary>
@@ -37,6 +43,23 @@ namespace CreativeAI.Gameplay
             _nextAttackTime =
                 Time.time + Random.Range(baseInterval * IntervalMinScale, baseInterval * IntervalMaxScale);
             _isScheduled = true;
+        }
+
+        /// <summary>
+        /// 追い込みを始めた時に呼ぶ。新しい基準間隔で引き直した時刻の方が早ければ、次の攻撃を前倒しする。
+        /// ただし今から minDelay 秒より早くはしない（合図の目の光・音から攻撃まで、気付いて身構える間を取るため）。
+        /// 既に攻撃時刻を過ぎていた場合も、minDelay 秒後まで待たせる。交戦に入っていなければ何もしない。
+        /// </summary>
+        public void Expedite(float baseInterval, float minDelay)
+        {
+            if (!_isScheduled)
+            {
+                return;
+            }
+
+            float candidate =
+                Time.time + Random.Range(baseInterval * IntervalMinScale, baseInterval * IntervalMaxScale);
+            _nextAttackTime = Mathf.Max(Time.time + minDelay, Mathf.Min(_nextAttackTime, candidate));
         }
 
         /// <summary>交戦が終わった時（見失って巡回へ戻る等）に呼ぶ。次の交戦では待ち時間を新しく決める。</summary>

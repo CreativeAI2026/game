@@ -19,7 +19,15 @@ namespace CreativeAI.Gameplay
         [SerializeField]
         private PanicDetector _panicDetector;
 
+        [Tooltip("焦りに応じて追い込むボス。未設定ならシーンから探す（いなければ追い込みの行は出さない）")]
+        [SerializeField]
+        private TutorialBossController _boss;
+
         [Header("UIパーツ")]
+        [Tooltip("ボスの追い込みの状態と、次の攻撃までの時間を出すテキスト（2行）")]
+        [SerializeField]
+        private TextMeshProUGUI _bossPressureText;
+
         [Tooltip("焦り度バー（Filledタイプ）")]
         [SerializeField]
         private Image _panicFillBar;
@@ -84,6 +92,9 @@ namespace CreativeAI.Gameplay
 
             if (_panicDetector == null)
                 _panicDetector = FindAnyObjectByType<PanicDetector>(FindObjectsInactive.Exclude);
+
+            if (_boss == null)
+                _boss = FindAnyObjectByType<TutorialBossController>(FindObjectsInactive.Exclude);
 #else
             // 開発中の確認用の表示なので、ビルドには出さない
             gameObject.SetActive(false);
@@ -111,6 +122,7 @@ namespace CreativeAI.Gameplay
 
             UpdatePanicBar();
             UpdateSignalRows();
+            UpdateBossPressure();
             UpdateFlash();
         }
 
@@ -175,6 +187,38 @@ namespace CreativeAI.Gameplay
             {
                 _signalTexts[index].text = label;
             }
+        }
+
+        /// <summary>
+        /// ボスの追い込みの状態を出す。例:
+        ///   ボスの追い込み：追い込み中 逃げ腰（残り5.2秒）
+        ///   次の攻撃まで：1.2秒
+        /// </summary>
+        private void UpdateBossPressure()
+        {
+            if (_bossPressureText == null)
+                return;
+
+            if (_boss == null)
+            {
+                _bossPressureText.text = string.Empty;
+                return;
+            }
+
+            TBossPanicPressure pressure = _boss.PanicPressure;
+            string status = pressure.Mode switch
+            {
+                TBossPressureMode.Pressing =>
+                    $"{pressure.Mode.ToDisplayName()} {pressure.Category.ToDisplayName()}（残り{pressure.PressureRemaining:F1}秒）",
+                TBossPressureMode.Breather =>
+                    $"{pressure.Mode.ToDisplayName()}（残り{pressure.BreatherRemaining:F1}秒）",
+                _ => pressure.Mode.ToDisplayName(),
+            };
+
+            float untilAttack = _boss.TimeUntilNextAttack;
+            string nextAttack = untilAttack < 0f ? "（非交戦）" : $"{untilAttack:F1}秒";
+
+            _bossPressureText.text = $"ボスの追い込み：{status}\n次の攻撃まで：{nextAttack}";
         }
 
         private void UpdateFlash()

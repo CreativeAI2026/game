@@ -19,6 +19,8 @@ namespace CreativeAI.Gameplay
     ///   signal … 指標が焦りの兆候を検知した瞬間（detail 列に指標名）
     ///   marker … プレイヤーが「今焦った」と印を付けた瞬間（detail 列に通し番号）
     ///   level  … 焦りの段階が切り替わった瞬間（detail 列に新しい段階）
+    ///   pressure … ボスの追い込みが始まった・終わった瞬間（detail 列に「開始:系統」または「終了:次の状態」）
+    /// ボス（TutorialBossController）がいれば、焦りへのボスの反応（追い込みの状態・次の攻撃までの時間など）も列に記録する。
     /// marker 行の前後でスコアがどう動いていたかを見て、取りこぼし・誤検知を調べる。
     /// </summary>
     public class PanicSessionLogger : MonoBehaviour
@@ -32,6 +34,10 @@ namespace CreativeAI.Gameplay
         [Tooltip("記録する PanicDetector。未設定ならシーンから探す")]
         [SerializeField]
         private PanicDetector _panicDetector;
+
+        [Tooltip("焦りに応じて追い込むボス。未設定ならシーンから探す（いなければボスの列は空欄）")]
+        [SerializeField]
+        private TutorialBossController _boss;
 
         [Tooltip("1秒あたりの sample 行の記録回数")]
         [SerializeField]
@@ -68,6 +74,9 @@ namespace CreativeAI.Gameplay
                 return;
             }
             _playerStatus = _panicDetector.GetComponent<PlayerStatus>();
+
+            if (_boss == null)
+                _boss = FindAnyObjectByType<TutorialBossController>(FindObjectsInactive.Exclude);
 #else
             // 開発中の調整用なので、製品ビルドではファイルを作らない
             enabled = false;
@@ -87,16 +96,45 @@ namespace CreativeAI.Gameplay
             _writer?.Flush();
         }
 
-        // 列見出しに指標の一覧を使うため、PanicDetector の Awake（指標一覧の生成）が済んだ後に開く
+        // 列見出しに指標の一覧を使うため、PanicDetector の Awake（指標一覧の生成）が済んだ後に開く。
+        // ボスの追い込み判断もボスの Awake で作られるので、購読はここで行う
         private void Start()
         {
             OpenFile();
+
+            if (_boss != null)
+            {
+                _boss.PanicPressure.PressureStarted += OnPressureStarted;
+                _boss.PanicPressure.PressureEnded += OnPressureEnded;
+            }
         }
 
         private void OnDestroy()
         {
+            if (_boss != null && _boss.PanicPressure != null)
+            {
+                _boss.PanicPressure.PressureStarted -= OnPressureStarted;
+                _boss.PanicPressure.PressureEnded -= OnPressureEnded;
+            }
+
             _writer?.Dispose();
             _writer = null;
+        }
+
+        private void OnPressureStarted(PanicCategory category)
+        {
+            if (_writer == null)
+                return;
+
+            WriteRow("pressure", $"開始:{category.ToDisplayName()}");
+        }
+
+        private void OnPressureEnded()
+        {
+            if (_writer == null)
+                return;
+
+            WriteRow("pressure", $"終了:{_boss.PanicPressure.Mode.ToDisplayName()}");
         }
 
         private void Update()
@@ -185,6 +223,9 @@ namespace CreativeAI.Gameplay
                 header.Append(',').Append(signal.DisplayName).Append("_スコア");
                 header.Append(',').Append(signal.DisplayName).Append('_').Append(signal.RawValueUnit);
             }
+            header.Append(
+                ",boss_state,boss_pressure,boss_pressure_category,pressure_remaining,breather_remaining,next_attack_in"
+            );
             return header.ToString();
         }
 
@@ -216,7 +257,27 @@ namespace CreativeAI.Gameplay
                 row.Append(',').Append(Format(signal.Score));
                 row.Append(',').Append(Format(signal.RawValue));
             }
+            AppendBossColumns(row);
             _writer.WriteLine(row.ToString());
+        }
+
+        // 焦りへのボスの反応。ボスがいなければ列の数だけ空欄にする（列がずれないように）
+        private void AppendBossColumns(StringBuilder row)
+        {
+            if (_boss == null)
+            {
+                row.Append(",,,,,,");
+                return;
+            }
+
+            TBossPanicPressure pressure = _boss.PanicPressure;
+            bool isPressing = pressure.Mode == TBossPressureMode.Pressing;
+            row.Append(',').Append(_boss.CurrentStateName);
+            row.Append(',').Append(pressure.Mode.ToDisplayName());
+            row.Append(',').Append(isPressing ? pressure.Category.ToDisplayName() : string.Empty);
+            row.Append(',').Append(Format(pressure.PressureRemaining));
+            row.Append(',').Append(Format(pressure.BreatherRemaining));
+            row.Append(',').Append(Format(_boss.TimeUntilNextAttack));
         }
 
         // 端末の地域設定で小数点がカンマになると列がずれるため、常に InvariantCulture で書く

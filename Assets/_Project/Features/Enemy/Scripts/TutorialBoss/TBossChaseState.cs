@@ -103,7 +103,8 @@ namespace CreativeAI.Gameplay
             if (distance <= boss.WatchDistanceMax && boss.AttackFeasibility.HasDirectApproach())
             {
                 // 毎回様子見から入る一定パターンを崩すため、一定確率で様子見を挟まずそのまま突っ込む
-                if (Random.value < boss.DirectAssaultChance && boss.TryStartAttack())
+                // （焦っているプレイヤーには確率が上がる）
+                if (Random.value < boss.EffectiveDirectAssaultChance && boss.TryStartAttack())
                 {
                     return;
                 }
@@ -141,7 +142,8 @@ namespace CreativeAI.Gameplay
                 <= LastKnownArriveDistance * boss.BodyScale;
             bool stuck = _stuckDetector != null && _stuckDetector.Tick(Time.deltaTime);
 
-            if (reachedLastKnown || stuck || boss.LostSightTimer >= boss.LostSightDuration)
+            // 逃げ腰で焦っている相手は、見失ってもすぐには諦めずしつこく追う（EffectiveLostSightDuration が長くなる）
+            if (reachedLastKnown || stuck || boss.LostSightTimer >= boss.EffectiveLostSightDuration)
             {
                 boss.LostSightTimer = 0f;
                 // 即座にパトロールへ戻さず、最後に見た移動方向から逃げた先を読んで捜索してから諦めさせる
