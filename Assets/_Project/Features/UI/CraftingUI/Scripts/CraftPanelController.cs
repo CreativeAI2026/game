@@ -102,6 +102,8 @@ namespace CreativeAI.UI
         private bool _hasWarningBasePosition;
 
         public bool IsCraftFlowRunning => _isCraftFlowRunning;
+        public ItemData PreviewedCraftedItem => _previewedCraftedItem;
+        public event Action<ItemData> PreviewChanged;
 
         private bool IsCraftInteractionLocked => _isCrafting || _isCraftFlowRunning;
 
@@ -275,6 +277,12 @@ namespace CreativeAI.UI
             InventoryView.ScrollRefreshMode scrollMode
         )
         {
+            if (definition is AllItemsTabDefinition)
+            {
+                _inventory.SetItems(InventoryManager.Instance?.GetAllItems(), scrollMode);
+                return;
+            }
+
             if (definition is InventoryTabDefinition inventoryDefinition)
             {
                 _inventory.RequestItems(inventoryDefinition.Category, scrollMode);
@@ -600,6 +608,8 @@ namespace CreativeAI.UI
                 _craftedItemSlot.SetIcon(resultItem);
             else
                 _craftedItemSlot.Clear();
+
+            PreviewChanged?.Invoke(resultItem);
         }
 
         private void StartCraft()

@@ -2,7 +2,6 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using CreativeAI.Gameplay;
-using TMPro;
 using UnityEngine;
 using UnityEngine.EventSystems;
 using UnityEngine.UI;
@@ -29,9 +28,6 @@ namespace CreativeAI.UI
 
         [SerializeField]
         private SlotFrameView _frameView;
-
-        [SerializeField]
-        private TMP_Text _slotLabel;
 
         private Coroutine _materialAnimationRoutine;
         private bool _isSelected;
@@ -211,7 +207,6 @@ namespace CreativeAI.UI
             WarnIfMissing(_emptyView, nameof(SlotEmptyView));
             WarnIfMissing(_hoverView, nameof(SlotHoverView));
             WarnIfMissing(_frameView, nameof(SlotFrameView));
-            WarnIfMissing(_slotLabel, "SlotLabel");
         }
 
 #if UNITY_EDITOR
@@ -225,7 +220,6 @@ namespace CreativeAI.UI
             _emptyView ??= GetComponentInChildren<SlotEmptyView>(true);
             _hoverView ??= GetComponentInChildren<SlotHoverView>(true);
             _frameView ??= GetComponentInChildren<SlotFrameView>(true);
-            _slotLabel ??= transform.Find("SlotLabel")?.GetComponent<TMP_Text>();
         }
 #endif
 

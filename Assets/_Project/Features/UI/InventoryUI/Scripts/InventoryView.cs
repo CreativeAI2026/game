@@ -55,6 +55,7 @@ namespace CreativeAI.UI
         public event System.Action<ItemStack> OnSlotSubmitted;
         public event System.Action<TabDefinition, int, ScrollRefreshMode> DisplayRefreshRequested;
         public event System.Action<ItemCategory, ScrollRefreshMode> ItemsRequested;
+        public ItemStack SelectedStack => _selectedStack;
 
         private bool _navigationDisabled;
         private bool _interactionEnabled = true;
