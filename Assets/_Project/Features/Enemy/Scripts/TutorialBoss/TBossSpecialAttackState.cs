@@ -30,8 +30,8 @@ namespace CreativeAI.Gameplay
         // 射出の瞬間にワイヤーが縮んでから飛ぶ見た目の破綻が起きる。構える程度の短さに留める。
         private const float AimTentacleLength = 0.5f;
 
-        // 射出フェーズの当たり判定半径
-        private const float TentacleHitRadius = 0.25f;
+        /// <summary>射出フェーズの当たり判定半径。攻撃前の射線チェック（TBossAttackFeasibility）でも同じ太さで判定する。</summary>
+        public const float TentacleHitRadius = 0.25f;
 
         private const float AimNoiseStrength = 90f; // ノイズによるランダム成分（度数）
 
@@ -67,6 +67,7 @@ namespace CreativeAI.Gameplay
             _timer = 0f;
             _hasHit = false;
             _currentPhase = Phase.Aim;
+            boss.Sounds.PlayWireArmExtend();
             _currentLength = 0f;
             _retractStartLength = 0f;
             _hasPrevTip = false;
@@ -327,6 +328,7 @@ namespace CreativeAI.Gameplay
         {
             _currentPhase = Phase.Shoot;
             _timer = 0f;
+            boss.Sounds.PlayWireShoot();
 
             // 掃引判定の起点を射出開始時の先端位置に合わせる
             _hasPrevTip = false;

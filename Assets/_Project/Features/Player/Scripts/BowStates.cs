@@ -95,6 +95,7 @@ namespace CreativeAI.Gameplay
             if (!bow.Input.subAction)
             {
                 // 撃たずに構えを解いた(キャンセル)
+                bow.NotifyAimCancelled();
                 bow.ChangeState(new BowStateFree(bow));
                 return;
             }

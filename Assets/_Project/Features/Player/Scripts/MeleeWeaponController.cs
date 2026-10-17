@@ -1,5 +1,7 @@
+using SoundKit;
 using UnityEngine;
 using UnityEngine.Assertions;
+using UnityEngine.Serialization;
 
 namespace CreativeAI.Gameplay
 {
@@ -20,10 +22,18 @@ namespace CreativeAI.Gameplay
 
         [Header("設定")]
         [Tooltip(
-            "攻撃・投擲の狙いを探す半径（m）。敵のレイヤーは PlayerTargetManager で一元管理する"
+            "近接攻撃でダッシュ接近の対象にする敵を探す半径（m）。投擲・叩きつけの狙いは各武器の別の半径を使う。"
+                + "敵のレイヤーは PlayerTargetManager で一元管理する"
         )]
-        public float searchRadius = 8f;
+        [FormerlySerializedAs("searchRadius")]
+        public float dashSearchRadius = 8f;
+
+        [Tooltip(
+            "射程（m）。攻撃入力時、最寄りの敵の原点がこれより遠ければダッシュで接近し、ここまで近づいたら攻撃する"
+        )]
         public float attackRange = 3f;
+
+        [Tooltip("ダッシュ接近の速度（m/秒）")]
         public float dashSpeed = 20f;
 
         [Header("攻撃判定")]
@@ -32,6 +42,11 @@ namespace CreativeAI.Gameplay
         )]
         [SerializeField]
         private PlayerMeleeHitbox _hitbox;
+
+        [Header("音")]
+        [Tooltip("3段コンボで振る音。判定ON(TriggerEnableHitbox)のタイミングで鳴らす")]
+        [SerializeField]
+        private SoundCue _swingSound;
 
         // --- 実行時に Awake で取得する参照・状態(シーンに保存されないようプロパティにしている) ---
         public PlayerInputHandler Input { get; private set; }
@@ -157,12 +172,18 @@ namespace CreativeAI.Gameplay
                 _hitbox.DisableHitbox();
         }
 
+        /// <summary>3段コンボで武器を振る音を、攻撃判定の位置で鳴らす。</summary>
+        public void PlaySwingSound()
+        {
+            WorldSoundPlayer.Play(_swingSound, _hitbox.transform.position, this);
+        }
+
         /// <summary>
         /// 攻撃入力を受けたときの共通処理。最寄りの敵が射程外ならダッシュで接近、射程内(または敵なし)なら即攻撃。
         /// </summary>
         public void BeginAttack()
         {
-            TargetEnemy = FindNearestEnemy();
+            TargetEnemy = FindMeleeTarget();
             if (
                 TargetEnemy != null
                 && Vector3.Distance(PlayerTransform.position, TargetEnemy.position) > attackRange
@@ -213,8 +234,11 @@ namespace CreativeAI.Gameplay
         /// <summary>攻撃ステートに入った瞬間に呼ばれる。武器の見た目の調整などに使う。</summary>
         public virtual void OnAttackStateEntered() { }
 
-        /// <summary>この武器の索敵半径内で最寄りの敵を探す(索敵の本体は PlayerTargetManager)。</summary>
-        public Transform FindNearestEnemy() => _targetManager.FindNearest(searchRadius);
+        /// <summary>近接攻撃(ダッシュ接近・コンボ)の対象を <see cref="dashSearchRadius"/> 内の最寄りの敵から探す。</summary>
+        public Transform FindMeleeTarget() => FindNearestEnemy(dashSearchRadius);
+
+        /// <summary>指定した半径内で最寄りの敵を探す(索敵の本体は PlayerTargetManager)。</summary>
+        public Transform FindNearestEnemy(float radius) => _targetManager.FindNearest(radius);
 
         /// <summary>
         /// 怯み・死亡時(WeaponManager.ResetEquippedWeapon 経由)に、現在のステートを終了して中立状態へ戻す。

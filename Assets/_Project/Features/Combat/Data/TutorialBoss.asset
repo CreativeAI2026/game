@@ -13,7 +13,7 @@ MonoBehaviour:
   m_Name: TutorialBoss
   m_EditorClassIdentifier: CreativeAI.Gameplay::CreativeAI.Gameplay.EnemyParameterData
   characterName: TutorialBoss
-  baseMaxLife: 25000
+  baseMaxLife: 60000
   baseAttackPower: 400
   baseDefense: 250
   baseMoveSpeed: 5

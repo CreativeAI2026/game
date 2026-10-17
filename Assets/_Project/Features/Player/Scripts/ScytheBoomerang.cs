@@ -1,4 +1,5 @@
 using System;
+using SoundKit;
 using UnityEngine;
 using UnityEngine.Assertions;
 
@@ -84,7 +85,21 @@ namespace CreativeAI.Gameplay
         [SerializeField]
         private ParticleSystem _trail;
 
+        [Header("音(敵に当たった音は同じ GameObject の PlayerMeleeHitbox に割り当てる)")]
+        [Tooltip("飛んでいる間鳴り続ける音。ループする素材を使う")]
+        [SerializeField]
+        private SoundCue _flightLoopSound;
+
+        [Tooltip("行きで障害物に当たって折り返した時の音")]
+        [SerializeField]
+        private SoundCue _obstacleHitSound;
+
+        [Tooltip("手元に戻って受け止めた時の音。武器切替等で強制的に回収した場合は鳴らさない")]
+        [SerializeField]
+        private SoundCue _catchSound;
+
         private PlayerMeleeHitbox _hitbox;
+        private LoopingSound _flightLoop;
         private Phase _phase = Phase.Idle;
         private Vector3 _direction;
         private float _traveled;
@@ -101,6 +116,7 @@ namespace CreativeAI.Gameplay
         private void Awake()
         {
             _hitbox = GetComponent<PlayerMeleeHitbox>();
+            _flightLoop = new LoopingSound(gameObject);
             Assert.IsNotNull(_spinRoot, $"{name}: 回転させるモデル(_spinRoot)が未設定です");
             Assert.IsNotNull(_trail, $"{name}: 軌跡(_trail)が未設定です");
         }
@@ -125,6 +141,7 @@ namespace CreativeAI.Gameplay
             gameObject.SetActive(true);
             _trail.Play(true);
             _hitbox.EnableHitbox();
+            _flightLoop.Play(_flightLoopSound, this);
         }
 
         /// <summary>飛行中なら即座に受け取り扱いにする(武器切替・破棄時の後始末用)。</summary>
@@ -167,6 +184,7 @@ namespace CreativeAI.Gameplay
             );
             if (hitObstacle)
             {
+                WorldSoundPlayer.Play(_obstacleHitSound, transform.position, this);
                 BeginReturn();
                 return;
             }
@@ -197,7 +215,10 @@ namespace CreativeAI.Gameplay
             );
 
             if (Vector3.Distance(transform.position, target) <= _catchDistance)
+            {
+                WorldSoundPlayer.Play(_catchSound, target, this);
                 Catch();
+            }
         }
 
         private void BeginReturn()
@@ -214,6 +235,8 @@ namespace CreativeAI.Gameplay
             _hitbox.DisableHitbox();
             // 停止したまま非表示にしておき、次に投げた瞬間に前回の粒が残っていないようにする
             _trail.Stop(true, ParticleSystemStopBehavior.StopEmittingAndClear);
+            // すぐ非表示にするのでフェードは進まない。鳴りかけのまま残らないよう即座に止める
+            _flightLoop.StopImmediately();
             gameObject.SetActive(false);
             Caught?.Invoke();
         }

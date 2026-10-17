@@ -1,3 +1,4 @@
+using SoundKit;
 using UnityEngine;
 
 namespace CreativeAI.Gameplay
@@ -8,8 +9,9 @@ namespace CreativeAI.Gameplay
     /// 鳴らすタイミングは移動クリップの AnimationEvent(OnFootstep / OnLand)で決まる。
     /// イベントはモデル層の <see cref="PlayerAnimationEventRelay"/> から中継される。
     /// 本番アニメーションに差し替えたら、足が接地するフレームに OnFootstep、着地に OnLand を置く。
+    ///
+    /// 敵AIへの通知は音の割り当てと関係なく行う(音素材が無くても敵の聴覚の挙動が変わらないようにするため)。
     /// </summary>
-    [RequireComponent(typeof(AudioSource))]
     [RequireComponent(typeof(PlayerController))]
     public class PlayerFootstep : MonoBehaviour
     {
@@ -19,23 +21,18 @@ namespace CreativeAI.Gameplay
         // 移動速度がこれだけ歩き速度を上回っていたらダッシュ音にする(歩きの加減速の揺れを拾わないための余裕)
         private const float SprintSpeedMargin = 0.5f;
 
-        [Header("足音クリップ")]
-        [Tooltip("歩行時。ランダムに1つ選ばれる。")]
+        [Header("音")]
+        [Tooltip("歩行時の足音。音程の揺らぎは SoundCue 側で設定する")]
         [SerializeField]
-        private AudioClip[] _walkFootStepClips;
+        private SoundCue _walkSound;
 
-        [Tooltip("ダッシュ時。ランダムに1つ選ばれる。")]
+        [Tooltip("ダッシュ時の足音")]
         [SerializeField]
-        private AudioClip[] _dashFootStepClips;
+        private SoundCue _runSound;
 
-        [Tooltip("着地音。空欄なら鳴らさない")]
+        [Tooltip("着地音")]
         [SerializeField]
-        private AudioClip _landingClip;
-
-        [Header("音量")]
-        [SerializeField]
-        [Range(0f, 1f)]
-        private float _volume = 0.5f;
+        private SoundCue _landingSound;
 
         [Header("AIへの感知設定")]
         [Tooltip("歩き足音がAIに届く半径（メートル）。")]
@@ -46,13 +43,11 @@ namespace CreativeAI.Gameplay
         [SerializeField]
         private float _runRadius = 12f;
 
-        private AudioSource _audioSource;
         private PlayerController _playerController;
         private CharacterController _characterController;
 
         private void Awake()
         {
-            _audioSource = GetComponent<AudioSource>();
             _playerController = GetComponent<PlayerController>();
             // PlayerController は [RequireComponent(typeof(CharacterController))]
             _characterController = GetComponent<CharacterController>();
@@ -75,23 +70,13 @@ namespace CreativeAI.Gameplay
             if (evt.animatorClipInfo.weight <= MinClipWeight)
                 return;
 
-            // 着地音は任意項目
-            if (_landingClip != null)
-                _audioSource.PlayOneShot(_landingClip, _volume);
+            WorldSoundPlayer.Play(_landingSound, transform.position, this);
         }
 
         /// <summary>足音を1回再生し、SoundEventBusに発行する。</summary>
         private void PlayFootstep(bool isSprinting)
         {
-            AudioClip[] clips = isSprinting ? _dashFootStepClips : _walkFootStepClips;
-
-            // 足音クリップは任意項目。未設定(0個)なら鳴らさない
-            if (clips.Length == 0)
-                return;
-
-            AudioClip clip = clips[Random.Range(0, clips.Length)];
-            _audioSource.pitch = Random.Range(0.8f, 1.2f);
-            _audioSource.PlayOneShot(clip, _volume);
+            WorldSoundPlayer.Play(isSprinting ? _runSound : _walkSound, transform.position, this);
 
             // 音が鳴った瞬間のワールド座標を取得して敵AIへ通知
             SoundType soundType = isSprinting ? SoundType.Run : SoundType.Walk;

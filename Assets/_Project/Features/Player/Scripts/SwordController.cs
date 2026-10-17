@@ -1,3 +1,4 @@
+using SoundKit;
 using UnityEngine;
 
 namespace CreativeAI.Gameplay
@@ -22,6 +23,15 @@ namespace CreativeAI.Gameplay
 
         [Tooltip("パリィ成功時に出すVFXプレハブ")]
         public GameObject parryEffectPrefab;
+
+        [Header("音")]
+        [Tooltip("ガードで攻撃を受けた時の音")]
+        [SerializeField]
+        private SoundCue _guardSound;
+
+        [Tooltip("パリィ成功時の音")]
+        [SerializeField]
+        private SoundCue _parrySound;
 
         // ジャストパリィの残り受付時間(秒)。subAction を押した瞬間から数える
         private float _parryTimer;
@@ -84,15 +94,17 @@ namespace CreativeAI.Gameplay
                     if (_parryTimer > 0f)
                     {
                         SpawnParryEffect(hitPoint);
+                        WorldSoundPlayer.Play(_parrySound, hitPoint, this);
 
                         CameraShakeManager.Instance?.Shake(0.4f);
 
                         if (isMeleeAttack && attacker != null)
                         {
-                            var enemyCon = attacker.GetComponentInParent<TestEnemyController>();
+                            // 崩れ方は敵ごとに異なるため、敵共通の受け口に任せる
+                            var enemyCon = attacker.GetComponentInParent<EnemyBaseController>();
                             if (enemyCon != null)
                             {
-                                enemyCon.ChangeState(new TestEnemyParriedState(enemyCon));
+                                enemyCon.ForceParried();
                             }
                         }
 
@@ -104,6 +116,7 @@ namespace CreativeAI.Gameplay
                     }
 
                     SpawnGuardEffect(hitPoint);
+                    WorldSoundPlayer.Play(_guardSound, hitPoint, this);
 
                     CameraShakeManager.Instance?.Shake(0.2f);
 

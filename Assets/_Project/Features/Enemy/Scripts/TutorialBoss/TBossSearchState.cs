@@ -22,6 +22,11 @@ namespace CreativeAI.Gameplay
         // 目標地点への移動を打ち切るまでの時間（経路が届かない・障害物で詰まった場合の保険）
         private const float MoveTimeout = 8f;
 
+        // 目標地点に着いたとみなす余裕（スケール1換算。BodyScaleを掛けて使う）
+        private const float ArriveMargin = 0.5f;
+
+        private TBossStuckDetector _stuckDetector;
+
         // 到着後に見回す回数と、1方向あたりの向きを維持する時間
         private const int LookAroundCount = 3;
         private const float LookAroundStepDuration = 1.2f;
@@ -31,10 +36,18 @@ namespace CreativeAI.Gameplay
         private float _lookStepTimer;
         private Quaternion _lookTargetRotation;
 
-        public TBossSearchState(TutorialBossController controller, Vector3 target)
+        // 目標地点へ向かう速度。交戦後の捜索は走り、未発見時に気配を確かめに行く場合は歩く
+        private readonly float _moveSpeed;
+
+        /// <param name="cautious">
+        /// true なら歩いて向かう。巡回中に「ちらっと見えた」場所を確かめに行く場合に使い、
+        /// 確信が無いのに全力で駆けつける不自然さを避ける。
+        /// </param>
+        public TBossSearchState(TutorialBossController controller, Vector3 target, bool cautious = false)
             : base(controller)
         {
             _target = target;
+            _moveSpeed = cautious ? controller.WalkSpeed : controller.RunSpeed;
         }
 
         public override void Enter()
@@ -47,14 +60,10 @@ namespace CreativeAI.Gameplay
 
             if (boss.Agent != null)
             {
-                boss.Agent.speed = boss.RunSpeed;
+                boss.Agent.speed = _moveSpeed;
                 boss.Agent.isStopped = false;
                 boss.Agent.SetDestination(_target);
-            }
-
-            if (boss.Animator != null)
-            {
-                boss.Animator.SetBool("IsRunning", true);
+                _stuckDetector = new TBossStuckDetector(boss.Agent);
             }
 
             SoundEventBus.OnSoundEmitted += OnSoundHeard;
@@ -90,11 +99,6 @@ namespace CreativeAI.Gameplay
             {
                 boss.Agent.isStopped = false;
             }
-
-            if (boss.Animator != null)
-            {
-                boss.Animator.SetBool("IsRunning", false);
-            }
         }
 
         private void UpdateMove()
@@ -107,9 +111,13 @@ namespace CreativeAI.Gameplay
                 boss.Agent != null
                 && !boss.Agent.pathPending
                 && boss.Agent.hasPath
-                && boss.Agent.remainingDistance <= boss.Agent.stoppingDistance + 0.5f;
+                && boss.Agent.remainingDistance
+                    <= boss.Agent.stoppingDistance + ArriveMargin * boss.BodyScale;
 
-            if (arrived || _timer >= MoveTimeout)
+            // 目標がNavMesh外・到達不能だと着かないまま止まるため、詰まったらその場で見回しに切り替える
+            bool stuck = _stuckDetector != null && _stuckDetector.Tick(Time.deltaTime);
+
+            if (arrived || stuck || _timer >= MoveTimeout)
             {
                 StartLookAround();
             }
@@ -123,10 +131,6 @@ namespace CreativeAI.Gameplay
             if (boss.Agent != null)
             {
                 boss.Agent.isStopped = true;
-            }
-            if (boss.Animator != null)
-            {
-                boss.Animator.SetBool("IsRunning", false);
             }
 
             PickNextLookAngle();
@@ -196,14 +200,11 @@ namespace CreativeAI.Gameplay
 
             if (boss.Agent != null)
             {
-                boss.Agent.speed = boss.RunSpeed;
+                boss.Agent.speed = _moveSpeed;
                 boss.Agent.isStopped = false;
                 boss.Agent.SetDestination(_target);
             }
-            if (boss.Animator != null)
-            {
-                boss.Animator.SetBool("IsRunning", true);
-            }
+            _stuckDetector?.Reset();
         }
     }
 }

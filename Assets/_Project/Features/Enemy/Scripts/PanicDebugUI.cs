@@ -1,5 +1,6 @@
 using TMPro;
 using UnityEngine;
+using UnityEngine.InputSystem;
 using UnityEngine.UI;
 
 namespace CreativeAI.Gameplay
@@ -8,7 +9,9 @@ namespace CreativeAI.Gameplay
     /// PanicDetector の焦り度スコアと各指標をリアルタイムでデバッグ表示するUIコンポーネント。
     /// 専用の独立キャンバスにアタッチして使用する。
     /// このUIは敵の挙動制御には一切関わらない純粋なデバッグ用途。
+    /// エディター上でのみ表示でき、切替キー（既定: F2）で表示/非表示を切り替える。
     /// </summary>
+    [RequireComponent(typeof(Canvas))]
     public class PanicDebugUI : MonoBehaviour
     {
         [Header("参照")]
@@ -54,13 +57,33 @@ namespace CreativeAI.Gameplay
         [SerializeField]
         private float _flashDuration = 0.8f;
 
+        [Header("表示切替")]
+        [Tooltip("表示/非表示を切り替えるキー。エディター上で再生中のみ有効（ビルドでは常に非表示）")]
+        [SerializeField]
+        private Key _toggleKey = Key.F2;
+
+        [Tooltip("再生開始時に表示しておくか")]
+        [SerializeField]
+        private bool _visibleOnStart = false;
+
         private float _flashTimer = 0f;
         private bool _isFlashing = false;
 
+        private Canvas _canvas;
+
         private void Awake()
         {
+#if UNITY_EDITOR
+            // GameObject ごと無効にすると Update が止まり切替キーを受け付けられないため、Canvas の描画だけを切り替える
+            _canvas = GetComponent<Canvas>();
+            _canvas.enabled = _visibleOnStart;
+
             if (_panicDetector == null)
                 _panicDetector = FindAnyObjectByType<PanicDetector>(FindObjectsInactive.Exclude);
+#else
+            // 開発中の確認用の表示なので、ビルドには出さない
+            gameObject.SetActive(false);
+#endif
         }
 
         private void OnEnable()
@@ -77,12 +100,21 @@ namespace CreativeAI.Gameplay
 
         private void Update()
         {
-            if (_panicDetector == null)
+            HandleToggleInput();
+
+            if (_panicDetector == null || !_canvas.enabled)
                 return;
 
             UpdatePanicBar();
             UpdateSignalRows();
             UpdateFlash();
+        }
+
+        private void HandleToggleInput()
+        {
+            var keyboard = Keyboard.current;
+            if (keyboard != null && keyboard[_toggleKey].wasPressedThisFrame)
+                _canvas.enabled = !_canvas.enabled;
         }
 
         private void UpdatePanicBar()
@@ -105,30 +137,35 @@ namespace CreativeAI.Gameplay
         private void UpdateSignalRows()
         {
             // 0: 逃避
+            FlightSignal flight = _panicDetector.Flight;
             string flightStatus = _panicDetector.IsFlightDetectionActive
-                ? $"逃避    継続: {_panicDetector.FlightTimer:F1}s"
-                : "逃避    (対象敵なし)";
-            UpdateRow(0, _panicDetector.FlightScore, flightStatus);
+                ? $"逃避    継続: {flight.Timer:F1}s"
+                : "逃避    (交戦中の敵なし)";
+            UpdateRow(0, flight.Score, flightStatus);
 
             // 1: スパム
-            UpdateRow(1, _panicDetector.SpamScore, $" {_panicDetector.SpamRate:F1}回/s");
+            GuardSpamSignal guardSpam = _panicDetector.GuardSpam;
+            UpdateRow(1, guardSpam.Score, $" {guardSpam.Rate:F1}回/s");
 
             // 2: ジッター
-            bool isAiming =
-                _panicDetector.JitterScore > 0f || _panicDetector.JitterAngularSpeed > 0f;
+            AimJitterSignal aimJitter = _panicDetector.AimJitter;
+            bool isAiming = aimJitter.Score > 0f || aimJitter.AngularSpeed > 0f;
             string jitterStatus = isAiming
-                ? $"{_panicDetector.JitterAngularSpeed:F0}°/s"
-                : "(非構え中)";
-            UpdateRow(2, _panicDetector.JitterScore, jitterStatus);
+                ? $"{aimJitter.AngularSpeed:F0}°/s"
+                : "(非構え中/非交戦)";
+            UpdateRow(2, aimJitter.Score, jitterStatus);
 
             // 3: 空間喪失
-            UpdateRow(3, _panicDetector.TrapScore, $"継続: {_panicDetector.TrapTimer:F1}s");
+            TrapSignal trap = _panicDetector.Trap;
+            UpdateRow(3, trap.Score, $"継続: {trap.Timer:F1}s");
 
             // 4: 意思崩壊
-            UpdateRow(4, _panicDetector.AimCancelScore, $"累計: {_panicDetector.AimCancelCount}回");
+            AimCancelSignal aimCancel = _panicDetector.AimCancel;
+            UpdateRow(4, aimCancel.Score, $"直近{aimCancel.Window:F0}s: {aimCancel.Count}回");
 
             // 5: 回避失敗
-            UpdateRow(5, _panicDetector.HitChainScore, $"連続: {_panicDetector.HitChainCount}回");
+            HitChainSignal hitChain = _panicDetector.HitChain;
+            UpdateRow(5, hitChain.Score, $"連続: {hitChain.ChainCount}回");
         }
 
         private void UpdateRow(int index, float score, string label)

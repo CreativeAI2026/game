@@ -72,8 +72,8 @@ namespace CreativeAI.Gameplay
             scythe.LockControls();
             scythe.ComboStep = 0;
 
-            _target = scythe.FindNearestEnemy();
-            FacePlayerTo(scythe.ResolveThrowDirection(_target));
+            _target = scythe.FindThrowTarget();
+            FacePlayerTo(scythe.ResolveThrowDirection(_target, scythe.PlayerTransform.position));
 
             // 前回の投擲で止めたまま中断されていても、投げモーションが頭から動くようにする
             scythe.SetThrowAnimationPaused(false);
@@ -153,9 +153,8 @@ namespace CreativeAI.Gameplay
         private void Release()
         {
             // 投げモーション中に敵が動いた分を追従するため、方向は手放す瞬間に決め直す
-            Vector3 direction = scythe.ResolveThrowDirection(_target);
-            FacePlayerTo(direction);
-            scythe.LaunchBoomerang(direction);
+            FacePlayerTo(scythe.ResolveThrowDirection(_target, scythe.PlayerTransform.position));
+            scythe.LaunchBoomerang(_target);
             scythe.ChangeState(new ScytheStateWaitReturn(scythe));
         }
 

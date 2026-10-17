@@ -1,5 +1,6 @@
 using System;
 using System.Collections;
+using SoundKit;
 using UnityEngine;
 
 namespace CreativeAI.Gameplay
@@ -24,6 +25,15 @@ namespace CreativeAI.Gameplay
 
         /// <summary>毒状態が変化したときに通知する。引数は新しい IsPoisoned 値。</summary>
         public event Action<bool> OnPoisonChanged;
+
+        [Header("毒の音")]
+        [Tooltip("毒にかかった時の音(毒中の延長では鳴らさない)")]
+        [SerializeField]
+        private SoundCue _poisonAppliedSound;
+
+        [Tooltip("毒ダメージを受けるたびの音。付与した瞬間にも1回目のダメージが入るため、付与の音と同時に鳴る")]
+        [SerializeField]
+        private SoundCue _poisonDamageSound;
 
         private PlayerStatus _playerStatus;
         private Coroutine _poisonCoroutine;
@@ -57,6 +67,7 @@ namespace CreativeAI.Gameplay
         {
             IsPoisoned = true;
             OnPoisonChanged?.Invoke(true);
+            WorldSoundPlayer.Play(_poisonAppliedSound, transform.position, this);
 
             // 毒が付与された瞬間に即座に1回目のダメージが入るように初期値を設定
             float tickTimer = _currentTickInterval;
@@ -72,6 +83,7 @@ namespace CreativeAI.Gameplay
                     tickTimer = 0f;
                     // 毒ダメージはひるみを発生させない
                     _playerStatus.TakeDamage(_currentDamagePerTick, false, suppressFlinch: true);
+                    WorldSoundPlayer.Play(_poisonDamageSound, transform.position, this);
                 }
 
                 yield return null;

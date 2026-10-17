@@ -222,6 +222,12 @@ namespace CreativeAI.Gameplay
             ChangeState(new TestEnemyDeathState(this));
         }
 
+        public override void ForceParried()
+        {
+            base.ForceParried();
+            ChangeState(new TestEnemyParriedState(this));
+        }
+
         private void OnDrawGizmosSelected()
         {
             Gizmos.color = Color.red;

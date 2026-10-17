@@ -5137,6 +5137,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: CreativeAI.Gameplay::CreativeAI.Gameplay.PlayerMeleeHitbox
   _meleeMultiplier: 1
   _hitEffect: {fileID: 1758473627833946668, guid: fe43ffc680021e449a8c86605ce01634, type: 3}
+  _hitSound: {fileID: 11400000, guid: 0d9bae69458819c4685a3eb1567babdd, type: 2}
   _hitboxRadius: 0.75
   _targetLayer:
     serializedVersion: 2
@@ -5153,10 +5154,10 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: ffabbe34805ffe243b288c72f5475f14, type: 3}
   m_Name: 
   m_EditorClassIdentifier: CreativeAI.Gameplay::CreativeAI.Gameplay.ScytheBoomerang
-  _maxDistance: 10
-  _outboundSpeed: 20
+  _maxDistance: 20
+  _outboundSpeed: 50
   _apexSpeedRatio: 0.25
-  _returnSpeed: 25
+  _returnSpeed: 50
   _returnAccelerationTime: 0.6
   _catchDistance: 0.5
   _obstacleLayer:
@@ -5167,6 +5168,9 @@ MonoBehaviour:
   _spinAxis: {x: 0, y: 1, z: 0}
   _spinSpeed: 1080
   _trail: {fileID: 3134979810936631678}
+  _flightLoopSound: {fileID: 11400000, guid: eb252aae48362dc47b9b350e20311c7b, type: 2}
+  _obstacleHitSound: {fileID: 11400000, guid: c0c8c0b20d71ba24f88b6b6fb4b9fd39, type: 2}
+  _catchSound: {fileID: 11400000, guid: a81d5a500e48a2a4bb97c58d3c2e8e20, type: 2}
 --- !u!1 &5559606881339899839
 GameObject:
   m_ObjectHideFlags: 0

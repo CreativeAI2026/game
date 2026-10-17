@@ -1,11 +1,18 @@
 using UnityEngine;
+using UnityEngine.Assertions;
 
 namespace CreativeAI.Gameplay
 {
     /// <summary>
-    /// 懐中電灯・頭の Animation Rigging 用エイムターゲットを動かす。ボーンは直接動かさず、Multi-Aim Constraint 等の Source Objects に登録した
-    /// ターゲットを動かして Rig 側に回転を計算させる（WireRig / wireIkTarget と同じ方式。ボーンを直接書き換えるとアニメと競合して破綻する）。
-    /// 未設定の参照は何もしないので Rig 未セットアップでも安全。セットアップ手順はクラス末尾を参照。
+    /// 追跡・様子見の間だけ、首と頭をプレイヤーへ向ける。
+    /// 懐中電灯（視界）は頭ボーンの子に置くため、顔の向き＝視界の向きになり、移動方向と見る方向を分けられる。
+    /// 攻撃・怯み・捕獲・未発見時は効きを 0 にしてアニメーションに任せる。
+    /// 攻撃ポーズを崩さないためと、攻撃後の硬直中に視界から抜ける逃げ道をプレイヤーに与えるため。
+    ///
+    /// Animation Rigging の Multi-Aim はこのボスの骨格では頭の位置を実際より高く計算して真下を向いてしまったため使わない。
+    /// Animator がポーズを書き込んだ後（LateUpdate）に、実際の骨の位置から回転を求めて上書きする。
+    /// Animator は毎フレームポーズを書き直すため、上書きが積み重なることはない。
+    /// クラス名は Rig 方式の名残だが、シーン上の参照を壊さないため変えていない。
     /// </summary>
     public class TBossAimRigController : MonoBehaviour
     {
@@ -13,144 +20,157 @@ namespace CreativeAI.Gameplay
         [SerializeField]
         private TutorialBossController boss;
 
-        [Header("懐中電灯エイム")]
-        [Tooltip(
-            "懐中電灯のMulti-Aim ConstraintのSource Objectsに登録する空オブジェクト。未設定なら何もしない。"
-        )]
+        [Tooltip("首ボーン。顔向けの一部をここで負担させ、頭だけが折れ曲がって見えるのを防ぐ。")]
         [SerializeField]
-        private Transform flashlightAimTarget;
+        private Transform neckBone;
 
-        [Tooltip("懐中電灯エイムターゲットの追従の滑らかさ。")]
-        [SerializeField]
-        private float flashlightSmoothSpeed = 6f;
-
-        [Tooltip("未発見・非警戒時に懐中電灯を左右にゆっくり振る。falseなら体の正面に固定する。")]
-        [SerializeField]
-        private bool sweepWhilePatrolling = true;
-
-        [Tooltip("スイープの片側最大角度（度）。")]
-        [SerializeField]
-        private float sweepAngle = 35f;
-
-        [Tooltip("スイープ1往復にかかる時間（秒）。")]
-        [SerializeField]
-        private float sweepPeriod = 6f;
-
-        [Header("頭のエイム")]
-        [Tooltip(
-            "頭・首のMulti-Aim ConstraintのSource Objectsに登録する空オブジェクト。未設定なら何もしない。"
-        )]
-        [SerializeField]
-        private Transform headAimTarget;
-
-        [Tooltip("頭ボーン（可動域を制限する際の起点）。")]
+        [Tooltip("頭ボーン。ローカルZ軸が顔の正面である前提。")]
         [SerializeField]
         private Transform headBone;
 
+        [Header("顔向け設定")]
         [Tooltip(
-            "正面から首を向ける最大角度。これを超える位置のプレイヤーは追わない（不自然な回転防止）。"
+            "体の正面から顔を向けられる最大角度。これを超える位置は限界角度の境界を狙う（首が不自然に回るのを防ぐ）。"
         )]
         [SerializeField]
         private float headMaxAngle = 70f;
 
-        [Tooltip("頭エイムターゲットの追従の滑らかさ。")]
+        [Tooltip("向きを変える量のうち首が負担する割合（0〜1）。残りを頭が負担して狙いを合わせきる。")]
         [SerializeField]
-        private float headSmoothSpeed = 5f;
+        [Range(0f, 1f)]
+        private float neckShare = 0.4f;
+
+        [Tooltip("狙い先の追従の滑らかさ。")]
+        [SerializeField]
+        private float targetSmoothSpeed = 8f;
+
+        [Tooltip("顔向けの効きを 0⇔1 で切り替えるのにかける時間（秒）。0だと首がカクッと跳ねる。")]
+        [SerializeField]
+        private float weightBlendDuration = 0.25f;
+
+        private float _weight;
+
+        // 狙う向きを体基準のローカル方向で補間する。
+        // ワールド座標の点で補間すると、体が向きを変えた時に狙いだけがその場に取り残され、首が体に遅れてついてくるため
+        private Vector3 _smoothedLocalAimDir = Vector3.forward;
+
+        private void Awake()
+        {
+            Assert.IsNotNull(boss, $"{name}: boss が未設定です");
+            Assert.IsNotNull(neckBone, $"{name}: neckBone が未設定です");
+            Assert.IsNotNull(headBone, $"{name}: headBone が未設定です");
+        }
 
         private void LateUpdate()
         {
-            if (boss == null)
+            UpdateWeight();
+
+            if (_weight <= 0f)
             {
+                // 効きが0の間も正面に置き直しておき、次に効かせた瞬間に古い向きへ首が振られるのを防ぐ
+                _smoothedLocalAimDir = Vector3.forward;
                 return;
             }
 
-            UpdateFlashlightAim();
-            UpdateHeadAim();
+            Vector3 desiredDir = ClampToHeadRange(GetDesiredAimPoint()) - headBone.position;
+            if (desiredDir.sqrMagnitude > 0.0001f)
+            {
+                _smoothedLocalAimDir = Vector3.Slerp(
+                    _smoothedLocalAimDir,
+                    boss.transform.InverseTransformDirection(desiredDir.normalized),
+                    Time.deltaTime * targetSmoothSpeed
+                );
+            }
+
+            Vector3 aimDir = boss.transform.TransformDirection(_smoothedLocalAimDir);
+
+            // 首→頭の順に回す。どちらも「顔の正面（頭のZ軸）を狙う向きへ合わせる回転」を基準に、首はその一部だけを負担する
+            RotateBoneTowardAim(neckBone, aimDir, _weight * neckShare);
+            RotateBoneTowardAim(headBone, aimDir, _weight);
         }
 
-        private void UpdateFlashlightAim()
+        private void UpdateWeight()
         {
-            if (flashlightAimTarget == null || boss.FlashlightTransform == null)
-            {
-                return;
-            }
-
-            Vector3 targetPosition;
-
-            if (boss.IsAlerted || boss.IsSuspicious)
-            {
-                // 発見・警戒中はプレイヤーを狙う
-                targetPosition =
-                    boss.Player != null
-                        ? boss.Player.transform.position + Vector3.up * 1f
-                        : boss.FlashlightTransform.position + boss.FlashlightTransform.forward * 5f;
-            }
-            else if (sweepWhilePatrolling)
-            {
-                // 未発見時は「探している」印象を出すため左右にゆっくり振る
-                float angle = Mathf.Sin(Time.time * (Mathf.PI * 2f / sweepPeriod)) * sweepAngle;
-                Vector3 sweepDir = Quaternion.AngleAxis(angle, Vector3.up) * boss.transform.forward;
-                targetPosition = boss.FlashlightTransform.position + sweepDir * 5f;
-            }
-            else
-            {
-                targetPosition = boss.FlashlightTransform.position + boss.transform.forward * 5f;
-            }
-
-            flashlightAimTarget.position = Vector3.Lerp(
-                flashlightAimTarget.position,
-                targetPosition,
-                Time.deltaTime * flashlightSmoothSpeed
-            );
+            float targetWeight = boss.IsHeadAimActive ? 1f : 0f;
+            float maxDelta = weightBlendDuration > 0f ? Time.deltaTime / weightBlendDuration : 1f;
+            _weight = Mathf.MoveTowards(_weight, targetWeight, maxDelta);
         }
 
-        private void UpdateHeadAim()
+        /// <summary>
+        /// 顔の正面（頭のZ軸）が aimDir を向くための回転のうち、weight 分だけを bone に加える。
+        /// 首を回すと頭の向きも変わるため、頭は首の後に現在の向きから計算し直して狙いを合わせきる。
+        /// </summary>
+        private void RotateBoneTowardAim(Transform bone, Vector3 aimDir, float weight)
         {
-            if (headAimTarget == null || headBone == null)
+            if (weight <= 0f)
             {
                 return;
             }
 
-            Vector3 targetPosition;
+            Quaternion fullRotation = Quaternion.FromToRotation(headBone.forward, aimDir);
+            bone.rotation = Quaternion.Slerp(Quaternion.identity, fullRotation, weight) * bone.rotation;
+        }
 
-            if (boss.Player != null && (boss.IsAlerted || boss.IsSuspicious))
+        /// <summary>体の正面から可動域を超える位置は、限界角度の境界を狙う。</summary>
+        private Vector3 ClampToHeadRange(Vector3 desired)
+        {
+            Vector3 toTarget = desired - headBone.position;
+            Vector3 bodyForward = boss.transform.forward;
+            if (Vector3.Angle(bodyForward, toTarget) <= headMaxAngle)
             {
-                Vector3 dirToPlayer = boss.Player.transform.position - headBone.position;
-                float angleToPlayer = Vector3.Angle(boss.transform.forward, dirToPlayer);
-
-                if (angleToPlayer <= headMaxAngle)
-                {
-                    targetPosition = boss.Player.transform.position;
-                }
-                else
-                {
-                    // 可動域を超えた位置には限界角度の境界にターゲットを留める。
-                    // こうしないと首が不自然な角度まで回ってしまう（HeadLookControllerと同じ考え方）
-                    Vector3 clampedDir = Vector3.RotateTowards(
-                        boss.transform.forward,
-                        dirToPlayer,
-                        headMaxAngle * Mathf.Deg2Rad,
-                        0f
-                    );
-                    targetPosition = headBone.position + clampedDir * 5f;
-                }
-            }
-            else
-            {
-                targetPosition = headBone.position + boss.transform.forward * 5f;
+                return desired;
             }
 
-            headAimTarget.position = Vector3.Lerp(
-                headAimTarget.position,
-                targetPosition,
-                Time.deltaTime * headSmoothSpeed
+            Vector3 clampedDir = Vector3.RotateTowards(
+                bodyForward,
+                toTarget,
+                headMaxAngle * Mathf.Deg2Rad,
+                0f
             );
+            return headBone.position + clampedDir.normalized * toTarget.magnitude;
+        }
+
+        /// <summary>
+        /// 顔を向ける先。捕捉できている間はプレイヤーの胸、見失っている間は最後に把握した位置の胸の高さ。
+        /// 見えていないのに今の位置を狙うと、物陰の移動を目で追う透視になってしまうため区別する。
+        /// </summary>
+        private Vector3 GetDesiredAimPoint()
+        {
+            if (boss.Player == null)
+            {
+                return GetForwardPoint();
+            }
+
+            Vector3 chestOffset = GetPlayerChestOffset();
+
+            if (boss.CheckPlayerTracked())
+            {
+                return boss.Player.transform.position + chestOffset;
+            }
+
+            if (boss.HasKnownPlayerPosition)
+            {
+                return boss.LastKnownPlayerPosition + chestOffset;
+            }
+
+            return GetForwardPoint();
+        }
+
+        /// <summary>プレイヤーの足元から胸までのずれ。体格（スケール）が変わっても胸を狙えるようコライダーから求める。</summary>
+        private Vector3 GetPlayerChestOffset()
+        {
+            Collider playerCollider = boss.PlayerCollider;
+            if (playerCollider == null)
+            {
+                return Vector3.up * boss.Player.transform.lossyScale.y;
+            }
+            return playerCollider.bounds.center - boss.Player.transform.position;
+        }
+
+        private Vector3 GetForwardPoint()
+        {
+            // 正面に置く距離は意味を持たない（方向だけが効く）ため、体格に比例した適当な距離にしている
+            return headBone.position + boss.transform.forward * boss.BodyScale * 2f;
         }
     }
 }
-
-// Editor セットアップ手順（このスクリプトだけでは見た目は変わらない）
-// 1. TutorialBoss プレハブに空の "FlashlightAimTarget" "HeadAimTarget" を作り、ボスの少し前方に置く
-// 2. WireRig と同階層に Rig 付きの "AimRig" を作り、子に懐中電灯ボーン用・頭/首ボーン用の Multi-Aim Constraint を追加して
-//    Source Objects に手順1のターゲットを登録し、ルートの RigBuilder の Rig Layers に AimRig を追加する
-// 3. このコンポーネントを追加し boss / flashlightAimTarget / headAimTarget / headBone を割り当てる（問題時は RigDebugger で確認）

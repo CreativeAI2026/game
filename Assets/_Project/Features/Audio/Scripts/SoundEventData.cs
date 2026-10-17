@@ -40,5 +40,11 @@ namespace CreativeAI.Gameplay
 
         /// <summary>弓が壁に刺さった音（中）</summary>
         ArrowHit,
+
+        /// <summary>ハンマーの叩きつけ(範囲攻撃)の噴射音（大）</summary>
+        HammerThrust,
+
+        /// <summary>ハンマーの叩きつけ(範囲攻撃)で地面を叩いた音（大）</summary>
+        HammerSlam,
     }
 }

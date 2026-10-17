@@ -267,7 +267,7 @@ namespace SoundKit.EditorTools
             if (!FfmpegAudio.TryProbe(originalPath, out string codecName, out double duration))
                 return new Result(assetPath, Outcome.Failed, setting, note: "形式・長さを読めない");
 
-            string encoderArgs = GetEncoderArgs(Path.GetExtension(assetPath), codecName);
+            string encoderArgs = FfmpegAudio.GetEncoderArgs(Path.GetExtension(assetPath), codecName);
             if (encoderArgs == null)
                 return new Result(assetPath, Outcome.Failed, setting, note: $"未対応の形式（{Path.GetExtension(assetPath)}）");
 
@@ -321,16 +321,40 @@ namespace SoundKit.EditorTools
             return originalPath;
         }
 
-        /// <summary>元と同じ形式で書き出す指定。mp3・ogg は書き出し直しで劣化するため、高い音質で書き出す。</summary>
-        private static string GetEncoderArgs(string extension, string codecName)
+        /// <summary>
+        /// 今のファイルがこのツールで音量をそろえたものなら、そろえる前の元の素材の場所を返す（音声エディタが、
+        /// そろえた後の素材をさらに書き出し直して劣化を重ねないよう、元の素材から編集するために使う）。
+        /// </summary>
+        internal static bool TryGetNormalizedOriginal(string assetPath, out string originalPath)
         {
-            switch (extension.ToLowerInvariant())
-            {
-                case ".mp3": return "-c:a libmp3lame -b:a 320k";
-                case ".ogg": return "-c:a libvorbis -q:a 8";
-                case ".wav": return codecName.StartsWith("pcm_") ? "-c:a " + codecName : null;
-                default: return null;
-            }
+            originalPath = Path.GetFullPath(Path.Combine(OriginalsFolder, assetPath));
+            var importer = AssetImporter.GetAtPath(assetPath) as AudioImporter;
+            return importer != null
+                   && TryGetMarkerMd5(importer.userData, out string markerMd5)
+                   && markerMd5 == ComputeMd5(Path.GetFullPath(assetPath))
+                   && File.Exists(originalPath);
+        }
+
+        /// <summary>
+        /// 素材の名前変更・移動に合わせて、保存してある元の素材を新しいパスの場所へ移す（AudioBackupFollower が呼ぶ）。
+        /// 処理済みの印は素材の .meta にあり素材と一緒に動くため、元の素材さえ移せば引き続き元から作り直せる。
+        /// </summary>
+        internal static void MoveOriginal(string fromAssetPath, string toAssetPath)
+        {
+            string from = Path.GetFullPath(Path.Combine(OriginalsFolder, fromAssetPath));
+            if (!File.Exists(from)) return;
+
+            string to = Path.GetFullPath(Path.Combine(OriginalsFolder, toAssetPath));
+            Directory.CreateDirectory(Path.GetDirectoryName(to));
+            if (File.Exists(to)) File.Delete(to);
+            File.Move(from, to);
+        }
+
+        /// <summary>一度でもこのツールで音量をそろえた素材か（中身が変わって、そろえ直しが必要な場合も含む）。</summary>
+        internal static bool WasNormalized(string assetPath)
+        {
+            var importer = AssetImporter.GetAtPath(assetPath) as AudioImporter;
+            return importer != null && TryGetMarkerMd5(importer.userData, out _);
         }
 
         private static void MarkNormalized(AudioImporter importer, string filePath, ClipSetting setting)
@@ -359,7 +383,7 @@ namespace SoundKit.EditorTools
             return true;
         }
 
-        private static string ComputeMd5(string filePath)
+        internal static string ComputeMd5(string filePath)
         {
             using (var md5 = MD5.Create())
             using (var stream = File.OpenRead(filePath))

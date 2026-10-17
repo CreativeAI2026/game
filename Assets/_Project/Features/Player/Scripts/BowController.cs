@@ -1,7 +1,7 @@
 using System;
+using SoundKit;
 using UnityEngine;
 using UnityEngine.Assertions;
-using Random = UnityEngine.Random;
 
 namespace CreativeAI.Gameplay
 {
@@ -14,7 +14,6 @@ namespace CreativeAI.Gameplay
     /// 弦の中点は手元の矢に追従する(アニメーションで手が動けば弦も引かれる)。
     /// 照準の表示はシーン側の CrosshairView が PlayerController.IsAiming を見て行う。
     /// </summary>
-    [RequireComponent(typeof(AudioSource))]
     public class BowController : MonoBehaviour, IResettableWeapon, IWeaponAnimationEventHandler
     {
         [Header("弓の参照（弓Prefab内の各Transform）")]
@@ -48,15 +47,14 @@ namespace CreativeAI.Gameplay
         private float _maxRange = 200f;
 
         [Header("SE設定")]
-        [Tooltip("弦を引く音")]
+        [Tooltip("弦を引く音。引き切って矢をつがえた瞬間(DrawComplete)に鳴らす")]
         [SerializeField]
-        private AudioClip _drawSound;
+        private SoundCue _drawSound;
 
         [Tooltip("矢が発射される音")]
         [SerializeField]
-        private AudioClip _shootSound;
+        private SoundCue _shootSound;
 
-        private AudioSource _audioSource;
         private WeaponManager _weaponManager;
         private PlayerStatus _owner;
         private Transform _arrowHandHoldPoint;
@@ -83,13 +81,21 @@ namespace CreativeAI.Gameplay
         /// </summary>
         public static event Action OnFired;
 
+        /// <summary>
+        /// プレイヤーが自分でボタンを離し、撃たずに構えを解いた瞬間に発火する。
+        /// 怯み・掴み・武器切替などによる強制解除では発火しない(PanicDetector が「迷い」として数えるため区別する)。
+        /// </summary>
+        public event Action OnAimCancelled;
+
+        /// <summary>構えステートから、プレイヤー自身による構え解除を通知する。</summary>
+        public void NotifyAimCancelled() => OnAimCancelled?.Invoke();
+
         private void Awake()
         {
             Input = GetComponentInParent<PlayerInputHandler>();
             Player = GetComponentInParent<PlayerController>();
             _weaponManager = GetComponentInParent<WeaponManager>();
             _owner = GetComponentInParent<PlayerStatus>();
-            _audioSource = GetComponent<AudioSource>();
 
             PlayerModel model = PlayerModel.Of(this);
             Animator = model.Animator;
@@ -214,7 +220,7 @@ namespace CreativeAI.Gameplay
             _nockedArrow.transform.localPosition = Vector3.zero;
             _nockedArrow.transform.localRotation = Quaternion.identity;
             IsArrowNocked = true;
-            PlayOneShotWithRandomPitch(_drawSound);
+            WorldSoundPlayer.Play(_drawSound, transform.position, this);
         }
 
         public void FireArrow()
@@ -233,7 +239,7 @@ namespace CreativeAI.Gameplay
             OnFired?.Invoke();
 
             Animator.SetTrigger(PlayerAnimatorParams.Fire);
-            PlayOneShotWithRandomPitch(_shootSound);
+            WorldSoundPlayer.Play(_shootSound, transform.position, this);
         }
 
         public void DestroyArrow()
@@ -244,15 +250,6 @@ namespace CreativeAI.Gameplay
                 _nockedArrow = null;
             }
             IsArrowNocked = false;
-        }
-
-        private void PlayOneShotWithRandomPitch(AudioClip clip)
-        {
-            // SE は任意項目。未設定なら鳴らさない
-            if (clip == null)
-                return;
-            _audioSource.pitch = Random.Range(0.8f, 1.2f);
-            _audioSource.PlayOneShot(clip);
         }
 
         /// <summary>

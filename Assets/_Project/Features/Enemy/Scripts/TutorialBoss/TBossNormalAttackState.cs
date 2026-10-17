@@ -20,14 +20,11 @@ namespace CreativeAI.Gameplay
         private const float HomingSpeed = 10f;
         private const float LungeSpeed = 8f;
 
-        // 接近フェーズの打ち切り時間。これを超えたら追跡ステートに戻して仕切り直す
-        private const float ApproachTimeout = 5f;
-
         // Attackステートに入らないままこの時間を超えたら、トリガー取りこぼしとみなして復帰する
         private const float AttackStateTimeout = 3f;
 
+        private TBossMeleeApproach _approach;
         private bool _isApproaching;
-        private float _approachTimer;
         private float _attackTimer;
 
         public TBossNormalAttackState(TutorialBossController controller)
@@ -35,25 +32,13 @@ namespace CreativeAI.Gameplay
 
         public override void Enter()
         {
-            _approachTimer = 0f;
             _attackTimer = 0f;
+            _approach = new TBossMeleeApproach(boss, boss.AttackRange);
 
-            if (
-                boss.Player != null
-                && Vector3.Distance(boss.transform.position, boss.Player.transform.position)
-                    > boss.AttackRange
-            )
+            if (boss.Player != null && !_approach.CanStrikeNow())
             {
                 _isApproaching = true;
-                if (boss.Agent != null)
-                {
-                    boss.Agent.speed = boss.RunSpeed;
-                    boss.Agent.isStopped = false;
-                }
-                if (boss.Animator != null)
-                {
-                    boss.Animator.SetBool("IsRunning", true);
-                }
+                _approach.Begin();
             }
             else
             {
@@ -73,7 +58,6 @@ namespace CreativeAI.Gameplay
 
             if (boss.Animator != null)
             {
-                boss.Animator.SetBool("IsRunning", false);
                 boss.Animator.SetTrigger("Attack");
             }
 
@@ -93,25 +77,19 @@ namespace CreativeAI.Gameplay
                     return;
                 }
 
-                if (boss.Agent != null)
+                switch (_approach.Tick(Time.deltaTime))
                 {
-                    boss.Agent.SetDestination(boss.Player.transform.position);
-                }
-
-                if (
-                    Vector3.Distance(boss.transform.position, boss.Player.transform.position)
-                    <= boss.AttackRange
-                )
-                {
-                    StartAttack();
-                    return;
-                }
-
-                // 逃げ続けるプレイヤーを攻撃ステートのまま延々追い回さないよう打ち切り、追跡へ戻して仕切り直す
-                _approachTimer += Time.deltaTime;
-                if (_approachTimer >= ApproachTimeout)
-                {
-                    boss.ChangeState(new TBossChaseState(boss));
+                    case TBossMeleeApproach.Result.Arrived:
+                        StartAttack();
+                        break;
+                    case TBossMeleeApproach.Result.Unreachable:
+                        // 到達できない位置にいて近づけない場合は、走り続けず様子見で仕切り直す
+                        boss.ChangeState(new TBossWatchState(boss));
+                        break;
+                    case TBossMeleeApproach.Result.TimedOut:
+                        // 逃げ続けるプレイヤーを攻撃ステートのまま延々追い回さないよう打ち切り、追跡へ戻して仕切り直す
+                        boss.ChangeState(new TBossChaseState(boss));
+                        break;
                 }
                 return;
             }

@@ -35,6 +35,9 @@ namespace CreativeAI.Gameplay
         private PlayerController _playerController;
         private CharacterController _playerCC;
 
+        private TBossMeleeApproach _approach;
+        private bool _isApproaching;
+
         public TBossNormalAttack2State(TutorialBossController controller)
             : base(controller) { }
 
@@ -56,6 +59,23 @@ namespace CreativeAI.Gameplay
                 _playerController = boss.Player.GetComponent<PlayerController>();
                 _playerCC = boss.Player.GetComponent<CharacterController>();
             }
+
+            // 様子見の間合いの外から選ばれた場合は、振れる間合いまで走り込んでから振る
+            _approach = new TBossMeleeApproach(boss, boss.NormalAttack2Range);
+            if (boss.Player != null && !_approach.CanStrikeNow())
+            {
+                _isApproaching = true;
+                _approach.Begin();
+                return;
+            }
+
+            StartSwing();
+        }
+
+        /// <summary>立ち止まってプレイヤーへ向き、鎌の連撃を始める。</summary>
+        private void StartSwing()
+        {
+            _isApproaching = false;
 
             if (boss.Agent != null)
             {
@@ -90,6 +110,12 @@ namespace CreativeAI.Gameplay
 
         public override void Update()
         {
+            if (_isApproaching)
+            {
+                UpdateApproach();
+                return;
+            }
+
             UpdateReachHold();
             UpdateExtensionLerp();
             UpdateHoming();
@@ -129,7 +155,36 @@ namespace CreativeAI.Gameplay
 
         public override void LateUpdate()
         {
+            // 走り込み中は腕のしなりを乗せず、走りモーションのままにする
+            if (_isApproaching)
+            {
+                return;
+            }
+
             ApplyKamaTransform();
+        }
+
+        private void UpdateApproach()
+        {
+            if (boss.Player == null)
+            {
+                boss.ChangeState(new TBossPatrolState(boss));
+                return;
+            }
+
+            switch (_approach.Tick(Time.deltaTime))
+            {
+                case TBossMeleeApproach.Result.Arrived:
+                    StartSwing();
+                    break;
+                case TBossMeleeApproach.Result.Unreachable:
+                    // 到達できない位置にいて近づけない場合は、走り続けず様子見で仕切り直す
+                    boss.ChangeState(new TBossWatchState(boss));
+                    break;
+                case TBossMeleeApproach.Result.TimedOut:
+                    boss.ChangeState(new TBossChaseState(boss));
+                    break;
+            }
         }
 
         public override void Exit()
@@ -170,6 +225,7 @@ namespace CreativeAI.Gameplay
         public void OnReachExtend()
         {
             _targetExtension = boss.Attack2ReachExtension;
+            boss.Sounds.PlayAttack2ReachExtend();
 
             if (boss.Attack2ReachHoldDuration <= 0f)
             {
@@ -193,6 +249,7 @@ namespace CreativeAI.Gameplay
         public void OnReachRetract()
         {
             _targetExtension = 0f;
+            boss.Sounds.PlayAttack2ReachRetract();
         }
 
         /// <summary>

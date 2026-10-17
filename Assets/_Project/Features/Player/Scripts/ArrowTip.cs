@@ -1,3 +1,4 @@
+using SoundKit;
 using UnityEngine;
 using UnityEngine.Assertions;
 
@@ -31,16 +32,15 @@ namespace CreativeAI.Gameplay
         private GameObject _hitEffect;
 
         [Header("着弾音設定")]
-        [Tooltip("壁に刺さった時の着弾音AudioClip。ArrowProjectileのAudioSourceで再生される。")]
+        [Tooltip("敵に当たった時の音")]
         [SerializeField]
-        private AudioClip _impactClip;
+        private SoundCue _enemyHitSound;
 
-        [Tooltip("着弾音の音量。")]
+        [Tooltip("壁などに刺さった時の音")]
         [SerializeField]
-        [Range(0f, 1f)]
-        private float _impactVolume = 0.8f;
+        private SoundCue _stickSound;
 
-        [Tooltip("着弾音がAIに届く半径（メートル）。")]
+        [Tooltip("壁などに刺さった音がAIに届く半径（メートル）。")]
         [SerializeField]
         private float _impactRadius = 15f;
 
@@ -101,6 +101,7 @@ namespace CreativeAI.Gameplay
 
             ContactPoint contact = collision.contacts[0];
             SpawnHitEffect(contact.point, contact.normal);
+            WorldSoundPlayer.Play(_enemyHitSound, contact.point, this);
 
             _projectile.ReturnToPool();
         }
@@ -110,17 +111,11 @@ namespace CreativeAI.Gameplay
             _projectile.StopFlying();
             _projectile.transform.SetParent(collision.transform, true);
 
-            // 矢にアタッチされたAudioSourceで着弾音を再生(SE は任意項目。未設定なら鳴らさない)
-            if (_impactClip != null)
-            {
-                _projectile.ArrowAudioSource.pitch = Random.Range(0.8f, 1.2f);
-                _projectile.ArrowAudioSource.PlayOneShot(_impactClip, _impactVolume);
-            }
+            Vector3 impactPoint = collision.contacts[0].point;
+            WorldSoundPlayer.Play(_stickSound, impactPoint, this);
 
             // 着弾位置をSoundEventBusで敵AIに通知する
-            SoundEventBus.Emit(
-                new SoundEventData(SoundType.ArrowHit, collision.contacts[0].point, _impactRadius)
-            );
+            SoundEventBus.Emit(new SoundEventData(SoundType.ArrowHit, impactPoint, _impactRadius));
         }
 
         // TODO : 現在はダメージを与えたときにしか生成されないが、のちに壁に当たったときにも別のエフェクトを生成させる

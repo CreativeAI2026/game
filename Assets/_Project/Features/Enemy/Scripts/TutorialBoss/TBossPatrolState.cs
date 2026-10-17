@@ -20,6 +20,14 @@ namespace CreativeAI.Gameplay
         // プレイヤーへ向き直る補間速度
         private const float NoticeRotateSpeed = 3f;
 
+        // 怪しんでいる間にプレイヤーが光から消えて、この時間（秒）見えなければ、見えた場所を確かめに行く
+        private const float GlimpseCheckDelay = 1f;
+
+        // 今回の「怪しい」の間に実際にプレイヤーを光で捉えたか。
+        // 音の調査から戻った直後など、見てもいないのに古い既知位置へ確かめに行かないための区別
+        private bool _sawPlayerWhileSuspicious;
+        private float _glimpseLostTimer;
+
         public TBossPatrolState(TutorialBossController controller)
             : base(controller) { }
 
@@ -27,15 +35,13 @@ namespace CreativeAI.Gameplay
         {
             Debug.Log("[TutorialBoss] パトロールステート開始");
 
+            // 交戦が終わったので、次に見つけた時は攻撃までの待ち時間を新しく決める
+            boss.EndCombatTempo();
+
             if (boss.Agent != null)
             {
                 boss.Agent.speed = boss.WalkSpeed;
                 boss.Agent.isStopped = false;
-            }
-
-            if (boss.Animator != null)
-            {
-                boss.Animator.SetBool("IsRunning", false);
             }
 
             _wanderTimer = WanderInterval; // 即座に最初の目標を設定させる
@@ -55,12 +61,14 @@ namespace CreativeAI.Gameplay
                 return;
             }
 
-            // ちらっと見えた等で怪しんでいる間は、立ち止まってプレイヤー方向を向くだけにする
+            // ちらっと見えた等で怪しんでいる間は、立ち止まって見えた場所を向く
             if (boss.IsSuspicious)
             {
                 if (!_hasTriggeredLook)
                 {
                     _hasTriggeredLook = true;
+                    _sawPlayerWhileSuspicious = false;
+                    _glimpseLostTimer = 0f;
                     if (boss.Agent != null)
                     {
                         boss.Agent.isStopped = true;
@@ -71,7 +79,12 @@ namespace CreativeAI.Gameplay
                     }
                 }
 
-                FaceTowardPlayer();
+                if (UpdateGlimpse())
+                {
+                    return;
+                }
+
+                FaceTowardLastKnown();
                 return;
             }
 
@@ -127,15 +140,47 @@ namespace CreativeAI.Gameplay
             }
         }
 
-        /// <summary>怪しんでいる間、その場でプレイヤーの方向へ向き直る（懐中電灯は体の向きに追従する）。</summary>
-        private void FaceTowardPlayer()
+        /// <summary>
+        /// 怪しんでいる間にプレイヤーが光から消えたら、少し待ってから見えた場所を歩いて確かめに行く。
+        /// 遷移した場合は true を返す。
+        /// </summary>
+        private bool UpdateGlimpse()
         {
-            if (boss.Player == null)
+            if (boss.CheckInFlashlight())
+            {
+                _sawPlayerWhileSuspicious = true;
+                _glimpseLostTimer = 0f;
+                return false;
+            }
+
+            if (!_sawPlayerWhileSuspicious || !boss.HasKnownPlayerPosition)
+            {
+                return false;
+            }
+
+            _glimpseLostTimer += Time.deltaTime;
+            if (_glimpseLostTimer < GlimpseCheckDelay)
+            {
+                return false;
+            }
+
+            Debug.Log("[TutorialBoss] 見えた気がした場所を確かめに行く");
+            boss.ChangeState(new TBossSearchState(boss, boss.LastKnownPlayerPosition, cautious: true));
+            return true;
+        }
+
+        /// <summary>
+        /// 怪しんでいる間、その場で最後に見えた場所へ向き直る（懐中電灯は体の向きに追従する）。
+        /// 実際のプレイヤー位置を向くと、見えていないのに物陰の移動を目で追う透視になってしまう。
+        /// </summary>
+        private void FaceTowardLastKnown()
+        {
+            if (!boss.HasKnownPlayerPosition)
             {
                 return;
             }
 
-            Vector3 dir = boss.Player.transform.position - boss.transform.position;
+            Vector3 dir = boss.LastKnownPlayerPosition - boss.transform.position;
             dir.y = 0f;
             if (dir.sqrMagnitude < 0.001f)
             {

@@ -9,7 +9,7 @@
 |---|---|---|
 | `Runtime/` | `SoundKit` | 再生の仕組み本体（依存なし） |
 | `Runtime/UGUI/` | `SoundKit.UGUI` | uGUI ボタンの音（`com.unity.ugui` が必要。使わないなら消してよい） |
-| `Editor/` | `SoundKit.EditorTools` | SoundCue のインスペクタ（試聴）、ffmpeg による音量そろえ |
+| `Editor/` | `SoundKit.EditorTools` | SoundCue のインスペクタ（試聴）、ffmpeg による音量そろえ・音声エディタ |
 
 ## 使い方
 
@@ -38,7 +38,7 @@
 3. どこかの `Resources` フォルダ直下に、Create > SoundKit から
    `AudioMixerRouting` と `UISoundSet` を作り（名前は変えない）、ミキサーとグループ、UI 音を割り当てる。
 4. 使う側の asmdef の references に `SoundKit`（uGUI 用を使うなら `SoundKit.UGUI` も）を足す。
-5. `.gitignore` に `/AudioLoudnessBackup/` を足す（下の音量そろえが元の素材を保存する場所）。
+5. `.gitignore` に `/AudioLoudnessBackup/` と `/AudioEditBackup/` を足す（下の音量そろえ・音声エディタが元の素材を保存する場所）。
 
 ## 素材の音量そろえ（ffmpeg）
 
@@ -52,3 +52,22 @@
 - 基準は `AudioLoudnessNormalizer.TargetLufs`（-20 LUFS）。SoundCue の「Loudness Offset Db」で音ごとに上げ下げする。
 - 元の素材はプロジェクト直下の `AudioLoudnessBackup/Originals` に1度だけ保存し、以後はそこから作り直す（劣化が重ならない）。
 - 処理済みの印は素材の `.meta`（AudioImporter.userData）に残す。何度実行しても処理済みは飛ばす。
+- 素材の名前を変えたり移動したりすると、保存してある元の素材（と音声エディタの保存ファイル）も自動で新しいパスへ移る。
+
+## 音声エディタ（ffmpeg）
+
+音素材の前後の切り取り・音程・再生速度を、Unity の中で波形を見ながら変える。音声ファイルそのものを書き換える。
+
+- 開き方：Tools > SoundKit > 音声エディタ（Project で選んだ素材を表示する）、または素材を右クリック > SoundKit > 音声エディタで開く
+- できること：
+  - 前後の切り取り（波形をドラッグ、または秒数を入力）
+  - 前後の無音の自動検出（「無音とみなす大きさ（dB）」と「前後に残す余白（秒）」で決める。既定は -50 dB・0.01 秒）
+  - 音程（半音単位、速さはそのまま）と再生速度（音程はそのまま）
+    （ffmpeg に rubberband があれば、効果音の立ち上がりを崩さない設定で使う。無ければ atempo で代用し、ウィンドウに注意を出す）
+  - 切り取った端だけに掛ける短いフェード（既定 5 ミリ秒。ブツッという音を防ぐ）
+  - 元の音・編集後の音の試聴（保存する前に聞ける）
+- まとめて処理：素材を選んで右クリック > SoundKit > 選択した音素材の前後の無音を削る（基準は音声エディタと共通）
+- 対応形式：mp3・ogg・wav（wav は PCM のみ）。音量そろえと同じく、元と同じ形式で書き出す。
+- 上書きする前のファイルはプロジェクト直下の `AudioEditBackup/` に1度だけ保存し、音声エディタの「元に戻す」で戻せる。
+  保存した素材を開き直すと、編集前の素材に前回の編集内容を掛け直した状態から再開する（書き出しの劣化を重ねないため）。
+- 音量をそろえ済みの素材は、そろえる前の元の素材から編集する。編集した後は音量をそろえ直す（そろえ直すまで SoundCue の表示が「未反映」になる）。

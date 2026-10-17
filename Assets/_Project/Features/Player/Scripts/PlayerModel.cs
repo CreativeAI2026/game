@@ -15,7 +15,6 @@ namespace CreativeAI.Gameplay
     /// - Animator
     /// - Humanoid のボーン(<see cref="GetBone"/>。ボーン名が違っても同じ部位が取れる)
     /// - 取り付け点(<see cref="GetSocket"/>。武器の持ち手など。位置・向きはモデルごとにここで調整)
-    /// - 頭の注視ターゲット(<see cref="LookAtTarget"/>)
     /// を受け取る。モデルを差し替えるときは、新しいモデルにこのコンポーネントを付けてソケットを合わせるだけでよい。
     ///
     /// 前提: Avatar は Humanoid(Rig の Animation Type = Humanoid)。
@@ -38,12 +37,6 @@ namespace CreativeAI.Gameplay
         [SerializeField]
         private SocketEntry[] _sockets = Array.Empty<SocketEntry>();
 
-        [Tooltip(
-            "頭の注視ターゲット(Animation Rigging の Multi-Aim の Source)。HeadLookController が毎フレーム動かす"
-        )]
-        [SerializeField]
-        private Transform _lookAtTarget;
-
         private Animator _animator;
 
         // 見た目の高さオフセットの基準(モデルの元の置き位置)
@@ -53,17 +46,11 @@ namespace CreativeAI.Gameplay
         public Animator Animator =>
             _animator != null ? _animator : _animator = GetComponent<Animator>();
 
-        public Transform LookAtTarget => _lookAtTarget;
-
         private void Awake()
         {
             _baseLocalPosition = transform.localPosition;
             Assert.IsNotNull(Animator.avatar, $"{name}: Animator に Avatar が設定されていません");
             Assert.IsTrue(Animator.avatar.isHuman, $"{name}: Avatar が Humanoid ではありません");
-            Assert.IsNotNull(
-                _lookAtTarget,
-                $"{name}: 頭の注視ターゲット(_lookAtTarget)が未設定です"
-            );
             ValidateAnimatorParameters();
         }
 

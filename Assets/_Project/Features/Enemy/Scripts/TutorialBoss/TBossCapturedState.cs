@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using SoundKit;
 using UnityEngine;
 
 namespace CreativeAI.Gameplay
@@ -24,6 +25,7 @@ namespace CreativeAI.Gameplay
         private Vector2 _prevMoveInput;
         private Vector3 _knockbackVelocity;
         private ParticleSystem _electricEffect;
+        private LoopingSound _electricLoop;
 
         private PlayerController _playerController;
         private PlayerInputHandler _playerInput;
@@ -106,6 +108,7 @@ namespace CreativeAI.Gameplay
 
             _phase = Phase.WaitBeforePull;
 
+            boss.Sounds.PlayGrab();
             GrabEscapeEvents.OnCameraPull?.Invoke();
 
             if (boss.WireRig != null)
@@ -328,6 +331,7 @@ namespace CreativeAI.Gameplay
 
             GrabEscapeEvents.OnCameraEscape?.Invoke();
             StopElectricEffect();
+            boss.Sounds.PlayEscape();
 
             if (boss.Player != null)
             {
@@ -420,12 +424,19 @@ namespace CreativeAI.Gameplay
                     : new Vector3(0f, 1.4f, 0f);
             _electricEffect.transform.localPosition = localNeckPos;
             _electricEffect.Play();
+
+            // 電撃の音はエフェクトと同じ位置(プレイヤーの首元)から鳴らす。エフェクトごとに作り、エフェクトと一緒に破棄される
+            _electricLoop = new LoopingSound(_electricEffect.gameObject);
+            _electricLoop.Play(boss.Sounds.ElectricLoopSound, boss.Sounds);
         }
 
         private void StopElectricEffect()
         {
             if (_electricEffect == null)
                 return;
+            // エフェクトは粒子が消えるまで2秒残すので、その間にフェードして止まる
+            _electricLoop.Stop();
+            _electricLoop = null;
             _electricEffect.Stop(true, ParticleSystemStopBehavior.StopEmitting);
             Object.Destroy(_electricEffect.gameObject, 2f);
             _electricEffect = null;
