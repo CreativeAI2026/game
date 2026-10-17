@@ -23,9 +23,21 @@ namespace CreativeAI.Gameplay
         // 判定ウィンドウ内のキャンセル時刻（古い順）
         private readonly Queue<float> _cancelTimes = new Queue<float>();
 
+        // 狙い直しのための意図的なキャンセルも含まれるため中程度にする
+        private const float DefaultWeight = 0.5f;
+
+        public AimCancelSignal()
+            : base(DefaultWeight) { }
+
+        public override PanicCategory Category => PanicCategory.Indecision;
+
         public override string DisplayName => "意思崩壊";
 
         public override float Score => Mathf.Clamp01((float)_cancelTimes.Count / _maxCount);
+
+        public override float RawValue => _cancelTimes.Count;
+
+        public override string RawValueUnit => "直近回数";
 
         /// <summary>直近の判定ウィンドウ内の弓キャンセル回数</summary>
         public int Count => _cancelTimes.Count;

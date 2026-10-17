@@ -20,6 +20,8 @@ namespace CreativeAI.Gameplay
     ///   4. 空間喪失 <see cref="TrapSignal"/>
     ///   5. 意思崩壊 <see cref="AimCancelSignal"/>
     ///   6. 回避失敗 <see cref="HitChainSignal"/>
+    ///   7. 硬直     <see cref="FreezeSignal"/>
+    ///   8. 武器空回し <see cref="WeaponThrashSignal"/>
     ///
     /// 回避失敗以外の指標は、交戦中の敵がいる間（<see cref="IsInCombat"/>）だけ計測する。
     /// 気付かれていない隠密行動中に背を向けて移動したり、構えて解いたりするのは焦りではないため。
@@ -71,15 +73,43 @@ namespace CreativeAI.Gameplay
         [SerializeField]
         private HitChainSignal _hitChain = new HitChainSignal();
 
+        [Header("硬直")]
+        [SerializeField]
+        private FreezeSignal _freeze = new FreezeSignal();
+
+        [Header("武器空回し")]
+        [SerializeField]
+        private WeaponThrashSignal _weaponThrash = new WeaponThrashSignal();
+
         [Header("総合焦り度")]
         [SerializeField]
         private PanicScoreCalculator _scoreCalculator = new PanicScoreCalculator();
 
+        [Header("焦りの段階")]
+        [SerializeField]
+        private PanicLevelTracker _levelTracker = new PanicLevelTracker();
+
+        // 敵の体への接触を「今も触れている」とみなす猶予（秒）。接触通知は押し当てている間の移動フレームにしか来ないため
+        private const float EnemyContactGraceSeconds = 0.1f;
+
         private readonly PanicContext _context = new PanicContext();
         private PanicSignal[] _signals;
+        private float _lastEnemyContactTime = float.NegativeInfinity;
 
         /// <summary>総合焦り度スコア（0〜100）</summary>
         public float PanicScore => _scoreCalculator.Score;
+
+        /// <summary>焦りの段階（平常／動揺／焦り）。AI はこちらで判断する。</summary>
+        public PanicLevel Level => _levelTracker.Level;
+
+        /// <summary>系統ごとの焦り度が最も高い系統（何に焦っているか）。</summary>
+        public PanicCategory DominantCategory => _scoreCalculator.DominantCategory;
+
+        /// <summary>系統ごとの焦り度（0〜100）。</summary>
+        public float GetCategoryScore(PanicCategory category) => _scoreCalculator.GetCategoryScore(category);
+
+        /// <summary>焦りの段階が変わった時に発火する。引数は新しい段階。</summary>
+        public event Action<PanicLevel> OnPanicLevelChanged;
 
         /// <summary>交戦中の敵がいるか。回避失敗以外の指標はこれが true の間だけ計測する。</summary>
         public bool IsInCombat => _context.IsInCombat;
@@ -99,6 +129,8 @@ namespace CreativeAI.Gameplay
         public TrapSignal Trap => _trap;
         public AimCancelSignal AimCancel => _aimCancel;
         public HitChainSignal HitChain => _hitChain;
+        public FreezeSignal Freeze => _freeze;
+        public WeaponThrashSignal WeaponThrash => _weaponThrash;
 
         /// <summary>最後に検知されたシグナル名</summary>
         public string LastDetectedSignal { get; private set; } = "なし";
@@ -121,15 +153,27 @@ namespace CreativeAI.Gameplay
             _bowController = GetComponentInChildren<BowController>(includeInactive: true);
             Assert.IsNotNull(_bowController, $"{name}: 子階層に BowController が見つかりません");
 
-            _signals = new PanicSignal[] { _flight, _guardSpam, _aimJitter, _trap, _aimCancel, _hitChain };
+            _signals = new PanicSignal[]
+            {
+                _flight,
+                _guardSpam,
+                _aimJitter,
+                _trap,
+                _aimCancel,
+                _hitChain,
+                _freeze,
+                _weaponThrash,
+            };
         }
 
         private void OnEnable()
         {
             _inputHandler.OnSubActionPressed += OnDefenseButtonPressed;
+            _inputHandler.OnAttackPressed += OnAttackPressed;
             // HPの増減ではなく被弾そのものを購読する(最大HP低下によるHPの切り詰めを被弾と誤認しないため)
             _playerStatus.Damaged += OnPlayerDamaged;
             _bowController.OnAimCancelled += OnAimCancelled;
+            _weaponManager.OnWeaponSwitchedByInput += OnWeaponSwitchedByInput;
             foreach (PanicSignal signal in _signals)
             {
                 signal.Detected += OnSignalDetected;
@@ -139,8 +183,10 @@ namespace CreativeAI.Gameplay
         private void OnDisable()
         {
             _inputHandler.OnSubActionPressed -= OnDefenseButtonPressed;
+            _inputHandler.OnAttackPressed -= OnAttackPressed;
             _playerStatus.Damaged -= OnPlayerDamaged;
             _bowController.OnAimCancelled -= OnAimCancelled;
+            _weaponManager.OnWeaponSwitchedByInput -= OnWeaponSwitchedByInput;
             foreach (PanicSignal signal in _signals)
             {
                 signal.Detected -= OnSignalDetected;
@@ -158,6 +204,11 @@ namespace CreativeAI.Gameplay
             }
 
             _scoreCalculator.Update(_signals, deltaTime);
+
+            if (_levelTracker.Update(_scoreCalculator.Score))
+            {
+                OnPanicLevelChanged?.Invoke(_levelTracker.Level);
+            }
         }
 
         /// <summary>
@@ -178,6 +229,12 @@ namespace CreativeAI.Gameplay
                 signal.ResetState();
             }
             _scoreCalculator.Reset();
+            bool wasCalm = _levelTracker.Level == PanicLevel.Calm;
+            _levelTracker.Reset();
+            if (!wasCalm)
+            {
+                OnPanicLevelChanged?.Invoke(PanicLevel.Calm);
+            }
             _engagement.Clear();
             LastDetectedSignal = "なし";
         }
@@ -207,21 +264,29 @@ namespace CreativeAI.Gameplay
             Vector3 cameraForward = Camera.main.transform.forward;
 
             _context.MoveInput = _inputHandler.move;
-            _context.HorizontalSpeed = new Vector2(velocity.x, velocity.z).magnitude;
+            _context.HorizontalVelocity = new Vector3(velocity.x, 0f, velocity.z);
+            _context.DesiredSpeed = _playerController.DesiredSpeed;
+            _context.WalkSpeed = _playerController.MoveSpeed;
+            _context.IsTouchingEnemy = Time.time - _lastEnemyContactTime <= EnemyContactGraceSeconds;
             _context.CanMove = _playerController.CanMove;
             _context.IsAiming = _bowController.IsAiming;
+            _context.IsSubActionHeld = _inputHandler.subAction;
+            _context.IsBusyWithOwnAction =
+                !_playerController.CanMove && !_playerController.IsGrabbed && !_playerController.IsFlinching;
             _context.CameraForwardXZ = new Vector3(cameraForward.x, 0f, cameraForward.z).normalized;
             _context.CameraYaw = _camera.CinemachineCameraTarget.transform.eulerAngles.y;
         }
 
         /// <summary>
-        /// 防御ボタンが新たに押されたときに PlayerInputHandler から呼ばれる。
-        /// 交戦中に剣を持っているときのみスパムとしてカウントする。
+        /// 防御ボタン（サブアクション）が新たに押されたときに PlayerInputHandler から呼ばれる。
+        /// どの武器でも「敵の攻撃に反応した」とみなし、剣を持っているときのみスパムとしてもカウントする。
         /// </summary>
         private void OnDefenseButtonPressed()
         {
             if (!_context.IsInCombat)
                 return;
+
+            _freeze.RecordPlayerAction();
 
             // subAction は武器ごとに意味が違う(剣=防御 / 弓=構え / 鎌=投擲)。
             // 「防御の連打」を測る指標なので、剣を装備しているときだけ数える
@@ -229,7 +294,34 @@ namespace CreativeAI.Gameplay
             if (weapon == null || !weapon.TryGetComponent<SwordController>(out _))
                 return;
 
-            _guardSpam.RecordPress();
+            _guardSpam.RecordPress(_context);
+        }
+
+        /// <summary>攻撃ボタンが押されたときに PlayerInputHandler から呼ばれる（敵の攻撃に反応したかの判定用）。</summary>
+        private void OnAttackPressed()
+        {
+            _freeze.RecordPlayerAction();
+        }
+
+        /// <summary>プレイヤーの入力で武器が切り替わったときに WeaponManager から呼ばれる。</summary>
+        private void OnWeaponSwitchedByInput()
+        {
+            if (!_context.IsInCombat)
+                return;
+
+            _weaponThrash.RecordSwitch();
+        }
+
+        /// <summary>
+        /// CharacterController が移動中に何かへぶつかった時に呼ばれる。
+        /// 敵の体に押し当てているだけで止まっている状態を、空間喪失（地形に引っかかって動けない）から除くために記録する。
+        /// </summary>
+        private void OnControllerColliderHit(ControllerColliderHit hit)
+        {
+            if ((_targetManager.enemyLayer.value & (1 << hit.gameObject.layer)) != 0)
+            {
+                _lastEnemyContactTime = Time.time;
+            }
         }
 
         /// <summary>

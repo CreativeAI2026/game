@@ -86,6 +86,12 @@ namespace CreativeAI.Gameplay
         /// <summary>敵に掴まれているか(書き手: 掴み攻撃を行う敵)。</summary>
         public bool IsGrabbed { get; set; }
 
+        /// <summary>
+        /// 入力から決まる、今出そうとしている水平移動速度（m/s。歩き/走り × スティックの倒し具合）。
+        /// 移動できない時・入力が無い時は 0。実際の速度と比べて「入力しているのに動けていない」を判定するのに使う。
+        /// </summary>
+        public float DesiredSpeed { get; private set; }
+
         private void Awake()
         {
             _mainCamera = GameObject.FindGameObjectWithTag("MainCamera");
@@ -141,6 +147,7 @@ namespace CreativeAI.Gameplay
 
             if (!CanMove)
             {
+                DesiredSpeed = 0f;
                 _speed = 0f;
                 _animationBlend = 0f;
                 _controller.Move(new Vector3(0.0f, _verticalVelocity, 0.0f) * Time.deltaTime);
@@ -167,6 +174,7 @@ namespace CreativeAI.Gameplay
 
             float speedOffset = 0.1f;
             float inputMagnitude = _input.analogMovement ? _input.move.magnitude : 1f;
+            DesiredSpeed = targetSpeed * inputMagnitude;
 
             if (
                 currentHorizontalSpeed < targetSpeed - speedOffset

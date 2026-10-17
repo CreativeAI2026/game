@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using TMPro;
 using UnityEngine;
 using UnityEngine.InputSystem;
@@ -32,16 +33,19 @@ namespace CreativeAI.Gameplay
         private TextMeshProUGUI _lastSignalText;
 
         [Tooltip(
-            "各指標ごとの情報テキスト（6行、順番通り）\n0:逃避 1:スパム 2:ジッター 3:空間喪失 4:意思崩壊 5:回避失敗"
+            "各指標の名前テキスト。並びは PanicDetector.Signals の順（逃避・スパム・ジッター・空間喪失・意思崩壊・回避失敗・硬直・武器切替）。\n"
+                + "未設定の行はシーン側の文字のまま"
         )]
         [SerializeField]
-        private TextMeshProUGUI[] _signalTexts = new TextMeshProUGUI[6];
+        private TextMeshProUGUI[] _signalLabels = new TextMeshProUGUI[0];
 
-        [Tooltip(
-            "各指標のバー（Filledタイプ、6本）\n0:逃避 1:スパム 2:ジッター 3:空間喪失 4:意思崩壊 5:回避失敗"
-        )]
+        [Tooltip("各指標の計測値テキスト。並びは名前テキストと同じ。行が足りない指標は表示しない")]
         [SerializeField]
-        private Image[] _signalBars = new Image[6];
+        private TextMeshProUGUI[] _signalTexts = new TextMeshProUGUI[0];
+
+        [Tooltip("各指標のバー（Filledタイプ）。並びは名前テキストと同じ。行が足りない指標は表示しない")]
+        [SerializeField]
+        private Image[] _signalBars = new Image[0];
 
         [Header("カラー設定")]
         [Tooltip("焦り度が低いときのバーの色")]
@@ -130,42 +134,33 @@ namespace CreativeAI.Gameplay
 
             if (_panicScoreText != null)
             {
-                _panicScoreText.text = Mathf.RoundToInt(score).ToString();
+                PanicLevel level = _panicDetector.Level;
+                _panicScoreText.text =
+                    level == PanicLevel.Calm
+                        ? $"{Mathf.RoundToInt(score)} {level.ToDisplayName()}"
+                        : $"{Mathf.RoundToInt(score)} {level.ToDisplayName()}/{_panicDetector.DominantCategory.ToDisplayName()}";
             }
         }
 
         private void UpdateSignalRows()
         {
-            // 0: 逃避
-            FlightSignal flight = _panicDetector.Flight;
-            string flightStatus = _panicDetector.IsFlightDetectionActive
-                ? $"逃避    継続: {flight.Timer:F1}s"
-                : "逃避    (交戦中の敵なし)";
-            UpdateRow(0, flight.Score, flightStatus);
+            // 指標を足しても表示コードを直さずに済むよう、指標の一覧と生の値（単位付き）から行を作る
+            bool isInCombat = _panicDetector.IsInCombat;
+            IReadOnlyList<PanicSignal> signals = _panicDetector.Signals;
+            for (int i = 0; i < signals.Count; i++)
+            {
+                PanicSignal signal = signals[i];
+                if (i < _signalLabels.Length && _signalLabels[i] != null)
+                {
+                    _signalLabels[i].text = signal.DisplayName;
+                }
 
-            // 1: スパム
-            GuardSpamSignal guardSpam = _panicDetector.GuardSpam;
-            UpdateRow(1, guardSpam.Score, $" {guardSpam.Rate:F1}回/s");
-
-            // 2: ジッター
-            AimJitterSignal aimJitter = _panicDetector.AimJitter;
-            bool isAiming = aimJitter.Score > 0f || aimJitter.AngularSpeed > 0f;
-            string jitterStatus = isAiming
-                ? $"{aimJitter.AngularSpeed:F0}°/s"
-                : "(非構え中/非交戦)";
-            UpdateRow(2, aimJitter.Score, jitterStatus);
-
-            // 3: 空間喪失
-            TrapSignal trap = _panicDetector.Trap;
-            UpdateRow(3, trap.Score, $"継続: {trap.Timer:F1}s");
-
-            // 4: 意思崩壊
-            AimCancelSignal aimCancel = _panicDetector.AimCancel;
-            UpdateRow(4, aimCancel.Score, $"直近{aimCancel.Window:F0}s: {aimCancel.Count}回");
-
-            // 5: 回避失敗
-            HitChainSignal hitChain = _panicDetector.HitChain;
-            UpdateRow(5, hitChain.Score, $"連続: {hitChain.ChainCount}回");
+                // 回避失敗以外は交戦中しか計測しないので、交戦外は値ではなく理由を出す
+                string status = isInCombat
+                    ? $"{signal.RawValueUnit}: {signal.RawValue:0.#}"
+                    : "(非交戦)";
+                UpdateRow(i, signal.Score, status);
+            }
         }
 
         private void UpdateRow(int index, float score, string label)
@@ -214,7 +209,8 @@ namespace CreativeAI.Gameplay
         {
             if (_lastSignalText != null)
             {
-                _lastSignalText.text = $"最後の検知: [{signalName}]";
+                // 見出し「最後の検知：」はシーン側の固定ラベルにあるので、ここでは指標名だけを出す
+                _lastSignalText.text = $"[{signalName}]";
             }
 
             _flashTimer = _flashDuration;

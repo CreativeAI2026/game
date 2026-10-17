@@ -33,14 +33,35 @@ namespace CreativeAI.Gameplay
         /// <summary>移動入力があるか。</summary>
         public bool HasMoveInput => MoveInput.sqrMagnitude > 0.01f;
 
+        /// <summary>実際の水平移動速度ベクトル（m/s、y は 0）。</summary>
+        public Vector3 HorizontalVelocity { get; set; }
+
         /// <summary>実際の水平移動速度（m/s）。</summary>
-        public float HorizontalSpeed { get; set; }
+        public float HorizontalSpeed => HorizontalVelocity.magnitude;
+
+        /// <summary>入力から決まる、今出そうとしている水平移動速度（m/s）。移動できない時・入力が無い時は 0。</summary>
+        public float DesiredSpeed { get; set; }
+
+        /// <summary>通常の歩き速度（m/s）。速さのしきい値をこれに対する割合で決め、体格・速度調整に追従させる。</summary>
+        public float WalkSpeed { get; set; }
+
+        /// <summary>直前に敵の体へ接触したか（敵に押し当てて止まっているだけの状態を「動けない」と区別するため）。</summary>
+        public bool IsTouchingEnemy { get; set; }
 
         /// <summary>移動が許可されているか（掴み・攻撃中などで封じられていれば false）。</summary>
         public bool CanMove { get; set; }
 
         /// <summary>弓を構えているか。</summary>
         public bool IsAiming { get; set; }
+
+        /// <summary>サブアクション（剣の防御・弓の構えなど）のボタンを押し続けているか。</summary>
+        public bool IsSubActionHeld { get; set; }
+
+        /// <summary>
+        /// 自分の行動（攻撃モーションなど）で移動が封じられているか。怯み・掴みで封じられている場合は含めない。
+        /// 自分から動いている最中なので「何もできずに固まっている」のとは区別する。
+        /// </summary>
+        public bool IsBusyWithOwnAction { get; set; }
 
         /// <summary>カメラ（見ている方向）の水平成分（正規化済み）。</summary>
         public Vector3 CameraForwardXZ { get; set; }

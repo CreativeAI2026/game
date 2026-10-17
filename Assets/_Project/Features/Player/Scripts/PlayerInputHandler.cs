@@ -205,12 +205,19 @@ namespace CreativeAI.Gameplay
             subAction = newSubActionState;
         }
 
+        /// <summary>
+        /// 攻撃ボタンが押された瞬間に発火するイベント。
+        /// PanicDetectorが購読し、ボスの攻撃中にプレイヤーが何か操作したか（硬直していないか）を判定するために使用する。
+        /// </summary>
+        public event Action OnAttackPressed;
+
         public void AttackInput()
         {
             if (Blocked)
                 return;
             _attackPending = true;
             _attackPressedTime = Time.time;
+            OnAttackPressed?.Invoke();
         }
 
         public void WeaponNextInput(bool newWeaponNextState)

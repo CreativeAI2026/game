@@ -5,69 +5,95 @@ using UnityEngine;
 namespace CreativeAI.Gameplay
 {
     /// <summary>
-    /// 各指標のスコアから総合焦り度（0〜100）を算出する。
+    /// 各指標のスコアから、総合焦り度と系統ごとの焦り度（どちらも 0〜100）を算出する。
     ///
-    /// 【設計方針】
-    /// 「1つの行動を強く繰り返す」こと自体も焦りの強いシグナルであるため、
-    ///  単純な重み付き合計ではなく「最大値主体 + 多様性ボーナス」の式を採用する。
+    /// 【合算式】確率の「または」（soft-OR）
+    ///   焦り度 = 100 × (1 − Π(1 − 重みᵢ × スコアᵢ))
+    ///   各指標を「焦っている証拠がどれだけ確からしいか（重み×スコア）」とみなし、
+    ///   「どれか1つでも当たっている確率」を焦り度とする。
     ///
-    ///  PanicScore = max(各指標スコア) × 70  ← 1行動の強度を主軸にする
-    ///             + avg(全指標スコア) × 30  ← 複数行動の組み合わせでさらに上昇
+    ///   - 1つだけ満点 → 重み×100（逃避 0.7 なら 70）
+    ///   - 複数そろうほど 100 に近づくが超えない（逃避と連打が満点 → 1 − 0.3×0.5 = 85）
+    ///   - 指標を増やしても式や目盛りを直す必要がない（以前の「平均÷6」は指標数で目盛りが変わった）
     ///
-    /// 結果:
-    ///   1指標だけ 100%  → 約 75（6指標の場合。明確な焦り状態と判定）
-    ///   全指標が  100%  → 100  （極度の焦り）
-    ///
-    /// 毎フレーム自然減衰も適用する。
+    /// 系統ごとの焦り度も、その系統の指標だけで同じ式を使う。
+    /// どちらも、上がる時は速く・下がる時は遅く、目標値へ指数的に追従させる（フレームレートに依存しない）。
     /// </summary>
     [Serializable]
     public class PanicScoreCalculator
     {
-        // 最大値の項と平均の項の配分（合計100）
-        private const float MaxTermWeight = 70f;
-        private const float AverageTermWeight = 30f;
+        private static readonly PanicCategory[] Categories =
+            (PanicCategory[])Enum.GetValues(typeof(PanicCategory));
 
-        // 上昇時に目標値へ追いつく速さ（毎秒、差の何割を詰めるか）
-        private const float RiseRate = 5f;
-
-        [Tooltip("焦り度が毎秒どれだけ自然に減少するか")]
+        [Tooltip("焦り度が上がる時、目標値の約63%まで追いつく時間（秒）。短いほど兆候にすぐ反応する")]
         [SerializeField]
-        private float _decayPerSecond = 5f;
+        [Min(0.01f)]
+        private float _riseTime = 0.3f;
+
+        [Tooltip("焦り度が下がる時、差の約63%が消えるまでの時間（秒）。長いほど焦りの余韻が残る")]
+        [SerializeField]
+        [Min(0.01f)]
+        private float _fallTime = 4f;
+
+        private readonly float[] _categoryScores = new float[Categories.Length];
+
+        // 系統ごとの「どの指標も当たっていない確率」の積。毎フレーム使い回して確保を避ける
+        private readonly float[] _categoryNotPanicProducts = new float[Categories.Length];
 
         /// <summary>総合焦り度（0〜100）</summary>
         public float Score { get; private set; }
 
-        /// <summary>各指標の現在値から総合焦り度を1フレーム分更新する。</summary>
+        /// <summary>系統ごとの焦り度が最も高い系統。</summary>
+        public PanicCategory DominantCategory { get; private set; }
+
+        /// <summary>系統ごとの焦り度（0〜100）。</summary>
+        public float GetCategoryScore(PanicCategory category) => _categoryScores[(int)category];
+
+        /// <summary>各指標の現在値から焦り度を1フレーム分更新する。</summary>
         public void Update(IReadOnlyList<PanicSignal> signals, float deltaTime)
         {
-            float maxScore = 0f;
-            float sum = 0f;
+            float notPanicProduct = 1f;
+            for (int i = 0; i < _categoryNotPanicProducts.Length; i++)
+            {
+                _categoryNotPanicProducts[i] = 1f;
+            }
+
             foreach (PanicSignal signal in signals)
             {
-                float s = signal.Score;
-                maxScore = Mathf.Max(maxScore, s);
-                sum += s;
+                float evidence = Mathf.Clamp01(signal.Weight * signal.Score);
+                notPanicProduct *= 1f - evidence;
+                _categoryNotPanicProducts[(int)signal.Category] *= 1f - evidence;
             }
-            float averageScore = signals.Count > 0 ? sum / signals.Count : 0f;
 
-            float raw = maxScore * MaxTermWeight + averageScore * AverageTermWeight;
+            Score = Smooth(Score, (1f - notPanicProduct) * 100f, deltaTime);
 
-            // 上昇は素早く追いつき、自然減衰はゆっくり
-            if (raw > Score)
+            float dominantScore = -1f;
+            for (int i = 0; i < _categoryScores.Length; i++)
             {
-                Score = Mathf.Lerp(Score, raw, deltaTime * RiseRate);
+                _categoryScores[i] = Smooth(
+                    _categoryScores[i],
+                    (1f - _categoryNotPanicProducts[i]) * 100f,
+                    deltaTime
+                );
+                if (_categoryScores[i] > dominantScore)
+                {
+                    dominantScore = _categoryScores[i];
+                    DominantCategory = Categories[i];
+                }
             }
-            else
-            {
-                Score = Mathf.Max(0f, Score - _decayPerSecond * deltaTime);
-            }
-
-            Score = Mathf.Clamp(Score, 0f, 100f);
         }
 
         public void Reset()
         {
             Score = 0f;
+            Array.Clear(_categoryScores, 0, _categoryScores.Length);
+            DominantCategory = Categories[0];
+        }
+
+        private float Smooth(float current, float target, float deltaTime)
+        {
+            float time = target > current ? _riseTime : _fallTime;
+            return current + (target - current) * (1f - Mathf.Exp(-deltaTime / time));
         }
     }
 }
