@@ -276,7 +276,7 @@ namespace CreativeAI.UI
         }
 #endif
 
-        private const float InitialSlotScale = 0.82f;
+        private const float InitialSlotScale = 0f;
         private Tween _scrollTween;
 
         public void SetReleaseSelectionOnOutsideClick(bool release)

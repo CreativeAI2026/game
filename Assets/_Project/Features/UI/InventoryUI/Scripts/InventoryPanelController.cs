@@ -94,6 +94,12 @@ namespace CreativeAI.UI
             if (_inventory == null)
                 return;
 
+            if (definition is AllItemsTabDefinition)
+            {
+                _inventory.SetItems(InventoryManager.Instance?.GetAllItems(), scrollMode);
+                return;
+            }
+
             if (definition is InventoryTabDefinition inventoryDefinition)
             {
                 _inventory.RequestItems(inventoryDefinition.Category, scrollMode);
@@ -121,13 +127,7 @@ namespace CreativeAI.UI
             if (stack?.Data is not FoodData)
                 return;
 
-            if (_itemUseDialogPanel == null)
-            {
-                WarnMissingItemUseDialogPanelOnce();
-                return;
-            }
-
-            _itemUseDialogPanel.Show(stack);
+            GetComponent<InventoryScreenView>()?.FocusUseButton(stack);
         }
 
         private void WarnMissingReferencesOnce()

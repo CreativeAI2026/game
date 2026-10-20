@@ -96,14 +96,32 @@ namespace CreativeAI.UI
         private Coroutine _craftRoutine;
         private Coroutine _initialSelectionRoutine;
         private ItemData _previewedCraftedItem;
+        private ItemCategory _materialCategory = ItemCategory.Food;
         private Action _resultClosedAction;
+        private Sequence _resultSequence;
         private Coroutine _warningRoutine;
         private Vector2 _warningBasePosition;
         private bool _hasWarningBasePosition;
 
         public bool IsCraftFlowRunning => _isCraftFlowRunning;
         public ItemData PreviewedCraftedItem => _previewedCraftedItem;
+        public ItemCategory MaterialCategory => _materialCategory;
+        public ItemStack FirstMaterial => _materials[0];
+        public ItemStack SecondMaterial => _materials[1];
         public event Action<ItemData> PreviewChanged;
+        public event Action<ItemStack> ResultShown;
+
+        public void SelectMaterialCategory(ItemCategory category)
+        {
+            if (
+                IsCraftInteractionLocked
+                || (category != ItemCategory.Food && category != ItemCategory.Equipment)
+            )
+                return;
+            _materialCategory = category;
+            ResetSlots(resetInventoryView: true);
+            SelectFirstSlotIfNeeded();
+        }
 
         private bool IsCraftInteractionLocked => _isCrafting || _isCraftFlowRunning;
 
@@ -161,6 +179,8 @@ namespace CreativeAI.UI
 
         private void OnDestroy()
         {
+            _resultSequence?.Kill();
+            _resultSequence = null;
             Unsubscribe();
             if (_resultCloseOnClick != null)
                 _resultCloseOnClick.ClearClickAction(HideResult);
@@ -277,6 +297,12 @@ namespace CreativeAI.UI
             InventoryView.ScrollRefreshMode scrollMode
         )
         {
+            // The authored quick-item / equipment buttons own category selection.
+            if (definition == null)
+            {
+                _inventory.RequestItems(_materialCategory, scrollMode);
+                return;
+            }
             if (definition is AllItemsTabDefinition)
             {
                 _inventory.SetItems(InventoryManager.Instance?.GetAllItems(), scrollMode);
@@ -600,7 +626,7 @@ namespace CreativeAI.UI
         private void RefreshCraftedItemSlot(CraftRecipe recipe)
         {
             ItemData resultItem = recipe != null ? recipe.resultItem : null;
-            if (_craftedItemSlot == null || _previewedCraftedItem == resultItem)
+            if (_craftedItemSlot == null)
                 return;
 
             _previewedCraftedItem = resultItem;
@@ -829,6 +855,7 @@ namespace CreativeAI.UI
                 item != null ? item.itemName : string.Empty,
                 ItemStatTextFormatter.BuildStatsText(crafted)
             );
+            ResultShown?.Invoke(crafted);
             if (_resultCloseOnClick != null)
                 _resultCloseOnClick.SetClickAction(HideResult);
             PlayResultIn();
@@ -981,7 +1008,10 @@ namespace CreativeAI.UI
 
             ResultRoot.SetActive(true);
 
-            var sequence = DOTween.Sequence().SetTarget(ResultRoot).SetUpdate(true);
+            var sequence = _resultSequence = DOTween
+                .Sequence()
+                .SetTarget(ResultRoot)
+                .SetUpdate(true);
             if (rect != null)
                 sequence.Join(
                     rect.DOScale(Vector3.one, ResultAnimationDuration).SetEase(Ease.OutBack)
@@ -1007,7 +1037,10 @@ namespace CreativeAI.UI
             _resultCanvasGroup.interactable = false;
             _resultCanvasGroup.blocksRaycasts = false;
 
-            var sequence = DOTween.Sequence().SetTarget(ResultRoot).SetUpdate(true);
+            var sequence = _resultSequence = DOTween
+                .Sequence()
+                .SetTarget(ResultRoot)
+                .SetUpdate(true);
             if (rect != null)
             {
                 sequence.Join(
@@ -1038,6 +1071,8 @@ namespace CreativeAI.UI
 
         private void KillResultTweens(RectTransform rect)
         {
+            _resultSequence?.Kill();
+            _resultSequence = null;
             DOTween.Kill(ResultRoot);
             rect?.DOKill();
             _resultCanvasGroup.DOKill();

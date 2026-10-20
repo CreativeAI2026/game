@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using CreativeAI.Gameplay;
 using TMPro;
 using UnityEngine;
+using UnityEngine.UI;
 
 namespace CreativeAI.UI.CharacterUI
 {
@@ -45,6 +46,9 @@ namespace CreativeAI.UI.CharacterUI
 
         [SerializeField]
         private TMP_Text _criticalDamageValue;
+
+        [SerializeField]
+        private Image _weaponPreview;
 
         [SerializeField]
         private List<CharacterWeaponSelection> _weapons = new();
@@ -142,7 +146,19 @@ namespace CreativeAI.UI.CharacterUI
             foreach (CharacterWeaponSelection weapon in _weapons)
             {
                 if (weapon != null)
+                {
                     weapon.Button?.SetSelected(weapon == selectedWeapon);
+                    var icon = weapon.Button?.transform.Find("WeaponIcon")?.GetComponent<Image>();
+                    if (icon != null)
+                        icon.color =
+                            weapon == selectedWeapon ? Color.white : new Color(.62f, .65f, .7f, 1);
+                    var label = weapon.Button?.GetComponentInChildren<TMP_Text>(true);
+                    if (label != null)
+                        label.color =
+                            weapon == selectedWeapon
+                                ? UiVisualTheme.Gold
+                                : UiVisualTheme.Muted * new Color(.7f, .7f, .7f, 1);
+                }
             }
 
             if (selectedWeapon == null)
@@ -151,6 +167,12 @@ namespace CreativeAI.UI.CharacterUI
             WeaponData data = selectedWeapon.Data;
             if (data == null)
                 return;
+
+            if (_weaponPreview != null)
+            {
+                _weaponPreview.sprite = data.icon;
+                _weaponPreview.gameObject.SetActive(data.icon != null);
+            }
 
             PlayText(_weaponName, data.itemName, 0);
             PlayText(_weaponDescription, data.description, 1);

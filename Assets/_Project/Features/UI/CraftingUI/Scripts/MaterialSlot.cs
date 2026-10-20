@@ -12,7 +12,7 @@ namespace CreativeAI.UI
     public class MaterialSlot : BaseItemSlot, IPointerClickHandler
     {
         private const float SelectedSlotScale = 1.08f;
-        private const float EmptyIconAlpha = 50f / 255f;
+        private const float EmptyIconAlpha = 0f;
 
         [SerializeField]
         private RectTransform _visualRootRect;
@@ -28,6 +28,9 @@ namespace CreativeAI.UI
 
         [SerializeField]
         private SlotFrameView _frameView;
+
+        [SerializeField]
+        private GameObject _materialHint;
 
         private Coroutine _materialAnimationRoutine;
         private bool _isSelected;
@@ -96,12 +99,16 @@ namespace CreativeAI.UI
             _iconView?.SetEmptyAlpha(EmptyIconAlpha);
             base.Refresh();
             _emptyView?.SetEmpty(_item == null);
+            if (_materialHint != null)
+                _materialHint.SetActive(_item == null);
         }
 
         public override void Clear()
         {
             base.Clear();
             _emptyView?.SetEmpty(true);
+            if (_materialHint != null)
+                _materialHint.SetActive(true);
         }
 
         public void ClearMaterialAnimated(Action onCleared = null)
