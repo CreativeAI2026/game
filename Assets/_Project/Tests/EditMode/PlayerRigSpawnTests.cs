@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using CreativeAI.Gameplay;
 using CreativeAI.UI;
 using NUnit.Framework;
 using UnityEngine;
@@ -42,6 +43,29 @@ namespace CreativeAI.Tests.EditMode
             Assert.AreNotSame(prefab, spawned); // テンプレでなく実体が生成される
             Assert.AreEqual("PlayerRig", spawned.name); // "(Clone)" が付かない
             _cleanup.Add(spawned);
+        }
+
+        [Test]
+        public void EnsureCameraRig_NullPrefab_ReturnsNull_NoThrow()
+        {
+            CameraRig result = null;
+            Assert.DoesNotThrow(() => result = GameSession.EnsureCameraRig(null));
+            Assert.IsNull(result);
+        }
+
+        [Test]
+        public void EnsureCameraRig_SecondCall_ReturnsExisting()
+        {
+            // シーン上のテンプレだと Find がテンプレ自身を拾うので、本物の Prefab アセットを使う
+            var prefab = Resources
+                .Load<ResidentBootstrapConfig>(nameof(ResidentBootstrapConfig))
+                .cameraRigPrefab;
+
+            var first = GameSession.EnsureCameraRig(prefab);
+            _cleanup.Add(first.gameObject);
+            var second = GameSession.EnsureCameraRig(prefab);
+
+            Assert.AreSame(first, second); // 2つ目は作らない
         }
     }
 }

@@ -2,6 +2,8 @@ using System.Collections;
 using CreativeAI.Core;
 using CreativeAI.Gameplay;
 using UnityEngine;
+using UnityEngine.EventSystems;
+using UnityEngine.InputSystem.UI;
 
 namespace CreativeAI.UI
 {
@@ -19,14 +21,14 @@ namespace CreativeAI.UI
 
         [SerializeField]
         [Tooltip(
-            "直接 Play 時にプレイヤーリグも出す。フィールドシーンだけ ON にする"
-                + "(UI 確認シーンでは要らないし、リグのカメラが二重になるので既定 OFF)。"
+            "直接 Play 時にプレイヤーリグとカメラリグも出す。フィールドシーンだけ ON にする"
+                + "(UI 確認シーンは自前のカメラを持つので、二重にならないよう既定 OFF)。"
         )]
         private bool _spawnPlayerRig;
 
         [SerializeField]
-        [Tooltip("リグを出す位置の SpawnPoint ID。本番の Start Spawn / Dest Spawn と同じ仕組み。")]
-        private string _spawnPointId = "start";
+        [Tooltip("リグを出す位置の SpawnPoint ID。本番の「はじめる」と同じ開始位置が既定。")]
+        private string _spawnPointId = SpawnPoint.StartId;
 
         private DevState _devState;
 
@@ -46,10 +48,13 @@ namespace CreativeAI.UI
             }
 
             GameSession.EnsureResidents(config != null ? config.uiRootPrefab : null);
+            EnsureEventSystem();
 
             // プレイヤーリグも Title と同じ経路で出し、配置も本番と同じ SpawnPoint 経由にする。
+            // プレイヤーは Awake で MainCamera を探すので、カメラリグを先に出す。
             if (_spawnPlayerRig)
             {
+                GameSession.EnsureCameraRig(config != null ? config.cameraRigPrefab : null);
                 var player = GameSession.EnsurePlayerRig(
                     config != null ? config.playerRigPrefab : null
                 );
@@ -63,6 +68,17 @@ namespace CreativeAI.UI
 
             _devState = LoadDevState();
             _devState?.Apply(ProgressManager.Instance, InventoryManager.Instance);
+        }
+
+        // UI のクリックを受ける EventSystem は Title にしか置いていないので、直接 Play では無ければ作る(UI 確認シーンは自前で持つ)。
+        private static void EnsureEventSystem()
+        {
+            if (FindAnyObjectByType<EventSystem>() != null)
+                return;
+            var go = new GameObject(nameof(EventSystem));
+            go.AddComponent<EventSystem>();
+            go.AddComponent<InputSystemUIInputModule>();
+            go.AddComponent<PersistentEventSystem>();
         }
 
         // 武器・HP はリグ側の部品が持つ。PlayerStatus.Start が HP を満タンに戻すので、1フレーム待ってから入れる。

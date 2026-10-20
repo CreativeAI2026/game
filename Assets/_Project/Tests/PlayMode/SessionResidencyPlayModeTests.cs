@@ -61,14 +61,11 @@ namespace CreativeAI.Tests.PlayMode
                 .GetField(name, BindingFlags.Instance | BindingFlags.NonPublic)
                 .SetValue(target, value);
 
-        private bool EnsureSessionAndPlayer() =>
+        private bool EnsureSession() =>
             (bool)
                 _title
                     .GetType()
-                    .GetMethod(
-                        "EnsureSessionAndPlayer",
-                        BindingFlags.Instance | BindingFlags.NonPublic
-                    )
+                    .GetMethod("EnsureSession", BindingFlags.Instance | BindingFlags.NonPublic)
                     .Invoke(_title, null);
 
         private static int CountOf<T>()
@@ -76,16 +73,11 @@ namespace CreativeAI.Tests.PlayMode
             Object.FindObjectsByType<T>(FindObjectsInactive.Exclude).Length;
 
         [UnityTest]
-        public IEnumerator EnsureSessionAndPlayer_IsIdempotent()
+        public IEnumerator EnsureSession_IsIdempotent()
         {
-            // PlayerRig Prefab 未割当なのでプレイヤー生成だけは警告してスキップされる(呼ぶたび1回)。
             for (int i = 0; i < 2; i++)
             {
-                LogAssert.Expect(
-                    LogType.Warning,
-                    new System.Text.RegularExpressions.Regex("playerRigPrefab が未割当")
-                );
-                Assert.IsTrue(EnsureSessionAndPlayer());
+                Assert.IsTrue(EnsureSession());
                 yield return null;
             }
 

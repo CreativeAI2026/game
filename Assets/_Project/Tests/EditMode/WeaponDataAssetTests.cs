@@ -5,7 +5,7 @@ using UnityEditor;
 namespace CreativeAI.Tests.EditMode
 {
     /// <summary>
-    /// 剣・弓・鎌の固定ステータスがアセットに入っているかを固定する。
+    /// 剣・弓・鎌・ハンマーの固定ステータスがアセットに入っているかを固定する。
     /// 数値がコード外(アセット)にあると仕様からの乖離に気づけないため、ここで実アセットを読んで突き合わせる。
     /// </summary>
     public class WeaponDataAssetTests
@@ -62,18 +62,18 @@ namespace CreativeAI.Tests.EditMode
 
             Assert.AreEqual(1004, w.id);
             Assert.AreEqual(0, w.attack);
-            Assert.AreEqual(0f, w.criticalRate, 1e-3f);
-            Assert.AreEqual(100f, w.criticalDamage, 1e-3f);
+            Assert.AreEqual(25f, w.criticalRate, 1e-3f, "ハンマー: 会心率 +25%");
+            Assert.AreEqual(100f, w.criticalDamage, 1e-3f, "ハンマー: 会心ダメージ +100%");
         }
 
         [Test]
-        public void AllThreeWeapons_HaveEqualAverageDamage()
+        public void AllWeapons_HaveEqualAverageDamage()
         {
-            // 平均ダメージ = 攻撃力 ×(1 + 会心率 × 会心ダメージ)が3種とも等価になるよう設定。
+            // 平均ダメージ = 攻撃力 ×(1 + 会心率 × 会心ダメージ)が4種とも等価になるよう設定。
             // 素の値(攻撃2000 / 会心率0 / 会心ダメージ0)でいずれも平均 2500 になる。
             const float baseAttack = 2000f;
 
-            foreach (var name in new[] { "Sword", "Bow", "Scythe" })
+            foreach (var name in new[] { "Sword", "Bow", "Scythe", "Hammer" })
             {
                 var w = LoadRequired(name);
                 float attack = baseAttack * (1f + w.attack / 100f);

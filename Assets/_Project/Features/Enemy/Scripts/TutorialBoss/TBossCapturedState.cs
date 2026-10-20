@@ -59,7 +59,7 @@ namespace CreativeAI.Gameplay
             _headLookController = boss.Player.GetComponent<HeadLookController>();
 
             // Animator と首のボーンはプレイヤーのモデル層から取る(モデル差し替えでボーン名が変わっても辿れる)。
-            // 仮リグ(PlayerRig_Dummy)にはモデル層が無いので、その場合は演出を省く
+            // モデル層が無いリグでは演出を省く
             PlayerModel playerModel = boss.Player.GetComponentInChildren<PlayerModel>();
             if (playerModel != null)
             {

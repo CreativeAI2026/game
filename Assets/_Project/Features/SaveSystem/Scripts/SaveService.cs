@@ -277,7 +277,7 @@ namespace CreativeAI.Gameplay
         public int selectedWeaponIndex;
 
         /// <summary>
-        /// 入手ずみ武器のキー(sword/bow/scythe)。主人公は初期0本でイベント入手なので、
+        /// 入手ずみ武器のキー(sword/bow/scythe/hammer)。主人公は初期0本でイベント入手なので、
         /// 「どれを持っているか」自体がセーブ対象になる。旧セーブに無ければ空 = 0本で復元される。
         /// </summary>
         public List<string> ownedWeaponKeys = new();
