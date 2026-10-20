@@ -262,12 +262,23 @@ namespace CreativeAI.EditorTools
 
             var root = slotPrefab;
             string path = AssetDatabase.GetAssetPath(root);
-            if (path != ItemSlotPath)
+            var source = root;
+            bool derivesFromItemSlot = false;
+            while (source != null)
+            {
+                if (AssetDatabase.GetAssetPath(source) == ItemSlotPath)
+                {
+                    derivesFromItemSlot = true;
+                    break;
+                }
+                source = PrefabUtility.GetCorrespondingObjectFromSource(source);
+            }
+            if (!derivesFromItemSlot)
             {
                 report.Error(
                     inventory.name,
                     "_slotPrefab",
-                    $"正しいItemSlot Variantを設定してください。期待値: '{ItemSlotPath}'、現在: '{path}'",
+                    $"ItemSlot またはその派生 Variantを設定してください。元Prefab: '{ItemSlotPath}'、現在: '{path}'",
                     inventory
                 );
             }

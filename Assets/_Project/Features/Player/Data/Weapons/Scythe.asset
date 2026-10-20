@@ -12,10 +12,10 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: fa05067c46c7d2048a12a0a8b225df33, type: 3}
   m_Name: Scythe
   m_EditorClassIdentifier: CreativeAI.Gameplay::CreativeAI.Gameplay.WeaponData
-  icon: {fileID: 21300000, guid: ba803ac5651664846bbf65405b09965b, type: 3}
+  icon: {fileID: 21300000, guid: a175b2e3f9ff9bf4cb89e323b75e5896, type: 3}
   id: 1003
-  itemName: "アンブレラサイス"
-  description: "傘を改造した大鎌。広い間合いで敵を薙ぎ払う。"
+  itemName: "\u30A2\u30F3\u30D6\u30EC\u30E9\u30B5\u30A4\u30B9"
+  description: "\u5098\u3092\u6539\u9020\u3057\u305F\u5927\u938C\u3002\u5E83\u3044\u9593\u5408\u3044\u3067\u6575\u3092\u8599\u304E\u6255\u3046\u3002"
   attack: 0
   criticalDamage: 50
   criticalRate: 50

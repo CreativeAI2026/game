@@ -2,7 +2,6 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using CreativeAI.Gameplay;
-using TMPro;
 using UnityEngine;
 using UnityEngine.EventSystems;
 using UnityEngine.UI;
@@ -13,7 +12,7 @@ namespace CreativeAI.UI
     public class MaterialSlot : BaseItemSlot, IPointerClickHandler
     {
         private const float SelectedSlotScale = 1.08f;
-        private const float EmptyIconAlpha = 50f / 255f;
+        private const float EmptyIconAlpha = 0f;
 
         [SerializeField]
         private RectTransform _visualRootRect;
@@ -31,7 +30,7 @@ namespace CreativeAI.UI
         private SlotFrameView _frameView;
 
         [SerializeField]
-        private TMP_Text _slotLabel;
+        private GameObject _materialHint;
 
         private Coroutine _materialAnimationRoutine;
         private bool _isSelected;
@@ -100,12 +99,16 @@ namespace CreativeAI.UI
             _iconView?.SetEmptyAlpha(EmptyIconAlpha);
             base.Refresh();
             _emptyView?.SetEmpty(_item == null);
+            if (_materialHint != null)
+                _materialHint.SetActive(_item == null);
         }
 
         public override void Clear()
         {
             base.Clear();
             _emptyView?.SetEmpty(true);
+            if (_materialHint != null)
+                _materialHint.SetActive(true);
         }
 
         public void ClearMaterialAnimated(Action onCleared = null)
@@ -211,7 +214,6 @@ namespace CreativeAI.UI
             WarnIfMissing(_emptyView, nameof(SlotEmptyView));
             WarnIfMissing(_hoverView, nameof(SlotHoverView));
             WarnIfMissing(_frameView, nameof(SlotFrameView));
-            WarnIfMissing(_slotLabel, "SlotLabel");
         }
 
 #if UNITY_EDITOR
@@ -225,7 +227,6 @@ namespace CreativeAI.UI
             _emptyView ??= GetComponentInChildren<SlotEmptyView>(true);
             _hoverView ??= GetComponentInChildren<SlotHoverView>(true);
             _frameView ??= GetComponentInChildren<SlotFrameView>(true);
-            _slotLabel ??= transform.Find("SlotLabel")?.GetComponent<TMP_Text>();
         }
 #endif
 
