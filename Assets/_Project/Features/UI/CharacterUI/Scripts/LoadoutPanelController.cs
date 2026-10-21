@@ -4,6 +4,7 @@ using System.Globalization;
 using System.Linq;
 using CreativeAI.Gameplay;
 using CreativeAI.UI;
+using DG.Tweening;
 using TMPro;
 using UnityEngine;
 using UnityEngine.Events;
@@ -19,7 +20,6 @@ namespace CreativeAI.UI.CharacterUI
     {
         private enum Filter
         {
-            All,
             Quick,
             Equipment,
         }
@@ -62,6 +62,13 @@ namespace CreativeAI.UI.CharacterUI
         [SerializeField, Min(0f)]
         private float _detailSectionDelay = 0.06f;
 
+        [Header("Slot Appearance")]
+        [SerializeField, Min(0f)]
+        private float _slotAppearDuration = 0.2f;
+
+        [SerializeField, Min(0f)]
+        private float _slotAppearStagger = 0.05f;
+
         private readonly List<Button> _filterButtons = new();
         private readonly List<TMP_Text> _filterLabels = new();
         private readonly List<TMP_Text> _filterCountLabels = new();
@@ -87,6 +94,12 @@ namespace CreativeAI.UI.CharacterUI
         private TMP_Text _maxHpParameterValue;
         private TMP_Text _criticalRateParameterValue;
         private TMP_Text _criticalDamageParameterValue;
+        private LayoutElement _detailAreaLayout;
+        private GameObject _detailParameterRow;
+        private GameObject _detailIconArea;
+        private GameObject _detailButtonArea;
+        private float _detailExpandedHeight;
+        private float _detailParameterHeight;
         private LoadoutDropErrorFeedback _dropErrorFeedback;
 
         private Filter _filter;
@@ -100,6 +113,8 @@ namespace CreativeAI.UI.CharacterUI
         private Coroutine _refreshRoutine;
         private InventoryManager _subscribedInventoryManager;
         private TmpTypewriterPlayer _typewriter;
+        private Sequence _slotAppearSequence;
+        private readonly Dictionary<Transform, Vector3> _slotRestScales = new();
 
         private InventoryManager ActiveInventoryManager =>
             _subscribedInventoryManager != null
@@ -120,12 +135,17 @@ namespace CreativeAI.UI.CharacterUI
             if (!Initialize())
                 return;
 
+            _selectedStack = null;
+            _inventory?.ClearSelection();
+            ShowEmptyDetail(replayText: true);
+            PlaySlotAppearance();
             BindDataEvents();
             RestartDeferredRefresh();
         }
 
         private void OnDisable()
         {
+            StopSlotAppearance();
             _typewriter?.CompleteAll();
             StopDeferredRefresh();
             UnbindDataEvents();
@@ -133,8 +153,42 @@ namespace CreativeAI.UI.CharacterUI
 
         private void OnDestroy()
         {
+            StopSlotAppearance();
             UnbindUiEvents();
             UnbindDataEvents();
+        }
+
+        private void PlaySlotAppearance()
+        {
+            StopSlotAppearance();
+            _slotAppearSequence = DOTween.Sequence().SetUpdate(true).SetTarget(this);
+            int index = 0;
+            foreach (var slot in _quickSlots.Concat(_equipmentSlots))
+            {
+                if (slot == null)
+                    continue;
+                var target = slot.transform;
+                if (!_slotRestScales.TryGetValue(target, out var restScale))
+                {
+                    restScale = target.localScale;
+                    _slotRestScales.Add(target, restScale);
+                }
+                target.localScale = Vector3.zero;
+                _slotAppearSequence.Insert(
+                    index * _slotAppearStagger,
+                    target.DOScale(restScale, _slotAppearDuration).SetEase(Ease.OutBack)
+                );
+                index++;
+            }
+        }
+
+        private void StopSlotAppearance()
+        {
+            _slotAppearSequence?.Kill();
+            _slotAppearSequence = null;
+            foreach (var entry in _slotRestScales)
+                if (entry.Key != null)
+                    entry.Key.localScale = entry.Value;
         }
 
         private bool Initialize()
@@ -156,7 +210,7 @@ namespace CreativeAI.UI.CharacterUI
 
             _selectedQuickSlot = 0;
             _selectedEquipmentSlot = 0;
-            _filter = Filter.All;
+            _filter = Filter.Quick;
             _initialized = true;
 
             RefreshTabVisuals();
@@ -177,8 +231,8 @@ namespace CreativeAI.UI.CharacterUI
             }
 
             var warnings = new List<string>();
-            if (_filterButtons.Count != 3)
-                warnings.Add($"カテゴリボタン3個（現在 {_filterButtons.Count} 個）");
+            if (_filterButtons.Count != 2)
+                warnings.Add($"カテゴリボタン2個（現在 {_filterButtons.Count} 個）");
             if (_quickSlots.Count != 3)
                 warnings.Add($"QuickItemArea のスロット3個（現在 {_quickSlots.Count} 個）");
             if (_equipmentSlots.Count != 3)
@@ -205,6 +259,22 @@ namespace CreativeAI.UI.CharacterUI
 
         private void ResolveReferences()
         {
+            if (_detailAreaLayout == null)
+            {
+                var detail = transform.Find("InventoryArea/DetailArea");
+                _detailAreaLayout = detail != null ? detail.GetComponent<LayoutElement>() : null;
+                _detailExpandedHeight =
+                    _detailAreaLayout != null ? _detailAreaLayout.preferredHeight : 0;
+                _detailParameterRow = detail?.Find("ParamaterRow")?.gameObject;
+                var parameterLayout =
+                    _detailParameterRow != null
+                        ? _detailParameterRow.GetComponent<LayoutElement>()
+                        : null;
+                _detailParameterHeight =
+                    parameterLayout != null ? Mathf.Max(0, parameterLayout.preferredHeight) : 0;
+                _detailIconArea = detail?.Find("ItemRow/IconArea")?.gameObject;
+                _detailButtonArea = detail?.Find("ItemRow/ButtonArea")?.gameObject;
+            }
             _inventory ??= transform
                 .Find("InventoryArea/ScrollViewArea")
                 ?.GetComponentInChildren<InventoryView>(true);
@@ -546,7 +616,6 @@ namespace CreativeAI.UI.CharacterUI
         private void RefreshFilterCounts()
         {
             IReadOnlyList<ItemStack> items = ActiveInventoryManager?.GetAllItems();
-            int allCount = 0;
             int quickCount = 0;
             int equipmentCount = 0;
 
@@ -558,17 +627,15 @@ namespace CreativeAI.UI.CharacterUI
                     {
                         case ItemCategory.Food:
                             quickCount++;
-                            allCount++;
                             break;
                         case ItemCategory.Equipment:
                             equipmentCount++;
-                            allCount++;
                             break;
                     }
                 }
             }
 
-            int[] counts = { allCount, quickCount, equipmentCount };
+            int[] counts = { quickCount, equipmentCount };
             for (int i = 0; i < _filterCountLabels.Count && i < counts.Length; i++)
             {
                 if (_filterCountLabels[i] != null)
@@ -608,7 +675,7 @@ namespace CreativeAI.UI.CharacterUI
             {
                 Filter.Quick => data.category == ItemCategory.Food,
                 Filter.Equipment => data.category == ItemCategory.Equipment,
-                _ => data.category == ItemCategory.Food || data.category == ItemCategory.Equipment,
+                _ => false,
             };
         }
 
@@ -1069,6 +1136,9 @@ namespace CreativeAI.UI.CharacterUI
                 return;
             }
 
+            _detailIconArea?.SetActive(true);
+            _detailButtonArea?.SetActive(true);
+
             if (_detailIcon != null)
             {
                 _detailIcon.sprite = item.icon;
@@ -1086,16 +1156,18 @@ namespace CreativeAI.UI.CharacterUI
             SetDetailAction(action, item);
         }
 
-        private void ShowEmptyDetail()
+        private void ShowEmptyDetail(bool replayText = false)
         {
+            _detailIconArea?.SetActive(false);
+            _detailButtonArea?.SetActive(false);
             if (_detailIcon != null)
             {
                 _detailIcon.sprite = null;
                 _detailIcon.color = Color.clear;
             }
 
-            PlayDetailText(_detailName, "アイテムを選択", 0);
-            PlayDetailText(_detailDescription, "一覧からアイテムを選んでください。", 1);
+            PlayDetailText(_detailName, "アイテムを選択", 0, replayText);
+            PlayDetailText(_detailDescription, "一覧からアイテムを選んでください。", 1, replayText);
             if (_detailCount != null)
                 _detailCount.text = string.Empty;
 
@@ -1131,13 +1203,19 @@ namespace CreativeAI.UI.CharacterUI
             ItemData item = stack?.Data;
             bool showsQuick = item is FoodData;
             bool showsEquipment = item?.category == ItemCategory.Equipment;
+            bool showsParameters = showsQuick || showsEquipment;
+            _detailParameterRow?.SetActive(showsParameters);
+            if (_detailAreaLayout != null)
+                _detailAreaLayout.preferredHeight = showsParameters
+                    ? _detailExpandedHeight
+                    : Mathf.Max(0, _detailExpandedHeight - _detailParameterHeight);
             _quickParameterPattern?.SetActive(showsQuick);
             _equipmentParameterPattern?.SetActive(showsEquipment);
 
             if (item is FoodData food)
             {
                 if (_quickParameterLabel != null)
-                    _quickParameterLabel.text = "即時回復";
+                    _quickParameterLabel.text = "回復量";
                 SetParameterValue(_quickParameterValue, food.HealFraction * 100f);
             }
             else if (showsEquipment)
@@ -1163,13 +1241,18 @@ namespace CreativeAI.UI.CharacterUI
             text.text = $"{sign}{value.ToString("0.##", CultureInfo.InvariantCulture)}%";
         }
 
-        private void PlayDetailText(TMP_Text text, string value, int sectionIndex)
+        private void PlayDetailText(
+            TMP_Text text,
+            string value,
+            int sectionIndex,
+            bool replay = false
+        )
         {
             if (text == null)
                 return;
 
             string content = value ?? string.Empty;
-            if (text.text == content)
+            if (!replay && text.text == content)
                 return;
 
             _typewriter ??= new TmpTypewriterPlayer(this);
@@ -1186,7 +1269,10 @@ namespace CreativeAI.UI.CharacterUI
         {
             _detailAction = action;
             if (_actionButton != null)
+            {
                 _actionButton.interactable = action != DetailAction.None;
+                _actionButton.gameObject.SetActive(action != DetailAction.None);
+            }
             if (_actionLabel != null)
                 _actionLabel.text = action switch
                 {

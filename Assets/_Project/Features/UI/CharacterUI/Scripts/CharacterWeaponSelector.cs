@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using CreativeAI.Gameplay;
 using TMPro;
 using UnityEngine;
+using UnityEngine.UI;
 
 namespace CreativeAI.UI.CharacterUI
 {
@@ -47,6 +48,9 @@ namespace CreativeAI.UI.CharacterUI
         private TMP_Text _criticalDamageValue;
 
         [SerializeField]
+        private Image _weaponPreview;
+
+        [SerializeField]
         private List<CharacterWeaponSelection> _weapons = new();
 
         [SerializeField, Min(0)]
@@ -67,6 +71,27 @@ namespace CreativeAI.UI.CharacterUI
 
         [SerializeField, Min(0f)]
         private float _sectionDelay = 0.06f;
+
+        public event Action<WeaponData> SelectionChanged;
+        public WeaponData SelectedWeapon => GetWeapon(CurrentIndex)?.Data;
+        private WeaponManager _ownership;
+
+        public void SetOwnedWeapons(WeaponManager manager)
+        {
+            _ownership = manager;
+            foreach (var entry in _weapons)
+                if (entry?.Button != null)
+                    entry.Button.gameObject.SetActive(IsOwned(entry.Data));
+            if (!IsOwned(SelectedWeapon))
+                CurrentIndex = _weapons.FindIndex(entry => entry != null && IsOwned(entry.Data));
+            if (CurrentIndex >= 0)
+                ApplySelection();
+            else
+                SelectionChanged?.Invoke(null);
+        }
+
+        private bool IsOwned(WeaponData data) =>
+            data != null && (_ownership == null || _ownership.IsOwned(data.id - 1001));
 
         private bool _initialized;
         private TmpTypewriterPlayer _typewriter;
@@ -109,7 +134,7 @@ namespace CreativeAI.UI.CharacterUI
 
         public void Select(int index)
         {
-            if (!IsValidIndex(index))
+            if (!IsValidIndex(index) || !IsOwned(_weapons[index]?.Data))
                 return;
 
             CurrentIndex = index;
@@ -142,7 +167,19 @@ namespace CreativeAI.UI.CharacterUI
             foreach (CharacterWeaponSelection weapon in _weapons)
             {
                 if (weapon != null)
+                {
                     weapon.Button?.SetSelected(weapon == selectedWeapon);
+                    var icon = weapon.Button?.transform.Find("WeaponIcon")?.GetComponent<Image>();
+                    if (icon != null)
+                        icon.color =
+                            weapon == selectedWeapon ? Color.white : new Color(.62f, .65f, .7f, 1);
+                    var label = weapon.Button?.GetComponentInChildren<TMP_Text>(true);
+                    if (label != null)
+                        label.color =
+                            weapon == selectedWeapon
+                                ? UiVisualTheme.Gold
+                                : UiVisualTheme.Muted * new Color(.7f, .7f, .7f, 1);
+                }
             }
 
             if (selectedWeapon == null)
@@ -151,6 +188,14 @@ namespace CreativeAI.UI.CharacterUI
             WeaponData data = selectedWeapon.Data;
             if (data == null)
                 return;
+
+            SelectionChanged?.Invoke(data);
+
+            if (_weaponPreview != null)
+            {
+                _weaponPreview.sprite = data.icon;
+                _weaponPreview.gameObject.SetActive(data.icon != null);
+            }
 
             PlayText(_weaponName, data.itemName, 0);
             PlayText(_weaponDescription, data.description, 1);

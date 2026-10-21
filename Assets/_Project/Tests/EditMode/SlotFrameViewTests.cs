@@ -49,15 +49,62 @@ namespace CreativeAI.Tests.EditMode
         }
 
         [Test]
+        public void SingleItem_UsesNormalFrameWithoutCountBadge()
+        {
+            var item = ScriptableObject.CreateInstance<CreativeAI.Gameplay.FoodData>();
+            try
+            {
+                _view.SetContent(item, 1);
+                Assert.IsFalse(_view.HasVisibleCount);
+                Assert.AreSame(_sprites[0], _view.CurrentSprite);
+                _view.SetSelected(true);
+                Assert.AreSame(_sprites[1], _view.CurrentSprite);
+            }
+            finally
+            {
+                Object.DestroyImmediate(item);
+            }
+        }
+
+        [Test]
+        public void Equipment_UsesNormalFrameWithAndWithoutSelection()
+        {
+            var item = ScriptableObject.CreateInstance<CreativeAI.Gameplay.ItemData>();
+            item.category = CreativeAI.Gameplay.ItemCategory.Equipment;
+            try
+            {
+                _view.SetContent(item, 1);
+                Assert.IsFalse(_view.HasVisibleCount);
+                Assert.AreSame(_sprites[0], _view.CurrentSprite);
+                _view.SetSelected(true);
+                Assert.AreSame(_sprites[1], _view.CurrentSprite);
+                _view.SetSelected(false);
+                _view.SetContent(null, 0);
+                Assert.AreSame(_sprites[0], _view.CurrentSprite);
+                _view.SetSelected(true);
+                Assert.AreSame(_sprites[1], _view.CurrentSprite);
+            }
+            finally
+            {
+                Object.DestroyImmediate(item);
+            }
+        }
+
+        [Test]
         public void ItemWithCountAndSelected_UsesCombinedSprite()
         {
             var item = ScriptableObject.CreateInstance<CreativeAI.Gameplay.FoodData>();
             try
             {
                 _view.SetContent(item, 2);
+                Assert.AreSame(_sprites[3], _view.CurrentSprite);
                 _view.SetSelected(true);
 
                 Assert.AreSame(_sprites[5], _view.ResolveSprite());
+                _view.SetContent(item, 1);
+                Assert.AreSame(_sprites[1], _view.CurrentSprite);
+                _view.SetSelected(false);
+                Assert.AreSame(_sprites[0], _view.CurrentSprite);
             }
             finally
             {

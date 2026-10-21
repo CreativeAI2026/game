@@ -21,7 +21,7 @@ namespace CreativeAI.UI
         public FlagEntry[] flags = Array.Empty<FlagEntry>();
         public string[] importantItems = Array.Empty<string>();
 
-        /// <summary>持たせる武器のキー(sword / bow / scythe)。</summary>
+        /// <summary>持たせる武器のキー(sword / bow / scythe / hammer)。</summary>
         public string[] weapons = Array.Empty<string>();
 
         /// <summary>選んでおく武器のキー。空や未所持なら持っている武器の先頭。</summary>

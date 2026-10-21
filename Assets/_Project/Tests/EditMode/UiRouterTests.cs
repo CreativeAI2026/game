@@ -1,3 +1,4 @@
+using CreativeAI.Core;
 using CreativeAI.UI;
 using NUnit.Framework;
 using UnityEngine;
@@ -7,6 +8,7 @@ namespace CreativeAI.Tests.EditMode
     /// <summary>
     /// 操作で開く UI(キャラ / インベ / セーブ / 調合)の排他表示。
     /// 開くのは常に1つで、別のを開くと前のが閉じる。
+    /// どれかが開いているかは UiPanelService に伝わる(プレイヤーの操作を止めるため)。
     /// </summary>
     public class UiRouterTests
     {
@@ -40,6 +42,7 @@ namespace CreativeAI.Tests.EditMode
         [TearDown]
         public void TearDown()
         {
+            UiPanelService.ResetState();
             Object.DestroyImmediate(_craft);
             Object.DestroyImmediate(_save);
             Object.DestroyImmediate(_inventory);
@@ -129,6 +132,45 @@ namespace CreativeAI.Tests.EditMode
             _router.Toggle(UiRouter.UiId.Save);
 
             Assert.IsTrue(_save.activeSelf);
+        }
+
+        [Test]
+        public void Open_TellsUiPanelServiceItIsOpen()
+        {
+            _router.Open(UiRouter.UiId.Character);
+
+            Assert.IsTrue(UiPanelService.IsOpen);
+        }
+
+        [Test]
+        public void CloseAll_TellsUiPanelServiceItIsClosed()
+        {
+            _router.Open(UiRouter.UiId.Character);
+
+            _router.CloseAll();
+
+            Assert.IsFalse(UiPanelService.IsOpen);
+        }
+
+        [Test]
+        public void Toggle_Closing_TellsUiPanelServiceItIsClosed()
+        {
+            _router.Toggle(UiRouter.UiId.Inventory);
+            _router.Toggle(UiRouter.UiId.Inventory);
+
+            Assert.IsFalse(UiPanelService.IsOpen);
+        }
+
+        [Test]
+        public void PanelClosedItself_IsPickedUpOnUpdate()
+        {
+            // 戻るボタンはルータを通らずに SetActive(false) で閉じる。
+            _router.Open(UiRouter.UiId.Save);
+            _save.SetActive(false);
+
+            TestReflection.Invoke(_router, "Update");
+
+            Assert.IsFalse(UiPanelService.IsOpen);
         }
 
         [Test]

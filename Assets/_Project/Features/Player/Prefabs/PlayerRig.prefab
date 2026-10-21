@@ -99,10 +99,6 @@ PrefabInstance:
       propertyPath: m_Name
       value: PlayerRig
       objectReference: {fileID: 0}
-    - target: {fileID: 8830876905192145249, guid: 4d30f9d77d1f9c64bb9fe22315f2c5c2, type: 3}
-      propertyPath: _bowStringRenderer
-      value: 
-      objectReference: {fileID: 0}
     m_RemovedComponents:
     - {fileID: 3992504625198873444, guid: 4d30f9d77d1f9c64bb9fe22315f2c5c2, type: 3}
     m_RemovedGameObjects: []
