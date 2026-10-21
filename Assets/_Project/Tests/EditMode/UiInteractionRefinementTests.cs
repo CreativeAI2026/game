@@ -27,13 +27,14 @@ namespace CreativeAI.Tests.EditMode
                     data.itemName,
                     selector.transform.Find("ViewArea/Name").GetComponent<TMP_Text>().text
                 );
-                Assert.AreEqual(
-                    data.icon,
-                    selector
-                        .transform.Find("ViewArea/WeaponView/WeaponPreview")
-                        .GetComponent<Image>()
-                        .sprite
+                Assert.AreSame(data, selector.SelectedWeapon);
+                var preview = selector.transform.Find("ViewArea/WeaponView/WeaponPreview");
+                Assert.False(
+                    preview.GetComponent<Image>().enabled,
+                    "The legacy sprite preview is replaced by 3D rendering"
                 );
+                Assert.NotNull(preview.GetComponentInChildren<ModelPreview>(true));
+                Assert.NotNull(preview.GetComponentInChildren<RawImage>(true));
                 Assert.AreEqual(
                     "+100%",
                     selector

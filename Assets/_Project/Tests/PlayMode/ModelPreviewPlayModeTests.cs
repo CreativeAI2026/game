@@ -188,9 +188,9 @@ namespace CreativeAI.Tests.PlayMode
                 else
                 {
                     double animationTime = controller.PreviewAnimationTime;
-                    var poseRoot = Object
-                        .FindObjectsByType<Animator>(FindObjectsSortMode.None)
-                        .Single(a => a.name == "UI Character Pose");
+                    var poseRoot = Resources
+                        .FindObjectsOfTypeAll<Animator>()
+                        .Single(a => a.name == "UI Character Pose" && a.gameObject.scene.IsValid());
                     var bones = poseRoot.GetComponentsInChildren<Transform>();
                     var rotations = bones.Select(b => b.localRotation).ToArray();
                     yield return new WaitForSecondsRealtime(.4f);
