@@ -1,6 +1,8 @@
 using System;
 using System.Collections;
+using System.Collections.Generic;
 using CreativeAI.Core;
+using CreativeAI.Gameplay;
 using UnityEngine;
 
 namespace CreativeAI.UI
@@ -40,6 +42,49 @@ namespace CreativeAI.UI
         [SerializeField]
         private EventDefinition _event; // 割当時は組み込みデモの代わりに、このイベント(events.json 由来)を EventPlayer で再生
 
+        [Serializable]
+        public struct PreviewFlag
+        {
+            public string Key;
+            public string Value;
+        }
+
+        [SerializeField]
+        private PreviewFlag[] _initialFlags = Array.Empty<PreviewFlag>();
+
+        [
+            SerializeField,
+            Tooltip("分岐テスト用。大事なもののitemKeyを指定。本番の所持品は変更しません。")
+        ]
+        private string[] _importantItemKeys = Array.Empty<string>();
+        private readonly Dictionary<string, string> _previewFlags = new();
+
+        private sealed class PreviewInventory : IItemGiver, IWeaponGiver
+        {
+            private readonly HashSet<string> _owned;
+            private readonly HashSet<string> _important = new();
+
+            public PreviewInventory(string[] keys)
+            {
+                _owned = new HashSet<string>(keys ?? Array.Empty<string>());
+                var catalog = Resources.Load<ItemCatalog>("ItemCatalog");
+                if (catalog != null)
+                    foreach (var item in catalog.Items)
+                        if (item != null && item.category == ItemCategory.Important)
+                            _important.Add(item.key);
+            }
+
+            public void Give(string key)
+            {
+                if (_important.Contains(key))
+                    _owned.Add(key);
+            }
+
+            public bool HasImportantItem(string key) => _owned.Contains(key);
+
+            public void GiveWeapon(string key) { }
+        }
+
         private IEnumerator Start()
         {
             IDialogueView view = _view != null ? _view : DialogueViewService.Current;
@@ -53,12 +98,9 @@ namespace CreativeAI.UI
 
             if (_event != null)
             {
-                // 本番と同じ再生経路。在庫・進行度の常駐が無いシーンなので giveItem は演出のみ、フラグ/進行は記録されない。
-                var player = EventPlayer.EnsureResident();
-                player.Inject(null, view, null);
                 do
                 {
-                    yield return player.PlayRoutine(_event); // 終了時のウィンドウは EventPlayer が閉じる
+                    yield return PlayEventPreview(_event, view);
                     yield return new WaitForSecondsRealtime(0.4f);
                 } while (_loop);
                 yield break;
@@ -68,6 +110,79 @@ namespace CreativeAI.UI
             {
                 yield return PlayPreview(view);
             } while (_loop);
+        }
+
+        /// <summary>一時的なフラグ・所持品だけで再生し、本番の進行度や戦闘には触れない。</summary>
+        public IEnumerator PlayEventPreview(EventDefinition ev, IDialogueView view)
+        {
+            if (ev == null || view == null || EventPlaybackService.IsPlaying)
+                yield break;
+            _previewFlags.Clear();
+            foreach (var flag in _initialFlags)
+                if (!string.IsNullOrWhiteSpace(flag.Key))
+                    _previewFlags[flag.Key] = flag.Value;
+            var inventory = new PreviewInventory(_importantItemKeys);
+            EventPlaybackService.SetPlaying(true);
+            try
+            {
+                for (int i = 0; i < ev.Steps.Count; i++)
+                {
+                    var step = ev.Steps[i];
+                    if (step == null)
+                        continue;
+                    if (step.Kind == StepKind.Branch || step.Kind == StepKind.Jump)
+                    {
+                        int target = step.ResolveTarget(
+                            key =>
+                                _previewFlags.TryGetValue(key, out var value)
+                                    ? value
+                                    : string.Empty,
+                            inventory.HasImportantItem
+                        );
+                        if (target <= i || target > ev.Steps.Count)
+                        {
+                            Debug.LogError(
+                                $"[ConversationPreviewDriver] 分岐先 {target} が不正です（位置={i}）。"
+                            );
+                            yield return view.Close();
+                            yield break;
+                        }
+                        i = target - 1;
+                        continue;
+                    }
+                    switch (step.Kind)
+                    {
+                        case StepKind.Line:
+                            yield return view.ShowLine(step.Speaker, step.Portrait, step.Text);
+                            break;
+                        case StepKind.Choice:
+                            string picked = null;
+                            yield return view.ShowChoice(step.Options, value => picked = value);
+                            if (!string.IsNullOrEmpty(picked))
+                                _previewFlags[step.FlagKey] = picked;
+                            break;
+                        case StepKind.GiveItem:
+                            inventory.Give(step.ItemKey);
+                            yield return view.ShowItemGet(step.ItemKey, step.Message);
+                            break;
+                        case StepKind.GiveWeapon:
+                            yield return view.ShowWeaponGet(step.WeaponKey, step.Message);
+                            break;
+                        case StepKind.Command:
+                            yield return view.RunCommand(step.CommandName, step.Arg);
+                            break;
+                        case StepKind.Battle:
+                            yield return view.Close();
+                            // プレビューでは敵の生成・ゲームモードの変更を行わない。
+                            break;
+                    }
+                }
+                yield return view.Close();
+            }
+            finally
+            {
+                EventPlaybackService.SetPlaying(false);
+            }
         }
 
         private static IEnumerator PlayPreview(IDialogueView view)

@@ -83,6 +83,26 @@ namespace CreativeAI.Core
         GiveWeapon,
         Battle,
         Command,
+        Branch,
+        Jump,
+    }
+
+    [Serializable]
+    public sealed class EventBranchCase
+    {
+        [SerializeField]
+        private string _value;
+
+        [SerializeField]
+        private int _target;
+        public string Value => _value;
+        public int Target => _target;
+
+        public EventBranchCase(string value, int target)
+        {
+            _value = value;
+            _target = target;
+        }
     }
 
     /// <summary>choice ステップの選択肢1つ(表示文 + 書き込む値)。</summary>
@@ -146,6 +166,55 @@ namespace CreativeAI.Core
 
         [SerializeField]
         private string _arg; // command: コマンド引数(wait の秒数など。不要なら空)
+
+        [SerializeField]
+        private EventBranchCase[] _cases = Array.Empty<EventBranchCase>();
+
+        [SerializeField]
+        private int _thenTarget;
+
+        [SerializeField]
+        private int _elseTarget;
+
+        [SerializeField]
+        private int _joinTarget;
+        public IReadOnlyList<EventBranchCase> Cases => _cases;
+        public int JoinTarget => _joinTarget;
+
+        public static EventStep BranchFlag(string flag, EventBranchCase[] cases, int join) =>
+            new()
+            {
+                _kind = StepKind.Branch,
+                _flagKey = flag,
+                _cases = cases,
+                _joinTarget = join,
+            };
+
+        public static EventStep BranchItem(string key, int thenTarget, int elseTarget, int join) =>
+            new()
+            {
+                _kind = StepKind.Branch,
+                _itemKey = key,
+                _thenTarget = thenTarget,
+                _elseTarget = elseTarget,
+                _joinTarget = join,
+            };
+
+        public static EventStep Jump(int target) =>
+            new() { _kind = StepKind.Jump, _joinTarget = target };
+
+        public int ResolveTarget(Func<string, string> getFlag, Func<string, bool> hasItem)
+        {
+            if (_kind == StepKind.Jump)
+                return _joinTarget;
+            if (!string.IsNullOrEmpty(_itemKey))
+                return hasItem?.Invoke(_itemKey) == true ? _thenTarget : _elseTarget;
+            string value = getFlag?.Invoke(_flagKey);
+            foreach (var option in _cases ?? Array.Empty<EventBranchCase>())
+                if (string.Equals(option.Value, value, StringComparison.Ordinal))
+                    return option.Target;
+            return _joinTarget;
+        }
 
         public EventStep() { }
 

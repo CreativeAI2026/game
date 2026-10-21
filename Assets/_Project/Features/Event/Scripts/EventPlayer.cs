@@ -123,10 +123,30 @@ namespace CreativeAI.Core
             EventPlaybackService.SetPlaying(true);
             try
             {
-                foreach (var step in ev.Steps)
+                for (int stepIndex = 0; stepIndex < ev.Steps.Count; stepIndex++)
                 {
+                    var step = ev.Steps[stepIndex];
                     if (step == null)
                         continue;
+
+                    if (step.Kind == StepKind.Branch || step.Kind == StepKind.Jump)
+                    {
+                        int target = step.ResolveTarget(
+                            key => Progress?.GetFlag(key),
+                            key => Items?.HasImportantItem(key) ?? false
+                        );
+                        if (target <= stepIndex || target > ev.Steps.Count)
+                        {
+                            Debug.LogError(
+                                $"[EventPlayer] 分岐先 {target} が不正です（位置={stepIndex}, event={ev.Id}）。"
+                            );
+                            if (View != null)
+                                yield return View.Close();
+                            yield break;
+                        }
+                        stepIndex = target - 1;
+                        continue;
+                    }
 
                     // 戦闘中に会話ウィンドウが残らないよう、battle の前に閉じる。
                     if (step.Kind == StepKind.Battle && View != null)
@@ -144,7 +164,9 @@ namespace CreativeAI.Core
                             if (View != null)
                                 yield return View.ShowChoice(step.Options, v => picked = v);
                             if (!string.IsNullOrEmpty(picked))
+                            {
                                 Progress?.SetFlag(step.FlagKey, picked);
+                            }
                             break;
 
                         case StepKind.GiveItem:
