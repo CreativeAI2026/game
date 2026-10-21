@@ -1888,7 +1888,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 03a414691de43194c99d2562c82c6de1, type: 3}
   m_Name:
   m_EditorClassIdentifier: CreativeAI.UI::CreativeAI.UI.CharacterUI.CharacterPreviewController
-  _bladeIdle: {fileID: 6707078722156420434, guid: 56abcc5f6d9001f4e86a0363ac8c68ea, type: 3}
+  _meleeAttack: {fileID: 7400000, guid: f16e2c6658648d44397ca10b4f566f00, type: 2}
+  _weaponIdle: {fileID: 6707078722156420434, guid: 56abcc5f6d9001f4e86a0363ac8c68ea, type: 3}
   _characterPreview: {fileID: 2883880161189224899}
   _weaponPreview: {fileID: 8053405369766792541}
   _selector: {fileID: 1565401905684781263}

@@ -7,7 +7,7 @@ using UnityEngine.Playables;
 
 namespace CreativeAI.UI.CharacterUI
 {
-    // A transform-and-renderer-only rig. HumanPoseHandler poses this copy, never the live player.
+    // Isolated render rig; only its own Animator and PlayableGraph drive preview poses.
     internal sealed class CharacterPreviewPose : IDisposable
     {
         private readonly Dictionary<Transform, Transform> _transforms = new();
@@ -21,19 +21,67 @@ namespace CreativeAI.UI.CharacterUI
         private readonly AnimationClip _bladeIdle;
         private PlayableGraph _idleGraph;
         private Animator _previewAnimator;
+        private AnimationMixerPlayable _mixer;
+        private AnimationClipPlayable _attack;
+        private float _attackElapsed;
+        private float _attackDuration;
+        public bool IsAttacking => _attack.IsValid();
         public bool IsAnimating => _idleGraph.IsValid();
         public double AnimationTime => IsAnimating ? _idleGraph.GetRootPlayable(0).GetTime() : 0;
 
         public void Tick(float deltaTime)
         {
-            if (IsAnimating)
-                _idleGraph.Evaluate(deltaTime);
+            if (!IsAnimating)
+                return;
+            if (IsAttacking)
+            {
+                _attackElapsed += deltaTime;
+                if (_attackElapsed >= _attackDuration)
+                    EndAttack();
+                else
+                    _mixer.SetInputWeight(
+                        1,
+                        Mathf.Min(
+                            Mathf.Clamp01(_attackElapsed / .1f),
+                            Mathf.Clamp01((_attackDuration - _attackElapsed) / .15f)
+                        )
+                    );
+            }
+            _mixer.SetInputWeight(0, 1f - (IsAttacking ? _mixer.GetInputWeight(1) : 0f));
+            _idleGraph.Evaluate(deltaTime);
+        }
+
+        public bool PlayAttack(AnimationClip clip)
+        {
+            if (!IsAnimating || IsAttacking || clip == null || clip.length <= 0)
+                return false;
+            _attack = AnimationClipPlayable.Create(_idleGraph, clip);
+            _attack.SetApplyFootIK(false);
+            _attack.SetApplyPlayableIK(false);
+            _idleGraph.Connect(_attack, 0, _mixer, 1);
+            _attackElapsed = 0;
+            _attackDuration = clip.length;
+            _mixer.SetInputWeight(1, 0);
+            return true;
+        }
+
+        private void EndAttack()
+        {
+            if (!IsAttacking)
+                return;
+            _mixer.DisconnectInput(1);
+            _idleGraph.DestroyPlayable(_attack);
+            _attack = default;
+            _mixer.SetInputWeight(1, 0);
+            _mixer.SetInputWeight(0, 1);
         }
 
         private void StopIdle()
         {
             if (_idleGraph.IsValid())
                 _idleGraph.Destroy();
+            _attack = default;
+            _mixer = default;
             if (_previewAnimator != null)
                 _previewAnimator.enabled = false;
             foreach (var pair in _standing)
@@ -44,7 +92,7 @@ namespace CreativeAI.UI.CharacterUI
             }
         }
 
-        private void StartBladeIdle()
+        private void StartIdle()
         {
             if (_bladeIdle == null)
                 return;
@@ -57,13 +105,16 @@ namespace CreativeAI.UI.CharacterUI
                 _previewAnimator.fireEvents = false;
             }
             _previewAnimator.enabled = true;
-            _idleGraph = PlayableGraph.Create("UI Blade Idle");
+            _idleGraph = PlayableGraph.Create("UI Weapon Preview");
             _idleGraph.SetTimeUpdateMode(DirectorUpdateMode.Manual);
             var clip = AnimationClipPlayable.Create(_idleGraph, _bladeIdle);
             clip.SetApplyFootIK(false);
             clip.SetApplyPlayableIK(false);
             var output = AnimationPlayableOutput.Create(_idleGraph, "Pose", _previewAnimator);
-            output.SetSourcePlayable(clip);
+            _mixer = AnimationMixerPlayable.Create(_idleGraph, 2);
+            _idleGraph.Connect(clip, 0, _mixer, 0);
+            _mixer.SetInputWeight(0, 1);
+            output.SetSourcePlayable(_mixer);
             _idleGraph.Play();
             _idleGraph.Evaluate(0);
         }
@@ -252,8 +303,8 @@ namespace CreativeAI.UI.CharacterUI
             }
             StopIdle();
             WeaponId = source != null ? id : -1;
-            if (WeaponId == 1001)
-                StartBladeIdle();
+            if (WeaponId == 1001 || WeaponId == 1003 || WeaponId == 1004)
+                StartIdle();
             if (source == null)
             {
                 SynchronizeAppearance();

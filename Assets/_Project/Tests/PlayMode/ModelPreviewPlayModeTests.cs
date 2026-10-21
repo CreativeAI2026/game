@@ -174,44 +174,96 @@ namespace CreativeAI.Tests.PlayMode
                     manager.CurrentWeaponIndex,
                     "Browsing must not alter the live player equipment"
                 );
-                Assert.AreEqual(
-                    id == 1001,
+                Assert.True(
                     controller.PreviewIsAnimating,
-                    "Only the blade uses the idle animation"
+                    "All three melee weapons share the idle"
                 );
-                if (id != 1001)
-                    Assert.Less(
-                        controller.PreviewKneeBend,
-                        2f,
-                        "Other weapons keep the standing pose"
-                    );
-                else
+                Assert.False(controller.PreviewIsAttacking, "Weapon changes cancel attacks");
+                double animationTime = controller.PreviewAnimationTime;
+                var poseRoot = Resources
+                    .FindObjectsOfTypeAll<Animator>()
+                    .Single(a => a.name == "UI Character Pose" && a.gameObject.scene.IsValid());
+                var bones = poseRoot.GetComponentsInChildren<Transform>();
+                var rotations = bones.Select(b => b.localRotation).ToArray();
+                yield return new WaitForSecondsRealtime(.4f);
+                Assert.True(
+                    bones
+                        .Where(
+                            (bone, index) =>
+                                Quaternion.Angle(bone.localRotation, rotations[index]) > .05f
+                        )
+                        .Any(),
+                    "Idle must animate the preview bones"
+                );
+                Assert.Greater(controller.PreviewAnimationTime, animationTime);
+
+                var pointer = new PointerEventData(EventSystem.current)
                 {
-                    double animationTime = controller.PreviewAnimationTime;
-                    var poseRoot = Resources
-                        .FindObjectsOfTypeAll<Animator>()
-                        .Single(a => a.name == "UI Character Pose" && a.gameObject.scene.IsValid());
-                    var bones = poseRoot.GetComponentsInChildren<Transform>();
-                    var rotations = bones.Select(b => b.localRotation).ToArray();
-                    yield return new WaitForSecondsRealtime(.4f);
-                    Assert.True(
-                        bones
-                            .Where(
-                                (bone, index) =>
-                                    Quaternion.Angle(bone.localRotation, rotations[index]) > .05f
-                            )
-                            .Any(),
-                        "Idle playback must animate the preview bones, not only advance its clock"
-                    );
-                    Assert.Greater(
-                        controller.PreviewAnimationTime,
-                        animationTime,
-                        "Blade idle must keep playing"
-                    );
-                }
+                    button = PointerEventData.InputButton.Left,
+                };
+                character.OnPointerDown(pointer);
+                character.OnDrag(
+                    new PointerEventData(EventSystem.current)
+                    {
+                        button = PointerEventData.InputButton.Left,
+                        delta = new Vector2(20, 0),
+                    }
+                );
+                character.OnPointerClick(pointer);
+                Assert.False(
+                    controller.PreviewIsAttacking,
+                    "Dragging must never trigger an attack"
+                );
+                character.OnPointerDown(pointer);
+                character.OnPointerClick(pointer);
+                Assert.True(
+                    controller.PreviewIsAttacking,
+                    "A left click starts the selected weapon's normal melee attack"
+                );
+                var attackRotations = bones.Select(b => b.localRotation).ToArray();
+                yield return new WaitForSecondsRealtime(.2f);
+                Assert.True(
+                    bones
+                        .Where(
+                            (bone, index) =>
+                                Quaternion.Angle(bone.localRotation, attackRotations[index]) > 5f
+                        )
+                        .Any(),
+                    "Attack must visibly move the preview bones"
+                );
+                AssertVisible(character, "preview-attack-" + id);
+                Assert.AreEqual(beforePosition, player.transform.position);
+                Assert.AreEqual(beforeRotation, player.transform.rotation);
+                yield return new WaitForSecondsRealtime(2f);
+                Assert.False(
+                    controller.PreviewIsAttacking,
+                    "Attack must finish and return to idle"
+                );
+                Assert.True(controller.PreviewIsAnimating);
+                character.OnPointerDown(
+                    new PointerEventData(EventSystem.current)
+                    {
+                        button = PointerEventData.InputButton.Right,
+                    }
+                );
+                character.OnPointerClick(
+                    new PointerEventData(EventSystem.current)
+                    {
+                        button = PointerEventData.InputButton.Right,
+                    }
+                );
+                Assert.False(controller.PreviewIsAttacking, "Right click does not attack");
                 AssertVisible(character, "preview-character-weapon-" + id);
                 AssertVisible(weapon, "preview-weapon-" + id);
             }
+            // Cancel an active attack on weapon change.
+            var leftClick = new PointerEventData(EventSystem.current)
+            {
+                button = PointerEventData.InputButton.Left,
+            };
+            character.OnPointerDown(leftClick);
+            character.OnPointerClick(leftClick);
+            Assert.True(controller.PreviewIsAttacking);
             // Bow has no model asset in this repository; its UI must explain that state.
             for (int i = 0; i < 4; i++)
             {
@@ -220,6 +272,8 @@ namespace CreativeAI.Tests.PlayMode
                     break;
             }
             Assert.AreEqual(1002, selector.SelectedWeapon.id);
+            yield return null;
+            Assert.False(controller.PreviewIsAttacking);
             Assert.AreEqual(0, weapon.MeshCount);
             Assert.True(weapon.transform.parent.Find("ModelUnavailable").gameObject.activeSelf);
             for (int i = 0; i < 4; i++)
@@ -276,9 +330,30 @@ namespace CreativeAI.Tests.PlayMode
             );
             yield return new WaitForSecondsRealtime(.4f);
 #endif
+            var pauseScale = Time.timeScale;
+            try
+            {
+                Time.timeScale = 0;
+                character.OnPointerDown(leftClick);
+                character.OnPointerClick(leftClick);
+                Assert.True(controller.PreviewIsAttacking);
+                yield return new WaitForSecondsRealtime(2f);
+                Assert.False(
+                    controller.PreviewIsAttacking,
+                    "Attack returns to idle while game time is paused"
+                );
+            }
+            finally
+            {
+                Time.timeScale = pauseScale;
+            }
+            character.OnPointerDown(leftClick);
+            character.OnPointerClick(leftClick);
+            Assert.True(controller.PreviewIsAttacking);
             var oldTexture = character.Texture;
             router.CloseAll();
             Assert.IsNull(character.Texture);
+            Assert.False(controller.PreviewIsAttacking, "Closing disposes active attack playback");
             Assert.True(
                 player.GetComponentsInChildren<Renderer>(true).All(r => r.forceRenderingOff),
                 "The UI-only source player must never be visible outside the panel"

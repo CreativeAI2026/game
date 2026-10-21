@@ -55,6 +55,14 @@ UI_Sandboxの確認用プレイヤーにはPreviewOnlyPlayerを付け、通常�
 
 ## ブレードの待機モーション
 
-ブレード（1001）のみPlayer.fbx内のArmature|Idle_katanaをプレビュー専用Animatorと手動更新PlayableGraphでループ再生する。Time.unscaledDeltaTimeで進め、ゲームの停止中も動く。ゲーム側Animatorや装備は変更しない。イベントとRoot Motionは無効。他武器・素手へ切替時にはグラフを破棄し、保存した立ち姿のTransformへ戻す。パネル終了でもグラフを破棄する。PrefabのBlade Idle参照は設定済み。
+ブレード（1001）・大鎌（1003）・ハンマー（1004）はPlayer.fbx内のArmature|Idle_katanaを共通アイドルとしてプレビュー専用Animatorと手動更新PlayableGraphでループ再生する。Time.unscaledDeltaTimeで進め、ゲームの停止中も動く。ゲーム側Animatorや装備は変更しない。イベントとRoot Motionは無効。武器切替時にはグラフを破棄して再構築する。弓・素手へ切替時は保存した立ち姿のTransformへ戻す。パネル終了でもグラフを破棄する。PrefabのWeapon IdleとMelee Attack参照は設定済み。
 
 Play Mode回帰テスト成功（Temp/ModelPreviewEvidence/BladeIdleResults.xml）。再生時間だけでなくボーン回転の変化、他武器での直立、所有0・再取得・閉じて再表示を確認。Idle_katanaは刀を下げた控えめな待機姿勢。
+
+## 共通アイドルとクリック攻撃（feature/preview-weapon-animations）
+
+キャラクタープレビューを左クリックすると通常近接攻撃（Armature_Slash_01_katana）を1回再生し、共通アイドルへ戻る。鎌・ハンマーもゲーム本体の通常攻撃と同じ共通クリップを使用。入り0.1秒・戻り0.15秒のブレンドを適用する。ドラッグは回転だけとし、ドラッグ後のクリック・右クリック・攻撃中の連打は無視する。弓・素手は攻撃しない。武器切替・所持0・パネル終了で攻撃を破棄する。時間停止中もunscaledDeltaTimeで進む。
+
+ゲーム本体のAnimator・攻撃スクリプト・AnimationEvent・ヒット判定・Root Motionは使わず、プレビュー内の骨だけを動かす。
+
+Play Mode回帰テスト成功（Temp/ModelPreviewEvidence/AttackPreviewResults.xml）。3武器のアイドルと攻撃のボーン変化、ドラッグ後の攻撃抑止、右クリック無効、攻撃終了時の復帰、時間停止中の復帰、武器切替・パネル終了による中断を確認。
