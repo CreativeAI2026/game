@@ -72,6 +72,27 @@ namespace CreativeAI.UI.CharacterUI
         [SerializeField, Min(0f)]
         private float _sectionDelay = 0.06f;
 
+        public event Action<WeaponData> SelectionChanged;
+        public WeaponData SelectedWeapon => GetWeapon(CurrentIndex)?.Data;
+        private WeaponManager _ownership;
+
+        public void SetOwnedWeapons(WeaponManager manager)
+        {
+            _ownership = manager;
+            foreach (var entry in _weapons)
+                if (entry?.Button != null)
+                    entry.Button.gameObject.SetActive(IsOwned(entry.Data));
+            if (!IsOwned(SelectedWeapon))
+                CurrentIndex = _weapons.FindIndex(entry => entry != null && IsOwned(entry.Data));
+            if (CurrentIndex >= 0)
+                ApplySelection();
+            else
+                SelectionChanged?.Invoke(null);
+        }
+
+        private bool IsOwned(WeaponData data) =>
+            data != null && (_ownership == null || _ownership.IsOwned(data.id - 1001));
+
         private bool _initialized;
         private TmpTypewriterPlayer _typewriter;
 
@@ -113,7 +134,7 @@ namespace CreativeAI.UI.CharacterUI
 
         public void Select(int index)
         {
-            if (!IsValidIndex(index))
+            if (!IsValidIndex(index) || !IsOwned(_weapons[index]?.Data))
                 return;
 
             CurrentIndex = index;
@@ -167,6 +188,8 @@ namespace CreativeAI.UI.CharacterUI
             WeaponData data = selectedWeapon.Data;
             if (data == null)
                 return;
+
+            SelectionChanged?.Invoke(data);
 
             if (_weaponPreview != null)
             {
