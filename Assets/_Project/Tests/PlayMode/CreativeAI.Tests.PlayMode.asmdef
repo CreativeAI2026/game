@@ -6,7 +6,8 @@
         "CreativeAI.Gameplay",
         "CreativeAI.UI",
         "Unity.TextMeshPro",
-        "UnityEngine.TestRunner"
+        "UnityEngine.TestRunner",
+        "Unity.InputSystem"
     ],
     "includePlatforms": [],
     "excludePlatforms": [],

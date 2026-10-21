@@ -20,11 +20,14 @@ namespace CreativeAI.UI
         private bool _seedTestItems = true;
 
         [SerializeField]
-        [Tooltip(
-            "直接 Play 時にプレイヤーリグとカメラリグも出す。フィールドシーンだけ ON にする"
-                + "(UI 確認シーンは自前のカメラを持つので、二重にならないよう既定 OFF)。"
-        )]
+        [Tooltip("直接Play時にプレイヤーを生成します。既存のMain Cameraは再利用します。")]
         private bool _spawnPlayerRig;
+
+        [
+            SerializeField,
+            Tooltip("UI確認用プレイヤーをゲーム画面に表示せず、操作と物理を停止します。")
+        ]
+        private bool _previewOnlyPlayer;
 
         [SerializeField]
         [Tooltip("リグを出す位置の SpawnPoint ID。本番の「はじめる」と同じ開始位置が既定。")]
@@ -35,7 +38,11 @@ namespace CreativeAI.UI
         private void Awake()
         {
             // Title 経由で既に常駐が生成済みなら何もしない(UIRoot の有無で判定)。
-            if (UIRoot.Instance != null && InventoryManager.Instance != null)
+            if (
+                UIRoot.Instance != null
+                && InventoryManager.Instance != null
+                && (!_spawnPlayerRig || PlayerRegistry.Current != null)
+            )
                 return;
 
             var config = Resources.Load<ResidentBootstrapConfig>(nameof(ResidentBootstrapConfig));
@@ -54,12 +61,33 @@ namespace CreativeAI.UI
             // プレイヤーは Awake で MainCamera を探すので、カメラリグを先に出す。
             if (_spawnPlayerRig)
             {
-                GameSession.EnsureCameraRig(config != null ? config.cameraRigPrefab : null);
+                if (Camera.main == null)
+                    GameSession.EnsureCameraRig(config != null ? config.cameraRigPrefab : null);
                 var player = GameSession.EnsurePlayerRig(
                     config != null ? config.playerRigPrefab : null
                 );
                 if (player != null)
+                {
                     SpawnPoint.Place(player, _spawnPointId);
+                    if (_previewOnlyPlayer)
+                    {
+                        player.AddComponent<PreviewOnlyPlayer>();
+                        var controller = player.GetComponent<PlayerController>();
+                        if (controller != null)
+                            controller.enabled = false;
+                        var input = player.GetComponent<PlayerInputHandler>();
+                        if (input != null)
+                        {
+                            input.cursorLocked = false;
+                            input.enabled = false;
+                        }
+                        Cursor.lockState = CursorLockMode.None;
+                        Cursor.visible = true;
+                        var collider = player.GetComponent<CharacterController>();
+                        if (collider != null)
+                            collider.enabled = false;
+                    }
+                }
             }
 
             // 開発用: テスト品を積む(本番 Title フローでは呼ばれない = まっさら)。
