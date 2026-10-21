@@ -10,7 +10,11 @@ namespace CreativeAI.UI.CharacterUI
         private ModelPreview _characterPreview;
 
         [SerializeField]
-        private AnimationClip _bladeIdle;
+        [UnityEngine.Serialization.FormerlySerializedAs("_bladeIdle")]
+        private AnimationClip _weaponIdle;
+
+        [SerializeField]
+        private AnimationClip _meleeAttack;
 
         [SerializeField]
         private ModelPreview _weaponPreview;
@@ -30,16 +34,26 @@ namespace CreativeAI.UI.CharacterUI
         private WeaponData _shownWeapon;
         private CharacterPreviewPose _posedModel;
         public float PreviewKneeBend => _posedModel != null ? _posedModel.KneeBend : 0f;
+        public bool PreviewIsAttacking => _posedModel != null && _posedModel.IsAttacking;
         public bool PreviewIsAnimating => _posedModel != null && _posedModel.IsAnimating;
         public double PreviewAnimationTime => _posedModel != null ? _posedModel.AnimationTime : 0;
         public int PreviewWeaponId => _posedModel != null ? _posedModel.WeaponId : -1;
 
         private void OnEnable()
         {
+            if (_characterPreview != null)
+                _characterPreview.Clicked += PlayPreviewAttack;
             PlayerRegistry.Changed += Bind;
             if (_selector != null)
                 _selector.SelectionChanged += SelectionChanged;
             Bind(PlayerRegistry.Current);
+        }
+
+        private void PlayPreviewAttack()
+        {
+            // Ignore clicks while selection/equipment is waiting to be synchronized.
+            if (!_dirty && _posedModel != null)
+                _posedModel.PlayAttack(_meleeAttack);
         }
 
         private void Bind(PlayerController player)
@@ -111,7 +125,7 @@ namespace CreativeAI.UI.CharacterUI
             if (_posedModel == null || _posedModel.Source != model)
             {
                 _posedModel?.Dispose();
-                _posedModel = new CharacterPreviewPose(model, _manager, _bladeIdle);
+                _posedModel = new CharacterPreviewPose(model, _manager, _weaponIdle);
             }
             int weaponId =
                 _manager.OwnedCount > 0 && _manager.CurrentWeaponIndex >= 0
@@ -168,6 +182,8 @@ namespace CreativeAI.UI.CharacterUI
 
         private void OnDisable()
         {
+            if (_characterPreview != null)
+                _characterPreview.Clicked -= PlayPreviewAttack;
             PlayerRegistry.Changed -= Bind;
             if (_selector != null)
                 _selector.SelectionChanged -= SelectionChanged;

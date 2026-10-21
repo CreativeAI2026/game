@@ -67,7 +67,11 @@ namespace CreativeAI.EditorTools
                     )
                 )
                     if (asset is AnimationClip idle && idle.name == "Armature|Idle_katana")
-                        settings.FindProperty("_bladeIdle").objectReferenceValue = idle;
+                        settings.FindProperty("_weaponIdle").objectReferenceValue = idle;
+                settings.FindProperty("_meleeAttack").objectReferenceValue =
+                    AssetDatabase.LoadAssetAtPath<AnimationClip>(
+                        "Assets/_Project/Art/Models/Characters/Player/Armature_Slash_01_katana.anim"
+                    );
                 settings.FindProperty("_characterPreview").objectReferenceValue = character;
                 settings.FindProperty("_weaponPreview").objectReferenceValue = weapon;
                 settings.FindProperty("_selector").objectReferenceValue = selector;

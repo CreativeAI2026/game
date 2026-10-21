@@ -9,7 +9,11 @@ namespace CreativeAI.UI.CharacterUI
 {
     // Copies only render data. No gameplay object, Animator, collider or script is instantiated.
     [RequireComponent(typeof(RawImage))]
-    public sealed class ModelPreview : MonoBehaviour, IDragHandler
+    public sealed class ModelPreview
+        : MonoBehaviour,
+            IDragHandler,
+            IPointerDownHandler,
+            IPointerClickHandler
     {
         [SerializeField]
         private float _rotationSpeed;
@@ -29,6 +33,31 @@ namespace CreativeAI.UI.CharacterUI
         private RawImage _image;
         private float _yaw;
         private float _radius = 1;
+        private bool _dragged;
+        public event System.Action Clicked;
+
+        public void OnPointerDown(PointerEventData eventData)
+        {
+            if (eventData.button == PointerEventData.InputButton.Left)
+                _dragged = false;
+        }
+
+        public void OnPointerClick(PointerEventData eventData)
+        {
+            if (
+                !_allowDrag
+                || eventData.button != PointerEventData.InputButton.Left
+                || _dragged
+                || eventData.dragging
+            )
+                return;
+            float threshold =
+                EventSystem.current != null ? EventSystem.current.pixelDragThreshold : 5;
+            if ((eventData.position - eventData.pressPosition).sqrMagnitude > threshold * threshold)
+                return;
+            Clicked?.Invoke();
+        }
+
         public RenderTexture Texture => _texture;
         public float Yaw => _yaw;
         public int MeshCount => _renderers.Count;
@@ -214,7 +243,10 @@ namespace CreativeAI.UI.CharacterUI
         public void OnDrag(PointerEventData eventData)
         {
             if (_allowDrag && eventData.button == PointerEventData.InputButton.Left)
+            {
+                _dragged = true;
                 _yaw -= eventData.delta.x * .4f;
+            }
         }
 
         private void ClearVisuals()
@@ -233,6 +265,7 @@ namespace CreativeAI.UI.CharacterUI
 
         private void OnDisable()
         {
+            _dragged = false;
             ClearVisuals();
             if (_image != null)
             {
