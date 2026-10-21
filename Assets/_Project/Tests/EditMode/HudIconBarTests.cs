@@ -10,6 +10,7 @@ namespace CreativeAI.Tests.EditMode
     /// 右上アイコンバーの出し分けの検証(移動中だけ表示し、戦闘中と会話中は隠す)。
     /// 会話中に隠すのはセーブ/インベを開かせないため。
     /// GameObject ごと消すと購読が切れるため、Canvas / Raycaster の enabled で出し分ける実装を検証する。
+    /// 隠れるとき(戦闘・会話の開始)は、開いているパネルも閉じる。
     /// </summary>
     public class HudIconBarTests
     {
@@ -107,6 +108,31 @@ namespace CreativeAI.Tests.EditMode
 
             _gmm.ExitBattle();
             Assert.IsTrue(IsShown);
+        }
+
+        [Test]
+        public void BattleStarts_ClosesOpenPanel()
+        {
+            var routerGo = new GameObject("UiRouter");
+            var panel = new GameObject("InventoryUI");
+            try
+            {
+                var router = routerGo.AddComponent<UiRouter>();
+                TestReflection.SetField(router, "_inventoryUI", panel);
+                TestReflection.Invoke(router, "Awake");
+                TestReflection.SetField(_bar, "_router", router);
+                router.Open(UiRouter.UiId.Inventory);
+
+                _gmm.EnterBattle();
+
+                Assert.IsFalse(panel.activeSelf, "戦闘が始まったらインベは閉じる");
+            }
+            finally
+            {
+                UiPanelService.ResetState();
+                Object.DestroyImmediate(panel);
+                Object.DestroyImmediate(routerGo);
+            }
         }
 
         [Test]

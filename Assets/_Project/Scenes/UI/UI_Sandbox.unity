@@ -355,7 +355,8 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: CreativeAI.UI::CreativeAI.UI.FieldDevBootstrap
   _seedTestItems: 1
-  _spawnPlayerRig: 0
+  _spawnPlayerRig: 1
+  _previewOnlyPlayer: 1
   _spawnPointId: start
 --- !u!4 &926243128
 Transform:

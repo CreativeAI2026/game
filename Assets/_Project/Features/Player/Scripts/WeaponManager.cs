@@ -125,6 +125,20 @@ namespace CreativeAI.Gameplay
         /// <summary>登録されている武器の総数。WeaponHUDController がパネル数の決定に使用する。</summary>
         public int WeaponCount => _slots.Length;
 
+        public GameObject GetWeaponObject(int dataId)
+        {
+            foreach (var slot in _slots)
+                if (slot.stats != null && slot.stats.id == dataId)
+                    return slot.weapon;
+            return null;
+        }
+
+        public void Unequip()
+        {
+            ApplySelection(NoWeapon);
+            OnWeaponSwitched?.Invoke(false);
+        }
+
         /// <summary>
         /// 武器のアイコン(ステータス補正アセット WeaponData の Icon)。未設定なら null。
         /// HUD はこれを使ってパネルとアイコンを武器ごとに対応させる。
