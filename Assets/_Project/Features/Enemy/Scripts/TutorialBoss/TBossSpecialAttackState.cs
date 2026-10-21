@@ -30,9 +30,6 @@ namespace CreativeAI.Gameplay
         // 射出の瞬間にワイヤーが縮んでから飛ぶ見た目の破綻が起きる。構える程度の短さに留める。
         private const float AimTentacleLength = 0.5f;
 
-        /// <summary>射出フェーズの当たり判定半径。攻撃前の射線チェック（TBossAttackFeasibility）でも同じ太さで判定する。</summary>
-        public const float TentacleHitRadius = 0.25f;
-
         private const float AimNoiseStrength = 90f; // ノイズによるランダム成分（度数）
 
         // キープと引っ込みフェーズの時間設定
@@ -75,7 +72,7 @@ namespace CreativeAI.Gameplay
             if (boss.Agent != null)
             {
                 boss.Agent.ResetPath();
-                boss.Agent.isStopped = true;
+                boss.SetAgentStopped(true);
             }
 
             if (boss.Animator != null)
@@ -193,7 +190,7 @@ namespace CreativeAI.Gameplay
 
             if (boss.Agent != null)
             {
-                boss.Agent.isStopped = false;
+                boss.SetAgentStopped(false);
             }
 
             // OnSpecialAttackPoseReady で 0 にしたアニメ速度を必ず戻す（怯み・死亡などで中断された場合の最後の砦）。
@@ -445,7 +442,7 @@ namespace CreativeAI.Gameplay
             {
                 RaycastHit[] sweep = Physics.SphereCastAll(
                     tipPosition - delta,
-                    TentacleHitRadius,
+                    boss.WireHitRadius,
                     delta.normalized,
                     delta.magnitude,
                     ~0,
@@ -465,7 +462,7 @@ namespace CreativeAI.Gameplay
             // 密着状態は掃引で検出できないため重なり判定で補完する
             Collider[] overlaps = Physics.OverlapSphere(
                 tipPosition,
-                TentacleHitRadius,
+                boss.WireHitRadius,
                 ~0,
                 QueryTriggerInteraction.Ignore
             );

@@ -19,7 +19,7 @@ MonoBehaviour:
   - {fileID: 8300000, guid: 31f5fd15fe4ea524296e0ae83f1dd0dc, type: 3}
   - {fileID: 8300000, guid: d03b86cc7e2dc8343830abad76771973, type: 3}
   _volume: 1
-  _loudnessOffsetDb: 0
+  _loudnessOffsetDb: -5
   _allowClipping: 0
   _pitchVariation: 0.2
   _category: 2

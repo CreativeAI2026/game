@@ -11,7 +11,10 @@ namespace CreativeAI.Gameplay
     /// タイミングはアニメーションイベントで決まり、スクリプトは秒数を持たない:
     /// - 構えクリップ(UpperBody の Aim ステート)の DrawComplete : 引き切り。矢をつがえて発射可能にする
     /// - 発射クリップ(UpperBody の Fire ステート)の ReleaseEnd   : 発射の戻りが終わり、次の矢を引ける
-    /// 弦の中点は手元の矢に追従する(アニメーションで手が動けば弦も引かれる)。
+    ///
+    /// 弦: モデルの弦は張った形のメッシュで固定されていて引けない。そこで矢を持っている間だけモデルの弦を隠し、
+    /// LineRenderer で「上端 → 矢 → 下端」の弦を描く(アニメーションで手が動けば弦も引かれる)。
+    /// 矢を持っていない間はモデルの弦をそのまま見せる。
     /// 照準の表示はシーン側の CrosshairView が PlayerController.IsAiming を見て行う。
     /// </summary>
     public class BowController : MonoBehaviour, IResettableWeapon, IWeaponAnimationEventHandler
@@ -21,21 +24,25 @@ namespace CreativeAI.Gameplay
         [SerializeField]
         private Transform _arrowNockPoint;
 
-        [Tooltip("弓の弦（弓Prefab内のLineRenderer）")]
+        [Tooltip(
+            "矢を持っている間に弦を描く LineRenderer（弓Prefab内）。材質と太さはモデルの弦に合わせておく"
+        )]
         [SerializeField]
         private LineRenderer _bowStringRenderer;
 
-        [Tooltip("弦の上端（弓Prefab内の空GO）")]
+        [Tooltip(
+            "モデルに付いている弦のメッシュ。矢を持っている間は隠し、LineRenderer の弦に置き換える（任意。弦の無いモデルなら空でよい）"
+        )]
+        [SerializeField]
+        private Renderer[] _modelStringRenderers = Array.Empty<Renderer>();
+
+        [Tooltip("弦の上端（弓Prefab内の空GO。モデルの弦が上のリムに付く位置に置く）")]
         [SerializeField]
         private Transform _stringTopPoint;
 
-        [Tooltip("弦の下端（弓Prefab内の空GO）")]
+        [Tooltip("弦の下端（弓Prefab内の空GO。モデルの弦が下のリムに付く位置に置く）")]
         [SerializeField]
         private Transform _stringBottomPoint;
-
-        [Tooltip("弦を引いていない時の中点（任意。空欄なら上端と下端の中点）")]
-        [SerializeField]
-        private Transform _stringRestMidPoint;
 
         [Header("矢の設定")]
         [Tooltip("矢の飛翔速度 (m/s)。矢の Prefab はシーンの ArrowPool に設定する")]
@@ -64,10 +71,16 @@ namespace CreativeAI.Gameplay
         private GameObject _nockedArrow;
         private int _upperBodyLayer;
 
+        // 照準の Raycast が当たる対象。プレイヤー自身(カメラとの間に入りうる)と、飛んでいる・刺さった矢は除く
+        private int _aimRayMask;
+
         // --- ステート(BowStates.cs)から使う参照と状態 ---
         public PlayerInputHandler Input { get; private set; }
         public PlayerController Player { get; private set; }
         public Animator Animator { get; private set; }
+
+        /// <summary>引き切った後に矢が付く位置。</summary>
+        public Transform ArrowNockPoint => _arrowNockPoint;
 
         /// <summary>矢をつがえ終わり、発射できる状態か。</summary>
         public bool IsArrowNocked { get; private set; }
@@ -105,6 +118,8 @@ namespace CreativeAI.Gameplay
 
             // 仮モデル専用の見た目補正。本番アニメーションで向きが付いたら外す(無ければ何もしない)
             TryGetComponent(out _mockPose);
+
+            _aimRayMask = Physics.DefaultRaycastLayers & ~LayerMask.GetMask("Player", "PlayerAttack");
 
             Assert.IsTrue(
                 _upperBodyLayer >= 0,
@@ -186,17 +201,24 @@ namespace CreativeAI.Gameplay
             _currentState.OnAnimationEvent(type, sourceState);
         }
 
-        /// <summary>UpperBody レイヤーで、指定のステートを再生中か、そこへ遷移中か。</summary>
-        public bool IsInUpperBodyState(int stateHash) =>
-            Animator.GetCurrentAnimatorStateInfo(_upperBodyLayer).shortNameHash == stateHash
-            || (
-                Animator.IsInTransition(_upperBodyLayer)
-                && Animator.GetNextAnimatorStateInfo(_upperBodyLayer).shortNameHash == stateHash
-            );
+        /// <summary>
+        /// UpperBody レイヤーで指定のステートを再生中か、そこへ遷移中なら true を返し、そのステート自身の情報を info に入れる。
+        /// そのステートから抜けている遷移の最中は false(抜けかけの古い再生を「入った」と数えない)。
+        ///
+        /// 遷移中は current 側が遷移元なので、遷移先の情報は next 側から取る。
+        /// 遷移元の再生位置を見ると、長く再生されていた遷移元(待機の None など)の値で「最後まで再生した」と誤判定する。
+        /// </summary>
+        public bool TryGetUpperBodyState(int stateHash, out AnimatorStateInfo info)
+        {
+            if (Animator.IsInTransition(_upperBodyLayer))
+            {
+                info = Animator.GetNextAnimatorStateInfo(_upperBodyLayer);
+                return info.shortNameHash == stateHash;
+            }
 
-        /// <summary>UpperBody レイヤーで現在再生中のステートの進み具合(1 で1周)。</summary>
-        public float UpperBodyNormalizedTime =>
-            Animator.GetCurrentAnimatorStateInfo(_upperBodyLayer).normalizedTime;
+            info = Animator.GetCurrentAnimatorStateInfo(_upperBodyLayer);
+            return info.shortNameHash == stateHash;
+        }
 
         public void SpawnArrowInHand()
         {
@@ -260,7 +282,14 @@ namespace CreativeAI.Gameplay
         private Vector3 GetShootDirection()
         {
             Ray ray = _mainCamera.ViewportPointToRay(new Vector2(0.5f, 0.5f));
-            Vector3 targetPoint = Physics.Raycast(ray, out RaycastHit hit, _maxRange)
+            // トリガー(ドアの開閉判定など)は見えない壁なので照準から外す。当たると矢があらぬ方向へ飛ぶ
+            Vector3 targetPoint = Physics.Raycast(
+                ray,
+                out RaycastHit hit,
+                _maxRange,
+                _aimRayMask,
+                QueryTriggerInteraction.Ignore
+            )
                 ? hit.point
                 : ray.GetPoint(_maxRange);
 
@@ -270,26 +299,23 @@ namespace CreativeAI.Gameplay
         }
 
         /// <summary>
-        /// 弦の LineRenderer を更新する。3点（上端・中点・下端）で弦を表し、
-        /// 矢を持っている間は中点を矢の後端(手元またはノック位置)に合わせる。
+        /// 弦の表示を更新する。矢を持っている間は、モデルの弦を隠して LineRenderer で
+        /// 3点（上端・矢の後端・下端）の弦を描く。矢の後端は手元(引いている最中)またはノック位置(引き切り)。
         /// 引く速さは構えアニメーションの手の動きで決まり、秒数の設定は持たない。
         /// </summary>
         private void UpdateBowString()
         {
-            Vector3 midPoint;
-            if (_nockedArrow != null)
-                midPoint = _nockedArrow.transform.position;
-            else if (_stringRestMidPoint != null)
-                midPoint = _stringRestMidPoint.position;
-            else
-                midPoint = Vector3.Lerp(
-                    _stringTopPoint.position,
-                    _stringBottomPoint.position,
-                    0.5f
-                );
+            bool isHoldingArrow = _nockedArrow != null;
+
+            _bowStringRenderer.enabled = isHoldingArrow;
+            foreach (Renderer modelString in _modelStringRenderers)
+                modelString.enabled = !isHoldingArrow;
+
+            if (!isHoldingArrow)
+                return;
 
             _bowStringRenderer.SetPosition(0, _stringTopPoint.position);
-            _bowStringRenderer.SetPosition(1, midPoint);
+            _bowStringRenderer.SetPosition(1, _nockedArrow.transform.position);
             _bowStringRenderer.SetPosition(2, _stringBottomPoint.position);
         }
 

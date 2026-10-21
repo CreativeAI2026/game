@@ -45,6 +45,9 @@ namespace CreativeAI.Gameplay
         public static readonly int Grabbed = Animator.StringToHash("Grabbed");
         public static readonly int Escaped = Animator.StringToHash("Escaped");
 
+        // --- 死亡(PlayerDeathHandler) ---
+        public static readonly int Die = Animator.StringToHash("Die");
+
         /// <summary>起動時の検査に使う、必須パラメータの一覧(名前, 種類)。</summary>
         public static readonly (string name, AnimatorControllerParameterType type)[] Required =
         {
@@ -70,6 +73,7 @@ namespace CreativeAI.Gameplay
             ("PlayerFlinch", AnimatorControllerParameterType.Trigger),
             ("Grabbed", AnimatorControllerParameterType.Trigger),
             ("Escaped", AnimatorControllerParameterType.Trigger),
+            ("Die", AnimatorControllerParameterType.Trigger),
         };
     }
 

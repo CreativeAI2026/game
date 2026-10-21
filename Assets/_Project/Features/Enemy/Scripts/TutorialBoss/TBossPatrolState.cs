@@ -14,8 +14,8 @@ namespace CreativeAI.Gameplay
         private const float WanderInterval = 4f;
         private const float WanderRadius = 8f;
 
-        // Suspicious状態に入った際に一度だけLookトリガーを引くためのフラグ
-        private bool _hasTriggeredLook;
+        // 怪しんで立ち止まり、見えた場所を見つめているか（怪しみ始めの1回だけ立ち止まる処理をするため）
+        private bool _isStaringAtGlimpse;
 
         // プレイヤーへ向き直る補間速度
         private const float NoticeRotateSpeed = 3f;
@@ -41,11 +41,11 @@ namespace CreativeAI.Gameplay
             if (boss.Agent != null)
             {
                 boss.Agent.speed = boss.WalkSpeed;
-                boss.Agent.isStopped = false;
+                boss.SetAgentStopped(false);
             }
 
             _wanderTimer = WanderInterval; // 即座に最初の目標を設定させる
-            _hasTriggeredLook = false;
+            _isStaringAtGlimpse = false;
 
             // 音イベント購読
             SoundEventBus.OnSoundEmitted += OnSoundHeard;
@@ -64,18 +64,16 @@ namespace CreativeAI.Gameplay
             // ちらっと見えた等で怪しんでいる間は、立ち止まって見えた場所を向く
             if (boss.IsSuspicious)
             {
-                if (!_hasTriggeredLook)
+                if (!_isStaringAtGlimpse)
                 {
-                    _hasTriggeredLook = true;
+                    _isStaringAtGlimpse = true;
                     _sawPlayerWhileSuspicious = false;
                     _glimpseLostTimer = 0f;
+                    // 立ち止まって、見えた場所を見つめる（顔と光はコントローラの顔向けで向ける）。
+                    // ここで見渡しモーションを出すと、頭に付いた光が見えた相手から外れて発見度が下がり、目の前でも見つけられなくなる
                     if (boss.Agent != null)
                     {
-                        boss.Agent.isStopped = true;
-                    }
-                    if (boss.Animator != null)
-                    {
-                        boss.Animator.SetTrigger("Look");
+                        boss.SetAgentStopped(true);
                     }
                 }
 
@@ -88,13 +86,13 @@ namespace CreativeAI.Gameplay
                 return;
             }
 
-            if (_hasTriggeredLook)
+            if (_isStaringAtGlimpse)
             {
                 // 疑いが晴れたので徘徊を再開する
-                _hasTriggeredLook = false;
+                _isStaringAtGlimpse = false;
                 if (boss.Agent != null)
                 {
-                    boss.Agent.isStopped = false;
+                    boss.SetAgentStopped(false);
                 }
             }
 
@@ -204,23 +202,13 @@ namespace CreativeAI.Gameplay
                 return;
             }
 
-            // 半径フィルタ：音の届く範囲内かチェック
-            float distToSound = Vector3.Distance(boss.transform.position, data.Position);
-            if (distToSound > data.Radius)
-            {
-                return;
-            }
-
-            // 自分の反応半径内かチェック
-            if (distToSound > boss.SoundReactRadius)
+            // 音の届く範囲内か。音源に近いほど確信度が高い（遠ければ振り返るだけ、中くらいなら歩いて、近ければ走って向かう）
+            if (!boss.TryHearSound(data, out float confidence))
             {
                 return;
             }
 
             boss.LastHeardSoundPosition = data.Position;
-
-            // 距離が近いほど確信度が高い（远ければ振り返るだけ、近ければ歩いて向かう）
-            float confidence = 1f - Mathf.Clamp01(distToSound / boss.SoundReactRadius);
             boss.NotifySoundHeard(confidence);
             boss.ChangeState(new TBossSoundInvestigateState(boss, confidence));
         }

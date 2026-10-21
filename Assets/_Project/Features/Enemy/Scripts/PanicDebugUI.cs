@@ -10,7 +10,7 @@ namespace CreativeAI.Gameplay
     /// PanicDetector の焦り度スコアと各指標をリアルタイムでデバッグ表示するUIコンポーネント。
     /// 専用の独立キャンバスにアタッチして使用する。
     /// このUIは敵の挙動制御には一切関わらない純粋なデバッグ用途。
-    /// エディター上でのみ表示でき、切替キー（既定: F2）で表示/非表示を切り替える。
+    /// エディター・ビルドの両方で動作し、切替キー（既定: F2）で表示/非表示を切り替える。
     /// </summary>
     [RequireComponent(typeof(Canvas))]
     public class PanicDebugUI : MonoBehaviour
@@ -70,7 +70,7 @@ namespace CreativeAI.Gameplay
         private float _flashDuration = 0.8f;
 
         [Header("表示切替")]
-        [Tooltip("表示/非表示を切り替えるキー。エディター上で再生中のみ有効（ビルドでは常に非表示）")]
+        [Tooltip("表示/非表示を切り替えるキー。エディター・ビルドの両方で有効")]
         [SerializeField]
         private Key _toggleKey = Key.F2;
 
@@ -85,7 +85,6 @@ namespace CreativeAI.Gameplay
 
         private void Awake()
         {
-#if UNITY_EDITOR
             // GameObject ごと無効にすると Update が止まり切替キーを受け付けられないため、Canvas の描画だけを切り替える
             _canvas = GetComponent<Canvas>();
             _canvas.enabled = _visibleOnStart;
@@ -95,10 +94,6 @@ namespace CreativeAI.Gameplay
 
             if (_boss == null)
                 _boss = FindAnyObjectByType<TutorialBossController>(FindObjectsInactive.Exclude);
-#else
-            // 開発中の確認用の表示なので、ビルドには出さない
-            gameObject.SetActive(false);
-#endif
         }
 
         private void OnEnable()

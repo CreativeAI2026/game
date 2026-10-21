@@ -7,7 +7,6 @@ namespace CreativeAI.Gameplay
 {
     /// <summary>
     /// プレイヤーの「焦り」を複数の行動指標から検知し、0〜100の焦り度スコアとして管理するコンポーネント。
-    /// 現時点では敵の行動には影響せず、デバッグUI（PanicDebugUI）への情報提供のみを目的とする。
     ///
     /// このクラスの役割は、毎フレームの観測値（<see cref="PanicContext"/>）の取りまとめ、
     /// 入力・被弾イベントの各指標への受け渡し、結果の公開に限る。
@@ -106,7 +105,8 @@ namespace CreativeAI.Gameplay
         public PanicCategory DominantCategory => _scoreCalculator.DominantCategory;
 
         /// <summary>系統ごとの焦り度（0〜100）。</summary>
-        public float GetCategoryScore(PanicCategory category) => _scoreCalculator.GetCategoryScore(category);
+        public float GetCategoryScore(PanicCategory category) =>
+            _scoreCalculator.GetCategoryScore(category);
 
         /// <summary>焦りの段階が変わった時に発火する。引数は新しい段階。</summary>
         public event Action<PanicLevel> OnPanicLevelChanged;
@@ -267,12 +267,15 @@ namespace CreativeAI.Gameplay
             _context.HorizontalVelocity = new Vector3(velocity.x, 0f, velocity.z);
             _context.DesiredSpeed = _playerController.DesiredSpeed;
             _context.WalkSpeed = _playerController.MoveSpeed;
-            _context.IsTouchingEnemy = Time.time - _lastEnemyContactTime <= EnemyContactGraceSeconds;
+            _context.IsTouchingEnemy =
+                Time.time - _lastEnemyContactTime <= EnemyContactGraceSeconds;
             _context.CanMove = _playerController.CanMove;
             _context.IsAiming = _bowController.IsAiming;
             _context.IsSubActionHeld = _inputHandler.subAction;
             _context.IsBusyWithOwnAction =
-                !_playerController.CanMove && !_playerController.IsGrabbed && !_playerController.IsFlinching;
+                !_playerController.CanMove
+                && !_playerController.IsGrabbed
+                && !_playerController.IsFlinching;
             _context.CameraForwardXZ = new Vector3(cameraForward.x, 0f, cameraForward.z).normalized;
             _context.CameraYaw = _camera.CinemachineCameraTarget.transform.eulerAngles.y;
         }

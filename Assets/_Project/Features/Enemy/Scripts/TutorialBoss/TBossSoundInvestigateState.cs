@@ -68,7 +68,7 @@ namespace CreativeAI.Gameplay
                 if (boss.Agent != null)
                 {
                     boss.Agent.speed = SpeedForConfidence();
-                    boss.Agent.isStopped = false;
+                    boss.SetAgentStopped(false);
                     boss.Agent.SetDestination(boss.LastHeardSoundPosition);
                 }
             }
@@ -77,7 +77,7 @@ namespace CreativeAI.Gameplay
                 // 確信度が低い：その場で向くだけ
                 if (boss.Agent != null)
                 {
-                    boss.Agent.isStopped = true;
+                    boss.SetAgentStopped(true);
                 }
             }
 
@@ -115,7 +115,7 @@ namespace CreativeAI.Gameplay
                     {
                         if (boss.Animator != null)
                         {
-                            boss.Animator.SetTrigger("Look");
+                            boss.PlayLookAround();
                         }
                         _hasTriggeredLook = true;
                     }
@@ -189,7 +189,7 @@ namespace CreativeAI.Gameplay
 
             if (boss.Agent != null && boss.Agent.isOnNavMesh)
             {
-                boss.Agent.isStopped = false;
+                boss.SetAgentStopped(false);
             }
         }
 
@@ -235,12 +235,12 @@ namespace CreativeAI.Gameplay
 
             if (boss.Agent != null)
             {
-                boss.Agent.isStopped = true;
+                boss.SetAgentStopped(true);
             }
 
             if (!_hasTriggeredLook && boss.Animator != null)
             {
-                boss.Animator.SetTrigger("Look");
+                boss.PlayLookAround();
                 _hasTriggeredLook = true;
             }
         }
@@ -255,14 +255,12 @@ namespace CreativeAI.Gameplay
                 return;
             }
 
-            float distToSound = Vector3.Distance(boss.transform.position, data.Position);
-            if (distToSound > data.Radius || distToSound > boss.SoundReactRadius)
+            if (!boss.TryHearSound(data, out float newConfidence))
             {
                 return;
             }
 
-            // 新しい音の確信度を計算し、今より高ければ目標を更新
-            float newConfidence = 1f - Mathf.Clamp01(distToSound / boss.SoundReactRadius);
+            // 新しい音の確信度が今より高ければ目標を更新
             boss.NotifySoundHeard(newConfidence);
             if (newConfidence > _confidence)
             {
@@ -277,7 +275,7 @@ namespace CreativeAI.Gameplay
                     {
                         // Enterで設定する移動速度と揃える
                         boss.Agent.speed = SpeedForConfidence();
-                        boss.Agent.isStopped = false;
+                        boss.SetAgentStopped(false);
                         boss.Agent.SetDestination(boss.LastHeardSoundPosition);
                     }
                 }

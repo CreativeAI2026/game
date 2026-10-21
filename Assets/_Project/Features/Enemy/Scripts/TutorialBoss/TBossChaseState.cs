@@ -33,7 +33,7 @@ namespace CreativeAI.Gameplay
             if (boss.Agent != null)
             {
                 boss.Agent.speed = boss.RunSpeed;
-                boss.Agent.isStopped = false;
+                boss.SetAgentStopped(false);
                 _stuckDetector = new TBossStuckDetector(boss.Agent);
             }
 
@@ -84,7 +84,7 @@ namespace CreativeAI.Gameplay
 
             if (boss.Agent != null)
             {
-                boss.Agent.isStopped = false;
+                boss.SetAgentStopped(false);
                 boss.Agent.SetDestination(boss.Player.transform.position);
             }
 
@@ -131,7 +131,7 @@ namespace CreativeAI.Gameplay
                 _isHeadingToLastKnown = true;
                 if (boss.Agent != null)
                 {
-                    boss.Agent.isStopped = false;
+                    boss.SetAgentStopped(false);
                     boss.Agent.SetDestination(boss.LastKnownPlayerPosition);
                 }
                 _stuckDetector?.Reset();
@@ -162,8 +162,7 @@ namespace CreativeAI.Gameplay
                 return;
             }
 
-            float distToSound = Vector3.Distance(boss.transform.position, data.Position);
-            if (distToSound > data.Radius || distToSound > boss.SoundReactRadius)
+            if (!boss.TryHearSound(data, out _))
             {
                 return;
             }
@@ -173,7 +172,7 @@ namespace CreativeAI.Gameplay
 
             if (boss.Agent != null)
             {
-                boss.Agent.isStopped = false;
+                boss.SetAgentStopped(false);
                 boss.Agent.SetDestination(data.Position);
             }
             _isHeadingToLastKnown = true;

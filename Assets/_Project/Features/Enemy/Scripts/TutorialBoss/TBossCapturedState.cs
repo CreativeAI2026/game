@@ -23,7 +23,6 @@ namespace CreativeAI.Gameplay
         private float _damageTimer;
         private float _escapeGauge;
         private Vector2 _prevMoveInput;
-        private Vector3 _knockbackVelocity;
         private ParticleSystem _electricEffect;
         private LoopingSound _electricLoop;
 
@@ -34,6 +33,7 @@ namespace CreativeAI.Gameplay
         private CharacterController _playerCC;
         private Rigidbody _playerRb;
         private HeadLookController _headLookController;
+        private PlayerEscapeHandler _playerEscape;
         private Transform _neckBone;
 
         private Quaternion _initialLocalRot;
@@ -59,6 +59,11 @@ namespace CreativeAI.Gameplay
             _playerCC = boss.Player.GetComponent<CharacterController>();
             _playerRb = boss.Player.GetComponent<Rigidbody>();
             _headLookController = boss.Player.GetComponent<HeadLookController>();
+            _playerEscape = boss.Player.GetComponent<PlayerEscapeHandler>();
+            if (_playerEscape == null)
+                Debug.LogError(
+                    "[TutorialBoss] プレイヤーに PlayerEscapeHandler がありません。脱出時に後退しません。"
+                );
 
             // Animator と首のボーンはプレイヤーのモデル層から取る(モデル差し替えでボーン名が変わっても辿れる)。
             // モデル層が無いリグでは演出を省く
@@ -72,7 +77,7 @@ namespace CreativeAI.Gameplay
             if (boss.Agent != null)
             {
                 boss.Agent.ResetPath();
-                boss.Agent.isStopped = true;
+                boss.SetAgentStopped(true);
             }
 
             if (_playerController != null)
@@ -220,7 +225,7 @@ namespace CreativeAI.Gameplay
 
             if (boss.Agent != null)
             {
-                boss.Agent.isStopped = false;
+                boss.SetAgentStopped(false);
             }
 
             if (boss.WireRig != null)
@@ -323,11 +328,8 @@ namespace CreativeAI.Gameplay
             _phase = Phase.Escape;
             _timer = 0f;
 
-            // 脱出後は怯みステートを経由するため、警戒を落とすと目の前のプレイヤーを見失って徘徊に戻ってしまう
+            // 脱出後は崩れ(Parried)を経由して交戦に戻る。警戒を落とすと目の前のプレイヤーを見失って徘徊に戻ってしまう
             boss.IsAlerted = true;
-
-            if (_playerAnimator != null)
-                _playerAnimator.SetTrigger(PlayerAnimatorParams.Escaped);
 
             GrabEscapeEvents.OnCameraEscape?.Invoke();
             StopElectricEffect();
@@ -335,16 +337,15 @@ namespace CreativeAI.Gameplay
 
             if (boss.Player != null)
             {
+                // 後退は PlayerEscapeHandler が CharacterController で行うので、先に有効へ戻しておく
                 if (_playerCC != null)
                     _playerCC.enabled = true;
 
-                Vector3 knockbackDir = (
-                    boss.Player.transform.position - boss.transform.position
-                ).normalized;
-                knockbackDir.y = 0f;
-                knockbackDir.Normalize();
-
-                _knockbackVelocity = knockbackDir * boss.GrabEscapeKnockbackForce;
+                // 脱出モーションと後退はプレイヤー側の担当。距離・時間は脱出クリップに合わせてプレイヤー側が持つ
+                if (_playerEscape != null)
+                    _playerEscape.TriggerEscape(
+                        boss.Player.transform.position - boss.transform.position
+                    );
             }
 
             if (boss.WireRig != null)
@@ -362,22 +363,11 @@ namespace CreativeAI.Gameplay
         {
             _timer += Time.deltaTime;
 
-            if (_playerCC != null && _playerCC.enabled && _knockbackVelocity.sqrMagnitude > 0.01f)
-            {
-                _knockbackVelocity = Vector3.Lerp(
-                    _knockbackVelocity,
-                    Vector3.zero,
-                    Time.deltaTime * 5f
-                );
-                Vector3 move = _knockbackVelocity;
-                move.y -= 9.81f;
-                _playerCC.Move(move * Time.deltaTime);
-            }
-
             float t = Mathf.Clamp01(_timer / boss.GrabRetractDuration);
             if (t >= 1f)
             {
-                boss.ChangeState(new TBossFlinchState(boss));
+                // レバガチャで振りほどかれたら、パリィされた時と同じく大きく崩れる
+                boss.ChangeState(new TBossParriedState(boss));
             }
         }
 

@@ -55,7 +55,7 @@ namespace CreativeAI.Gameplay
             if (_boss.Agent != null)
             {
                 _boss.Agent.speed = _boss.RunSpeed;
-                _boss.Agent.isStopped = false;
+                _boss.SetAgentStopped(false);
                 _stuckDetector = new TBossStuckDetector(_boss.Agent);
             }
         }

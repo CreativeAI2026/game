@@ -127,6 +127,7 @@ namespace CreativeAI.Gameplay
                 currentState.Exit();
             }
 
+            OnBeforeStateEnter();
             currentState = newState;
 
             if (currentState != null)
@@ -134,6 +135,12 @@ namespace CreativeAI.Gameplay
                 currentState.Enter();
             }
         }
+
+        /// <summary>
+        /// 前のステートの Exit の後、次のステートの Enter の前に呼ばれる。
+        /// 前のステートが引いたまま使われなかったアニメーションのトリガーを捨てるなど、ステートをまたいで残してはいけないものを片付ける。
+        /// </summary>
+        protected virtual void OnBeforeStateEnter() { }
 
         /// <summary>
         /// 敵のサイズや耐性によって怯みの表現（専用モーションの再生や無視など）が異なるため、派生クラスでの具象化を要求する。

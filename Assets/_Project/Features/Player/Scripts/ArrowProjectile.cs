@@ -92,6 +92,8 @@ namespace CreativeAI.Gameplay
                 rb.linearVelocity = Vector3.zero;
                 rb.angularVelocity = Vector3.zero;
                 rb.isKinematic = true;
+                // 刺さった物が動いても矢が付いていくよう、飛翔用の補間を切る(残すと古い位置に描かれる)
+                rb.interpolation = RigidbodyInterpolation.None;
             }
 
             Collider[] cols = GetComponentsInChildren<Collider>();
@@ -114,11 +116,17 @@ namespace CreativeAI.Gameplay
 
             // Rigidbody は初回の Launch で追加されるので、まだ一度も飛んでいない矢には無い
             // (壁に刺さって回収された矢は既に kinematic。kinematic への速度設定は警告になるので避ける)
-            if (TryGetComponent(out Rigidbody rb) && !rb.isKinematic)
+            if (TryGetComponent(out Rigidbody rb))
             {
-                rb.linearVelocity = Vector3.zero;
-                rb.angularVelocity = Vector3.zero;
-                rb.isKinematic = true;
+                if (!rb.isKinematic)
+                {
+                    rb.linearVelocity = Vector3.zero;
+                    rb.angularVelocity = Vector3.zero;
+                    rb.isKinematic = true;
+                }
+                // 飛翔用の補間が残っていると、手の子にしても描画位置が物理側の古い位置から補間で上書きされ、
+                // 手から大きくずれた位置・角度に見える(再利用した矢だけで起きる)
+                rb.interpolation = RigidbodyInterpolation.None;
             }
 
             foreach (var col in GetComponentsInChildren<Collider>(true))

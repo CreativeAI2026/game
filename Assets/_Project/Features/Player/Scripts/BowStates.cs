@@ -115,10 +115,10 @@ namespace CreativeAI.Gameplay
         /// </summary>
         private void CheckDrawEventMissing()
         {
-            if (bow.IsInUpperBodyState(PlayerAnimatorStates.Aim))
+            if (bow.TryGetUpperBodyState(PlayerAnimatorStates.Aim, out AnimatorStateInfo aimState))
             {
                 _hasEntered = true;
-                if (bow.UpperBodyNormalizedTime < 1f)
+                if (aimState.normalizedTime < 1f)
                     return;
 
                 Debug.LogWarning(
@@ -196,7 +196,7 @@ namespace CreativeAI.Gameplay
                 return;
             }
 
-            if (bow.IsInUpperBodyState(PlayerAnimatorStates.Fire))
+            if (bow.TryGetUpperBodyState(PlayerAnimatorStates.Fire, out _))
             {
                 _hasEntered = true;
             }

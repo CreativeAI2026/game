@@ -19,9 +19,18 @@ namespace CreativeAI.Gameplay
         [Tooltip("キャラクターのスプリント（ダッシュ）速度 (m/s)")]
         public float SprintSpeed = 5.335f;
 
+        [Tooltip(
+            "弓を構えている間の移動速度 (m/s)。構え歩きクリップの歩幅(前後約1.1、横約1.4)に合わせ、足が滑らない速さにする"
+        )]
+        public float AimMoveSpeed = 1.5f;
+
         [Tooltip("キャラクターが移動方向に向き直る際の回転の滑らかさ（秒）")]
         [Range(0.0f, 0.3f)]
         public float RotationSmoothTime = 0.12f;
+
+        [Tooltip("弓を構えた時に、体をカメラの向きへ振り向かせる滑らかさ（秒）。0 で即座に向く")]
+        [Range(0.0f, 0.3f)]
+        public float AimRotationSmoothTime = 0.04f;
 
         [Tooltip("加速と減速の速さ")]
         public float SpeedChangeRate = 10.0f;
@@ -158,7 +167,10 @@ namespace CreativeAI.Gameplay
 
             bool canSprint = _input.sprint && !IsAiming;
 
-            float targetSpeed = canSprint ? SprintSpeed : MoveSpeed;
+            float targetSpeed =
+                IsAiming ? AimMoveSpeed
+                : canSprint ? SprintSpeed
+                : MoveSpeed;
 
             // Vector2の == 演算子は内部で近似値比較を行うため、微小な入力による意図しない移動を防げる
             if (_input.move == Vector2.zero)
@@ -210,9 +222,17 @@ namespace CreativeAI.Gameplay
 
             if (IsAiming)
             {
-                // エイム中はカメラの向きに体を固定し、移動はストレイフ（横移動）として処理する
+                // エイム中は体をカメラの向きに合わせ、移動はストレイフ（横移動）として処理する。
+                // 構えた瞬間に最大180度回るとポーズが飛んで見えるため、ごく短い時間で振り向かせる
+                // (矢はカメラ中央へ飛ぶので、体の向きが一瞬遅れても狙いは変わらない)
                 _targetRotation = _mainCamera.transform.eulerAngles.y;
-                transform.rotation = Quaternion.Euler(0.0f, _targetRotation, 0.0f);
+                float aimRotation = Mathf.SmoothDampAngle(
+                    transform.eulerAngles.y,
+                    _targetRotation,
+                    ref _rotationVelocity,
+                    AimRotationSmoothTime
+                );
+                transform.rotation = Quaternion.Euler(0.0f, aimRotation, 0.0f);
 
                 if (_input.move != Vector2.zero)
                 {

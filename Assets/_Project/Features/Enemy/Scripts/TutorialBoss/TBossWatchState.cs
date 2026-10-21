@@ -51,7 +51,7 @@ namespace CreativeAI.Gameplay
             if (boss.Agent != null)
             {
                 boss.Agent.speed = boss.StrafeSpeed;
-                boss.Agent.isStopped = false;
+                boss.SetAgentStopped(false);
                 // NavMeshAgentの自動回転を切ることで、自前でプレイヤー方向を向きながら移動できる
                 boss.Agent.updateRotation = false;
             }

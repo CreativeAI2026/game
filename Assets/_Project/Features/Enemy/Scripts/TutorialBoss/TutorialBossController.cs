@@ -117,6 +117,13 @@ namespace CreativeAI.Gameplay
         private float specialAttackCooldown = 8f;
 
         [Header("特殊攻撃（ワイヤー）設定")]
+        [Tooltip(
+            "ワイヤー先端の当たり判定の半径（m）。先端の軌跡に沿ってこの太さで掃引し、プレイヤーに触れたら捕獲する。\n"
+                + "攻撃前の射線チェックも同じ太さで行う。"
+        )]
+        [SerializeField]
+        private float wireHitRadius = 1f;
+
         [Tooltip("ワイヤーとして伸ばすボーン。")]
         [SerializeField]
         private Transform wireBone;
@@ -157,6 +164,20 @@ namespace CreativeAI.Gameplay
         )]
         [SerializeField]
         private bool forceStraightWireByRig = true;
+
+        [Header("通常攻撃（踏み込み）設定")]
+        [Tooltip(
+            "踏み込み後に、プレイヤーの中心がボスの中心からこの距離に来るよう踏み込みの長さを合わせる（m）。\n"
+                + "クリップの振りで当たり判定（半径1m）の中心が最も前に出るのは約3.0m先のため、その少し外を狙う。"
+        )]
+        [SerializeField]
+        private float attack1StrikeDistance = 3.5f;
+
+        [Tooltip(
+            "踏み込みで動かす長さの上限（m）。踏み込み中も後ろ足は接地したままなので、長くすると後ろ足が引きずられて見える。"
+        )]
+        [SerializeField]
+        private float attack1MaxStepIn = 1.5f;
 
         [Header("通常攻撃2（鎌）設定")]
         [Tooltip("鎌の付け根として伸縮・角度補正を行うボーン。左手（mixamorig:LeftHand）を想定。")]
@@ -235,11 +256,6 @@ namespace CreativeAI.Gameplay
         [SerializeField]
         private TBossLimbChainSettings kamaChainSettings = new TBossLimbChainSettings();
 
-        [Header("音反応設定")]
-        [Tooltip("反応する音の最大半径フィルタ（未実装の半径フィルタ用）。")]
-        [SerializeField]
-        private float soundReactRadius = 15f;
-
         [Header("障害物設定")]
         [SerializeField]
         private LayerMask obstacleLayer;
@@ -275,10 +291,6 @@ namespace CreativeAI.Gameplay
         [SerializeField]
         private float grabPullLateralOffset = 0f;
 
-        [Tooltip("脱出後にプレイヤーを後方へ押し出す力。")]
-        [SerializeField]
-        private float grabEscapeKnockbackForce = 8f;
-
         [Tooltip("電撃エフェクトの ParticleSystem プレハブ（プレイヤーにアタッチして使用）。")]
         [SerializeField]
         private ParticleSystem electricEffectPrefab;
@@ -313,6 +325,8 @@ namespace CreativeAI.Gameplay
         public float RunSpeed => runSpeed;
         public float StrafeSpeed => strafeSpeed;
         public float AttackRange => attackRange;
+        public float Attack1StrikeDistance => attack1StrikeDistance;
+        public float Attack1MaxStepIn => attack1MaxStepIn;
         public float NormalAttack2Range => normalAttack2Range;
         public float SpecialAttackRange => specialAttackRange;
         public float WatchDistanceMin => watchDistanceMin;
@@ -336,7 +350,30 @@ namespace CreativeAI.Gameplay
         public float SpecialAttackAimDuration => specialAttackAimDuration;
         public float SpecialAttackShootDuration => specialAttackShootDuration;
         public bool ForceStraightWireByRig => forceStraightWireByRig;
-        public float SoundReactRadius => soundReactRadius;
+        public float WireHitRadius => wireHitRadius;
+
+        /// <summary>
+        /// 音が聞こえたかと、その確信度（0〜1）を判定する。聞こえる範囲は鳴らした側が決めた音の半径（足音・ハンマーなど）で、
+        /// 音源がその半径の端なら確信度0、すぐそばなら1。大きな音ほど遠くから聞こえ、遠くでも確信度が残る。
+        /// 以前はボス側の聴覚半径でも上限を掛けていたため、音の半径を広げても一定距離より遠いと聞こえなかった。
+        /// </summary>
+        public bool TryHearSound(SoundEventData data, out float confidence)
+        {
+            confidence = 0f;
+            if (data.Radius <= 0f)
+            {
+                return false;
+            }
+
+            float distToSound = Vector3.Distance(transform.position, data.Position);
+            if (distToSound > data.Radius)
+            {
+                return false;
+            }
+
+            confidence = 1f - Mathf.Clamp01(distToSound / data.Radius);
+            return true;
+        }
         public LayerMask ObstacleLayer => obstacleLayer;
         public float GrabDamagePerTick => Status.CurrentAttackPower * grabDamageMultiplier;
         public float GrabDamageInterval => grabDamageInterval;
@@ -345,7 +382,6 @@ namespace CreativeAI.Gameplay
         public float GrabPullDuration => grabPullDuration;
         public float GrabPullDistance => grabPullDistance;
         public float GrabPullLateralOffset => grabPullLateralOffset;
-        public float GrabEscapeKnockbackForce => grabEscapeKnockbackForce;
         public ParticleSystem ElectricEffectPrefab => electricEffectPrefab;
         public float GrabRetractDuration => grabRetractDuration;
         public Transform KamaBone => kamaBone;
@@ -409,6 +445,93 @@ namespace CreativeAI.Gameplay
         // 交戦中の攻撃タイミング。追跡・様子見の往復で待ち時間がやり直しにならないよう、ステートではなくここで持つ
         private readonly TBossCombatTempo _combatTempo = new TBossCombatTempo();
 
+        // 見渡しモーションの再生と、その間の足止め。Awake で生成する（Animator が必要なため）
+        private TBossLookAround _lookAround;
+
+        // 各ステートが要求している「NavMeshAgent を止めるか」。見渡し中はこれに関係なく止める
+        private bool _agentStopRequested;
+
+        /// <summary>
+        /// NavMeshAgent を止める／動かす。各ステートは Agent.isStopped を直接書かずにこれを使う。
+        /// 見渡しモーションの最中は、動かす要求でも見渡しが終わるまで止めたままにする（滑って動くのを防ぐ）。
+        /// </summary>
+        public void SetAgentStopped(bool stopped)
+        {
+            _agentStopRequested = stopped;
+            ApplyAgentStopped();
+        }
+
+        /// <summary>
+        /// 周りを見渡すモーションを出す。再生しきるまでその場に止まる。
+        /// 巡回・捜索・音の調査の間だけ有効で、追跡や攻撃に移ると自動で打ち切られる。
+        /// </summary>
+        public void PlayLookAround()
+        {
+            _lookAround.Play();
+            ApplyAgentStopped();
+        }
+
+        private void ApplyAgentStopped()
+        {
+            // isStopped は NavMesh 上に無いエージェントで触るとエラーになる（死亡時は Agent 自体を無効化している）
+            if (Agent == null || !Agent.isOnNavMesh)
+            {
+                return;
+            }
+
+            bool stop = _agentStopRequested || _lookAround.IsHolding;
+            if (stop && !Agent.isStopped)
+            {
+                // 減速を待つと、その間に滑って見えるため即座に止める
+                Agent.velocity = Vector3.zero;
+            }
+            Agent.isStopped = stop;
+        }
+
+        // ステートが変わる時に捨てる、行動モーション用のトリガー（死亡は捨てない）
+        private static readonly string[] ActionTriggers =
+        {
+            "Attack",
+            "Attack2",
+            "SpecialAttack",
+            "Flinch",
+            "Parried",
+            "Look",
+        };
+
+        /// <summary>
+        /// 前のステートが引いたトリガーが、遷移の途中などで使われずに残っていると、後で状況と無関係に再生されるため捨てる。
+        /// 次のステートが必要なトリガーはその Enter で引き直す。
+        /// </summary>
+        protected override void OnBeforeStateEnter()
+        {
+            if (Animator == null)
+            {
+                return;
+            }
+
+            foreach (string trigger in ActionTriggers)
+            {
+                Animator.ResetTrigger(trigger);
+            }
+        }
+
+        /// <summary>
+        /// 見渡しの足止めを1フレーム分進める。見渡してよいのは巡回・捜索・音の調査の間だけで、
+        /// それ以外（追跡・攻撃など）に移ったら足止めを解く（モーションの打ち切りは Animator 側の遷移に任せる）。
+        /// </summary>
+        private void UpdateLookAround()
+        {
+            bool lookAllowed =
+                currentState is TBossPatrolState
+                || currentState is TBossSearchState
+                || currentState is TBossSoundInvestigateState;
+            if (_lookAround.Tick(lookAllowed, Time.deltaTime))
+            {
+                ApplyAgentStopped();
+            }
+        }
+
         /// <summary>交戦中で、次の攻撃を仕掛けてよい時刻を過ぎたか。</summary>
         public bool IsAttackDue => _combatTempo.IsAttackDue;
 
@@ -449,10 +572,13 @@ namespace CreativeAI.Gameplay
         public bool IsPlayerDead => _playerStatus != null && _playerStatus.IsDead;
 
         /// <summary>
-        /// 顔（と頭に付けた懐中電灯）をRigでプレイヤーへ向ける状態か。追跡・様子見の間だけ true。
+        /// 顔（と頭に付けた懐中電灯）をプレイヤーへ向ける状態か。追跡・様子見の間と、巡回中に怪しんで見つめている間だけ true。
         /// 攻撃・怯み・捕獲・未発見時はアニメーションに任せ、攻撃後の硬直中に視界から抜ける逃げ道を残す。
         /// </summary>
-        public bool IsHeadAimActive => currentState is TBossChaseState || currentState is TBossWatchState;
+        public bool IsHeadAimActive =>
+            currentState is TBossChaseState
+            || currentState is TBossWatchState
+            || (currentState is TBossPatrolState && IsSuspicious);
 
         /// <summary>
         /// 通常攻撃・通常攻撃2（鎌）・特殊攻撃（触手）のステート中か。走り込みの接近フェーズも含む。
@@ -486,6 +612,7 @@ namespace CreativeAI.Gameplay
             KamaChainDriver = new TBossLimbChainDriver(kamaChainSettings);
 
             _perception = new TBossPerception(this);
+            _lookAround = new TBossLookAround(Animator);
             AttackFeasibility = new TBossAttackFeasibility(this, _perception);
 
             if (Player != null)
@@ -567,6 +694,8 @@ namespace CreativeAI.Gameplay
             // Exit後のステートが処理を続けてしまうため、イベント購読ではなくここで状態を確認する
             DisengageIfPlayerDied();
             base.Update();
+            UpdateLookAround();
+            TryRestorePlayerCollision();
             UpdateAnimatorParameters();
             _perception.Tick(Time.deltaTime);
             TickPanicPressure();
@@ -666,6 +795,85 @@ namespace CreativeAI.Gameplay
         public void HideScytheTrail()
         {
             scytheTrail.emitting = false;
+        }
+
+        // プレイヤーとの衝突を戻す予約。重なったまま戻すと、プレイヤーがめり込みから押し出されて上へ飛ぶため、離れるまで待つ
+        private bool _isPlayerCollisionRestorePending;
+
+        // 「離れた」とみなすための、体が触れる距離に足す余裕（m）
+        private const float SeparationMargin = 0.1f;
+
+        /// <summary>
+        /// ボスとプレイヤーの体（コライダー）が水平方向で触れ合う中心間の距離。
+        /// ボスのカプセル半径とプレイヤーのキャラクターコントローラー半径を、それぞれの拡大率込みで足す。
+        /// </summary>
+        public float BodyContactDistance
+        {
+            get
+            {
+                float bossRadius =
+                    EnemyCollider is CapsuleCollider capsule
+                        ? capsule.radius * transform.lossyScale.x
+                        : EnemyCollider.bounds.extents.x;
+                float playerRadius =
+                    PlayerCollider is CharacterController playerCC
+                        ? playerCC.radius * Player.transform.lossyScale.x
+                        : PlayerCollider.bounds.extents.x;
+                return bossRadius + playerRadius;
+            }
+        }
+
+        /// <summary>攻撃の動きでボスがプレイヤーを押し退けたり、引っかかったりしないよう、互いの衝突を無効にする。</summary>
+        public void IgnorePlayerCollision()
+        {
+            if (EnemyCollider == null || PlayerCollider == null)
+            {
+                return;
+            }
+
+            _isPlayerCollisionRestorePending = false;
+            Physics.IgnoreCollision(EnemyCollider, PlayerCollider, true);
+        }
+
+        /// <summary>
+        /// 無効にした衝突を戻す。体が重なっている間は戻さず、離れた時点で戻す
+        /// （重なったまま戻すと、プレイヤーのキャラクターコントローラーがボスのカプセルを段差として乗り越え、上へ飛ばされる）。
+        /// </summary>
+        public void RestorePlayerCollisionWhenSeparated()
+        {
+            _isPlayerCollisionRestorePending = true;
+            TryRestorePlayerCollision();
+        }
+
+        private void TryRestorePlayerCollision()
+        {
+            if (!_isPlayerCollisionRestorePending || EnemyCollider == null || PlayerCollider == null)
+            {
+                return;
+            }
+
+            Vector3 toPlayer = Player.transform.position - transform.position;
+            toPlayer.y = 0f;
+            if (toPlayer.magnitude < BodyContactDistance + SeparationMargin)
+            {
+                return;
+            }
+
+            Physics.IgnoreCollision(EnemyCollider, PlayerCollider, false);
+            _isPlayerCollisionRestorePending = false;
+        }
+
+        /// <summary>
+        /// 攻撃の振りが途中で打ち切られた時の後始末。振り終わりのAnimationEventが呼ばれないため、
+        /// 攻撃判定と鎌の軌跡が出たまま残らないよう、ここで止める。
+        /// </summary>
+        public void StopSwingEffects()
+        {
+            if (meleeHitbox != null)
+            {
+                meleeHitbox.DisableHitbox();
+            }
+            HideScytheTrail();
         }
 
         /// <summary>
@@ -829,13 +1037,14 @@ namespace CreativeAI.Gameplay
         /// </summary>
         public void OnSpecialAttackPoseReady()
         {
-            if (Animator != null)
-            {
-                Animator.speed = 0f; // アニメーションを一時停止
-            }
-
+            // 特殊攻撃ステートの間だけ構えで一時停止する。ステートを抜けた後にモーションの残りでこのイベントが来ても、
+            // Animator 全体を止めてボスを棒立ちにしないため
             if (currentState is TBossSpecialAttackState specialState)
             {
+                if (Animator != null)
+                {
+                    Animator.speed = 0f;
+                }
                 specialState.OnPoseReady();
             }
         }
@@ -1067,10 +1276,6 @@ namespace CreativeAI.Gameplay
             // 交戦中に光の外でも捕捉し続ける距離
             Gizmos.color = Color.white;
             Gizmos.DrawWireSphere(transform.position, combatCloseSenseRadius);
-
-            // 音反応半径
-            Gizmos.color = Color.cyan;
-            Gizmos.DrawWireSphere(transform.position, soundReactRadius);
         }
 #endif
     }

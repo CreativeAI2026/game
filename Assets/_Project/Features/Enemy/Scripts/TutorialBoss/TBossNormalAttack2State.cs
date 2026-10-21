@@ -80,7 +80,7 @@ namespace CreativeAI.Gameplay
             if (boss.Agent != null)
             {
                 boss.Agent.ResetPath();
-                boss.Agent.isStopped = true;
+                boss.SetAgentStopped(true);
             }
 
             if (boss.Animator != null)
@@ -194,6 +194,8 @@ namespace CreativeAI.Gameplay
                 boss.MeleeHitbox.OnHitLanded -= HandlePlayerHitLanded;
             }
 
+            // 怯み・パリィなどで振りの途中に抜けた場合でも、攻撃判定と軌跡を残さない
+            boss.StopSwingEffects();
             EndPull();
 
             // 連鎖へ分配した伸長は誰も書き戻さないため、明示的に取り消す
@@ -214,7 +216,7 @@ namespace CreativeAI.Gameplay
 
             if (boss.Agent != null)
             {
-                boss.Agent.isStopped = false;
+                boss.SetAgentStopped(false);
             }
         }
 
@@ -412,7 +414,7 @@ namespace CreativeAI.Gameplay
             // 引き寄せ中にボスと押し合いになるのを防ぐ
             if (boss.EnemyCollider != null && boss.PlayerCollider != null)
             {
-                Physics.IgnoreCollision(boss.EnemyCollider, boss.PlayerCollider, true);
+                boss.IgnorePlayerCollision();
                 _collisionIgnored = true;
             }
         }
@@ -453,9 +455,10 @@ namespace CreativeAI.Gameplay
                 _playerController.Locks.Release(this);
             }
 
-            if (_collisionIgnored && boss.EnemyCollider != null && boss.PlayerCollider != null)
+            if (_collisionIgnored)
             {
-                Physics.IgnoreCollision(boss.EnemyCollider, boss.PlayerCollider, false);
+                // 重なったまま衝突を戻すとプレイヤーが押し出されて上へ飛ぶため、離れてから戻す
+                boss.RestorePlayerCollisionWhenSeparated();
                 _collisionIgnored = false;
             }
         }

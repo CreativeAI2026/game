@@ -9,23 +9,25 @@ namespace CreativeAI.UI
     {
         public static GrabEscapeGaugeUI Instance { get; private set; }
 
-        [Header("円形ゲージ")]
+        [Header("アイコン")]
         [SerializeField]
-        private Image _gaugeImage;
+        private Image _iconImage;
 
+        [Tooltip("通常時の画像")]
         [SerializeField]
-        private Image _gaugeBgImage;
+        private Sprite _normalSprite;
+
+        [Tooltip("振りほどき度が増えた瞬間に表示する画像")]
+        [SerializeField]
+        private Sprite _pressedSprite;
+
+        [Tooltip("押下画像を表示してから通常画像に戻るまでの秒数")]
+        [SerializeField]
+        private float _pressedDuration = 0.1f;
 
         [Header("ラベル")]
         [SerializeField]
         private TextMeshProUGUI _labelText;
-
-        [Header("色設定")]
-        [SerializeField]
-        private Color _colorLow = new Color(0.2f, 0.8f, 1f, 1f);
-
-        [SerializeField]
-        private Color _colorHigh = new Color(1f, 0.9f, 0.1f, 1f);
 
         [Header("点滅設定")]
         [SerializeField]
@@ -39,6 +41,7 @@ namespace CreativeAI.UI
         private bool _isVisible = false;
         private float _currentValue = 0f;
         private float _maxValue = 1f;
+        private float _pressedTimer = 0f;
 
         private void Awake()
         {
@@ -48,6 +51,11 @@ namespace CreativeAI.UI
                 return;
             }
             Instance = this;
+
+            if (_iconImage == null || _normalSprite == null || _pressedSprite == null)
+            {
+                Debug.LogError($"[{nameof(GrabEscapeGaugeUI)}] _iconImage / _normalSprite / _pressedSprite のいずれかが未設定です", this);
+            }
 
             _canvasGroup = GetComponent<CanvasGroup>();
             if (_canvasGroup == null)
@@ -88,6 +96,8 @@ namespace CreativeAI.UI
                 (Mathf.Sin(Time.time * _blinkFrequency * Mathf.PI * 2f) + 1f) * 0.5f
             );
             _canvasGroup.alpha = alpha;
+
+            UpdatePressedIcon();
         }
 
         public void Show(float current, float max)
@@ -95,7 +105,9 @@ namespace CreativeAI.UI
             _currentValue = current;
             _maxValue = max;
             SetVisible(true);
-            RefreshGauge();
+            SetIconSprite(_normalSprite);
+            _pressedTimer = 0f;
+            RefreshLabel();
         }
 
         public void Hide()
@@ -105,12 +117,38 @@ namespace CreativeAI.UI
 
         public void UpdateValue(float current, float max)
         {
+            bool increased = current > _currentValue;
             _currentValue = current;
             _maxValue = max;
-            if (_isVisible)
+            if (!_isVisible)
+                return;
+
+            if (increased)
             {
-                RefreshGauge();
+                SetIconSprite(_pressedSprite);
+                _pressedTimer = _pressedDuration;
             }
+            RefreshLabel();
+        }
+
+        private void UpdatePressedIcon()
+        {
+            if (_pressedTimer <= 0f)
+                return;
+
+            _pressedTimer -= Time.deltaTime;
+            if (_pressedTimer <= 0f)
+            {
+                SetIconSprite(_normalSprite);
+            }
+        }
+
+        private void SetIconSprite(Sprite sprite)
+        {
+            if (_iconImage == null)
+                return;
+
+            _iconImage.sprite = sprite;
         }
 
         private void SetVisible(bool visible)
@@ -124,15 +162,9 @@ namespace CreativeAI.UI
             }
         }
 
-        private void RefreshGauge()
+        private void RefreshLabel()
         {
             float ratio = _maxValue > 0f ? Mathf.Clamp01(_currentValue / _maxValue) : 0f;
-
-            if (_gaugeImage != null)
-            {
-                _gaugeImage.fillAmount = ratio;
-                _gaugeImage.color = Color.Lerp(_colorLow, _colorHigh, ratio);
-            }
 
             if (_labelText != null)
             {

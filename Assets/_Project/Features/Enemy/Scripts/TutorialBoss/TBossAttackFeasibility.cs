@@ -71,7 +71,7 @@ namespace CreativeAI.Gameplay
             // 攻撃本体の判定（TBossSpecialAttackState.CheckHitAtTip）と同じく全レイヤー・トリガー除外で調べる
             int hitCount = Physics.SphereCastNonAlloc(
                 origin,
-                TBossSpecialAttackState.TentacleHitRadius,
+                _boss.WireHitRadius,
                 direction,
                 _wireHits,
                 _boss.SpecialAttackRange,

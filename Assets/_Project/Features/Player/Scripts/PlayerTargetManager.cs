@@ -25,12 +25,30 @@ namespace CreativeAI.Gameplay
         /// <summary>現在の最寄りの敵のコライダー。</summary>
         public Collider CurrentTargetCollider { get; private set; }
 
+        // 「見る位置」の高さ。コライダーの下端から上端までのうち、この割合の位置を見る。
+        // 中心(0.5)だと腰のあたりになり、背の高い敵では足元を見ているように見えたため、顔の高さに寄せている
+        // (TutorialBoss ではこの高さが頭のボーンとほぼ一致する)
+        private const float LookHeightRatio = 0.75f;
+
         /// <summary>
-        /// 現在の最寄りの敵の「見る位置」。足元(Transform の原点)ではなくコライダーの中心。
+        /// 現在の最寄りの敵の「見る位置」。コライダーの下から <see cref="LookHeightRatio"/> の高さ(顔のあたり)。
         /// ターゲットがいなければ null。
         /// </summary>
-        public Vector3? CurrentTargetPoint =>
-            CurrentTargetCollider != null ? CurrentTargetCollider.bounds.center : (Vector3?)null;
+        public Vector3? CurrentTargetPoint
+        {
+            get
+            {
+                if (CurrentTargetCollider == null)
+                    return null;
+
+                Bounds bounds = CurrentTargetCollider.bounds;
+                return new Vector3(
+                    bounds.center.x,
+                    bounds.min.y + bounds.size.y * LookHeightRatio,
+                    bounds.center.z
+                );
+            }
+        }
 
         private void Update()
         {

@@ -61,7 +61,7 @@ namespace CreativeAI.Gameplay
             if (boss.Agent != null)
             {
                 boss.Agent.speed = _moveSpeed;
-                boss.Agent.isStopped = false;
+                boss.SetAgentStopped(false);
                 boss.Agent.SetDestination(_target);
                 _stuckDetector = new TBossStuckDetector(boss.Agent);
             }
@@ -97,7 +97,7 @@ namespace CreativeAI.Gameplay
 
             if (boss.Agent != null && boss.Agent.isOnNavMesh)
             {
-                boss.Agent.isStopped = false;
+                boss.SetAgentStopped(false);
             }
         }
 
@@ -130,7 +130,7 @@ namespace CreativeAI.Gameplay
 
             if (boss.Agent != null)
             {
-                boss.Agent.isStopped = true;
+                boss.SetAgentStopped(true);
             }
 
             PickNextLookAngle();
@@ -146,7 +146,7 @@ namespace CreativeAI.Gameplay
 
             if (boss.Animator != null)
             {
-                boss.Animator.SetTrigger("Look");
+                boss.PlayLookAround();
             }
         }
 
@@ -184,13 +184,11 @@ namespace CreativeAI.Gameplay
 
         private void OnSoundHeard(SoundEventData data)
         {
-            float distToSound = Vector3.Distance(boss.transform.position, data.Position);
-            if (distToSound > data.Radius || distToSound > boss.SoundReactRadius)
+            if (!boss.TryHearSound(data, out float confidence))
             {
                 return;
             }
 
-            float confidence = 1f - Mathf.Clamp01(distToSound / boss.SoundReactRadius);
             boss.NotifySoundHeard(confidence);
 
             // 捜索中に新しい音を聞いたら、そちらへ目標を更新して移動を再開する
@@ -201,7 +199,7 @@ namespace CreativeAI.Gameplay
             if (boss.Agent != null)
             {
                 boss.Agent.speed = _moveSpeed;
-                boss.Agent.isStopped = false;
+                boss.SetAgentStopped(false);
                 boss.Agent.SetDestination(_target);
             }
             _stuckDetector?.Reset();

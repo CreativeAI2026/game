@@ -10,6 +10,7 @@ namespace CreativeAI.Gameplay
     /// モデル層のルート(Animator / <see cref="PlayerModel"/> と同じ GameObject)に置く。
     /// - 攻撃系: WeaponManager の選択中の武器ルートに付いた <see cref="IWeaponAnimationEventHandler"/> へ渡す
     /// - 足音系: ロジック層の <see cref="PlayerFootstep"/> へ渡す
+    /// - 死亡系: ロジック層の <see cref="PlayerDeathHandler"/> へ渡す
     ///
     /// public メソッド名がそのままクリップ上のイベントの Function 名になる。改名するとクリップ側の設定が切れる。
     /// </summary>
@@ -19,18 +20,21 @@ namespace CreativeAI.Gameplay
         private WeaponManager _weaponManager;
         private PlayerFootstep _footstep;
         private PlayerFlinchHandler _flinchHandler;
+        private PlayerDeathHandler _deathHandler;
 
         private void Awake()
         {
             _weaponManager = GetComponentInParent<WeaponManager>();
             _footstep = GetComponentInParent<PlayerFootstep>();
             _flinchHandler = GetComponentInParent<PlayerFlinchHandler>();
+            _deathHandler = GetComponentInParent<PlayerDeathHandler>();
             Assert.IsNotNull(_weaponManager, $"{name}: 親階層に WeaponManager が見つかりません");
             Assert.IsNotNull(_footstep, $"{name}: 親階層に PlayerFootstep が見つかりません");
             Assert.IsNotNull(
                 _flinchHandler,
                 $"{name}: 親階層に PlayerFlinchHandler が見つかりません"
             );
+            Assert.IsNotNull(_deathHandler, $"{name}: 親階層に PlayerDeathHandler が見つかりません");
         }
 
         // --- 攻撃系。関数名は既存の Slash1〜3.anim に設定済みのもの(旧 AnimationEventReceiver)を引き継いでいる ---
@@ -83,6 +87,11 @@ namespace CreativeAI.Gameplay
         public void OnFootstep(AnimationEvent evt) => _footstep.OnFootstepEvent(evt);
 
         public void OnLand(AnimationEvent evt) => _footstep.OnLandEvent(evt);
+
+        // --- 死亡系 ---
+
+        /// <summary>死亡クリップで体が床に着くフレームに置く。</summary>
+        public void OnFallDown() => _deathHandler.OnFallDownEvent();
 
         private void RelayToWeapon(WeaponAnimationEventType type, AnimationEvent evt)
         {

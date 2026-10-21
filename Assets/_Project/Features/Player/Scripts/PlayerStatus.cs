@@ -258,7 +258,6 @@ namespace CreativeAI.Gameplay
         private void Die()
         {
             IsDead = true;
-            Debug.Log("プレイヤーは力尽きた...");
             OnDied?.Invoke();
         }
 

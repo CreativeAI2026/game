@@ -25,6 +25,8 @@ namespace CreativeAI.Gameplay
                 boss.EnemyCollider.enabled = false;
             }
 
+            boss.StopSwingEffects();
+
             if (boss.Animator != null)
             {
                 boss.Animator.SetTrigger("Die");

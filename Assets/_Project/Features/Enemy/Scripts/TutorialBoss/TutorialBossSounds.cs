@@ -75,6 +75,11 @@ namespace CreativeAI.Gameplay
         [SerializeField]
         private SoundCue _pressureCueSound;
 
+        [Header("死亡")]
+        [Tooltip("倒れたときのSE。AnimationEventで呼ぶ")]
+        [SerializeField]
+        private SoundCue _fallDownSound;
+
         /// <summary>電撃の鳴り続ける音。鳴らす位置(電撃エフェクト)は拘束ステートが用意する。</summary>
         public SoundCue ElectricLoopSound => _electricLoopSound;
 
@@ -108,6 +113,8 @@ namespace CreativeAI.Gameplay
         /// <summary>追い込み開始の合図の音を、目の位置から鳴らす。</summary>
         public void PlayPressureCue(Vector3 position) =>
             WorldSoundPlayer.Play(_pressureCueSound, position, this);
+
+        public void PlayFallDownSound() => WorldSoundPlayer.Play(_fallDownSound, transform.position, this);
 
         private void PlayAtSelf(SoundCue cue)
         {
