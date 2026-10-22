@@ -1,6 +1,8 @@
 using System;
 using System.Collections;
+using System.Collections.Generic;
 using CreativeAI.Core;
+using CreativeAI.Gameplay;
 using UnityEngine;
 
 namespace CreativeAI.UI
@@ -40,6 +42,48 @@ namespace CreativeAI.UI
         [SerializeField]
         private EventDefinition _event; // 割当時は組み込みデモの代わりに、このイベント(events.json 由来)を EventPlayer で再生
 
+        [Serializable]
+        public struct PreviewFlag
+        {
+            public string Key;
+            public string Value;
+        }
+
+        [SerializeField]
+        private PreviewFlag[] _initialFlags = Array.Empty<PreviewFlag>();
+
+        [
+            SerializeField,
+            Tooltip("分岐テスト用。大事なもののitemKeyを指定。本番の所持品は変更しません。")
+        ]
+        private string[] _importantItemKeys = Array.Empty<string>();
+
+        private sealed class PreviewInventory : IItemGiver, IWeaponGiver
+        {
+            private readonly HashSet<string> _owned;
+            private readonly HashSet<string> _important = new();
+
+            public PreviewInventory(string[] keys)
+            {
+                _owned = new HashSet<string>(keys ?? Array.Empty<string>());
+                var catalog = Resources.Load<ItemCatalog>("ItemCatalog");
+                if (catalog != null)
+                    foreach (var item in catalog.Items)
+                        if (item != null && item.category == ItemCategory.Important)
+                            _important.Add(item.key);
+            }
+
+            public void Give(string key)
+            {
+                if (_important.Contains(key))
+                    _owned.Add(key);
+            }
+
+            public bool HasImportantItem(string key) => _owned.Contains(key);
+
+            public void GiveWeapon(string key) { }
+        }
+
         private IEnumerator Start()
         {
             IDialogueView view = _view != null ? _view : DialogueViewService.Current;
@@ -53,12 +97,9 @@ namespace CreativeAI.UI
 
             if (_event != null)
             {
-                // 本番と同じ再生経路。在庫・進行度の常駐が無いシーンなので giveItem は演出のみ、フラグ/進行は記録されない。
-                var player = EventPlayer.EnsureResident();
-                player.Inject(null, view, null);
                 do
                 {
-                    yield return player.PlayRoutine(_event); // 終了時のウィンドウは EventPlayer が閉じる
+                    yield return PlayEventPreview(_event, view);
                     yield return new WaitForSecondsRealtime(0.4f);
                 } while (_loop);
                 yield break;
@@ -68,6 +109,51 @@ namespace CreativeAI.UI
             {
                 yield return PlayPreview(view);
             } while (_loop);
+        }
+
+        /// <summary>一時状態を注入し、本番と同じ再生処理でイベントを確認する。</summary>
+        public IEnumerator PlayEventPreview(EventDefinition ev, IDialogueView view)
+        {
+            if (ev == null || view == null || EventPlaybackService.IsPlaying)
+                yield break;
+            var state = new PreviewState(_initialFlags);
+            var inventory = new PreviewInventory(_importantItemKeys);
+            var player = EventPlayer.EnsureResident();
+            using (player.InjectScoped(state, view, inventory, state, state, inventory))
+                yield return player.PlayRoutine(ev);
+        }
+
+        /// <summary>プレビュー用の保存先と戦闘通知先。本番の状態には書き込まない。</summary>
+        private sealed class PreviewState : IEventProgress, IEventGameMode, IBattleRunner
+        {
+            private readonly Dictionary<string, string> _flags = new();
+
+            public PreviewState(PreviewFlag[] initialFlags)
+            {
+                foreach (var flag in initialFlags ?? Array.Empty<PreviewFlag>())
+                    if (!string.IsNullOrWhiteSpace(flag.Key))
+                        _flags[flag.Key] = flag.Value;
+            }
+
+            public string GetFlag(string key) =>
+                key != null && _flags.TryGetValue(key, out var value) ? value : string.Empty;
+
+            public void SetFlag(string key, string value)
+            {
+                if (!string.IsNullOrEmpty(key))
+                    _flags[key] = value;
+            }
+
+            public void AdvanceTo(int progress) { }
+
+            public void EnterBattle() { }
+
+            public void ExitBattle() { }
+
+            public IEnumerator Run(BattleSetup setup)
+            {
+                yield break;
+            }
         }
 
         private static IEnumerator PlayPreview(IDialogueView view)
