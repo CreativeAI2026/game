@@ -30,6 +30,9 @@ namespace CreativeAI.Gameplay
         /// <summary>行動の終わり。ここで操作を返し、移動モーションへ戻す(関数名: ActionEnd)。</summary>
         ActionEnd,
 
+        /// <summary>矢を生成する(関数名: GenerateArrow)。</summary>
+        GenerateArrow,
+
         /// <summary>弓を引き切った。矢をつがえて発射可能にする(関数名: DrawComplete)。</summary>
         DrawComplete,
 

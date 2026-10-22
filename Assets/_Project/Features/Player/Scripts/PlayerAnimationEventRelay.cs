@@ -57,6 +57,9 @@ namespace CreativeAI.Gameplay
         public void ThrowHold(AnimationEvent evt) =>
             RelayToWeapon(WeaponAnimationEventType.ThrowHold, evt);
 
+        public void GenerateArrow(AnimationEvent evt) =>
+            RelayToWeapon(WeaponAnimationEventType.GenerateArrow, evt);
+
         public void DrawComplete(AnimationEvent evt) =>
             RelayToWeapon(WeaponAnimationEventType.DrawComplete, evt);
 

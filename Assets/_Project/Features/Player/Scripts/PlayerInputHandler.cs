@@ -18,7 +18,6 @@ namespace CreativeAI.Gameplay
         [Header("キャラクターの入力値")]
         public Vector2 move;
         public Vector2 look;
-        public bool jump;
         public bool sprint;
         public bool subAction; // 武器ごとに異なるアクション（剣：防御、弓：構え、鎌：投擲）に使用
         public bool weaponNext;
@@ -88,7 +87,6 @@ namespace CreativeAI.Gameplay
         {
             move = Vector2.zero;
             look = Vector2.zero;
-            jump = false;
             sprint = false;
             subAction = false;
             weaponNext = false;
@@ -118,7 +116,6 @@ namespace CreativeAI.Gameplay
         {
             move = Vector2.zero;
             look = Vector2.zero;
-            jump = false;
             sprint = false;
             subAction = false;
             weaponNext = false;
@@ -135,11 +132,6 @@ namespace CreativeAI.Gameplay
         {
             if (cursorInputForLook)
                 LookInput(value.Get<Vector2>());
-        }
-
-        public void OnJump(InputValue value)
-        {
-            JumpInput(value.isPressed);
         }
 
         public void OnSprint(InputValue value)
@@ -181,6 +173,12 @@ namespace CreativeAI.Gameplay
             WeaponPrevInput(value.isPressed);
         }
 
+        public void OnQuickFood1(InputValue value) => QuickFoodInput(0, value.isPressed);
+
+        public void OnQuickFood2(InputValue value) => QuickFoodInput(1, value.isPressed);
+
+        public void OnQuickFood3(InputValue value) => QuickFoodInput(2, value.isPressed);
+
         public void MoveInput(Vector2 newMoveDirection)
         {
             if (Blocked)
@@ -193,13 +191,6 @@ namespace CreativeAI.Gameplay
             if (Blocked)
                 return;
             look = newLookDirection;
-        }
-
-        public void JumpInput(bool newJumpState)
-        {
-            if (Blocked)
-                return;
-            jump = newJumpState;
         }
 
         public void SprintInput(bool newSprintState)
@@ -243,6 +234,19 @@ namespace CreativeAI.Gameplay
             if (Blocked)
                 return;
             weaponPrev = newWeaponPrevState;
+        }
+
+        /// <summary>
+        /// 即時食材キー(1/2/3)が押された瞬間に、押された枠番号(0始まり)を通知する。
+        /// 使用処理は <see cref="PlayerQuickFoodUser"/> が行う(入力の保持はここ、アイテムの使用は向こう)。
+        /// </summary>
+        public event Action<int> QuickFoodPressed;
+
+        public void QuickFoodInput(int slot, bool pressed)
+        {
+            if (!pressed || Blocked)
+                return;
+            QuickFoodPressed?.Invoke(slot);
         }
 
         private void OnApplicationFocus(bool hasFocus) => ApplyCursorLock();

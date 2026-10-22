@@ -13,11 +13,16 @@ namespace CreativeAI.Gameplay
         public static readonly int Speed = Animator.StringToHash("Speed");
         public static readonly int MotionSpeed = Animator.StringToHash("MotionSpeed");
         public static readonly int Grounded = Animator.StringToHash("Grounded");
-        public static readonly int Jump = Animator.StringToHash("Jump");
         public static readonly int FreeFall = Animator.StringToHash("FreeFall");
         public static readonly int Aim = Animator.StringToHash("Aim");
         public static readonly int StrafeX = Animator.StringToHash("StrafeX");
         public static readonly int StrafeZ = Animator.StringToHash("StrafeZ");
+
+        /// <summary>
+        /// 弓を持っているか(0 か 1)。移動の Blend Tree を弓用の歩きへ切り替える(BowController)。
+        /// Blend Tree の切り替えに使うため Bool ではなく Float にしている。
+        /// </summary>
+        public static readonly int BowEquipped = Animator.StringToHash("BowEquipped");
 
         // --- 行動(Trigger 名 = 行き先のステート名) ---
         /// <summary>3段コンボの各段。index 0 が1段目。</summary>
@@ -54,11 +59,11 @@ namespace CreativeAI.Gameplay
             ("Speed", AnimatorControllerParameterType.Float),
             ("MotionSpeed", AnimatorControllerParameterType.Float),
             ("Grounded", AnimatorControllerParameterType.Bool),
-            ("Jump", AnimatorControllerParameterType.Bool),
             ("FreeFall", AnimatorControllerParameterType.Bool),
             ("Aim", AnimatorControllerParameterType.Bool),
             ("StrafeX", AnimatorControllerParameterType.Float),
             ("StrafeZ", AnimatorControllerParameterType.Float),
+            ("BowEquipped", AnimatorControllerParameterType.Float),
             ("Attack1", AnimatorControllerParameterType.Trigger),
             ("Attack2", AnimatorControllerParameterType.Trigger),
             ("Attack3", AnimatorControllerParameterType.Trigger),

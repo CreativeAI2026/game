@@ -407,7 +407,7 @@ namespace CreativeAI.Gameplay
 
             if (_playerController != null)
             {
-                _playerController.Locks.Set(this, PlayerLock.Move | PlayerLock.Jump);
+                _playerController.Locks.Set(this, PlayerLock.Move);
                 _movementSuppressed = true;
             }
 

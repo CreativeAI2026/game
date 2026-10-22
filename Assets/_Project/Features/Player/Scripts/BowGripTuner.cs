@@ -8,7 +8,7 @@ namespace CreativeAI.Gameplay
     ///
     /// - 弓: 持ち手ソケットに付いた位置(実行時と同じ)に置かれる。ギズモで動かすと MockWeaponPose の今の姿勢(構え/通常)の値に取り込む
     /// - 手に持った矢(つがえる前): 引き手ソケット(ArrowHold)をギズモで動かす
-    /// - つがえた矢: 弓の子の ArrowNockPoint をギズモで動かす
+    /// - つがえた矢: 尾は引き手ソケット(弦が付いていく)。向きは弓の子の ArrowRestPoint をギズモで動かして合わせる
     /// 矢は、再生位置がつがえる前なら手に、後なら弓に、実行時と同じ大きさで描く(選択はできないので、ソケットを選んで動かす)。
     /// 値はシーンのプレイヤーに入るので、合わせたらプレハブへ Apply する。専用アニメーションが来たらこのコンポーネントごと外す。
     /// </summary>
@@ -164,22 +164,24 @@ namespace CreativeAI.Gameplay
             transform.GetPositionAndRotation(out _placedPosition, out _placedRotation);
         }
 
-        /// <summary>矢を、実行時と同じ位置・大きさで描く(つがえる前は手、後は弓)。</summary>
+        /// <summary>矢を、実行時と同じ位置・大きさで描く(つがえる前は手、後は尾を引き手の弦に掛けて矢の通り道へ向ける)。</summary>
         private void OnDrawGizmos()
         {
             if (!_isPreviewing || !IsAiming || _arrowPrefab == null)
                 return;
 
             Transform hold = PlayerModel.Of(this).GetSocket(PlayerSocketId.ArrowHold);
-            Transform nock = GetComponent<BowController>().ArrowNockPoint;
+            Transform rest = GetComponent<BowController>().ArrowRestPoint;
             Vector3 prefabScale = _arrowPrefab.transform.localScale;
             bool nocked = _previewNormalizedTime >= NockNormalizedTime();
 
-            // 実行時の矢: プール(拡大率1)で作られて見た目の大きさのまま手に付き(SetParent)、
-            // その時のローカルの大きさのまま ArrowNockPoint に付く(SetParent(…, false))
-            Matrix4x4 arrow = nocked
-                ? nock.localToWorldMatrix * Matrix4x4.Scale(Divide(prefabScale, hold.lossyScale))
-                : Matrix4x4.TRS(hold.position, hold.rotation, prefabScale);
+            // 実行時の矢は、プールで作られた見た目の大きさのまま手や弓に付く(SetParent で大きさを保つ)。
+            // つがえた後は弦(根本ボーン)が引き手に付くので、尾は引き手の位置になる
+            Vector3 toRest = rest.position - hold.position;
+            Matrix4x4 arrow =
+                nocked && toRest.sqrMagnitude > 0.000001f
+                    ? Matrix4x4.TRS(hold.position, Quaternion.LookRotation(toRest, rest.up), prefabScale)
+                    : Matrix4x4.TRS(hold.position, hold.rotation, prefabScale);
 
             Gizmos.color = nocked ? Color.yellow : Color.cyan;
             foreach (MeshFilter filter in _arrowPrefab.GetComponentsInChildren<MeshFilter>(true))
@@ -203,8 +205,6 @@ namespace CreativeAI.Gameplay
             }
             return 1f;
         }
-
-        private static Vector3 Divide(Vector3 a, Vector3 b) => new(a.x / b.x, a.y / b.y, a.z / b.z);
 #endif
     }
 }

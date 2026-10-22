@@ -35,18 +35,8 @@ namespace CreativeAI.Gameplay
         [Tooltip("加速と減速の速さ")]
         public float SpeedChangeRate = 10.0f;
 
-        [Space(10)]
-        [Tooltip("プレイヤーのジャンプの高さ")]
-        public float JumpHeight = 1.2f;
-
         [Tooltip("キャラクター固有の重力値。Unityエンジンのデフォルトは -9.81f")]
         public float Gravity = -15.0f;
-
-        [Space(10)]
-        [Tooltip(
-            "再度ジャンプできるようになるまでに必要な時間。0fに設定するとすぐにジャンプ可能になる。"
-        )]
-        public float JumpTimeout = 0.50f;
 
         [Tooltip("落下状態に移行するまでに必要な時間。階段を下りるときなどに使う。")]
         public float FallTimeout = 0.15f;
@@ -67,8 +57,6 @@ namespace CreativeAI.Gameplay
         private float _rotationVelocity;
         private float _verticalVelocity;
         private float _terminalVelocity = 53.0f;
-
-        private float _jumpTimeoutDelta;
         private float _fallTimeoutDelta;
 
         private Animator _animator;
@@ -121,13 +109,12 @@ namespace CreativeAI.Gameplay
 
         private void Start()
         {
-            _jumpTimeoutDelta = JumpTimeout;
             _fallTimeoutDelta = FallTimeout;
         }
 
         private void Update()
         {
-            JumpAndGravity();
+            FallGravity();
             GroundedCheck();
             Move();
         }
@@ -277,13 +264,12 @@ namespace CreativeAI.Gameplay
             _animator.SetFloat(PlayerAnimatorParams.StrafeZ, _input.move.y);
         }
 
-        private void JumpAndGravity()
+        private void FallGravity()
         {
             if (Grounded)
             {
                 _fallTimeoutDelta = FallTimeout;
 
-                _animator.SetBool(PlayerAnimatorParams.Jump, false);
                 _animator.SetBool(PlayerAnimatorParams.FreeFall, false);
 
                 // 接地中は速度を-2fに保つ。0fだとCheckSphereとの判定タイミング次第で
@@ -292,25 +278,10 @@ namespace CreativeAI.Gameplay
                 {
                     _verticalVelocity = -2f;
                 }
-
-                // 攻撃・怯み・掴まれ中などはジャンプさせない
-                if (_input.jump && _jumpTimeoutDelta <= 0.0f && !Locks.IsLocked(PlayerLock.Jump))
-                {
-                    // 運動方程式 v = √(2gh) から、指定した高さに到達するための初速を算出
-                    _verticalVelocity = Mathf.Sqrt(JumpHeight * -2f * Gravity);
-
-                    _animator.SetBool(PlayerAnimatorParams.Jump, true);
-                }
-
-                if (_jumpTimeoutDelta >= 0.0f)
-                {
-                    _jumpTimeoutDelta -= Time.deltaTime;
-                }
             }
             else
             {
-                _jumpTimeoutDelta = JumpTimeout;
-
+                // 段差を下りる程度の短い浮きでは落下モーションにしない
                 if (_fallTimeoutDelta >= 0.0f)
                 {
                     _fallTimeoutDelta -= Time.deltaTime;
@@ -319,9 +290,6 @@ namespace CreativeAI.Gameplay
                 {
                     _animator.SetBool(PlayerAnimatorParams.FreeFall, true);
                 }
-
-                // 空中でのジャンプ入力を無効化する（二段ジャンプ防止）
-                _input.jump = false;
             }
 
             // 終端速度未満であれば重力を適用。deltaTimeを2回乗算するのは、等加速度運動（v += a*dt）の離散化のため
