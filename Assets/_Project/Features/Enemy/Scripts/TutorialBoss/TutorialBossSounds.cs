@@ -114,7 +114,8 @@ namespace CreativeAI.Gameplay
         public void PlayPressureCue(Vector3 position) =>
             WorldSoundPlayer.Play(_pressureCueSound, position, this);
 
-        public void PlayFallDownSound() => WorldSoundPlayer.Play(_fallDownSound, transform.position, this);
+        public void PlayFallDownSound() =>
+            WorldSoundPlayer.Play(_fallDownSound, transform.position, this);
 
         private void PlayAtSelf(SoundCue cue)
         {

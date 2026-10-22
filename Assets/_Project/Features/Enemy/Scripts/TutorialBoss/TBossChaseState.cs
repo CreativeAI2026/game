@@ -20,7 +20,10 @@ namespace CreativeAI.Gameplay
         /// <param name="continueLostSightTimer">
         /// true なら見失い時間を引き継ぐ。様子見中に物陰へ隠れられて追跡へ戻る場合に使い、見失いの猶予が二重に延びないようにする。
         /// </param>
-        public TBossChaseState(TutorialBossController controller, bool continueLostSightTimer = false)
+        public TBossChaseState(
+            TutorialBossController controller,
+            bool continueLostSightTimer = false
+        )
             : base(controller)
         {
             _continueLostSightTimer = continueLostSightTimer;
@@ -95,7 +98,10 @@ namespace CreativeAI.Gameplay
                 return;
             }
 
-            float distance = Vector3.Distance(boss.transform.position, boss.Player.transform.position);
+            float distance = Vector3.Distance(
+                boss.transform.position,
+                boss.Player.transform.position
+            );
 
             // 様子見の間合いに入ったら様子見へ。
             // ただし間に壁・穴・段差があって直線で詰められない場合、様子見の直線的な間合い管理は成立しないため、

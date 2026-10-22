@@ -156,13 +156,27 @@ namespace CreativeAI.Gameplay
         {
             Vector3 origin = LastKnownPlayerPosition;
             float sampleRadius = PredictionSampleRadius * _boss.BodyScale;
-            if (!NavMesh.SamplePosition(origin, out NavMeshHit originHit, sampleRadius, NavMesh.AllAreas))
+            if (
+                !NavMesh.SamplePosition(
+                    origin,
+                    out NavMeshHit originHit,
+                    sampleRadius,
+                    NavMesh.AllAreas
+                )
+            )
             {
                 return origin;
             }
 
             Vector3 predicted = originHit.position + LastKnownPlayerVelocity * PredictionSeconds;
-            if (NavMesh.Raycast(originHit.position, predicted, out NavMeshHit wallHit, NavMesh.AllAreas))
+            if (
+                NavMesh.Raycast(
+                    originHit.position,
+                    predicted,
+                    out NavMeshHit wallHit,
+                    NavMesh.AllAreas
+                )
+            )
             {
                 return wallHit.position;
             }
@@ -332,7 +346,8 @@ namespace CreativeAI.Gameplay
             {
                 // コライダーが取れない場合は、足元からスケール1換算で1m上（従来の胸元相当）のみを使う
                 Transform playerTransform = _boss.Player.transform;
-                _samplePoints[0] = playerTransform.position + Vector3.up * playerTransform.lossyScale.y;
+                _samplePoints[0] =
+                    playerTransform.position + Vector3.up * playerTransform.lossyScale.y;
                 return 1;
             }
 

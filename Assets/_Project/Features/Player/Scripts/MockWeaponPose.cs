@@ -37,7 +37,9 @@ namespace CreativeAI.Gameplay
         [SerializeField]
         private Transform _target;
 
-        [Tooltip("姿勢ごとのローカル角度と位置のずれ。登録していない姿勢を指定された場合は変えない")]
+        [Tooltip(
+            "姿勢ごとのローカル角度と位置のずれ。登録していない姿勢を指定された場合は変えない"
+        )]
         [SerializeField]
         private Pose[] _poses = Array.Empty<Pose>();
 
@@ -71,7 +73,11 @@ namespace CreativeAI.Gameplay
         }
 
         /// <summary>姿勢の値を返す。登録していなければ 0 を返す。</summary>
-        public void GetPoseValues(MockWeaponPoseKey key, out Vector3 localEulerAngles, out Vector3 localPositionOffset)
+        public void GetPoseValues(
+            MockWeaponPoseKey key,
+            out Vector3 localEulerAngles,
+            out Vector3 localPositionOffset
+        )
         {
             int index = Array.FindIndex(_poses, p => p.key == key);
             localEulerAngles = index >= 0 ? _poses[index].localEulerAngles : Vector3.zero;
@@ -80,7 +86,11 @@ namespace CreativeAI.Gameplay
 
 #if UNITY_EDITOR
         /// <summary>調整用(BowGripTuner): 姿勢の値を書き換える。登録していなければ追加する。</summary>
-        public void EditorSetPoseValues(MockWeaponPoseKey key, Vector3 localEulerAngles, Vector3 localPositionOffset)
+        public void EditorSetPoseValues(
+            MockWeaponPoseKey key,
+            Vector3 localEulerAngles,
+            Vector3 localPositionOffset
+        )
         {
             UnityEditor.Undo.RecordObject(this, "Tune Weapon Pose");
             int index = Array.FindIndex(_poses, p => p.key == key);

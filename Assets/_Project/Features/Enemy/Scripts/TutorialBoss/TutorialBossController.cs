@@ -87,7 +87,9 @@ namespace CreativeAI.Gameplay
         [SerializeField]
         private float watchDuration = 2f;
 
-        [Tooltip("追跡で間合いに入った時、様子見を挟まずそのまま攻撃に移る確率（0〜1）。毎回様子見から入る一定パターンを崩す。")]
+        [Tooltip(
+            "追跡で間合いに入った時、様子見を挟まずそのまま攻撃に移る確率（0〜1）。毎回様子見から入る一定パターンを崩す。"
+        )]
         [SerializeField]
         [Range(0f, 1f)]
         private float directAssaultChance = 0.35f;
@@ -300,7 +302,9 @@ namespace CreativeAI.Gameplay
         private float grabRetractDuration = 0.4f;
 
         [Header("焦りへの追い込み")]
-        [Tooltip("プレイヤーの焦り（PanicDetector）に応じて攻めを強める設定。段階・系統ごとの補正値と歯止め。")]
+        [Tooltip(
+            "プレイヤーの焦り（PanicDetector）に応じて攻めを強める設定。段階・系統ごとの補正値と歯止め。"
+        )]
         [SerializeField]
         private TBossPanicPressureSettings panicPressureSettings = new TBossPanicPressureSettings();
 
@@ -310,7 +314,8 @@ namespace CreativeAI.Gameplay
         public float LostSightDuration => lostSightDuration;
 
         /// <summary>プレイヤーが光から外れてから見失うまでの時間（秒）。焦りへの追い込み（逃げ腰）で長くなる。</summary>
-        public float EffectiveLostSightDuration => lostSightDuration * PanicPressure.LostSightDurationScale;
+        public float EffectiveLostSightDuration =>
+            lostSightDuration * PanicPressure.LostSightDurationScale;
         public float CombatCloseSenseRadius => combatCloseSenseRadius;
 
         /// <summary>
@@ -338,7 +343,9 @@ namespace CreativeAI.Gameplay
         /// 追い込み開始の合図の直後は、プレイヤーが身構える間を取るため突っ込まない。
         /// </summary>
         public float EffectiveDirectAssaultChance =>
-            PanicPressure.IsInCueLead ? 0f : PanicPressure.AdjustDirectAssaultChance(directAssaultChance);
+            PanicPressure.IsInCueLead
+                ? 0f
+                : PanicPressure.AdjustDirectAssaultChance(directAssaultChance);
         public float SpecialAttackChance => specialAttackChance;
         public float NormalAttack2Chance => normalAttack2Chance;
         public float NormalAttackCooldown => normalAttackCooldown;
@@ -374,6 +381,7 @@ namespace CreativeAI.Gameplay
             confidence = 1f - Mathf.Clamp01(distToSound / data.Radius);
             return true;
         }
+
         public LayerMask ObstacleLayer => obstacleLayer;
         public float GrabDamagePerTick => Status.CurrentAttackPower * grabDamageMultiplier;
         public float GrabDamageInterval => grabDamageInterval;
@@ -540,7 +548,8 @@ namespace CreativeAI.Gameplay
             _combatTempo.IsScheduled ? Mathf.Max(0f, _combatTempo.NextAttackTime - Time.time) : -1f;
 
         /// <summary>今のステートの名前（デバッグ表示・ログ用）。</summary>
-        public string CurrentStateName => currentState != null ? currentState.GetType().Name : "なし";
+        public string CurrentStateName =>
+            currentState != null ? currentState.GetType().Name : "なし";
 
         /// <summary>追跡・様子見に入った時に呼ぶ。交戦の時計がまだ動いていなければ動かし始める。</summary>
         public void BeginCombatTempo() => _combatTempo.EnsureScheduled(CurrentAttackInterval);
@@ -585,9 +594,10 @@ namespace CreativeAI.Gameplay
         /// 捕獲は攻撃が当たった後の別ステートなので含めない。
         /// </summary>
         public override bool IsAttacking =>
-            currentState is TBossNormalAttackState
-                or TBossNormalAttack2State
-                or TBossSpecialAttackState;
+            currentState
+                is TBossNormalAttackState
+                    or TBossNormalAttack2State
+                    or TBossSpecialAttackState;
 
         // ────────────────────────────────────────────
         //  Unity ライフサイクル
@@ -623,7 +633,9 @@ namespace CreativeAI.Gameplay
                 _playerPanic = Player.GetComponent<PanicDetector>();
                 if (_playerPanic == null)
                 {
-                    Debug.LogWarning($"{name}: プレイヤーに PanicDetector が無いため、焦りへの追い込みは行いません");
+                    Debug.LogWarning(
+                        $"{name}: プレイヤーに PanicDetector が無いため、焦りへの追い込みは行いません"
+                    );
                 }
             }
 
@@ -634,7 +646,9 @@ namespace CreativeAI.Gameplay
             _eyeGlint = GetComponent<TBossEyeGlint>();
             if (_eyeGlint == null)
             {
-                Debug.LogWarning($"{name}: TBossEyeGlint が無いため、追い込み開始の合図は音だけになります");
+                Debug.LogWarning(
+                    $"{name}: TBossEyeGlint が無いため、追い込み開始の合図は音だけになります"
+                );
             }
 
             Sounds = GetComponent<TutorialBossSounds>();
@@ -722,7 +736,12 @@ namespace CreativeAI.Gameplay
                 && !IsPlayerDead
                 && _playerPanic.IsInCombat
                 && currentState is not TBossDeathState;
-            PanicPressure.Tick(_playerPanic.Level, _playerPanic.DominantCategory, isEngaged, Time.deltaTime);
+            PanicPressure.Tick(
+                _playerPanic.Level,
+                _playerPanic.DominantCategory,
+                isEngaged,
+                Time.deltaTime
+            );
         }
 
         /// <summary>
@@ -811,14 +830,12 @@ namespace CreativeAI.Gameplay
         {
             get
             {
-                float bossRadius =
-                    EnemyCollider is CapsuleCollider capsule
-                        ? capsule.radius * transform.lossyScale.x
-                        : EnemyCollider.bounds.extents.x;
-                float playerRadius =
-                    PlayerCollider is CharacterController playerCC
-                        ? playerCC.radius * Player.transform.lossyScale.x
-                        : PlayerCollider.bounds.extents.x;
+                float bossRadius = EnemyCollider is CapsuleCollider capsule
+                    ? capsule.radius * transform.lossyScale.x
+                    : EnemyCollider.bounds.extents.x;
+                float playerRadius = PlayerCollider is CharacterController playerCC
+                    ? playerCC.radius * Player.transform.lossyScale.x
+                    : PlayerCollider.bounds.extents.x;
                 return bossRadius + playerRadius;
             }
         }
@@ -847,7 +864,11 @@ namespace CreativeAI.Gameplay
 
         private void TryRestorePlayerCollision()
         {
-            if (!_isPlayerCollisionRestorePending || EnemyCollider == null || PlayerCollider == null)
+            if (
+                !_isPlayerCollisionRestorePending
+                || EnemyCollider == null
+                || PlayerCollider == null
+            )
             {
                 return;
             }
@@ -1027,7 +1048,8 @@ namespace CreativeAI.Gameplay
         public void NotifySoundHeard(float confidence) => _perception.NotifySoundHeard(confidence);
 
         /// <summary>プレイヤーの位置で鳴る音（足音など）を聞いた際に、既知位置を音源へ更新する。</summary>
-        public void NotifyPlayerHeardAt(Vector3 position) => _perception.NotifyPlayerHeardAt(position);
+        public void NotifyPlayerHeardAt(Vector3 position) =>
+            _perception.NotifyPlayerHeardAt(position);
 
         /// <summary>見失ったプレイヤーが逃げた先の予測地点（最後に見た位置と移動方向から求める）。</summary>
         public Vector3 PredictPlayerPosition() => _perception.PredictPlayerPosition();
@@ -1190,8 +1212,12 @@ namespace CreativeAI.Gameplay
             bool specialEligible
         )
         {
-            float specialWeight = specialEligible ? specialAttackChance * PanicPressure.SpecialWeightScale : 0f;
-            float normal2Weight = normal2Eligible ? normalAttack2Chance * PanicPressure.Normal2WeightScale : 0f;
+            float specialWeight = specialEligible
+                ? specialAttackChance * PanicPressure.SpecialWeightScale
+                : 0f;
+            float normal2Weight = normal2Eligible
+                ? normalAttack2Chance * PanicPressure.Normal2WeightScale
+                : 0f;
             float normalWeight = normalEligible ? PanicPressure.NormalWeightScale : 0f;
 
             float total = specialWeight + normal2Weight + normalWeight;

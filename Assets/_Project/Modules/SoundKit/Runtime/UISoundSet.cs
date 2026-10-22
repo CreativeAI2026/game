@@ -7,7 +7,10 @@ namespace SoundKit
     /// ファイルはどこかの Resources フォルダ直下に UISoundSet という名前で置く（シーンをまたいで static から読むため）。
     /// 画面ごとに違う音（知らせ・結果画面など）は、その画面のスクリプトが SoundCue を持つ。
     /// </summary>
-    [CreateAssetMenu(menuName = "SoundKit/UISoundSet（Resources 直下に置く）", fileName = ResourcePath)]
+    [CreateAssetMenu(
+        menuName = "SoundKit/UISoundSet（Resources 直下に置く）",
+        fileName = ResourcePath
+    )]
     public class UISoundSet : ScriptableObject
     {
         private const string ResourcePath = "UISoundSet";

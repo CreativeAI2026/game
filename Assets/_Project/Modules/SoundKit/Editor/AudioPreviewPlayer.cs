@@ -15,13 +15,15 @@ namespace SoundKit.EditorTools
         public bool IsPlaying => _source != null && _source.isPlaying;
 
         /// <summary>再生中の位置（秒）。</summary>
-        public double PlaybackSeconds => IsPlaying ? _source.timeSamples / (double)_clip.frequency : 0;
+        public double PlaybackSeconds =>
+            IsPlaying ? _source.timeSamples / (double)_clip.frequency : 0;
 
         public void Play(float[] samples, int channels, int sampleRate)
         {
             Stop();
             int frameCount = samples.Length / channels;
-            if (frameCount == 0) return;
+            if (frameCount == 0)
+                return;
 
             ReleaseClip();
             _clip = AudioClip.Create("AudioEditPreview", frameCount, channels, sampleRate, false);
@@ -34,27 +36,35 @@ namespace SoundKit.EditorTools
 
         public void Stop()
         {
-            if (_source != null) _source.Stop();
+            if (_source != null)
+                _source.Stop();
         }
 
         /// <summary>ウィンドウを閉じるときに、試聴用に作ったものを片付ける。</summary>
         public void Dispose()
         {
-            if (_source != null) Object.DestroyImmediate(_source.gameObject);
+            if (_source != null)
+                Object.DestroyImmediate(_source.gameObject);
             ReleaseClip();
         }
 
         private void ReleaseClip()
         {
-            if (_clip != null) Object.DestroyImmediate(_clip);
+            if (_clip != null)
+                Object.DestroyImmediate(_clip);
             _clip = null;
         }
 
         private AudioSource GetSource()
         {
-            if (_source != null) return _source;
+            if (_source != null)
+                return _source;
 
-            var go = EditorUtility.CreateGameObjectWithHideFlags("AudioEditPreview", HideFlags.HideAndDontSave, typeof(AudioSource));
+            var go = EditorUtility.CreateGameObjectWithHideFlags(
+                "AudioEditPreview",
+                HideFlags.HideAndDontSave,
+                typeof(AudioSource)
+            );
             _source = go.GetComponent<AudioSource>();
             _source.playOnAwake = false;
             _source.spatialBlend = 0f;

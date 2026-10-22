@@ -47,7 +47,9 @@ namespace SoundKit
         private SoundCategory _category = SoundCategory.Effect;
 
         [Header("立体音（BGM・UI ではオフ）")]
-        [Tooltip("オン：鳴った位置から聞こえる（離れると小さく、左右も分かる）。オフ：どこにいても同じに聞こえる")]
+        [Tooltip(
+            "オン：鳴った位置から聞こえる（離れると小さく、左右も分かる）。オフ：どこにいても同じに聞こえる"
+        )]
         [SerializeField]
         private bool _is3D = true;
 

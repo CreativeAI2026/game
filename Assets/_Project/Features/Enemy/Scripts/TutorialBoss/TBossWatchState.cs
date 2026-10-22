@@ -55,7 +55,6 @@ namespace CreativeAI.Gameplay
                 // NavMeshAgentの自動回転を切ることで、自前でプレイヤー方向を向きながら移動できる
                 boss.Agent.updateRotation = false;
             }
-
         }
 
         public override void Update()
@@ -91,7 +90,10 @@ namespace CreativeAI.Gameplay
             }
 
             // 走って離れたプレイヤーを歩きの間合い管理で追っても追いつけないため、追跡へ切り替えて走る
-            float distance = Vector3.Distance(boss.transform.position, boss.Player.transform.position);
+            float distance = Vector3.Distance(
+                boss.transform.position,
+                boss.Player.transform.position
+            );
             if (distance > boss.WatchDistanceMax * BreakAwayDistanceScale)
             {
                 boss.ChangeState(new TBossChaseState(boss));
@@ -175,7 +177,8 @@ namespace CreativeAI.Gameplay
             else
             {
                 tooCloseDistance = boss.WatchDistanceMin;
-                tooFarDistance = boss.WatchDistanceMax * (playerAiming ? WatchDistanceMaxScaleWhileAiming : 1f);
+                tooFarDistance =
+                    boss.WatchDistanceMax * (playerAiming ? WatchDistanceMaxScaleWhileAiming : 1f);
             }
 
             // 1回の移動目標までの距離と壁チェック。スケール1の体格で調整した値なので体格に合わせる
@@ -220,7 +223,8 @@ namespace CreativeAI.Gameplay
 
         private bool IsStrafeBlocked(Vector3 strafeDir, float step, Vector3 strafeTarget)
         {
-            Vector3 rayStart = boss.transform.position + Vector3.up * (WallCheckHeight * boss.BodyScale);
+            Vector3 rayStart =
+                boss.transform.position + Vector3.up * (WallCheckHeight * boss.BodyScale);
             if (
                 Physics.Raycast(
                     rayStart,

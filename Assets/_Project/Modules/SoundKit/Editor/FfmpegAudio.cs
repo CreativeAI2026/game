@@ -33,8 +33,12 @@ namespace SoundKit.EditorTools
         /// </summary>
         private const double MinMeasureSeconds = 2.0;
 
-        private static readonly Regex IntegratedPattern = new Regex("\"input_i\"\\s*:\\s*\"([^\"]+)\"");
-        private static readonly Regex TruePeakPattern = new Regex("\"input_tp\"\\s*:\\s*\"([^\"]+)\"");
+        private static readonly Regex IntegratedPattern = new Regex(
+            "\"input_i\"\\s*:\\s*\"([^\"]+)\""
+        );
+        private static readonly Regex TruePeakPattern = new Regex(
+            "\"input_tp\"\\s*:\\s*\"([^\"]+)\""
+        );
 
         public static string FfmpegPath => FindExecutable("ffmpeg");
         public static string FfprobePath => FindExecutable("ffprobe");
@@ -50,7 +54,8 @@ namespace SoundKit.EditorTools
         {
             if (_filterList == null)
             {
-                if (FfmpegPath == null) return false;
+                if (FfmpegPath == null)
+                    return false;
                 Run(FfmpegPath, "-hide_banner -nostdin -filters", out string stdout, out _);
                 _filterList = stdout ?? string.Empty;
             }
@@ -63,9 +68,18 @@ namespace SoundKit.EditorTools
         /// </summary>
         private static string FindExecutable(string name)
         {
-            var targets = new[] { EnvironmentVariableTarget.Process, EnvironmentVariableTarget.User, EnvironmentVariableTarget.Machine };
+            var targets = new[]
+            {
+                EnvironmentVariableTarget.Process,
+                EnvironmentVariableTarget.User,
+                EnvironmentVariableTarget.Machine,
+            };
             var directories = targets
-                .SelectMany(target => (Environment.GetEnvironmentVariable("PATH", target) ?? string.Empty).Split(Path.PathSeparator))
+                .SelectMany(target =>
+                    (Environment.GetEnvironmentVariable("PATH", target) ?? string.Empty).Split(
+                        Path.PathSeparator
+                    )
+                )
                 .Select(directory => directory.Trim().Trim('"'))
                 .Where(directory => directory.Length > 0);
 
@@ -74,62 +88,95 @@ namespace SoundKit.EditorTools
                 foreach (string fileName in new[] { name + ".exe", name })
                 {
                     string candidate = Path.Combine(directory, fileName);
-                    if (File.Exists(candidate)) return candidate;
+                    if (File.Exists(candidate))
+                        return candidate;
                 }
             }
             return null;
         }
 
         /// <summary>音声の形式名（mp3、pcm_s16le など）と長さ（秒）を調べる。調べられなければ false。</summary>
-        public static bool TryProbe(string filePath, out string codecName, out double durationSeconds)
+        public static bool TryProbe(
+            string filePath,
+            out string codecName,
+            out double durationSeconds
+        )
         {
             codecName = null;
             durationSeconds = 0;
 
-            string args = $"-v error -select_streams a:0 -show_entries stream=codec_name:format=duration -of default=nw=1 {Quote(filePath)}";
-            if (Run(FfprobePath, args, out string stdout, out _) != 0) return false;
+            string args =
+                $"-v error -select_streams a:0 -show_entries stream=codec_name:format=duration -of default=nw=1 {Quote(filePath)}";
+            if (Run(FfprobePath, args, out string stdout, out _) != 0)
+                return false;
 
             foreach (string line in stdout.Split('\n').Select(l => l.Trim()))
             {
-                if (line.StartsWith("codec_name=")) codecName = line.Substring("codec_name=".Length);
-                else if (line.StartsWith("duration=")) double.TryParse(line.Substring("duration=".Length), NumberStyles.Float, CultureInfo.InvariantCulture, out durationSeconds);
+                if (line.StartsWith("codec_name="))
+                    codecName = line.Substring("codec_name=".Length);
+                else if (line.StartsWith("duration="))
+                    double.TryParse(
+                        line.Substring("duration=".Length),
+                        NumberStyles.Float,
+                        CultureInfo.InvariantCulture,
+                        out durationSeconds
+                    );
             }
             return codecName != null && durationSeconds > 0;
         }
 
         /// <summary>音声の形式名・サンプリング周波数・チャンネル数を調べる。調べられなければ false。</summary>
-        public static bool TryProbeFormat(string filePath, out string codecName, out int sampleRate, out int channels)
+        public static bool TryProbeFormat(
+            string filePath,
+            out string codecName,
+            out int sampleRate,
+            out int channels
+        )
         {
             codecName = null;
             sampleRate = 0;
             channels = 0;
 
-            string args = $"-v error -select_streams a:0 -show_entries stream=codec_name,sample_rate,channels -of default=nw=1 {Quote(filePath)}";
-            if (Run(FfprobePath, args, out string stdout, out _) != 0) return false;
+            string args =
+                $"-v error -select_streams a:0 -show_entries stream=codec_name,sample_rate,channels -of default=nw=1 {Quote(filePath)}";
+            if (Run(FfprobePath, args, out string stdout, out _) != 0)
+                return false;
 
             foreach (string line in stdout.Split('\n').Select(l => l.Trim()))
             {
-                if (line.StartsWith("codec_name=")) codecName = line.Substring("codec_name=".Length);
-                else if (line.StartsWith("sample_rate=")) int.TryParse(line.Substring("sample_rate=".Length), out sampleRate);
-                else if (line.StartsWith("channels=")) int.TryParse(line.Substring("channels=".Length), out channels);
+                if (line.StartsWith("codec_name="))
+                    codecName = line.Substring("codec_name=".Length);
+                else if (line.StartsWith("sample_rate="))
+                    int.TryParse(line.Substring("sample_rate=".Length), out sampleRate);
+                else if (line.StartsWith("channels="))
+                    int.TryParse(line.Substring("channels=".Length), out channels);
             }
             return codecName != null && sampleRate > 0 && channels > 0;
         }
 
         /// <summary>聞こえ方の大きさを測る。無音などで測れなければ false。</summary>
-        public static bool TryMeasure(string filePath, double durationSeconds, out Loudness loudness)
+        public static bool TryMeasure(
+            string filePath,
+            double durationSeconds,
+            out Loudness loudness
+        )
         {
             loudness = default;
 
-            int loopCount = durationSeconds < MinMeasureSeconds
-                ? (int)Math.Ceiling(MinMeasureSeconds / durationSeconds) - 1
-                : 0;
+            int loopCount =
+                durationSeconds < MinMeasureSeconds
+                    ? (int)Math.Ceiling(MinMeasureSeconds / durationSeconds) - 1
+                    : 0;
             string loopArg = loopCount > 0 ? $"-stream_loop {loopCount} " : string.Empty;
-            string args = $"-hide_banner -nostats -nostdin {loopArg}-i {Quote(filePath)} -map 0:a:0 -af loudnorm=print_format=json -f null -";
-            if (Run(FfmpegPath, args, out _, out string stderr) != 0) return false;
+            string args =
+                $"-hide_banner -nostats -nostdin {loopArg}-i {Quote(filePath)} -map 0:a:0 -af loudnorm=print_format=json -f null -";
+            if (Run(FfmpegPath, args, out _, out string stderr) != 0)
+                return false;
 
-            if (!TryParseValue(IntegratedPattern, stderr, out double integrated)) return false;
-            if (!TryParseValue(TruePeakPattern, stderr, out double truePeak)) return false;
+            if (!TryParseValue(IntegratedPattern, stderr, out double integrated))
+                return false;
+            if (!TryParseValue(TruePeakPattern, stderr, out double truePeak))
+                return false;
 
             loudness = new Loudness(integrated, truePeak);
             return true;
@@ -139,9 +186,16 @@ namespace SoundKit.EditorTools
         /// 音量を gainDb だけ変えて outputPath に書き出す。音色は変えない（大きい瞬間を抑える処理などはしない）。
         /// encoderArgs は書き出す形式の指定（例："-c:a libmp3lame -b:a 320k"）。失敗したら ffmpeg の出力を error に返す。
         /// </summary>
-        public static bool TryRender(string inputPath, string outputPath, double gainDb, string encoderArgs, out string error)
+        public static bool TryRender(
+            string inputPath,
+            string outputPath,
+            double gainDb,
+            string encoderArgs,
+            out string error
+        )
         {
-            string filter = "volume=" + gainDb.ToString("0.00", CultureInfo.InvariantCulture) + "dB";
+            string filter =
+                "volume=" + gainDb.ToString("0.00", CultureInfo.InvariantCulture) + "dB";
             return TryRenderFiltered(inputPath, outputPath, filter, encoderArgs, out error);
         }
 
@@ -149,10 +203,17 @@ namespace SoundKit.EditorTools
         /// ffmpeg のフィルター（-af に渡す文字列。例："atrim=start=0.1,asetpts=PTS-STARTPTS"）を掛けて outputPath に書き出す。
         /// encoderArgs は書き出す形式の指定。失敗したら ffmpeg の出力を error に返す。
         /// </summary>
-        public static bool TryRenderFiltered(string inputPath, string outputPath, string filter, string encoderArgs, out string error)
+        public static bool TryRenderFiltered(
+            string inputPath,
+            string outputPath,
+            string filter,
+            string encoderArgs,
+            out string error
+        )
         {
             // -map 0:a:0：音だけを書き出す（mp3 に入っているジャケット画像などは捨てる）
-            string args = $"-hide_banner -nostats -nostdin -y -i {Quote(inputPath)} -map 0:a:0{FilterArg(filter)} {encoderArgs} {Quote(outputPath)}";
+            string args =
+                $"-hide_banner -nostats -nostdin -y -i {Quote(inputPath)} -map 0:a:0{FilterArg(filter)} {encoderArgs} {Quote(outputPath)}";
             int exitCode = Run(FfmpegPath, args, out _, out string stderr);
             error = exitCode == 0 ? null : stderr;
             return exitCode == 0;
@@ -162,11 +223,19 @@ namespace SoundKit.EditorTools
         /// 音声を（フィルターを掛けたうえで）波形データとして読み出す。
         /// samples はチャンネルが交互に並んだ -1〜1 の値。チャンネル数・サンプリング周波数は指定した値にそろえる。
         /// </summary>
-        public static bool TryDecode(string inputPath, string filter, int channels, int sampleRate, out float[] samples, out string error)
+        public static bool TryDecode(
+            string inputPath,
+            string filter,
+            int channels,
+            int sampleRate,
+            out float[] samples,
+            out string error
+        )
         {
             samples = null;
-            string args = $"-hide_banner -nostats -nostdin -i {Quote(inputPath)} -map 0:a:0{FilterArg(filter)} " +
-                          $"-ac {channels} -ar {sampleRate} -f f32le -c:a pcm_f32le -";
+            string args =
+                $"-hide_banner -nostats -nostdin -i {Quote(inputPath)} -map 0:a:0{FilterArg(filter)} "
+                + $"-ac {channels} -ar {sampleRate} -f f32le -c:a pcm_f32le -";
             int exitCode = RunBinary(FfmpegPath, args, out byte[] stdout, out string stderr);
             if (exitCode != 0)
             {
@@ -188,22 +257,34 @@ namespace SoundKit.EditorTools
         {
             switch (extension.ToLowerInvariant())
             {
-                case ".mp3": return "-c:a libmp3lame -b:a 320k";
-                case ".ogg": return "-c:a libvorbis -q:a 8";
-                case ".wav": return codecName != null && codecName.StartsWith("pcm_") ? "-c:a " + codecName : null;
-                default: return null;
+                case ".mp3":
+                    return "-c:a libmp3lame -b:a 320k";
+                case ".ogg":
+                    return "-c:a libvorbis -q:a 8";
+                case ".wav":
+                    return codecName != null && codecName.StartsWith("pcm_")
+                        ? "-c:a " + codecName
+                        : null;
+                default:
+                    return null;
             }
         }
 
-        private static string FilterArg(string filter) => string.IsNullOrEmpty(filter) ? string.Empty : " -af " + Quote(filter);
+        private static string FilterArg(string filter) =>
+            string.IsNullOrEmpty(filter) ? string.Empty : " -af " + Quote(filter);
 
         private static bool TryParseValue(Regex pattern, string text, out double value)
         {
             value = 0;
             Match match = pattern.Match(text);
             return match.Success
-                   && double.TryParse(match.Groups[1].Value, NumberStyles.Float, CultureInfo.InvariantCulture, out value)
-                   && !double.IsInfinity(value);
+                && double.TryParse(
+                    match.Groups[1].Value,
+                    NumberStyles.Float,
+                    CultureInfo.InvariantCulture,
+                    out value
+                )
+                && !double.IsInfinity(value);
         }
 
         private static string Quote(string path) => "\"" + path + "\"";
@@ -232,7 +313,12 @@ namespace SoundKit.EditorTools
         }
 
         /// <summary>標準出力をバイト列のまま受け取る版（波形データの読み出し用）。</summary>
-        private static int RunBinary(string exePath, string args, out byte[] stdout, out string stderr)
+        private static int RunBinary(
+            string exePath,
+            string args,
+            out byte[] stdout,
+            out string stderr
+        )
         {
             var startInfo = new ProcessStartInfo(exePath, args)
             {

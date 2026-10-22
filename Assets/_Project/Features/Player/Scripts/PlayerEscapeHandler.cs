@@ -14,7 +14,9 @@ namespace CreativeAI.Gameplay
     [RequireComponent(typeof(PlayerController))]
     public class PlayerEscapeHandler : MonoBehaviour
     {
-        [Tooltip("脱出モーション中に後退する距離（m）。元クリップのルート移動量(約1.7m)に合わせている")]
+        [Tooltip(
+            "脱出モーション中に後退する距離（m）。元クリップのルート移動量(約1.7m)に合わせている"
+        )]
         [SerializeField]
         private float _retreatDistance = 1.7f;
 

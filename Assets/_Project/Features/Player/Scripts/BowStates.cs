@@ -132,7 +132,10 @@ namespace CreativeAI.Gameplay
         /// </summary>
         private void CheckDrawEventMissing()
         {
-            bool isInAim = bow.TryGetUpperBodyState(PlayerAnimatorStates.Aim, out AnimatorStateInfo aimState);
+            bool isInAim = bow.TryGetUpperBodyState(
+                PlayerAnimatorStates.Aim,
+                out AnimatorStateInfo aimState
+            );
             if (isInAim)
                 _hasEntered = true;
 

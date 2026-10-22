@@ -54,7 +54,10 @@ namespace CreativeAI.UI
 
             if (_iconImage == null || _normalSprite == null || _pressedSprite == null)
             {
-                Debug.LogError($"[{nameof(GrabEscapeGaugeUI)}] _iconImage / _normalSprite / _pressedSprite のいずれかが未設定です", this);
+                Debug.LogError(
+                    $"[{nameof(GrabEscapeGaugeUI)}] _iconImage / _normalSprite / _pressedSprite のいずれかが未設定です",
+                    this
+                );
             }
 
             _canvasGroup = GetComponent<CanvasGroup>();

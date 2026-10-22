@@ -49,21 +49,31 @@ namespace SoundKit.EditorTools
         /// 書き出した renderedPath で素材を上書きし、記録を残す。
         /// 初めての編集（または差し替えられた素材）なら、上書きの前に元ファイルと編集の元の素材を保存する。
         /// </summary>
-        public static void Commit(string assetPath, string sourcePath, string renderedPath, AudioEditSettings settings)
+        public static void Commit(
+            string assetPath,
+            string sourcePath,
+            string renderedPath,
+            AudioEditSettings settings
+        )
         {
             string filePath = Path.GetFullPath(assetPath);
             if (!TryLoadCurrentRecord(assetPath, out _))
             {
                 string folder = FolderOf(assetPath);
                 // 前の記録（差し替え前の素材のもの）が残っていれば消してから作り直す
-                if (Directory.Exists(folder)) Directory.Delete(folder, true);
+                if (Directory.Exists(folder))
+                    Directory.Delete(folder, true);
                 Directory.CreateDirectory(folder);
                 File.Copy(filePath, RestorePath(assetPath));
                 File.Copy(sourcePath, SourcePath(assetPath));
             }
 
             File.Copy(renderedPath, filePath, true);
-            var record = new Record { OutputMd5 = AudioLoudnessNormalizer.ComputeMd5(filePath), Settings = settings };
+            var record = new Record
+            {
+                OutputMd5 = AudioLoudnessNormalizer.ComputeMd5(filePath),
+                Settings = settings,
+            };
             File.WriteAllText(RecordPath(assetPath), JsonUtility.ToJson(record, true));
             AssetDatabase.ImportAsset(assetPath, ImportAssetOptions.ForceUpdate);
         }
@@ -83,11 +93,13 @@ namespace SoundKit.EditorTools
         public static void MoveRecord(string fromAssetPath, string toAssetPath)
         {
             // 記録のあるフォルダだけを移す。フォルダごと動かした場合は、中の素材1つずつについて呼ばれる
-            if (!File.Exists(RecordPath(fromAssetPath))) return;
+            if (!File.Exists(RecordPath(fromAssetPath)))
+                return;
 
             string from = FolderOf(fromAssetPath);
             string to = FolderOf(toAssetPath);
-            if (Directory.Exists(to)) Directory.Delete(to, true);
+            if (Directory.Exists(to))
+                Directory.Delete(to, true);
             Directory.CreateDirectory(Path.GetDirectoryName(to));
             Directory.Move(from, to);
 
@@ -99,27 +111,41 @@ namespace SoundKit.EditorTools
         private static void RenameByExtension(string folder, string baseName, string assetPath)
         {
             string expected = Path.Combine(folder, baseName + Path.GetExtension(assetPath));
-            if (File.Exists(expected)) return;
+            if (File.Exists(expected))
+                return;
             string[] candidates = Directory.GetFiles(folder, baseName + ".*");
-            if (candidates.Length == 1) File.Move(candidates[0], expected);
+            if (candidates.Length == 1)
+                File.Move(candidates[0], expected);
         }
 
         private static bool TryLoadCurrentRecord(string assetPath, out Record record)
         {
             record = null;
             string recordPath = RecordPath(assetPath);
-            if (!File.Exists(recordPath) || !File.Exists(SourcePath(assetPath)) || !File.Exists(RestorePath(assetPath)))
+            if (
+                !File.Exists(recordPath)
+                || !File.Exists(SourcePath(assetPath))
+                || !File.Exists(RestorePath(assetPath))
+            )
                 return false;
 
             record = JsonUtility.FromJson<Record>(File.ReadAllText(recordPath));
             return record != null
-                   && record.Settings != null
-                   && record.OutputMd5 == AudioLoudnessNormalizer.ComputeMd5(Path.GetFullPath(assetPath));
+                && record.Settings != null
+                && record.OutputMd5
+                    == AudioLoudnessNormalizer.ComputeMd5(Path.GetFullPath(assetPath));
         }
 
-        private static string FolderOf(string assetPath) => Path.GetFullPath(Path.Combine(BackupFolder, assetPath));
-        private static string RestorePath(string assetPath) => Path.Combine(FolderOf(assetPath), "restore" + Path.GetExtension(assetPath));
-        private static string SourcePath(string assetPath) => Path.Combine(FolderOf(assetPath), "source" + Path.GetExtension(assetPath));
-        private static string RecordPath(string assetPath) => Path.Combine(FolderOf(assetPath), "edit.json");
+        private static string FolderOf(string assetPath) =>
+            Path.GetFullPath(Path.Combine(BackupFolder, assetPath));
+
+        private static string RestorePath(string assetPath) =>
+            Path.Combine(FolderOf(assetPath), "restore" + Path.GetExtension(assetPath));
+
+        private static string SourcePath(string assetPath) =>
+            Path.Combine(FolderOf(assetPath), "source" + Path.GetExtension(assetPath));
+
+        private static string RecordPath(string assetPath) =>
+            Path.Combine(FolderOf(assetPath), "edit.json");
     }
 }

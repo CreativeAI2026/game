@@ -31,7 +31,9 @@ namespace CreativeAI.Gameplay
         [SerializeField]
         private ScytheBoomerang _boomerangPrefab;
 
-        [Tooltip("鎌を投げる音。ThrowRelease(手放した瞬間)で鳴らす。飛行中・受け止めの音は投擲用プレハブ側に割り当てる")]
+        [Tooltip(
+            "鎌を投げる音。ThrowRelease(手放した瞬間)で鳴らす。飛行中・受け止めの音は投擲用プレハブ側に割り当てる"
+        )]
         [SerializeField]
         private SoundCue _throwSound;
 

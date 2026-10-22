@@ -15,7 +15,9 @@ namespace SoundKit
         [SerializeField]
         private SoundCue _impactSound;
 
-        [Tooltip("この速さ（m/s）以上でぶつかったときだけ鳴らす。転がっているだけの接触で鳴り続けないようにする")]
+        [Tooltip(
+            "この速さ（m/s）以上でぶつかったときだけ鳴らす。転がっているだけの接触で鳴り続けないようにする"
+        )]
         [SerializeField]
         [Min(0f)]
         private float _minImpactSpeed = 1f;
@@ -42,7 +44,10 @@ namespace SoundKit
                 return;
 
             _lastPlayedTime = Time.time;
-            float volume = Mathf.Max(MinVolume, Mathf.InverseLerp(_minImpactSpeed, _fullVolumeImpactSpeed, speed));
+            float volume = Mathf.Max(
+                MinVolume,
+                Mathf.InverseLerp(_minImpactSpeed, _fullVolumeImpactSpeed, speed)
+            );
             WorldSoundPlayer.Play(_impactSound, collision.GetContact(0).point, this, volume);
         }
     }

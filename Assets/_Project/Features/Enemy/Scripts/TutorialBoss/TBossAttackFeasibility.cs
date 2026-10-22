@@ -37,7 +37,8 @@ namespace CreativeAI.Gameplay
 
             Bounds bossBounds = _boss.EnemyCollider.bounds;
             Bounds playerBounds = _boss.PlayerCollider.bounds;
-            return playerBounds.min.y <= bossBounds.center.y && playerBounds.max.y >= bossBounds.min.y;
+            return playerBounds.min.y <= bossBounds.center.y
+                && playerBounds.max.y >= bossBounds.min.y;
         }
 
         /// <summary>

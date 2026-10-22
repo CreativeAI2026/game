@@ -80,7 +80,7 @@ namespace CreativeAI.Gameplay
         [Header("軌跡")]
         [Tooltip(
             "飛行中の軌跡(子のパーティクルごと再生する)。投げた瞬間に再生し、受け取りで消す。"
-            + "Tools/CreativeAI/VFX/鎌の投擲軌跡を生成 で作られる"
+                + "Tools/CreativeAI/VFX/鎌の投擲軌跡を生成 で作られる"
         )]
         [SerializeField]
         private ParticleSystem _trail;

@@ -39,7 +39,8 @@ namespace CreativeAI.Gameplay
 
             if (
                 !IsEngageable(EngagedEnemy)
-                || HorizontalDistance(EngagedEnemy.transform.position, playerPosition) > _engagementRadius
+                || HorizontalDistance(EngagedEnemy.transform.position, playerPosition)
+                    > _engagementRadius
             )
             {
                 EngagedEnemy = null;

@@ -31,7 +31,10 @@ namespace CreativeAI.Gameplay
         {
             if (string.IsNullOrEmpty(_targetSceneName))
             {
-                Debug.LogError($"[{nameof(DebugSceneJumpInput)}] 遷移先のシーン名が未設定です", this);
+                Debug.LogError(
+                    $"[{nameof(DebugSceneJumpInput)}] 遷移先のシーン名が未設定です",
+                    this
+                );
                 return;
             }
 

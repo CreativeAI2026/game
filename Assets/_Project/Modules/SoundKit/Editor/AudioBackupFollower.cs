@@ -12,8 +12,12 @@ namespace SoundKit.EditorTools
     /// </summary>
     public class AudioBackupFollower : AssetPostprocessor
     {
-        private static void OnPostprocessAllAssets(string[] importedAssets, string[] deletedAssets,
-            string[] movedAssets, string[] movedFromAssetPaths)
+        private static void OnPostprocessAllAssets(
+            string[] importedAssets,
+            string[] deletedAssets,
+            string[] movedAssets,
+            string[] movedFromAssetPaths
+        )
         {
             for (int i = 0; i < movedAssets.Length; i++)
             {

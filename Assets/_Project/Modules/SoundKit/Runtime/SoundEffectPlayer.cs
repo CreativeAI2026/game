@@ -28,7 +28,10 @@ namespace SoundKit
             AudioClip clip = cue != null ? cue.PickClip() : null;
             if (clip == null)
             {
-                UnassignedSoundWarning.WarnOnce(owner, cue == null ? null : $"音「{cue.name}」の素材");
+                UnassignedSoundWarning.WarnOnce(
+                    owner,
+                    cue == null ? null : $"音「{cue.name}」の素材"
+                );
                 return;
             }
 

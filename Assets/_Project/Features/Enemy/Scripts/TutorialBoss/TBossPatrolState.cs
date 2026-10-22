@@ -163,7 +163,9 @@ namespace CreativeAI.Gameplay
             }
 
             Debug.Log("[TutorialBoss] 見えた気がした場所を確かめに行く");
-            boss.ChangeState(new TBossSearchState(boss, boss.LastKnownPlayerPosition, cautious: true));
+            boss.ChangeState(
+                new TBossSearchState(boss, boss.LastKnownPlayerPosition, cautious: true)
+            );
             return true;
         }
 

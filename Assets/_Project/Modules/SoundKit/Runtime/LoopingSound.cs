@@ -38,7 +38,10 @@ namespace SoundKit
 
             if (cue == null || !cue.HasClip)
             {
-                UnassignedSoundWarning.WarnOnce(owner, cue == null ? "鳴り続ける音" : $"音「{cue.name}」の素材");
+                UnassignedSoundWarning.WarnOnce(
+                    owner,
+                    cue == null ? "鳴り続ける音" : $"音「{cue.name}」の素材"
+                );
                 return;
             }
 

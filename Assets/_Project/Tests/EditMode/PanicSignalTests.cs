@@ -284,7 +284,11 @@ namespace CreativeAI.Tests.EditMode
         // --- 硬直 ---
 
         /// <summary>敵の攻撃を1回分（始まり→続く→終わり）流す。攻撃の途中で duringAttack を1回呼ぶ。</summary>
-        private void PlayEnemyAttack(FreezeSignal freeze, PanicContext context, System.Action duringAttack = null)
+        private void PlayEnemyAttack(
+            FreezeSignal freeze,
+            PanicContext context,
+            System.Action duringAttack = null
+        )
         {
             _enemy.Attacking = true;
             for (int i = 0; i < 5; i++)

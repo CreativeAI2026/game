@@ -45,7 +45,8 @@ namespace CreativeAI.Gameplay
             _hitTimes.Count < FirstCountedHit
                 ? 0f
                 : Mathf.Clamp01(
-                    (float)(_hitTimes.Count - FirstCountedHit + 1) / (_maxCount - FirstCountedHit + 1)
+                    (float)(_hitTimes.Count - FirstCountedHit + 1)
+                        / (_maxCount - FirstCountedHit + 1)
                 );
 
         public override float RawValue => _hitTimes.Count;

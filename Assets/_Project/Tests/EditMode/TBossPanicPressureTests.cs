@@ -30,7 +30,12 @@ namespace CreativeAI.Tests.EditMode
             _pressure.PressureEnded += () => _endedCount++;
         }
 
-        private void TickFor(PanicLevel level, PanicCategory category, float seconds, bool isEngaged = true)
+        private void TickFor(
+            PanicLevel level,
+            PanicCategory category,
+            float seconds,
+            bool isEngaged = true
+        )
         {
             for (float t = 0f; t < seconds - 0.0001f; t += Step)
             {
@@ -58,7 +63,10 @@ namespace CreativeAI.Tests.EditMode
 
             Assert.That(_pressure.Mode, Is.EqualTo(TBossPressureMode.Tense));
             Assert.That(_pressure.AttackIntervalScale, Is.EqualTo(0.8f).Within(0.001f));
-            Assert.That(_pressure.AdjustDirectAssaultChance(0.35f), Is.EqualTo(0.5f).Within(0.001f));
+            Assert.That(
+                _pressure.AdjustDirectAssaultChance(0.35f),
+                Is.EqualTo(0.5f).Within(0.001f)
+            );
             // 系統ごとの追い込みは焦りになってから
             Assert.That(_pressure.SpecialWeightScale, Is.EqualTo(1f));
             Assert.That(_startedCount, Is.EqualTo(0));
@@ -74,7 +82,10 @@ namespace CreativeAI.Tests.EditMode
             Assert.That(_startedCategory, Is.EqualTo(PanicCategory.Avoidance));
             // 逃げ腰: 触手で引き戻し、突っ込み、しつこく追う
             Assert.That(_pressure.SpecialWeightScale, Is.EqualTo(3f));
-            Assert.That(_pressure.AdjustDirectAssaultChance(0.35f), Is.EqualTo(0.9f).Within(0.001f));
+            Assert.That(
+                _pressure.AdjustDirectAssaultChance(0.35f),
+                Is.EqualTo(0.9f).Within(0.001f)
+            );
             Assert.That(_pressure.LostSightDurationScale, Is.EqualTo(1.5f));
             Assert.That(_pressure.ClosesIn, Is.False);
         }
@@ -94,7 +105,10 @@ namespace CreativeAI.Tests.EditMode
         {
             TickFor(PanicLevel.Panic, PanicCategory.Avoidance, 0.5f);
 
-            Assert.That(_pressure.AdjustDirectAssaultChance(0.95f), Is.EqualTo(0.95f).Within(0.001f));
+            Assert.That(
+                _pressure.AdjustDirectAssaultChance(0.95f),
+                Is.EqualTo(0.95f).Within(0.001f)
+            );
         }
 
         [Test]

@@ -271,8 +271,10 @@ namespace CreativeAI.Gameplay
 
         public GameObject MinionPrefab => minionPrefab;
         public int MinionCount => minionCount;
+
         // MidBossMinionProjectile が int でダメージを受け取るため丸める
-        public int MinionDamage => Mathf.RoundToInt(Status.CurrentAttackPower * minionDamageMultiplier);
+        public int MinionDamage =>
+            Mathf.RoundToInt(Status.CurrentAttackPower * minionDamageMultiplier);
 
         protected override void Awake()
         {

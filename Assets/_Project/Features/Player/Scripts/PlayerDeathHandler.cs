@@ -65,6 +65,7 @@ namespace CreativeAI.Gameplay
         }
 
         /// <summary>死亡クリップの OnFallDown イベント(PlayerAnimationEventRelay 経由)。</summary>
-        public void OnFallDownEvent() => WorldSoundPlayer.Play(_fallDownSound, transform.position, this);
+        public void OnFallDownEvent() =>
+            WorldSoundPlayer.Play(_fallDownSound, transform.position, this);
     }
 }

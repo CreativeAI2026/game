@@ -57,7 +57,12 @@ namespace SoundKit.EditorTools
             }
         }
 
-        private enum Outcome { Adjusted, AlreadyClose, Failed }
+        private enum Outcome
+        {
+            Adjusted,
+            AlreadyClose,
+            Failed,
+        }
 
         private readonly struct Result
         {
@@ -70,8 +75,16 @@ namespace SoundKit.EditorTools
             public readonly bool ShortOfTarget;
             public readonly string Note;
 
-            public Result(string path, Outcome outcome, ClipSetting setting, double before = double.NaN, double after = double.NaN,
-                double clippedDb = 0, bool shortOfTarget = false, string note = null)
+            public Result(
+                string path,
+                Outcome outcome,
+                ClipSetting setting,
+                double before = double.NaN,
+                double after = double.NaN,
+                double clippedDb = 0,
+                bool shortOfTarget = false,
+                string note = null
+            )
             {
                 Path = path;
                 Outcome = outcome;
@@ -109,7 +122,8 @@ namespace SoundKit.EditorTools
         public static bool IsUpToDate(string clipPath, ClipSetting setting)
         {
             var importer = AssetImporter.GetAtPath(clipPath) as AudioImporter;
-            return importer != null && importer.userData == CreateMarker(Path.GetFullPath(clipPath), setting);
+            return importer != null
+                && importer.userData == CreateMarker(Path.GetFullPath(clipPath), setting);
         }
 
         /// <summary>素材ごとの作り方。素材を入れた全 SoundCue の設定から決める。</summary>
@@ -119,9 +133,13 @@ namespace SoundKit.EditorTools
             foreach (string cuePath in FindAssetPaths("t:SoundCue"))
             {
                 var cue = AssetDatabase.LoadAssetAtPath<SoundCue>(cuePath);
-                if (cue == null) continue;
+                if (cue == null)
+                    continue;
 
-                var cueSetting = new ClipSetting(Math.Round(TargetLufs + cue.LoudnessOffsetDb, 1), cue.AllowClipping);
+                var cueSetting = new ClipSetting(
+                    Math.Round(TargetLufs + cue.LoudnessOffsetDb, 1),
+                    cue.AllowClipping
+                );
                 foreach (AudioClip clip in cue.Clips.Where(clip => clip != null))
                 {
                     string clipPath = AssetDatabase.GetAssetPath(clip);
@@ -132,29 +150,47 @@ namespace SoundKit.EditorTools
                     }
 
                     // 設定の違う複数の SoundCue に入っている素材は、大きくする側に合わせる
-                    if (Math.Abs(existing.Target - cueSetting.Target) < 0.05 && existing.AllowClipping == cueSetting.AllowClipping) continue;
+                    if (
+                        Math.Abs(existing.Target - cueSetting.Target) < 0.05
+                        && existing.AllowClipping == cueSetting.AllowClipping
+                    )
+                        continue;
                     conflicts?.Add(Path.GetFileName(clipPath));
-                    settings[clipPath] = new ClipSetting(Math.Max(existing.Target, cueSetting.Target),
-                        existing.AllowClipping || cueSetting.AllowClipping);
+                    settings[clipPath] = new ClipSetting(
+                        Math.Max(existing.Target, cueSetting.Target),
+                        existing.AllowClipping || cueSetting.AllowClipping
+                    );
                 }
             }
             return settings;
         }
 
-        public static ClipSetting GetSetting(Dictionary<string, ClipSetting> settings, string clipPath)
-            => settings.TryGetValue(clipPath, out ClipSetting setting) ? setting : new ClipSetting(TargetLufs, false);
+        public static ClipSetting GetSetting(
+            Dictionary<string, ClipSetting> settings,
+            string clipPath
+        ) =>
+            settings.TryGetValue(clipPath, out ClipSetting setting)
+                ? setting
+                : new ClipSetting(TargetLufs, false);
 
         /// <summary>ゲームで鳴る可能性のある音素材。素材パックのデモシーンだけで使われている音は含めない。</summary>
         private static List<string> CollectUsedClipPaths()
         {
             var roots = new List<string>();
-            roots.AddRange(EditorBuildSettings.scenes.Where(scene => scene.enabled).Select(scene => scene.path));
+            roots.AddRange(
+                EditorBuildSettings.scenes.Where(scene => scene.enabled).Select(scene => scene.path)
+            );
             roots.AddRange(FindAssetPaths("t:SoundCue"));
             roots.AddRange(FindAssetPaths("t:UISoundSet"));
             // Resources は名前で読み込まれるため、シーンから参照されていなくても鳴る
-            roots.AddRange(AssetDatabase.GetAllAssetPaths().Where(path => path.StartsWith("Assets/") && path.Contains("/Resources/")));
+            roots.AddRange(
+                AssetDatabase
+                    .GetAllAssetPaths()
+                    .Where(path => path.StartsWith("Assets/") && path.Contains("/Resources/"))
+            );
 
-            return AssetDatabase.GetDependencies(roots.Distinct().ToArray(), true)
+            return AssetDatabase
+                .GetDependencies(roots.Distinct().ToArray(), true)
                 .Where(IsAudioAsset)
                 .Distinct()
                 .OrderBy(path => path)
@@ -163,7 +199,8 @@ namespace SoundKit.EditorTools
 
         private static List<string> CollectSelectedClipPaths()
         {
-            return Selection.GetFiltered<AudioClip>(SelectionMode.DeepAssets)
+            return Selection
+                .GetFiltered<AudioClip>(SelectionMode.DeepAssets)
                 .Select(AssetDatabase.GetAssetPath)
                 .Where(IsAudioAsset)
                 .Distinct()
@@ -171,19 +208,22 @@ namespace SoundKit.EditorTools
                 .ToList();
         }
 
-        private static IEnumerable<string> FindAssetPaths(string filter)
-            => AssetDatabase.FindAssets(filter).Select(AssetDatabase.GUIDToAssetPath);
+        private static IEnumerable<string> FindAssetPaths(string filter) =>
+            AssetDatabase.FindAssets(filter).Select(AssetDatabase.GUIDToAssetPath);
 
-        private static bool IsAudioAsset(string path)
-            => path.StartsWith("Assets/") && AssetImporter.GetAtPath(path) is AudioImporter;
+        private static bool IsAudioAsset(string path) =>
+            path.StartsWith("Assets/") && AssetImporter.GetAtPath(path) is AudioImporter;
 
         private static void Normalize(List<string> clipPaths, bool askConfirmation)
         {
             if (FfmpegAudio.FfmpegPath == null || FfmpegAudio.FfprobePath == null)
             {
-                EditorUtility.DisplayDialog("音量をそろえる",
-                    "ffmpeg（ffmpeg.exe と ffprobe.exe）が見つかりません。\n" +
-                    "インストール済みの場合は、Unity を開き直してから実行してください。", "OK");
+                EditorUtility.DisplayDialog(
+                    "音量をそろえる",
+                    "ffmpeg（ffmpeg.exe と ffprobe.exe）が見つかりません。\n"
+                        + "インストール済みの場合は、Unity を開き直してから実行してください。",
+                    "OK"
+                );
                 return;
             }
 
@@ -191,34 +231,48 @@ namespace SoundKit.EditorTools
             {
                 // 「すべて処理済み」と区別がつかないと、実行されなかったのか分からないため理由を出す
                 const string message =
-                    "対象の音素材が見つからないため、何もしませんでした。\n\n" +
-                    "対象は「SoundCue に入っている素材」「ビルドに入るシーンが参照している素材」「Resources 内の素材」です。\n" +
-                    "それ以外の素材は、Project ウィンドウで選んで右クリック > SoundKit > 選択した音素材の音量をそろえる で処理できます。";
+                    "対象の音素材が見つからないため、何もしませんでした。\n\n"
+                    + "対象は「SoundCue に入っている素材」「ビルドに入るシーンが参照している素材」「Resources 内の素材」です。\n"
+                    + "それ以外の素材は、Project ウィンドウで選んで右クリック > SoundKit > 選択した音素材の音量をそろえる で処理できます。";
                 Debug.Log("[音量をそろえる] " + message);
-                if (askConfirmation) EditorUtility.DisplayDialog("音量をそろえる", message, "OK");
+                if (askConfirmation)
+                    EditorUtility.DisplayDialog("音量をそろえる", message, "OK");
                 return;
             }
 
             var conflicts = new List<string>();
             Dictionary<string, ClipSetting> settings = CollectSettings(conflicts);
 
-            var pending = clipPaths.Where(path => !IsUpToDate(path, GetSetting(settings, path))).ToList();
+            var pending = clipPaths
+                .Where(path => !IsUpToDate(path, GetSetting(settings, path)))
+                .ToList();
             int skippedCount = clipPaths.Count - pending.Count;
             if (pending.Count == 0)
             {
-                Debug.Log($"[音量をそろえる] 対象の音素材 {clipPaths.Count} 個は、すべて処理済みのため何もしませんでした。");
+                Debug.Log(
+                    $"[音量をそろえる] 対象の音素材 {clipPaths.Count} 個は、すべて処理済みのため何もしませんでした。"
+                );
                 if (askConfirmation)
                 {
-                    EditorUtility.DisplayDialog("音量をそろえる",
-                        $"対象の音素材 {clipPaths.Count} 個は、すべて処理済みです。", "OK");
+                    EditorUtility.DisplayDialog(
+                        "音量をそろえる",
+                        $"対象の音素材 {clipPaths.Count} 個は、すべて処理済みです。",
+                        "OK"
+                    );
                 }
                 return;
             }
 
-            if (askConfirmation && !EditorUtility.DisplayDialog("音量をそろえる",
-                    $"音素材 {pending.Count} 個の音量をそろえます（処理済みの {skippedCount} 個は飛ばします）。\n\n" +
-                    $"音声ファイルを書き換えます。初めて処理する素材は、元のファイルをプロジェクト直下の {OriginalsFolder} に保存します。",
-                    "実行", "やめる"))
+            if (
+                askConfirmation
+                && !EditorUtility.DisplayDialog(
+                    "音量をそろえる",
+                    $"音素材 {pending.Count} 個の音量をそろえます（処理済みの {skippedCount} 個は飛ばします）。\n\n"
+                        + $"音声ファイルを書き換えます。初めて処理する素材は、元のファイルをプロジェクト直下の {OriginalsFolder} に保存します。",
+                    "実行",
+                    "やめる"
+                )
+            )
             {
                 return;
             }
@@ -229,8 +283,13 @@ namespace SoundKit.EditorTools
                 for (int i = 0; i < pending.Count; i++)
                 {
                     string path = pending[i];
-                    if (EditorUtility.DisplayCancelableProgressBar("音量をそろえる",
-                            $"{i + 1}/{pending.Count}  {Path.GetFileName(path)}", (float)i / pending.Count))
+                    if (
+                        EditorUtility.DisplayCancelableProgressBar(
+                            "音量をそろえる",
+                            $"{i + 1}/{pending.Count}  {Path.GetFileName(path)}",
+                            (float)i / pending.Count
+                        )
+                    )
                     {
                         break;
                     }
@@ -243,23 +302,35 @@ namespace SoundKit.EditorTools
             }
 
             LogReport(results, skippedCount, conflicts);
-            if (!askConfirmation) return;
+            if (!askConfirmation)
+                return;
 
             int failedCount = results.Count(result => result.Outcome == Outcome.Failed);
             int shortCount = results.Count(result => result.ShortOfTarget);
-            EditorUtility.DisplayDialog("音量をそろえる",
-                $"処理：{results.Count} 個（うち失敗 {failedCount} 個、音割れの手前で止めて目標に届かなかった {shortCount} 個）\n" +
-                "素材ごとの結果は Console に出しました。", "OK");
+            EditorUtility.DisplayDialog(
+                "音量をそろえる",
+                $"処理：{results.Count} 個（うち失敗 {failedCount} 個、音割れの手前で止めて目標に届かなかった {shortCount} 個）\n"
+                    + "素材ごとの結果は Console に出しました。",
+                "OK"
+            );
         }
 
         private static Result NormalizeClip(string assetPath, ClipSetting setting)
         {
             string filePath = Path.GetFullPath(assetPath);
             var importer = (AudioImporter)AssetImporter.GetAtPath(assetPath);
-            if (!string.IsNullOrEmpty(importer.userData) && !importer.userData.StartsWith(MarkerPrefix))
+            if (
+                !string.IsNullOrEmpty(importer.userData)
+                && !importer.userData.StartsWith(MarkerPrefix)
+            )
             {
                 // 他の仕組みが userData を使っている素材。印を書くと消してしまうため触らない
-                return new Result(assetPath, Outcome.Failed, setting, note: "userData が別の用途で使われているため飛ばした");
+                return new Result(
+                    assetPath,
+                    Outcome.Failed,
+                    setting,
+                    note: "userData が別の用途で使われているため飛ばした"
+                );
             }
 
             string originalPath = EnsureOriginal(assetPath, filePath, importer.userData);
@@ -267,17 +338,31 @@ namespace SoundKit.EditorTools
             if (!FfmpegAudio.TryProbe(originalPath, out string codecName, out double duration))
                 return new Result(assetPath, Outcome.Failed, setting, note: "形式・長さを読めない");
 
-            string encoderArgs = FfmpegAudio.GetEncoderArgs(Path.GetExtension(assetPath), codecName);
+            string encoderArgs = FfmpegAudio.GetEncoderArgs(
+                Path.GetExtension(assetPath),
+                codecName
+            );
             if (encoderArgs == null)
-                return new Result(assetPath, Outcome.Failed, setting, note: $"未対応の形式（{Path.GetExtension(assetPath)}）");
+                return new Result(
+                    assetPath,
+                    Outcome.Failed,
+                    setting,
+                    note: $"未対応の形式（{Path.GetExtension(assetPath)}）"
+                );
 
             if (!FfmpegAudio.TryMeasure(originalPath, duration, out FfmpegAudio.Loudness before))
-                return new Result(assetPath, Outcome.Failed, setting, note: "無音などで大きさを測れない");
+                return new Result(
+                    assetPath,
+                    Outcome.Failed,
+                    setting,
+                    note: "無音などで大きさを測れない"
+                );
 
             double gainDb = setting.Target - before.Integrated;
             double overCeilingDb = before.TruePeak + gainDb - PeakCeilingDb;
             bool shortOfTarget = !setting.AllowClipping && overCeilingDb > 0;
-            if (shortOfTarget) gainDb -= overCeilingDb;
+            if (shortOfTarget)
+                gainDb -= overCeilingDb;
             double clippedDb = Math.Max(0, before.TruePeak + gainDb);
 
             if (Math.Abs(gainDb) < MinChangeDb)
@@ -285,25 +370,61 @@ namespace SoundKit.EditorTools
                 // 元の素材のままでよい。以前に別の大きさで作り直していた場合は元に戻す
                 File.Copy(originalPath, filePath, true);
                 MarkNormalized(importer, filePath, setting);
-                return new Result(assetPath, Outcome.AlreadyClose, setting, before.Integrated, before.Integrated,
-                    clippedDb, shortOfTarget);
+                return new Result(
+                    assetPath,
+                    Outcome.AlreadyClose,
+                    setting,
+                    before.Integrated,
+                    before.Integrated,
+                    clippedDb,
+                    shortOfTarget
+                );
             }
 
-            string tempPath = Path.Combine(Path.GetFullPath("Temp"), "AudioLoudness" + Path.GetExtension(assetPath));
-            if (!FfmpegAudio.TryRender(originalPath, tempPath, gainDb, encoderArgs, out string error))
+            string tempPath = Path.Combine(
+                Path.GetFullPath("Temp"),
+                "AudioLoudness" + Path.GetExtension(assetPath)
+            );
+            if (
+                !FfmpegAudio.TryRender(
+                    originalPath,
+                    tempPath,
+                    gainDb,
+                    encoderArgs,
+                    out string error
+                )
+            )
             {
                 Debug.LogError($"[音量をそろえる] {assetPath} の書き出しに失敗しました。\n{error}");
-                return new Result(assetPath, Outcome.Failed, setting, before.Integrated, note: "書き出しに失敗（Console に詳細）");
+                return new Result(
+                    assetPath,
+                    Outcome.Failed,
+                    setting,
+                    before.Integrated,
+                    note: "書き出しに失敗（Console に詳細）"
+                );
             }
 
             File.Copy(tempPath, filePath, true);
             File.Delete(tempPath);
 
-            double after = FfmpegAudio.TryMeasure(filePath, duration, out FfmpegAudio.Loudness measured)
+            double after = FfmpegAudio.TryMeasure(
+                filePath,
+                duration,
+                out FfmpegAudio.Loudness measured
+            )
                 ? measured.Integrated
                 : double.NaN;
             MarkNormalized(importer, filePath, setting);
-            return new Result(assetPath, Outcome.Adjusted, setting, before.Integrated, after, clippedDb, shortOfTarget);
+            return new Result(
+                assetPath,
+                Outcome.Adjusted,
+                setting,
+                before.Integrated,
+                after,
+                clippedDb,
+                shortOfTarget
+            );
         }
 
         /// <summary>
@@ -313,8 +434,11 @@ namespace SoundKit.EditorTools
         private static string EnsureOriginal(string assetPath, string filePath, string userData)
         {
             string originalPath = Path.GetFullPath(Path.Combine(OriginalsFolder, assetPath));
-            bool isOurOutput = TryGetMarkerMd5(userData, out string markerMd5) && markerMd5 == ComputeMd5(filePath);
-            if (isOurOutput && File.Exists(originalPath)) return originalPath;
+            bool isOurOutput =
+                TryGetMarkerMd5(userData, out string markerMd5)
+                && markerMd5 == ComputeMd5(filePath);
+            if (isOurOutput && File.Exists(originalPath))
+                return originalPath;
 
             Directory.CreateDirectory(Path.GetDirectoryName(originalPath));
             File.Copy(filePath, originalPath, true);
@@ -330,9 +454,9 @@ namespace SoundKit.EditorTools
             originalPath = Path.GetFullPath(Path.Combine(OriginalsFolder, assetPath));
             var importer = AssetImporter.GetAtPath(assetPath) as AudioImporter;
             return importer != null
-                   && TryGetMarkerMd5(importer.userData, out string markerMd5)
-                   && markerMd5 == ComputeMd5(Path.GetFullPath(assetPath))
-                   && File.Exists(originalPath);
+                && TryGetMarkerMd5(importer.userData, out string markerMd5)
+                && markerMd5 == ComputeMd5(Path.GetFullPath(assetPath))
+                && File.Exists(originalPath);
         }
 
         /// <summary>
@@ -342,11 +466,13 @@ namespace SoundKit.EditorTools
         internal static void MoveOriginal(string fromAssetPath, string toAssetPath)
         {
             string from = Path.GetFullPath(Path.Combine(OriginalsFolder, fromAssetPath));
-            if (!File.Exists(from)) return;
+            if (!File.Exists(from))
+                return;
 
             string to = Path.GetFullPath(Path.Combine(OriginalsFolder, toAssetPath));
             Directory.CreateDirectory(Path.GetDirectoryName(to));
-            if (File.Exists(to)) File.Delete(to);
+            if (File.Exists(to))
+                File.Delete(to);
             File.Move(from, to);
         }
 
@@ -357,7 +483,11 @@ namespace SoundKit.EditorTools
             return importer != null && TryGetMarkerMd5(importer.userData, out _);
         }
 
-        private static void MarkNormalized(AudioImporter importer, string filePath, ClipSetting setting)
+        private static void MarkNormalized(
+            AudioImporter importer,
+            string filePath,
+            ClipSetting setting
+        )
         {
             importer.userData = CreateMarker(filePath, setting);
             importer.SaveAndReimport();
@@ -374,11 +504,13 @@ namespace SoundKit.EditorTools
         private static bool TryGetMarkerMd5(string userData, out string md5)
         {
             md5 = null;
-            if (string.IsNullOrEmpty(userData) || !userData.StartsWith(MarkerPrefix)) return false;
+            if (string.IsNullOrEmpty(userData) || !userData.StartsWith(MarkerPrefix))
+                return false;
 
             const string key = "md5=";
             int index = userData.IndexOf(key, StringComparison.Ordinal);
-            if (index < 0) return false;
+            if (index < 0)
+                return false;
             md5 = userData.Substring(index + key.Length);
             return true;
         }
@@ -392,30 +524,49 @@ namespace SoundKit.EditorTools
             }
         }
 
-        private static void LogReport(List<Result> results, int skippedCount, List<string> conflicts)
+        private static void LogReport(
+            List<Result> results,
+            int skippedCount,
+            List<string> conflicts
+        )
         {
             var report = new StringBuilder();
-            report.AppendLine($"[音量をそろえる] 基準 {TargetLufs} LUFS／処理 {results.Count} 個・処理済みで飛ばした {skippedCount} 個");
-            report.AppendLine("（元 → 後 は聞こえ方の大きさ LUFS。「届かない」＝音割れの手前で止めた、「音割れ」＝音割れしても上げる設定で 0dB を超えた量）");
+            report.AppendLine(
+                $"[音量をそろえる] 基準 {TargetLufs} LUFS／処理 {results.Count} 個・処理済みで飛ばした {skippedCount} 個"
+            );
+            report.AppendLine(
+                "（元 → 後 は聞こえ方の大きさ LUFS。「届かない」＝音割れの手前で止めた、「音割れ」＝音割れしても上げる設定で 0dB を超えた量）"
+            );
             if (conflicts.Count > 0)
             {
-                report.AppendLine("※ 設定の違う複数の SoundCue に入っているため、大きくする側に合わせた素材：" +
-                                  string.Join("、", conflicts.Distinct()));
+                report.AppendLine(
+                    "※ 設定の違う複数の SoundCue に入っているため、大きくする側に合わせた素材："
+                        + string.Join("、", conflicts.Distinct())
+                );
             }
 
-            foreach (Result result in results.OrderBy(result => result.Outcome).ThenBy(result => result.Path))
+            foreach (
+                Result result in results
+                    .OrderBy(result => result.Outcome)
+                    .ThenBy(result => result.Path)
+            )
             {
                 string name = Path.GetFileName(result.Path);
                 string target = $"目標 {FormatLufs(result.Setting.Target)}";
-                string flags = (result.ShortOfTarget ? "  届かない" : string.Empty)
-                               + (result.ClippedDb > 0 ? $"  音割れ +{result.ClippedDb:0.0}dB" : string.Empty);
+                string flags =
+                    (result.ShortOfTarget ? "  届かない" : string.Empty)
+                    + (result.ClippedDb > 0 ? $"  音割れ +{result.ClippedDb:0.0}dB" : string.Empty);
                 switch (result.Outcome)
                 {
                     case Outcome.Adjusted:
-                        report.AppendLine($"調整　{target}　{FormatLufs(result.Before)} → {FormatLufs(result.After)}{flags}  {name}");
+                        report.AppendLine(
+                            $"調整　{target}　{FormatLufs(result.Before)} → {FormatLufs(result.After)}{flags}  {name}"
+                        );
                         break;
                     case Outcome.AlreadyClose:
-                        report.AppendLine($"そのまま　{target}　{FormatLufs(result.Before)}（目標に近いので元の素材のまま）{flags}  {name}");
+                        report.AppendLine(
+                            $"そのまま　{target}　{FormatLufs(result.Before)}（目標に近いので元の素材のまま）{flags}  {name}"
+                        );
                         break;
                     default:
                         report.AppendLine($"失敗　{result.Note}  {result.Path}");
@@ -425,7 +576,7 @@ namespace SoundKit.EditorTools
             Debug.Log(report.ToString());
         }
 
-        private static string FormatLufs(double value)
-            => double.IsNaN(value) ? "?" : value.ToString("0.0", CultureInfo.InvariantCulture);
+        private static string FormatLufs(double value) =>
+            double.IsNaN(value) ? "?" : value.ToString("0.0", CultureInfo.InvariantCulture);
     }
 }

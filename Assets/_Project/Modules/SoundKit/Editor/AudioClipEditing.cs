@@ -30,7 +30,8 @@ namespace SoundKit.EditorTools
             public double Duration => Samples.Length / (double)(Channels * SampleRate);
         }
 
-        public static bool IsFfmpegAvailable => FfmpegAudio.FfmpegPath != null && FfmpegAudio.FfprobePath != null;
+        public static bool IsFfmpegAvailable =>
+            FfmpegAudio.FfmpegPath != null && FfmpegAudio.FfprobePath != null;
 
         /// <summary>音程・速度の変更に、質の良い rubberband を使えるか（無ければ atempo で代用する）。</summary>
         public static bool UsesRubberband => FfmpegAudio.HasFilter("rubberband");
@@ -39,8 +40,8 @@ namespace SoundKit.EditorTools
         {
             string extension = Path.GetExtension(assetPath).ToLowerInvariant();
             return assetPath.StartsWith("Assets/")
-                   && AssetImporter.GetAtPath(assetPath) is AudioImporter
-                   && (extension == ".mp3" || extension == ".ogg" || extension == ".wav");
+                && AssetImporter.GetAtPath(assetPath) is AudioImporter
+                && (extension == ".mp3" || extension == ".ogg" || extension == ".wav");
         }
 
         public static bool TryLoad(string assetPath, out Source source, out string error)
@@ -48,7 +49,8 @@ namespace SoundKit.EditorTools
             source = null;
             if (!IsFfmpegAvailable)
             {
-                error = "ffmpeg（ffmpeg.exe と ffprobe.exe）が見つかりません。インストール済みの場合は、Unity を開き直してください。";
+                error =
+                    "ffmpeg（ffmpeg.exe と ffprobe.exe）が見つかりません。インストール済みの場合は、Unity を開き直してください。";
                 return false;
             }
             if (!IsSupported(assetPath))
@@ -57,13 +59,32 @@ namespace SoundKit.EditorTools
                 return false;
             }
 
-            string filePath = AudioEditStore.ResolveSource(assetPath, out AudioEditSettings previous);
-            if (!FfmpegAudio.TryProbeFormat(filePath, out string codecName, out int sampleRate, out int channels))
+            string filePath = AudioEditStore.ResolveSource(
+                assetPath,
+                out AudioEditSettings previous
+            );
+            if (
+                !FfmpegAudio.TryProbeFormat(
+                    filePath,
+                    out string codecName,
+                    out int sampleRate,
+                    out int channels
+                )
+            )
             {
                 error = "形式を読み取れませんでした。";
                 return false;
             }
-            if (!FfmpegAudio.TryDecode(filePath, null, channels, sampleRate, out float[] samples, out string decodeError))
+            if (
+                !FfmpegAudio.TryDecode(
+                    filePath,
+                    null,
+                    channels,
+                    sampleRate,
+                    out float[] samples,
+                    out string decodeError
+                )
+            )
             {
                 error = "読み込みに失敗しました。\n" + decodeError;
                 return false;
@@ -90,7 +111,8 @@ namespace SoundKit.EditorTools
         /// </summary>
         private static bool SourceExists(Source source, out string error)
         {
-            bool exists = File.Exists(source.FilePath) && File.Exists(Path.GetFullPath(source.AssetPath));
+            bool exists =
+                File.Exists(source.FilePath) && File.Exists(Path.GetFullPath(source.AssetPath));
             error = exists
                 ? null
                 : $"ファイルが見つかりません（名前の変更・移動・削除をした可能性があります）。素材を開き直してください。\n{source.AssetPath}";
@@ -98,30 +120,66 @@ namespace SoundKit.EditorTools
         }
 
         /// <summary>保存したときと同じ加工を掛けた波形データを作る（試聴用）。</summary>
-        public static bool TryRenderPreview(Source source, AudioEditSettings settings, out float[] samples, out string error)
+        public static bool TryRenderPreview(
+            Source source,
+            AudioEditSettings settings,
+            out float[] samples,
+            out string error
+        )
         {
             samples = null;
-            if (!SourceExists(source, out error)) return false;
+            if (!SourceExists(source, out error))
+                return false;
 
-            string filter = settings.BuildFilter(source.Duration, source.SampleRate, UsesRubberband);
-            return FfmpegAudio.TryDecode(source.FilePath, filter, source.Channels, source.SampleRate, out samples, out error);
+            string filter = settings.BuildFilter(
+                source.Duration,
+                source.SampleRate,
+                UsesRubberband
+            );
+            return FfmpegAudio.TryDecode(
+                source.FilePath,
+                filter,
+                source.Channels,
+                source.SampleRate,
+                out samples,
+                out error
+            );
         }
 
         /// <summary>編集内容を掛けて素材を上書きする。元のファイルは AudioEditStore が保存する。</summary>
         public static bool TryApply(Source source, AudioEditSettings settings, out string error)
         {
-            if (!SourceExists(source, out error)) return false;
+            if (!SourceExists(source, out error))
+                return false;
 
-            string encoderArgs = FfmpegAudio.GetEncoderArgs(Path.GetExtension(source.AssetPath), source.CodecName);
+            string encoderArgs = FfmpegAudio.GetEncoderArgs(
+                Path.GetExtension(source.AssetPath),
+                source.CodecName
+            );
             if (encoderArgs == null)
             {
                 error = "この形式では書き出せません（wav は PCM 形式のみ対応）。";
                 return false;
             }
 
-            string tempPath = Path.Combine(Path.GetFullPath("Temp"), "AudioEdit" + Path.GetExtension(source.AssetPath));
-            string filter = settings.BuildFilter(source.Duration, source.SampleRate, UsesRubberband);
-            if (!FfmpegAudio.TryRenderFiltered(source.FilePath, tempPath, filter, encoderArgs, out string renderError))
+            string tempPath = Path.Combine(
+                Path.GetFullPath("Temp"),
+                "AudioEdit" + Path.GetExtension(source.AssetPath)
+            );
+            string filter = settings.BuildFilter(
+                source.Duration,
+                source.SampleRate,
+                UsesRubberband
+            );
+            if (
+                !FfmpegAudio.TryRenderFiltered(
+                    source.FilePath,
+                    tempPath,
+                    filter,
+                    encoderArgs,
+                    out string renderError
+                )
+            )
             {
                 error = "書き出しに失敗しました。\n" + renderError;
                 return false;

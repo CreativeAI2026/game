@@ -37,7 +37,9 @@ namespace CreativeAI.Gameplay
         [SerializeField]
         private MockWeaponPoseKey _previewPose = MockWeaponPoseKey.Aim;
 
-        [Tooltip("構えクリップの再生位置（0 引き始め 〜 1 引き切り）。矢をつがえる前は矢が手に付く")]
+        [Tooltip(
+            "構えクリップの再生位置（0 引き始め 〜 1 引き切り）。矢をつがえる前は矢が手に付く"
+        )]
         [Range(0f, 1f)]
         [SerializeField]
         private float _previewNormalizedTime = 1f;
@@ -76,7 +78,10 @@ namespace CreativeAI.Gameplay
 
             Transform modelRoot = PlayerModel.Of(this).Animator.transform;
             modelRoot.GetLocalPositionAndRotation(out Vector3 position, out Quaternion rotation);
-            clip.SampleAnimation(modelRoot.gameObject, IsAiming ? _previewNormalizedTime * clip.length : 0f);
+            clip.SampleAnimation(
+                modelRoot.gameObject,
+                IsAiming ? _previewNormalizedTime * clip.length : 0f
+            );
             // クリップのルート移動でモデルがずれないよう戻す
             modelRoot.SetLocalPositionAndRotation(position, rotation);
 
@@ -106,9 +111,14 @@ namespace CreativeAI.Gameplay
             _isPreviewing = false;
 
             ResetBonesToModelFile(PlayerModel.Of(this).Animator);
-            Transform bowSource = UnityEditor.PrefabUtility.GetCorrespondingObjectFromSource(transform);
+            Transform bowSource = UnityEditor.PrefabUtility.GetCorrespondingObjectFromSource(
+                transform
+            );
             if (bowSource != null)
-                transform.SetLocalPositionAndRotation(bowSource.localPosition, bowSource.localRotation);
+                transform.SetLocalPositionAndRotation(
+                    bowSource.localPosition,
+                    bowSource.localRotation
+                );
             UnityEditor.SceneView.RepaintAll();
         }
 
@@ -119,7 +129,10 @@ namespace CreativeAI.Gameplay
             var model = UnityEditor.AssetDatabase.LoadAssetAtPath<GameObject>(modelPath);
             if (model == null)
             {
-                Debug.LogError($"[BowGripTuner] Avatar の元のモデルが見つからず、姿勢を戻せません: {modelPath}", animator);
+                Debug.LogError(
+                    $"[BowGripTuner] Avatar の元のモデルが見つからず、姿勢を戻せません: {modelPath}",
+                    animator
+                );
                 return;
             }
 
@@ -128,7 +141,9 @@ namespace CreativeAI.Gameplay
                 Transform t = animator.GetBoneTransform(bone);
                 if (t == null)
                     continue;
-                Transform source = model.transform.Find(UnityEditor.AnimationUtility.CalculateTransformPath(t, animator.transform));
+                Transform source = model.transform.Find(
+                    UnityEditor.AnimationUtility.CalculateTransformPath(t, animator.transform)
+                );
                 if (source != null)
                     t.SetLocalPositionAndRotation(source.localPosition, source.localRotation);
             }
@@ -159,8 +174,12 @@ namespace CreativeAI.Gameplay
         private void PlaceBow()
         {
             Transform grip = PlayerModel.Of(this).GetSocket(PlayerSocketId.BowGrip);
-            GetComponent<MockWeaponPose>().GetPoseValues(_previewPose, out Vector3 euler, out Vector3 offset);
-            transform.SetPositionAndRotation(grip.TransformPoint(offset), grip.rotation * Quaternion.Euler(euler));
+            GetComponent<MockWeaponPose>()
+                .GetPoseValues(_previewPose, out Vector3 euler, out Vector3 offset);
+            transform.SetPositionAndRotation(
+                grip.TransformPoint(offset),
+                grip.rotation * Quaternion.Euler(euler)
+            );
             transform.GetPositionAndRotation(out _placedPosition, out _placedRotation);
         }
 
@@ -180,7 +199,11 @@ namespace CreativeAI.Gameplay
             Vector3 toRest = rest.position - hold.position;
             Matrix4x4 arrow =
                 nocked && toRest.sqrMagnitude > 0.000001f
-                    ? Matrix4x4.TRS(hold.position, Quaternion.LookRotation(toRest, rest.up), prefabScale)
+                    ? Matrix4x4.TRS(
+                        hold.position,
+                        Quaternion.LookRotation(toRest, rest.up),
+                        prefabScale
+                    )
                     : Matrix4x4.TRS(hold.position, hold.rotation, prefabScale);
 
             Gizmos.color = nocked ? Color.yellow : Color.cyan;
@@ -189,7 +212,8 @@ namespace CreativeAI.Gameplay
                 if (filter.sharedMesh == null)
                     continue;
                 // Prefab のルートからの相対の変換(ルート自体の拡大率は上の行列に含めた)
-                Matrix4x4 local = _arrowPrefab.transform.worldToLocalMatrix * filter.transform.localToWorldMatrix;
+                Matrix4x4 local =
+                    _arrowPrefab.transform.worldToLocalMatrix * filter.transform.localToWorldMatrix;
                 Gizmos.matrix = arrow * local;
                 Gizmos.DrawMesh(filter.sharedMesh);
             }
@@ -198,7 +222,9 @@ namespace CreativeAI.Gameplay
 
         private float NockNormalizedTime()
         {
-            foreach (AnimationEvent evt in UnityEditor.AnimationUtility.GetAnimationEvents(_aimClip))
+            foreach (
+                AnimationEvent evt in UnityEditor.AnimationUtility.GetAnimationEvents(_aimClip)
+            )
             {
                 if (evt.functionName == NockEventName && _aimClip.length > 0f)
                     return evt.time / _aimClip.length;

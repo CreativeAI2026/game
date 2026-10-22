@@ -65,7 +65,8 @@ namespace CreativeAI.Gameplay
         public int NeedleCount => needleCount;
 
         // EnemyNeedleProjectile が int でダメージを受け取るため丸める
-        public int NeedleDamage => Mathf.RoundToInt(Status.CurrentAttackPower * needleDamageMultiplier);
+        public int NeedleDamage =>
+            Mathf.RoundToInt(Status.CurrentAttackPower * needleDamageMultiplier);
 
         [HideInInspector]
         public float NeedleAttackTimer;

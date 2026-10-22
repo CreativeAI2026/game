@@ -25,7 +25,9 @@ namespace CreativeAI.Gameplay
         private GameObject _hitEffect;
 
         [Header("被弾音")]
-        [Tooltip("プレイヤーにダメージを与えた時の音。攻撃の大分類(斬撃など)ごとの音を割り当てる。ガード・パリィ成立時は鳴らさない")]
+        [Tooltip(
+            "プレイヤーにダメージを与えた時の音。攻撃の大分類(斬撃など)ごとの音を割り当てる。ガード・パリィ成立時は鳴らさない"
+        )]
         [SerializeField]
         private SoundCue _hitSound;
 

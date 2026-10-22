@@ -37,7 +37,10 @@ namespace CreativeAI.Tests.EditMode
             public override void ResetState() => CurrentScore = 0f;
         }
 
-        private static void Settle(PanicScoreCalculator calculator, IReadOnlyList<PanicSignal> signals)
+        private static void Settle(
+            PanicScoreCalculator calculator,
+            IReadOnlyList<PanicSignal> signals
+        )
         {
             for (int i = 0; i < SettleSteps; i++)
             {
@@ -78,9 +81,18 @@ namespace CreativeAI.Tests.EditMode
 
             Settle(calculator, new PanicSignal[] { flight, aimCancel });
 
-            Assert.That(calculator.GetCategoryScore(PanicCategory.Avoidance), Is.EqualTo(70f).Within(0.1f));
-            Assert.That(calculator.GetCategoryScore(PanicCategory.Indecision), Is.EqualTo(20f).Within(0.1f));
-            Assert.That(calculator.GetCategoryScore(PanicCategory.DefenseBreakdown), Is.EqualTo(0f).Within(0.01f));
+            Assert.That(
+                calculator.GetCategoryScore(PanicCategory.Avoidance),
+                Is.EqualTo(70f).Within(0.1f)
+            );
+            Assert.That(
+                calculator.GetCategoryScore(PanicCategory.Indecision),
+                Is.EqualTo(20f).Within(0.1f)
+            );
+            Assert.That(
+                calculator.GetCategoryScore(PanicCategory.DefenseBreakdown),
+                Is.EqualTo(0f).Within(0.01f)
+            );
             Assert.That(calculator.DominantCategory, Is.EqualTo(PanicCategory.Avoidance));
         }
 

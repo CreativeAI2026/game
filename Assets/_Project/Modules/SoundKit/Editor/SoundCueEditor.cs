@@ -27,19 +27,26 @@ namespace SoundKit.EditorTools
         {
             EditorGUI.BeginChangeCheck();
             DrawDefaultInspector();
-            if (EditorGUI.EndChangeCheck()) _statusDirty = true;
+            if (EditorGUI.EndChangeCheck())
+                _statusDirty = true;
 
             // スライダーを動かしている最中は測り直さない
-            if (_statusDirty && Event.current.type == EventType.Layout && GUIUtility.hotControl == 0) RefreshStatus();
+            if (
+                _statusDirty
+                && Event.current.type == EventType.Layout
+                && GUIUtility.hotControl == 0
+            )
+                RefreshStatus();
 
             EditorGUILayout.Space(10);
             EditorGUILayout.LabelField("試聴・素材への反映", EditorStyles.boldLabel);
             DrawClipRows();
             DrawButtons();
             EditorGUILayout.HelpBox(
-                "試聴は Volume とミキサーの流し先を通して鳴らします（離れたときの減衰・音程の揺らぎは含みません）。\n" +
-                "「素材の大きさ（dB）」と「音割れしても上げる」は、素材に反映するまで音に出ません。",
-                MessageType.None);
+                "試聴は Volume とミキサーの流し先を通して鳴らします（離れたときの減衰・音程の揺らぎは含みません）。\n"
+                    + "「素材の大きさ（dB）」と「音割れしても上げる」は、素材に反映するまで音に出ません。",
+                MessageType.None
+            );
         }
 
         private void DrawClipRows()
@@ -51,12 +58,16 @@ namespace SoundKit.EditorTools
 
                 using (new EditorGUILayout.HorizontalScope())
                 {
-                    if (GUILayout.Button("▶", GUILayout.Width(28))) Play(clip);
+                    if (GUILayout.Button("▶", GUILayout.Width(28)))
+                        Play(clip);
                     EditorGUILayout.LabelField(Path.GetFileName(path));
 
                     var previousColor = GUI.contentColor;
                     GUI.contentColor = upToDate ? previousColor : new Color(1f, 0.6f, 0.3f);
-                    EditorGUILayout.LabelField(upToDate ? "反映済み" : "未反映", GUILayout.Width(60));
+                    EditorGUILayout.LabelField(
+                        upToDate ? "反映済み" : "未反映",
+                        GUILayout.Width(60)
+                    );
                     GUI.contentColor = previousColor;
                 }
             }
@@ -68,9 +79,11 @@ namespace SoundKit.EditorTools
             {
                 using (new EditorGUI.DisabledScope(!Cue.HasClip))
                 {
-                    if (GUILayout.Button("▶ 試聴（ランダムに1つ）")) Play(Cue.PickClip());
+                    if (GUILayout.Button("▶ 試聴（ランダムに1つ）"))
+                        Play(Cue.PickClip());
                 }
-                if (GUILayout.Button("■ 停止", GUILayout.Width(70)) && _previewSource != null) _previewSource.Stop();
+                if (GUILayout.Button("■ 停止", GUILayout.Width(70)) && _previewSource != null)
+                    _previewSource.Stop();
             }
 
             bool hasPending = _upToDate.Values.Any(upToDate => !upToDate);
@@ -78,7 +91,9 @@ namespace SoundKit.EditorTools
             {
                 if (GUILayout.Button("設定を素材に反映"))
                 {
-                    AudioLoudnessNormalizer.NormalizeClips(Cue.Clips.Where(clip => clip != null).Select(AssetDatabase.GetAssetPath));
+                    AudioLoudnessNormalizer.NormalizeClips(
+                        Cue.Clips.Where(clip => clip != null).Select(AssetDatabase.GetAssetPath)
+                    );
                     RefreshStatus();
                 }
             }
@@ -89,17 +104,22 @@ namespace SoundKit.EditorTools
             _statusDirty = false;
             _upToDate.Clear();
 
-            Dictionary<string, AudioLoudnessNormalizer.ClipSetting> settings = AudioLoudnessNormalizer.CollectSettings();
+            Dictionary<string, AudioLoudnessNormalizer.ClipSetting> settings =
+                AudioLoudnessNormalizer.CollectSettings();
             foreach (AudioClip clip in Cue.Clips.Where(clip => clip != null))
             {
                 string path = AssetDatabase.GetAssetPath(clip);
-                _upToDate[path] = AudioLoudnessNormalizer.IsUpToDate(path, AudioLoudnessNormalizer.GetSetting(settings, path));
+                _upToDate[path] = AudioLoudnessNormalizer.IsUpToDate(
+                    path,
+                    AudioLoudnessNormalizer.GetSetting(settings, path)
+                );
             }
         }
 
         private void Play(AudioClip clip)
         {
-            if (clip == null) return;
+            if (clip == null)
+                return;
 
             AudioSource source = GetPreviewSource();
             source.Stop();
@@ -109,10 +129,15 @@ namespace SoundKit.EditorTools
 
         private static AudioSource GetPreviewSource()
         {
-            if (_previewSource != null) return _previewSource;
+            if (_previewSource != null)
+                return _previewSource;
 
             // シーンに保存されず、Hierarchy にも出ない試聴専用の音源
-            var go = EditorUtility.CreateGameObjectWithHideFlags("SoundCuePreview", HideFlags.HideAndDontSave, typeof(AudioSource));
+            var go = EditorUtility.CreateGameObjectWithHideFlags(
+                "SoundCuePreview",
+                HideFlags.HideAndDontSave,
+                typeof(AudioSource)
+            );
             _previewSource = go.GetComponent<AudioSource>();
             _previewSource.playOnAwake = false;
             _previewSource.spatialBlend = 0f;

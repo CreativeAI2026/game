@@ -30,7 +30,9 @@ namespace CreativeAI.Gameplay
         [Tooltip("視線移動の滑らかさ")]
         public float smoothSpeed = 5f;
 
-        [Tooltip("向きを変える量のうち首が負担する割合（0〜1）。残りを頭が負担して視線を合わせきる")]
+        [Tooltip(
+            "向きを変える量のうち首が負担する割合（0〜1）。残りを頭が負担して視線を合わせきる"
+        )]
         [Range(0f, 1f)]
         public float neckShare = 0.4f;
 
@@ -133,7 +135,8 @@ namespace CreativeAI.Gameplay
 
             Vector3 faceDir = _headBone.TransformDirection(_faceLocalAxis);
             Quaternion fullRotation = Quaternion.FromToRotation(faceDir, lookDir);
-            bone.rotation = Quaternion.Slerp(Quaternion.identity, fullRotation, weight) * bone.rotation;
+            bone.rotation =
+                Quaternion.Slerp(Quaternion.identity, fullRotation, weight) * bone.rotation;
         }
 
         private Vector3 GetForwardPoint()

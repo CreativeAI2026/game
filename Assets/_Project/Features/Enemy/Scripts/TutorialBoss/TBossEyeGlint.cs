@@ -31,7 +31,9 @@ namespace CreativeAI.Gameplay
         private static readonly int ShapeId = Shader.PropertyToID("_Shape");
 
         [Header("参照")]
-        [Tooltip("光らせる目の位置。頭のボーン（mixamorig:Head）の子に置いた空のオブジェクト（左右2つ）")]
+        [Tooltip(
+            "光らせる目の位置。頭のボーン（mixamorig:Head）の子に置いた空のオブジェクト（左右2つ）"
+        )]
         [SerializeField]
         private Transform[] _eyeAnchors = new Transform[0];
 
@@ -132,7 +134,10 @@ namespace CreativeAI.Gameplay
         private void Awake()
         {
             Assert.IsNotNull(_glintMaterial, $"{name}: 目の光のマテリアルが設定されていません");
-            Assert.IsTrue(_eyeAnchors.Length > 0, $"{name}: 目の位置（_eyeAnchors）が設定されていません");
+            Assert.IsTrue(
+                _eyeAnchors.Length > 0,
+                $"{name}: 目の位置（_eyeAnchors）が設定されていません"
+            );
 
             _propertyBlock = new MaterialPropertyBlock();
             _quadMesh = CreateQuadMesh();
@@ -182,7 +187,11 @@ namespace CreativeAI.Gameplay
         private void LateUpdate()
         {
             float deltaTime = Time.deltaTime;
-            _residual = Mathf.MoveTowards(_residual, _residualTarget, deltaTime / _residualFadeSeconds);
+            _residual = Mathf.MoveTowards(
+                _residual,
+                _residualTarget,
+                deltaTime / _residualFadeSeconds
+            );
 
             bool isFlashing = _flashElapsed >= 0f;
             if (isFlashing)
@@ -216,19 +225,29 @@ namespace CreativeAI.Gameplay
         private void ApplyPose(Camera viewCamera, float elapsed)
         {
             Transform cameraTransform = viewCamera.transform;
-            Quaternion facing = Quaternion.LookRotation(cameraTransform.forward, cameraTransform.up);
+            Quaternion facing = Quaternion.LookRotation(
+                cameraTransform.forward,
+                cameraTransform.up
+            );
 
             // --- 芯: 膨らんでから落ち着き、筋が消えるのに合わせて残光の強さへ下がる ---
             float popProgress = Mathf.Clamp01(elapsed / _corePopSeconds);
-            float settleProgress = Mathf.Clamp01((elapsed - _corePopSeconds) / Mathf.Max(0.001f, _extendSeconds));
+            float settleProgress = Mathf.Clamp01(
+                (elapsed - _corePopSeconds) / Mathf.Max(0.001f, _extendSeconds)
+            );
             float coreScale =
                 elapsed < _corePopSeconds
                     ? Mathf.Lerp(0f, CorePopOvershoot, popProgress)
                     : Mathf.Lerp(CorePopOvershoot, 1f, settleProgress);
 
-            float fadeProgress = Mathf.Clamp01((elapsed - _extendSeconds - _holdSeconds) / _fadeSeconds);
+            float fadeProgress = Mathf.Clamp01(
+                (elapsed - _extendSeconds - _holdSeconds) / _fadeSeconds
+            );
             float flashStrength = 1f - fadeProgress;
-            float coreIntensity = Mathf.Max(_flashIntensity * flashStrength, _residualIntensity * _residual);
+            float coreIntensity = Mathf.Max(
+                _flashIntensity * flashStrength,
+                _residualIntensity * _residual
+            );
             // 残光だけの時は膨らみの途中の大きさにせず、落ち着いた大きさで光らせる
             if (flashStrength <= 0f)
             {
@@ -240,7 +259,9 @@ namespace CreativeAI.Gameplay
             float easedExtend = 1f - Mathf.Pow(1f - extendProgress, 3f);
             float streakWidth = _streakLength * easedExtend;
             float streakThickness =
-                _streakThickness * Mathf.Lerp(1f, StreakFadeThinness, fadeProgress) * StreakQuadHeightPerThickness;
+                _streakThickness
+                * Mathf.Lerp(1f, StreakFadeThinness, fadeProgress)
+                * StreakQuadHeightPerThickness;
             float streakIntensity = _flashIntensity * flashStrength;
 
             for (int i = 0; i < _eyeAnchors.Length; i++)
@@ -249,8 +270,22 @@ namespace CreativeAI.Gameplay
                 Vector3 toCamera = (cameraTransform.position - eyePosition).normalized;
                 Vector3 position = eyePosition + toCamera * _cameraOffset;
 
-                ApplyQuad(_coreRenderers[i], position, facing, new Vector3(_coreSize, _coreSize, 1f) * coreScale, coreIntensity, 0f);
-                ApplyQuad(_streakRenderers[i], position, facing, new Vector3(streakWidth, streakThickness, 1f), streakIntensity, 1f);
+                ApplyQuad(
+                    _coreRenderers[i],
+                    position,
+                    facing,
+                    new Vector3(_coreSize, _coreSize, 1f) * coreScale,
+                    coreIntensity,
+                    0f
+                );
+                ApplyQuad(
+                    _streakRenderers[i],
+                    position,
+                    facing,
+                    new Vector3(streakWidth, streakThickness, 1f),
+                    streakIntensity,
+                    1f
+                );
             }
         }
 
@@ -326,7 +361,13 @@ namespace CreativeAI.Gameplay
                 new Vector3(-0.5f, 0.5f, 0f),
                 new Vector3(0.5f, 0.5f, 0f),
             };
-            mesh.uv = new[] { new Vector2(0f, 0f), new Vector2(1f, 0f), new Vector2(0f, 1f), new Vector2(1f, 1f) };
+            mesh.uv = new[]
+            {
+                new Vector2(0f, 0f),
+                new Vector2(1f, 0f),
+                new Vector2(0f, 1f),
+                new Vector2(1f, 1f),
+            };
             mesh.triangles = new[] { 0, 2, 1, 2, 3, 1 };
             mesh.RecalculateBounds();
             return mesh;

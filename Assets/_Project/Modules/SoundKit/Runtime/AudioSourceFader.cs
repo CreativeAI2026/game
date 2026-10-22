@@ -34,7 +34,12 @@ namespace SoundKit
         /// </summary>
         /// <param name="stopOnComplete">変え終わったら AudioSource を止めるか（フェードアウト用）</param>
         /// <param name="useUnscaledTime">時間の停止（Time.timeScale = 0）の影響を受けずに進めるか</param>
-        public void FadeTo(float targetVolume, float duration, bool stopOnComplete, bool useUnscaledTime)
+        public void FadeTo(
+            float targetVolume,
+            float duration,
+            bool stopOnComplete,
+            bool useUnscaledTime
+        )
         {
             _startVolume = _source.volume;
             _targetVolume = targetVolume;

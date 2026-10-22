@@ -158,7 +158,9 @@ namespace CreativeAI.Gameplay
         {
             Vector3 position = PlayerTransform.position;
             WorldSoundPlayer.Play(_thrustSound, position, this);
-            SoundEventBus.Emit(new SoundEventData(SoundType.HammerThrust, position, _thrustNoiseRadius));
+            SoundEventBus.Emit(
+                new SoundEventData(SoundType.HammerThrust, position, _thrustNoiseRadius)
+            );
         }
 
         /// <summary>跳躍の音を鳴らす(LeapStart)。</summary>
@@ -187,7 +189,9 @@ namespace CreativeAI.Gameplay
             Instantiate(_impactEffectPrefab, impactPoint, PlayerTransform.rotation);
 
             WorldSoundPlayer.Play(_slamSound, impactPoint, this);
-            SoundEventBus.Emit(new SoundEventData(SoundType.HammerSlam, impactPoint, _slamNoiseRadius));
+            SoundEventBus.Emit(
+                new SoundEventData(SoundType.HammerSlam, impactPoint, _slamNoiseRadius)
+            );
 
             _slamHitbox.EnableHitbox();
         }

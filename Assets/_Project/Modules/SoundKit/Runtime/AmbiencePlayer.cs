@@ -21,14 +21,18 @@ namespace SoundKit
         {
             if (cue == null || !cue.HasClip)
             {
-                UnassignedSoundWarning.WarnOnce(null, cue == null ? "場所の環境音" : $"環境音「{cue.name}」の素材");
+                UnassignedSoundWarning.WarnOnce(
+                    null,
+                    cue == null ? "場所の環境音" : $"環境音「{cue.name}」の素材"
+                );
                 return;
             }
 
             GetTrack().Play(cue, fadeDuration);
         }
 
-        public static void Stop(float fadeDuration = DefaultFadeDuration) => _track?.Stop(fadeDuration);
+        public static void Stop(float fadeDuration = DefaultFadeDuration) =>
+            _track?.Stop(fadeDuration);
 
         private static CrossfadeLoopTrack GetTrack()
         {

@@ -15,7 +15,9 @@ namespace CreativeAI.Gameplay
         [Min(0.05f)]
         private float _attackIntervalScale = 1f;
 
-        [Tooltip("追跡で間合いに入った時、様子見を挟まず突っ込む確率の下限（0〜1）。元の確率がこれより高ければそちらを使う")]
+        [Tooltip(
+            "追跡で間合いに入った時、様子見を挟まず突っ込む確率の下限（0〜1）。元の確率がこれより高ければそちらを使う"
+        )]
         [SerializeField]
         [Range(0f, 1f)]
         private float _directAssaultChance;

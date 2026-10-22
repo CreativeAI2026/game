@@ -55,7 +55,8 @@ namespace SoundKit
             next.clip = cue.PickClip();
             next.volume = 0f;
             next.Play();
-            _faders[_activeIndex].FadeTo(cue.Volume, fadeDuration, stopOnComplete: false, useUnscaledTime: true);
+            _faders[_activeIndex]
+                .FadeTo(cue.Volume, fadeDuration, stopOnComplete: false, useUnscaledTime: true);
         }
 
         public void Stop(float fadeDuration)

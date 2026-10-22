@@ -39,11 +39,19 @@ namespace SoundKit
         /// <param name="owner">どこから鳴らしたか。未設定の警告に使う</param>
         /// <param name="volumeScale">SoundCue の音量に掛ける倍率（ぶつかった強さで大きさを変える等）</param>
         /// <returns>鳴らした音の長さ（秒）。鳴らさなかったら 0。続けて別の音を鳴らす時刻を決めるのに使う</returns>
-        public static float Play(SoundCue cue, Vector3 position, Object owner, float volumeScale = 1f)
+        public static float Play(
+            SoundCue cue,
+            Vector3 position,
+            Object owner,
+            float volumeScale = 1f
+        )
         {
             if (cue == null || !cue.HasClip)
             {
-                UnassignedSoundWarning.WarnOnce(owner, cue == null ? null : $"音「{cue.name}」の素材");
+                UnassignedSoundWarning.WarnOnce(
+                    owner,
+                    cue == null ? null : $"音「{cue.name}」の素材"
+                );
                 return 0f;
             }
 

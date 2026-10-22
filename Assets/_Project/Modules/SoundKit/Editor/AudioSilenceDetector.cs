@@ -35,23 +35,33 @@ namespace SoundKit.EditorTools
         /// 無音でない部分の始まりと終わり（秒、余白込み）を求める。全体が無音なら false。
         /// どれか1つのチャンネルでも基準を超えていれば音があるとみなす。
         /// </summary>
-        public static bool TryFindSoundRange(float[] samples, int channels, int sampleRate, float thresholdDb, float marginSeconds,
-            out double start, out double end)
+        public static bool TryFindSoundRange(
+            float[] samples,
+            int channels,
+            int sampleRate,
+            float thresholdDb,
+            float marginSeconds,
+            out double start,
+            out double end
+        )
         {
             float threshold = (float)Math.Pow(10, thresholdDb / 20.0);
             int frameCount = samples.Length / channels;
 
             int first = -1;
             for (int frame = 0; frame < frameCount && first < 0; frame++)
-                if (IsLoud(samples, frame, channels, threshold)) first = frame;
+                if (IsLoud(samples, frame, channels, threshold))
+                    first = frame;
 
             start = end = 0;
-            if (first < 0) return false;
+            if (first < 0)
+                return false;
 
             int last = first;
             for (int frame = frameCount - 1; frame > first; frame--)
             {
-                if (!IsLoud(samples, frame, channels, threshold)) continue;
+                if (!IsLoud(samples, frame, channels, threshold))
+                    continue;
                 last = frame;
                 break;
             }
@@ -66,7 +76,8 @@ namespace SoundKit.EditorTools
         {
             int offset = frame * channels;
             for (int channel = 0; channel < channels; channel++)
-                if (Math.Abs(samples[offset + channel]) > threshold) return true;
+                if (Math.Abs(samples[offset + channel]) > threshold)
+                    return true;
             return false;
         }
     }

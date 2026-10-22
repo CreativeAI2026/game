@@ -19,7 +19,9 @@ namespace CreativeAI.Gameplay
         // 攻撃を待ち構えて最後まで動かない冷静な立ち回り（攻撃が届かず空振りする場合など）も含まれうるため、逃避より少し低くする
         private const float DefaultWeight = 0.6f;
 
-        [Tooltip("攻撃中の敵がこの水平距離（m）以内に来た攻撃だけを数える。遠くの空振りに無反応なのは硬直ではないため")]
+        [Tooltip(
+            "攻撃中の敵がこの水平距離（m）以内に来た攻撃だけを数える。遠くの空振りに無反応なのは硬直ではないため"
+        )]
         [SerializeField]
         private float _threatDistance = 15f;
 

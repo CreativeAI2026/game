@@ -43,7 +43,11 @@ namespace CreativeAI.Gameplay
         /// true なら歩いて向かう。巡回中に「ちらっと見えた」場所を確かめに行く場合に使い、
         /// 確信が無いのに全力で駆けつける不自然さを避ける。
         /// </param>
-        public TBossSearchState(TutorialBossController controller, Vector3 target, bool cautious = false)
+        public TBossSearchState(
+            TutorialBossController controller,
+            Vector3 target,
+            bool cautious = false
+        )
             : base(controller)
         {
             _target = target;

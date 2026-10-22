@@ -104,7 +104,8 @@ namespace CreativeAI.Gameplay
             // 矢が最初に現れる位置(引き手)はモデルごとに違うので、モデル側のソケットから取る
             _arrowHandHoldPoint = model.GetSocket(PlayerSocketId.ArrowHold);
 
-            _aimRayMask = Physics.DefaultRaycastLayers & ~LayerMask.GetMask("Player", "PlayerAttack");
+            _aimRayMask =
+                Physics.DefaultRaycastLayers & ~LayerMask.GetMask("Player", "PlayerAttack");
 
             Assert.IsTrue(
                 _upperBodyLayer >= 0,

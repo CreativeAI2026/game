@@ -35,7 +35,9 @@ namespace CreativeAI.Gameplay
         [SerializeField]
         private float headMaxAngle = 70f;
 
-        [Tooltip("向きを変える量のうち首が負担する割合（0〜1）。残りを頭が負担して狙いを合わせきる。")]
+        [Tooltip(
+            "向きを変える量のうち首が負担する割合（0〜1）。残りを頭が負担して狙いを合わせきる。"
+        )]
         [SerializeField]
         [Range(0f, 1f)]
         private float neckShare = 0.4f;
@@ -108,7 +110,8 @@ namespace CreativeAI.Gameplay
             }
 
             Quaternion fullRotation = Quaternion.FromToRotation(headBone.forward, aimDir);
-            bone.rotation = Quaternion.Slerp(Quaternion.identity, fullRotation, weight) * bone.rotation;
+            bone.rotation =
+                Quaternion.Slerp(Quaternion.identity, fullRotation, weight) * bone.rotation;
         }
 
         /// <summary>体の正面から可動域を超える位置は、限界角度の境界を狙う。</summary>

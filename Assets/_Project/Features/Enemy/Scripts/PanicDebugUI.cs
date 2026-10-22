@@ -19,7 +19,9 @@ namespace CreativeAI.Gameplay
         [SerializeField]
         private PanicDetector _panicDetector;
 
-        [Tooltip("焦りに応じて追い込むボス。未設定ならシーンから探す（いなければ追い込みの行は出さない）")]
+        [Tooltip(
+            "焦りに応じて追い込むボス。未設定ならシーンから探す（いなければ追い込みの行は出さない）"
+        )]
         [SerializeField]
         private TutorialBossController _boss;
 
@@ -51,7 +53,9 @@ namespace CreativeAI.Gameplay
         [SerializeField]
         private TextMeshProUGUI[] _signalTexts = new TextMeshProUGUI[0];
 
-        [Tooltip("各指標のバー（Filledタイプ）。並びは名前テキストと同じ。行が足りない指標は表示しない")]
+        [Tooltip(
+            "各指標のバー（Filledタイプ）。並びは名前テキストと同じ。行が足りない指標は表示しない"
+        )]
         [SerializeField]
         private Image[] _signalBars = new Image[0];
 

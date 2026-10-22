@@ -41,7 +41,8 @@ namespace CreativeAI.Gameplay
         public void Schedule(float baseInterval)
         {
             _nextAttackTime =
-                Time.time + Random.Range(baseInterval * IntervalMinScale, baseInterval * IntervalMaxScale);
+                Time.time
+                + Random.Range(baseInterval * IntervalMinScale, baseInterval * IntervalMaxScale);
             _isScheduled = true;
         }
 
@@ -58,8 +59,12 @@ namespace CreativeAI.Gameplay
             }
 
             float candidate =
-                Time.time + Random.Range(baseInterval * IntervalMinScale, baseInterval * IntervalMaxScale);
-            _nextAttackTime = Mathf.Max(Time.time + minDelay, Mathf.Min(_nextAttackTime, candidate));
+                Time.time
+                + Random.Range(baseInterval * IntervalMinScale, baseInterval * IntervalMaxScale);
+            _nextAttackTime = Mathf.Max(
+                Time.time + minDelay,
+                Mathf.Min(_nextAttackTime, candidate)
+            );
         }
 
         /// <summary>交戦が終わった時（見失って巡回へ戻る等）に呼ぶ。次の交戦では待ち時間を新しく決める。</summary>

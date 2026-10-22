@@ -31,7 +31,9 @@ namespace CreativeAI.Gameplay
         [SerializeField]
         private SoundCue _poisonAppliedSound;
 
-        [Tooltip("毒ダメージを受けるたびの音。付与した瞬間にも1回目のダメージが入るため、付与の音と同時に鳴る")]
+        [Tooltip(
+            "毒ダメージを受けるたびの音。付与した瞬間にも1回目のダメージが入るため、付与の音と同時に鳴る"
+        )]
         [SerializeField]
         private SoundCue _poisonDamageSound;
 

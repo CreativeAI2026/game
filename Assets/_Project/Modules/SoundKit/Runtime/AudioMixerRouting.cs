@@ -10,7 +10,10 @@ namespace SoundKit
     /// Resources から1つだけ読み込んで参照する。ファイルはどこかの Resources フォルダ直下に AudioMixerRouting という名前で置く。
     /// 未設定でも音自体は鳴る（ミキサーを通らないだけ）。設定漏れは初回にエラーで知らせる。
     /// </summary>
-    [CreateAssetMenu(menuName = "SoundKit/AudioMixerRouting（Resources 直下に置く）", fileName = ResourcePath)]
+    [CreateAssetMenu(
+        menuName = "SoundKit/AudioMixerRouting（Resources 直下に置く）",
+        fileName = ResourcePath
+    )]
     public class AudioMixerRouting : ScriptableObject
     {
         private const string ResourcePath = "AudioMixerRouting";

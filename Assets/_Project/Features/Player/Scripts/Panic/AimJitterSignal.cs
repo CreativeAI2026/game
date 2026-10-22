@@ -24,7 +24,9 @@ namespace CreativeAI.Gameplay
         // 正常な追従でも切り返しは起きうるため、ほかの指標より低めの信頼度にする
         private const float DefaultWeight = 0.4f;
 
-        [Tooltip("一方向にこの角度（度）以上振ってから逆向きに戻したら「切り返し」1回と数える。細かな照準調整を除くため")]
+        [Tooltip(
+            "一方向にこの角度（度）以上振ってから逆向きに戻したら「切り返し」1回と数える。細かな照準調整を除くため"
+        )]
         [SerializeField]
         [Min(0f)]
         private float _minSwingDegrees = 3f;

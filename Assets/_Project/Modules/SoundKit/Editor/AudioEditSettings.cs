@@ -32,7 +32,8 @@ namespace SoundKit.EditorTools
         public float FadeOutMs = DefaultFadeMs;
 
         /// <summary>何も変えない編集内容（素材の全体をそのまま使う）。</summary>
-        public static AudioEditSettings CreateDefault(double sourceDuration) => new AudioEditSettings { TrimEnd = sourceDuration };
+        public static AudioEditSettings CreateDefault(double sourceDuration) =>
+            new AudioEditSettings { TrimEnd = sourceDuration };
 
         public AudioEditSettings Clone() => (AudioEditSettings)MemberwiseClone();
 
@@ -40,6 +41,7 @@ namespace SoundKit.EditorTools
         public double OutputDuration => Math.Max(0, TrimEnd - TrimStart) / Speed;
 
         public bool IsTrimmedStart => TrimStart > EdgeEpsilon;
+
         public bool IsTrimmedEnd(double sourceDuration) => TrimEnd < sourceDuration - EdgeEpsilon;
 
         /// <summary>値を扱える範囲に収める（ウィンドウの入力・読み込んだ記録のどちらにも使う）。</summary>
@@ -47,7 +49,10 @@ namespace SoundKit.EditorTools
         {
             TrimStart = Math.Max(0, Math.Min(TrimStart, sourceDuration));
             TrimEnd = Math.Max(TrimStart, Math.Min(TrimEnd, sourceDuration));
-            PitchSemitones = Math.Max(-MaxPitchSemitones, Math.Min(PitchSemitones, MaxPitchSemitones));
+            PitchSemitones = Math.Max(
+                -MaxPitchSemitones,
+                Math.Min(PitchSemitones, MaxPitchSemitones)
+            );
             Speed = Math.Max(MinSpeed, Math.Min(Speed, MaxSpeed));
             FadeInMs = Math.Max(0, FadeInMs);
             FadeOutMs = Math.Max(0, FadeOutMs);
@@ -90,7 +95,9 @@ namespace SoundKit.EditorTools
                 if (changesPitch || changesSpeed)
                 {
                     // detector=percussive・window=short：効果音の短い立ち上がりを、ぼかさず前にもずらさずに残す設定
-                    filters.Add($"rubberband=tempo={F(Speed)}:pitch={F(pitchRatio)}:transients=crisp:detector=percussive:window=short");
+                    filters.Add(
+                        $"rubberband=tempo={F(Speed)}:pitch={F(pitchRatio)}:transients=crisp:detector=percussive:window=short"
+                    );
                 }
                 return string.Join(",", filters);
             }
@@ -104,14 +111,16 @@ namespace SoundKit.EditorTools
 
             // 音程を上げた分だけ速くなっているので、それを打ち消したうえで指定の速さにする
             double tempo = Speed / pitchRatio;
-            foreach (double factor in SplitTempo(tempo)) filters.Add($"atempo={F(factor)}");
+            foreach (double factor in SplitTempo(tempo))
+                filters.Add($"atempo={F(factor)}");
 
             return string.Join(",", filters);
         }
 
         private static IEnumerable<double> SplitTempo(double tempo)
         {
-            if (Math.Abs(tempo - 1.0) < 0.0001) yield break;
+            if (Math.Abs(tempo - 1.0) < 0.0001)
+                yield break;
 
             while (tempo > MaxAtempo)
             {
@@ -126,6 +135,7 @@ namespace SoundKit.EditorTools
             yield return tempo;
         }
 
-        private static string F(double value) => value.ToString("0.######", CultureInfo.InvariantCulture);
+        private static string F(double value) =>
+            value.ToString("0.######", CultureInfo.InvariantCulture);
     }
 }

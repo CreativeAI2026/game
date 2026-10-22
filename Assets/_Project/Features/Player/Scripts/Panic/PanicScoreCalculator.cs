@@ -22,10 +22,12 @@ namespace CreativeAI.Gameplay
     [Serializable]
     public class PanicScoreCalculator
     {
-        private static readonly PanicCategory[] Categories =
-            (PanicCategory[])Enum.GetValues(typeof(PanicCategory));
+        private static readonly PanicCategory[] Categories = (PanicCategory[])
+            Enum.GetValues(typeof(PanicCategory));
 
-        [Tooltip("焦り度が上がる時、目標値の約63%まで追いつく時間（秒）。短いほど兆候にすぐ反応する")]
+        [Tooltip(
+            "焦り度が上がる時、目標値の約63%まで追いつく時間（秒）。短いほど兆候にすぐ反応する"
+        )]
         [SerializeField]
         [Min(0.01f)]
         private float _riseTime = 0.3f;

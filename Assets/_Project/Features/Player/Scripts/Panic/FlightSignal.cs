@@ -42,7 +42,9 @@ namespace CreativeAI.Gameplay
         [Range(0f, 1f)]
         private float _retreatSpeedRatio = 0.4f;
 
-        [Tooltip("敵を向いたまま後ろへ下がっている時の溜まり方（背を向けて離れる時を 1 とした割合）")]
+        [Tooltip(
+            "敵を向いたまま後ろへ下がっている時の溜まり方（背を向けて離れる時を 1 とした割合）"
+        )]
         [SerializeField]
         [Range(0f, 1f)]
         private float _backpedalFactor = 0.5f;
@@ -114,7 +116,10 @@ namespace CreativeAI.Gameplay
             if (context.IsAiming)
                 return 0f;
 
-            float retreatSpeed = Vector3.Dot(context.HorizontalVelocity, -context.ToEnemyDirectionXZ);
+            float retreatSpeed = Vector3.Dot(
+                context.HorizontalVelocity,
+                -context.ToEnemyDirectionXZ
+            );
             if (retreatSpeed < context.WalkSpeed * _retreatSpeedRatio)
                 return 0f;
 

@@ -97,7 +97,9 @@ namespace CreativeAI.Gameplay
         private float _breatherAttackIntervalScale = 1.2f;
 
         [Header("合図")]
-        [Tooltip("追い込み開始の合図（目の光と音）から、最初の追い込み攻撃までに最低限あける時間（秒）")]
+        [Tooltip(
+            "追い込み開始の合図（目の光と音）から、最初の追い込み攻撃までに最低限あける時間（秒）"
+        )]
         [SerializeField]
         [Min(0f)]
         private float _cueLeadSeconds = 0.5f;

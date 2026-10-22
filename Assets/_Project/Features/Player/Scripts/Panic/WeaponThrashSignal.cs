@@ -43,7 +43,8 @@ namespace CreativeAI.Gameplay
             _switchTimes.Count < FirstCountedSwitch
                 ? 0f
                 : Mathf.Clamp01(
-                    (float)(_switchTimes.Count - FirstCountedSwitch + 1) / (_maxCount - FirstCountedSwitch + 1)
+                    (float)(_switchTimes.Count - FirstCountedSwitch + 1)
+                        / (_maxCount - FirstCountedSwitch + 1)
                 );
 
         public override float RawValue => _switchTimes.Count;

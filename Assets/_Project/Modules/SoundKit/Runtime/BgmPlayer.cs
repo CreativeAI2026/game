@@ -38,14 +38,20 @@ namespace SoundKit
         {
             if (cue == null || !cue.HasClip)
             {
-                UnassignedSoundWarning.WarnOnce(null, cue == null ? $"BGM（{layer}）" : $"BGM「{cue.name}」の素材");
+                UnassignedSoundWarning.WarnOnce(
+                    null,
+                    cue == null ? $"BGM（{layer}）" : $"BGM「{cue.name}」の素材"
+                );
                 return;
             }
 
             GetTrack(layer).Play(cue, fadeDuration);
         }
 
-        public static void Stop(BgmLayer layer = BgmLayer.Main, float fadeDuration = DefaultFadeDuration)
+        public static void Stop(
+            BgmLayer layer = BgmLayer.Main,
+            float fadeDuration = DefaultFadeDuration
+        )
         {
             if (_tracks == null)
                 return;

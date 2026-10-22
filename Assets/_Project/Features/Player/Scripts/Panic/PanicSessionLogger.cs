@@ -28,8 +28,8 @@ namespace CreativeAI.Gameplay
         // 書き出しをまとめる間隔（秒）。毎行書くとディスクアクセスが増え、溜めすぎると強制終了時に失われるため
         private const float FlushInterval = 1f;
 
-        private static readonly PanicCategory[] Categories =
-            (PanicCategory[])Enum.GetValues(typeof(PanicCategory));
+        private static readonly PanicCategory[] Categories = (PanicCategory[])
+            Enum.GetValues(typeof(PanicCategory));
 
         [Tooltip("記録する PanicDetector。未設定ならシーンから探す")]
         [SerializeField]
@@ -44,7 +44,9 @@ namespace CreativeAI.Gameplay
         [Min(1f)]
         private float _samplesPerSecond = 10f;
 
-        [Tooltip("交戦中だけ sample 行を記録するか。false なら探索中も記録する（signal・marker 行は常に記録）")]
+        [Tooltip(
+            "交戦中だけ sample 行を記録するか。false なら探索中も記録する（signal・marker 行は常に記録）"
+        )]
         [SerializeField]
         private bool _recordOnlyInCombat = false;
 
@@ -186,7 +188,9 @@ namespace CreativeAI.Gameplay
         private void OpenFile()
         {
 #if UNITY_EDITOR
-            string directory = Path.GetFullPath(Path.Combine(Application.dataPath, "..", "Logs", "Panic"));
+            string directory = Path.GetFullPath(
+                Path.Combine(Application.dataPath, "..", "Logs", "Panic")
+            );
 #else
             string directory = Path.Combine(Application.persistentDataPath, "PanicLogs");
 #endif
@@ -199,14 +203,18 @@ namespace CreativeAI.Gameplay
             }
             catch (Exception e) when (e is IOException || e is UnauthorizedAccessException)
             {
-                Debug.LogError($"[焦り度ログ] ファイルを作れなかったため記録しません: {path}\n{e.Message}");
+                Debug.LogError(
+                    $"[焦り度ログ] ファイルを作れなかったため記録しません: {path}\n{e.Message}"
+                );
                 enabled = false;
                 return;
             }
 
             FilePath = path;
             _writer.WriteLine(BuildHeader());
-            Debug.Log($"[焦り度ログ] 記録を開始しました: {path}（{_markerKey} キーで「今焦った」の印）");
+            Debug.Log(
+                $"[焦り度ログ] 記録を開始しました: {path}（{_markerKey} キーで「今焦った」の印）"
+            );
         }
 
         private string BuildHeader()
@@ -221,7 +229,11 @@ namespace CreativeAI.Gameplay
             foreach (PanicSignal signal in _panicDetector.Signals)
             {
                 header.Append(',').Append(signal.DisplayName).Append("_スコア");
-                header.Append(',').Append(signal.DisplayName).Append('_').Append(signal.RawValueUnit);
+                header
+                    .Append(',')
+                    .Append(signal.DisplayName)
+                    .Append('_')
+                    .Append(signal.RawValueUnit);
             }
             header.Append(
                 ",boss_state,boss_pressure,boss_pressure_category,pressure_remaining,breather_remaining,next_attack_in"
@@ -234,7 +246,9 @@ namespace CreativeAI.Gameplay
             PanicContext context = _panicDetector.Context;
             EnemyBaseController enemy = context.EngagedEnemy;
             float hpRatio =
-                _playerStatus.CurrentMaxHp > 0f ? _playerStatus.CurrentHp / _playerStatus.CurrentMaxHp : 0f;
+                _playerStatus.CurrentMaxHp > 0f
+                    ? _playerStatus.CurrentHp / _playerStatus.CurrentMaxHp
+                    : 0f;
 
             var row = new StringBuilder();
             row.Append(Format(Time.time));
@@ -281,7 +295,8 @@ namespace CreativeAI.Gameplay
         }
 
         // 端末の地域設定で小数点がカンマになると列がずれるため、常に InvariantCulture で書く
-        private static string Format(float value) => value.ToString("0.###", CultureInfo.InvariantCulture);
+        private static string Format(float value) =>
+            value.ToString("0.###", CultureInfo.InvariantCulture);
 
         // 名前にカンマや引用符が入っても列がずれないよう、CSV の規則で囲む
         private static string EscapeCell(string value)

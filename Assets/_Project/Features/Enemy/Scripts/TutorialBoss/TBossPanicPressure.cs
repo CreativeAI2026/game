@@ -47,7 +47,8 @@ namespace CreativeAI.Gameplay
                 : 0f;
 
         /// <summary>息継ぎの残り時間（秒）。Breather 以外は 0。</summary>
-        public float BreatherRemaining => Mode == TBossPressureMode.Breather ? _breatherRemaining : 0f;
+        public float BreatherRemaining =>
+            Mode == TBossPressureMode.Breather ? _breatherRemaining : 0f;
 
         /// <summary>追い込み開始の合図から、最初の追い込み攻撃までに最低限あける時間（秒）。</summary>
         public float CueLeadSeconds => _settings.CueLeadSeconds;
@@ -89,7 +90,8 @@ namespace CreativeAI.Gameplay
         public bool ClosesIn => IsPressing && CurrentProfile.ClosesIn;
 
         /// <summary>プレイヤーを見失ってから諦めるまでの時間に掛ける倍率。</summary>
-        public float LostSightDurationScale => IsPressing ? CurrentProfile.LostSightDurationScale : 1f;
+        public float LostSightDurationScale =>
+            IsPressing ? CurrentProfile.LostSightDurationScale : 1f;
 
         private bool IsPressing => Mode == TBossPressureMode.Pressing;
 
@@ -102,8 +104,14 @@ namespace CreativeAI.Gameplay
         public float AdjustDirectAssaultChance(float baseChance) =>
             Mode switch
             {
-                TBossPressureMode.Tense => Math.Min(1f, baseChance + _settings.TenseDirectAssaultBonus),
-                TBossPressureMode.Pressing => Math.Max(baseChance, CurrentProfile.DirectAssaultChance),
+                TBossPressureMode.Tense => Math.Min(
+                    1f,
+                    baseChance + _settings.TenseDirectAssaultBonus
+                ),
+                TBossPressureMode.Pressing => Math.Max(
+                    baseChance,
+                    CurrentProfile.DirectAssaultChance
+                ),
                 _ => baseChance,
             };
 
@@ -114,7 +122,12 @@ namespace CreativeAI.Gameplay
         /// <param name="dominantCategory">プレイヤーの焦りの系統（最も高いもの）</param>
         /// <param name="isEngaged">ボスとプレイヤーが交戦中か。交戦していなければ追い込まない</param>
         /// <param name="deltaTime">経過時間（秒）</param>
-        public void Tick(PanicLevel level, PanicCategory dominantCategory, bool isEngaged, float deltaTime)
+        public void Tick(
+            PanicLevel level,
+            PanicCategory dominantCategory,
+            bool isEngaged,
+            float deltaTime
+        )
         {
             switch (Mode)
             {
@@ -183,12 +196,20 @@ namespace CreativeAI.Gameplay
             Mode = level == PanicLevel.Tense ? TBossPressureMode.Tense : TBossPressureMode.None;
         }
 
-        private void TickPressing(PanicLevel level, PanicCategory dominantCategory, bool isEngaged, float deltaTime)
+        private void TickPressing(
+            PanicLevel level,
+            PanicCategory dominantCategory,
+            bool isEngaged,
+            float deltaTime
+        )
         {
             if (!isEngaged || level != PanicLevel.Panic)
             {
                 // 相手が落ち着いた（または交戦が切れた）。息継ぎは挟まず、今の段階に合わせ直す
-                Mode = isEngaged && level == PanicLevel.Tense ? TBossPressureMode.Tense : TBossPressureMode.None;
+                Mode =
+                    isEngaged && level == PanicLevel.Tense
+                        ? TBossPressureMode.Tense
+                        : TBossPressureMode.None;
                 PressureEnded?.Invoke();
                 return;
             }
