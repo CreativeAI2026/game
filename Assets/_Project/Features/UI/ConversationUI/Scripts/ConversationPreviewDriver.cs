@@ -57,7 +57,6 @@ namespace CreativeAI.UI
             Tooltip("分岐テスト用。大事なもののitemKeyを指定。本番の所持品は変更しません。")
         ]
         private string[] _importantItemKeys = Array.Empty<string>();
-        private readonly Dictionary<string, string> _previewFlags = new();
 
         private sealed class PreviewInventory : IItemGiver, IWeaponGiver
         {
@@ -112,76 +111,48 @@ namespace CreativeAI.UI
             } while (_loop);
         }
 
-        /// <summary>一時的なフラグ・所持品だけで再生し、本番の進行度や戦闘には触れない。</summary>
+        /// <summary>一時状態を注入し、本番と同じ再生処理でイベントを確認する。</summary>
         public IEnumerator PlayEventPreview(EventDefinition ev, IDialogueView view)
         {
             if (ev == null || view == null || EventPlaybackService.IsPlaying)
                 yield break;
-            _previewFlags.Clear();
-            foreach (var flag in _initialFlags)
-                if (!string.IsNullOrWhiteSpace(flag.Key))
-                    _previewFlags[flag.Key] = flag.Value;
+            var state = new PreviewState(_initialFlags);
             var inventory = new PreviewInventory(_importantItemKeys);
-            EventPlaybackService.SetPlaying(true);
-            try
+            var player = EventPlayer.EnsureResident();
+            using (player.InjectScoped(state, view, inventory, state, state, inventory))
+                yield return player.PlayRoutine(ev);
+        }
+
+        /// <summary>プレビュー用の保存先と戦闘通知先。本番の状態には書き込まない。</summary>
+        private sealed class PreviewState : IEventProgress, IEventGameMode, IBattleRunner
+        {
+            private readonly Dictionary<string, string> _flags = new();
+
+            public PreviewState(PreviewFlag[] initialFlags)
             {
-                for (int i = 0; i < ev.Steps.Count; i++)
-                {
-                    var step = ev.Steps[i];
-                    if (step == null)
-                        continue;
-                    if (step.Kind == StepKind.Branch || step.Kind == StepKind.Jump)
-                    {
-                        int target = step.ResolveTarget(
-                            key =>
-                                _previewFlags.TryGetValue(key, out var value)
-                                    ? value
-                                    : string.Empty,
-                            inventory.HasImportantItem
-                        );
-                        if (target <= i || target > ev.Steps.Count)
-                        {
-                            Debug.LogError(
-                                $"[ConversationPreviewDriver] 分岐先 {target} が不正です（位置={i}）。"
-                            );
-                            yield return view.Close();
-                            yield break;
-                        }
-                        i = target - 1;
-                        continue;
-                    }
-                    switch (step.Kind)
-                    {
-                        case StepKind.Line:
-                            yield return view.ShowLine(step.Speaker, step.Portrait, step.Text);
-                            break;
-                        case StepKind.Choice:
-                            string picked = null;
-                            yield return view.ShowChoice(step.Options, value => picked = value);
-                            if (!string.IsNullOrEmpty(picked))
-                                _previewFlags[step.FlagKey] = picked;
-                            break;
-                        case StepKind.GiveItem:
-                            inventory.Give(step.ItemKey);
-                            yield return view.ShowItemGet(step.ItemKey, step.Message);
-                            break;
-                        case StepKind.GiveWeapon:
-                            yield return view.ShowWeaponGet(step.WeaponKey, step.Message);
-                            break;
-                        case StepKind.Command:
-                            yield return view.RunCommand(step.CommandName, step.Arg);
-                            break;
-                        case StepKind.Battle:
-                            yield return view.Close();
-                            // プレビューでは敵の生成・ゲームモードの変更を行わない。
-                            break;
-                    }
-                }
-                yield return view.Close();
+                foreach (var flag in initialFlags ?? Array.Empty<PreviewFlag>())
+                    if (!string.IsNullOrWhiteSpace(flag.Key))
+                        _flags[flag.Key] = flag.Value;
             }
-            finally
+
+            public string GetFlag(string key) =>
+                key != null && _flags.TryGetValue(key, out var value) ? value : string.Empty;
+
+            public void SetFlag(string key, string value)
             {
-                EventPlaybackService.SetPlaying(false);
+                if (!string.IsNullOrEmpty(key))
+                    _flags[key] = value;
+            }
+
+            public void AdvanceTo(int progress) { }
+
+            public void EnterBattle() { }
+
+            public void ExitBattle() { }
+
+            public IEnumerator Run(BattleSetup setup)
+            {
+                yield break;
             }
         }
 

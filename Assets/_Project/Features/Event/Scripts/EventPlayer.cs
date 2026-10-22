@@ -52,8 +52,8 @@ namespace CreativeAI.Core
         private void OnActiveSceneChanged(Scene previous, Scene next) => _sceneGeneration++;
 
         // Inject されたものを優先し、無ければ各 seam / Instance にフォールバックする。
-        private ProgressManager _progress;
-        private GameModeManager _gameMode;
+        private IEventProgress _progress;
+        private IEventGameMode _gameMode;
         private IDialogueView _view;
         private IItemGiver _items;
         private IWeaponGiver _weapons;
@@ -63,18 +63,22 @@ namespace CreativeAI.Core
         private IItemGiver Items => _items ??= ItemGiverService.Current;
         private IWeaponGiver Weapons => _weapons ??= WeaponGiverService.Current;
         private IBattleRunner BattleRunner => _battle ??= BattleRunnerService.Current;
-        private ProgressManager Progress =>
-            _progress != null ? _progress : ProgressManager.Instance;
-        private GameModeManager GameModes =>
-            _gameMode != null ? _gameMode : GameModeManager.Instance;
+        private IEventProgress Progress =>
+            _progress is UnityEngine.Object obj && obj == null
+                ? ProgressManager.Instance
+                : _progress ?? ProgressManager.Instance;
+        private IEventGameMode GameModes =>
+            _gameMode is UnityEngine.Object obj && obj == null
+                ? GameModeManager.Instance
+                : _gameMode ?? GameModeManager.Instance;
 
         /// <summary>seam の代わりに依存を注入する(プレビュー / テスト用)。</summary>
         public void Inject(
-            ProgressManager progress,
+            IEventProgress progress,
             IDialogueView view,
             IItemGiver items,
             IBattleRunner battle = null,
-            GameModeManager gameMode = null,
+            IEventGameMode gameMode = null,
             IWeaponGiver weapons = null
         )
         {
@@ -84,6 +88,38 @@ namespace CreativeAI.Core
             _battle = battle;
             _gameMode = gameMode;
             _weapons = weapons;
+        }
+
+        /// <summary>一時的に依存を差し替え、破棄時に元の注入状態へ戻す。</summary>
+        public IDisposable InjectScoped(
+            IEventProgress progress,
+            IDialogueView view,
+            IItemGiver items,
+            IBattleRunner battle = null,
+            IEventGameMode gameMode = null,
+            IWeaponGiver weapons = null
+        )
+        {
+            var previous = (_progress, _view, _items, _battle, _gameMode, _weapons);
+            Inject(progress, view, items, battle, gameMode, weapons);
+            return new DependencyScope(() =>
+            {
+                (_progress, _view, _items, _battle, _gameMode, _weapons) = previous;
+            });
+        }
+
+        private sealed class DependencyScope : IDisposable
+        {
+            private Action _restore;
+
+            public DependencyScope(Action restore) => _restore = restore;
+
+            public void Dispose()
+            {
+                var restore = _restore;
+                _restore = null;
+                restore?.Invoke();
+            }
         }
 
         public void Play(EventDefinition ev, BattleSetup battle = default)

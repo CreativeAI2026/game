@@ -8,6 +8,7 @@ using CreativeAI.UI;
 using NUnit.Framework;
 using UnityEditor;
 using UnityEngine;
+using UnityEngine.TestTools;
 
 namespace CreativeAI.Tests.EditMode
 {
@@ -79,6 +80,19 @@ namespace CreativeAI.Tests.EditMode
             public void Give(string key) { }
 
             public bool HasImportantItem(string key) => Owned;
+        }
+
+        private sealed class MemoryProgress : IEventProgress
+        {
+            public readonly Dictionary<string, string> Flags = new();
+            public int Progress;
+
+            public string GetFlag(string key) =>
+                Flags.TryGetValue(key, out var value) ? value : string.Empty;
+
+            public void SetFlag(string key, string value) => Flags[key] = value;
+
+            public void AdvanceTo(int progress) => Progress = progress;
         }
 
         private static readonly EventImporter.ImportCatalog Catalog = new(
@@ -287,6 +301,9 @@ namespace CreativeAI.Tests.EditMode
             {
                 var progress = go.AddComponent<ProgressManager>();
                 progress.SetFlag("answer", "本番の値");
+                var player = go.AddComponent<EventPlayer>();
+                var originalView = new View();
+                player.Inject(progress, originalView, new Items());
                 var driver = go.AddComponent<ConversationPreviewDriver>();
                 var view = new View();
                 Drive(driver.PlayEventPreview(ev, view));
@@ -294,6 +311,103 @@ namespace CreativeAI.Tests.EditMode
                 Assert.AreEqual("本番の値", progress.GetFlag("answer"));
                 Assert.AreEqual(0, progress.Progress);
                 Assert.False(EventPlaybackService.IsPlaying);
+                Drive(player.PlayRoutine(ev));
+                CollectionAssert.AreEqual(new[] { "選択" }, originalView.Lines);
+                Assert.AreEqual("yes", progress.GetFlag("answer"));
+                Assert.AreEqual(1, progress.Progress);
+            }
+            finally
+            {
+                UnityEngine.Object.DestroyImmediate(ev);
+                UnityEngine.Object.DestroyImmediate(go);
+                EventPlaybackService.SetPlaying(false);
+            }
+        }
+
+        [Test]
+        public void EventPlayer_UsesInjectedProgressForFlagsAndCompletion()
+        {
+            var ev = Import(
+                @"{""kind"":""choice"",""flag"":""answer"",""options"":[{""text"":""はい"",""value"":""yes""},{""text"":""いいえ"",""value"":""no""}]},{""kind"":""branch"",""flag"":""answer"",""cases"":{""yes"":[{""kind"":""line"",""text"":""選択""}]}}"
+            );
+            var go = new GameObject("注入状態のテスト");
+            try
+            {
+                var production = go.AddComponent<ProgressManager>();
+                production.SetFlag("answer", "本番の値");
+                var state = new MemoryProgress();
+                var view = new View();
+                var player = go.AddComponent<EventPlayer>();
+                player.Inject(state, view, new Items());
+                Drive(player.PlayRoutine(ev));
+                Assert.AreEqual("yes", state.GetFlag("answer"));
+                Assert.AreEqual(1, state.Progress);
+                CollectionAssert.AreEqual(new[] { "選択" }, view.Lines);
+                Assert.AreEqual("本番の値", production.GetFlag("answer"));
+                Assert.AreEqual(0, production.Progress);
+            }
+            finally
+            {
+                UnityEngine.Object.DestroyImmediate(ev);
+                UnityEngine.Object.DestroyImmediate(go);
+                EventPlaybackService.SetPlaying(false);
+            }
+        }
+
+        [Test]
+        public void PreviewDriver_BattleDoesNotChangeProductionMode()
+        {
+            var ev = Import(
+                @"{""kind"":""line"",""text"":""戦闘前""},{""kind"":""battle""},{""kind"":""line"",""text"":""戦闘後""}"
+            );
+            var go = new GameObject("戦闘プレビューのテスト");
+            try
+            {
+                var progress = go.AddComponent<ProgressManager>();
+                var mode = go.AddComponent<GameModeManager>();
+                mode.EnterBattle();
+                int modeChanges = 0;
+                mode.OnModeChanged += _ => modeChanges++;
+                go.AddComponent<EventPlayer>();
+                var driver = go.AddComponent<ConversationPreviewDriver>();
+                var view = new View();
+                LogAssert.Expect(
+                    LogType.Warning,
+                    new System.Text.RegularExpressions.Regex("battle ステップに敵 Prefab が未配線")
+                );
+                Drive(driver.PlayEventPreview(ev, view));
+                CollectionAssert.AreEqual(new[] { "戦闘前", "戦闘後" }, view.Lines);
+                Assert.AreEqual(GameMode.Battle, mode.CurrentMode);
+                Assert.AreEqual(0, modeChanges);
+                Assert.AreEqual(0, progress.Progress);
+            }
+            finally
+            {
+                UnityEngine.Object.DestroyImmediate(ev);
+                UnityEngine.Object.DestroyImmediate(go);
+                EventPlaybackService.SetPlaying(false);
+            }
+        }
+
+        [Test]
+        public void ScopedInjection_RestoresOriginalDependenciesOnException()
+        {
+            var ev = Import(@"{""kind"":""line"",""text"":""再開""}");
+            var go = new GameObject("依存の復元テスト");
+            try
+            {
+                var player = go.AddComponent<EventPlayer>();
+                var original = new MemoryProgress();
+                var view = new View();
+                player.Inject(original, view, new Items());
+                Assert.Throws<InvalidOperationException>(() =>
+                {
+                    using (player.InjectScoped(new MemoryProgress(), new View(), new Items()))
+                        throw new InvalidOperationException("中断を再現");
+                });
+                Drive(player.PlayRoutine(ev));
+                Assert.AreEqual(1, original.Progress);
+                CollectionAssert.AreEqual(new[] { "再開" }, view.Lines);
             }
             finally
             {
