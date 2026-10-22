@@ -1098,6 +1098,9 @@ namespace CreativeAI.EditorTools
             | StaticEditorFlags.OccludeeStatic
             | StaticEditorFlags.ReflectionProbeStatic;
 
+        // 柵は不透明でも隙間から奥が見えるので、遮蔽物にはしない(柵越しの物がカメラの位置で消えたり出たりする)
+        const StaticEditorFlags FenceFlags = SolidFlags & ~StaticEditorFlags.OccluderStatic;
+
         /// <summary>Field_Area01 を作り直さずに、今の Map へ Static 設定だけ当てて保存する。</summary>
         [MenuItem("Tools/CreativeAI/Map/Apply Static Flags To Field_Area01")]
         public static void ApplyStaticFlagsToArea01()
@@ -1150,7 +1153,9 @@ namespace CreativeAI.EditorTools
                     continue;
                 }
 
-                GameObjectUtility.SetStaticEditorFlags(go, SolidFlags);
+                var isFence = go.GetComponentsInParent<Transform>(true)
+                    .Any(t => t.name == "Fences");
+                GameObjectUtility.SetStaticEditorFlags(go, isFence ? FenceFlags : SolidFlags);
                 solid++;
                 var hasLightmapUV =
                     go.TryGetComponent<MeshFilter>(out var filter)
