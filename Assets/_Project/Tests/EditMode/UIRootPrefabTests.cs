@@ -7,8 +7,9 @@ using UnityEngine;
 namespace CreativeAI.Tests.EditMode
 {
     /// <summary>
-    /// UIRoot Prefab の保存状態。直下の常駐UI(HUD・アイコンバー・即時食材バー・操作プロンプト等)は
-    /// 表示/非表示を各自の Canvas.enabled で切り替えるので、GameObject がオフで保存されると実行時に二度と出ない。
+    /// UIRoot Prefab 直下の常駐UIがオフのまま保存されていないかの検証。
+    /// 常駐UI(アイコンバー・即時食材バー・扉プロンプト・会話UI等)は表示/非表示を各自の Canvas.enabled で切り替えるので、
+    /// GameObject がオフで保存されると実行時に二度と出ない。
     /// 開閉を UiRouter が SetActive で行うパネル(キャラ/インベ/セーブ/調合)だけはオフで保存されていてよい。
     /// </summary>
     public class UIRootPrefabTests

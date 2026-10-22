@@ -10,8 +10,8 @@ using UnityEngine.TestTools;
 namespace CreativeAI.Tests.PlayMode
 {
     /// <summary>
-    /// 本物の UIRoot Prefab を本番と同じ経路(ResidentBootstrapConfig → GameSession.EnsureResidents)で生成し、
-    /// 常駐UI(会話UI・扉プロンプト・即時食材バー・アイコンバー)が実際に登録・表示されるかを見る。
+    /// 本物の UIRoot で常駐UI(会話UI・扉プロンプト・即時食材バー等)が登録・表示されるかの検証。
+    /// UIRoot は本番と同じ経路(ResidentBootstrapConfig → GameSession.EnsureResidents)で生成する。
     /// 部品ごとのテストは手組みの GameObject で回るので、Prefab 側の保存状態や配線の崩れはここでしか拾えない。
     /// </summary>
     public class UIRootResidentPlayModeTests
