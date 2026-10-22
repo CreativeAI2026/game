@@ -3,6 +3,13 @@ using UnityEngine;
 
 namespace CreativeAI.Core
 {
+    /// <summary>イベント再生から戦闘モードへの出入りを通知する契約。</summary>
+    public interface IEventGameMode
+    {
+        void EnterBattle();
+        void ExitBattle();
+    }
+
     public enum GameMode
     {
         Field,
@@ -15,7 +22,7 @@ namespace CreativeAI.Core
     /// 叩くのは進行側(EventPlayer)のみ。
     /// </summary>
     [DefaultExecutionOrder(-100)]
-    public sealed class GameModeManager : MonoBehaviour
+    public sealed class GameModeManager : MonoBehaviour, IEventGameMode
     {
         public static GameModeManager Instance { get; private set; }
 
