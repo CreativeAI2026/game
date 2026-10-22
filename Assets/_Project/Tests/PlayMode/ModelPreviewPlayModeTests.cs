@@ -1,4 +1,4 @@
-﻿using System.Collections;
+using System.Collections;
 using System.IO;
 using System.Linq;
 using CreativeAI.Gameplay;
@@ -264,7 +264,7 @@ namespace CreativeAI.Tests.PlayMode
             character.OnPointerDown(leftClick);
             character.OnPointerClick(leftClick);
             Assert.True(controller.PreviewIsAttacking);
-            // Bow has no model asset in this repository; its UI must explain that state.
+            // The bow now ships with a model (Bow.fbx), so its preview shows it like other weapons.
             for (int i = 0; i < 4; i++)
             {
                 selector.Select(i);
@@ -274,8 +274,8 @@ namespace CreativeAI.Tests.PlayMode
             Assert.AreEqual(1002, selector.SelectedWeapon.id);
             yield return null;
             Assert.False(controller.PreviewIsAttacking);
-            Assert.AreEqual(0, weapon.MeshCount);
-            Assert.True(weapon.transform.parent.Find("ModelUnavailable").gameObject.activeSelf);
+            Assert.Greater(weapon.MeshCount, 0);
+            Assert.False(weapon.transform.parent.Find("ModelUnavailable").gameObject.activeSelf);
             for (int i = 0; i < 4; i++)
             {
                 selector.Select(i);
