@@ -5,6 +5,8 @@ namespace CreativeAI.UI
     /// <summary>
     /// セッション常駐の UI レイヤーのルート。HUD / アイコンバー / 即時食材使用UI / 武器切替UI / 各パネル / 会話UI を束ねる親。
     /// Title フローで <see cref="EnsureResident"/> により1回だけ生成し DontDestroyOnLoad で常駐させる。状態は保存せず、フィールドシーンには UI を置かない。
+    /// Prefab 編集時の注意: 直下の常駐UIは各自の Canvas.enabled で出し分けるため、GameObject をオフで保存しない
+    /// (オフで保存すると実行時に二度と表示されない)。オン/オフで開閉するのは <see cref="UiRouter"/> が管理するパネルだけ。
     /// </summary>
     public sealed class UIRoot : MonoBehaviour
     {
