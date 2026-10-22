@@ -92,3 +92,8 @@ crashlytics-build.properties
 /IUnsafeCommandBuffer.cs
 /RasterCommandBuffer.cs
 /UnsafeCommandBuffer.cs
+
+# 音量をそろえるツール（SoundKit の AudioLoudnessNormalizer）が保存する元の音声ファイル
+/AudioLoudnessBackup/
+# 音声エディタ（SoundKit の AudioClipEditWindow）が保存する、上書き前の音声ファイルと編集の記録
+/AudioEditBackup/

@@ -22,11 +22,14 @@ namespace CreativeAI.Gameplay
 
             _timer = 0f;
 
-            if (boss.Agent != null)
+            if (boss.Agent != null && boss.Agent.isOnNavMesh)
             {
                 boss.Agent.ResetPath();
-                boss.Agent.velocity = Vector3.zero;
+                // 経路を消すだけでは、直前のステートが動かす指示を残していると怯みながら滑るため止める
+                boss.SetAgentStopped(true);
             }
+
+            boss.StopSwingEffects();
 
             if (boss.Animator != null)
             {
@@ -52,7 +55,7 @@ namespace CreativeAI.Gameplay
                 return;
             }
 
-            // Flinchトリガーの取りこぼしで永久に怯んだままになるのを防ぐ
+            // 何らかの理由でFlinchの再生が終わらない場合に、永久に怯んだままになるのを防ぐ保険
             if (_timer >= FlinchStateTimeout)
             {
                 Debug.LogWarning(
@@ -77,6 +80,7 @@ namespace CreativeAI.Gameplay
         public override void Exit()
         {
             Debug.Log("[TutorialBoss] 怯みステート終了");
+            boss.SetAgentStopped(false);
         }
     }
 }

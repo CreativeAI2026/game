@@ -118,34 +118,35 @@ namespace CreativeAI.Tests.EditMode
         }
 
         [Test]
-        public void TakeDamage_IsReducedByDefense()
+        public void RollDamage_ZeroCritChance_NeverCrits()
         {
-            _status.RestoreHp(1000f); // 防御 500
+            // 素の会心率は0%。抽選の端(0)が出ても会心にしない。
+            for (int i = 0; i < 1000; i++)
+            {
+                _status.RollDamage(1f, out bool isCritical);
+                Assert.IsFalse(isCritical);
+            }
+        }
 
-            _status.TakeDamage(800f, isCritical: false);
+        [Test]
+        public void TakeDamage_IsReducedByDefenseRatio()
+        {
+            _status.RestoreHp(1000f); // 防御 500 = 定数と同じ → 半減
 
-            Assert.AreEqual(700f, _status.CurrentHp, 1e-2f, "800 - 防御500 = 300 ダメージ");
+            _status.TakeDamage(400f, isCritical: false);
+
+            Assert.AreEqual(800f, _status.CurrentHp, 1e-2f, "400 × 500/(500+500) = 200 ダメージ");
         }
 
         [Test]
         public void TakeDamage_GuaranteesAtLeastOneDamage()
         {
-            // 防御力がダメージを上回ってもノーダメージにはしない。
+            // 軽減後に1未満になってもノーダメージにはしない。
             _status.RestoreHp(1000f);
 
-            _status.TakeDamage(10f, isCritical: false);
+            _status.TakeDamage(1f, isCritical: false);
 
             Assert.AreEqual(999f, _status.CurrentHp, 1e-2f, "最低1ダメージは保証する");
-        }
-
-        [Test]
-        public void TakeDamage_ExactlyEqualToDefense_StillDealsOne()
-        {
-            _status.RestoreHp(1000f);
-
-            _status.TakeDamage(500f, isCritical: false); // ダメージ == 防御
-
-            Assert.AreEqual(999f, _status.CurrentHp, 1e-2f);
         }
 
         [Test]
@@ -155,9 +156,9 @@ namespace CreativeAI.Tests.EditMode
             _status.SetEquipment(new EquipmentBonus { defensePct = 100f });
             _status.RestoreHp(1000f);
 
-            _status.TakeDamage(1200f, isCritical: false);
+            _status.TakeDamage(600f, isCritical: false);
 
-            Assert.AreEqual(800f, _status.CurrentHp, 1e-2f, "1200 - 防御1000 = 200 ダメージ");
+            Assert.AreEqual(800f, _status.CurrentHp, 1e-2f, "600 × 500/(500+1000) = 200 ダメージ");
         }
 
         [Test]

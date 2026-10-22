@@ -4,7 +4,7 @@ namespace CreativeAI.Gameplay
 {
     /// <summary>
     /// 鎌固有のステートの基底クラス。
-    /// Free → Throw → WaitReturn → Free の投擲サイクルを管理する。攻撃は共通の Dash / Attack を使う。
+    /// Free → Throw → WaitReturn → Catch → Free の投擲サイクルを管理する。攻撃は共通の Dash / Attack を使う。
     /// </summary>
     public abstract class ScytheState : MeleeWeaponState
     {
@@ -72,9 +72,11 @@ namespace CreativeAI.Gameplay
             scythe.LockControls();
             scythe.ComboStep = 0;
 
-            _target = scythe.FindNearestEnemy();
-            FacePlayerTo(scythe.ResolveThrowDirection(_target));
+            _target = scythe.FindThrowTarget();
+            FacePlayerTo(scythe.ResolveThrowDirection(_target, scythe.PlayerTransform.position));
 
+            // 前回の投擲で止めたまま中断されていても、投げモーションが頭から動くようにする
+            scythe.SetThrowAnimationPaused(false);
             scythe.StartAnimatorAction(PlayerAnimatorParams.Throw);
             _requestTime = Time.time;
             _hasStartedAction = false;
@@ -91,12 +93,20 @@ namespace CreativeAI.Gameplay
             AnimatorStateInfo sourceState
         )
         {
-            if (
-                type == WeaponAnimationEventType.ThrowRelease
-                && sourceState.shortNameHash == ThrowHash
-            )
+            if (sourceState.shortNameHash != ThrowHash)
+                return;
+
+            if (type == WeaponAnimationEventType.ThrowRelease)
             {
                 Release();
+            }
+            else if (type == WeaponAnimationEventType.ThrowHold)
+            {
+                // 手放す前に止めると、鎌を投げないまま固まってしまうので止めない
+                Debug.LogWarning(
+                    $"[{scythe.name}] Throw で ThrowRelease より前に ThrowHold を受信したため無視しました。"
+                        + "ThrowHold は ThrowRelease より後のフレームに置いてください。"
+                );
             }
         }
 
@@ -143,9 +153,8 @@ namespace CreativeAI.Gameplay
         private void Release()
         {
             // 投げモーション中に敵が動いた分を追従するため、方向は手放す瞬間に決め直す
-            Vector3 direction = scythe.ResolveThrowDirection(_target);
-            FacePlayerTo(direction);
-            scythe.LaunchBoomerang(direction);
+            FacePlayerTo(scythe.ResolveThrowDirection(_target, scythe.PlayerTransform.position));
+            scythe.LaunchBoomerang(_target);
             scythe.ChangeState(new ScytheStateWaitReturn(scythe));
         }
 
@@ -157,7 +166,8 @@ namespace CreativeAI.Gameplay
 
     /// <summary>
     /// 投げた鎌が戻ってくるのを待つステート。移動・攻撃・武器切替は不可。
-    /// 鎌が手元に戻ったら待機へ。
+    /// ThrowHold のフレームで投げモーションを止めて待つ。
+    /// 鎌が手元に戻ったとき、まだ投げモーション中なら続き(受け取り)を再生し、そうでなければ待機へ。
     /// </summary>
     public class ScytheStateWaitReturn : ScytheState
     {
@@ -172,25 +182,92 @@ namespace CreativeAI.Gameplay
             scythe.LockControls();
         }
 
+        public override void Exit()
+        {
+            // 止めたまま抜けても(怯み・死亡等)、次に Throw ステートを再生したときに動くようにする
+            scythe.SetThrowAnimationPaused(false);
+        }
+
         public override void OnAnimationEvent(
             WeaponAnimationEventType type,
             AnimatorStateInfo sourceState
         )
         {
-            // 投げモーションの終わりで移動モーション(待機ポーズ)へ戻す。操作は鎌を受け取るまで戻さない
-            if (
-                type == WeaponAnimationEventType.ActionEnd
-                && sourceState.shortNameHash == PlayerAnimatorStates.Throw
-            )
-                scythe.ReturnAnimatorToLocomotion();
+            if (sourceState.shortNameHash != PlayerAnimatorStates.Throw)
+                return;
+
+            switch (type)
+            {
+                case WeaponAnimationEventType.ThrowHold:
+                    scythe.SetThrowAnimationPaused(true);
+                    break;
+                // ThrowHold を置いていない(または ActionEnd より後に置いた)場合は、
+                // 投げモーションの終わりで移動モーション(待機ポーズ)へ戻す。操作は鎌を受け取るまで戻さない
+                case WeaponAnimationEventType.ActionEnd:
+                    scythe.ReturnAnimatorToLocomotion();
+                    break;
+            }
         }
 
         public override void Update()
         {
             scythe.Input.ConsumeAttack();
 
-            if (!scythe.IsBoomerangFlying)
+            if (scythe.IsBoomerangFlying)
+                return;
+
+            // 止める前に戻ってきた場合も、投げモーション中なら残りを受け取りモーションとして最後まで見せる。
+            // 怯み等で投げモーションを抜けていれば、続きは再生せずに待機へ
+            if (scythe.IsThrowAnimationPlaying())
+                scythe.ChangeState(new ScytheStateCatch(scythe));
+            else
+                scythe.ChangeState(new ScytheStateFree(scythe));
+        }
+    }
+
+    /// <summary>
+    /// 鎌を受け取った後、止めていた投げモーションの続き(受け取りモーション)を再生するステート。
+    /// クリップ末尾の ActionEnd で移動モーションへ戻し、待機へ。それまで移動・攻撃・武器切替は不可。
+    /// </summary>
+    public class ScytheStateCatch : ScytheState
+    {
+        public ScytheStateCatch(ScytheController context)
+            : base(context) { }
+
+        public override void Enter()
+        {
+            scythe.LockControls();
+            scythe.SetThrowAnimationPaused(false);
+        }
+
+        public override void OnAnimationEvent(
+            WeaponAnimationEventType type,
+            AnimatorStateInfo sourceState
+        )
+        {
+            // ThrowHold は無視する(止める前に受け取った場合、ここで止まらないように)
+            if (
+                type == WeaponAnimationEventType.ActionEnd
+                && sourceState.shortNameHash == PlayerAnimatorStates.Throw
+            )
             {
+                scythe.ReturnAnimatorToLocomotion();
+                scythe.ChangeState(new ScytheStateFree(scythe));
+            }
+        }
+
+        public override void Update()
+        {
+            scythe.Input.ConsumeAttack();
+
+            // ActionEnd を受け取らないまま投げモーションが終わった(ActionEnd が ThrowHold より前にある等)。
+            // Throw ステートの Exit Time で移動モーションへ戻っているので、操作だけ返す
+            if (!scythe.IsThrowAnimationPlaying())
+            {
+                Debug.LogWarning(
+                    $"[{scythe.name}] 受け取りモーション中に ActionEnd を受信しないまま Throw が終了しました。"
+                        + "Throw のクリップで ActionEnd を ThrowHold より後に置いてください。"
+                );
                 scythe.ChangeState(new ScytheStateFree(scythe));
             }
         }

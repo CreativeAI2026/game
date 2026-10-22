@@ -88,6 +88,13 @@ namespace CreativeAI.Gameplay
         public event Action<bool> OnWeaponSwitched;
 
         /// <summary>
+        /// プレイヤーの切替入力で武器が切り替わった時だけ通知する。
+        /// <see cref="OnWeaponSwitched"/> は入手・セーブ復元時の補正の引き直しでも発火するため、
+        /// 操作としての切替回数を数えたい側（PanicDetector の武器の空回し）はこちらを使う。
+        /// </summary>
+        public event Action OnWeaponSwitchedByInput;
+
+        /// <summary>
         /// 所持本数が変わったときに通知(引数は変化後の本数)。武器切替UIが 0本→非表示 / 1本以上→表示 に使う。
         /// </summary>
         public event Action<int> OnOwnedCountChanged;
@@ -337,13 +344,15 @@ namespace CreativeAI.Gameplay
             if (_input.weaponNext)
             {
                 _input.weaponNext = false;
-                SelectNext();
+                if (SelectNext())
+                    OnWeaponSwitchedByInput?.Invoke();
             }
 
             if (_input.weaponPrev)
             {
                 _input.weaponPrev = false;
-                SelectPrevious();
+                if (SelectPrevious())
+                    OnWeaponSwitchedByInput?.Invoke();
             }
         }
 

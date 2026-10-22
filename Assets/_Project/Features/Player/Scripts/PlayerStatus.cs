@@ -186,8 +186,7 @@ namespace CreativeAI.Gameplay
             if (IsDead)
                 return;
 
-            // 防御力で軽減するが、最低1ダメージは保証する（防御力がダメージを上回ってもノーダメージにはしない）
-            float finalDamage = Mathf.Max(1f, damage - CurrentDefense);
+            float finalDamage = DamageFormula.ApplyDefense(damage, CurrentDefense);
 
             CurrentHp = Mathf.Max(0f, CurrentHp - finalDamage);
             OnHpChanged?.Invoke(CurrentHp, CurrentMaxHp);
@@ -215,13 +214,16 @@ namespace CreativeAI.Gameplay
         /// 武器固有の倍率を受け取り、会心判定を含めた最終ダメージを算出する。
         /// ダメージ計算を一元化することで、装備やバフの影響を武器側に意識させない設計。
         /// </summary>
-        /// <param name="weaponMultiplier">武器固有の倍率（弓なら0.8f、近接なら1.5fなど）</param>
+        /// <param name="weaponMultiplier">攻撃ごとの倍率（通常攻撃は1.0、ハンマーの叩きつけ等の大技のみ1.0超）</param>
         /// <param name="isCritical">会心が発生したかどうかの結果を返す</param>
         public float RollDamage(float weaponMultiplier, out bool isCritical)
         {
             float baseDmg = CurrentAttackPower * weaponMultiplier;
 
-            isCritical = UnityEngine.Random.Range(0f, 100f) <= CurrentCriticalChance;
+            // Random.Range(0,100) は両端を含むため、会心率0%のときは抽選しない(0 が出ると会心になってしまう)
+            isCritical =
+                CurrentCriticalChance > 0f
+                && UnityEngine.Random.Range(0f, 100f) <= CurrentCriticalChance;
             if (isCritical)
             {
                 // 会心ダメージは%ポイント(会心率と同スケール)。÷100 して攻撃力へ上乗せする。
@@ -256,7 +258,6 @@ namespace CreativeAI.Gameplay
         private void Die()
         {
             IsDead = true;
-            Debug.Log("プレイヤーは力尽きた...");
             OnDied?.Invoke();
         }
 

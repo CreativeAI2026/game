@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using SoundKit;
 using UnityEngine;
 
 namespace CreativeAI.Gameplay
@@ -22,6 +23,13 @@ namespace CreativeAI.Gameplay
         [Header("ヒットエフェクト")]
         [SerializeField]
         private GameObject _hitEffect;
+
+        [Header("被弾音")]
+        [Tooltip(
+            "プレイヤーにダメージを与えた時の音。攻撃の大分類(斬撃など)ごとの音を割り当てる。ガード・パリィ成立時は鳴らさない"
+        )]
+        [SerializeField]
+        private SoundCue _hitSound;
 
         [Header("判定設定(SphereCast)")]
         [Tooltip("判定の太さ（半径）。武器を包み込むくらいのサイズにする")]
@@ -145,6 +153,7 @@ namespace CreativeAI.Gameplay
                     target.TakeDamage(finalDamage, false);
 
                     SpawnHitEffect(hitPoint, hitNormal);
+                    WorldSoundPlayer.Play(_hitSound, hitPoint, this);
                 }
             }
         }

@@ -85,7 +85,7 @@ namespace CreativeAI.Gameplay
             hammer.LockControls();
             hammer.ComboStep = 0;
 
-            _target = hammer.FindNearestEnemy();
+            _target = hammer.FindSlamTarget();
             hammer.FaceTowards(_target);
 
             hammer.StartAnimatorAction(PlayerAnimatorParams.Slam);
@@ -113,9 +113,11 @@ namespace CreativeAI.Gameplay
             {
                 case WeaponAnimationEventType.ThrustStart:
                     hammer.StartThrustEffect();
+                    hammer.PlayThrustSound();
                     break;
                 case WeaponAnimationEventType.LeapStart:
                     BeginLeap(sourceState);
+                    hammer.PlayLeapSound();
                     break;
                 case WeaponAnimationEventType.SlamImpact:
                     // 跳躍が予定より長引いても、叩きつけた位置・地面の高さで止める
@@ -196,7 +198,7 @@ namespace CreativeAI.Gameplay
 
             // 予備動作の間に敵が撃破された(非アクティブ)場合は狙い直す
             if (_target == null || !_target.gameObject.activeInHierarchy)
-                _target = hammer.FindNearestEnemy();
+                _target = hammer.FindSlamTarget();
 
             // 予備動作中に敵が動いた分を追従するため、向きと着地点は跳ぶ瞬間に決め直す
             hammer.FaceTowards(_target);

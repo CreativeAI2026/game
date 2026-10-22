@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using SoundKit;
 using UnityEngine;
 using UnityEngine.Assertions;
 
@@ -12,11 +13,16 @@ namespace CreativeAI.Gameplay
     {
         [Header("近接のダメージ倍率(1.0 = 100%)")]
         [SerializeField]
-        private float _meleeMultiplier = 1.5f;
+        private float _meleeMultiplier = 1.0f;
 
         [Header("ヒットエフェクト")]
         [SerializeField]
         private GameObject _hitEffect;
+
+        [Header("ヒット音")]
+        [Tooltip("敵に当たった時の音。武器(判定)ごとに割り当てる")]
+        [SerializeField]
+        private SoundCue _hitSound;
 
         [Header("判定設定(SphereCast)")]
         [Tooltip("判定の太さ（半径）。武器を包み込むくらいのサイズにする")]
@@ -116,6 +122,7 @@ namespace CreativeAI.Gameplay
                 CameraShakeManager.Instance?.Shake(0.3f);
 
                 SpawnHitEffect(hitPoint, hitNormal);
+                WorldSoundPlayer.Play(_hitSound, hitPoint, this);
             }
         }
 

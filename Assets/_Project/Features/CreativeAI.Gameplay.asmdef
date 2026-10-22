@@ -7,7 +7,9 @@
         "Unity.Cinemachine",
         "Unity.TextMeshPro",
         "Unity.Animation.Rigging",
-        "UniTask"
+        "UniTask",
+        "SoundKit",
+        "SoundKit.UGUI"
     ],
     "includePlatforms": [],
     "excludePlatforms": [],

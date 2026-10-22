@@ -1,0 +1,24 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 81389657198a4094bdf378aa30bf13c9, type: 3}
+  m_Name: AudioMixerRouting
+  m_EditorClassIdentifier: 
+  _mixer: {fileID: 24100000, guid: aa34e8bb6552d6140a6e7f284952826a, type: 2}
+  _bgmGroup: {fileID: -356783755667799727, guid: aa34e8bb6552d6140a6e7f284952826a, type: 2}
+  _ambientGroup: {fileID: 184211135464153487, guid: aa34e8bb6552d6140a6e7f284952826a, type: 2}
+  _effectGroup: {fileID: -6209370822001320787, guid: aa34e8bb6552d6140a6e7f284952826a, type: 2}
+  _uiGroup: {fileID: -772675199713784300, guid: aa34e8bb6552d6140a6e7f284952826a, type: 2}
+  _masterVolumeName: MasterVolume
+  _bgmVolumeName: BgmVolume
+  _ambientVolumeName: AmbientVolume
+  _effectVolumeName: EffectVolume
+  _uiVolumeName: UIVolume

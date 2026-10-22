@@ -135,7 +135,7 @@ namespace CreativeAI.Gameplay
             // パリィモーション中の攻撃入力で即反撃へ移行（キャンセル攻撃）
             if (sword.Input.ConsumeAttack())
             {
-                sword.TargetEnemy = sword.FindNearestEnemy();
+                sword.TargetEnemy = sword.FindMeleeTarget();
                 sword.ChangeState(new MeleeStateAttack(sword));
                 return;
             }

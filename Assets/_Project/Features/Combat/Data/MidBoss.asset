@@ -13,9 +13,9 @@ MonoBehaviour:
   m_Name: MidBoss
   m_EditorClassIdentifier: CreativeAI.Gameplay::CreativeAI.Gameplay.EnemyParameterData
   characterName: MidBoss
-  baseMaxLife: 5000
-  baseAttackPower: 100
-  baseDefense: 10
+  baseMaxLife: 31250
+  baseAttackPower: 500
+  baseDefense: 500
   baseMoveSpeed: 5
   flinchCooldownTime: 10
-  flinchDamageThreshold: 150
+  flinchDamageThreshold: 1400

@@ -4,27 +4,32 @@ using UnityEngine.AI;
 namespace CreativeAI.Gameplay
 {
     /// <summary>
-    /// 発見後に攻撃の機会を伺う様子見ステート（TestEnemy の StrafeState 相当）。一定時間後に攻撃へ遷移する。
+    /// 発見後に攻撃の機会を伺う様子見ステート（TestEnemy の StrafeState 相当）。交戦全体の時計（TBossCombatTempo）で攻撃時刻が来たら仕掛ける。
     /// 近すぎれば下がり、遠すぎれば詰め、適正距離ではプレイヤーの視野外側へ回り込む（間合い管理）。
+    /// プレイヤーが走って離れたら歩いて追わず、追跡（走り）へ切り替える。
     /// </summary>
     public class TBossWatchState : TBossBaseState
     {
         // プレイヤーへ向き直る補間速度
         private const float RotateSpeed = 8f;
 
-        // 様子見時間にランダム幅を持たせ、読まれやすい一定間隔での攻撃を避ける
-        private const float WatchDurationMinScale = 0.6f;
-        private const float WatchDurationMaxScale = 1.4f;
+        // プレイヤーが弓を構えている間は、より遠くまで「適正距離」とみなして距離を取る（間合いの外側に対する倍率）
+        private const float WatchDistanceMaxScaleWhileAiming = 1.3f;
 
-        // 近すぎる/遠すぎるとみなす距離のAttackRange・NormalAttack2Rangeに対する倍率
-        private const float TooCloseRangeScale = 0.8f;
-        private const float TooFarRangeScale = 0.9f;
+        // 迷い・硬直の相手へ間合いを詰める時、間合いの内側（WatchDistanceMin）の何倍まで近づくか。
+        // TBossDemo の値（内側6m）で3.6m。体同士が触れる距離（中心間 約2m）より遠く、通常攻撃の射程（4m）には入る
+        private const float CloseInMinDistanceScale = 0.6f;
 
-        // プレイヤーが弓を構えている間は、より遠くまで「適正距離」とみなして距離を取る
-        private const float TooFarRangeScaleWhileAiming = 1.3f;
+        // 間合いの外側のこの倍率より離れたら「振り切られた」とみなし、歩きの様子見をやめて走って追う
+        private const float BreakAwayDistanceScale = 1.5f;
 
-        private float _watchTimer;
-        private float _watchDurationThisEntry;
+        // 間合い調整で1回に動く距離と、壁チェックのレイの高さ（どちらもスケール1換算。BodyScaleを掛けて使う）
+        private const float SpacingStepDistance = 2f;
+        private const float WallCheckHeight = 1f;
+
+        // 捕捉が切れてから追跡へ戻るまでの猶予（秒）。光の縁でのチラつきで様子見⇔追跡を往復しないための幅
+        private const float LostSightGraceBeforeChase = 0.5f;
+
         private float _strafeDirection;
         private PlayerController _playerController;
 
@@ -35,11 +40,9 @@ namespace CreativeAI.Gameplay
         {
             Debug.Log("[TutorialBoss] 様子見ステート開始");
 
-            _watchTimer = 0f;
-            _watchDurationThisEntry = Random.Range(
-                boss.WatchDuration * WatchDurationMinScale,
-                boss.WatchDuration * WatchDurationMaxScale
-            );
+            // 攻撃中など見失い判定をしていない間の古い値で、入った直後に追跡へ戻らないようにする
+            boss.LostSightTimer = 0f;
+            boss.BeginCombatTempo();
 
             _strafeDirection = DecideInitialStrafeDirection();
             _playerController =
@@ -48,15 +51,9 @@ namespace CreativeAI.Gameplay
             if (boss.Agent != null)
             {
                 boss.Agent.speed = boss.StrafeSpeed;
-                boss.Agent.isStopped = false;
+                boss.SetAgentStopped(false);
                 // NavMeshAgentの自動回転を切ることで、自前でプレイヤー方向を向きながら移動できる
                 boss.Agent.updateRotation = false;
-            }
-
-            if (boss.Animator != null)
-            {
-                // 走るモーションを解除（歩きモーション等への遷移を促す）
-                boss.Animator.SetBool("IsRunning", false);
             }
         }
 
@@ -68,15 +65,15 @@ namespace CreativeAI.Gameplay
                 return;
             }
 
-            // 見失い判定
-            if (!boss.CheckInFlashlight())
+            // 見失い判定（至近距離なら光の外でも捕捉を維持する）
+            if (!boss.CheckPlayerTracked())
             {
                 boss.LostSightTimer += Time.deltaTime;
-                if (boss.LostSightTimer >= boss.LostSightDuration)
+                if (boss.LostSightTimer >= LostSightGraceBeforeChase)
                 {
-                    boss.LostSightTimer = 0f;
-                    // 即座にパトロールへ戻さず、最後に把握した位置を捜索してから諦めさせる
-                    boss.ChangeState(new TBossSearchState(boss, boss.LastKnownPlayerPosition));
+                    // 柱や壁の陰に隠れられた。その場で見つめ続けず、追跡へ戻って最後に見た位置まで回り込む。
+                    // 見失い時間は引き継ぎ、追跡側で残りの猶予が切れたら捜索へ移る
+                    boss.ChangeState(new TBossChaseState(boss, continueLostSightTimer: true));
                     return;
                 }
             }
@@ -85,12 +82,21 @@ namespace CreativeAI.Gameplay
                 boss.LostSightTimer = 0f;
             }
 
-            _watchTimer += Time.deltaTime;
-
-            // 様子見時間が経過したら攻撃へ
-            if (_watchTimer >= _watchDurationThisEntry)
+            // 交戦の時計で攻撃時刻が来たら仕掛ける（様子見に入り直しても待ち時間はやり直さない）
+            if (boss.IsAttackDue)
             {
                 boss.TransitionToAttack();
+                return;
+            }
+
+            // 走って離れたプレイヤーを歩きの間合い管理で追っても追いつけないため、追跡へ切り替えて走る
+            float distance = Vector3.Distance(
+                boss.transform.position,
+                boss.Player.transform.position
+            );
+            if (distance > boss.WatchDistanceMax * BreakAwayDistanceScale)
+            {
+                boss.ChangeState(new TBossChaseState(boss));
                 return;
             }
 
@@ -160,39 +166,50 @@ namespace CreativeAI.Gameplay
 
             bool playerAiming = _playerController != null && _playerController.IsAiming;
 
-            float tooCloseDistance = boss.AttackRange * TooCloseRangeScale;
-            float tooFarDistance =
-                boss.NormalAttack2Range
-                * (playerAiming ? TooFarRangeScaleWhileAiming : TooFarRangeScale);
+            float tooCloseDistance;
+            float tooFarDistance;
+            if (boss.PanicPressure.ClosesIn)
+            {
+                // 迷い・硬直で焦っている相手には、弓を構えられても下がらず、間合いの内側よりさらに詰めて考える時間を与えない
+                tooCloseDistance = boss.WatchDistanceMin * CloseInMinDistanceScale;
+                tooFarDistance = boss.WatchDistanceMin;
+            }
+            else
+            {
+                tooCloseDistance = boss.WatchDistanceMin;
+                tooFarDistance =
+                    boss.WatchDistanceMax * (playerAiming ? WatchDistanceMaxScaleWhileAiming : 1f);
+            }
 
+            // 1回の移動目標までの距離と壁チェック。スケール1の体格で調整した値なので体格に合わせる
+            float step = SpacingStepDistance * boss.BodyScale;
             Vector3 targetPos;
 
             if (distance < tooCloseDistance)
             {
                 // 近すぎるので後退
-                targetPos = boss.transform.position - dirToPlayer * 2f;
+                targetPos = boss.transform.position - dirToPlayer * step;
             }
             else if (distance > tooFarDistance)
             {
                 // 遠すぎるので詰める
-                targetPos = boss.transform.position + dirToPlayer * 2f;
+                targetPos = boss.transform.position + dirToPlayer * step;
             }
             else
             {
                 // 適正距離。プレイヤーの視野外側へ回り込むようにストレイフする
                 Vector3 strafeDir = Vector3.Cross(Vector3.up, dirToPlayer) * _strafeDirection;
 
-                // 壁があれば方向反転
-                Vector3 rayStart = boss.transform.position + Vector3.up * 1f;
-                if (
-                    Physics.Raycast(rayStart, strafeDir, out RaycastHit hit, 2f, boss.ObstacleLayer)
-                )
+                // 壁、またはNavMeshの端（段差・穴）があれば方向反転。端を見ないと端に押し付けたまま足踏みする
+                Vector3 strafeTarget = boss.transform.position + strafeDir * step;
+                if (IsStrafeBlocked(strafeDir, step, strafeTarget))
                 {
                     _strafeDirection *= -1f;
                     strafeDir = Vector3.Cross(Vector3.up, dirToPlayer) * _strafeDirection;
+                    strafeTarget = boss.transform.position + strafeDir * step;
                 }
 
-                targetPos = boss.transform.position + strafeDir * 2f;
+                targetPos = strafeTarget;
             }
 
             boss.Agent.SetDestination(targetPos);
@@ -201,6 +218,32 @@ namespace CreativeAI.Gameplay
                 boss.transform.rotation,
                 Quaternion.LookRotation(dirToPlayer),
                 Time.deltaTime * RotateSpeed
+            );
+        }
+
+        private bool IsStrafeBlocked(Vector3 strafeDir, float step, Vector3 strafeTarget)
+        {
+            Vector3 rayStart =
+                boss.transform.position + Vector3.up * (WallCheckHeight * boss.BodyScale);
+            if (
+                Physics.Raycast(
+                    rayStart,
+                    strafeDir,
+                    step,
+                    boss.ObstacleLayer,
+                    QueryTriggerInteraction.Ignore
+                )
+            )
+            {
+                return true;
+            }
+
+            // NavMesh.Raycast は途中でNavMeshの端に当たると true を返す
+            return NavMesh.Raycast(
+                boss.transform.position,
+                strafeTarget,
+                out NavMeshHit _,
+                NavMesh.AllAreas
             );
         }
     }

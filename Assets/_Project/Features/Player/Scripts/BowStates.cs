@@ -57,7 +57,7 @@ namespace CreativeAI.Gameplay
     }
 
     /// <summary>
-    /// 弓のエイムステート。矢を手に持って引き、構えクリップの DrawComplete で矢をつがえる。
+    /// 弓のエイムステート。構えクリップの GenerateArrow で矢を手に出し、DrawComplete で矢をつがえる。
     /// つがえた後に攻撃入力で発射する。
     /// </summary>
     public class BowStateAim : BowState
@@ -73,7 +73,6 @@ namespace CreativeAI.Gameplay
             bow.Player.IsAiming = true;
             // 構えたまま移動はできる。武器の持ち替えだけ禁止する
             bow.Player.Locks.Set(bow, PlayerLock.ChangeWeapon);
-            bow.SpawnArrowInHand();
             _enterTime = Time.time;
             _hasEntered = false;
         }
@@ -83,11 +82,29 @@ namespace CreativeAI.Gameplay
             AnimatorStateInfo sourceState
         )
         {
-            if (
-                type == WeaponAnimationEventType.DrawComplete
-                && sourceState.shortNameHash == PlayerAnimatorStates.Aim
-            )
-                bow.NockArrow();
+            if (sourceState.shortNameHash != PlayerAnimatorStates.Aim)
+                return;
+
+            if (type == WeaponAnimationEventType.GenerateArrow)
+                bow.GenerateArrow();
+            else if (type == WeaponAnimationEventType.DrawComplete)
+                NockWithArrow();
+        }
+
+        /// <summary>
+        /// 矢をつがえる。GenerateArrow が届いていない(矢が無い)ときは、撃てないまま固まらないよう、ここで矢を出して警告する。
+        /// </summary>
+        private void NockWithArrow()
+        {
+            if (!bow.HasArrow)
+            {
+                Debug.LogWarning(
+                    $"[{bow.name}] 構えクリップの GenerateArrow イベントを受信しないまま矢をつがえようとしました。"
+                        + "構えクリップの DrawComplete より前に GenerateArrow を追加してください。"
+                );
+                bow.GenerateArrow();
+            }
+            bow.NockArrow();
         }
 
         public override void Update()
@@ -95,6 +112,7 @@ namespace CreativeAI.Gameplay
             if (!bow.Input.subAction)
             {
                 // 撃たずに構えを解いた(キャンセル)
+                bow.NotifyAimCancelled();
                 bow.ChangeState(new BowStateFree(bow));
                 return;
             }
@@ -109,29 +127,32 @@ namespace CreativeAI.Gameplay
         }
 
         /// <summary>
-        /// DrawComplete が届かないまま構えクリップが最後まで再生された、または構えステートに入れなかった場合は、
-        /// 撃てないまま固まらないよう、その時点でつがえて警告する。
+        /// DrawComplete が届かないまま構えクリップが最後まで再生された(保持ステートへ移った場合も含む)、
+        /// または構えステートに入れなかった場合は、撃てないまま固まらないよう、その時点でつがえて警告する。
         /// </summary>
         private void CheckDrawEventMissing()
         {
-            if (bow.IsInUpperBodyState(PlayerAnimatorStates.Aim))
-            {
+            bool isInAim = bow.TryGetUpperBodyState(
+                PlayerAnimatorStates.Aim,
+                out AnimatorStateInfo aimState
+            );
+            if (isInAim)
                 _hasEntered = true;
-                if (bow.UpperBodyNormalizedTime < 1f)
-                    return;
 
+            if ((isInAim && aimState.normalizedTime >= 1f) || (!isInAim && _hasEntered))
+            {
                 Debug.LogWarning(
                     $"[{bow.name}] 構えクリップの DrawComplete イベントを受信しないまま最後まで再生されました。"
                         + "構えクリップに DrawComplete を追加してください。"
                 );
-                bow.NockArrow();
+                NockWithArrow();
             }
             else if (!_hasEntered && Time.time - _enterTime > EnterStateTimeout)
             {
                 Debug.LogWarning(
                     $"[{bow.name}] UpperBody の Aim ステートへ遷移できませんでした。Animator の遷移設定を確認してください。"
                 );
-                bow.NockArrow();
+                NockWithArrow();
             }
         }
     }
@@ -195,7 +216,7 @@ namespace CreativeAI.Gameplay
                 return;
             }
 
-            if (bow.IsInUpperBodyState(PlayerAnimatorStates.Fire))
+            if (bow.TryGetUpperBodyState(PlayerAnimatorStates.Fire, out _))
             {
                 _hasEntered = true;
             }

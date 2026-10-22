@@ -7,16 +7,11 @@ namespace CreativeAI.Gameplay
     /// 矢の飛翔制御を担当する。射出前はボーンの子として静的に存在し、
     /// Launch() 呼び出し時に初めて物理挙動を付与する設計。
     /// ObjectPool による生成・回収に対応するため、Destroy の代わりに ReturnToPool を使う。
-    /// AudioSource はこのオブジェクトに固定でアタッチされ、着弾音の再生に使用される。
     /// </summary>
-    [RequireComponent(typeof(AudioSource))]
     public class ArrowProjectile : MonoBehaviour
     {
         [Tooltip("矢が自動回収されるまでの時間（秒）。0以下で自動回収しない。"), SerializeField]
         private float _lifetime = 8f;
-
-        /// <summary>ArrowTipから着弾音の再生に使用するAudioSource。</summary>
-        public AudioSource ArrowAudioSource { get; private set; }
 
         public bool IsFlying { get; private set; }
 
@@ -26,11 +21,6 @@ namespace CreativeAI.Gameplay
         // ObjectPoolから設定される（ArrowPoolが呼び出す）
         private IObjectPool<ArrowProjectile> _pool;
         private float _lifetimeTimer;
-
-        private void Awake()
-        {
-            ArrowAudioSource = GetComponent<AudioSource>();
-        }
 
         private void Update()
         {
@@ -102,6 +92,8 @@ namespace CreativeAI.Gameplay
                 rb.linearVelocity = Vector3.zero;
                 rb.angularVelocity = Vector3.zero;
                 rb.isKinematic = true;
+                // 刺さった物が動いても矢が付いていくよう、飛翔用の補間を切る(残すと古い位置に描かれる)
+                rb.interpolation = RigidbodyInterpolation.None;
             }
 
             Collider[] cols = GetComponentsInChildren<Collider>();
@@ -124,11 +116,17 @@ namespace CreativeAI.Gameplay
 
             // Rigidbody は初回の Launch で追加されるので、まだ一度も飛んでいない矢には無い
             // (壁に刺さって回収された矢は既に kinematic。kinematic への速度設定は警告になるので避ける)
-            if (TryGetComponent(out Rigidbody rb) && !rb.isKinematic)
+            if (TryGetComponent(out Rigidbody rb))
             {
-                rb.linearVelocity = Vector3.zero;
-                rb.angularVelocity = Vector3.zero;
-                rb.isKinematic = true;
+                if (!rb.isKinematic)
+                {
+                    rb.linearVelocity = Vector3.zero;
+                    rb.angularVelocity = Vector3.zero;
+                    rb.isKinematic = true;
+                }
+                // 飛翔用の補間が残っていると、手の子にしても描画位置が物理側の古い位置から補間で上書きされ、
+                // 手から大きくずれた位置・角度に見える(再利用した矢だけで起きる)
+                rb.interpolation = RigidbodyInterpolation.None;
             }
 
             foreach (var col in GetComponentsInChildren<Collider>(true))

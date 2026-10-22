@@ -60,12 +60,10 @@ namespace CreativeAI.Tests.EditMode
             EventPlaybackService.SetPlaying(true);
 
             _input.MoveInput(Vector2.up);
-            _input.JumpInput(true);
             _input.AttackInput();
             _input.WeaponNextInput(true);
 
             Assert.AreEqual(Vector2.zero, _input.move);
-            Assert.IsFalse(_input.jump);
             Assert.IsFalse(_input.HasAttackInput);
             Assert.IsFalse(_input.weaponNext);
         }

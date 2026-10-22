@@ -19,25 +19,24 @@ namespace CreativeAI.Gameplay
         [Tooltip("キャラクターのスプリント（ダッシュ）速度 (m/s)")]
         public float SprintSpeed = 5.335f;
 
+        [Tooltip(
+            "弓を構えている間の移動速度 (m/s)。構え歩きクリップの歩幅(前後約1.1、横約1.4)に合わせ、足が滑らない速さにする"
+        )]
+        public float AimMoveSpeed = 1.5f;
+
         [Tooltip("キャラクターが移動方向に向き直る際の回転の滑らかさ（秒）")]
         [Range(0.0f, 0.3f)]
         public float RotationSmoothTime = 0.12f;
 
+        [Tooltip("弓を構えた時に、体をカメラの向きへ振り向かせる滑らかさ（秒）。0 で即座に向く")]
+        [Range(0.0f, 0.3f)]
+        public float AimRotationSmoothTime = 0.04f;
+
         [Tooltip("加速と減速の速さ")]
         public float SpeedChangeRate = 10.0f;
 
-        [Space(10)]
-        [Tooltip("プレイヤーのジャンプの高さ")]
-        public float JumpHeight = 1.2f;
-
         [Tooltip("キャラクター固有の重力値。Unityエンジンのデフォルトは -9.81f")]
         public float Gravity = -15.0f;
-
-        [Space(10)]
-        [Tooltip(
-            "再度ジャンプできるようになるまでに必要な時間。0fに設定するとすぐにジャンプ可能になる。"
-        )]
-        public float JumpTimeout = 0.50f;
 
         [Tooltip("落下状態に移行するまでに必要な時間。階段を下りるときなどに使う。")]
         public float FallTimeout = 0.15f;
@@ -58,8 +57,6 @@ namespace CreativeAI.Gameplay
         private float _rotationVelocity;
         private float _verticalVelocity;
         private float _terminalVelocity = 53.0f;
-
-        private float _jumpTimeoutDelta;
         private float _fallTimeoutDelta;
 
         private Animator _animator;
@@ -86,6 +83,12 @@ namespace CreativeAI.Gameplay
         /// <summary>敵に掴まれているか(書き手: 掴み攻撃を行う敵)。</summary>
         public bool IsGrabbed { get; set; }
 
+        /// <summary>
+        /// 入力から決まる、今出そうとしている水平移動速度（m/s。歩き/走り × スティックの倒し具合）。
+        /// 移動できない時・入力が無い時は 0。実際の速度と比べて「入力しているのに動けていない」を判定するのに使う。
+        /// </summary>
+        public float DesiredSpeed { get; private set; }
+
         private void Awake()
         {
             _mainCamera = GameObject.FindGameObjectWithTag("MainCamera");
@@ -106,13 +109,12 @@ namespace CreativeAI.Gameplay
 
         private void Start()
         {
-            _jumpTimeoutDelta = JumpTimeout;
             _fallTimeoutDelta = FallTimeout;
         }
 
         private void Update()
         {
-            JumpAndGravity();
+            FallGravity();
             GroundedCheck();
             Move();
         }
@@ -141,6 +143,7 @@ namespace CreativeAI.Gameplay
 
             if (!CanMove)
             {
+                DesiredSpeed = 0f;
                 _speed = 0f;
                 _animationBlend = 0f;
                 _controller.Move(new Vector3(0.0f, _verticalVelocity, 0.0f) * Time.deltaTime);
@@ -151,7 +154,10 @@ namespace CreativeAI.Gameplay
 
             bool canSprint = _input.sprint && !IsAiming;
 
-            float targetSpeed = canSprint ? SprintSpeed : MoveSpeed;
+            float targetSpeed =
+                IsAiming ? AimMoveSpeed
+                : canSprint ? SprintSpeed
+                : MoveSpeed;
 
             // Vector2の == 演算子は内部で近似値比較を行うため、微小な入力による意図しない移動を防げる
             if (_input.move == Vector2.zero)
@@ -167,6 +173,7 @@ namespace CreativeAI.Gameplay
 
             float speedOffset = 0.1f;
             float inputMagnitude = _input.analogMovement ? _input.move.magnitude : 1f;
+            DesiredSpeed = targetSpeed * inputMagnitude;
 
             if (
                 currentHorizontalSpeed < targetSpeed - speedOffset
@@ -202,9 +209,17 @@ namespace CreativeAI.Gameplay
 
             if (IsAiming)
             {
-                // エイム中はカメラの向きに体を固定し、移動はストレイフ（横移動）として処理する
+                // エイム中は体をカメラの向きに合わせ、移動はストレイフ（横移動）として処理する。
+                // 構えた瞬間に最大180度回るとポーズが飛んで見えるため、ごく短い時間で振り向かせる
+                // (矢はカメラ中央へ飛ぶので、体の向きが一瞬遅れても狙いは変わらない)
                 _targetRotation = _mainCamera.transform.eulerAngles.y;
-                transform.rotation = Quaternion.Euler(0.0f, _targetRotation, 0.0f);
+                float aimRotation = Mathf.SmoothDampAngle(
+                    transform.eulerAngles.y,
+                    _targetRotation,
+                    ref _rotationVelocity,
+                    AimRotationSmoothTime
+                );
+                transform.rotation = Quaternion.Euler(0.0f, aimRotation, 0.0f);
 
                 if (_input.move != Vector2.zero)
                 {
@@ -249,13 +264,12 @@ namespace CreativeAI.Gameplay
             _animator.SetFloat(PlayerAnimatorParams.StrafeZ, _input.move.y);
         }
 
-        private void JumpAndGravity()
+        private void FallGravity()
         {
             if (Grounded)
             {
                 _fallTimeoutDelta = FallTimeout;
 
-                _animator.SetBool(PlayerAnimatorParams.Jump, false);
                 _animator.SetBool(PlayerAnimatorParams.FreeFall, false);
 
                 // 接地中は速度を-2fに保つ。0fだとCheckSphereとの判定タイミング次第で
@@ -264,25 +278,10 @@ namespace CreativeAI.Gameplay
                 {
                     _verticalVelocity = -2f;
                 }
-
-                // 攻撃・怯み・掴まれ中などはジャンプさせない
-                if (_input.jump && _jumpTimeoutDelta <= 0.0f && !Locks.IsLocked(PlayerLock.Jump))
-                {
-                    // 運動方程式 v = √(2gh) から、指定した高さに到達するための初速を算出
-                    _verticalVelocity = Mathf.Sqrt(JumpHeight * -2f * Gravity);
-
-                    _animator.SetBool(PlayerAnimatorParams.Jump, true);
-                }
-
-                if (_jumpTimeoutDelta >= 0.0f)
-                {
-                    _jumpTimeoutDelta -= Time.deltaTime;
-                }
             }
             else
             {
-                _jumpTimeoutDelta = JumpTimeout;
-
+                // 段差を下りる程度の短い浮きでは落下モーションにしない
                 if (_fallTimeoutDelta >= 0.0f)
                 {
                     _fallTimeoutDelta -= Time.deltaTime;
@@ -291,9 +290,6 @@ namespace CreativeAI.Gameplay
                 {
                     _animator.SetBool(PlayerAnimatorParams.FreeFall, true);
                 }
-
-                // 空中でのジャンプ入力を無効化する（二段ジャンプ防止）
-                _input.jump = false;
             }
 
             // 終端速度未満であれば重力を適用。deltaTimeを2回乗算するのは、等加速度運動（v += a*dt）の離散化のため

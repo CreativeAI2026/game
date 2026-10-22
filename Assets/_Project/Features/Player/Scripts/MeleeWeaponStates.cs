@@ -48,6 +48,12 @@ namespace CreativeAI.Gameplay
             ctx.StartAnimatorAction(PlayerAnimatorParams.Approach);
         }
 
+        public override void Exit()
+        {
+            // 怯み等で Aproach ステートに入る前にダッシュが終わった場合、Trigger が残ると後で勝手に接近モーションが出るため消す
+            ctx.Animator.ResetTrigger(PlayerAnimatorParams.Approach);
+        }
+
         public override void Update()
         {
             if (ctx.TargetEnemy == null)
@@ -146,6 +152,7 @@ namespace CreativeAI.Gameplay
             {
                 case WeaponAnimationEventType.HitboxOn:
                     ctx.SetHitboxActive(true);
+                    ctx.PlaySwingSound();
                     break;
                 case WeaponAnimationEventType.HitboxOff:
                     ctx.SetHitboxActive(false);
@@ -245,7 +252,7 @@ namespace CreativeAI.Gameplay
             }
             if (ctx.TargetEnemy == null)
             {
-                ctx.TargetEnemy = ctx.FindNearestEnemy();
+                ctx.TargetEnemy = ctx.FindMeleeTarget();
             }
 
             // コンボ中に敵が射程外に移動した場合、再度ダッシュで接近する。

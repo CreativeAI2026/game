@@ -169,5 +169,71 @@ namespace CreativeAI.Tests.EditMode
                 Object.DestroyImmediate(go);
             }
         }
+
+        // キー(PlayerUiInput のイベント)で開閉する。購読先の選び方ではなく、押されたときの判定を検証する。
+        private void WithRouter(System.Action<UiRouter, GameObject> body)
+        {
+            var routerGo = new GameObject("UiRouter");
+            var panel = new GameObject("InventoryUI");
+            try
+            {
+                var router = routerGo.AddComponent<UiRouter>();
+                TestReflection.SetField(router, "_inventoryUI", panel);
+                TestReflection.Invoke(router, "Awake");
+                TestReflection.SetField(_bar, "_router", router);
+                body(router, panel);
+            }
+            finally
+            {
+                UiPanelService.ResetState();
+                Object.DestroyImmediate(panel);
+                Object.DestroyImmediate(routerGo);
+            }
+        }
+
+        [Test]
+        public void InventoryKey_TogglesInventory()
+        {
+            WithRouter(
+                (_, panel) =>
+                {
+                    TestReflection.Invoke(_bar, "OnInventoryPressed");
+                    Assert.IsTrue(panel.activeSelf, "I で開く");
+
+                    TestReflection.Invoke(_bar, "OnInventoryPressed");
+                    Assert.IsFalse(panel.activeSelf, "もう一度 I で閉じる");
+                }
+            );
+        }
+
+        [Test]
+        public void CancelKey_ClosesOpenPanel()
+        {
+            WithRouter(
+                (router, panel) =>
+                {
+                    router.Open(UiRouter.UiId.Inventory);
+
+                    TestReflection.Invoke(_bar, "OnCancelPressed");
+
+                    Assert.IsFalse(panel.activeSelf);
+                }
+            );
+        }
+
+        [Test]
+        public void Keys_AreIgnoredWhileHidden()
+        {
+            WithRouter(
+                (_, panel) =>
+                {
+                    EventPlaybackService.SetPlaying(true); // 会話中は隠れる
+
+                    TestReflection.Invoke(_bar, "OnInventoryPressed");
+
+                    Assert.IsFalse(panel.activeSelf, "会話中はキーでも開けない");
+                }
+            );
+        }
     }
 }
