@@ -12,7 +12,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 7422eb2d061e48dd9cecbec7e4ad68da, type: 3}
   m_Name: ImportantTabDefinition
   m_EditorClassIdentifier: CreativeAI.UI::CreativeAI.UI.InventoryUI.InventoryTabDefinition
-  _id: 
+  _label: "\u5927\u4E8B\u306A\u3082\u306E"
+  _englishLabel: IMPORTANT
   _icon: {fileID: 21300000, guid: 43c8b545a28f09645bd89cc937502bb5, type: 3}
-  _label: 
   _category: 3

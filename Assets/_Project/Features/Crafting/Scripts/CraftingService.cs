@@ -100,8 +100,6 @@ namespace CreativeAI.Gameplay
 
             // 調合は「装備品同士 / 食材同士」のみ(武器・大事なもの・カテゴリ跨ぎは不可)。
             // UI 非経由の直呼びも弾くためサービス層で明示ガードする。
-            if (a is WeaponData || b is WeaponData)
-                return false;
             return a.category == b.category
                 && (a.category == ItemCategory.Equipment || a.category == ItemCategory.Food);
         }

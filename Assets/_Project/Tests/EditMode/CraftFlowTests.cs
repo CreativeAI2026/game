@@ -82,7 +82,61 @@ namespace CreativeAI.Tests.EditMode
         [TearDown]
         public void TearDown()
         {
+            _controller.CancelCraftFlow();
             Object.DestroyImmediate(_root);
+        }
+
+        [Test]
+        public void CraftWarning_StaysCenteredWithoutMovingCraftSlots()
+        {
+            const string path = "Assets/_Project/Features/UI/CraftingUI/Prefabs/CraftPanel.prefab";
+            var root = PrefabUtility.LoadPrefabContents(path);
+            try
+            {
+                var rect = (RectTransform)root.transform;
+                rect.sizeDelta = new Vector2(1920, 1080);
+                var controller = root.GetComponent<CraftPanelController>();
+                var warning = TestReflection.GetField<TMP_Text>(controller, "_warningText");
+                var materials = TestReflection.GetField<MaterialSlot[]>(
+                    controller,
+                    "_materialSlots"
+                );
+                var crafted = TestReflection.GetField<SlotIconView>(controller, "_craftedItemSlot");
+                var button = TestReflection.GetField<Button>(controller, "_craftButton");
+                var targets = new Transform[]
+                {
+                    materials[0].transform,
+                    materials[1].transform,
+                    crafted.transform,
+                    button.transform,
+                };
+                warning.gameObject.SetActive(false);
+                LayoutRebuilder.ForceRebuildLayoutImmediate(rect);
+                var positions = System.Array.ConvertAll(targets, t => t.position);
+                warning.text = "装備中のアイテムは素材にできません";
+                warning.gameObject.SetActive(true);
+                LayoutRebuilder.ForceRebuildLayoutImmediate(rect);
+                for (int i = 0; i < targets.Length; i++)
+                    Assert.That(
+                        Vector3.Distance(positions[i], targets[i].position),
+                        Is.LessThan(.01f),
+                        targets[i].name
+                    );
+                Assert.AreSame(root.transform, warning.transform.parent);
+                Assert.IsTrue(warning.GetComponent<LayoutElement>().ignoreLayout);
+                Assert.That(
+                    Vector3.Distance(
+                        rect.TransformPoint(rect.rect.center),
+                        warning.rectTransform.TransformPoint(warning.rectTransform.rect.center)
+                    ),
+                    Is.LessThan(.01f)
+                );
+                Assert.AreEqual(TextAlignmentOptions.Center, warning.alignment);
+            }
+            finally
+            {
+                PrefabUtility.UnloadPrefabContents(root);
+            }
         }
 
         [Test]
@@ -190,7 +244,7 @@ namespace CreativeAI.Tests.EditMode
             var parameters = TestReflection.GetField<TMP_Text>(craftPanel, "_resultItemParameters");
             Assert.IsNotNull(parameters, "ResultPanelのItemParameters参照が未設定です。");
             Assert.AreEqual("ItemParameters", parameters.gameObject.name);
-            Assert.AreEqual(resultRoot, parameters.transform.parent.parent);
+            Assert.IsTrue(parameters.transform.IsChildOf(resultRoot));
             Assert.IsFalse(parameters.raycastTarget);
         }
     }

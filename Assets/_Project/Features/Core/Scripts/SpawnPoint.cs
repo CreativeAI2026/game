@@ -8,11 +8,12 @@ namespace CreativeAI.Core
     /// </summary>
     public sealed class SpawnPoint : MonoBehaviour
     {
+        /// <summary>「はじめる」で置く開始位置の ID。</summary>
+        public const string StartId = "start";
+
         [SerializeField]
-        [Tooltip(
-            "到着位置の ID。そのシーン内で一意。Start Spawn / Dest Spawn にこの文字列を入れる"
-        )]
-        private string _id = "start";
+        [Tooltip("到着位置の ID。そのシーン内で一意。「はじめる」の開始位置は start")]
+        private string _id = StartId;
 
         public string Id => _id;
 

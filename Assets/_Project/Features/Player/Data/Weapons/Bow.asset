@@ -14,12 +14,8 @@ MonoBehaviour:
   m_EditorClassIdentifier: CreativeAI.Gameplay::CreativeAI.Gameplay.WeaponData
   icon: {fileID: 21300000, guid: 60ba5475d16e870439c5e853e727b097, type: 3}
   id: 1002
-  key: bow
-  itemName: "\u5F13"
-  category: 0
-  description:
+  itemName: "\u30A4\u30FC\u30BC\u30EB\u30DC\u30A6"
+  description: "\u96E2\u308C\u305F\u76F8\u624B\u3092\u72D9\u3048\u308B\u3001\u30A4\u30FC\u30BC\u30EB\u3092\u7D44\u307F\u8FBC\u3093\u3060\u5F13\u3002"
   attack: 25
-  defense: 0
   criticalDamage: 0
   criticalRate: 50
-  maxHP: 0

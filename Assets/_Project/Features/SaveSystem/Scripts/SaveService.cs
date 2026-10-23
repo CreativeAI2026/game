@@ -22,7 +22,7 @@ namespace CreativeAI.Gameplay
         public static void Save()
         {
             // セーブ可能なのは「フィールド移動中」だけ(戦闘モード中・会話イベント再生中は不可)。
-            // 入口(HudIconBar)側でもボタンを塞いでいるが、別経路からの呼び出しに備えた多重防御。
+            // 入口(HudIconBarView)側でもボタンを塞いでいるが、別経路からの呼び出しに備えた多重防御。
             if (!CanSaveNow(out string blockedReason))
             {
                 Debug.LogWarning(
@@ -277,7 +277,7 @@ namespace CreativeAI.Gameplay
         public int selectedWeaponIndex;
 
         /// <summary>
-        /// 入手ずみ武器のキー(sword/bow/scythe)。主人公は初期0本でイベント入手なので、
+        /// 入手ずみ武器のキー(sword/bow/scythe/hammer)。主人公は初期0本でイベント入手なので、
         /// 「どれを持っているか」自体がセーブ対象になる。旧セーブに無ければ空 = 0本で復元される。
         /// </summary>
         public List<string> ownedWeaponKeys = new();

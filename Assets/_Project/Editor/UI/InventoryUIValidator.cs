@@ -59,8 +59,6 @@ namespace CreativeAI.EditorTools
 
             var panelControllers = FindAll<InventoryPanelController>(scene);
             var craftControllers = FindAll<CraftPanelController>(scene);
-            var equipmentControllers = FindAll<EquipmentViewController>(scene);
-            var quickFoodControllers = FindAll<QuickFoodViewController>(scene);
             var inventories = FindAll<InventoryView>(scene);
             var itemUseDialogs = FindAll<ItemUseDialogPanel>(scene);
 
@@ -75,22 +73,13 @@ namespace CreativeAI.EditorTools
             foreach (var itemUseDialog in itemUseDialogs)
                 ValidateItemUseDialog(itemUseDialog, report);
 
-            ValidateInventoryDataProviders(
-                inventories,
-                panelControllers,
-                craftControllers,
-                equipmentControllers,
-                quickFoodControllers,
-                report
-            );
+            ValidateInventoryDataProviders(inventories, panelControllers, craftControllers, report);
         }
 
         private static void ValidateInventoryDataProviders(
             InventoryView[] inventories,
             InventoryPanelController[] panelControllers,
             CraftPanelController[] craftControllers,
-            EquipmentViewController[] equipmentControllers,
-            QuickFoodViewController[] quickFoodControllers,
             UIValidationReport report
         )
         {
@@ -103,10 +92,6 @@ namespace CreativeAI.EditorTools
                 AddProvider(controller, "_inventory", nameof(InventoryPanelController));
             foreach (var controller in craftControllers)
                 AddProvider(controller, "_inventory", nameof(CraftPanelController));
-            foreach (var controller in equipmentControllers)
-                AddProvider(controller, "_inventory", nameof(EquipmentViewController));
-            foreach (var controller in quickFoodControllers)
-                AddProvider(controller, "_inventory", nameof(QuickFoodViewController));
 
             foreach (var inventory in inventories)
             {
@@ -262,12 +247,23 @@ namespace CreativeAI.EditorTools
 
             var root = slotPrefab;
             string path = AssetDatabase.GetAssetPath(root);
-            if (path != ItemSlotPath)
+            var source = root;
+            bool derivesFromItemSlot = false;
+            while (source != null)
+            {
+                if (AssetDatabase.GetAssetPath(source) == ItemSlotPath)
+                {
+                    derivesFromItemSlot = true;
+                    break;
+                }
+                source = PrefabUtility.GetCorrespondingObjectFromSource(source);
+            }
+            if (!derivesFromItemSlot)
             {
                 report.Error(
                     inventory.name,
                     "_slotPrefab",
-                    $"正しいItemSlot Variantを設定してください。期待値: '{ItemSlotPath}'、現在: '{path}'",
+                    $"ItemSlot またはその派生 Variantを設定してください。元Prefab: '{ItemSlotPath}'、現在: '{path}'",
                     inventory
                 );
             }

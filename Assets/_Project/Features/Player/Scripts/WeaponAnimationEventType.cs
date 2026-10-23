@@ -21,8 +21,17 @@ namespace CreativeAI.Gameplay
         /// <summary>投擲物を手から離す(関数名: ThrowRelease)。</summary>
         ThrowRelease,
 
+        /// <summary>
+        /// 投げモーションをこのフレームで止め、投げた鎌を受け取ったら続き(受け取りモーション)を再生する(関数名: ThrowHold)。
+        /// ThrowRelease より後に置く。
+        /// </summary>
+        ThrowHold,
+
         /// <summary>行動の終わり。ここで操作を返し、移動モーションへ戻す(関数名: ActionEnd)。</summary>
         ActionEnd,
+
+        /// <summary>矢を生成する(関数名: GenerateArrow)。</summary>
+        GenerateArrow,
 
         /// <summary>弓を引き切った。矢をつがえて発射可能にする(関数名: DrawComplete)。</summary>
         DrawComplete,

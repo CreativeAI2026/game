@@ -9,14 +9,15 @@ namespace CreativeAI.Gameplay
     /// Input Systemからの入力イベントを受け取り、各フィールドに保持する。
     /// 攻撃入力はConsumeパターン（1回消費）を採用し、
     /// 武器コントローラー側が任意のタイミングで入力を読み取れるようにしている。
-    /// 会話イベント中(<see cref="EventPlaybackService.BlocksPlayerControl"/>)は入力を捨てて操作不能にする。
+    /// 会話イベント中(<see cref="EventPlaybackService.BlocksPlayerControl"/>)と、
+    /// 操作で開くUIの表示中(<see cref="UiPanelService.IsOpen"/>)は入力を捨てて操作不能にする。
+    /// UI 表示中はクリックできるようカーソルのロックを外す。
     /// </summary>
     public class PlayerInputHandler : MonoBehaviour
     {
         [Header("キャラクターの入力値")]
         public Vector2 move;
         public Vector2 look;
-        public bool jump;
         public bool sprint;
         public bool subAction; // 武器ごとに異なるアクション（剣：防御、弓：構え、鎌：投擲）に使用
         public bool weaponNext;
@@ -49,6 +50,7 @@ namespace CreativeAI.Gameplay
         private void OnEnable()
         {
             EventPlaybackService.PlayingChanged += OnPlayingChanged;
+            UiPanelService.OpenChanged += OnUiPanelChanged;
             _gameMode = GameModeManager.Instance;
             if (_gameMode != null)
                 _gameMode.OnModeChanged += OnModeChanged;
@@ -58,6 +60,7 @@ namespace CreativeAI.Gameplay
         private void OnDisable()
         {
             EventPlaybackService.PlayingChanged -= OnPlayingChanged;
+            UiPanelService.OpenChanged -= OnUiPanelChanged;
             if (_gameMode != null)
                 _gameMode.OnModeChanged -= OnModeChanged;
             _gameMode = null;
@@ -67,10 +70,16 @@ namespace CreativeAI.Gameplay
 
         private void OnModeChanged(GameMode _) => OnControlStateChanged();
 
+        private void OnUiPanelChanged(bool _)
+        {
+            OnControlStateChanged();
+            ApplyCursorLock();
+        }
+
         // 操作不能になった瞬間に押しっぱなしの入力を捨てる(会話中に歩き続けたり、解除直後に攻撃が出たりしないように)。
         private void OnControlStateChanged()
         {
-            if (EventPlaybackService.BlocksPlayerControl)
+            if (Blocked)
                 ClearInputs();
         }
 
@@ -78,7 +87,6 @@ namespace CreativeAI.Gameplay
         {
             move = Vector2.zero;
             look = Vector2.zero;
-            jump = false;
             sprint = false;
             subAction = false;
             weaponNext = false;
@@ -86,7 +94,8 @@ namespace CreativeAI.Gameplay
             _attackPending = false;
         }
 
-        private static bool Blocked => EventPlaybackService.BlocksPlayerControl;
+        private static bool Blocked =>
+            EventPlaybackService.BlocksPlayerControl || UiPanelService.IsOpen;
 
         /// <summary>
         /// 攻撃入力を消費する。1回の入力に対して1回だけtrueを返す。
@@ -107,7 +116,6 @@ namespace CreativeAI.Gameplay
         {
             move = Vector2.zero;
             look = Vector2.zero;
-            jump = false;
             sprint = false;
             subAction = false;
             weaponNext = false;
@@ -124,11 +132,6 @@ namespace CreativeAI.Gameplay
         {
             if (cursorInputForLook)
                 LookInput(value.Get<Vector2>());
-        }
-
-        public void OnJump(InputValue value)
-        {
-            JumpInput(value.isPressed);
         }
 
         public void OnSprint(InputValue value)
@@ -170,6 +173,12 @@ namespace CreativeAI.Gameplay
             WeaponPrevInput(value.isPressed);
         }
 
+        public void OnQuickFood1(InputValue value) => QuickFoodInput(0, value.isPressed);
+
+        public void OnQuickFood2(InputValue value) => QuickFoodInput(1, value.isPressed);
+
+        public void OnQuickFood3(InputValue value) => QuickFoodInput(2, value.isPressed);
+
         public void MoveInput(Vector2 newMoveDirection)
         {
             if (Blocked)
@@ -182,13 +191,6 @@ namespace CreativeAI.Gameplay
             if (Blocked)
                 return;
             look = newLookDirection;
-        }
-
-        public void JumpInput(bool newJumpState)
-        {
-            if (Blocked)
-                return;
-            jump = newJumpState;
         }
 
         public void SprintInput(bool newSprintState)
@@ -205,12 +207,19 @@ namespace CreativeAI.Gameplay
             subAction = newSubActionState;
         }
 
+        /// <summary>
+        /// 攻撃ボタンが押された瞬間に発火するイベント。
+        /// PanicDetectorが購読し、ボスの攻撃中にプレイヤーが何か操作したか（硬直していないか）を判定するために使用する。
+        /// </summary>
+        public event Action OnAttackPressed;
+
         public void AttackInput()
         {
             if (Blocked)
                 return;
             _attackPending = true;
             _attackPressedTime = Time.time;
+            OnAttackPressed?.Invoke();
         }
 
         public void WeaponNextInput(bool newWeaponNextState)
@@ -227,9 +236,25 @@ namespace CreativeAI.Gameplay
             weaponPrev = newWeaponPrevState;
         }
 
-        private void OnApplicationFocus(bool hasFocus)
+        /// <summary>
+        /// 即時食材キー(1/2/3)が押された瞬間に、押された枠番号(0始まり)を通知する。
+        /// 使用処理は <see cref="PlayerQuickFoodUser"/> が行う(入力の保持はここ、アイテムの使用は向こう)。
+        /// </summary>
+        public event Action<int> QuickFoodPressed;
+
+        public void QuickFoodInput(int slot, bool pressed)
         {
-            Cursor.lockState = cursorLocked ? CursorLockMode.Locked : CursorLockMode.None;
+            if (!pressed || Blocked)
+                return;
+            QuickFoodPressed?.Invoke(slot);
+        }
+
+        private void OnApplicationFocus(bool hasFocus) => ApplyCursorLock();
+
+        private void ApplyCursorLock()
+        {
+            bool locked = cursorLocked && !UiPanelService.IsOpen;
+            Cursor.lockState = locked ? CursorLockMode.Locked : CursorLockMode.None;
         }
     }
 }

@@ -365,7 +365,7 @@ namespace CreativeAI.Tests.EditMode
             var item = _prefabObject.GetComponent<RevolverTabItemView>();
             item.Bind(_definitions[0], 0, _ => { });
 
-            item.ApplyLayout(new RevolverTabLayout(Vector2.zero, 1f, 0f, true, true, 0f), true);
+            item.ApplyLayout(new RevolverTabLayout(Vector2.zero, 1f, 1f, 0f, true, true, 0f), true);
 
             Assert.IsFalse(item.CanvasGroup.blocksRaycasts);
             Assert.IsFalse(item.CanvasGroup.interactable);
@@ -378,7 +378,10 @@ namespace CreativeAI.Tests.EditMode
             var item = _prefabObject.GetComponent<RevolverTabItemView>();
             item.Bind(_definitions[0], 0, _ => { });
 
-            item.ApplyLayout(new RevolverTabLayout(Vector2.zero, 1f, 0.5f, false, false, 3f), true);
+            item.ApplyLayout(
+                new RevolverTabLayout(Vector2.zero, 1f, 1f, 0.5f, false, false, 3f),
+                true
+            );
 
             Assert.IsFalse(item.CanvasGroup.blocksRaycasts);
             Assert.IsFalse(item.CanvasGroup.interactable);
@@ -391,11 +394,43 @@ namespace CreativeAI.Tests.EditMode
             var item = _prefabObject.GetComponent<RevolverTabItemView>();
             item.Bind(_definitions[0], 0, _ => { });
 
-            item.ApplyLayout(new RevolverTabLayout(Vector2.zero, 1f, 0.5f, true, true, 0f), true);
+            item.ApplyLayout(
+                new RevolverTabLayout(Vector2.zero, 1f, 1f, 0.5f, true, true, 0f),
+                true
+            );
 
             Assert.IsTrue(item.CanvasGroup.blocksRaycasts);
             Assert.IsTrue(item.CanvasGroup.interactable);
             Assert.IsTrue(item.Button.interactable);
+        }
+
+        [Test]
+        public void ApplyLayout_AppliesConfiguredIconScale()
+        {
+            var item = _prefabObject.GetComponent<RevolverTabItemView>();
+            item.Bind(_definitions[0], 0, _ => { });
+
+            item.ApplyLayout(
+                new RevolverTabLayout(Vector2.zero, 0.75f, 1f, 1f, true, true, 0f),
+                true
+            );
+
+            Transform icon = _prefabObject.transform.Find("TabButton/Icon");
+            Assert.AreEqual(Vector3.one * 0.75f, icon.localScale);
+        }
+
+        [Test]
+        public void SetSelected_DimsUnselectedIcon()
+        {
+            var item = _prefabObject.GetComponent<RevolverTabItemView>();
+            item.Bind(_definitions[0], 0, _ => { });
+
+            item.SetSelected(true);
+            Color selectedColor = item.TabButton.Icon.color;
+            item.SetSelected(false);
+            Color unselectedColor = item.TabButton.Icon.color;
+
+            Assert.Less(unselectedColor.grayscale, selectedColor.grayscale);
         }
 
         [Test]

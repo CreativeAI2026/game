@@ -184,11 +184,11 @@ RectTransform:
   - {fileID: 7027021736082043095}
   m_Father: {fileID: 567093039207048889}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
-  m_AnchorMin: {x: 0, y: 1}
-  m_AnchorMax: {x: 0, y: 1}
-  m_AnchoredPosition: {x: 10, y: -10}
-  m_SizeDelta: {x: 44, y: 44}
-  m_Pivot: {x: 0, y: 1}
+  m_AnchorMin: {x: 1, y: 1}
+  m_AnchorMax: {x: 1, y: 1}
+  m_AnchoredPosition: {x: -8, y: -8}
+  m_SizeDelta: {x: 40, y: 40}
+  m_Pivot: {x: 1, y: 1}
 --- !u!222 &2889113891184189530
 CanvasRenderer:
   m_ObjectHideFlags: 0
@@ -210,16 +210,16 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: UnityEngine.UI::UnityEngine.UI.Image
   m_Material: {fileID: 0}
-  m_Color: {r: 0.105882354, g: 0.22745098, b: 0.34509805, a: 0.96}
+  m_Color: {r: 1, g: 1, b: 1, a: 1}
   m_RaycastTarget: 0
   m_RaycastPadding: {x: 0, y: 0, z: 0, w: 0}
   m_Maskable: 1
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_Sprite: {fileID: 10913, guid: 0000000000000000f000000000000000, type: 0}
+  m_Sprite: {fileID: 21300000, guid: a47e80c5f06a4d27b79bd8973373a839, type: 3}
   m_Type: 0
-  m_PreserveAspect: 0
+  m_PreserveAspect: 1
   m_FillCenter: 1
   m_FillMethod: 4
   m_FillAmount: 1
@@ -234,10 +234,10 @@ MonoBehaviour:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 7575365804542858586}
-  m_Enabled: 1
+  m_Enabled: 0
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: e19747de3f5aca642ab2be37e372fb86, type: 3}
-  m_Name:
+  m_Name: 
   m_EditorClassIdentifier: UnityEngine.UI::UnityEngine.UI.Outline
   m_EffectColor: {r: 0.45, g: 0.72, b: 1, a: 0.55}
   m_EffectDistance: {x: 1, y: -1}
@@ -259,7 +259,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!224 &7027021736082043095
 RectTransform:
   m_ObjectHideFlags: 0
@@ -467,6 +467,10 @@ PrefabInstance:
       propertyPath: m_LocalEulerAnglesHint.z
       value: 0
       objectReference: {fileID: 0}
+    - target: {fileID: 900000000000000004, guid: eb83329e79f51e24d8c2185aaa107fba, type: 3}
+      propertyPath: m_PreserveAspect
+      value: 1
+      objectReference: {fileID: 0}
     - target: {fileID: 1227703057984881157, guid: eb83329e79f51e24d8c2185aaa107fba, type: 3}
       propertyPath: m_Name
       value: ItemSlot
@@ -495,6 +499,22 @@ PrefabInstance:
       propertyPath: m_AnchoredPosition.y
       value: -28.965
       objectReference: {fileID: 0}
+    - target: {fileID: 6023777252402658441, guid: eb83329e79f51e24d8c2185aaa107fba, type: 3}
+      propertyPath: _normalSprite
+      value: 
+      objectReference: {fileID: 21300000, guid: 71cb07dc6b0b5404c97e103145916d59, type: 3}
+    - target: {fileID: 6023777252402658441, guid: eb83329e79f51e24d8c2185aaa107fba, type: 3}
+      propertyPath: _selectedSprite
+      value: 
+      objectReference: {fileID: 21300000, guid: d3a358727a466c44bb2c6f6accaca079, type: 3}
+    - target: {fileID: 6023777252402658441, guid: eb83329e79f51e24d8c2185aaa107fba, type: 3}
+      propertyPath: _itemWithCountSprite
+      value: 
+      objectReference: {fileID: 21300000, guid: dd6097617ebaade439cb900fefdb6f65, type: 3}
+    - target: {fileID: 6023777252402658441, guid: eb83329e79f51e24d8c2185aaa107fba, type: 3}
+      propertyPath: _itemWithCountSelectedSprite
+      value: 
+      objectReference: {fileID: 21300000, guid: 1209ae75deb5b8449b834770ffa231d6, type: 3}
     - target: {fileID: 7157305898682086758, guid: eb83329e79f51e24d8c2185aaa107fba, type: 3}
       propertyPath: m_SizeDelta.x
       value: 0
@@ -606,6 +626,7 @@ MonoBehaviour:
   _countTextCanvasGroup: {fileID: 8553543124283959575}
   _backgroundImage: {fileID: 7410469025042987458}
   _frameRect: {fileID: 978815406877775115}
+  _positionRect: {fileID: 0}
   _badgeRatio: 0.16
   _minBadgeHeight: 12
   _maxBadgeHeight: 24

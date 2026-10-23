@@ -1,0 +1,28 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 766c3419a3434274a4c1a87714a2bd3c, type: 3}
+  m_Name: Player_Footstep_Run
+  m_EditorClassIdentifier: SoundKit::SoundKit.SoundCue
+  _clips:
+  - {fileID: 8300000, guid: bb8972a4aeddf534eac09797993eddf8, type: 3}
+  - {fileID: 8300000, guid: 56780d58f79c4254fafd43527592fe4c, type: 3}
+  - {fileID: 8300000, guid: b3e582d9756ca9643b75c7b73724bc64, type: 3}
+  - {fileID: 8300000, guid: 58a6658667601db468a9d08b9e076d3c, type: 3}
+  - {fileID: 8300000, guid: 6ec82778e9ac58e43ad142858b93536f, type: 3}
+  _volume: 1
+  _loudnessOffsetDb: 3
+  _allowClipping: 1
+  _pitchVariation: 0.2
+  _category: 2
+  _is3D: 1
+  _minDistance: 1
+  _maxDistance: 20

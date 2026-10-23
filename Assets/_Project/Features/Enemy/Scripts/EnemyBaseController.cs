@@ -19,6 +19,12 @@ namespace CreativeAI.Gameplay
         protected IEnemyState currentState;
         public bool IsAlerted { get; set; }
 
+        /// <summary>
+        /// 攻撃ステートの最中か。プレイヤー側（焦り度の検知など）が「いま攻撃が来ているか」を知るために使う。
+        /// 攻撃ステートを持つ敵が上書きする。
+        /// </summary>
+        public virtual bool IsAttacking => false;
+
         protected virtual void Awake()
         {
             // モデルの差し替え等でPrefabの階層構造が変化しても、参照の欠損でスクリプトが破損するのを防ぐためのフォールバック
@@ -121,6 +127,7 @@ namespace CreativeAI.Gameplay
                 currentState.Exit();
             }
 
+            OnBeforeStateEnter();
             currentState = newState;
 
             if (currentState != null)
@@ -128,6 +135,12 @@ namespace CreativeAI.Gameplay
                 currentState.Enter();
             }
         }
+
+        /// <summary>
+        /// 前のステートの Exit の後、次のステートの Enter の前に呼ばれる。
+        /// 前のステートが引いたまま使われなかったアニメーションのトリガーを捨てるなど、ステートをまたいで残してはいけないものを片付ける。
+        /// </summary>
+        protected virtual void OnBeforeStateEnter() { }
 
         /// <summary>
         /// 敵のサイズや耐性によって怯みの表現（専用モーションの再生や無視など）が異なるため、派生クラスでの具象化を要求する。
@@ -143,5 +156,11 @@ namespace CreativeAI.Gameplay
         /// 死亡時の演出（ラグドール化、爆発、分裂など）のバリエーションを吸収するためのフックメソッド。
         /// </summary>
         public virtual void ForceDeath() { }
+
+        /// <summary>
+        /// 近接攻撃をジャストパリィされた時に剣側（SwordController）から呼ばれる。
+        /// パリィされた時の崩れ方（大怯み・無視など）は敵ごとに異なるため、派生クラスで具象化する。
+        /// </summary>
+        public virtual void ForceParried() { }
     }
 }

@@ -1,5 +1,7 @@
+using System.Collections.Generic;
 using TMPro;
 using UnityEngine;
+using UnityEngine.InputSystem;
 using UnityEngine.UI;
 
 namespace CreativeAI.Gameplay
@@ -8,14 +10,26 @@ namespace CreativeAI.Gameplay
     /// PanicDetector の焦り度スコアと各指標をリアルタイムでデバッグ表示するUIコンポーネント。
     /// 専用の独立キャンバスにアタッチして使用する。
     /// このUIは敵の挙動制御には一切関わらない純粋なデバッグ用途。
+    /// エディター・ビルドの両方で動作し、切替キー（既定: F2）で表示/非表示を切り替える。
     /// </summary>
+    [RequireComponent(typeof(Canvas))]
     public class PanicDebugUI : MonoBehaviour
     {
         [Header("参照")]
         [SerializeField]
         private PanicDetector _panicDetector;
 
+        [Tooltip(
+            "焦りに応じて追い込むボス。未設定ならシーンから探す（いなければ追い込みの行は出さない）"
+        )]
+        [SerializeField]
+        private TutorialBossController _boss;
+
         [Header("UIパーツ")]
+        [Tooltip("ボスの追い込みの状態と、次の攻撃までの時間を出すテキスト（2行）")]
+        [SerializeField]
+        private TextMeshProUGUI _bossPressureText;
+
         [Tooltip("焦り度バー（Filledタイプ）")]
         [SerializeField]
         private Image _panicFillBar;
@@ -29,16 +43,21 @@ namespace CreativeAI.Gameplay
         private TextMeshProUGUI _lastSignalText;
 
         [Tooltip(
-            "各指標ごとの情報テキスト（6行、順番通り）\n0:逃避 1:スパム 2:ジッター 3:空間喪失 4:意思崩壊 5:回避失敗"
+            "各指標の名前テキスト。並びは PanicDetector.Signals の順（逃避・スパム・ジッター・空間喪失・意思崩壊・回避失敗・硬直・武器切替）。\n"
+                + "未設定の行はシーン側の文字のまま"
         )]
         [SerializeField]
-        private TextMeshProUGUI[] _signalTexts = new TextMeshProUGUI[6];
+        private TextMeshProUGUI[] _signalLabels = new TextMeshProUGUI[0];
+
+        [Tooltip("各指標の計測値テキスト。並びは名前テキストと同じ。行が足りない指標は表示しない")]
+        [SerializeField]
+        private TextMeshProUGUI[] _signalTexts = new TextMeshProUGUI[0];
 
         [Tooltip(
-            "各指標のバー（Filledタイプ、6本）\n0:逃避 1:スパム 2:ジッター 3:空間喪失 4:意思崩壊 5:回避失敗"
+            "各指標のバー（Filledタイプ）。並びは名前テキストと同じ。行が足りない指標は表示しない"
         )]
         [SerializeField]
-        private Image[] _signalBars = new Image[6];
+        private Image[] _signalBars = new Image[0];
 
         [Header("カラー設定")]
         [Tooltip("焦り度が低いときのバーの色")]
@@ -54,13 +73,31 @@ namespace CreativeAI.Gameplay
         [SerializeField]
         private float _flashDuration = 0.8f;
 
+        [Header("表示切替")]
+        [Tooltip("表示/非表示を切り替えるキー。エディター・ビルドの両方で有効")]
+        [SerializeField]
+        private Key _toggleKey = Key.F2;
+
+        [Tooltip("再生開始時に表示しておくか")]
+        [SerializeField]
+        private bool _visibleOnStart = false;
+
         private float _flashTimer = 0f;
         private bool _isFlashing = false;
 
+        private Canvas _canvas;
+
         private void Awake()
         {
+            // GameObject ごと無効にすると Update が止まり切替キーを受け付けられないため、Canvas の描画だけを切り替える
+            _canvas = GetComponent<Canvas>();
+            _canvas.enabled = _visibleOnStart;
+
             if (_panicDetector == null)
                 _panicDetector = FindAnyObjectByType<PanicDetector>(FindObjectsInactive.Exclude);
+
+            if (_boss == null)
+                _boss = FindAnyObjectByType<TutorialBossController>(FindObjectsInactive.Exclude);
         }
 
         private void OnEnable()
@@ -77,12 +114,22 @@ namespace CreativeAI.Gameplay
 
         private void Update()
         {
-            if (_panicDetector == null)
+            HandleToggleInput();
+
+            if (_panicDetector == null || !_canvas.enabled)
                 return;
 
             UpdatePanicBar();
             UpdateSignalRows();
+            UpdateBossPressure();
             UpdateFlash();
+        }
+
+        private void HandleToggleInput()
+        {
+            var keyboard = Keyboard.current;
+            if (keyboard != null && keyboard[_toggleKey].wasPressedThisFrame)
+                _canvas.enabled = !_canvas.enabled;
         }
 
         private void UpdatePanicBar()
@@ -98,37 +145,33 @@ namespace CreativeAI.Gameplay
 
             if (_panicScoreText != null)
             {
-                _panicScoreText.text = Mathf.RoundToInt(score).ToString();
+                PanicLevel level = _panicDetector.Level;
+                _panicScoreText.text =
+                    level == PanicLevel.Calm
+                        ? $"{Mathf.RoundToInt(score)} {level.ToDisplayName()}"
+                        : $"{Mathf.RoundToInt(score)} {level.ToDisplayName()}/{_panicDetector.DominantCategory.ToDisplayName()}";
             }
         }
 
         private void UpdateSignalRows()
         {
-            // 0: 逃避
-            string flightStatus = _panicDetector.IsFlightDetectionActive
-                ? $"逃避    継続: {_panicDetector.FlightTimer:F1}s"
-                : "逃避    (対象敵なし)";
-            UpdateRow(0, _panicDetector.FlightScore, flightStatus);
+            // 指標を足しても表示コードを直さずに済むよう、指標の一覧と生の値（単位付き）から行を作る
+            bool isInCombat = _panicDetector.IsInCombat;
+            IReadOnlyList<PanicSignal> signals = _panicDetector.Signals;
+            for (int i = 0; i < signals.Count; i++)
+            {
+                PanicSignal signal = signals[i];
+                if (i < _signalLabels.Length && _signalLabels[i] != null)
+                {
+                    _signalLabels[i].text = signal.DisplayName;
+                }
 
-            // 1: スパム
-            UpdateRow(1, _panicDetector.SpamScore, $" {_panicDetector.SpamRate:F1}回/s");
-
-            // 2: ジッター
-            bool isAiming =
-                _panicDetector.JitterScore > 0f || _panicDetector.JitterAngularSpeed > 0f;
-            string jitterStatus = isAiming
-                ? $"{_panicDetector.JitterAngularSpeed:F0}°/s"
-                : "(非構え中)";
-            UpdateRow(2, _panicDetector.JitterScore, jitterStatus);
-
-            // 3: 空間喪失
-            UpdateRow(3, _panicDetector.TrapScore, $"継続: {_panicDetector.TrapTimer:F1}s");
-
-            // 4: 意思崩壊
-            UpdateRow(4, _panicDetector.AimCancelScore, $"累計: {_panicDetector.AimCancelCount}回");
-
-            // 5: 回避失敗
-            UpdateRow(5, _panicDetector.HitChainScore, $"連続: {_panicDetector.HitChainCount}回");
+                // 回避失敗以外は交戦中しか計測しないので、交戦外は値ではなく理由を出す
+                string status = isInCombat
+                    ? $"{signal.RawValueUnit}: {signal.RawValue:0.#}"
+                    : "(非交戦)";
+                UpdateRow(i, signal.Score, status);
+            }
         }
 
         private void UpdateRow(int index, float score, string label)
@@ -143,6 +186,38 @@ namespace CreativeAI.Gameplay
             {
                 _signalTexts[index].text = label;
             }
+        }
+
+        /// <summary>
+        /// ボスの追い込みの状態を出す。例:
+        ///   ボスの追い込み：追い込み中 逃げ腰（残り5.2秒）
+        ///   次の攻撃まで：1.2秒
+        /// </summary>
+        private void UpdateBossPressure()
+        {
+            if (_bossPressureText == null)
+                return;
+
+            if (_boss == null)
+            {
+                _bossPressureText.text = string.Empty;
+                return;
+            }
+
+            TBossPanicPressure pressure = _boss.PanicPressure;
+            string status = pressure.Mode switch
+            {
+                TBossPressureMode.Pressing =>
+                    $"{pressure.Mode.ToDisplayName()} {pressure.Category.ToDisplayName()}（残り{pressure.PressureRemaining:F1}秒）",
+                TBossPressureMode.Breather =>
+                    $"{pressure.Mode.ToDisplayName()}（残り{pressure.BreatherRemaining:F1}秒）",
+                _ => pressure.Mode.ToDisplayName(),
+            };
+
+            float untilAttack = _boss.TimeUntilNextAttack;
+            string nextAttack = untilAttack < 0f ? "（非交戦）" : $"{untilAttack:F1}秒";
+
+            _bossPressureText.text = $"ボスの追い込み：{status}\n次の攻撃まで：{nextAttack}";
         }
 
         private void UpdateFlash()
@@ -177,7 +252,8 @@ namespace CreativeAI.Gameplay
         {
             if (_lastSignalText != null)
             {
-                _lastSignalText.text = $"最後の検知: [{signalName}]";
+                // 見出し「最後の検知：」はシーン側の固定ラベルにあるので、ここでは指標名だけを出す
+                _lastSignalText.text = $"[{signalName}]";
             }
 
             _flashTimer = _flashDuration;

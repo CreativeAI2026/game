@@ -16,8 +16,18 @@ namespace CreativeAI.Gameplay
         // この確信度以上なら音源へ向かう（以下なら振り返るだけ）
         private const float WalkThreshold = 0.5f;
 
+        // この確信度以上なら音源へ走る（以下なら歩く）。
+        // 走り速度はプレイヤーのダッシュと同等なので、遠めの物音にまで全力で駆けつけると逃げ場が無くなる
+        private const float RunThreshold = 0.8f;
+
         private float _timeoutTimer;
         private const float Timeout = 12f;
+
+        // 音源に着いたとみなす距離と、経路残距離の余裕（スケール1換算。BodyScaleを掛けて使う）
+        private const float SoundArriveDistance = 2f;
+        private const float ArriveMargin = 0.5f;
+
+        private TBossStuckDetector _stuckDetector;
 
         // 振り返り中のタイマー（LookOnly モード時）
         private float _lookOnlyTimer;
@@ -54,17 +64,12 @@ namespace CreativeAI.Gameplay
 
             if (_mode == Mode.Walk)
             {
-                // 音源へ向かう（走る）
+                // 音源へ向かう（確信度が高ければ走り、そうでなければ歩く）
                 if (boss.Agent != null)
                 {
-                    boss.Agent.speed = boss.RunSpeed;
-                    boss.Agent.isStopped = false;
+                    boss.Agent.speed = SpeedForConfidence();
+                    boss.SetAgentStopped(false);
                     boss.Agent.SetDestination(boss.LastHeardSoundPosition);
-                }
-
-                if (boss.Animator != null)
-                {
-                    boss.Animator.SetBool("IsRunning", true);
                 }
             }
             else
@@ -72,8 +77,13 @@ namespace CreativeAI.Gameplay
                 // 確信度が低い：その場で向くだけ
                 if (boss.Agent != null)
                 {
-                    boss.Agent.isStopped = true;
+                    boss.SetAgentStopped(true);
                 }
+            }
+
+            if (boss.Agent != null)
+            {
+                _stuckDetector = new TBossStuckDetector(boss.Agent);
             }
 
             // 音イベント購読（別の音が鳴ったら確信度を更新）
@@ -105,7 +115,7 @@ namespace CreativeAI.Gameplay
                     {
                         if (boss.Animator != null)
                         {
-                            boss.Animator.SetTrigger("Look");
+                            boss.PlayLookAround();
                         }
                         _hasTriggeredLook = true;
                     }
@@ -144,7 +154,7 @@ namespace CreativeAI.Gameplay
 
             _timeoutTimer += Time.deltaTime;
 
-            // 音源の近く（2m以内）まで来たら調査完了
+            // 音源の近くまで来たら調査完了
             float distToTarget = Vector3.Distance(
                 boss.transform.position,
                 boss.LastHeardSoundPosition
@@ -152,17 +162,20 @@ namespace CreativeAI.Gameplay
             // 経路計算前は remainingDistance が 0 を返すため、hasPath を確認しないと
             // SetDestination の直後に「到着した」と誤判定してしまう
             bool arrived =
-                distToTarget <= 2f
+                distToTarget <= SoundArriveDistance * boss.BodyScale
                 || (
                     boss.Agent != null
                     && !boss.Agent.pathPending
                     && boss.Agent.hasPath
-                    && boss.Agent.remainingDistance <= boss.Agent.stoppingDistance + 0.5f
+                    && boss.Agent.remainingDistance
+                        <= boss.Agent.stoppingDistance + ArriveMargin * boss.BodyScale
                 );
 
+            // 音源がNavMesh外・到達不能だと着かないまま止まるため、詰まったらそこで調査を切り上げる
+            bool stuck = _stuckDetector != null && _stuckDetector.Tick(Time.deltaTime);
             bool timedOut = _timeoutTimer >= Timeout;
 
-            if (arrived || timedOut)
+            if (arrived || stuck || timedOut)
             {
                 OnArrived();
             }
@@ -176,13 +189,13 @@ namespace CreativeAI.Gameplay
 
             if (boss.Agent != null && boss.Agent.isOnNavMesh)
             {
-                boss.Agent.isStopped = false;
+                boss.SetAgentStopped(false);
             }
+        }
 
-            if (boss.Animator != null)
-            {
-                boss.Animator.SetBool("IsRunning", false);
-            }
+        private float SpeedForConfidence()
+        {
+            return _confidence >= RunThreshold ? boss.RunSpeed : boss.WalkSpeed;
         }
 
         private void RotateTowardSound()
@@ -206,34 +219,28 @@ namespace CreativeAI.Gameplay
 
         private void OnArrived()
         {
-            // 音源に到達。スポットライトで周囲を確認（すでにCheckInFlashlightで判定済み）
-            // プレイヤーが攻撃範囲内（特殊攻撃射程の半分、または通常攻撃の長い方）なら攻撃
-            if (boss.Player != null)
+            // 音源に到達。光の中にいれば既にUpdateで追跡へ移っている。
+            // 光の外でも、すぐ近くで遮蔽物なく見通せる位置にいれば気づいて交戦に入る。
+            // 以前は距離だけで攻撃していたため、壁の向こうや背後の見えていないプレイヤーにも攻撃していた
+            if (boss.CheckPlayerTracked())
             {
-                float dist = Vector3.Distance(
-                    boss.transform.position,
-                    boss.Player.transform.position
-                );
-                float attackThreshold = Mathf.Max(boss.AttackRange, boss.SpecialAttackRange * 0.5f);
-                if (dist <= attackThreshold)
-                {
-                    boss.TransitionToAttack();
-                    return;
-                }
+                boss.IsAlerted = true;
+                boss.ChangeState(new TBossChaseState(boss));
+                return;
             }
 
-            // 攻撃圏外ならArrivedモードに移行して周囲を警戒
+            // 気づけなければArrivedモードに移行して周囲を警戒
             _mode = Mode.Arrived;
             _arrivedTimer = 0f;
 
             if (boss.Agent != null)
             {
-                boss.Agent.isStopped = true;
+                boss.SetAgentStopped(true);
             }
 
             if (!_hasTriggeredLook && boss.Animator != null)
             {
-                boss.Animator.SetTrigger("Look");
+                boss.PlayLookAround();
                 _hasTriggeredLook = true;
             }
         }
@@ -248,14 +255,12 @@ namespace CreativeAI.Gameplay
                 return;
             }
 
-            float distToSound = Vector3.Distance(boss.transform.position, data.Position);
-            if (distToSound > data.Radius || distToSound > boss.SoundReactRadius)
+            if (!boss.TryHearSound(data, out float newConfidence))
             {
                 return;
             }
 
-            // 新しい音の確信度を計算し、今より高ければ目標を更新
-            float newConfidence = 1f - Mathf.Clamp01(distToSound / boss.SoundReactRadius);
+            // 新しい音の確信度が今より高ければ目標を更新
             boss.NotifySoundHeard(newConfidence);
             if (newConfidence > _confidence)
             {
@@ -269,15 +274,19 @@ namespace CreativeAI.Gameplay
                     if (boss.Agent != null)
                     {
                         // Enterで設定する移動速度と揃える
-                        boss.Agent.speed = boss.RunSpeed;
-                        boss.Agent.isStopped = false;
+                        boss.Agent.speed = SpeedForConfidence();
+                        boss.SetAgentStopped(false);
                         boss.Agent.SetDestination(boss.LastHeardSoundPosition);
                     }
                 }
                 else if (_mode == Mode.Walk && boss.Agent != null)
                 {
+                    boss.Agent.speed = SpeedForConfidence();
                     boss.Agent.SetDestination(boss.LastHeardSoundPosition);
                 }
+
+                // 目的地が変わったので、進み具合の計測をやり直す
+                _stuckDetector?.Reset();
             }
         }
     }

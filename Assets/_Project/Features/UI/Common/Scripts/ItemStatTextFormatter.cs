@@ -36,15 +36,6 @@ namespace CreativeAI.UI
             var bonus = new EquipmentBonus();
             if (stack.IsInstance)
                 bonus.Add(stack.RolledStats);
-            else if (item is WeaponData weapon)
-                AddFixedStats(
-                    ref bonus,
-                    weapon.attack,
-                    weapon.defense,
-                    weapon.criticalDamage,
-                    weapon.criticalRate,
-                    weapon.maxHP
-                );
 
             var lines = new List<string>();
             AddPercent(lines, AttackLabel, bonus.attackPct);
@@ -53,22 +44,6 @@ namespace CreativeAI.UI
             AddPercent(lines, CriticalRateLabel, bonus.criticalChance);
             AddPercent(lines, HpLabel, bonus.maxHpPct);
             return string.Join("\n", lines);
-        }
-
-        private static void AddFixedStats(
-            ref EquipmentBonus bonus,
-            float attack,
-            float defense,
-            float criticalDamage,
-            float criticalRate,
-            float maxHp
-        )
-        {
-            bonus.attackPct += attack;
-            bonus.defensePct += defense;
-            bonus.criticalDamage += criticalDamage;
-            bonus.criticalChance += criticalRate;
-            bonus.maxHpPct += maxHp;
         }
 
         private static void AddPercent(List<string> lines, string label, float value)

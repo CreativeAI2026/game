@@ -14,14 +14,8 @@ MonoBehaviour:
   m_EditorClassIdentifier: CreativeAI.Gameplay::CreativeAI.Gameplay.WeaponData
   icon: {fileID: 21300000, guid: 3a46ce1d22f877945905fcc5dade33ae, type: 3}
   id: 1004
-  key: hammer
   itemName: "\u6D88\u706B\u5668\u30CF\u30F3\u30DE\u30FC"
-  category: 0
-  effect: 
-  description: 
-  _maxStack: 1
-  attack: 100
-  defense: 0
+  description: "\u6D88\u706B\u5668\u306E\u91CD\u91CF\u3092\u751F\u304B\u3057\u3066\u53E9\u304D\u3064\u3051\u308B\u30CF\u30F3\u30DE\u30FC\u3002"
+  attack: 0
   criticalDamage: 100
   criticalRate: 25
-  maxHP: 0

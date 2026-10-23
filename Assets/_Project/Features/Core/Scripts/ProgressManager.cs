@@ -4,13 +4,21 @@ using UnityEngine;
 
 namespace CreativeAI.Core
 {
+    /// <summary>イベント再生が読み書きするフラグと進行度の保存先。</summary>
+    public interface IEventProgress
+    {
+        string GetFlag(string key);
+        void SetFlag(string key, string value);
+        void AdvanceTo(int progress);
+    }
+
     /// <summary>
     /// メインストーリーの進行度(整数1つ)とフラグ(key→値)を保持する常駐 SSOT。
     /// 状態を持つだけで、イベントの中身は知らない。進行度・フラグを読ませ／書かせ、
     /// 変わったら通知する。
     /// </summary>
     [DefaultExecutionOrder(-100)]
-    public sealed class ProgressManager : MonoBehaviour
+    public sealed class ProgressManager : MonoBehaviour, IEventProgress
     {
         public static ProgressManager Instance { get; private set; }
 

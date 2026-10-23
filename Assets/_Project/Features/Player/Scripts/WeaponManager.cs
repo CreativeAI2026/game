@@ -34,6 +34,8 @@ namespace CreativeAI.Gameplay
             "hammer",
         };
 
+        private static readonly IReadOnlyList<int> WeaponIds = new[] { 1001, 1002, 1003, 1004 };
+
         /// <summary>
         /// 切り替えの順番(E = 次の武器 で進む向き)。Q はこの逆順。
         /// WeaponKeys の番号はセーブ・events.json との契約なので並べ替えず、切り替え順はここで別に持つ。
@@ -86,6 +88,13 @@ namespace CreativeAI.Gameplay
         public event Action<bool> OnWeaponSwitched;
 
         /// <summary>
+        /// プレイヤーの切替入力で武器が切り替わった時だけ通知する。
+        /// <see cref="OnWeaponSwitched"/> は入手・セーブ復元時の補正の引き直しでも発火するため、
+        /// 操作としての切替回数を数えたい側（PanicDetector の武器の空回し）はこちらを使う。
+        /// </summary>
+        public event Action OnWeaponSwitchedByInput;
+
+        /// <summary>
         /// 所持本数が変わったときに通知(引数は変化後の本数)。武器切替UIが 0本→非表示 / 1本以上→表示 に使う。
         /// </summary>
         public event Action<int> OnOwnedCountChanged;
@@ -113,8 +122,22 @@ namespace CreativeAI.Gameplay
                 resettable.ForceReset();
         }
 
-        /// <summary>登録されている武器の総数。WeaponHUDController がパネル数の決定に使用する。</summary>
+        /// <summary>登録されている武器の総数。WeaponHudView がパネル数の決定に使用する。</summary>
         public int WeaponCount => _slots.Length;
+
+        public GameObject GetWeaponObject(int dataId)
+        {
+            foreach (var slot in _slots)
+                if (slot.stats != null && slot.stats.id == dataId)
+                    return slot.weapon;
+            return null;
+        }
+
+        public void Unequip()
+        {
+            ApplySelection(NoWeapon);
+            OnWeaponSwitched?.Invoke(false);
+        }
 
         /// <summary>
         /// 武器のアイコン(ステータス補正アセット WeaponData の Icon)。未設定なら null。
@@ -224,8 +247,6 @@ namespace CreativeAI.Gameplay
             }
 
             b.attackPct += w.attack;
-            b.defensePct += w.defense;
-            b.maxHpPct += w.maxHP;
             b.criticalChance += w.criticalRate;
             b.criticalDamage += w.criticalDamage;
             return b;
@@ -323,13 +344,15 @@ namespace CreativeAI.Gameplay
             if (_input.weaponNext)
             {
                 _input.weaponNext = false;
-                SelectNext();
+                if (SelectNext())
+                    OnWeaponSwitchedByInput?.Invoke();
             }
 
             if (_input.weaponPrev)
             {
                 _input.weaponPrev = false;
-                SelectPrevious();
+                if (SelectPrevious())
+                    OnWeaponSwitchedByInput?.Invoke();
             }
         }
 
@@ -421,9 +444,9 @@ namespace CreativeAI.Gameplay
             for (int i = 0; i < count; i++)
             {
                 WeaponData stats = _slots[i].stats;
-                if (stats != null && stats.key != WeaponKeys[i])
+                if (stats != null && stats.id != WeaponIds[i])
                     Debug.LogWarning(
-                        $"{name}: 武器の一覧 [{i}] は「{WeaponKeys[i]}」の枠ですが、ステータス補正の Key が「{stats.key}」です",
+                        $"{name}: 武器の一覧 [{i}] は「{WeaponKeys[i]}」の枠ですが、武器IDが「{stats.id}」です（期待値: {WeaponIds[i]}）",
                         this
                     );
             }

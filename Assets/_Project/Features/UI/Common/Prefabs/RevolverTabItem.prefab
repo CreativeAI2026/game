@@ -87,6 +87,10 @@ PrefabInstance:
       propertyPath: m_LocalScale.y
       value: 0.58
       objectReference: {fileID: 0}
+    - target: {fileID: 6994712391886018893, guid: b32822d6fbda1a44e978805497b93af1, type: 3}
+      propertyPath: m_IsActive
+      value: 0
+      objectReference: {fileID: 0}
     - target: {fileID: 8251821240556840967, guid: b32822d6fbda1a44e978805497b93af1, type: 3}
       propertyPath: m_IsActive
       value: 0
@@ -190,6 +194,10 @@ PrefabInstance:
     - target: {fileID: 5510271927287150368, guid: b32822d6fbda1a44e978805497b93af1, type: 3}
       propertyPath: _showSelectedUnderline
       value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 5510271927287150368, guid: b32822d6fbda1a44e978805497b93af1, type: 3}
+      propertyPath: _selectedBackground
+      value:
       objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []

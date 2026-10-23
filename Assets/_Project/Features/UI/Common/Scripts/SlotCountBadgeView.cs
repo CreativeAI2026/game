@@ -30,6 +30,9 @@ namespace CreativeAI.UI
         [SerializeField]
         private RectTransform _frameRect;
 
+        [SerializeField]
+        private RectTransform _positionRect;
+
         [Header("Responsive Layout")]
         [SerializeField]
         [Min(0f)]
@@ -70,6 +73,13 @@ namespace CreativeAI.UI
         public static bool ShouldShowCount(ItemData item, int count) =>
             item != null && item.MaxStack > 1 && count > 1;
 
+        public void SetPositionReference(RectTransform positionRect)
+        {
+            _positionRect = positionRect;
+            if (IsVisible)
+                RefreshLayout();
+        }
+
         public void SetCount(ItemData item, int count)
         {
             if (!ResolveReferences())
@@ -102,7 +112,8 @@ namespace CreativeAI.UI
             if (!ResolveReferences())
                 return;
 
-            float slotShortEdge = Mathf.Min(_frameRect.rect.width, _frameRect.rect.height);
+            RectTransform positionRect = ResolvePositionRect();
+            float slotShortEdge = Mathf.Min(positionRect.rect.width, positionRect.rect.height);
             if (slotShortEdge <= 0f)
             {
                 _layoutRefreshPending = true;
@@ -127,11 +138,11 @@ namespace CreativeAI.UI
             _container.anchorMin = center;
             _container.anchorMax = center;
             _container.pivot = new Vector2(0.5f, 0.5f);
-            Vector2 frameLocalPosition = new(
-                (_normalizedPosition.x - _frameRect.pivot.x) * _frameRect.rect.width,
-                (_normalizedPosition.y - _frameRect.pivot.y) * _frameRect.rect.height
+            Vector2 referenceLocalPosition = new(
+                (_normalizedPosition.x - positionRect.pivot.x) * positionRect.rect.width,
+                (_normalizedPosition.y - positionRect.pivot.y) * positionRect.rect.height
             );
-            Vector3 worldPosition = _frameRect.TransformPoint(frameLocalPosition);
+            Vector3 worldPosition = positionRect.TransformPoint(referenceLocalPosition);
             _container.SetSizeWithCurrentAnchors(RectTransform.Axis.Horizontal, badgeWidth);
             _container.SetSizeWithCurrentAnchors(RectTransform.Axis.Vertical, badgeHeight);
             _container.position = worldPosition;
@@ -236,7 +247,7 @@ namespace CreativeAI.UI
                 && _containerCanvasGroup != null
                 && _countTextCanvasGroup != null
                 && _backgroundImage != null
-                && ResolveFrameRect();
+                && ResolvePositionRect() != null;
             if (!valid)
                 WarnMissingReferencesOnce();
 
@@ -250,6 +261,14 @@ namespace CreativeAI.UI
 
             _frameRect = GetComponentInChildren<SlotFrameView>(true)?.FrameRect;
             return _frameRect != null;
+        }
+
+        private RectTransform ResolvePositionRect()
+        {
+            if (_positionRect != null)
+                return _positionRect;
+
+            return ResolveFrameRect() ? _frameRect : null;
         }
 
 #if UNITY_EDITOR

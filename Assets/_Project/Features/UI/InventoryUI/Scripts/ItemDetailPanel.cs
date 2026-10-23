@@ -27,6 +27,9 @@ namespace CreativeAI.UI
         private TMP_Text _description;
 
         [SerializeField]
+        private ItemParameterListView _parameters;
+
+        [SerializeField]
         private float _iconSpinDuration = 1f;
 
         [SerializeField, Min(1f)]
@@ -64,6 +67,7 @@ namespace CreativeAI.UI
             SetTextImmediately(_category, string.Empty);
             SetTextImmediately(_stats, string.Empty);
             SetTextImmediately(_description, string.Empty);
+            _parameters?.SetItem(null);
         }
 
         // 個体ごとにロール値が違うので、ItemData ではなく所持品1つ分(ItemStack)を表示する。
@@ -140,7 +144,18 @@ namespace CreativeAI.UI
             );
             TypeText(_stats, hasItem ? ItemStatTextFormatter.BuildStatsText(stack) : string.Empty);
             TypeText(_description, hasItem ? RemoveLineBreaks(item.description) : string.Empty);
+            if (_parameters != null && _description != null)
+                _description.gameObject.SetActive(
+                    hasItem && !string.IsNullOrWhiteSpace(item.description)
+                );
+            _parameters?.SetItem(stack);
             RebuildLayout();
+            if (_parameters != null)
+            {
+                var scroll = _parameters.GetComponentInParent<ScrollRect>();
+                if (scroll != null)
+                    scroll.verticalNormalizedPosition = 1;
+            }
         }
 
         private static string RemoveLineBreaks(string text) =>

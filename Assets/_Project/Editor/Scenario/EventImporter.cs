@@ -194,7 +194,13 @@ namespace CreativeAI.EditorTools
             JObject root;
             try
             {
-                root = JObject.Parse(json);
+                root = JObject.Parse(
+                    json,
+                    new JsonLoadSettings
+                    {
+                        DuplicatePropertyNameHandling = DuplicatePropertyNameHandling.Error,
+                    }
+                );
             }
             catch (JsonException ex)
             {
@@ -295,24 +301,22 @@ namespace CreativeAI.EditorTools
             }
             else
             {
-                var kinds = new StepKind?[stepArray.Count];
-                for (int s = 0; s < stepArray.Count; s++)
-                {
-                    var step = ParseStep(
-                        stepArray[s] as JObject,
-                        id,
-                        s,
-                        report,
-                        catalog,
-                        out var kind
-                    );
-                    kinds[s] = kind;
-                    if (step == null)
-                        ok = false;
-                    else
-                        steps.Add(step);
-                }
-                ok &= ValidateBattlePlacement(kinds, id, report);
+                ok &= AppendSteps(stepArray, steps, id, report, catalog, false);
+                // 分岐内の戦闘は禁止し、共通ステップだけで従来の配置制約を確認する。
+                ok &= ValidateBattlePlacement(
+                    stepArray
+                        .Select(token =>
+                            token is JObject obj
+                            && (obj["kind"] as JValue)?.Value is string name
+                            && Enum.TryParse<StepKind>(name, true, out var kind)
+                                ? (StepKind?)kind
+                                : null
+                        )
+                        .ToArray(),
+                    id,
+                    report
+                );
+                WarnBranchKeys(stepArray, id, report);
             }
 
             // --- nextProgress(必須・progress の value より大きい) ---
@@ -356,17 +360,188 @@ namespace CreativeAI.EditorTools
                 );
         }
 
+        // 元JSONの位置で検証し、アセット内だけ前方ジャンプと合流先へ変換する。
+        private static bool AppendSteps(
+            JArray input,
+            List<EventStep> output,
+            string id,
+            Report report,
+            ImportCatalog catalog,
+            bool insideBranch
+        )
+        {
+            int errors = report.ErrorCount;
+            foreach (var token in input)
+            {
+                string location = token.Path;
+                int start = location.IndexOf("steps[", StringComparison.Ordinal);
+                if (start >= 0)
+                    location = location.Substring(start);
+                var step = token as JObject;
+                string kind = (step?["kind"] as JValue)?.Value as string;
+                if (insideBranch && (kind == "choice" || kind == "branch" || kind == "battle"))
+                {
+                    report.Error(
+                        id,
+                        $"{location}: branch 内に choice / branch / battle は配置できません。"
+                    );
+                    continue;
+                }
+                if (kind != "branch")
+                {
+                    var parsed = ParseStep(
+                        step,
+                        id,
+                        output.Count,
+                        report,
+                        catalog,
+                        out _,
+                        location
+                    );
+                    if (parsed != null)
+                        output.Add(parsed);
+                    continue;
+                }
+                bool hasFlag = step.ContainsKey("flag"),
+                    hasItem = step.ContainsKey("hasItem");
+                string key = (step[hasFlag ? "flag" : "hasItem"] as JValue)?.Value as string;
+                if (
+                    hasFlag == hasItem
+                    || string.IsNullOrWhiteSpace(key)
+                    || step.ContainsKey("nextProgress")
+                )
+                {
+                    report.Error(
+                        id,
+                        $"{location}: branch は flag / hasItem の片方だけを指定し、空にしないでください。nextProgress はイベントのみです。"
+                    );
+                    continue;
+                }
+                var arms = new List<(string value, JToken steps)>();
+                if (hasFlag)
+                {
+                    if (
+                        step["cases"] is not JObject cases
+                        || !cases.Properties().Any()
+                        || step.ContainsKey("then")
+                        || step.ContainsKey("else")
+                    )
+                    {
+                        report.Error(
+                            id,
+                            $"{location}: flag branch は空でない cases が必須です。then / else は使えません。"
+                        );
+                        continue;
+                    }
+                    foreach (var arm in cases.Properties())
+                    {
+                        if (string.IsNullOrEmpty(arm.Name))
+                            report.Error(id, $"{location}.cases: キーは空にできません。");
+                        arms.Add((arm.Name, arm.Value));
+                    }
+                }
+                else
+                {
+                    if (step.ContainsKey("cases"))
+                    {
+                        report.Error(id, $"{location}: hasItem branch に cases は使えません。");
+                        continue;
+                    }
+                    ParseCondition(
+                        new JObject { ["type"] = "hasItem", ["itemKey"] = key },
+                        id,
+                        output.Count,
+                        report,
+                        catalog,
+                        location
+                    );
+                    arms.Add(("then", step["then"] ?? new JArray()));
+                    arms.Add(("else", step["else"] ?? new JArray()));
+                }
+                int branchIndex = output.Count;
+                output.Add(null);
+                var targets = new List<EventBranchCase>();
+                var jumps = new List<int>();
+                foreach (var arm in arms)
+                {
+                    targets.Add(new EventBranchCase(arm.value, output.Count));
+                    if (arm.steps is not JArray children)
+                        report.Error(
+                            id,
+                            $"{location}: branch '{arm.value}' はステップ配列にしてください。"
+                        );
+                    else
+                        AppendSteps(children, output, id, report, catalog, true);
+                    jumps.Add(output.Count);
+                    output.Add(null);
+                }
+                int join = output.Count;
+                foreach (int jump in jumps)
+                    output[jump] = EventStep.Jump(join);
+                output[branchIndex] = hasFlag
+                    ? EventStep.BranchFlag(key, targets.ToArray(), join)
+                    : EventStep.BranchItem(key, targets[0].Target, targets[1].Target, join);
+            }
+            return errors == report.ErrorCount;
+        }
+
+        private static void WarnBranchKeys(JArray steps, string id, Report report)
+        {
+            foreach (
+                var branch in steps
+                    .OfType<JObject>()
+                    .Where(s =>
+                        ((s["kind"] as JValue)?.Value as string) == "branch"
+                        && s["flag"]?.Type == JTokenType.String
+                        && s["cases"] is JObject
+                    )
+            )
+            {
+                string flag = ((branch["flag"] as JValue)?.Value as string);
+                var choices = steps
+                    .OfType<JObject>()
+                    .Where(s =>
+                        ((s["kind"] as JValue)?.Value as string) == "choice"
+                        && ((s["flag"] as JValue)?.Value as string) == flag
+                    )
+                    .ToArray();
+                if (choices.Length == 0)
+                    continue;
+                var values = choices
+                    .SelectMany(s => (s["options"] as JArray ?? new JArray()).OfType<JObject>())
+                    .Select(s => ((s["value"] as JValue)?.Value as string))
+                    .Where(s => s != null)
+                    .ToHashSet(StringComparer.Ordinal);
+                var keys = ((JObject)branch["cases"])
+                    .Properties()
+                    .Select(p => p.Name)
+                    .ToHashSet(StringComparer.Ordinal);
+                foreach (var missing in values.Except(keys))
+                    report.Warn(
+                        id,
+                        $"branch '{flag}' の cases に選択肢 '{missing}' が不足しています。"
+                    );
+                foreach (var extra in keys.Except(values))
+                    report.Warn(
+                        id,
+                        $"branch '{flag}' の cases に余分なキー '{extra}' があります。"
+                    );
+            }
+        }
+
         private static EventCondition ParseCondition(
             JObject cond,
             string id,
             int i,
             Report report,
-            ImportCatalog catalog
+            ImportCatalog catalog,
+            string sourcePath = null
         )
         {
+            string location = sourcePath ?? $"conditions[{i}]";
             if (cond == null)
             {
-                report.Error(id, $"conditions[{i}] がオブジェクトではありません。");
+                report.Error(id, $"{location} がオブジェクトではありません。");
                 return null;
             }
 
@@ -376,7 +551,7 @@ namespace CreativeAI.EditorTools
                 case "progress":
                     if (cond["value"]?.Type != JTokenType.Integer)
                     {
-                        report.Error(id, $"conditions[{i}] progress の value は整数(必須)。");
+                        report.Error(id, $"{location} progress の value は整数(必須)。");
                         return null;
                     }
                     return EventCondition.Progress(cond["value"].Value<int>());
@@ -386,7 +561,7 @@ namespace CreativeAI.EditorTools
                     var val = (cond["value"] as JValue)?.Value as string;
                     if (string.IsNullOrEmpty(key) || val == null)
                     {
-                        report.Error(id, $"conditions[{i}] flag は key と value が必須。");
+                        report.Error(id, $"{location} flag は key と value が必須。");
                         return null;
                     }
                     return EventCondition.Flag(key, val);
@@ -397,7 +572,7 @@ namespace CreativeAI.EditorTools
                     {
                         report.Error(
                             id,
-                            $"conditions[{i}] hasItem は itemKey(大事なものの key)が必須。"
+                            $"{location} hasItem は itemKey(大事なものの key)が必須。"
                         );
                         return null;
                     }
@@ -411,7 +586,7 @@ namespace CreativeAI.EditorTools
                         {
                             report.Error(
                                 id,
-                                $"conditions[{i}] hasItem の itemKey '{itemKey}' は大事なものカタログに存在しません。"
+                                $"{location} hasItem の itemKey '{itemKey}' は大事なものカタログに存在しません。"
                             );
                             return null;
                         }
@@ -420,7 +595,7 @@ namespace CreativeAI.EditorTools
                     {
                         report.Warn(
                             id,
-                            $"conditions[{i}] hasItem の itemKey '{itemKey}' は未検証(大事なものカタログ未提供)。"
+                            $"{location} hasItem の itemKey '{itemKey}' は未検証(大事なものカタログ未提供)。"
                         );
                     }
                     return EventCondition.HasItem(itemKey);
@@ -428,7 +603,7 @@ namespace CreativeAI.EditorTools
                 default:
                     report.Error(
                         id,
-                        $"conditions[{i}] の type '{type}' は不正(progress / flag / hasItem のみ)。"
+                        $"{location} の type '{type}' は不正(progress / flag / hasItem のみ)。"
                     );
                     return null;
             }
@@ -440,13 +615,15 @@ namespace CreativeAI.EditorTools
             int i,
             Report report,
             ImportCatalog catalog,
-            out StepKind? kind
+            out StepKind? kind,
+            string sourcePath = null
         )
         {
+            string location = sourcePath ?? $"steps[{i}]";
             kind = null;
             if (step == null)
             {
-                report.Error(id, $"steps[{i}] がオブジェクトではありません。");
+                report.Error(id, $"{location} がオブジェクトではありません。");
                 return null;
             }
 
@@ -461,14 +638,14 @@ namespace CreativeAI.EditorTools
                     var text = (step["text"] as JValue)?.Value as string;
                     if (string.IsNullOrEmpty(text))
                     {
-                        report.Error(id, $"steps[{i}] line は text が必須。");
+                        report.Error(id, $"{location} line は text が必須。");
                         return null;
                     }
                     if (!string.IsNullOrEmpty(portrait) && !PortraitKeys.Contains(portrait))
                     {
                         report.Error(
                             id,
-                            $"steps[{i}] line の portrait '{portrait}' はカタログに存在しません。"
+                            $"{location} line の portrait '{portrait}' はカタログに存在しません。"
                         );
                         return null;
                     }
@@ -481,7 +658,7 @@ namespace CreativeAI.EditorTools
                     )
                         report.Warn(
                             id,
-                            $"steps[{i}] line の portrait '{portrait}' は立ち絵アセット未登録です(実行時は既定の立ち絵になります)。"
+                            $"{location} line の portrait '{portrait}' は立ち絵アセット未登録です(実行時は既定の立ち絵になります)。"
                         );
                     return EventStep.Line(speaker, portrait, text);
                 }
@@ -493,7 +670,7 @@ namespace CreativeAI.EditorTools
                     var flagKey = (step["flag"] as JValue)?.Value as string;
                     if (string.IsNullOrEmpty(flagKey))
                     {
-                        report.Error(id, $"steps[{i}] choice は flag(書き込むキー)が必須。");
+                        report.Error(id, $"{location} choice は flag(書き込むキー)が必須。");
                         return null;
                     }
                     // 選択肢UIは3択ぶんの高さを基準に中央寄せするレイアウトなので、4つ以上は
@@ -507,7 +684,7 @@ namespace CreativeAI.EditorTools
                     {
                         report.Error(
                             id,
-                            $"steps[{i}] choice の options は{MinChoiceOptions}〜{MaxChoiceOptions}個にしてください。"
+                            $"{location} choice の options は{MinChoiceOptions}〜{MaxChoiceOptions}個にしてください。"
                         );
                         return null;
                     }
@@ -522,12 +699,20 @@ namespace CreativeAI.EditorTools
                         {
                             report.Error(
                                 id,
-                                $"steps[{i}] choice の options[{o}] は text と value が必須。"
+                                $"{location} choice の options[{o}] は text と value が必須。"
                             );
                             optionsOk = false;
                             continue;
                         }
                         parsed.Add(new ChoiceOption(optText, optValue));
+                    }
+                    if (
+                        parsed.Select(o => o.Value).Distinct(StringComparer.Ordinal).Count()
+                        != parsed.Count
+                    )
+                    {
+                        report.Error(id, $"{location} choice の value が重複しています。");
+                        optionsOk = false;
                     }
                     if (!optionsOk)
                         return null;
@@ -540,7 +725,7 @@ namespace CreativeAI.EditorTools
                     var itemKey = (step["itemKey"] as JValue)?.Value as string;
                     if (string.IsNullOrEmpty(itemKey))
                     {
-                        report.Error(id, $"steps[{i}] giveItem は itemKey が必須。");
+                        report.Error(id, $"{location} giveItem は itemKey が必須。");
                         return null;
                     }
                     if (catalog?.ItemKeys != null)
@@ -549,7 +734,7 @@ namespace CreativeAI.EditorTools
                         {
                             report.Error(
                                 id,
-                                $"steps[{i}] giveItem の itemKey '{itemKey}' が ItemData カタログに存在しません。"
+                                $"{location} giveItem の itemKey '{itemKey}' が ItemData カタログに存在しません。"
                             );
                             return null;
                         }
@@ -558,7 +743,7 @@ namespace CreativeAI.EditorTools
                     {
                         report.Warn(
                             id,
-                            $"steps[{i}] giveItem の itemKey '{itemKey}' は未検証(item カタログ未提供)。"
+                            $"{location} giveItem の itemKey '{itemKey}' は未検証(item カタログ未提供)。"
                         );
                     }
                     return EventStep.GiveItem(
@@ -573,15 +758,15 @@ namespace CreativeAI.EditorTools
                     var weaponKey = (step["weaponKey"] as JValue)?.Value as string;
                     if (string.IsNullOrEmpty(weaponKey))
                     {
-                        report.Error(id, $"steps[{i}] giveWeapon は weaponKey が必須。");
+                        report.Error(id, $"{location} giveWeapon は weaponKey が必須。");
                         return null;
                     }
-                    // 武器は剣/弓/鎌の3種で固定。それ以外は打ち間違いとして弾く。
+                    // 武器は剣/弓/鎌/ハンマーの4種で固定。それ以外は打ち間違いとして弾く。
                     if (!WeaponKeys.Contains(weaponKey))
                     {
                         report.Error(
                             id,
-                            $"steps[{i}] giveWeapon の weaponKey '{weaponKey}' は不正(sword / bow / scythe のみ)。"
+                            $"{location} giveWeapon の weaponKey '{weaponKey}' は不正(sword / bow / scythe / hammer のみ)。"
                         );
                         return null;
                     }
@@ -597,12 +782,12 @@ namespace CreativeAI.EditorTools
                     var command = ((step["command"] as JValue)?.Value as string)?.Trim();
                     if (string.IsNullOrEmpty(command))
                     {
-                        report.Error(id, $"steps[{i}] command は command(コマンド名)が必須。");
+                        report.Error(id, $"{location} command は command(コマンド名)が必須。");
                         return null;
                     }
                     if (!IsKnownCommand(command))
                     {
-                        report.Error(id, $"steps[{i}] command の '{command}' は未対応です。");
+                        report.Error(id, $"{location} command の '{command}' は未対応です。");
                         return null;
                     }
                     var arg = (step["arg"] as JValue)?.Value?.ToString();
@@ -620,7 +805,7 @@ namespace CreativeAI.EditorTools
                         {
                             report.Error(
                                 id,
-                                $"steps[{i}] command 'wait' は arg に秒数(数値)が必須。"
+                                $"{location} command 'wait' は arg に秒数(数値)が必須。"
                             );
                             return null;
                         }
@@ -628,7 +813,7 @@ namespace CreativeAI.EditorTools
                         {
                             report.Error(
                                 id,
-                                $"steps[{i}] command 'wait' の秒数 {arg} は 0〜{MaxWaitSeconds} の範囲にしてください。"
+                                $"{location} command 'wait' の秒数 {arg} は 0〜{MaxWaitSeconds} の範囲にしてください。"
                             );
                             return null;
                         }
@@ -644,7 +829,7 @@ namespace CreativeAI.EditorTools
                     {
                         report.Error(
                             id,
-                            $"steps[{i}] battle に enemyKey は書けません(敵は EventTrigger に配線)。"
+                            $"{location} battle に enemyKey は書けません(敵は EventTrigger に配線)。"
                         );
                         return null;
                     }
@@ -654,7 +839,7 @@ namespace CreativeAI.EditorTools
                 default:
                     report.Error(
                         id,
-                        $"steps[{i}] の kind '{kindStr}' は不正(line / choice / giveItem / giveWeapon / battle / command のみ)。"
+                        $"{location} の kind '{kindStr}' は不正(line / choice / giveItem / giveWeapon / battle / command のみ)。"
                     );
                     return null;
             }

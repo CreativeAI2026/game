@@ -1,3 +1,4 @@
+using SoundKit;
 using UnityEngine;
 using UnityEngine.Assertions;
 
@@ -15,6 +16,13 @@ namespace CreativeAI.Gameplay
     public class HammerController : MeleeWeaponController
     {
         [Header("叩きつけ: 跳躍")]
+        [Tooltip(
+            "叩きつけで跳びかかる敵を探す半径（m）。近接のダッシュ接近(dashSearchRadius)とは別。"
+                + "範囲内に敵がいなければその場で叩きつける。跳べる距離(最大跳躍距離+着地の間合い)に合わせるとよい"
+        )]
+        [SerializeField]
+        private float _slamSearchRadius = 20f;
+
         [Tooltip("敵の中心からこの距離だけ手前に着地する（m）。敵に重なって着地しないための間合い")]
         [SerializeField]
         private float _leapStopDistance = 1.5f;
@@ -59,6 +67,27 @@ namespace CreativeAI.Gameplay
         [SerializeField]
         private PlayerMeleeHitbox _slamHitbox;
 
+        [Header("叩きつけ: 音")]
+        [Tooltip("噴射の音。ThrustStart で鳴らす")]
+        [SerializeField]
+        private SoundCue _thrustSound;
+
+        [Tooltip("跳躍の音。LeapStart で鳴らす")]
+        [SerializeField]
+        private SoundCue _leapSound;
+
+        [Tooltip("地面を叩いた音。SlamImpact で鳴らす")]
+        [SerializeField]
+        private SoundCue _slamSound;
+
+        [Tooltip("噴射の音が敵AIに届く半径（m）")]
+        [SerializeField]
+        private float _thrustNoiseRadius = 20f;
+
+        [Tooltip("地面を叩いた音が敵AIに届く半径（m）")]
+        [SerializeField]
+        private float _slamNoiseRadius = 20f;
+
         protected override void Awake()
         {
             base.Awake();
@@ -84,6 +113,9 @@ namespace CreativeAI.Gameplay
         }
 
         public override MeleeWeaponState CreateNeutralState() => new HammerStateFree(this);
+
+        /// <summary>叩きつけで跳びかかる敵を <see cref="_slamSearchRadius"/> 内の最寄りの敵から探す。</summary>
+        public Transform FindSlamTarget() => FindNearestEnemy(_slamSearchRadius);
 
         /// <summary>対象(いなければ何もしない)の方向へ、水平にプレイヤーを向ける。</summary>
         public void FaceTowards(Transform target)
@@ -121,13 +153,29 @@ namespace CreativeAI.Gameplay
             _thrustEffect.Play();
         }
 
+        /// <summary>噴射の音を鳴らし、敵AIにも知らせる(ThrustStart)。</summary>
+        public void PlayThrustSound()
+        {
+            Vector3 position = PlayerTransform.position;
+            WorldSoundPlayer.Play(_thrustSound, position, this);
+            SoundEventBus.Emit(
+                new SoundEventData(SoundType.HammerThrust, position, _thrustNoiseRadius)
+            );
+        }
+
+        /// <summary>跳躍の音を鳴らす(LeapStart)。</summary>
+        public void PlayLeapSound()
+        {
+            WorldSoundPlayer.Play(_leapSound, PlayerTransform.position, this);
+        }
+
         /// <summary>噴射の放出だけを止める(出ている粒子は寿命まで残して自然に消す)。</summary>
         public void StopThrustEffect()
         {
             _thrustEffect.Stop(true, ParticleSystemStopBehavior.StopEmitting);
         }
 
-        /// <summary>地面を叩いた瞬間の処理。噴射を止め、衝撃エフェクトを出し、範囲攻撃判定を有効にする。</summary>
+        /// <summary>地面を叩いた瞬間の処理。噴射を止め、衝撃エフェクトと音を出し(敵AIにも知らせる)、範囲攻撃判定を有効にする。</summary>
         public void ApplySlamImpact()
         {
             StopThrustEffect();
@@ -139,6 +187,11 @@ namespace CreativeAI.Gameplay
             impactPoint.y = PlayerTransform.position.y;
             // TODO : ObjectPool導入後、Instantiateをやめる
             Instantiate(_impactEffectPrefab, impactPoint, PlayerTransform.rotation);
+
+            WorldSoundPlayer.Play(_slamSound, impactPoint, this);
+            SoundEventBus.Emit(
+                new SoundEventData(SoundType.HammerSlam, impactPoint, _slamNoiseRadius)
+            );
 
             _slamHitbox.EnableHitbox();
         }

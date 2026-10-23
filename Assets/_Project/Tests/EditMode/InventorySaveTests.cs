@@ -102,12 +102,6 @@ namespace CreativeAI.Tests.EditMode
             var gear = ScriptableObject.CreateInstance<ItemData>();
             gear.category = ItemCategory.Equipment;
 
-            // 武器は在庫外。仮に在庫へ入れて装備フラグを立てても、
-            // GetEquippedBonus は武器を加算しない(補正は WeaponManager 経由に一本化)。
-            var weapon = ScriptableObject.CreateInstance<WeaponData>();
-            weapon.attack = 20;
-            weapon.maxHP = 50;
-
             var unequipped = ScriptableObject.CreateInstance<ItemData>();
             unequipped.category = ItemCategory.Equipment;
 
@@ -122,21 +116,19 @@ namespace CreativeAI.Tests.EditMode
                     new RolledStat(nameof(StatType.CritDamage), 0.5f),
                 }
             );
-            _inv.AddItem(weapon, 1);
             _inv.AddInstance(
                 unequipped,
                 new[] { new RolledStat(nameof(StatType.AttackPct), 999f) }
             );
             var stacks = _inv.GetAllItems();
             _inv.SetEquipped(stacks.Find(s => s.Data == gear), true);
-            _inv.SetEquipped(stacks.Find(s => s.Data == weapon), true);
             // unequipped は装備しない
 
             var b = _inv.GetEquippedBonus();
 
-            Assert.AreEqual(10f, b.attackPct); // gear のみ(武器20・unequipped999 は除外)
+            Assert.AreEqual(10f, b.attackPct); // gear のみ(unequipped999 は除外)
             Assert.AreEqual(5f, b.defensePct);
-            Assert.AreEqual(100f, b.maxHpPct); // gear のみ(武器50 は除外)
+            Assert.AreEqual(100f, b.maxHpPct);
             Assert.AreEqual(3f, b.criticalChance);
             Assert.AreEqual(0.5f, b.criticalDamage);
         }

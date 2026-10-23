@@ -13,11 +13,16 @@ namespace CreativeAI.Gameplay
         public static readonly int Speed = Animator.StringToHash("Speed");
         public static readonly int MotionSpeed = Animator.StringToHash("MotionSpeed");
         public static readonly int Grounded = Animator.StringToHash("Grounded");
-        public static readonly int Jump = Animator.StringToHash("Jump");
         public static readonly int FreeFall = Animator.StringToHash("FreeFall");
         public static readonly int Aim = Animator.StringToHash("Aim");
         public static readonly int StrafeX = Animator.StringToHash("StrafeX");
         public static readonly int StrafeZ = Animator.StringToHash("StrafeZ");
+
+        /// <summary>
+        /// 弓を持っているか(0 か 1)。移動の Blend Tree を弓用の歩きへ切り替える(BowController)。
+        /// Blend Tree の切り替えに使うため Bool ではなく Float にしている。
+        /// </summary>
+        public static readonly int BowEquipped = Animator.StringToHash("BowEquipped");
 
         // --- 行動(Trigger 名 = 行き先のステート名) ---
         /// <summary>3段コンボの各段。index 0 が1段目。</summary>
@@ -34,6 +39,9 @@ namespace CreativeAI.Gameplay
         public static readonly int Fire = Animator.StringToHash("Fire");
         public static readonly int IsGuarding = Animator.StringToHash("IsGuarding");
 
+        /// <summary>Throw ステートの再生速度の倍率。0 で投げモーションを止め、鎌を受け取ったら 1 に戻して続きを再生する。</summary>
+        public static readonly int ThrowSpeed = Animator.StringToHash("ThrowSpeed");
+
         /// <summary>行動ステートを抜けて移動へ戻す(ActionEnd イベント・硬直キャンセル時にスクリプトが送る)。</summary>
         public static readonly int ReturnToLocomotion = Animator.StringToHash("ReturnToLocomotion");
 
@@ -42,17 +50,20 @@ namespace CreativeAI.Gameplay
         public static readonly int Grabbed = Animator.StringToHash("Grabbed");
         public static readonly int Escaped = Animator.StringToHash("Escaped");
 
+        // --- 死亡(PlayerDeathHandler) ---
+        public static readonly int Die = Animator.StringToHash("Die");
+
         /// <summary>起動時の検査に使う、必須パラメータの一覧(名前, 種類)。</summary>
         public static readonly (string name, AnimatorControllerParameterType type)[] Required =
         {
             ("Speed", AnimatorControllerParameterType.Float),
             ("MotionSpeed", AnimatorControllerParameterType.Float),
             ("Grounded", AnimatorControllerParameterType.Bool),
-            ("Jump", AnimatorControllerParameterType.Bool),
             ("FreeFall", AnimatorControllerParameterType.Bool),
             ("Aim", AnimatorControllerParameterType.Bool),
             ("StrafeX", AnimatorControllerParameterType.Float),
             ("StrafeZ", AnimatorControllerParameterType.Float),
+            ("BowEquipped", AnimatorControllerParameterType.Float),
             ("Attack1", AnimatorControllerParameterType.Trigger),
             ("Attack2", AnimatorControllerParameterType.Trigger),
             ("Attack3", AnimatorControllerParameterType.Trigger),
@@ -62,10 +73,12 @@ namespace CreativeAI.Gameplay
             ("Slam", AnimatorControllerParameterType.Trigger),
             ("Fire", AnimatorControllerParameterType.Trigger),
             ("IsGuarding", AnimatorControllerParameterType.Bool),
+            ("ThrowSpeed", AnimatorControllerParameterType.Float),
             ("ReturnToLocomotion", AnimatorControllerParameterType.Trigger),
             ("PlayerFlinch", AnimatorControllerParameterType.Trigger),
             ("Grabbed", AnimatorControllerParameterType.Trigger),
             ("Escaped", AnimatorControllerParameterType.Trigger),
+            ("Die", AnimatorControllerParameterType.Trigger),
         };
     }
 
