@@ -20,8 +20,12 @@ namespace CreativeAI.EditorTools
             text.AppendLine("焦り度ログの集計");
             text.AppendLine("================");
             text.AppendLine($"ログの数: {analysis.FileCount}");
-            text.AppendLine($"記録時間: {analysis.RecordedSeconds:F0} 秒（うち交戦中 {analysis.CombatSeconds:F0} 秒）");
-            text.AppendLine($"場面の数: {analysis.Scenes.Count}（交戦の開始・ボスの攻撃の出だし・被弾・掴まれた で区切ったもの）");
+            text.AppendLine(
+                $"記録時間: {analysis.RecordedSeconds:F0} 秒（うち交戦中 {analysis.CombatSeconds:F0} 秒）"
+            );
+            text.AppendLine(
+                $"場面の数: {analysis.Scenes.Count}（交戦の開始・ボスの攻撃の出だし・被弾・掴まれた で区切ったもの）"
+            );
             text.AppendLine($"「焦った」の印: {analysis.Markers.Count}");
             text.AppendLine($"「焦り」の判定: {analysis.Detections.Count} 回");
             text.AppendLine();
@@ -39,7 +43,9 @@ namespace CreativeAI.EditorTools
         public static string BuildSceneTable(PanicLogAnalysis analysis)
         {
             var table = new StringBuilder();
-            table.Append("file,scene,trigger,start,end,has_marker,has_panic,has_tense_or_above,max_panic_score,category_at_max,control_scheme");
+            table.Append(
+                "file,scene,trigger,start,end,has_marker,has_panic,has_tense_or_above,max_panic_score,category_at_max,control_scheme"
+            );
             foreach (string column in analysis.SignalColumns)
             {
                 table.Append(',').Append(column);
@@ -71,17 +77,23 @@ namespace CreativeAI.EditorTools
 
         private static void AppendMatchRates(StringBuilder text, PanicLogAnalysis analysis)
         {
-            text.AppendLine("■ 印と判定の一致（印はその場面かひとつ前の場面、判定はその場面か次の場面で照合）");
+            text.AppendLine(
+                "■ 印と判定の一致（印はその場面かひとつ前の場面、判定はその場面か次の場面で照合）"
+            );
             int markers = analysis.Markers.Count;
             int matchedPanic = analysis.Markers.Count(m => m.MatchedPanic);
             int matchedTense = analysis.Markers.Count(m => m.MatchedTenseOrAbove);
             text.AppendLine($"  印のうち「焦り」と判定できていた: {Rate(matchedPanic, markers)}");
-            text.AppendLine($"  印のうち「動揺」以上と判定できていた: {Rate(matchedTense, markers)}");
+            text.AppendLine(
+                $"  印のうち「動揺」以上と判定できていた: {Rate(matchedTense, markers)}"
+            );
 
             int detections = analysis.Detections.Count;
             int marked = analysis.Detections.Count(d => d.HasMarker);
             text.AppendLine($"  「焦り」の判定のうち印が付いていた: {Rate(marked, detections)}");
-            text.AppendLine("  ※ 押し忘れがあると、最後の割合は実際より低く出る（印の無い判定がすべて誤検知とは限らない）");
+            text.AppendLine(
+                "  ※ 押し忘れがあると、最後の割合は実際より低く出る（印の無い判定がすべて誤検知とは限らない）"
+            );
             text.AppendLine();
         }
 
@@ -98,19 +110,29 @@ namespace CreativeAI.EditorTools
             }
 
             AppendAnswerLine(text, "全体", answers);
-            foreach (IGrouping<string, PanicLogReviewAnswer> group in answers.GroupBy(a => a.Category))
+            foreach (
+                IGrouping<string, PanicLogReviewAnswer> group in answers.GroupBy(a => a.Category)
+            )
             {
                 AppendAnswerLine(text, $"系統「{group.Key}」", group.ToList());
             }
-            foreach (IGrouping<string, PanicLogReviewAnswer> group in answers.GroupBy(a => a.MainSignal))
+            foreach (
+                IGrouping<string, PanicLogReviewAnswer> group in answers.GroupBy(a => a.MainSignal)
+            )
             {
                 AppendAnswerLine(text, $"中心の指標「{group.Key}」", group.ToList());
             }
-            text.AppendLine("  ※ 当たっていた割合は「焦っていた」÷（「焦っていた」＋「焦っていなかった」）。覚えていない・未回答は除く");
+            text.AppendLine(
+                "  ※ 当たっていた割合は「焦っていた」÷（「焦っていた」＋「焦っていなかった」）。覚えていない・未回答は除く"
+            );
             text.AppendLine();
         }
 
-        private static void AppendAnswerLine(StringBuilder text, string label, List<PanicLogReviewAnswer> answers)
+        private static void AppendAnswerLine(
+            StringBuilder text,
+            string label,
+            List<PanicLogReviewAnswer> answers
+        )
         {
             int yes = answers.Count(a => a.Answer == "焦っていた");
             int no = answers.Count(a => a.Answer == "焦っていなかった");
@@ -132,7 +154,7 @@ namespace CreativeAI.EditorTools
                 float markedAverage = AverageMax(marked, column);
                 float unmarkedAverage = AverageMax(unmarked, column);
                 text.AppendLine(
-                    $"  {column.Replace("_スコア", string.Empty),-6}: 印あり {markedAverage:F2} / 印なし {unmarkedAverage:F2}（差 {markedAverage - unmarkedAverage:+0.00;-0.00}）"
+                    $"  {column.Replace("_スコア", string.Empty), -6}: 印あり {markedAverage:F2} / 印なし {unmarkedAverage:F2}（差 {markedAverage - unmarkedAverage:+0.00;-0.00}）"
                 );
             }
             text.AppendLine();
@@ -159,13 +181,17 @@ namespace CreativeAI.EditorTools
         private static void AppendUnmarkedDetections(StringBuilder text, PanicLogAnalysis analysis)
         {
             text.AppendLine("■ 誤検知の候補（「焦り」と判定したのに印が無い）");
-            List<PanicLogDetection> unmarked = analysis.Detections.Where(d => !d.HasMarker).ToList();
+            List<PanicLogDetection> unmarked = analysis
+                .Detections.Where(d => !d.HasMarker)
+                .ToList();
             if (unmarked.Count == 0)
             {
                 text.AppendLine("  なし");
             }
 
-            foreach (IGrouping<string, PanicLogDetection> group in unmarked.GroupBy(d => d.CategoryAtMax))
+            foreach (
+                IGrouping<string, PanicLogDetection> group in unmarked.GroupBy(d => d.CategoryAtMax)
+            )
             {
                 text.AppendLine($"  系統「{group.Key}」: {group.Count()} 回");
             }
@@ -181,7 +207,11 @@ namespace CreativeAI.EditorTools
         private static void AppendPerControlScheme(StringBuilder text, PanicLogAnalysis analysis)
         {
             text.AppendLine("■ 操作機器ごと（場面の数 / 印 / 「焦り」の判定があった場面）");
-            foreach (IGrouping<string, PanicLogScene> group in analysis.Scenes.GroupBy(s => string.IsNullOrEmpty(s.ControlScheme) ? "記録なし" : s.ControlScheme))
+            foreach (
+                IGrouping<string, PanicLogScene> group in analysis.Scenes.GroupBy(s =>
+                    string.IsNullOrEmpty(s.ControlScheme) ? "記録なし" : s.ControlScheme
+                )
+            )
             {
                 text.AppendLine(
                     $"  {group.Key}: {group.Count()} / {group.Count(s => s.HasMarker)} / {group.Count(s => s.HasPanic)}"
@@ -214,6 +244,7 @@ namespace CreativeAI.EditorTools
         private static string Rate(int count, int total) =>
             total == 0 ? "（対象なし）" : $"{count} / {total}（{100f * count / total:F0}%）";
 
-        private static string Format(float value) => value.ToString("0.#", CultureInfo.InvariantCulture);
+        private static string Format(float value) =>
+            value.ToString("0.#", CultureInfo.InvariantCulture);
     }
 }

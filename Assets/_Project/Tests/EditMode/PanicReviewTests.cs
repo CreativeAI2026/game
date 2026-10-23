@@ -24,7 +24,10 @@ namespace CreativeAI.Tests.EditMode
         [Test]
         public void 見せる場面は上限までに絞られる()
         {
-            var moments = Enumerable.Range(1, 12).Select(i => Moment(i, PanicCategory.Avoidance, i)).ToList();
+            var moments = Enumerable
+                .Range(1, 12)
+                .Select(i => Moment(i, PanicCategory.Avoidance, i))
+                .ToList();
 
             List<PanicMoment> selected = PanicReviewSelection.Select(moments, 8);
 
@@ -72,7 +75,10 @@ namespace CreativeAI.Tests.EditMode
             PanicMoment moment = Moment(1, PanicCategory.Avoidance, 70);
             moment.RecentEvent = "ボスの鎌の攻撃の直後";
 
-            Assert.That(moment.ReviewText, Is.EqualTo("背を向けてボスから離れていたとき（ボスの鎌の攻撃の直後）"));
+            Assert.That(
+                moment.ReviewText,
+                Is.EqualTo("背を向けてボスから離れていたとき（ボスの鎌の攻撃の直後）")
+            );
         }
 
         [Test]
@@ -88,12 +94,21 @@ namespace CreativeAI.Tests.EditMode
             };
             var analysis = new PanicLogAnalysis();
 
-            PanicLogAnalyzer.AddReviewAnswers(analysis, new[] { PanicLogCsv.Parse("test_review.csv", lines) });
+            PanicLogAnalyzer.AddReviewAnswers(
+                analysis,
+                new[] { PanicLogCsv.Parse("test_review.csv", lines) }
+            );
             string report = PanicLogReportWriter.BuildReport(analysis);
 
             Assert.That(analysis.ReviewAnswers.Count, Is.EqualTo(4));
-            StringAssert.Contains("全体: 焦っていた 2 / 焦っていなかった 1 / 覚えていない・未回答 1 → 当たっていた割合 2 / 3（67%）", report);
-            StringAssert.Contains("系統「硬直」: 焦っていた 1 / 焦っていなかった 0 / 覚えていない・未回答 1 → 当たっていた割合 1 / 1（100%）", report);
+            StringAssert.Contains(
+                "全体: 焦っていた 2 / 焦っていなかった 1 / 覚えていない・未回答 1 → 当たっていた割合 2 / 3（67%）",
+                report
+            );
+            StringAssert.Contains(
+                "系統「硬直」: 焦っていた 1 / 焦っていなかった 0 / 覚えていない・未回答 1 → 当たっていた割合 1 / 1（100%）",
+                report
+            );
         }
     }
 }

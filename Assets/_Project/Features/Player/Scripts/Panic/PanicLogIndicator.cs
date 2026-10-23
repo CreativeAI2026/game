@@ -57,7 +57,10 @@ namespace CreativeAI.Gameplay
 
             // 一時停止中（timeScale = 0）でも表示は進めたいので、実時間で数える
             _elapsed += Time.unscaledDeltaTime;
-            _markerFeedbackRemaining = Mathf.Max(0f, _markerFeedbackRemaining - Time.unscaledDeltaTime);
+            _markerFeedbackRemaining = Mathf.Max(
+                0f,
+                _markerFeedbackRemaining - Time.unscaledDeltaTime
+            );
             Refresh();
         }
 

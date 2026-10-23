@@ -62,7 +62,12 @@ namespace CreativeAI.EditorTools
 
         public float GetFloat(string[] row, string column)
         {
-            return float.TryParse(Get(row, column), NumberStyles.Float, CultureInfo.InvariantCulture, out float value)
+            return float.TryParse(
+                Get(row, column),
+                NumberStyles.Float,
+                CultureInfo.InvariantCulture,
+                out float value
+            )
                 ? value
                 : 0f;
         }

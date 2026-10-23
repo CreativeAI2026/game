@@ -38,7 +38,10 @@ namespace CreativeAI.EditorTools
         }
 
         /// <summary>終了時の振り返りの答え（*_review.csv）を集計結果に加える。</summary>
-        public static void AddReviewAnswers(PanicLogAnalysis analysis, IEnumerable<PanicLogCsv> reviews)
+        public static void AddReviewAnswers(
+            PanicLogAnalysis analysis,
+            IEnumerable<PanicLogCsv> reviews
+        )
         {
             foreach (PanicLogCsv review in reviews)
             {
@@ -102,7 +105,15 @@ namespace CreativeAI.EditorTools
                 }
                 else
                 {
-                    string trigger = FindTrigger(wasInCombat, attacking, wasAttacking, hp, previousHp, bossState, previousBossState);
+                    string trigger = FindTrigger(
+                        wasInCombat,
+                        attacking,
+                        wasAttacking,
+                        hp,
+                        previousHp,
+                        bossState,
+                        previousBossState
+                    );
                     if (trigger != null || current == null)
                     {
                         if (current != null)
@@ -153,11 +164,19 @@ namespace CreativeAI.EditorTools
                 if (rowType == "marker")
                 {
                     // 交戦の外で付けた印（倒れた直後など）は、直前の場面のものとして扱う
-                    PanicLogScene scene = current ?? (scenes.Count > 0 ? scenes[scenes.Count - 1] : null);
+                    PanicLogScene scene =
+                        current ?? (scenes.Count > 0 ? scenes[scenes.Count - 1] : null);
                     if (scene != null)
                     {
                         scene.HasMarker = true;
-                        markers.Add(new PanicLogMarker { FileName = log.FileName, Time = time, Scene = scene });
+                        markers.Add(
+                            new PanicLogMarker
+                            {
+                                FileName = log.FileName,
+                                Time = time,
+                                Scene = scene,
+                            }
+                        );
                     }
                 }
 
@@ -209,7 +228,12 @@ namespace CreativeAI.EditorTools
                 _ => bossState,
             };
 
-        private static void AccumulateScene(PanicLogCsv log, string[] row, string level, PanicLogScene scene)
+        private static void AccumulateScene(
+            PanicLogCsv log,
+            string[] row,
+            string level,
+            PanicLogScene scene
+        )
         {
             if (level == PanicLevelName)
                 scene.HasPanic = true;
@@ -249,14 +273,18 @@ namespace CreativeAI.EditorTools
             {
                 int index = marker.Scene.Index;
                 PanicLogScene previous = index > 0 ? scenes[index - 1] : null;
-                marker.MatchedPanic = marker.Scene.HasPanic || (previous != null && previous.HasPanic);
+                marker.MatchedPanic =
+                    marker.Scene.HasPanic || (previous != null && previous.HasPanic);
                 marker.MatchedTenseOrAbove =
                     marker.Scene.HasTenseOrAbove || (previous != null && previous.HasTenseOrAbove);
             }
         }
 
         // 判定していた場面のどれか、またはその次の場面に印があれば一致とする
-        private static void MatchDetections(List<PanicLogScene> scenes, List<PanicLogDetection> detections)
+        private static void MatchDetections(
+            List<PanicLogScene> scenes,
+            List<PanicLogDetection> detections
+        )
         {
             foreach (PanicLogDetection detection in detections)
             {
@@ -264,7 +292,8 @@ namespace CreativeAI.EditorTools
                 {
                     PanicLogScene scene = scenes[i];
                     bool isDuringDetection = scene.StartTime <= detection.EndTime;
-                    bool isRightAfterDetection = i > 0 && scenes[i - 1].StartTime <= detection.EndTime;
+                    bool isRightAfterDetection =
+                        i > 0 && scenes[i - 1].StartTime <= detection.EndTime;
                     if (!isDuringDetection && !isRightAfterDetection)
                         break;
 

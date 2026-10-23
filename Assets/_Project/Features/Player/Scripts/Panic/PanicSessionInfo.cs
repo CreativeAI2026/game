@@ -40,7 +40,9 @@ namespace CreativeAI.Gameplay
             text.AppendLine($"「焦った」の印の回数: {markerCount}");
             text.AppendLine($"ゲームの版: {Application.version}");
             text.AppendLine($"Unity: {Application.unityVersion}");
-            text.AppendLine($"シーン: {UnityEngine.SceneManagement.SceneManager.GetActiveScene().name}");
+            text.AppendLine(
+                $"シーン: {UnityEngine.SceneManagement.SceneManager.GetActiveScene().name}"
+            );
             text.AppendLine($"画面: {Screen.width} x {Screen.height}");
             text.AppendLine("操作機器ごとの時間:");
             foreach (KeyValuePair<string, float> pair in _secondsPerControlScheme)
@@ -54,7 +56,9 @@ namespace CreativeAI.Gameplay
             }
             catch (Exception e) when (e is IOException || e is UnauthorizedAccessException)
             {
-                Debug.LogWarning($"[焦り度ログ] 情報ファイルを書けませんでした: {path}\n{e.Message}");
+                Debug.LogWarning(
+                    $"[焦り度ログ] 情報ファイルを書けませんでした: {path}\n{e.Message}"
+                );
             }
         }
     }

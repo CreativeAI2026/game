@@ -94,9 +94,13 @@ namespace CreativeAI.Gameplay
                 return;
             if (keyboard.digit1Key.wasPressedThisFrame || keyboard.numpad1Key.wasPressedThisFrame)
                 Answer(AnswerPanicked);
-            else if (keyboard.digit2Key.wasPressedThisFrame || keyboard.numpad2Key.wasPressedThisFrame)
+            else if (
+                keyboard.digit2Key.wasPressedThisFrame || keyboard.numpad2Key.wasPressedThisFrame
+            )
                 Answer(AnswerNotPanicked);
-            else if (keyboard.digit3Key.wasPressedThisFrame || keyboard.numpad3Key.wasPressedThisFrame)
+            else if (
+                keyboard.digit3Key.wasPressedThisFrame || keyboard.numpad3Key.wasPressedThisFrame
+            )
                 Answer(AnswerDontRemember);
             else if (keyboard.escapeKey.wasPressedThisFrame)
                 SkipRemaining();
@@ -132,7 +136,8 @@ namespace CreativeAI.Gameplay
         {
             PanicMoment moment = _moments[_current];
             _image.texture = moment.Thumbnail;
-            _image.color = moment.Thumbnail != null ? Color.white : new Color(0.15f, 0.15f, 0.15f, 1f);
+            _image.color =
+                moment.Thumbnail != null ? Color.white : new Color(0.15f, 0.15f, 0.15f, 1f);
             _progressText.text = $"全{_moments.Count}場面のうち {_current + 1} つ目";
             _descriptionText.text = $"{moment.ReviewText}\nこの場面で、あなたは焦っていましたか？";
         }
@@ -178,8 +183,22 @@ namespace CreativeAI.Gameplay
             Image background = CreateImage(_canvasObject.transform, "Background", PanelColor);
             Stretch(background.rectTransform);
 
-            CreateText(_canvasObject.transform, "Title", "最後に、遊んでいたときの場面について教えてください", 40f, new Vector2(0f, 430f), new Vector2(1700f, 70f));
-            _progressText = CreateText(_canvasObject.transform, "Progress", string.Empty, 26f, new Vector2(0f, 370f), new Vector2(1200f, 40f));
+            CreateText(
+                _canvasObject.transform,
+                "Title",
+                "最後に、遊んでいたときの場面について教えてください",
+                40f,
+                new Vector2(0f, 430f),
+                new Vector2(1700f, 70f)
+            );
+            _progressText = CreateText(
+                _canvasObject.transform,
+                "Progress",
+                string.Empty,
+                26f,
+                new Vector2(0f, 370f),
+                new Vector2(1200f, 40f)
+            );
 
             var imageObject = new GameObject("Moment", typeof(RectTransform));
             imageObject.transform.SetParent(_canvasObject.transform, false);
@@ -187,14 +206,43 @@ namespace CreativeAI.Gameplay
             _image.rectTransform.anchoredPosition = new Vector2(0f, 80f);
             _image.rectTransform.sizeDelta = new Vector2(880f, 495f);
 
-            _descriptionText = CreateText(_canvasObject.transform, "Description", string.Empty, 32f, new Vector2(0f, -250f), new Vector2(1700f, 110f));
+            _descriptionText = CreateText(
+                _canvasObject.transform,
+                "Description",
+                string.Empty,
+                32f,
+                new Vector2(0f, -250f),
+                new Vector2(1700f, 110f)
+            );
 
             _answerArea = new GameObject("Answers", typeof(RectTransform));
             _answerArea.transform.SetParent(_canvasObject.transform, false);
-            CreateButton(_answerArea.transform, "1  焦っていた", new Vector2(-460f, -380f), () => Answer(AnswerPanicked));
-            CreateButton(_answerArea.transform, "2  焦っていなかった", new Vector2(0f, -380f), () => Answer(AnswerNotPanicked));
-            CreateButton(_answerArea.transform, "3  覚えていない", new Vector2(460f, -380f), () => Answer(AnswerDontRemember));
-            CreateButton(_answerArea.transform, "答えずに終了する（Esc）", new Vector2(700f, -480f), SkipRemaining, new Vector2(400f, 60f), 22f);
+            CreateButton(
+                _answerArea.transform,
+                "1  焦っていた",
+                new Vector2(-460f, -380f),
+                () => Answer(AnswerPanicked)
+            );
+            CreateButton(
+                _answerArea.transform,
+                "2  焦っていなかった",
+                new Vector2(0f, -380f),
+                () => Answer(AnswerNotPanicked)
+            );
+            CreateButton(
+                _answerArea.transform,
+                "3  覚えていない",
+                new Vector2(460f, -380f),
+                () => Answer(AnswerDontRemember)
+            );
+            CreateButton(
+                _answerArea.transform,
+                "答えずに終了する（Esc）",
+                new Vector2(700f, -480f),
+                SkipRemaining,
+                new Vector2(400f, 60f),
+                22f
+            );
         }
 
         private static Image CreateImage(Transform parent, string objectName, Color color)
@@ -246,7 +294,14 @@ namespace CreativeAI.Gameplay
             button.targetGraphic = image;
             button.onClick.AddListener(onClick);
 
-            TextMeshProUGUI text = CreateText(image.transform, "Label", label, fontSize, Vector2.zero, image.rectTransform.sizeDelta);
+            TextMeshProUGUI text = CreateText(
+                image.transform,
+                "Label",
+                label,
+                fontSize,
+                Vector2.zero,
+                image.rectTransform.sizeDelta
+            );
             Stretch(text.rectTransform);
         }
 

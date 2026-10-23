@@ -280,7 +280,9 @@ namespace CreativeAI.Gameplay
             }
 
             var gamepad = Gamepad.current;
-            return _markWithGamepadSelect && gamepad != null && gamepad.selectButton.wasPressedThisFrame;
+            return _markWithGamepadSelect
+                && gamepad != null
+                && gamepad.selectButton.wasPressedThisFrame;
         }
 
         /// <summary>記録中の表示に出す、印の付け方の説明。</summary>
@@ -290,7 +292,10 @@ namespace CreativeAI.Gameplay
             {
                 var parts = new List<string>();
                 if (_markerKeys.Length > 0)
-                    parts.Add(string.Join(" か ", Array.ConvertAll(_markerKeys, k => k.ToString())) + " キー");
+                    parts.Add(
+                        string.Join(" か ", Array.ConvertAll(_markerKeys, k => k.ToString()))
+                            + " キー"
+                    );
                 if (_markWithMouseSideButtons)
                     parts.Add("マウスの側面ボタン");
                 if (_markWithGamepadSelect)
@@ -407,7 +412,10 @@ namespace CreativeAI.Gameplay
 
         private void OpenReview(Action onFinished)
         {
-            List<PanicMoment> moments = PanicReviewSelection.Select(_momentRecorder.Moments, _maxReviewMoments);
+            List<PanicMoment> moments = PanicReviewSelection.Select(
+                _momentRecorder.Moments,
+                _maxReviewMoments
+            );
 
             // 振り返りの 1・2・3 キーで武器が切り替わらないよう、ゲームの操作を止めておく
             bool wasInputActive = _playerInput != null && _playerInput.inputIsActive;
@@ -438,7 +446,9 @@ namespace CreativeAI.Gameplay
                 using var writer = new StreamWriter(_reviewPath, true, new UTF8Encoding(true));
                 if (isNew)
                 {
-                    writer.WriteLine("moment,time,category,main_signal,description,recent_event,panic_score,image,answer");
+                    writer.WriteLine(
+                        "moment,time,category,main_signal,description,recent_event,panic_score,image,answer"
+                    );
                 }
                 writer.WriteLine(
                     string.Join(
@@ -457,7 +467,9 @@ namespace CreativeAI.Gameplay
             }
             catch (Exception e) when (e is IOException || e is UnauthorizedAccessException)
             {
-                Debug.LogWarning($"[焦り度ログ] 振り返りの答えを書けませんでした: {_reviewPath}\n{e.Message}");
+                Debug.LogWarning(
+                    $"[焦り度ログ] 振り返りの答えを書けませんでした: {_reviewPath}\n{e.Message}"
+                );
             }
         }
 

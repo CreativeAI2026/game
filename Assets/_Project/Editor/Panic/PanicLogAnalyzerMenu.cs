@@ -21,21 +21,38 @@ namespace CreativeAI.EditorTools
         [MenuItem("Tools/CreativeAI/焦り度/ログを集計…")]
         private static void AnalyzeFromMenu()
         {
-            string defaultFolder = Path.GetFullPath(Path.Combine(Application.dataPath, "..", "Logs", "Panic"));
-            string folder = EditorUtility.OpenFolderPanel("焦り度ログのフォルダを選ぶ", defaultFolder, string.Empty);
+            string defaultFolder = Path.GetFullPath(
+                Path.Combine(Application.dataPath, "..", "Logs", "Panic")
+            );
+            string folder = EditorUtility.OpenFolderPanel(
+                "焦り度ログのフォルダを選ぶ",
+                defaultFolder,
+                string.Empty
+            );
             if (string.IsNullOrEmpty(folder))
                 return;
 
-            string[] allFiles = Directory.GetFiles(folder, LogFilePattern, SearchOption.AllDirectories);
+            string[] allFiles = Directory.GetFiles(
+                folder,
+                LogFilePattern,
+                SearchOption.AllDirectories
+            );
             // 同じ名前で始まる場面の一覧（_moments.csv）と振り返りの答え（_review.csv）は、ログ本体とは分けて読む
             string[] files = allFiles
                 .Where(f => !f.EndsWith(MomentsSuffix) && !f.EndsWith(ReviewSuffix))
                 .OrderBy(f => f)
                 .ToArray();
-            string[] reviewFiles = allFiles.Where(f => f.EndsWith(ReviewSuffix)).OrderBy(f => f).ToArray();
+            string[] reviewFiles = allFiles
+                .Where(f => f.EndsWith(ReviewSuffix))
+                .OrderBy(f => f)
+                .ToArray();
             if (files.Length == 0)
             {
-                EditorUtility.DisplayDialog("焦り度ログの集計", $"{folder} に panic_*.csv がありません。", "OK");
+                EditorUtility.DisplayDialog(
+                    "焦り度ログの集計",
+                    $"{folder} に panic_*.csv がありません。",
+                    "OK"
+                );
                 return;
             }
 

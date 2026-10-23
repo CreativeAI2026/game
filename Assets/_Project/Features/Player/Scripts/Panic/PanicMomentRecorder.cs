@@ -51,7 +51,12 @@ namespace CreativeAI.Gameplay
         public IReadOnlyList<PanicMoment> Moments => _moments;
 
         /// <summary>記録を始める。directory はログのフォルダ、baseName はログのファイル名（拡張子なし）。</summary>
-        public void Begin(PanicDetector detector, TutorialBossController boss, string directory, string baseName)
+        public void Begin(
+            PanicDetector detector,
+            TutorialBossController boss,
+            string directory,
+            string baseName
+        )
         {
             _detector = detector;
             _boss = boss;
@@ -201,13 +206,18 @@ namespace CreativeAI.Gameplay
             try
             {
                 Directory.CreateDirectory(_imageDirectory);
-                File.WriteAllBytes(Path.Combine(_imageDirectory, fileName), moment.Thumbnail.EncodeToPNG());
+                File.WriteAllBytes(
+                    Path.Combine(_imageDirectory, fileName),
+                    moment.Thumbnail.EncodeToPNG()
+                );
                 moment.ImageFileName = Path.Combine(_imageDirectoryName, fileName);
             }
             catch (Exception e) when (e is IOException || e is UnauthorizedAccessException)
             {
                 // 画像が保存できなくても、振り返りではメモリ上の画像を見せられる
-                Debug.LogWarning($"[焦り度ログ] 場面の画像を保存できませんでした: {fileName}\n{e.Message}");
+                Debug.LogWarning(
+                    $"[焦り度ログ] 場面の画像を保存できませんでした: {fileName}\n{e.Message}"
+                );
             }
         }
 
@@ -220,7 +230,9 @@ namespace CreativeAI.Gameplay
                 using var writer = new StreamWriter(_listPath, true, new UTF8Encoding(true));
                 if (isNew)
                 {
-                    writer.WriteLine("moment,time,category,main_signal,description,recent_event,panic_score,image");
+                    writer.WriteLine(
+                        "moment,time,category,main_signal,description,recent_event,panic_score,image"
+                    );
                 }
                 writer.WriteLine(
                     string.Join(
@@ -238,7 +250,9 @@ namespace CreativeAI.Gameplay
             }
             catch (Exception e) when (e is IOException || e is UnauthorizedAccessException)
             {
-                Debug.LogWarning($"[焦り度ログ] 場面の一覧を書けませんでした: {_listPath}\n{e.Message}");
+                Debug.LogWarning(
+                    $"[焦り度ログ] 場面の一覧を書けませんでした: {_listPath}\n{e.Message}"
+                );
             }
         }
     }

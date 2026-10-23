@@ -30,7 +30,10 @@ namespace CreativeAI.Tests.EditMode
             )
             {
                 _time += 0.1f;
-                string score = level == "焦り" ? "70" : level == "動揺" ? "35" : "0";
+                string score =
+                    level == "焦り" ? "70"
+                    : level == "動揺" ? "35"
+                    : "0";
                 _lines.Add(
                     $"{_time:0.0},sample,,{(inCombat ? 1 : 0)},{(attacking ? 1 : 0)},{hp},{score},{level},逃げ腰,{flight},{bossState},KeyboardMouse"
                 );
@@ -40,7 +43,9 @@ namespace CreativeAI.Tests.EditMode
             public LogBuilder Marker(bool inCombat = true, float hp = 1f)
             {
                 _time += 0.1f;
-                _lines.Add($"{_time:0.0},marker,1,{(inCombat ? 1 : 0)},0,{hp},0,平常,逃げ腰,0,TBossWatchState,KeyboardMouse");
+                _lines.Add(
+                    $"{_time:0.0},marker,1,{(inCombat ? 1 : 0)},0,{hp},0,平常,逃げ腰,0,TBossWatchState,KeyboardMouse"
+                );
                 return this;
             }
 
@@ -137,7 +142,10 @@ namespace CreativeAI.Tests.EditMode
                 .Sample(flight: 0.5f)
                 .Analyze();
 
-            Assert.That(analysis.Scenes.Single().MaxSignalScores["逃避_スコア"], Is.EqualTo(0.9f).Within(0.0001f));
+            Assert.That(
+                analysis.Scenes.Single().MaxSignalScores["逃避_スコア"],
+                Is.EqualTo(0.9f).Within(0.0001f)
+            );
         }
     }
 }

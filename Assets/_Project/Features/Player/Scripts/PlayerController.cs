@@ -259,7 +259,8 @@ namespace CreativeAI.Gameplay
 
             Vector3 targetDirection =
                 Quaternion.Euler(0.0f, targetDirectionAngle, 0.0f) * Vector3.forward;
-            DesiredMoveDirection = _input.move != Vector2.zero ? targetDirection.normalized : Vector3.zero;
+            DesiredMoveDirection =
+                _input.move != Vector2.zero ? targetDirection.normalized : Vector3.zero;
 
             _controller.Move(
                 targetDirection.normalized * (_speed * Time.deltaTime)

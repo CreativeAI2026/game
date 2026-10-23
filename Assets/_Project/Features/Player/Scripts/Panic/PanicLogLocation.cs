@@ -64,7 +64,9 @@ namespace CreativeAI.Gameplay
             catch (Exception e) when (e is IOException || e is UnauthorizedAccessException)
             {
                 // 説明が置けなくても記録自体はできるので、警告だけにする
-                Debug.LogWarning($"[焦り度ログ] 送り方の説明を書けませんでした: {path}\n{e.Message}");
+                Debug.LogWarning(
+                    $"[焦り度ログ] 送り方の説明を書けませんでした: {path}\n{e.Message}"
+                );
             }
         }
 

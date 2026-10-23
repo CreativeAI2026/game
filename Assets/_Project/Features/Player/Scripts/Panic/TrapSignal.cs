@@ -100,11 +100,15 @@ namespace CreativeAI.Gameplay
                 return false;
 
             bool isPushingTowardEnemy =
-                Vector3.Dot(context.DesiredMoveDirection, context.ToEnemyDirectionXZ) >= TowardEnemyDot;
+                Vector3.Dot(context.DesiredMoveDirection, context.ToEnemyDirectionXZ)
+                >= TowardEnemyDot;
             if (context.IsTouchingEnemy && isPushingTowardEnemy)
                 return false;
 
-            float progressSpeed = Vector3.Dot(context.HorizontalVelocity, context.DesiredMoveDirection);
+            float progressSpeed = Vector3.Dot(
+                context.HorizontalVelocity,
+                context.DesiredMoveDirection
+            );
             return progressSpeed < context.DesiredSpeed * _stuckProgressRatio;
         }
     }
