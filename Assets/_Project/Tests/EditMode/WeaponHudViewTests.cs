@@ -4,22 +4,20 @@ using CreativeAI.UI;
 using NUnit.Framework;
 using UnityEditor;
 using UnityEngine;
-using UnityEngine.UI;
 
 namespace CreativeAI.Tests.EditMode
 {
     /// <summary>
     /// 武器切替UIの出し分けの検証(モードではなく武器の所持本数で決める)。
     /// 0本=非表示 / 1本以上=表示。
-    /// GameObject ごと止めると WeaponManager の購読が切れるため Canvas の enabled で出し入れする。
+    /// GameObject ごと止めると WeaponManager の購読が切れるため CanvasGroup で出し入れする。
     /// </summary>
-    public class WeaponHUDControllerTests
+    public class WeaponHudViewTests
     {
         private GameObject _go;
         private WeaponManager _weapons;
-        private WeaponHUDController _hud;
-        private Canvas _canvas;
-        private GraphicRaycaster _raycaster;
+        private WeaponHudView _hud;
+        private CanvasGroup _group;
         private readonly List<Object> _created = new();
 
         private WeaponData MakeWeaponData(int attack)
@@ -34,10 +32,9 @@ namespace CreativeAI.Tests.EditMode
         public void SetUp()
         {
             _go = new GameObject("WeaponSwitchUI");
-            _canvas = _go.AddComponent<Canvas>();
-            _raycaster = _go.AddComponent<GraphicRaycaster>();
+            _group = _go.AddComponent<CanvasGroup>();
             _weapons = _go.AddComponent<WeaponManager>();
-            _hud = _go.AddComponent<WeaponHUDController>();
+            _hud = _go.AddComponent<WeaponHudView>();
 
             var stats = new[] { MakeWeaponData(25), MakeWeaponData(25), MakeWeaponData(0) };
             var so = new SerializedObject(_weapons);
@@ -49,8 +46,7 @@ namespace CreativeAI.Tests.EditMode
             so.ApplyModifiedPropertiesWithoutUndo();
 
             // EditMode では Awake/OnEnable が走らないので、Awake が解決する参照を入れて OnEnable を叩く。
-            TestReflection.SetField(_hud, "_canvas", _canvas);
-            TestReflection.SetField(_hud, "_raycaster", _raycaster);
+            TestReflection.SetField(_hud, "_group", _group);
             TestReflection.SetField(_hud, "_weaponManager", _weapons);
             TestReflection.Invoke(_hud, "OnEnable");
         }
@@ -65,7 +61,7 @@ namespace CreativeAI.Tests.EditMode
             _created.Clear();
         }
 
-        private bool IsShown => _canvas.enabled && _raycaster.enabled;
+        private bool IsShown => _group.IsShown() && _group.blocksRaycasts;
 
         [Test]
         public void ZeroWeapons_IsHidden()

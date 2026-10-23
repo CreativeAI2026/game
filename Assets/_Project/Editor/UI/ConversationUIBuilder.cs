@@ -86,27 +86,15 @@ namespace CreativeAI.EditorTools
             var choiceButtonSprite = AssetDatabase.LoadAssetAtPath<Sprite>(ChoiceButtonPng);
             var portraitSprite = AssetDatabase.LoadAssetAtPath<Sprite>(PortraitPaths[0]);
 
-            // --- ルート(Canvas + 常駐コンポーネント) ---
+            // --- ルート(常駐コンポーネント)。Canvas は置き先(UIRoot の ConversationUI / 確認用 Scene)が持つ ---
             var root = new GameObject(
                 "ConversationView",
                 typeof(RectTransform),
-                typeof(Canvas),
-                typeof(CanvasScaler),
-                typeof(GraphicRaycaster),
                 typeof(CanvasGroup),
                 typeof(ConversationView),
                 typeof(DialogueHistoryPanel)
             );
-            var canvas = root.GetComponent<Canvas>();
-            canvas.renderMode = RenderMode.ScreenSpaceOverlay;
-            canvas.sortingOrder = 200; // HUD/各パネルより前面
-
-            var scaler = root.GetComponent<CanvasScaler>();
-            scaler.uiScaleMode = CanvasScaler.ScaleMode.ScaleWithScreenSize;
-            scaler.referenceResolution = new Vector2(1920, 1080);
-            scaler.screenMatchMode = CanvasScaler.ScreenMatchMode.MatchWidthOrHeight;
-            scaler.matchWidthOrHeight = 0.5f;
-            scaler.referencePixelsPerUnit = 100;
+            SetStretch(root, Vector2.zero, Vector2.one);
 
             var layout = CreateLayer("Layout", root.transform);
             var portraitLayer = CreateLayer("Portraits", layout.transform);

@@ -154,13 +154,6 @@ namespace CreativeAI.EditorTools
                 if (oldGroup != null)
                     oldGroup.gameObject.SetActive(false);
 
-                var controller = weaponView.GetComponent<CreativeAI.UI.WeaponTabViewController>();
-                if (controller == null)
-                    throw new InvalidOperationException("WeaponTabViewController was not found.");
-                var controllerObject = new SerializedObject(controller);
-                controllerObject.FindProperty("_revolverTabGroup").objectReferenceValue = group;
-                controllerObject.ApplyModifiedPropertiesWithoutUndo();
-
                 PrefabUtility.SaveAsPrefabAsset(root, CharacterPanelPath);
             }
             finally

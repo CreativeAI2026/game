@@ -5,9 +5,9 @@ using UnityEngine.UI;
 
 namespace CreativeAI.UI
 {
-    public class GrabEscapeGaugeUI : MonoBehaviour
+    public class GrabEscapeGaugeView : MonoBehaviour
     {
-        public static GrabEscapeGaugeUI Instance { get; private set; }
+        public static GrabEscapeGaugeView Instance { get; private set; }
 
         [Header("アイコン")]
         [SerializeField]
@@ -55,7 +55,7 @@ namespace CreativeAI.UI
             if (_iconImage == null || _normalSprite == null || _pressedSprite == null)
             {
                 Debug.LogError(
-                    $"[{nameof(GrabEscapeGaugeUI)}] _iconImage / _normalSprite / _pressedSprite のいずれかが未設定です",
+                    $"[{nameof(GrabEscapeGaugeView)}] _iconImage / _normalSprite / _pressedSprite のいずれかが未設定です",
                     this
                 );
             }

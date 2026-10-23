@@ -300,7 +300,7 @@ namespace CreativeAI.Core
 
     /// <summary>
     /// 会話イベント再生中(= 操作不能)かどうかを UI に伝える seam。EventPlayer が再生の開始/終了で
-    /// 更新し、HudIconBar が購読して会話中は右上ナビ(セーブ/インベ入口)を隠す
+    /// 更新し、HudIconBarView が購読して会話中は右上ナビ(セーブ/インベ入口)を隠す
     /// (会話UI中はセーブ・インベントリ使用不可)。
     /// </summary>
     public static class EventPlaybackService

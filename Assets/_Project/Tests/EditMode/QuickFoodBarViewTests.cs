@@ -2,7 +2,6 @@ using CreativeAI.Core;
 using CreativeAI.UI;
 using NUnit.Framework;
 using UnityEngine;
-using UnityEngine.UI;
 
 namespace CreativeAI.Tests.EditMode
 {
@@ -11,7 +10,7 @@ namespace CreativeAI.Tests.EditMode
     /// パネルは インベ/キャラ/セーブ/調合。
     /// battle ステップも EventPlaybackService.IsPlaying の内側で走るので、モードで戦闘を除外する必要がある。
     /// </summary>
-    public class QuickFoodBarControllerTests
+    public class QuickFoodBarViewTests
     {
         private GameObject _gmmGo;
         private GameModeManager _gmm;
@@ -19,9 +18,8 @@ namespace CreativeAI.Tests.EditMode
         private UiRouter _router;
         private GameObject _panel;
         private GameObject _barGo;
-        private QuickFoodBarController _bar;
-        private Canvas _canvas;
-        private GraphicRaycaster _raycaster;
+        private QuickFoodBarView _bar;
+        private CanvasGroup _group;
 
         [SetUp]
         public void SetUp()
@@ -38,13 +36,11 @@ namespace CreativeAI.Tests.EditMode
 
             _barGo = new GameObject("QuickFoodBar");
             _barGo.transform.SetParent(_rootGo.transform);
-            _canvas = _barGo.AddComponent<Canvas>();
-            _raycaster = _barGo.AddComponent<GraphicRaycaster>();
-            _bar = _barGo.AddComponent<QuickFoodBarController>();
+            _group = _barGo.AddComponent<CanvasGroup>();
+            _bar = _barGo.AddComponent<QuickFoodBarView>();
 
             // EditMode では Awake が走らないので、Awake が解決する参照を直接入れる。
-            TestReflection.SetField(_bar, "_canvas", _canvas);
-            TestReflection.SetField(_bar, "_raycaster", _raycaster);
+            TestReflection.SetField(_bar, "_group", _group);
             TestReflection.SetField(_bar, "_router", _router);
         }
 
@@ -63,7 +59,7 @@ namespace CreativeAI.Tests.EditMode
         private bool Visible()
         {
             TestReflection.Invoke(_bar, "ApplyVisibility");
-            return _canvas.enabled && _raycaster.enabled;
+            return _group.IsShown() && _group.blocksRaycasts;
         }
 
         [Test]

@@ -2,24 +2,22 @@ using CreativeAI.Core;
 using CreativeAI.UI;
 using NUnit.Framework;
 using UnityEngine;
-using UnityEngine.UI;
 
 namespace CreativeAI.Tests.EditMode
 {
     /// <summary>
     /// 右上アイコンバーの出し分けの検証(移動中だけ表示し、戦闘中と会話中は隠す)。
     /// 会話中に隠すのはセーブ/インベを開かせないため。
-    /// GameObject ごと消すと購読が切れるため、Canvas / Raycaster の enabled で出し分ける実装を検証する。
+    /// GameObject ごと消すと購読が切れるため、CanvasGroup で出し分ける実装を検証する。
     /// 隠れるとき(戦闘・会話の開始)は、開いているパネルも閉じる。
     /// </summary>
-    public class HudIconBarTests
+    public class HudIconBarViewTests
     {
         private GameObject _gmmGo;
         private GameModeManager _gmm;
         private GameObject _barGo;
-        private HudIconBar _bar;
-        private Canvas _canvas;
-        private GraphicRaycaster _raycaster;
+        private HudIconBarView _bar;
+        private CanvasGroup _group;
 
         [SetUp]
         public void SetUp()
@@ -28,12 +26,10 @@ namespace CreativeAI.Tests.EditMode
             _gmm = _gmmGo.AddComponent<GameModeManager>();
             TestReflection.SetStaticProperty("Instance", _gmm);
 
-            _barGo = new GameObject("HudIconBar");
-            _canvas = _barGo.AddComponent<Canvas>();
-            _raycaster = _barGo.AddComponent<GraphicRaycaster>();
-            _bar = _barGo.AddComponent<HudIconBar>();
-            TestReflection.SetField(_bar, "_canvas", _canvas);
-            TestReflection.SetField(_bar, "_raycaster", _raycaster);
+            _barGo = new GameObject("HudIconBarView");
+            _group = _barGo.AddComponent<CanvasGroup>();
+            _bar = _barGo.AddComponent<HudIconBarView>();
+            TestReflection.SetField(_bar, "_group", _group);
 
             // EditMode では OnEnable が走らないので、購読 + 初期反映を明示的に行う。
             TestReflection.Invoke(_bar, "OnEnable");
@@ -49,7 +45,7 @@ namespace CreativeAI.Tests.EditMode
             Object.DestroyImmediate(_gmmGo);
         }
 
-        private bool IsShown => _canvas.enabled && _raycaster.enabled;
+        private bool IsShown => _group.IsShown() && _group.blocksRaycasts;
 
         [Test]
         public void FieldMode_NotInDialogue_IsShown()
@@ -153,15 +149,13 @@ namespace CreativeAI.Tests.EditMode
             var go = new GameObject("HudIconBar2");
             try
             {
-                var canvas = go.AddComponent<Canvas>();
-                var raycaster = go.AddComponent<GraphicRaycaster>();
-                var bar = go.AddComponent<HudIconBar>();
-                TestReflection.SetField(bar, "_canvas", canvas);
-                TestReflection.SetField(bar, "_raycaster", raycaster);
+                var group = go.AddComponent<CanvasGroup>();
+                var bar = go.AddComponent<HudIconBarView>();
+                TestReflection.SetField(bar, "_group", group);
 
                 TestReflection.Invoke(bar, "OnEnable");
 
-                Assert.IsTrue(canvas.enabled, "マネージャ未生成(タイトル直後)は Field 扱いで表示");
+                Assert.IsTrue(group.IsShown(), "マネージャ未生成(タイトル直後)は Field 扱いで表示");
                 TestReflection.Invoke(bar, "OnDisable");
             }
             finally

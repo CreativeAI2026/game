@@ -2,30 +2,28 @@ using System.Collections.Generic;
 using CreativeAI.Core;
 using CreativeAI.Gameplay;
 using UnityEngine;
-using UnityEngine.UI;
 
 namespace CreativeAI.UI
 {
     /// <summary>
-    /// 即時食材使用UI(常駐)。キャラUIの即時使用食材タブ(<see cref="CreativeAI.UI.QuickFoodViewController"/>)でセットした
+    /// 即時食材使用UI(常駐)。キャラUIのロードアウト(<see cref="CharacterUI.LoadoutPanelController"/>)でセットした
     /// 最大3枠(<see cref="InventoryManager.GetQuickFoodSlots"/>)を常時表示し、タップで即時使用(HP回復+消費)する。
     /// モードや所持で出し分けない。UIRoot Prefab の子として同梱され、常駐は <see cref="UIRoot"/> が担う。状態は持たない。
     /// </summary>
-    public sealed class QuickFoodBarController : MonoBehaviour
+    public sealed class QuickFoodBarView : MonoBehaviour
     {
         [Header("Slots (最大3。子の EquipmentSlot を順に割り当て)")]
         [SerializeField]
         private List<EquipmentSlot> _slots = new();
 
         private bool _subscribed;
-        private Canvas _canvas;
-        private GraphicRaycaster _raycaster;
+        private CanvasGroup _group;
         private UiRouter _router;
+        private GameModeManager _gameMode;
 
         private void Awake()
         {
-            _canvas = GetComponent<Canvas>();
-            _raycaster = GetComponent<GraphicRaycaster>();
+            _group = ResidentUiVisibility.GetOrAddGroup(gameObject);
             _router = GetComponentInParent<UiRouter>(true); // 親 UIRoot の排他ルータ
             InitializeSlots();
         }
@@ -34,11 +32,34 @@ namespace CreativeAI.UI
         {
             TryBind();
             RefreshSlots();
+            SubscribeVisibility();
             ApplyVisibility();
         }
 
-        // パネル(インベ/キャラ/セーブ/調合)表示中・会話中はバーを隠す。canvas.enabled で隠すので購読は生き続ける。
-        private void Update() => ApplyVisibility();
+        // パネル(インベ/キャラ/セーブ/調合)表示中・会話中はバーを隠す。CanvasGroup で隠すので購読は生き続ける。
+        // 常駐生成順ではマネージャが先に居るので Instance を取れる。
+        private void SubscribeVisibility()
+        {
+            _gameMode = GameModeManager.Instance;
+            if (_gameMode != null)
+                _gameMode.OnModeChanged += OnModeChanged;
+            EventPlaybackService.PlayingChanged += OnPlaybackChanged;
+            UiPanelService.OpenChanged += OnPanelOpenChanged;
+        }
+
+        private void UnsubscribeVisibility()
+        {
+            if (_gameMode != null)
+                _gameMode.OnModeChanged -= OnModeChanged;
+            EventPlaybackService.PlayingChanged -= OnPlaybackChanged;
+            UiPanelService.OpenChanged -= OnPanelOpenChanged;
+        }
+
+        private void OnModeChanged(GameMode mode) => ApplyVisibility();
+
+        private void OnPlaybackChanged(bool playing) => ApplyVisibility();
+
+        private void OnPanelOpenChanged(bool open) => ApplyVisibility();
 
         private void ApplyVisibility()
         {
@@ -49,13 +70,15 @@ namespace CreativeAI.UI
                 && GameModeManager.Instance.CurrentMode == GameMode.Battle;
             bool inDialogue = EventPlaybackService.IsPlaying && !inBattle;
             bool hide = (_router != null && _router.IsAnyPanelOpen) || inDialogue;
-            if (_canvas != null)
-                _canvas.enabled = !hide;
-            if (_raycaster != null)
-                _raycaster.enabled = !hide;
+            if (_group != null)
+                _group.SetShown(!hide);
         }
 
-        private void OnDisable() => Unbind();
+        private void OnDisable()
+        {
+            Unbind();
+            UnsubscribeVisibility();
+        }
 
         private void OnDestroy()
         {

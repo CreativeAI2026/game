@@ -8,7 +8,7 @@ namespace CreativeAI.UI
     /// <summary>
     /// PlayerStatusのHP変動イベントを購読し、UIスライダーとテキストに反映する。
     /// </summary>
-    public class PlayerHpUI : MonoBehaviour
+    public class PlayerHpView : MonoBehaviour
     {
         [Header("HPバー")]
         [Tooltip("最大HPを表示するテキスト")]
@@ -104,7 +104,7 @@ namespace CreativeAI.UI
 
         private void Start()
         {
-            // PlayerStatus.Start()がPlayerHpUI.OnEnable()より先に実行された場合、
+            // PlayerStatus.Start()がPlayerHpView.OnEnable()より先に実行された場合、
             // OnHpChangedの発火を受け取れないため、Start()で明示的に初期UIを更新する。
             if (_playerStatus != null)
             {

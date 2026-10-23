@@ -10,7 +10,7 @@ namespace CreativeAI.Gameplay
     /// 操作で開くUIの表示中(<see cref="UiPanelService.IsOpen"/>)と会話イベント中(<see cref="EventPlaybackService.BlocksPlayerControl"/>)は
     /// PlayerInput を UI マップへ、どちらも終わったら Player マップへ戻す。
     /// C / I は両マップに同名のアクションがあるので、どちらのマップでも同じメッセージ(OnCharacter / OnInventory)で届く。
-    /// どのパネルを開くかは UI 側(HudIconBar)が決める(プレイヤーは UI を知らない)。
+    /// どのパネルを開くかは UI 側(HudIconBarView)が決める(プレイヤーは UI を知らない)。
     /// </summary>
     [RequireComponent(typeof(PlayerInput))]
     public sealed class PlayerUiInput : MonoBehaviour

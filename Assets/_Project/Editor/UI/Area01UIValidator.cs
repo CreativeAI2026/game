@@ -92,22 +92,13 @@ namespace CreativeAI.EditorTools
             var inventories = FindAll<InventoryView>(scene);
             var panelControllers = FindAll<InventoryPanelController>(scene);
             var craftControllers = FindAll<CraftPanelController>(scene);
-            var equipmentControllers = FindAll<EquipmentViewController>(scene);
-            var quickFoodControllers = FindAll<QuickFoodViewController>(scene);
-            var weaponTabControllers = FindAll<WeaponTabViewController>(scene);
-            var characterControllers = FindAll<CharacterUIController>(scene);
             var tabGroups = FindAll<TabGroup>(scene);
 
             ValidateCount(inventories, ExpectedInventoryCount, nameof(InventoryView), report);
             ValidateCount(panelControllers, 1, nameof(InventoryPanelController), report);
             ValidateCount(craftControllers, 1, nameof(CraftPanelController), report);
-            ValidateCount(equipmentControllers, 2, nameof(EquipmentViewController), report);
-            ValidateCount(quickFoodControllers, 0, nameof(QuickFoodViewController), report);
-            ValidateCount(characterControllers, 1, nameof(CharacterUIController), report);
             ValidateAllTabDefinitions(tabGroups, report);
-            ValidateViewSwitchTabGroups(tabGroups, inventories, weaponTabControllers, report);
-            foreach (var controller in characterControllers)
-                ValidateCharacterTabContract(controller, report);
+            ValidateViewSwitchTabGroups(tabGroups, inventories, report);
 
             var providers = inventories.ToDictionary(
                 inventory => inventory,
@@ -118,19 +109,9 @@ namespace CreativeAI.EditorTools
                 AddProvider(controller, "_inventory", nameof(InventoryPanelController));
             foreach (var controller in craftControllers)
                 AddProvider(controller, "_inventory", nameof(CraftPanelController));
-            foreach (var controller in equipmentControllers)
-                AddEquipmentProvider(controller);
-            foreach (var controller in quickFoodControllers)
-                AddQuickFoodProvider(controller);
 
             foreach (var inventory in inventories)
                 ValidateSingleProvider(inventory, providers[inventory], report);
-
-            ValidateEquipmentCategories(equipmentControllers, report);
-            foreach (var controller in equipmentControllers)
-                ValidateEquipmentReferences(controller, report);
-            foreach (var controller in quickFoodControllers)
-                ValidateQuickFoodReferences(controller, report);
 
             void AddProvider(MonoBehaviour controller, string fieldName, string providerName)
             {
@@ -156,57 +137,15 @@ namespace CreativeAI.EditorTools
                         };
                 ValidateTabProvider(inventory, expectedCategories, report);
             }
-
-            void AddEquipmentProvider(EquipmentViewController controller)
-            {
-                var serializedController = new SerializedObject(controller);
-                var inventory = GetReference<InventoryView>(serializedController, "_inventory");
-                var categoryProperty = serializedController.FindProperty("_inventoryCategory");
-                if (
-                    inventory == null
-                    || !providers.TryGetValue(inventory, out var inventoryProviders)
-                )
-                    return;
-
-                var category = (ItemCategory)categoryProperty.intValue;
-                inventoryProviders.Add($"{nameof(EquipmentViewController)} ({category})");
-                ValidateProviderHierarchy(
-                    controller,
-                    inventory,
-                    $"{nameof(EquipmentViewController)} ({category})",
-                    report
-                );
-            }
-
-            void AddQuickFoodProvider(QuickFoodViewController controller)
-            {
-                var serializedController = new SerializedObject(controller);
-                var inventory = GetReference<InventoryView>(serializedController, "_inventory");
-                if (
-                    inventory == null
-                    || !providers.TryGetValue(inventory, out var inventoryProviders)
-                )
-                    return;
-
-                inventoryProviders.Add($"{nameof(QuickFoodViewController)} ({ItemCategory.Food})");
-                ValidateProviderHierarchy(
-                    controller,
-                    inventory,
-                    $"{nameof(QuickFoodViewController)} ({ItemCategory.Food})",
-                    report
-                );
-            }
         }
 
         private static void ValidateViewSwitchTabGroups(
             IEnumerable<TabGroup> tabGroups,
             IEnumerable<InventoryView> inventories,
-            IEnumerable<WeaponTabViewController> weaponTabControllers,
             UIValidationReport report
         )
         {
             var categoryTabGroups = new HashSet<TabGroup>();
-            var indexOnlyTabGroups = new HashSet<TabGroup>();
             foreach (var inventory in inventories)
             {
                 var serializedInventory = new SerializedObject(inventory);
@@ -215,20 +154,9 @@ namespace CreativeAI.EditorTools
                     categoryTabGroups.Add(tabGroup);
             }
 
-            foreach (var weaponController in weaponTabControllers)
-            {
-                var serializedController = new SerializedObject(weaponController);
-                var tabGroup = GetReference<TabGroup>(serializedController, "_tabGroup");
-                if (tabGroup != null)
-                {
-                    indexOnlyTabGroups.Add(tabGroup);
-                    ValidateWeaponTabContract(tabGroup, report);
-                }
-            }
-
             foreach (var tabGroup in tabGroups)
             {
-                if (categoryTabGroups.Contains(tabGroup) || indexOnlyTabGroups.Contains(tabGroup))
+                if (categoryTabGroups.Contains(tabGroup))
                     continue;
 
                 for (int i = 0; i < tabGroup.EntryCount; i++)
@@ -243,103 +171,6 @@ namespace CreativeAI.EditorTools
                         tabGroup
                     );
                 }
-            }
-        }
-
-        private static void ValidateWeaponTabContract(TabGroup tabGroup, UIValidationReport report)
-        {
-            string[] expectedDefinitions =
-            {
-                "SwordTabDefinition",
-                "BowTabDefinition",
-                "KamaTabDefinition",
-            };
-            if (tabGroup.EntryCount != expectedDefinitions.Length)
-            {
-                report.Error(
-                    UIHierarchyPathUtility.GetPath(tabGroup.transform),
-                    "TabEntry count",
-                    $"Weapon Tabは{expectedDefinitions.Length} Entry必要です。現在: {tabGroup.EntryCount}",
-                    tabGroup
-                );
-                return;
-            }
-
-            for (int i = 0; i < expectedDefinitions.Length; i++)
-            {
-                var definition = tabGroup.GetDefinitionForEntry(i);
-                if (
-                    definition != null
-                    && string.Equals(
-                        definition.name,
-                        expectedDefinitions[i],
-                        StringComparison.Ordinal
-                    )
-                )
-                    continue;
-
-                report.Error(
-                    UIHierarchyPathUtility.GetPath(tabGroup.transform),
-                    $"TabEntry[{i}].definition",
-                    $"{expectedDefinitions[i]}を設定してください。",
-                    tabGroup
-                );
-            }
-        }
-
-        private static void ValidateEquipmentReferences(
-            EquipmentViewController controller,
-            UIValidationReport report
-        )
-        {
-            var serializedController = new SerializedObject(controller);
-            string path = UIHierarchyPathUtility.GetPath(controller.transform);
-            foreach (
-                string fieldName in new[] { "_inventory", "_detailPanel", "_equipmentSlotsRoot" }
-            )
-            {
-                var property = serializedController.FindProperty(fieldName);
-                if (property?.objectReferenceValue != null)
-                    continue;
-
-                report.Error(
-                    path,
-                    fieldName,
-                    "Runtime fallbackはありません。Inspectorで必須参照を設定してください。",
-                    controller
-                );
-            }
-
-            if (serializedController.FindProperty("_inventoryCategory") == null)
-            {
-                report.Error(
-                    path,
-                    "_inventoryCategory",
-                    "Inventoryカテゴリ設定が見つかりません。",
-                    controller
-                );
-            }
-        }
-
-        private static void ValidateQuickFoodReferences(
-            QuickFoodViewController controller,
-            UIValidationReport report
-        )
-        {
-            var serializedController = new SerializedObject(controller);
-            string path = UIHierarchyPathUtility.GetPath(controller.transform);
-            foreach (string fieldName in new[] { "_inventory", "_detailPanel" })
-            {
-                var property = serializedController.FindProperty(fieldName);
-                if (property?.objectReferenceValue != null)
-                    continue;
-
-                report.Error(
-                    path,
-                    fieldName,
-                    "Runtime fallbackはありません。Inspectorで必須参照を設定してください。",
-                    controller
-                );
             }
         }
 
@@ -458,75 +289,6 @@ namespace CreativeAI.EditorTools
             }
         }
 
-        private static void ValidateEquipmentCategories(
-            EquipmentViewController[] controllers,
-            UIValidationReport report
-        )
-        {
-            var categories = controllers
-                .Select(controller =>
-                {
-                    var serializedController = new SerializedObject(controller);
-                    return (ItemCategory)
-                        serializedController.FindProperty("_inventoryCategory").intValue;
-                })
-                .ToArray();
-
-            ValidateCategoryCount(categories, ItemCategory.Equipment, report);
-            ValidateCategoryCount(categories, ItemCategory.Food, report);
-
-            int quickConsumableCount = controllers.Count(controller =>
-            {
-                var serializedController = new SerializedObject(controller);
-                return serializedController.FindProperty("_assignmentMode")?.intValue == 1;
-            });
-            if (quickConsumableCount == 1)
-            {
-                report.Ok(
-                    nameof(EquipmentViewController),
-                    "_assignmentMode",
-                    "QuickConsumable用Controllerが1つあります。",
-                    null
-                );
-            }
-            else
-            {
-                report.Error(
-                    nameof(EquipmentViewController),
-                    "_assignmentMode",
-                    $"QuickConsumable用Controllerは1つ必要です。現在: {quickConsumableCount}個",
-                    null
-                );
-            }
-        }
-
-        private static void ValidateCategoryCount(
-            ItemCategory[] categories,
-            ItemCategory expectedCategory,
-            UIValidationReport report
-        )
-        {
-            int count = categories.Count(category => category == expectedCategory);
-            if (count == 1)
-            {
-                report.Ok(
-                    nameof(EquipmentViewController),
-                    "_inventoryCategory",
-                    $"{expectedCategory}用Controllerが1つあります。",
-                    null
-                );
-            }
-            else
-            {
-                report.Error(
-                    nameof(EquipmentViewController),
-                    "_inventoryCategory",
-                    $"{expectedCategory}用Controllerは1つ必要です。現在: {count}個",
-                    null
-                );
-            }
-        }
-
         private static void ValidateSingleProvider(
             InventoryView inventory,
             IReadOnlyCollection<string> providers,
@@ -552,102 +314,6 @@ namespace CreativeAI.EditorTools
                         : $"供給元が重複しています: {string.Join(", ", providers)}",
                     inventory
                 );
-            }
-        }
-
-        private static void ValidateCharacterTabContract(
-            CharacterUIController controller,
-            UIValidationReport report
-        )
-        {
-            var serializedController = new SerializedObject(controller);
-            var tabGroup = GetReference<TabGroup>(serializedController, "_tabGroup");
-            string path = UIHierarchyPathUtility.GetPath(controller.transform);
-            if (tabGroup == null)
-            {
-                report.Error(
-                    path,
-                    "_tabGroup",
-                    "親Character TabGroupを設定してください。",
-                    controller
-                );
-                return;
-            }
-
-            string[] expectedDefinitions =
-            {
-                "StatsTabDefinition",
-                "WeaponTabDefinition",
-                "EquipTabDefinition",
-                "ConsumableDefinition",
-            };
-            string[] expectedViews =
-            {
-                "StatsView",
-                "WeaponView",
-                "EquipmentView",
-                "ConsumableView",
-            };
-
-            if (tabGroup.EntryCount != expectedDefinitions.Length)
-            {
-                report.Error(
-                    UIHierarchyPathUtility.GetPath(tabGroup.transform),
-                    "TabEntry count",
-                    $"Character Tabは{expectedDefinitions.Length} Entry必要です。現在: {tabGroup.EntryCount}",
-                    tabGroup
-                );
-                return;
-            }
-
-            for (int i = 0; i < expectedDefinitions.Length; i++)
-            {
-                var definition = tabGroup.GetDefinitionForEntry(i);
-                var view = tabGroup.GetView(i);
-                if (
-                    definition == null
-                    || !string.Equals(
-                        definition.name,
-                        expectedDefinitions[i],
-                        StringComparison.Ordinal
-                    )
-                )
-                {
-                    report.Error(
-                        UIHierarchyPathUtility.GetPath(tabGroup.transform),
-                        $"TabEntry[{i}].definition",
-                        $"{expectedDefinitions[i]}を設定してください。",
-                        tabGroup
-                    );
-                }
-
-                if (
-                    view == null
-                    || !string.Equals(view.name, expectedViews[i], StringComparison.Ordinal)
-                )
-                {
-                    report.Error(
-                        UIHierarchyPathUtility.GetPath(tabGroup.transform),
-                        $"TabEntry[{i}].view",
-                        $"{expectedViews[i]}を設定してください。",
-                        tabGroup
-                    );
-                    continue;
-                }
-
-                bool requiresLifecycleView = i >= 2;
-                int lifecycleViewCount = view.GetComponentsInChildren<ICharacterTabView>(
-                    true
-                ).Length;
-                if (requiresLifecycleView && lifecycleViewCount == 0)
-                {
-                    report.Error(
-                        UIHierarchyPathUtility.GetPath(view.transform),
-                        nameof(ICharacterTabView),
-                        "Equipment/Consumable ViewにはCharacter tab lifecycle実装が必要です。",
-                        view
-                    );
-                }
             }
         }
 

@@ -12,7 +12,7 @@ namespace CreativeAI.UI
     /// プレイヤーの <see cref="PlayerUiInput"/> から受け取る(プレイヤーは実行時生成なので <see cref="PlayerRegistry"/> 経由)。
     /// 隠れるとき(戦闘・会話の開始)は開いているパネルも閉じる。
     /// </summary>
-    public sealed class HudIconBar : MonoBehaviour
+    public sealed class HudIconBarView : MonoBehaviour
     {
         [SerializeField]
         private UiRouter _router;
@@ -26,12 +26,9 @@ namespace CreativeAI.UI
         [SerializeField]
         private Button _saveButton;
 
-        [Header("モード連動で出し入れする自分の Canvas")]
+        [Header("モード連動で出し入れする自分の CanvasGroup")]
         [SerializeField]
-        private Canvas _canvas;
-
-        [SerializeField]
-        private GraphicRaycaster _raycaster;
+        private CanvasGroup _group;
 
         private GameModeManager _gameMode;
         private PlayerUiInput _uiInput;
@@ -39,10 +36,10 @@ namespace CreativeAI.UI
 
         private void Awake()
         {
-            if (_canvas == null)
-                _canvas = GetComponent<Canvas>();
-            if (_raycaster == null)
-                _raycaster = GetComponent<GraphicRaycaster>();
+            if (_group == null)
+                _group = ResidentUiVisibility.GetOrAddGroup(gameObject);
+            if (_router == null)
+                _router = GetComponentInParent<UiRouter>(true); // 親 UIRoot の排他ルータ
 
             Bind(_characterButton, UiRouter.UiId.Character);
             Bind(_inventoryButton, UiRouter.UiId.Inventory);
@@ -127,7 +124,7 @@ namespace CreativeAI.UI
         /// <summary>
         /// Field かつ会話イベント中でないときだけ表示。Battle・会話中は非表示にしてセーブ等を開けなくする。
         /// GameObject ごと SetActive すると自分が止まって購読を失うため、
-        /// Canvas / Raycaster を無効化するだけにして自身は生かし続ける。
+        /// CanvasGroup で隠すだけにして自身は生かし続ける。
         /// </summary>
         private void Apply(GameMode mode)
         {
@@ -135,10 +132,8 @@ namespace CreativeAI.UI
             _shown = show;
             if (!show && _router != null && _router.IsAnyPanelOpen)
                 _router.CloseAll();
-            if (_canvas != null)
-                _canvas.enabled = show;
-            if (_raycaster != null)
-                _raycaster.enabled = show;
+            if (_group != null)
+                _group.SetShown(show);
         }
     }
 }

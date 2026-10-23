@@ -26,7 +26,7 @@ namespace CreativeAI.UI
     /// ■ 出し分け
     ///   武器の所持本数: 0本で非表示・1本以上で表示。未入手の武器のパネルは出さない。
     ///   GameObject ごと消すと <see cref="WeaponManager"/> の購読が切れて戻れないため、
-    ///   Canvas / GraphicRaycaster の enabled で出し入れする。
+    ///   CanvasGroup で出し入れする。
     ///
     /// ■ アニメーション
     ///   全パネルが楕円上を弧を描いて移動する（角度補間）。並びは「選択中が上、そこから反時計回りに次の武器」なので、
@@ -38,7 +38,7 @@ namespace CreativeAI.UI
     ///   以降は楕円の上下(真上・真下)に近いほど手前、左右の端ほど奥。
     ///   4本なら「上(選択) → 下 → 左右」の順に重なる。
     /// </summary>
-    public class WeaponHUDController : MonoBehaviour
+    public class WeaponHudView : MonoBehaviour
     {
         [Header("パネル")]
         [Tooltip(
@@ -65,12 +65,9 @@ namespace CreativeAI.UI
         )]
         private float panelSpacingY = 100f;
 
-        [Header("所持本数で出し入れする自分の Canvas(0本=非表示)")]
+        [Header("所持本数で出し入れする自分の CanvasGroup(0本=非表示)")]
         [SerializeField]
-        private Canvas _canvas;
-
-        [SerializeField]
-        private GraphicRaycaster _raycaster;
+        private CanvasGroup _group;
 
         [SerializeField]
         [Tooltip(
@@ -106,10 +103,8 @@ namespace CreativeAI.UI
 
         private void Awake()
         {
-            if (_canvas == null)
-                _canvas = GetComponent<Canvas>();
-            if (_raycaster == null)
-                _raycaster = GetComponent<GraphicRaycaster>();
+            if (_group == null)
+                _group = ResidentUiVisibility.GetOrAddGroup(gameObject);
         }
 
         private void Start()
@@ -189,15 +184,13 @@ namespace CreativeAI.UI
 
         /// <summary>
         /// 武器0本=非表示 / 1本以上=表示(モードでは変えない)。
-        /// GameObject ごと止めると WeaponManager の購読が切れて戻れないため Canvas を無効化するだけにする。
+        /// GameObject ごと止めると WeaponManager の購読が切れて戻れないため CanvasGroup で隠すだけにする。
         /// </summary>
         private void ApplyVisibility(int ownedCount)
         {
             bool show = ownedCount > 0;
-            if (_canvas != null)
-                _canvas.enabled = show;
-            if (_raycaster != null)
-                _raycaster.enabled = show;
+            if (_group != null)
+                _group.SetShown(show);
         }
 
         /// <summary>
