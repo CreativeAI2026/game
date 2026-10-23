@@ -5,7 +5,9 @@ using UnityEngine;
 
 namespace CreativeAI.Tests.EditMode
 {
-    /// <summary>画像ファイル名からの key 解釈、items.json の読み込みと照合、ItemCatalog が素材からレシピを引けることの検証。</summary>
+    /// <summary>
+    /// アイテム画像名と items.json の突き合わせ、素材からのレシピ検索の検証。
+    /// </summary>
     public sealed class ItemCatalogSyncTests
     {
         [TearDown]

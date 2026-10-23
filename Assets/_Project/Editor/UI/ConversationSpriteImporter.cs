@@ -25,7 +25,7 @@ namespace CreativeAI.EditorTools
             importer.wrapMode = TextureWrapMode.Clamp;
             importer.filterMode = FilterMode.Bilinear;
             importer.npotScale = TextureImporterNPOTScale.None;
-            importer.textureCompression = TextureImporterCompression.Uncompressed;
+            importer.textureCompression = TextureImporterCompression.Compressed;
             importer.maxTextureSize = 2048;
             importer.SaveAndReimport();
         }

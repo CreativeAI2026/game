@@ -7,6 +7,10 @@ using UnityEngine;
 
 namespace CreativeAI.Tests.EditMode
 {
+    /// <summary>
+    /// 調合画面に出す回復量・装備ステータス・結果プレビューの表示文字列の検証。
+    /// あわせて調合パネル Prefab に表示と流れの参照が全部入っているかも見る。
+    /// </summary>
     public class CraftParameterTextFormatterTests
     {
         [Test]
