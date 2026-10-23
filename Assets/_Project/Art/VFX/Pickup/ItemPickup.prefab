@@ -49,7 +49,7 @@ SphereCollider:
     serializedVersion: 2
     m_Bits: 0
   m_LayerOverridePriority: 0
-  m_IsTrigger: 0
+  m_IsTrigger: 1
   m_ProvidesContacts: 0
   m_Enabled: 1
   serializedVersion: 3
@@ -69,7 +69,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: CreativeAI.Gameplay::CreativeAI.Gameplay.FieldItemPickup
   _item: {fileID: 0}
   _count: 1
-  _sparkle: {fileID: 729981108195932767}
+  _sparkle: {fileID: 917785234057469338}
   _playerTag: Player
   _destroyOnPickup: 1
 --- !u!1 &917785234057469338

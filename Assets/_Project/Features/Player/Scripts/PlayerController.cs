@@ -89,6 +89,12 @@ namespace CreativeAI.Gameplay
         /// </summary>
         public float DesiredSpeed { get; private set; }
 
+        /// <summary>
+        /// 入力から決まる、今進もうとしている水平方向（ワールド座標・正規化済み）。
+        /// 移動できない時・入力が無い時は zero。壁に沿って滑っているだけで、狙った方向へは進めていない状態の判定に使う。
+        /// </summary>
+        public Vector3 DesiredMoveDirection { get; private set; }
+
         private void Awake()
         {
             _mainCamera = GameObject.FindGameObjectWithTag("MainCamera");
@@ -144,6 +150,7 @@ namespace CreativeAI.Gameplay
             if (!CanMove)
             {
                 DesiredSpeed = 0f;
+                DesiredMoveDirection = Vector3.zero;
                 _speed = 0f;
                 _animationBlend = 0f;
                 _controller.Move(new Vector3(0.0f, _verticalVelocity, 0.0f) * Time.deltaTime);
@@ -252,6 +259,8 @@ namespace CreativeAI.Gameplay
 
             Vector3 targetDirection =
                 Quaternion.Euler(0.0f, targetDirectionAngle, 0.0f) * Vector3.forward;
+            DesiredMoveDirection =
+                _input.move != Vector2.zero ? targetDirection.normalized : Vector3.zero;
 
             _controller.Move(
                 targetDirection.normalized * (_speed * Time.deltaTime)

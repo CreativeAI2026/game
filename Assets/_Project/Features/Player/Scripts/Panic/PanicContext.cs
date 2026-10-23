@@ -42,6 +42,9 @@ namespace CreativeAI.Gameplay
         /// <summary>入力から決まる、今出そうとしている水平移動速度（m/s）。移動できない時・入力が無い時は 0。</summary>
         public float DesiredSpeed { get; set; }
 
+        /// <summary>入力から決まる、今進もうとしている水平方向（正規化済み）。移動できない時・入力が無い時は zero。</summary>
+        public Vector3 DesiredMoveDirection { get; set; }
+
         /// <summary>通常の歩き速度（m/s）。速さのしきい値をこれに対する割合で決め、体格・速度調整に追従させる。</summary>
         public float WalkSpeed { get; set; }
 
