@@ -12,6 +12,10 @@ using UnityEngine.TestTools;
 
 namespace CreativeAI.Tests.EditMode
 {
+    /// <summary>
+    /// events.json の分岐ステップ(フラグ・所持品・選択肢)の取り込みと再生の検証。
+    /// 不正な分岐の拒否、エラー位置の報告、プレビュー実行が本番の進行を汚さないことまで見る。
+    /// </summary>
     public class EventBranchTests
     {
         private static string Document(string steps) =>

@@ -7,6 +7,10 @@ using UnityEngine;
 
 namespace CreativeAI.Tests.EditMode
 {
+    /// <summary>
+    /// アイテム詳細のパラメータ一覧が、アイテムの種類ごとに正しい項目と値を出すかの検証。
+    /// 装備は各ボーナスを項目ごとに、食料は回復量を出し、重要アイテムでは全項目を隠す。
+    /// </summary>
     public class ItemParameterListViewTests
     {
         private GameObject _prefab;

@@ -9,6 +9,10 @@ using UnityEngine.UI;
 
 namespace CreativeAI.Tests.EditMode
 {
+    /// <summary>
+    /// キャラクター画面の武器選択とインベントリの使うボタンの操作感の検証。
+    /// 武器を選ぶと詳細とプレビューが更新され他の武器が暗くなる。使うボタンはダイアログなしで即回復・消費する。
+    /// </summary>
     public class UiInteractionRefinementTests
     {
         [TestCase("CharacterUI/Prefabs/CharacterPanel.prefab")]
