@@ -1,0 +1,235 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 858f11bf7ac04ef1a88f80026e740e0f, type: 3}
+  m_Name: 8_encountering_strangehead
+  m_EditorClassIdentifier: CreativeAI.Core::CreativeAI.Core.EventDefinition
+  _id: 8_encountering_strangehead
+  _conditions:
+  - _type: 0
+    _progressValue: 7
+    _flagKey: 
+    _flagValue: 
+    _itemKey: 
+  _steps:
+  - _kind: 0
+    _speaker: 
+    _portrait: hero_surprised
+    _text: "\u300C\u2026\u2026\u304A\u3049\uFF1F<wait=0.3> \u306A\u3093\u3060\u3053\u3053\u3001\u3081\u3061\u3083\u304F\u3061\u3083\u5E83\u3044\u306A\u2026\u2026\u3002\u300D"
+    _flagKey: 
+    _options: []
+    _itemKey: 
+    _weaponKey: 
+    _message: 
+    _command: 
+    _arg: 
+  - _kind: 0
+    _speaker: 
+    _portrait: hero_normal
+    _text: "\u300C\u3055\u3063\u304D\u307E\u3067\u306E\u72ED\u3044\u5ECA\u4E0B\u3068\u306F\u5927\u9055\u3044\u3060\u306A\u3002\u300D"
+    _flagKey: 
+    _options: []
+    _itemKey: 
+    _weaponKey: 
+    _message: 
+    _command: 
+    _arg: 
+  - _kind: 0
+    _speaker: 
+    _portrait: hero_question
+    _text: "\u300C\u5929\u4E95\u3082\u9AD8\u3047\u3057\u2026\u2026<wait=0.3> \u306A\u3093\u304B\u5546\u696D\u65BD\u8A2D\u307F\u3066\u3047\u306A\u9020\u308A\u3060\u306A\u3002\u300D"
+    _flagKey: 
+    _options: []
+    _itemKey: 
+    _weaponKey: 
+    _message: 
+    _command: 
+    _arg: 
+  - _kind: 0
+    _speaker: 
+    _portrait: robot_normal
+    _text: "\u300C\u73FE\u5728\u5730\u3001<wait=0.3>\u7814\u7A76\u68DF\u63A5\u7D9A\u901A\u8DEF\u3092\u901A\u904E\u3002
+      \u672C\u68DF\u30A8\u30EA\u30A2\u3078\u5230\u9054\u3057\u307E\u3057\u305F\u3002\u300D"
+    _flagKey: 
+    _options: []
+    _itemKey: 
+    _weaponKey: 
+    _message: 
+    _command: 
+    _arg: 
+  - _kind: 0
+    _speaker: 
+    _portrait: robot_normal
+    _text: "\u300C\u5468\u8FBA\u7A7A\u9593\u3092\u30B9\u30AD\u30E3\u30F3\u4E2D\u2026\u2026<wait=0.5>
+      \u30DE\u30C3\u30D7\u30C7\u30FC\u30BF\u3092\u66F4\u65B0\u3057\u307E\u3059\u3002\u300D"
+    _flagKey: 
+    _options: []
+    _itemKey: 
+    _weaponKey: 
+    _message: 
+    _command: 
+    _arg: 
+  - _kind: 0
+    _speaker: 
+    _portrait: robot_normal
+    _text: "\u300C\u5F53\u30A8\u30EA\u30A2\u306F\u3001<wait=0.3>\u5E83\u57DF\u306A\u5439\u304D\u629C\u3051\u69CB\u9020\u3092\u6709\u3057\u3066\u3044\u307E\u3059\u3002\u300D"
+    _flagKey: 
+    _options: []
+    _itemKey: 
+    _weaponKey: 
+    _message: 
+    _command: 
+    _arg: 
+  - _kind: 0
+    _speaker: 
+    _portrait: robot_normal
+    _text: "\u300C\u305F\u3060\u3057\u3001\u6B7B\u89D2\u3082\u591A\u304F\u3001<wait=0.3>\u6575\u6027\u500B\u4F53\u3068\u306E\u906D\u9047\u30EA\u30B9\u30AF\u304C\u9AD8\u307E\u308A\u307E\u3059\u3002\u300D"
+    _flagKey: 
+    _options: []
+    _itemKey: 
+    _weaponKey: 
+    _message: 
+    _command: 
+    _arg: 
+  - _kind: 0
+    _speaker: 
+    _portrait: robot_normal
+    _text: "\u300C\u5F15\u304D\u7D9A\u304D\u3001<wait=0.3>\u8B66\u6212\u3092\u7DAD\u6301\u3057\u3066\u304F\u3060\u3055\u3044\u3002\u300D"
+    _flagKey: 
+    _options: []
+    _itemKey: 
+    _weaponKey: 
+    _message: 
+    _command: 
+    _arg: 
+  - _kind: 0
+    _speaker: 
+    _portrait: hero_normal
+    _text: "\u300C\u306F\u3044\u306F\u3044\u3001<wait=0.3>\u5206\u304B\u3063\u3066\u308B\u3063\u3066\u3002\u300D"
+    _flagKey: 
+    _options: []
+    _itemKey: 
+    _weaponKey: 
+    _message: 
+    _command: 
+    _arg: 
+  - _kind: 0
+    _speaker: 
+    _portrait: hero_confused
+    _text: "\u300C\u2026\u2026\u306B\u3057\u3066\u3082\u3001<wait=0.3>\u5999\u306B\u9759\u304B\u3058\u3083\u306D\u3047\u304B\uFF1F\u300D"
+    _flagKey: 
+    _options: []
+    _itemKey: 
+    _weaponKey: 
+    _message: 
+    _command: 
+    _arg: 
+  - _kind: 0
+    _speaker: 
+    _portrait: hero_question
+    _text: "\u300C\u3053\u3093\u3060\u3051\u5E83\u3044\u3093\u3060\u3002<wait=0.3>
+      \u8AB0\u304B\u4E00\u4EBA\u304F\u3089\u3044\u3044\u3066\u3082\u3088\u3055\u305D\u3046\u306A\u306E\u306B\u306A\u2026\u2026\u3002\u300D"
+    _flagKey: 
+    _options: []
+    _itemKey: 
+    _weaponKey: 
+    _message: 
+    _command: 
+    _arg: 
+  - _kind: 0
+    _speaker: 
+    _portrait: robot_normal
+    _text: "\u300C\u73FE\u5728\u3001\u53EF\u8996\u7BC4\u56F2\u5185\u306B\u6B63\u5E38\u306A\u4EBA\u9593\u306E\u751F\u4F53\u53CD\u5FDC\u306F\u78BA\u8A8D\u3067\u304D\u307E\u305B\u3093\u3002\u300D"
+    _flagKey: 
+    _options: []
+    _itemKey: 
+    _weaponKey: 
+    _message: 
+    _command: 
+    _arg: 
+  - _kind: 0
+    _speaker: 
+    _portrait: robot_normal
+    _text: "\u300C\u2026\u2026\u305F\u3060\u3057\u3002\u300D"
+    _flagKey: 
+    _options: []
+    _itemKey: 
+    _weaponKey: 
+    _message: 
+    _command: 
+    _arg: 
+  - _kind: 0
+    _speaker: 
+    _portrait: hero_question
+    _text: "\u300C\u2026\u2026\u305F\u3060\u3057\uFF1F<wait=0.5> \u306A\u3093\u3060\u3088\uFF1F\u300D"
+    _flagKey: 
+    _options: []
+    _itemKey: 
+    _weaponKey: 
+    _message: 
+    _command: 
+    _arg: 
+  - _kind: 0
+    _speaker: 
+    _portrait: robot_normal
+    _text: "\u300C\u524D\u65B9\u306E\u5E83\u57DF\u533A\u753B\u306B\u3066\u3001<wait=0.3>\u5FAE\u5F31\u306A\u97F3\u97FF\u30CE\u30A4\u30BA\u3092\u691C\u77E5\u3002\u300D"
+    _flagKey: 
+    _options: []
+    _itemKey: 
+    _weaponKey: 
+    _message: 
+    _command: 
+    _arg: 
+  - _kind: 0
+    _speaker: 
+    _portrait: robot_normal
+    _text: "\u300C\u3055\u3089\u306B\u3001<wait=0.5>\u5206\u985E\u4E0D\u80FD\u306A\u53CD\u5FDC\u3092\u78BA\u8A8D\u3057\u307E\u3057\u305F\u3002\u300D"
+    _flagKey: 
+    _options: []
+    _itemKey: 
+    _weaponKey: 
+    _message: 
+    _command: 
+    _arg: 
+  - _kind: 0
+    _speaker: 
+    _portrait: hero_confused
+    _text: "\u300C\u2026\u2026\u5206\u985E\u4E0D\u80FD\uFF1F<wait=0.3>\u307E\u305F\u3042\u306E\u30D0\u30B1\u30E2\u30CE\u304B\u2026\u2026\uFF1F\u300D"
+    _flagKey: 
+    _options: []
+    _itemKey: 
+    _weaponKey: 
+    _message: 
+    _command: 
+    _arg: 
+  - _kind: 0
+    _speaker: 
+    _portrait: hero_normal
+    _text: "\u300C\u2026\u2026\u307E\u3001<wait=0.3>\u3053\u3053\u3067\u8003\u3048\u3066\u3066\u3082\u4ED5\u65B9\u306D\u3047\u304B\u3002\u300D"
+    _flagKey: 
+    _options: []
+    _itemKey: 
+    _weaponKey: 
+    _message: 
+    _command: 
+    _arg: 
+  - _kind: 0
+    _speaker: 
+    _portrait: hero_anger
+    _text: "\u300C\u3068\u308A\u3042\u3048\u305A\u3001<wait=0.3>\u69D8\u5B50\u3092\u898B\u306B\u884C\u3063\u3066\u307F\u308B\u304B\u3002\u300D"
+    _flagKey: 
+    _options: []
+    _itemKey: 
+    _weaponKey: 
+    _message: 
+    _command: 
+    _arg: 
+  _nextProgress: 8
