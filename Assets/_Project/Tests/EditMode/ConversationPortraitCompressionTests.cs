@@ -6,6 +6,10 @@ using UnityEngine;
 
 namespace CreativeAI.Tests.EditMode
 {
+    /// <summary>
+    /// 会話の立ち絵14枚が4の倍数のサイズで、DXT5/BC7に圧縮されているかの検証。
+    /// 圧縮が効かず非圧縮(RGBA32)のままメモリに載り続けるのを防ぐ。
+    /// </summary>
     public class ConversationPortraitCompressionTests
     {
         private const string PortraitRoot = "Assets/_Project/Art/UI/Conversation/Character";
