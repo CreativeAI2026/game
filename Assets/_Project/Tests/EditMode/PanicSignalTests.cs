@@ -226,13 +226,21 @@ namespace CreativeAI.Tests.EditMode
 
         // --- 空間喪失 ---
 
+        /// <summary>左の壁へ向かって押しているのに動けない（敵は +Z 方向 5m）観測値。</summary>
+        private PanicContext PushingIntoLeftWallContext()
+        {
+            PanicContext context = CombatContext();
+            context.DesiredSpeed = WalkSpeed;
+            context.DesiredMoveDirection = Vector3.left;
+            context.HorizontalVelocity = Vector3.zero;
+            return context;
+        }
+
         [Test]
         public void 空間喪失_敵の近くで入力しているのに動けないと溜まる()
         {
             var trap = new TrapSignal();
-            PanicContext context = CombatContext();
-            context.DesiredSpeed = WalkSpeed;
-            context.HorizontalVelocity = Vector3.zero;
+            PanicContext context = PushingIntoLeftWallContext();
 
             TickFor(trap, context, 3f);
 
@@ -240,12 +248,40 @@ namespace CreativeAI.Tests.EditMode
         }
 
         [Test]
-        public void 空間喪失_敵の体に押し当てているだけなら数えない()
+        public void 空間喪失_壁に沿って横へ滑っているだけでも狙った方向へ進めていなければ溜まる()
         {
             var trap = new TrapSignal();
-            PanicContext context = CombatContext();
-            context.DesiredSpeed = WalkSpeed;
-            context.HorizontalVelocity = Vector3.zero;
+            PanicContext context = PushingIntoLeftWallContext();
+            // 左へ押しているが、壁に沿って後ろへ滑っている（速さはあるが狙った方向へは進んでいない）
+            context.HorizontalVelocity = Vector3.back * 4f;
+
+            TickFor(trap, context, 3f);
+
+            Assert.That(trap.Score, Is.EqualTo(1f).Within(0.01f));
+        }
+
+        [Test]
+        public void 空間喪失_斬られて怯んでいる間は溜まった時間を保つ()
+        {
+            var trap = new TrapSignal();
+            PanicContext context = PushingIntoLeftWallContext();
+            TickFor(trap, context, 2f);
+
+            // 怯み・掴みで移動が封じられた（以前はここで2倍の速さで減っていた）
+            context.CanMove = false;
+            context.DesiredSpeed = 0f;
+            context.DesiredMoveDirection = Vector3.zero;
+            TickFor(trap, context, 2f);
+
+            Assert.That(trap.Timer, Is.EqualTo(2f).Within(0.01f));
+        }
+
+        [Test]
+        public void 空間喪失_敵の体へ向かって押しているだけなら数えない()
+        {
+            var trap = new TrapSignal();
+            PanicContext context = PushingIntoLeftWallContext();
+            context.DesiredMoveDirection = Vector3.forward; // 敵の方向
             context.IsTouchingEnemy = true;
 
             TickFor(trap, context, 3f);
@@ -254,12 +290,23 @@ namespace CreativeAI.Tests.EditMode
         }
 
         [Test]
+        public void 空間喪失_敵に押されて壁際に挟まれているなら溜まる()
+        {
+            var trap = new TrapSignal();
+            PanicContext context = PushingIntoLeftWallContext();
+            context.DesiredMoveDirection = Vector3.back; // 敵から離れようとしている
+            context.IsTouchingEnemy = true;
+
+            TickFor(trap, context, 3f);
+
+            Assert.That(trap.Score, Is.EqualTo(1f).Within(0.01f));
+        }
+
+        [Test]
         public void 空間喪失_敵が遠ければ数えない()
         {
             var trap = new TrapSignal();
-            PanicContext context = CombatContext();
-            context.DesiredSpeed = WalkSpeed;
-            context.HorizontalVelocity = Vector3.zero;
+            PanicContext context = PushingIntoLeftWallContext();
             context.EnemyDistance = 20f;
 
             TickFor(trap, context, 3f);
@@ -271,8 +318,8 @@ namespace CreativeAI.Tests.EditMode
         public void 空間喪失_スティックを少し倒してゆっくり歩いているだけなら数えない()
         {
             var trap = new TrapSignal();
-            PanicContext context = CombatContext();
-            // 期待速度 1m/s に対して実速度 0.9m/s（0.5m/s の固定しきい値だった頃は境目付近だった）
+            PanicContext context = PushingIntoLeftWallContext();
+            // 期待速度 1m/s に対して、入力した方向へ 0.9m/s で進めている
             context.DesiredSpeed = 1f;
             context.HorizontalVelocity = Vector3.left * 0.9f;
 
