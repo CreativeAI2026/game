@@ -1,9 +1,10 @@
 using System.Collections;
+using CreativeAI.Gameplay;
 using UnityEngine;
 using UnityEngine.Assertions;
 using UnityEngine.UI;
 
-namespace CreativeAI.Gameplay
+namespace CreativeAI.UI
 {
     /// <summary>
     /// 被弾時の赤ビネット演出を管理する(シーン側の UI)。
@@ -13,7 +14,7 @@ namespace CreativeAI.Gameplay
     /// プレイヤーは UI を知らず、この UI が PlayerRegistry からプレイヤーを受け取って
     /// PlayerStatus.Damaged を購読する(プレイヤーが後から生成されても購読できる)。
     /// </summary>
-    public class DamageVignette : MonoBehaviour
+    public class DamageVignetteView : MonoBehaviour
     {
         [Tooltip("全画面を覆う赤いビネット用の Image コンポーネント")]
         [SerializeField]
