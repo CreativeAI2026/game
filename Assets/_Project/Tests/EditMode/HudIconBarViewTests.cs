@@ -1,0 +1,233 @@
+using CreativeAI.Core;
+using CreativeAI.UI;
+using NUnit.Framework;
+using UnityEngine;
+
+namespace CreativeAI.Tests.EditMode
+{
+    /// <summary>
+    /// 右上アイコンバーの出し分けの検証(移動中だけ表示し、戦闘中と会話中は隠す)。
+    /// 会話中に隠すのはセーブ/インベを開かせないため。
+    /// GameObject ごと消すと購読が切れるため、CanvasGroup で出し分ける実装を検証する。
+    /// 隠れるとき(戦闘・会話の開始)は、開いているパネルも閉じる。
+    /// </summary>
+    public class HudIconBarViewTests
+    {
+        private GameObject _gmmGo;
+        private GameModeManager _gmm;
+        private GameObject _barGo;
+        private HudIconBarView _bar;
+        private CanvasGroup _group;
+
+        [SetUp]
+        public void SetUp()
+        {
+            _gmmGo = new GameObject("GMM");
+            _gmm = _gmmGo.AddComponent<GameModeManager>();
+            TestReflection.SetStaticProperty("Instance", _gmm);
+
+            _barGo = new GameObject("HudIconBarView");
+            _group = _barGo.AddComponent<CanvasGroup>();
+            _bar = _barGo.AddComponent<HudIconBarView>();
+            TestReflection.SetField(_bar, "_group", _group);
+
+            // EditMode では OnEnable が走らないので、購読 + 初期反映を明示的に行う。
+            TestReflection.Invoke(_bar, "OnEnable");
+        }
+
+        [TearDown]
+        public void TearDown()
+        {
+            TestReflection.Invoke(_bar, "OnDisable");
+            EventPlaybackService.SetPlaying(false);
+            TestReflection.SetStaticProperty<GameModeManager>("Instance", null);
+            Object.DestroyImmediate(_barGo);
+            Object.DestroyImmediate(_gmmGo);
+        }
+
+        private bool IsShown => _group.IsShown() && _group.blocksRaycasts;
+
+        [Test]
+        public void FieldMode_NotInDialogue_IsShown()
+        {
+            Assert.IsTrue(IsShown);
+        }
+
+        [Test]
+        public void BattleMode_IsHidden()
+        {
+            _gmm.EnterBattle();
+
+            Assert.IsFalse(IsShown, "戦闘モード中は非表示");
+        }
+
+        [Test]
+        public void ReturningToField_ShowsAgain()
+        {
+            _gmm.EnterBattle();
+            Assert.IsFalse(IsShown);
+
+            _gmm.ExitBattle();
+
+            Assert.IsTrue(IsShown);
+        }
+
+        [Test]
+        public void DuringEventPlayback_IsHidden()
+        {
+            EventPlaybackService.SetPlaying(true);
+
+            Assert.IsFalse(IsShown, "会話UI表示中はセーブ/インベを開けない");
+        }
+
+        [Test]
+        public void AfterEventPlayback_ShowsAgain()
+        {
+            EventPlaybackService.SetPlaying(true);
+            Assert.IsFalse(IsShown);
+
+            EventPlaybackService.SetPlaying(false);
+
+            Assert.IsTrue(IsShown);
+        }
+
+        [Test]
+        public void BattleAndDialogue_BothCleared_IsRequiredToShow()
+        {
+            // 戦闘かつ会話中 → 片方だけ解除しても出さない。
+            _gmm.EnterBattle();
+            EventPlaybackService.SetPlaying(true);
+            Assert.IsFalse(IsShown);
+
+            EventPlaybackService.SetPlaying(false);
+            Assert.IsFalse(IsShown, "まだ戦闘中");
+
+            _gmm.ExitBattle();
+            Assert.IsTrue(IsShown);
+        }
+
+        [Test]
+        public void BattleStarts_ClosesOpenPanel()
+        {
+            var routerGo = new GameObject("UiRouter");
+            var panel = new GameObject("InventoryUI");
+            try
+            {
+                var router = routerGo.AddComponent<UiRouter>();
+                TestReflection.SetField(router, "_inventoryUI", panel);
+                TestReflection.Invoke(router, "Awake");
+                TestReflection.SetField(_bar, "_router", router);
+                router.Open(UiRouter.UiId.Inventory);
+
+                _gmm.EnterBattle();
+
+                Assert.IsFalse(panel.activeSelf, "戦闘が始まったらインベは閉じる");
+            }
+            finally
+            {
+                UiPanelService.ResetState();
+                Object.DestroyImmediate(panel);
+                Object.DestroyImmediate(routerGo);
+            }
+        }
+
+        [Test]
+        public void GameObjectStaysActive_SoSubscriptionsSurvive()
+        {
+            _gmm.EnterBattle();
+
+            Assert.IsTrue(
+                _barGo.activeSelf,
+                "SetActive(false) で自分を止めると購読が切れて戻れなくなる"
+            );
+        }
+
+        [Test]
+        public void WithoutGameModeManager_DefaultsToShown()
+        {
+            TestReflection.SetStaticProperty<GameModeManager>("Instance", null);
+            var go = new GameObject("HudIconBar2");
+            try
+            {
+                var group = go.AddComponent<CanvasGroup>();
+                var bar = go.AddComponent<HudIconBarView>();
+                TestReflection.SetField(bar, "_group", group);
+
+                TestReflection.Invoke(bar, "OnEnable");
+
+                Assert.IsTrue(group.IsShown(), "マネージャ未生成(タイトル直後)は Field 扱いで表示");
+                TestReflection.Invoke(bar, "OnDisable");
+            }
+            finally
+            {
+                Object.DestroyImmediate(go);
+            }
+        }
+
+        // キー(PlayerUiInput のイベント)で開閉する。購読先の選び方ではなく、押されたときの判定を検証する。
+        private void WithRouter(System.Action<UiRouter, GameObject> body)
+        {
+            var routerGo = new GameObject("UiRouter");
+            var panel = new GameObject("InventoryUI");
+            try
+            {
+                var router = routerGo.AddComponent<UiRouter>();
+                TestReflection.SetField(router, "_inventoryUI", panel);
+                TestReflection.Invoke(router, "Awake");
+                TestReflection.SetField(_bar, "_router", router);
+                body(router, panel);
+            }
+            finally
+            {
+                UiPanelService.ResetState();
+                Object.DestroyImmediate(panel);
+                Object.DestroyImmediate(routerGo);
+            }
+        }
+
+        [Test]
+        public void InventoryKey_TogglesInventory()
+        {
+            WithRouter(
+                (_, panel) =>
+                {
+                    TestReflection.Invoke(_bar, "OnInventoryPressed");
+                    Assert.IsTrue(panel.activeSelf, "I で開く");
+
+                    TestReflection.Invoke(_bar, "OnInventoryPressed");
+                    Assert.IsFalse(panel.activeSelf, "もう一度 I で閉じる");
+                }
+            );
+        }
+
+        [Test]
+        public void CancelKey_ClosesOpenPanel()
+        {
+            WithRouter(
+                (router, panel) =>
+                {
+                    router.Open(UiRouter.UiId.Inventory);
+
+                    TestReflection.Invoke(_bar, "OnCancelPressed");
+
+                    Assert.IsFalse(panel.activeSelf);
+                }
+            );
+        }
+
+        [Test]
+        public void Keys_AreIgnoredWhileHidden()
+        {
+            WithRouter(
+                (_, panel) =>
+                {
+                    EventPlaybackService.SetPlaying(true); // 会話中は隠れる
+
+                    TestReflection.Invoke(_bar, "OnInventoryPressed");
+
+                    Assert.IsFalse(panel.activeSelf, "会話中はキーでも開けない");
+                }
+            );
+        }
+    }
+}

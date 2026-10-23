@@ -22,7 +22,7 @@ namespace CreativeAI.Gameplay
         public static void Save()
         {
             // セーブ可能なのは「フィールド移動中」だけ(戦闘モード中・会話イベント再生中は不可)。
-            // 入口(HudIconBar)側でもボタンを塞いでいるが、別経路からの呼び出しに備えた多重防御。
+            // 入口(HudIconBarView)側でもボタンを塞いでいるが、別経路からの呼び出しに備えた多重防御。
             if (!CanSaveNow(out string blockedReason))
             {
                 Debug.LogWarning(
