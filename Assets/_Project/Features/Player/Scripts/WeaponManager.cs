@@ -122,7 +122,7 @@ namespace CreativeAI.Gameplay
                 resettable.ForceReset();
         }
 
-        /// <summary>登録されている武器の総数。WeaponHUDController がパネル数の決定に使用する。</summary>
+        /// <summary>登録されている武器の総数。WeaponHudView がパネル数の決定に使用する。</summary>
         public int WeaponCount => _slots.Length;
 
         public GameObject GetWeaponObject(int dataId)

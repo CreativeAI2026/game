@@ -6,6 +6,7 @@ using UnityEngine;
 using UnityEngine.EventSystems;
 using UnityEngine.InputSystem.UI;
 using UnityEngine.SceneManagement;
+using UnityEngine.UI;
 
 namespace CreativeAI.EditorTools
 {
@@ -26,8 +27,25 @@ namespace CreativeAI.EditorTools
 
             new GameObject("EventSystem", typeof(EventSystem), typeof(InputSystemUIInputModule));
 
-            var instance = (GameObject)PrefabUtility.InstantiatePrefab(prefab, scene);
-            instance.transform.SetAsLastSibling();
+            // 会話UIの Prefab は Canvas を持たないので、UIRoot の ConversationUI と同じ設定の Canvas の下に置く。
+            var canvasObject = new GameObject(
+                "ConversationUI",
+                typeof(RectTransform),
+                typeof(Canvas),
+                typeof(CanvasScaler),
+                typeof(GraphicRaycaster)
+            );
+            var canvas = canvasObject.GetComponent<Canvas>();
+            canvas.renderMode = RenderMode.ScreenSpaceOverlay;
+            canvas.sortingOrder = 200;
+            var scaler = canvasObject.GetComponent<CanvasScaler>();
+            scaler.uiScaleMode = CanvasScaler.ScaleMode.ScaleWithScreenSize;
+            scaler.referenceResolution = new Vector2(1920, 1080);
+            scaler.screenMatchMode = CanvasScaler.ScreenMatchMode.MatchWidthOrHeight;
+            scaler.matchWidthOrHeight = 0.5f;
+
+            var instance = (GameObject)
+                PrefabUtility.InstantiatePrefab(prefab, canvasObject.transform);
 
             var driverObject = new GameObject(
                 "ConversationPreviewDriver",

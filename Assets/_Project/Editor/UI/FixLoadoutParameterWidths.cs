@@ -51,7 +51,7 @@ namespace CreativeAI.EditorTools
                     }
                     if (root.name == "UIRoot")
                     {
-                        var hud = root.GetComponentInChildren<HudIconBar>(true);
+                        var hud = root.GetComponentInChildren<HudIconBarView>(true);
                         foreach (var name in new[] { "Character", "Inventory", "Save" })
                         {
                             var image = hud.transform.Find(name + "Button").GetComponent<Image>();

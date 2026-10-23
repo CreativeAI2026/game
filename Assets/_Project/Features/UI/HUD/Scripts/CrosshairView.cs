@@ -1,7 +1,8 @@
+using CreativeAI.Gameplay;
 using UnityEngine;
 using UnityEngine.UI;
 
-namespace CreativeAI.Gameplay
+namespace CreativeAI.UI
 {
     /// <summary>
     /// 弓を構えている間だけクロスヘアーを表示する。**クロスヘアーの Image と同じ GameObject に置く**(シーン側)。

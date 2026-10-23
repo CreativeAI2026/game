@@ -17,7 +17,7 @@ MonoBehaviour:
   key: mysterious_note_1
   itemName: "\u8B0E\u306E\u624B\u8A18\uFF11"
   category: 3
-  description: 
+  description: "\u91D1\u8272\u306E\u661F\u306E\u6A21\u69D8\u304C\u63CF\u304B\u308C\u305F\u3001\u8336\u8272\u3044\u9769\u8868\u7D19\u306E\u624B\u8A18\u3002"
   material1: {fileID: 0}
   material2: {fileID: 0}
   _maxStack: 1
@@ -36,9 +36,9 @@ MonoBehaviour:
   icon: {fileID: 21300000, guid: e6ad66fffe2bb9f45b716906fa59a19e, type: 3}
   id: 3121
   key: brown_rice_cream_cookie_miso_soup
-  itemName: "\u30AF\u30EA\u30FC\u30E0\u7384\u7C73\u30AF\u30C3\u30AD\u30FC\u3068\u5473\u564C\u6C41"
+  itemName: "\u30AF\u30C3\u30AD\u30FC\u5165\u308A\u5473\u564C\u6C41"
   category: 2
-  description: 
+  description: "\u8C46\u8150\u3084\u308F\u304B\u3081\u3068\u4E00\u7DD2\u306B\u3001\u56DB\u89D2\u3044\u30AF\u30C3\u30AD\u30FC\u304C\u6D6E\u304B\u3076\u5473\u564C\u6C41\u3002"
   material1: {fileID: -3201117879322543463}
   material2: {fileID: -3828202121546107835}
   _maxStack: 1
@@ -58,9 +58,9 @@ MonoBehaviour:
   icon: {fileID: 21300000, guid: ea8669df40db5b441b35f067151e0afe, type: 3}
   id: 2110
   key: clock_fluorescent_light
-  itemName: "\u61D0\u4E2D\u6642\u8A08\u3068\u86CD\u5149\u706F"
+  itemName: "\u771F\u7A7A\u7BA1\u30AF\u30ED\u30C3\u30AF"
   category: 1
-  description: 
+  description: "\u61D0\u4E2D\u6642\u8A08\u3068\u86CD\u5149\u706F\u3067\u5408\u6210\u3055\u308C\u305F\u88C5\u5099\u3002"
   material1: {fileID: 957348972317786013}
   material2: {fileID: -263205480878404495}
   _maxStack: 1
@@ -81,7 +81,7 @@ MonoBehaviour:
   key: magnet
   itemName: "\u78C1\u77F3"
   category: 1
-  description: 
+  description: "\u9244\u3092\u3074\u305F\u308A\u3068\u5F15\u304D\u5BC4\u305B\u308B\u78C1\u77F3\u3002"
   material1: {fileID: 0}
   material2: {fileID: 0}
   _maxStack: 1
@@ -100,9 +100,9 @@ MonoBehaviour:
   icon: {fileID: 21300000, guid: f0c9c16245c84624286f4921f82ad42e, type: 3}
   id: 2106
   key: balloon_magnet
-  itemName: "\u98A8\u8239\u3068\u78C1\u77F3"
+  itemName: "\u53CC\u6975\u30AA\u30FC\u30D6"
   category: 1
-  description: 
+  description: "\u98A8\u8239\u3068\u78C1\u77F3\u3067\u5408\u6210\u3055\u308C\u305F\u88C5\u5099\u3002"
   material1: {fileID: -7287126184965246600}
   material2: {fileID: -7822687782585050773}
   _maxStack: 1
@@ -121,9 +121,9 @@ MonoBehaviour:
   icon: {fileID: 21300000, guid: 41931a9cbade7314aa80048d1c228451, type: 3}
   id: 3139
   key: miso_soup_white_rice
-  itemName: "\u5473\u564C\u6C41\u3068\u767D\u7C73"
+  itemName: "\u8C46\u8150\u3068\u308F\u304B\u3081\u306E\u5473\u564C\u96D1\u708A"
   category: 2
-  description: 
+  description: "\u3054\u98EF\u306B\u8C46\u8150\u3084\u308F\u304B\u3081\u5165\u308A\u306E\u5473\u564C\u6C41\u3092\u5408\u308F\u305B\u305F\u3001\u6C41\u6C17\u305F\u3063\u3077\u308A\u306E\u4E00\u676F\u3002"
   material1: {fileID: -3828202121546107835}
   material2: {fileID: -1353312657710663384}
   _maxStack: 1
@@ -145,7 +145,7 @@ MonoBehaviour:
   key: balloon
   itemName: "\u98A8\u8239"
   category: 1
-  description: 
+  description: "\u3075\u308F\u3075\u308F\u6D6E\u304B\u3076\u3001\u8EFD\u3044\u98A8\u8239\u3002"
   material1: {fileID: 0}
   material2: {fileID: 0}
   _maxStack: 1
@@ -164,9 +164,9 @@ MonoBehaviour:
   icon: {fileID: 21300000, guid: 3166d165ef2895f4a8137163b4c77b5d, type: 3}
   id: 2114
   key: clock_magnet
-  itemName: "\u61D0\u4E2D\u6642\u8A08\u3068\u78C1\u77F3"
+  itemName: "\u7F85\u91DD\u61D0\u4E2D\u6642\u8A08"
   category: 1
-  description: 
+  description: "\u61D0\u4E2D\u6642\u8A08\u3068\u78C1\u77F3\u3067\u5408\u6210\u3055\u308C\u305F\u88C5\u5099\u3002"
   material1: {fileID: 957348972317786013}
   material2: {fileID: -7822687782585050773}
   _maxStack: 1
@@ -187,7 +187,7 @@ MonoBehaviour:
   key: strawberry_jelly
   itemName: "\u3044\u3061\u3054\u30BC\u30EA\u30FC"
   category: 2
-  description: 
+  description: "\u3044\u3061\u3054\u3092\u6DFB\u3048\u305F\u3001\u3064\u3084\u3084\u304B\u306A\u8D64\u3044\u30BC\u30EA\u30FC\u3002"
   material1: {fileID: 0}
   material2: {fileID: 0}
   _maxStack: 99
@@ -207,9 +207,9 @@ MonoBehaviour:
   icon: {fileID: 21300000, guid: 156c75b21e7ddc44fb6644e3c69e0665, type: 3}
   id: 2141
   key: magnet_note
-  itemName: "\u78C1\u77F3\u3068\u30CE\u30FC\u30C8"
+  itemName: "\u78C1\u77F3\u7559\u3081\u306E\u661F\u56F3\u5E33"
   category: 1
-  description: 
+  description: "\u78C1\u77F3\u3068\u30CE\u30FC\u30C8\u3067\u5408\u6210\u3055\u308C\u305F\u88C5\u5099\u3002"
   material1: {fileID: -7822687782585050773}
   material2: {fileID: 1491394875471116521}
   _maxStack: 1
@@ -228,9 +228,9 @@ MonoBehaviour:
   icon: {fileID: 21300000, guid: 247f83672e3268846acc13ff7e3dde4b, type: 3}
   id: 3133
   key: grapes_peach
-  itemName: "\u3076\u3069\u3046\u3068\u6843"
+  itemName: "\u623F\u306A\u308A\u6843"
   category: 2
-  description: 
+  description: "\u5C0F\u3055\u306A\u6843\u304C\u3001\u3076\u3069\u3046\u306E\u3088\u3046\u306B\u623F\u3044\u3063\u3071\u3044\u306B\u5B9F\u3063\u305F\u679C\u7269\u3002"
   material1: {fileID: -5554650038091774464}
   material2: {fileID: 2510756971122629955}
   _maxStack: 1
@@ -250,9 +250,9 @@ MonoBehaviour:
   icon: {fileID: 21300000, guid: 5e7c3b807262eea43afa60485545bd48, type: 3}
   id: 2112
   key: clock_glasses
-  itemName: "\u61D0\u4E2D\u6642\u8A08\u3068\u30E1\u30AC\u30CD"
+  itemName: "\u6642\u666F\u30B4\u30FC\u30B0\u30EB"
   category: 1
-  description: 
+  description: "\u61D0\u4E2D\u6642\u8A08\u3068\u30E1\u30AC\u30CD\u3067\u5408\u6210\u3055\u308C\u305F\u88C5\u5099\u3002"
   material1: {fileID: 957348972317786013}
   material2: {fileID: 6717797442590564354}
   _maxStack: 1
@@ -271,9 +271,9 @@ MonoBehaviour:
   icon: {fileID: 21300000, guid: aed8e2c1cada84d4cb221e29c16d72b5, type: 3}
   id: 3134
   key: grapes_strawberry_jelly
-  itemName: "\u3076\u3069\u3046\u3068\u3044\u3061\u3054\u30BC\u30EA\u30FC"
+  itemName: "\u3076\u3069\u3046\u306E\u623F\u30BC\u30EA\u30FC"
   category: 2
-  description: 
+  description: "\u3076\u3069\u3046\u306E\u623F\u3092\u304B\u305F\u3069\u3063\u305F\u3001\u8D64\u7D2B\u8272\u306B\u900F\u304D\u901A\u308B\u30BC\u30EA\u30FC\u3002"
   material1: {fileID: -5554650038091774464}
   material2: {fileID: -7209103825163294352}
   _maxStack: 1
@@ -293,9 +293,9 @@ MonoBehaviour:
   icon: {fileID: 21300000, guid: 2ad8e93cb263e1944bc9a325e6f43afc, type: 3}
   id: 3136
   key: miso_soup_orange_juice
-  itemName: "\u5473\u564C\u6C41\u3068\u307F\u304B\u3093\u30B8\u30E5\u30FC\u30B9"
+  itemName: "\u307F\u304B\u3093\u5165\u308A\u5473\u564C\u6C41"
   category: 2
-  description: 
+  description: "\u8C46\u8150\u3084\u308F\u304B\u3081\u3068\u4E00\u7DD2\u306B\u3001\u307F\u304B\u3093\u306E\u8F2A\u5207\u308A\u304C\u6D6E\u304B\u3076\u5473\u564C\u6C41\u3002"
   material1: {fileID: -3828202121546107835}
   material2: {fileID: -6523541574003027713}
   _maxStack: 1
@@ -315,9 +315,9 @@ MonoBehaviour:
   icon: {fileID: 21300000, guid: 6bce25c0827433944a37dcbaf2dcc749, type: 3}
   id: 2132
   key: glasses_magnet
-  itemName: "\u30E1\u30AC\u30CD\u3068\u78C1\u77F3"
+  itemName: "\u78C1\u754C\u30B9\u30AD\u30E3\u30F3\u30D0\u30A4\u30B6\u30FC"
   category: 1
-  description: 
+  description: "\u30E1\u30AC\u30CD\u3068\u78C1\u77F3\u3067\u5408\u6210\u3055\u308C\u305F\u88C5\u5099\u3002"
   material1: {fileID: 6717797442590564354}
   material2: {fileID: -7822687782585050773}
   _maxStack: 1
@@ -338,7 +338,7 @@ MonoBehaviour:
   key: orange_juice
   itemName: "\u307F\u304B\u3093\u30B8\u30E5\u30FC\u30B9"
   category: 2
-  description: 
+  description: "\u30B0\u30E9\u30B9\u306B\u6CE8\u304C\u308C\u305F\u3001\u9BAE\u3084\u304B\u306A\u30AA\u30EC\u30F3\u30B8\u8272\u306E\u30B8\u30E5\u30FC\u30B9\u3002"
   material1: {fileID: 0}
   material2: {fileID: 0}
   _maxStack: 99
@@ -358,9 +358,9 @@ MonoBehaviour:
   icon: {fileID: 21300000, guid: 24df83a50e495894eb4071d4c99799fd, type: 3}
   id: 3143
   key: peach_strawberry_jelly
-  itemName: "\u6843\u3068\u3044\u3061\u3054\u30BC\u30EA\u30FC"
+  itemName: "\u307E\u308B\u3054\u3068\u6843\u30BC\u30EA\u30FC"
   category: 2
-  description: 
+  description: "\u6843\u306E\u5F62\u3092\u305D\u306E\u307E\u307E\u5199\u3057\u305F\u3088\u3046\u306A\u3001\u8D64\u304F\u900F\u304D\u901A\u308B\u30BC\u30EA\u30FC\u3002"
   material1: {fileID: 2510756971122629955}
   material2: {fileID: -7209103825163294352}
   _maxStack: 1
@@ -382,7 +382,7 @@ MonoBehaviour:
   key: grapes
   itemName: "\u3076\u3069\u3046"
   category: 2
-  description: 
+  description: "\u7D2B\u8272\u306E\u5B9F\u304C\u304E\u3063\u3057\u308A\u3068\u4ED8\u3044\u305F\u3076\u3069\u3046\u3002"
   material1: {fileID: 0}
   material2: {fileID: 0}
   _maxStack: 99
@@ -404,7 +404,7 @@ MonoBehaviour:
   key: classified_document_3
   itemName: "\u6A5F\u5BC6\u66F8\u985E\uFF13"
   category: 3
-  description: 
+  description: "\u91D1\u8272\u306E\u5E7E\u4F55\u5B66\u6A21\u69D8\u304C\u63CF\u304B\u308C\u305F\u66F8\u985E\u5165\u308C\u3002"
   material1: {fileID: 0}
   material2: {fileID: 0}
   _maxStack: 1
@@ -423,9 +423,9 @@ MonoBehaviour:
   icon: {fileID: 21300000, guid: c4b271788a60f3b4f9d37dcd62d222e3, type: 3}
   id: 2117
   key: clock_umbrella
-  itemName: "\u61D0\u4E2D\u6642\u8A08\u3068\u5098"
+  itemName: "\u6587\u5B57\u76E4\u30A2\u30F3\u30D6\u30EC\u30E9"
   category: 1
-  description: 
+  description: "\u61D0\u4E2D\u6642\u8A08\u3068\u5098\u3067\u5408\u6210\u3055\u308C\u305F\u88C5\u5099\u3002"
   material1: {fileID: 957348972317786013}
   material2: {fileID: -181082550691912316}
   _maxStack: 1
@@ -444,9 +444,9 @@ MonoBehaviour:
   icon: {fileID: 21300000, guid: 548a943080271814fa5c18e842ec6eb7, type: 3}
   id: 3145
   key: strawberry_jelly_white_rice
-  itemName: "\u3044\u3061\u3054\u30BC\u30EA\u30FC\u3068\u767D\u7C73"
+  itemName: "\u3064\u3084\u3077\u308B\u30E9\u30A4\u30B9\u30BC\u30EA\u30FC"
   category: 2
-  description: 
+  description: "\u900F\u304D\u901A\u308B\u30BC\u30EA\u30FC\u306B\u5305\u307E\u308C\u305F\u3088\u3046\u306A\u3001\u3064\u3084\u3064\u3084\u306E\u767D\u3044\u3054\u98EF\u3002"
   material1: {fileID: -7209103825163294352}
   material2: {fileID: -1353312657710663384}
   _maxStack: 1
@@ -466,9 +466,9 @@ MonoBehaviour:
   icon: {fileID: 21300000, guid: 84dbe8dd151226d4197da800b2ecd1e0, type: 3}
   id: 2104
   key: balloon_glasses
-  itemName: "\u98A8\u8239\u3068\u30E1\u30AC\u30CD"
+  itemName: "\u8679\u8272\u30D0\u30D6\u30EB\u30B0\u30E9\u30B9"
   category: 1
-  description: 
+  description: "\u98A8\u8239\u3068\u30E1\u30AC\u30CD\u3067\u5408\u6210\u3055\u308C\u305F\u88C5\u5099\u3002"
   material1: {fileID: -7287126184965246600}
   material2: {fileID: 6717797442590564354}
   _maxStack: 1
@@ -487,9 +487,9 @@ MonoBehaviour:
   icon: {fileID: 21300000, guid: 053309fcab2e4ee4d9bdb86ffdd83341, type: 3}
   id: 2105
   key: balloon_hat
-  itemName: "\u98A8\u8239\u3068\u5E3D\u5B50"
+  itemName: "\u3075\u304F\u3089\u307F\u30B7\u30EB\u30AF\u30CF\u30C3\u30C8"
   category: 1
-  description: 
+  description: "\u98A8\u8239\u3068\u5E3D\u5B50\u3067\u5408\u6210\u3055\u308C\u305F\u88C5\u5099\u3002"
   material1: {fileID: -7287126184965246600}
   material2: {fileID: 5905387601538661209}
   _maxStack: 1
@@ -508,9 +508,9 @@ MonoBehaviour:
   icon: {fileID: 21300000, guid: 139a2e7365e8bf84a9b8115a1f0b0394, type: 3}
   id: 2134
   key: glasses_note
-  itemName: "\u30E1\u30AC\u30CD\u3068\u30CE\u30FC\u30C8"
+  itemName: "\u661F\u56F3\u306E\u30EB\u30FC\u30DA"
   category: 1
-  description: 
+  description: "\u30E1\u30AC\u30CD\u3068\u30CE\u30FC\u30C8\u3067\u5408\u6210\u3055\u308C\u305F\u88C5\u5099\u3002"
   material1: {fileID: 6717797442590564354}
   material2: {fileID: 1491394875471116521}
   _maxStack: 1
@@ -529,9 +529,9 @@ MonoBehaviour:
   icon: {fileID: 21300000, guid: 479bc9af41458514cb0b9eb469a2a7b8, type: 3}
   id: 3132
   key: grapes_orange_juice
-  itemName: "\u3076\u3069\u3046\u3068\u307F\u304B\u3093\u30B8\u30E5\u30FC\u30B9"
+  itemName: "\u3076\u3069\u3046\u3068\u307F\u304B\u3093\u306E\u6E26\u5DFB\u304D\u30B8\u30E5\u30FC\u30B9"
   category: 2
-  description: 
+  description: "\u7D2B\u3068\u30AA\u30EC\u30F3\u30B8\u304C\u9BAE\u3084\u304B\u306B\u6E26\u3092\u5DFB\u304F\u3001\u679C\u7269\u3092\u6DFB\u3048\u305F\u30B8\u30E5\u30FC\u30B9\u3002"
   material1: {fileID: -5554650038091774464}
   material2: {fileID: -6523541574003027713}
   _maxStack: 1
@@ -551,9 +551,9 @@ MonoBehaviour:
   icon: {fileID: 21300000, guid: c8af1c62872df4c4cb1194926584b0d8, type: 3}
   id: 3118
   key: banana_white_rice
-  itemName: "\u30D0\u30CA\u30CA\u3068\u767D\u7C73"
+  itemName: "\u713C\u304D\u30D0\u30CA\u30CA\u3054\u98EF"
   category: 2
-  description: 
+  description: "\u9EC4\u91D1\u8272\u306E\u3054\u98EF\u306B\u3001\u713C\u304D\u8272\u306E\u4ED8\u3044\u305F\u30D0\u30CA\u30CA\u3092\u8F09\u305B\u305F\u4E00\u676F\u3002"
   material1: {fileID: -725015441715178452}
   material2: {fileID: -1353312657710663384}
   _maxStack: 1
@@ -573,9 +573,9 @@ MonoBehaviour:
   icon: {fileID: 21300000, guid: d3ede3827c79d984d8e9144a08fbf865, type: 3}
   id: 3102
   key: apple_banana
-  itemName: "\u308A\u3093\u3054\u3068\u30D0\u30CA\u30CA"
+  itemName: "\u3080\u3051\u308B\u308A\u3093\u3054"
   category: 2
-  description: 
+  description: "\u30D0\u30CA\u30CA\u306E\u3088\u3046\u306B\u76AE\u304C\u3080\u3051\u3001\u4E2D\u304B\u3089\u767D\u3044\u679C\u8089\u304C\u306E\u305E\u304F\u308A\u3093\u3054\u3002"
   material1: {fileID: 8561165396911074249}
   material2: {fileID: -725015441715178452}
   _maxStack: 1
@@ -595,9 +595,9 @@ MonoBehaviour:
   icon: {fileID: 21300000, guid: 82e3e465a883a6a459585a94a2e048d4, type: 3}
   id: 3123
   key: brown_rice_cream_cookie_peach
-  itemName: "\u30AF\u30EA\u30FC\u30E0\u7384\u7C73\u30AF\u30C3\u30AD\u30FC\u3068\u6843"
+  itemName: "\u6843\u306E\u30AF\u30EA\u30FC\u30E0\u30B5\u30F3\u30C9"
   category: 2
-  description: 
+  description: "\u6843\u306E\u5F62\u306E\u751F\u5730\u3067\u3001\u6843\u306E\u8584\u5207\u308A\u3068\u30AF\u30EA\u30FC\u30E0\u3092\u631F\u3093\u3060\u30AF\u30C3\u30AD\u30FC\u3002"
   material1: {fileID: -3201117879322543463}
   material2: {fileID: 2510756971122629955}
   _maxStack: 1
@@ -617,9 +617,9 @@ MonoBehaviour:
   icon: {fileID: 21300000, guid: f436c234888d1714496293b2c9ef1d80, type: 3}
   id: 3125
   key: brown_rice_cream_cookie_white_rice
-  itemName: "\u30AF\u30EA\u30FC\u30E0\u7384\u7C73\u30AF\u30C3\u30AD\u30FC\u3068\u767D\u7C73"
+  itemName: "\u7C73\u3064\u3076\u30AF\u30EA\u30FC\u30E0\u30B5\u30F3\u30C9"
   category: 2
-  description: 
+  description: "\u7C73\u7C92\u306E\u5F62\u304C\u6D6E\u304B\u3076\u751F\u5730\u3067\u3001\u767D\u3044\u30AF\u30EA\u30FC\u30E0\u3092\u631F\u3093\u3060\u30AF\u30C3\u30AD\u30FC\u3002"
   material1: {fileID: -3201117879322543463}
   material2: {fileID: -1353312657710663384}
   _maxStack: 1
@@ -639,9 +639,9 @@ MonoBehaviour:
   icon: {fileID: 21300000, guid: 2d7318dc5a11aa443a1b3ba2e3a40f6c, type: 3}
   id: 2103
   key: balloon_full_body_tights
-  itemName: "\u98A8\u8239\u3068\u5168\u8EAB\u30BF\u30A4\u30C4"
+  itemName: "\u3082\u304F\u3082\u304F\u30AF\u30E9\u30A6\u30C9\u30B9\u30FC\u30C4"
   category: 1
-  description: 
+  description: "\u98A8\u8239\u3068\u5168\u8EAB\u30BF\u30A4\u30C4\u3067\u5408\u6210\u3055\u308C\u305F\u88C5\u5099\u3002"
   material1: {fileID: -7287126184965246600}
   material2: {fileID: 8829090763925122756}
   _maxStack: 1
@@ -662,7 +662,7 @@ MonoBehaviour:
   key: miso_soup
   itemName: "\u5473\u564C\u6C41"
   category: 2
-  description: 
+  description: "\u8C46\u8150\u3068\u308F\u304B\u3081\u3001\u306D\u304E\u304C\u5165\u3063\u305F\u5473\u564C\u6C41\u3002"
   material1: {fileID: 0}
   material2: {fileID: 0}
   _maxStack: 99
@@ -682,9 +682,9 @@ MonoBehaviour:
   icon: {fileID: 21300000, guid: 85fe6ecdf0138fb4b8d915a3f246a7d2, type: 3}
   id: 2109
   key: balloon_umbrella
-  itemName: "\u98A8\u8239\u3068\u5098"
+  itemName: "\u30D1\u30E9\u30B7\u30E5\u30FC\u30C8\u30A2\u30F3\u30D6\u30EC\u30E9"
   category: 1
-  description: 
+  description: "\u98A8\u8239\u3068\u5098\u3067\u5408\u6210\u3055\u308C\u305F\u88C5\u5099\u3002"
   material1: {fileID: -7287126184965246600}
   material2: {fileID: -181082550691912316}
   _maxStack: 1
@@ -703,9 +703,9 @@ MonoBehaviour:
   icon: {fileID: 21300000, guid: 07ee879342e41fc4ba83c4c588c4fb70, type: 3}
   id: 3127
   key: coffee_miso_soup
-  itemName: "\u30B3\u30FC\u30D2\u30FC\u3068\u5473\u564C\u6C41"
+  itemName: "\u9ED2\u3044\u30B3\u30FC\u30D2\u30FC\u5473\u564C\u6C41"
   category: 2
-  description: 
+  description: "\u8C46\u8150\u3084\u308F\u304B\u3081\u306B\u30B3\u30FC\u30D2\u30FC\u8C46\u304C\u6DF7\u3058\u308B\u3001\u8272\u306E\u6FC3\u3044\u5473\u564C\u6C41\u3002"
   material1: {fileID: -792122127041355525}
   material2: {fileID: -3828202121546107835}
   _maxStack: 1
@@ -725,9 +725,9 @@ MonoBehaviour:
   icon: {fileID: 21300000, guid: 91124f52fcb89414ba90893b9cd371b0, type: 3}
   id: 2102
   key: balloon_fluorescent_light
-  itemName: "\u98A8\u8239\u3068\u86CD\u5149\u706F"
+  itemName: "\u30D0\u30EB\u30FC\u30F3\u30E9\u30A4\u30C8"
   category: 1
-  description: 
+  description: "\u98A8\u8239\u3068\u86CD\u5149\u706F\u3067\u5408\u6210\u3055\u308C\u305F\u88C5\u5099\u3002"
   material1: {fileID: -7287126184965246600}
   material2: {fileID: -263205480878404495}
   _maxStack: 1
@@ -746,9 +746,9 @@ MonoBehaviour:
   icon: {fileID: 21300000, guid: a86cb9af0251ce1448c0d36a902fffd1, type: 3}
   id: 3116
   key: banana_peach
-  itemName: "\u30D0\u30CA\u30CA\u3068\u6843"
+  itemName: "\u6843\u8272\u30D0\u30CA\u30CA"
   category: 2
-  description: 
+  description: "\u30D0\u30CA\u30CA\u306E\u5F62\u306B\u3001\u6843\u306E\u3088\u3046\u306A\u8D64\u307F\u3068\u4E38\u307F\u304C\u52A0\u308F\u3063\u305F\u679C\u7269\u3002"
   material1: {fileID: -725015441715178452}
   material2: {fileID: 2510756971122629955}
   _maxStack: 1
@@ -770,7 +770,7 @@ MonoBehaviour:
   key: card_key
   itemName: "\u30AB\u30FC\u30C9\u30AD\u30FC"
   category: 3
-  description: 
+  description: "\u91D1\u8272\u306E\u30C1\u30C3\u30D7\u3068\u9752\u304F\u5149\u308B\u30E9\u30A4\u30F3\u304C\u4ED8\u3044\u305F\u3001\u50B7\u3060\u3089\u3051\u306E\u30AB\u30FC\u30C9\u30AD\u30FC\u3002"
   material1: {fileID: 0}
   material2: {fileID: 0}
   _maxStack: 1
@@ -791,7 +791,7 @@ MonoBehaviour:
   key: brown_rice_cream_cookie
   itemName: "\u30AF\u30EA\u30FC\u30E0\u7384\u7C73\u30AF\u30C3\u30AD\u30FC"
   category: 2
-  description: 
+  description: "\u3053\u3093\u304C\u308A\u713C\u3051\u305F\u751F\u5730\u3067\u3001\u30AF\u30EA\u30FC\u30E0\u3092\u631F\u3093\u3060\u7384\u7C73\u30AF\u30C3\u30AD\u30FC\u3002"
   material1: {fileID: 0}
   material2: {fileID: 0}
   _maxStack: 99
@@ -813,7 +813,7 @@ MonoBehaviour:
   key: classified_document_2
   itemName: "\u6A5F\u5BC6\u66F8\u985E\uFF12"
   category: 3
-  description: 
+  description: "\u8D64\u3044\u7D0B\u7AE0\u304C\u63CF\u304B\u308C\u305F\u3001\u5206\u539A\u3044\u66F8\u985E\u5165\u308C\u3002"
   material1: {fileID: 0}
   material2: {fileID: 0}
   _maxStack: 1
@@ -832,9 +832,9 @@ MonoBehaviour:
   icon: {fileID: 21300000, guid: 9a61d75a56b2bef4699f0b369c71151f, type: 3}
   id: 2135
   key: glasses_umbrella
-  itemName: "\u30E1\u30AC\u30CD\u3068\u5098"
+  itemName: "\u96E8\u3088\u3051\u30E1\u30AC\u30CD"
   category: 1
-  description: 
+  description: "\u30E1\u30AC\u30CD\u3068\u5098\u3067\u5408\u6210\u3055\u308C\u305F\u88C5\u5099\u3002"
   material1: {fileID: 6717797442590564354}
   material2: {fileID: -181082550691912316}
   _maxStack: 1
@@ -853,9 +853,9 @@ MonoBehaviour:
   icon: {fileID: 21300000, guid: 1e1af615272ad124eaa2726d18db4395, type: 3}
   id: 3131
   key: coffee_white_rice
-  itemName: "\u30B3\u30FC\u30D2\u30FC\u3068\u767D\u7C73"
+  itemName: "\u30B3\u30FC\u30D2\u30FC\u8C46\u3054\u98EF"
   category: 2
-  description: 
+  description: "\u30B3\u30FC\u30D2\u30FC\u8272\u306B\u67D3\u307E\u3063\u305F\u3054\u98EF\u306B\u3001\u30B3\u30FC\u30D2\u30FC\u8C46\u3092\u98FE\u3063\u305F\u4E00\u676F\u3002"
   material1: {fileID: -792122127041355525}
   material2: {fileID: -1353312657710663384}
   _maxStack: 1
@@ -875,9 +875,9 @@ MonoBehaviour:
   icon: {fileID: 21300000, guid: b069a202b23556647aacbbff62531772, type: 3}
   id: 2116
   key: clock_note
-  itemName: "\u61D0\u4E2D\u6642\u8A08\u3068\u30CE\u30FC\u30C8"
+  itemName: "\u6642\u74B0\u306E\u624B\u5E33"
   category: 1
-  description: 
+  description: "\u61D0\u4E2D\u6642\u8A08\u3068\u30CE\u30FC\u30C8\u3067\u5408\u6210\u3055\u308C\u305F\u88C5\u5099\u3002"
   material1: {fileID: 957348972317786013}
   material2: {fileID: 1491394875471116521}
   _maxStack: 1
@@ -896,9 +896,9 @@ MonoBehaviour:
   icon: {fileID: 21300000, guid: f98314a56ad3934489c3311a1b49dff5, type: 3}
   id: 2144
   key: microphone_umbrella
-  itemName: "\u30DE\u30A4\u30AF\u3068\u5098"
+  itemName: "\u84C4\u97F3\u30A2\u30F3\u30D6\u30EC\u30E9"
   category: 1
-  description: 
+  description: "\u30DE\u30A4\u30AF\u3068\u5098\u3067\u5408\u6210\u3055\u308C\u305F\u88C5\u5099\u3002"
   material1: {fileID: 7372939191468712669}
   material2: {fileID: -181082550691912316}
   _maxStack: 1
@@ -917,9 +917,9 @@ MonoBehaviour:
   icon: {fileID: 21300000, guid: 2d608def38a99ad49b3ec9143768585f, type: 3}
   id: 3112
   key: banana_coffee
-  itemName: "\u30D0\u30CA\u30CA\u3068\u30B3\u30FC\u30D2\u30FC"
+  itemName: "\u30D0\u30CA\u30CA\u30AF\u30EA\u30FC\u30E0\u30B3\u30FC\u30D2\u30FC"
   category: 2
-  description: 
+  description: "\u30AF\u30EA\u30FC\u30E0\u3068\u30D0\u30CA\u30CA\u3092\u98FE\u308A\u3001\u30BD\u30FC\u30B9\u3092\u304B\u3051\u305F\u30B3\u30FC\u30D2\u30FC\u3002"
   material1: {fileID: -725015441715178452}
   material2: {fileID: -792122127041355525}
   _maxStack: 1
@@ -939,9 +939,9 @@ MonoBehaviour:
   icon: {fileID: 21300000, guid: bea7577c5558a9945a18538d7e5dba88, type: 3}
   id: 3110
   key: apple_white_rice
-  itemName: "\u308A\u3093\u3054\u3068\u767D\u7C73"
+  itemName: "\u308A\u3093\u3054\u306E\u5F69\u308A\u3054\u98EF"
   category: 2
-  description: 
+  description: "\u8D64\u304F\u8272\u3065\u3044\u305F\u3054\u98EF\u306B\u3001\u308A\u3093\u3054\u306E\u8584\u5207\u308A\u3092\u4E26\u3079\u305F\u4E00\u676F\u3002"
   material1: {fileID: 8561165396911074249}
   material2: {fileID: -1353312657710663384}
   _maxStack: 1
@@ -961,9 +961,9 @@ MonoBehaviour:
   icon: {fileID: 21300000, guid: 71a9286b4f9ffad4d9ec2868b55c0155, type: 3}
   id: 2123
   key: fluorescent_light_note
-  itemName: "\u86CD\u5149\u706F\u3068\u30CE\u30FC\u30C8"
+  itemName: "\u5149\u7D0B\u30B9\u30AF\u30ED\u30FC\u30EB"
   category: 1
-  description: 
+  description: "\u86CD\u5149\u706F\u3068\u30CE\u30FC\u30C8\u3067\u5408\u6210\u3055\u308C\u305F\u88C5\u5099\u3002"
   material1: {fileID: -263205480878404495}
   material2: {fileID: 1491394875471116521}
   _maxStack: 1
@@ -984,7 +984,7 @@ MonoBehaviour:
   key: mysterious_key
   itemName: "\u8B0E\u306E\u9375"
   category: 3
-  description: 
+  description: "\u8F2A\u306E\u4E2D\u592E\u306B\u9752\u7DD1\u8272\u306E\u77F3\u3092\u5099\u3048\u305F\u53E4\u3044\u9375\u3002"
   material1: {fileID: 0}
   material2: {fileID: 0}
   _maxStack: 1
@@ -1003,9 +1003,9 @@ MonoBehaviour:
   icon: {fileID: 21300000, guid: 4de7b234d92919345a1de81e2bc318e7, type: 3}
   id: 3122
   key: brown_rice_cream_cookie_orange_juice
-  itemName: "\u30AF\u30EA\u30FC\u30E0\u7384\u7C73\u30AF\u30C3\u30AD\u30FC\u3068\u307F\u304B\u3093\u30B8\u30E5\u30FC\u30B9"
+  itemName: "\u307F\u304B\u3093\u30AF\u30EA\u30FC\u30E0\u30B5\u30F3\u30C9"
   category: 2
-  description: 
+  description: "\u307F\u304B\u3093\u306E\u8F2A\u5207\u308A\u3092\u3042\u3057\u3089\u3044\u3001\u30AF\u30EA\u30FC\u30E0\u3092\u631F\u3093\u3060\u30AF\u30C3\u30AD\u30FC\u3002"
   material1: {fileID: -3201117879322543463}
   material2: {fileID: -6523541574003027713}
   _maxStack: 1
@@ -1027,7 +1027,7 @@ MonoBehaviour:
   key: dirty_record
   itemName: "\u6C5A\u308C\u305F\u30EC\u30B3\u30FC\u30C9"
   category: 3
-  description: 
+  description: "\u8868\u9762\u306B\u6C5A\u308C\u3068\u50B7\u304C\u6B8B\u308B\u9ED2\u3044\u30EC\u30B3\u30FC\u30C9\u3002\u7E01\u306E\u4E00\u90E8\u304C\u5927\u304D\u304F\u6B20\u3051\u3066\u3044\u308B\u3002"
   material1: {fileID: 0}
   material2: {fileID: 0}
   _maxStack: 1
@@ -1048,7 +1048,7 @@ MonoBehaviour:
   key: white_rice
   itemName: "\u767D\u7C73"
   category: 2
-  description: 
+  description: "\u304A\u8336\u7897\u306B\u3075\u3063\u304F\u3089\u3068\u76DB\u3089\u308C\u305F\u767D\u3044\u3054\u98EF\u3002"
   material1: {fileID: 0}
   material2: {fileID: 0}
   _maxStack: 99
@@ -1068,9 +1068,9 @@ MonoBehaviour:
   icon: {fileID: 21300000, guid: cca8535d8f4ed1c4693bf19e463176b4, type: 3}
   id: 2120
   key: fluorescent_light_hat
-  itemName: "\u86CD\u5149\u706F\u3068\u5E3D\u5B50"
+  itemName: "\u30E9\u30F3\u30BF\u30F3\u30CF\u30C3\u30C8"
   category: 1
-  description: 
+  description: "\u86CD\u5149\u706F\u3068\u5E3D\u5B50\u3067\u5408\u6210\u3055\u308C\u305F\u88C5\u5099\u3002"
   material1: {fileID: -263205480878404495}
   material2: {fileID: 5905387601538661209}
   _maxStack: 1
@@ -1089,9 +1089,9 @@ MonoBehaviour:
   icon: {fileID: 21300000, guid: 120fedc95da464b439280d7c64a1e7be, type: 3}
   id: 3109
   key: apple_strawberry_jelly
-  itemName: "\u308A\u3093\u3054\u3068\u3044\u3061\u3054\u30BC\u30EA\u30FC"
+  itemName: "\u3046\u3055\u304E\u308A\u3093\u3054\u30BC\u30EA\u30FC"
   category: 2
-  description: 
+  description: "\u308A\u3093\u3054\u3067\u4F5C\u3063\u305F\u3046\u3055\u304E\u3092\u8F09\u305B\u305F\u3001\u771F\u3063\u8D64\u306A\u30BC\u30EA\u30FC\u3002"
   material1: {fileID: 8561165396911074249}
   material2: {fileID: -7209103825163294352}
   _maxStack: 1
@@ -1111,9 +1111,9 @@ MonoBehaviour:
   icon: {fileID: 21300000, guid: 813235865f8134d498e2a208348d6a94, type: 3}
   id: 2108
   key: balloon_note
-  itemName: "\u98A8\u8239\u3068\u30CE\u30FC\u30C8"
+  itemName: "\u3053\u3068\u3070\u306E\u30D0\u30EB\u30FC\u30F3"
   category: 1
-  description: 
+  description: "\u98A8\u8239\u3068\u30CE\u30FC\u30C8\u3067\u5408\u6210\u3055\u308C\u305F\u88C5\u5099\u3002"
   material1: {fileID: -7287126184965246600}
   material2: {fileID: 1491394875471116521}
   _maxStack: 1
@@ -1134,7 +1134,7 @@ MonoBehaviour:
   key: coffee
   itemName: "\u30B3\u30FC\u30D2\u30FC"
   category: 2
-  description: 
+  description: "\u30AB\u30C3\u30D7\u304B\u3089\u6E6F\u6C17\u304C\u7ACB\u3061\u306E\u307C\u308B\u3001\u9ED2\u3044\u30B3\u30FC\u30D2\u30FC\u3002"
   material1: {fileID: 0}
   material2: {fileID: 0}
   _maxStack: 99
@@ -1156,7 +1156,7 @@ MonoBehaviour:
   key: banana
   itemName: "\u30D0\u30CA\u30CA"
   category: 2
-  description: 
+  description: "\u9EC4\u8272\u304F\u719F\u3057\u305F\u3001\u623F\u4ED8\u304D\u306E\u30D0\u30CA\u30CA\u3002"
   material1: {fileID: 0}
   material2: {fileID: 0}
   _maxStack: 99
@@ -1176,9 +1176,9 @@ MonoBehaviour:
   icon: {fileID: 21300000, guid: d762b78ef8ec0634a96e99fd3b124a49, type: 3}
   id: 3117
   key: banana_strawberry_jelly
-  itemName: "\u30D0\u30CA\u30CA\u3068\u3044\u3061\u3054\u30BC\u30EA\u30FC"
+  itemName: "\u9EC4\u91D1\u30D0\u30CA\u30CA\u30BC\u30EA\u30FC"
   category: 2
-  description: 
+  description: "\u8F2A\u5207\u308A\u306E\u30D0\u30CA\u30CA\u3092\u9589\u3058\u8FBC\u3081\u305F\u3001\u900F\u304D\u901A\u308B\u9EC4\u91D1\u8272\u306E\u30BC\u30EA\u30FC\u3002"
   material1: {fileID: -725015441715178452}
   material2: {fileID: -7209103825163294352}
   _maxStack: 1
@@ -1198,9 +1198,9 @@ MonoBehaviour:
   icon: {fileID: 21300000, guid: 0b1c4371ca9134d4cb8008b9bf7b6c54, type: 3}
   id: 2122
   key: fluorescent_light_microphone
-  itemName: "\u86CD\u5149\u706F\u3068\u30DE\u30A4\u30AF"
+  itemName: "\u5149\u6CE2\u30E1\u30AC\u30DB\u30F3"
   category: 1
-  description: 
+  description: "\u86CD\u5149\u706F\u3068\u30DE\u30A4\u30AF\u3067\u5408\u6210\u3055\u308C\u305F\u88C5\u5099\u3002"
   material1: {fileID: -263205480878404495}
   material2: {fileID: 7372939191468712669}
   _maxStack: 1
@@ -1219,9 +1219,9 @@ MonoBehaviour:
   icon: {fileID: 21300000, guid: 4f302a014c115df449b1b6b358932525, type: 3}
   id: 3105
   key: apple_grapes
-  itemName: "\u308A\u3093\u3054\u3068\u3076\u3069\u3046"
+  itemName: "\u623F\u306A\u308A\u308A\u3093\u3054"
   category: 2
-  description: 
+  description: "\u5C0F\u3055\u306A\u308A\u3093\u3054\u306E\u3088\u3046\u306A\u8D64\u3044\u5B9F\u304C\u3001\u3076\u3069\u3046\u306E\u623F\u306E\u3088\u3046\u306B\u9023\u306A\u3063\u305F\u679C\u7269\u3002"
   material1: {fileID: 8561165396911074249}
   material2: {fileID: -5554650038091774464}
   _maxStack: 1
@@ -1243,7 +1243,7 @@ MonoBehaviour:
   key: fluorescent_light
   itemName: "\u86CD\u5149\u706F"
   category: 1
-  description: 
+  description: "\u3042\u305F\u308A\u3092\u7167\u3089\u3059\u7D30\u9577\u3044\u706F\u308A\u3002"
   material1: {fileID: 0}
   material2: {fileID: 0}
   _maxStack: 1
@@ -1264,7 +1264,7 @@ MonoBehaviour:
   key: umbrella
   itemName: "\u5098"
   category: 1
-  description: 
+  description: "\u96E8\u304B\u3089\u8EAB\u3092\u5B88\u308B\u5098\u3002"
   material1: {fileID: 0}
   material2: {fileID: 0}
   _maxStack: 1
@@ -1283,9 +1283,9 @@ MonoBehaviour:
   icon: {fileID: 21300000, guid: 1e34ed5e5a6ac2541aa41afeeeea6cb4, type: 3}
   id: 2113
   key: clock_hat
-  itemName: "\u61D0\u4E2D\u6642\u8A08\u3068\u5E3D\u5B50"
+  itemName: "\u6642\u8A08\u4ED5\u639B\u3051\u306E\u7FBD\u6839\u5E3D\u5B50"
   category: 1
-  description: 
+  description: "\u61D0\u4E2D\u6642\u8A08\u3068\u5E3D\u5B50\u3067\u5408\u6210\u3055\u308C\u305F\u88C5\u5099\u3002"
   material1: {fileID: 957348972317786013}
   material2: {fileID: 5905387601538661209}
   _maxStack: 1
@@ -1440,7 +1440,7 @@ MonoBehaviour:
   key: keepsake_accessory
   itemName: "\u5F62\u898B\u306E\u30A2\u30AF\u30BB\u30B5\u30EA\u30FC"
   category: 3
-  description: 
+  description: "\u9752\u3044\u5B9D\u77F3\u3092\u306F\u3081\u8FBC\u3093\u3060\u3001\u9280\u8272\u306E\u6955\u5186\u5F62\u306E\u30DA\u30F3\u30C0\u30F3\u30C8\u3002\u8868\u9762\u306B\u306F\u7E4A\u7D30\u306A\u88C5\u98FE\u304C\u523B\u307E\u308C\u3066\u3044\u308B\u3002"
   material1: {fileID: 0}
   material2: {fileID: 0}
   _maxStack: 1
@@ -1459,9 +1459,9 @@ MonoBehaviour:
   icon: {fileID: 21300000, guid: 8014ac725fa9cca449112e8b39a1243e, type: 3}
   id: 2140
   key: magnet_microphone
-  itemName: "\u78C1\u77F3\u3068\u30DE\u30A4\u30AF"
+  itemName: "\u53CC\u6975\u30E9\u30B8\u30AB\u30BB"
   category: 1
-  description: 
+  description: "\u78C1\u77F3\u3068\u30DE\u30A4\u30AF\u3067\u5408\u6210\u3055\u308C\u305F\u88C5\u5099\u3002"
   material1: {fileID: -7822687782585050773}
   material2: {fileID: 7372939191468712669}
   _maxStack: 1
@@ -1482,7 +1482,7 @@ MonoBehaviour:
   key: classified_document_1
   itemName: "\u6A5F\u5BC6\u66F8\u985E\uFF11"
   category: 3
-  description: 
+  description: "\u8D64\u3044\u5370\u304C\u62BC\u3055\u308C\u305F\u53E4\u3044\u66F8\u985E\u306E\u675F\u3002"
   material1: {fileID: 0}
   material2: {fileID: 0}
   _maxStack: 1
@@ -1503,7 +1503,7 @@ MonoBehaviour:
   key: broken_robot
   itemName: "\u58CA\u308C\u305F\u30ED\u30DC\u30C3\u30C8"
   category: 3
-  description: 
+  description: "\u88C5\u7532\u304C\u5272\u308C\u3001\u914D\u7DDA\u304C\u3080\u304D\u51FA\u3057\u306B\u306A\u3063\u305F\u30ED\u30DC\u30C3\u30C8\u3002\u7247\u76EE\u306B\u306F\u9752\u3044\u5149\u304C\u6B8B\u3063\u3066\u3044\u308B\u3002"
   material1: {fileID: 0}
   material2: {fileID: 0}
   _maxStack: 1
@@ -1522,9 +1522,9 @@ MonoBehaviour:
   icon: {fileID: 21300000, guid: e03ec454b79482f44b9e8384a051b543, type: 3}
   id: 3113
   key: banana_grapes
-  itemName: "\u30D0\u30CA\u30CA\u3068\u3076\u3069\u3046"
+  itemName: "\u7D2B\u30D0\u30CA\u30CA\u306E\u623F"
   category: 2
-  description: 
+  description: "\u7D2B\u3068\u9EC4\u8272\u306E\u5C0F\u3055\u306A\u30D0\u30CA\u30CA\u304C\u3001\u3076\u3069\u3046\u306E\u3088\u3046\u306B\u623F\u306B\u306A\u3063\u305F\u679C\u7269\u3002"
   material1: {fileID: -725015441715178452}
   material2: {fileID: -5554650038091774464}
   _maxStack: 1
@@ -1544,9 +1544,9 @@ MonoBehaviour:
   icon: {fileID: 21300000, guid: 8c073040bcf55ff47afd089d730dabae, type: 3}
   id: 3108
   key: apple_peach
-  itemName: "\u308A\u3093\u3054\u3068\u6843"
+  itemName: "\u308A\u3093\u3054\u6843"
   category: 2
-  description: 
+  description: "\u308A\u3093\u3054\u306E\u8D64\u3044\u3064\u3084\u3068\u3001\u6843\u306E\u3075\u3063\u304F\u3089\u3057\u305F\u5F62\u3092\u5408\u308F\u305B\u6301\u3064\u679C\u7269\u3002"
   material1: {fileID: 8561165396911074249}
   material2: {fileID: 2510756971122629955}
   _maxStack: 1
@@ -1568,7 +1568,7 @@ MonoBehaviour:
   key: mysterious_note_2
   itemName: "\u8B0E\u306E\u624B\u8A18\uFF12"
   category: 3
-  description: 
+  description: "\u91D1\u8272\u306E\u6708\u3068\u5186\u5F62\u306E\u6A21\u69D8\u304C\u63CF\u304B\u308C\u305F\u3001\u9752\u7DD1\u8272\u306E\u624B\u8A18\u3002"
   material1: {fileID: 0}
   material2: {fileID: 0}
   _maxStack: 1
@@ -1587,9 +1587,9 @@ MonoBehaviour:
   icon: {fileID: 21300000, guid: b6bad8ac63a849e44a7547be4348c0cb, type: 3}
   id: 2131
   key: glasses_hat
-  itemName: "\u30E1\u30AC\u30CD\u3068\u5E3D\u5B50"
+  itemName: "\u8986\u9762\u63A2\u5075\u30BB\u30C3\u30C8"
   category: 1
-  description: 
+  description: "\u30E1\u30AC\u30CD\u3068\u5E3D\u5B50\u3067\u5408\u6210\u3055\u308C\u305F\u88C5\u5099\u3002"
   material1: {fileID: 6717797442590564354}
   material2: {fileID: 5905387601538661209}
   _maxStack: 1
@@ -1608,9 +1608,9 @@ MonoBehaviour:
   icon: {fileID: 21300000, guid: b255a66ed4dfd6743b497ee64633ecb5, type: 3}
   id: 2121
   key: fluorescent_light_magnet
-  itemName: "\u86CD\u5149\u706F\u3068\u78C1\u77F3"
+  itemName: "\u5149\u8DEF\u306E\u30B3\u30F3\u30D1\u30B9"
   category: 1
-  description: 
+  description: "\u86CD\u5149\u706F\u3068\u78C1\u77F3\u3067\u5408\u6210\u3055\u308C\u305F\u88C5\u5099\u3002"
   material1: {fileID: -263205480878404495}
   material2: {fileID: -7822687782585050773}
   _maxStack: 1
@@ -1631,7 +1631,7 @@ MonoBehaviour:
   key: clock
   itemName: "\u61D0\u4E2D\u6642\u8A08"
   category: 1
-  description: 
+  description: "\u898F\u5247\u6B63\u3057\u304F\u6642\u3092\u523B\u3080\u61D0\u4E2D\u6642\u8A08\u3002"
   material1: {fileID: 0}
   material2: {fileID: 0}
   _maxStack: 1
@@ -1650,9 +1650,9 @@ MonoBehaviour:
   icon: {fileID: 21300000, guid: 0c0e7c09d72a5ba48b49c8e86f9bcc0b, type: 3}
   id: 3142
   key: orange_juice_white_rice
-  itemName: "\u307F\u304B\u3093\u30B8\u30E5\u30FC\u30B9\u3068\u767D\u7C73"
+  itemName: "\u307F\u304B\u3093\u306E\u9EC4\u91D1\u3054\u98EF"
   category: 2
-  description: 
+  description: "\u307F\u304B\u3093\u8272\u306B\u67D3\u307E\u3063\u305F\u3054\u98EF\u306B\u3001\u307F\u304B\u3093\u306E\u8F2A\u5207\u308A\u3092\u6DFB\u3048\u305F\u4E00\u676F\u3002"
   material1: {fileID: -6523541574003027713}
   material2: {fileID: -1353312657710663384}
   _maxStack: 1
@@ -1672,9 +1672,9 @@ MonoBehaviour:
   icon: {fileID: 21300000, guid: b1ffd36195b002d428364889aba633ea, type: 3}
   id: 3128
   key: coffee_orange_juice
-  itemName: "\u30B3\u30FC\u30D2\u30FC\u3068\u307F\u304B\u3093\u30B8\u30E5\u30FC\u30B9"
+  itemName: "\u30AA\u30EC\u30F3\u30B8\u30DE\u30FC\u30D6\u30EB\u30B3\u30FC\u30D2\u30FC"
   category: 2
-  description: 
+  description: "\u6C37\u306E\u5165\u3063\u305F\u30B0\u30E9\u30B9\u3067\u3001\u30B3\u30FC\u30D2\u30FC\u3068\u307F\u304B\u3093\u8272\u306E\u30B8\u30E5\u30FC\u30B9\u304C\u6DF7\u3056\u308A\u5408\u3046\u98F2\u307F\u7269\u3002"
   material1: {fileID: -792122127041355525}
   material2: {fileID: -6523541574003027713}
   _maxStack: 1
@@ -1694,9 +1694,9 @@ MonoBehaviour:
   icon: {fileID: 21300000, guid: 22d85d0d177152e48bc0fda5459c7380, type: 3}
   id: 3107
   key: apple_orange_juice
-  itemName: "\u308A\u3093\u3054\u3068\u307F\u304B\u3093\u30B8\u30E5\u30FC\u30B9"
+  itemName: "\u30A2\u30C3\u30D7\u30EB\u30AA\u30EC\u30F3\u30B8\u30B8\u30E5\u30FC\u30B9"
   category: 2
-  description: 
+  description: "\u308A\u3093\u3054\u3068\u307F\u304B\u3093\u306E\u30B9\u30E9\u30A4\u30B9\u3092\u6DFB\u3048\u305F\u3001\u8D64\u3068\u30AA\u30EC\u30F3\u30B8\u304C\u91CD\u306A\u308B\u30B8\u30E5\u30FC\u30B9\u3002"
   material1: {fileID: 8561165396911074249}
   material2: {fileID: -6523541574003027713}
   _maxStack: 1
@@ -1716,9 +1716,9 @@ MonoBehaviour:
   icon: {fileID: 21300000, guid: 169ad041d1fca1a45a52b62f6467d341, type: 3}
   id: 2111
   key: clock_full_body_tights
-  itemName: "\u61D0\u4E2D\u6642\u8A08\u3068\u5168\u8EAB\u30BF\u30A4\u30C4"
+  itemName: "\u6642\u91DD\u306E\u793C\u88C5"
   category: 1
-  description: 
+  description: "\u61D0\u4E2D\u6642\u8A08\u3068\u5168\u8EAB\u30BF\u30A4\u30C4\u3067\u5408\u6210\u3055\u308C\u305F\u88C5\u5099\u3002"
   material1: {fileID: 957348972317786013}
   material2: {fileID: 8829090763925122756}
   _maxStack: 1
@@ -1739,7 +1739,7 @@ MonoBehaviour:
   key: note
   itemName: "\u30CE\u30FC\u30C8"
   category: 1
-  description: 
+  description: "\u601D\u3044\u3064\u304D\u3092\u66F8\u304D\u7559\u3081\u308B\u30CE\u30FC\u30C8\u3002"
   material1: {fileID: 0}
   material2: {fileID: 0}
   _maxStack: 1
@@ -1758,9 +1758,9 @@ MonoBehaviour:
   icon: {fileID: 21300000, guid: b6e167a73a0e3e74c8da1f1e28187432, type: 3}
   id: 2136
   key: hat_magnet
-  itemName: "\u5E3D\u5B50\u3068\u78C1\u77F3"
+  itemName: "\u53CC\u74B0\u30DE\u30B0\u30CD\u30C3\u30C8\u30D8\u30EB\u30E0"
   category: 1
-  description: 
+  description: "\u5E3D\u5B50\u3068\u78C1\u77F3\u3067\u5408\u6210\u3055\u308C\u305F\u88C5\u5099\u3002"
   material1: {fileID: 5905387601538661209}
   material2: {fileID: -7822687782585050773}
   _maxStack: 1
@@ -1779,9 +1779,9 @@ MonoBehaviour:
   icon: {fileID: 21300000, guid: 781e9017241bcaa49a05edc8ab0fe13e, type: 3}
   id: 3140
   key: orange_juice_peach
-  itemName: "\u307F\u304B\u3093\u30B8\u30E5\u30FC\u30B9\u3068\u6843"
+  itemName: "\u30D4\u30FC\u30C1\u30AA\u30EC\u30F3\u30B8\u30B8\u30E5\u30FC\u30B9"
   category: 2
-  description: 
+  description: "\u6843\u8272\u3068\u30AA\u30EC\u30F3\u30B8\u8272\u304C\u6DF7\u3056\u308A\u5408\u3046\u3001\u679C\u7269\u3092\u6DFB\u3048\u305F\u30B8\u30E5\u30FC\u30B9\u3002"
   material1: {fileID: -6523541574003027713}
   material2: {fileID: 2510756971122629955}
   _maxStack: 1
@@ -1801,9 +1801,9 @@ MonoBehaviour:
   icon: {fileID: 21300000, guid: 7932aacb78b42aa4b908c6555ed5bde9, type: 3}
   id: 3141
   key: orange_juice_strawberry_jelly
-  itemName: "\u307F\u304B\u3093\u30B8\u30E5\u30FC\u30B9\u3068\u3044\u3061\u3054\u30BC\u30EA\u30FC"
+  itemName: "\u8F2A\u5207\u308A\u307F\u304B\u3093\u30BC\u30EA\u30FC"
   category: 2
-  description: 
+  description: "\u307F\u304B\u3093\u306E\u8F2A\u5207\u308A\u3092\u9589\u3058\u8FBC\u3081\u305F\u3001\u9BAE\u3084\u304B\u306A\u30AA\u30EC\u30F3\u30B8\u8272\u306E\u30BC\u30EA\u30FC\u3002"
   material1: {fileID: -6523541574003027713}
   material2: {fileID: -7209103825163294352}
   _maxStack: 1
@@ -1823,9 +1823,9 @@ MonoBehaviour:
   icon: {fileID: 21300000, guid: fd8dea77e5e178d44a2adc6ba1c01c15, type: 3}
   id: 2130
   key: full_body_tights_umbrella
-  itemName: "\u5168\u8EAB\u30BF\u30A4\u30C4\u3068\u5098"
+  itemName: "\u30B3\u30A6\u30E2\u30EA\u30DE\u30F3\u30C8\u30B9\u30FC\u30C4"
   category: 1
-  description: 
+  description: "\u5168\u8EAB\u30BF\u30A4\u30C4\u3068\u5098\u3067\u5408\u6210\u3055\u308C\u305F\u88C5\u5099\u3002"
   material1: {fileID: 8829090763925122756}
   material2: {fileID: -181082550691912316}
   _maxStack: 1
@@ -1844,9 +1844,9 @@ MonoBehaviour:
   icon: {fileID: 21300000, guid: 77f0de4e215035b4bb181459ca254e8c, type: 3}
   id: 3137
   key: miso_soup_peach
-  itemName: "\u5473\u564C\u6C41\u3068\u6843"
+  itemName: "\u6843\u5165\u308A\u5473\u564C\u6C41"
   category: 2
-  description: 
+  description: "\u6843\u306E\u8584\u5207\u308A\u3068\u8C46\u8150\u3001\u308F\u304B\u3081\u304C\u5165\u3063\u305F\u5473\u564C\u6C41\u3002"
   material1: {fileID: -3828202121546107835}
   material2: {fileID: 2510756971122629955}
   _maxStack: 1
@@ -1866,9 +1866,9 @@ MonoBehaviour:
   icon: {fileID: 21300000, guid: 4f67243e84dd2734d94b632d0cfe0f5f, type: 3}
   id: 3130
   key: coffee_strawberry_jelly
-  itemName: "\u30B3\u30FC\u30D2\u30FC\u3068\u3044\u3061\u3054\u30BC\u30EA\u30FC"
+  itemName: "\u30AF\u30EA\u30FC\u30E0\u306E\u305B\u30B3\u30FC\u30D2\u30FC\u30BC\u30EA\u30FC"
   category: 2
-  description: 
+  description: "\u30AF\u30EA\u30FC\u30E0\u3068\u30B3\u30FC\u30D2\u30FC\u8C46\u3092\u8F09\u305B\u305F\u3001\u6DF1\u3044\u8336\u8272\u306E\u30BC\u30EA\u30FC\u3002"
   material1: {fileID: -792122127041355525}
   material2: {fileID: -7209103825163294352}
   _maxStack: 1
@@ -1888,9 +1888,9 @@ MonoBehaviour:
   icon: {fileID: 21300000, guid: 0486101f21ac8084b8ff450c21872420, type: 3}
   id: 3138
   key: miso_soup_strawberry_jelly
-  itemName: "\u5473\u564C\u6C41\u3068\u3044\u3061\u3054\u30BC\u30EA\u30FC"
+  itemName: "\u3077\u308B\u3077\u308B\u5473\u564C\u6C41\u30BC\u30EA\u30FC"
   category: 2
-  description: 
+  description: "\u8C46\u8150\u3068\u308F\u304B\u3081\u3001\u306D\u304E\u3092\u9589\u3058\u8FBC\u3081\u305F\u3001\u5473\u564C\u6C41\u8272\u306E\u30BC\u30EA\u30FC\u3002"
   material1: {fileID: -3828202121546107835}
   material2: {fileID: -7209103825163294352}
   _maxStack: 1
@@ -1910,9 +1910,9 @@ MonoBehaviour:
   icon: {fileID: 21300000, guid: 3614bbc5d8794b949832e5adcfc24c40, type: 3}
   id: 2125
   key: full_body_tights_glasses
-  itemName: "\u5168\u8EAB\u30BF\u30A4\u30C4\u3068\u30E1\u30AC\u30CD"
+  itemName: "\u9ED2\u91D1\u306E\u30B4\u30FC\u30B0\u30EB\u30B9\u30FC\u30C4"
   category: 1
-  description: 
+  description: "\u5168\u8EAB\u30BF\u30A4\u30C4\u3068\u30E1\u30AC\u30CD\u3067\u5408\u6210\u3055\u308C\u305F\u88C5\u5099\u3002"
   material1: {fileID: 8829090763925122756}
   material2: {fileID: 6717797442590564354}
   _maxStack: 1
@@ -1931,9 +1931,9 @@ MonoBehaviour:
   icon: {fileID: 21300000, guid: 0c0da76e40f44ec40bbbb02fcee5e24a, type: 3}
   id: 3101
   key: grapes_miso_soup
-  itemName: "\u3076\u3069\u3046\u5473\u564C\u6C41"
+  itemName: "\u3076\u3069\u3046\u5165\u308A\u5473\u564C\u6C41"
   category: 2
-  description: 
+  description: "\u7D2B\u8272\u306E\u3076\u3069\u3046\u3068\u8C46\u8150\u3001\u308F\u304B\u3081\u304C\u6D6E\u304B\u3076\u5473\u564C\u6C41\u3002"
   material1: {fileID: -5554650038091774464}
   material2: {fileID: -3828202121546107835}
   _maxStack: 99
@@ -1955,7 +1955,7 @@ MonoBehaviour:
   key: peach
   itemName: "\u6843"
   category: 2
-  description: 
+  description: "\u6DE1\u3044\u9EC4\u8272\u3068\u6843\u8272\u306B\u8272\u3065\u3044\u305F\u3001\u4E38\u3044\u6843\u3002"
   material1: {fileID: 0}
   material2: {fileID: 0}
   _maxStack: 99
@@ -1975,9 +1975,9 @@ MonoBehaviour:
   icon: {fileID: 21300000, guid: aa724122e76cee249952ae1a6f732231, type: 3}
   id: 3104
   key: apple_coffee
-  itemName: "\u308A\u3093\u3054\u3068\u30B3\u30FC\u30D2\u30FC"
+  itemName: "\u30B9\u30D1\u30A4\u30B9\u30A2\u30C3\u30D7\u30EB\u30B3\u30FC\u30D2\u30FC"
   category: 2
-  description: 
+  description: "\u308A\u3093\u3054\u306E\u8584\u5207\u308A\u3068\u30B9\u30D1\u30A4\u30B9\u3092\u6DFB\u3048\u305F\u3001\u7425\u73C0\u8272\u306E\u6E29\u304B\u3044\u98F2\u307F\u7269\u3002"
   material1: {fileID: 8561165396911074249}
   material2: {fileID: -792122127041355525}
   _maxStack: 1
@@ -1997,9 +1997,9 @@ MonoBehaviour:
   icon: {fileID: 21300000, guid: c346e7f63af792e4e82b622b3e9d7650, type: 3}
   id: 3111
   key: banana_brown_rice_cream_cookie
-  itemName: "\u30D0\u30CA\u30CA\u3068\u30AF\u30EA\u30FC\u30E0\u7384\u7C73\u30AF\u30C3\u30AD\u30FC"
+  itemName: "\u713C\u304D\u30D0\u30CA\u30CA\u306E\u30AF\u30EA\u30FC\u30E0\u30B5\u30F3\u30C9"
   category: 2
-  description: 
+  description: "\u3053\u3093\u304C\u308A\u713C\u3051\u305F\u30D0\u30CA\u30CA\u306E\u5F62\u306E\u751F\u5730\u3067\u3001\u30AF\u30EA\u30FC\u30E0\u3092\u631F\u3093\u3060\u304A\u83D3\u5B50\u3002"
   material1: {fileID: -725015441715178452}
   material2: {fileID: -3201117879322543463}
   _maxStack: 1
@@ -2019,9 +2019,9 @@ MonoBehaviour:
   icon: {fileID: 21300000, guid: 5616a2fafa7fad848a06dd1f625e57af, type: 3}
   id: 2118
   key: fluorescent_light_full_body_tights
-  itemName: "\u86CD\u5149\u706F\u3068\u5168\u8EAB\u30BF\u30A4\u30C4"
+  itemName: "\u767D\u5149\u306E\u30ED\u30FC\u30D6"
   category: 1
-  description: 
+  description: "\u86CD\u5149\u706F\u3068\u5168\u8EAB\u30BF\u30A4\u30C4\u3067\u5408\u6210\u3055\u308C\u305F\u88C5\u5099\u3002"
   material1: {fileID: -263205480878404495}
   material2: {fileID: 8829090763925122756}
   _maxStack: 1
@@ -2040,9 +2040,9 @@ MonoBehaviour:
   icon: {fileID: 21300000, guid: a1896be9f23029c4590dc9b21482eb86, type: 3}
   id: 3119
   key: brown_rice_cream_cookie_coffee
-  itemName: "\u30AF\u30EA\u30FC\u30E0\u7384\u7C73\u30AF\u30C3\u30AD\u30FC\u3068\u30B3\u30FC\u30D2\u30FC"
+  itemName: "\u30E2\u30AB\u30AF\u30EA\u30FC\u30E0\u30B5\u30F3\u30C9"
   category: 2
-  description: 
+  description: "\u30B3\u30FC\u30D2\u30FC\u8C46\u3092\u98FE\u3063\u305F\u751F\u5730\u3067\u3001\u8336\u8272\u3068\u767D\u306E\u30AF\u30EA\u30FC\u30E0\u3092\u631F\u3093\u3060\u30AF\u30C3\u30AD\u30FC\u3002"
   material1: {fileID: -3201117879322543463}
   material2: {fileID: -792122127041355525}
   _maxStack: 1
@@ -2062,9 +2062,9 @@ MonoBehaviour:
   icon: {fileID: 21300000, guid: 9465750aa2017354a8885a997351b2ba, type: 3}
   id: 2124
   key: fluorescent_light_umbrella
-  itemName: "\u86CD\u5149\u706F\u3068\u5098"
+  itemName: "\u5149\u683C\u5B50\u30A2\u30F3\u30D6\u30EC\u30E9"
   category: 1
-  description: 
+  description: "\u86CD\u5149\u706F\u3068\u5098\u3067\u5408\u6210\u3055\u308C\u305F\u88C5\u5099\u3002"
   material1: {fileID: -263205480878404495}
   material2: {fileID: -181082550691912316}
   _maxStack: 1
@@ -2085,7 +2085,7 @@ MonoBehaviour:
   key: mysterious_note_3
   itemName: "\u8B0E\u306E\u624B\u8A18\uFF13"
   category: 3
-  description: 
+  description: "\u7126\u3052\u305F\u3088\u3046\u306B\u9ED2\u305A\u3093\u3060\u3001\u8D64\u8336\u8272\u306E\u624B\u8A18\u3002"
   material1: {fileID: 0}
   material2: {fileID: 0}
   _maxStack: 1
@@ -2104,9 +2104,9 @@ MonoBehaviour:
   icon: {fileID: 21300000, guid: a82cb1135a7e9f24aaaaa25fe8cbc133, type: 3}
   id: 3126
   key: coffee_grapes
-  itemName: "\u30B3\u30FC\u30D2\u30FC\u3068\u3076\u3069\u3046"
+  itemName: "\u7D2B\u306E\u6E26\u306E\u3076\u3069\u3046\u30B3\u30FC\u30D2\u30FC"
   category: 2
-  description: 
+  description: "\u98FE\u308A\u4ED8\u304D\u306E\u30AB\u30C3\u30D7\u3067\u3001\u9ED2\u3068\u7D2B\u304C\u6E26\u3092\u5DFB\u304F\u4E0D\u601D\u8B70\u306A\u30B3\u30FC\u30D2\u30FC\u3002"
   material1: {fileID: -792122127041355525}
   material2: {fileID: -5554650038091774464}
   _maxStack: 1
@@ -2126,9 +2126,9 @@ MonoBehaviour:
   icon: {fileID: 21300000, guid: 9a1a7ed9e6e18f241896ec29fe50bd9d, type: 3}
   id: 2138
   key: hat_note
-  itemName: "\u5E3D\u5B50\u3068\u30CE\u30FC\u30C8"
+  itemName: "\u3057\u304A\u308A\u306E\u51A0"
   category: 1
-  description: 
+  description: "\u5E3D\u5B50\u3068\u30CE\u30FC\u30C8\u3067\u5408\u6210\u3055\u308C\u305F\u88C5\u5099\u3002"
   material1: {fileID: 5905387601538661209}
   material2: {fileID: 1491394875471116521}
   _maxStack: 1
@@ -2147,9 +2147,9 @@ MonoBehaviour:
   icon: {fileID: 21300000, guid: c3678bb490de6b5489b2eed346c32e8a, type: 3}
   id: 2145
   key: note_umbrella
-  itemName: "\u30CE\u30FC\u30C8\u3068\u5098"
+  itemName: "\u661F\u56F3\u306E\u30D6\u30C3\u30AF\u30A2\u30F3\u30D6\u30EC\u30E9"
   category: 1
-  description: 
+  description: "\u30CE\u30FC\u30C8\u3068\u5098\u3067\u5408\u6210\u3055\u308C\u305F\u88C5\u5099\u3002"
   material1: {fileID: 1491394875471116521}
   material2: {fileID: -181082550691912316}
   _maxStack: 1
@@ -2168,9 +2168,9 @@ MonoBehaviour:
   icon: {fileID: 21300000, guid: 4c3b30da7bd0b904eaa5b2a2efce3b13, type: 3}
   id: 3120
   key: brown_rice_cream_cookie_grapes
-  itemName: "\u30AF\u30EA\u30FC\u30E0\u7384\u7C73\u30AF\u30C3\u30AD\u30FC\u3068\u3076\u3069\u3046"
+  itemName: "\u3076\u3069\u3046\u30AF\u30EA\u30FC\u30E0\u30B5\u30F3\u30C9"
   category: 2
-  description: 
+  description: "\u7D2B\u8272\u306E\u5B9F\u3092\u3042\u3057\u3089\u3063\u305F\u751F\u5730\u3067\u3001\u3076\u3069\u3046\u8272\u306E\u30AF\u30EA\u30FC\u30E0\u3092\u631F\u3093\u3060\u30AF\u30C3\u30AD\u30FC\u3002"
   material1: {fileID: -3201117879322543463}
   material2: {fileID: -5554650038091774464}
   _maxStack: 1
@@ -2190,9 +2190,9 @@ MonoBehaviour:
   icon: {fileID: 21300000, guid: 96dabfa3bb01bc04cb034028ccd3aa8b, type: 3}
   id: 2142
   key: magnet_umbrella
-  itemName: "\u78C1\u77F3\u3068\u5098"
+  itemName: "\u78C1\u74B0\u30A2\u30F3\u30D6\u30EC\u30E9"
   category: 1
-  description: 
+  description: "\u78C1\u77F3\u3068\u5098\u3067\u5408\u6210\u3055\u308C\u305F\u88C5\u5099\u3002"
   material1: {fileID: -7822687782585050773}
   material2: {fileID: -181082550691912316}
   _maxStack: 1
@@ -2211,9 +2211,9 @@ MonoBehaviour:
   icon: {fileID: 21300000, guid: 4d4bf3916baa98242a4d5f8992f7bb31, type: 3}
   id: 2101
   key: balloon_clock
-  itemName: "\u98A8\u8239\u3068\u61D0\u4E2D\u6642\u8A08"
+  itemName: "\u6642\u9650\u30D0\u30EB\u30FC\u30F3"
   category: 1
-  description: 
+  description: "\u98A8\u8239\u3068\u61D0\u4E2D\u6642\u8A08\u3067\u5408\u6210\u3055\u308C\u305F\u88C5\u5099\u3002"
   material1: {fileID: -7287126184965246600}
   material2: {fileID: 957348972317786013}
   _maxStack: 1
@@ -2232,9 +2232,9 @@ MonoBehaviour:
   icon: {fileID: 21300000, guid: 6d83690e729ea5648ad0e53471ea0165, type: 3}
   id: 2127
   key: full_body_tights_magnet
-  itemName: "\u5168\u8EAB\u30BF\u30A4\u30C4\u3068\u78C1\u77F3"
+  itemName: "\u53CC\u6975\u30DE\u30B0\u30CD\u30C3\u30C8\u30B9\u30FC\u30C4"
   category: 1
-  description: 
+  description: "\u5168\u8EAB\u30BF\u30A4\u30C4\u3068\u78C1\u77F3\u3067\u5408\u6210\u3055\u308C\u305F\u88C5\u5099\u3002"
   material1: {fileID: 8829090763925122756}
   material2: {fileID: -7822687782585050773}
   _maxStack: 1
@@ -2253,9 +2253,9 @@ MonoBehaviour:
   icon: {fileID: 21300000, guid: 639da3dcc3792c84597f7977bb6e017f, type: 3}
   id: 3124
   key: brown_rice_cream_cookie_strawberry_jelly
-  itemName: "\u30AF\u30EA\u30FC\u30E0\u7384\u7C73\u30AF\u30C3\u30AD\u30FC\u3068\u3044\u3061\u3054\u30BC\u30EA\u30FC"
+  itemName: "\u3044\u3061\u3054\u30BC\u30EA\u30FC\u30B5\u30F3\u30C9"
   category: 2
-  description: 
+  description: "\u8D64\u3044\u30BC\u30EA\u30FC\u3068\u767D\u3044\u30AF\u30EA\u30FC\u30E0\u3092\u631F\u3093\u3060\u3001\u5F69\u308A\u8C4A\u304B\u306A\u30AF\u30C3\u30AD\u30FC\u3002"
   material1: {fileID: -3201117879322543463}
   material2: {fileID: -7209103825163294352}
   _maxStack: 1
@@ -2275,9 +2275,9 @@ MonoBehaviour:
   icon: {fileID: 21300000, guid: a3e717833116a884097c0d705ef7dbab, type: 3}
   id: 3106
   key: apple_miso_soup
-  itemName: "\u308A\u3093\u3054\u3068\u5473\u564C\u6C41"
+  itemName: "\u308A\u3093\u3054\u5165\u308A\u5473\u564C\u6C41"
   category: 2
-  description: 
+  description: "\u8C46\u8150\u3084\u308F\u304B\u3081\u3068\u4E00\u7DD2\u306B\u3001\u308A\u3093\u3054\u306E\u8584\u5207\u308A\u304C\u6D6E\u304B\u3076\u5473\u564C\u6C41\u3002"
   material1: {fileID: 8561165396911074249}
   material2: {fileID: -3828202121546107835}
   _maxStack: 1
@@ -2297,9 +2297,9 @@ MonoBehaviour:
   icon: {fileID: 21300000, guid: b8edee5965208b942b70962551ebbe87, type: 3}
   id: 2139
   key: hat_umbrella
-  itemName: "\u5E3D\u5B50\u3068\u5098"
+  itemName: "\u304A\u672D\u306E\u96E8\u7B20"
   category: 1
-  description: 
+  description: "\u5E3D\u5B50\u3068\u5098\u3067\u5408\u6210\u3055\u308C\u305F\u88C5\u5099\u3002"
   material1: {fileID: 5905387601538661209}
   material2: {fileID: -181082550691912316}
   _maxStack: 1
@@ -2318,9 +2318,9 @@ MonoBehaviour:
   icon: {fileID: 21300000, guid: f76eeb7fca94004499aae54a99b965e1, type: 3}
   id: 2129
   key: full_body_tights_note
-  itemName: "\u5168\u8EAB\u30BF\u30A4\u30C4\u3068\u30CE\u30FC\u30C8"
+  itemName: "\u30DA\u30FC\u30B8\u30A2\u30FC\u30DE\u30FC"
   category: 1
-  description: 
+  description: "\u5168\u8EAB\u30BF\u30A4\u30C4\u3068\u30CE\u30FC\u30C8\u3067\u5408\u6210\u3055\u308C\u305F\u88C5\u5099\u3002"
   material1: {fileID: 8829090763925122756}
   material2: {fileID: 1491394875471116521}
   _maxStack: 1
@@ -2341,7 +2341,7 @@ MonoBehaviour:
   key: hat
   itemName: "\u5E3D\u5B50"
   category: 1
-  description: 
+  description: "\u982D\u306B\u3061\u3087\u3053\u3093\u3068\u304B\u3076\u308B\u5E3D\u5B50\u3002"
   material1: {fileID: 0}
   material2: {fileID: 0}
   _maxStack: 1
@@ -2360,9 +2360,9 @@ MonoBehaviour:
   icon: {fileID: 21300000, guid: 5c58f9cdb14fcce4aab80f5ee358ee58, type: 3}
   id: 2137
   key: hat_microphone
-  itemName: "\u5E3D\u5B50\u3068\u30DE\u30A4\u30AF"
+  itemName: "\u84C4\u97F3\u6A5F\u30CF\u30C3\u30C8"
   category: 1
-  description: 
+  description: "\u5E3D\u5B50\u3068\u30DE\u30A4\u30AF\u3067\u5408\u6210\u3055\u308C\u305F\u88C5\u5099\u3002"
   material1: {fileID: 5905387601538661209}
   material2: {fileID: 7372939191468712669}
   _maxStack: 1
@@ -2378,12 +2378,12 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: f6220288b2fd34b40bb3d8432012533a, type: 3}
   m_Name: FluorescentLightGlasses
   m_EditorClassIdentifier: CreativeAI.Gameplay::CreativeAI.Gameplay.ItemData
-  icon: {fileID: 21300000, guid: 786a1c940d15bc0499030cd4e01d39a7, type: 3}
+  icon: {fileID: 21300000, guid: decd566e634b1484a99fad45e084124e, type: 3}
   id: 2119
   key: fluorescent_light_glasses
-  itemName: "\u86CD\u5149\u706F\u3068\u30E1\u30AC\u30CD"
+  itemName: "\u86CD\u5149\u7BA1\u30B4\u30FC\u30B0\u30EB"
   category: 1
-  description: 
+  description: "\u86CD\u5149\u706F\u3068\u30E1\u30AC\u30CD\u3067\u5408\u6210\u3055\u308C\u305F\u88C5\u5099\u3002"
   material1: {fileID: -263205480878404495}
   material2: {fileID: 6717797442590564354}
   _maxStack: 1
@@ -2402,9 +2402,9 @@ MonoBehaviour:
   icon: {fileID: 21300000, guid: 9f1436a00d13b9d42a35619f75692cea, type: 3}
   id: 3115
   key: banana_orange_juice
-  itemName: "\u30D0\u30CA\u30CA\u3068\u307F\u304B\u3093\u30B8\u30E5\u30FC\u30B9"
+  itemName: "\u30D0\u30CA\u30CA\u30AA\u30EC\u30F3\u30B8\u30B9\u30E0\u30FC\u30B8\u30FC"
   category: 2
-  description: 
+  description: "\u30D0\u30CA\u30CA\u3068\u307F\u304B\u3093\u3092\u6DFB\u3048\u305F\u3001\u3068\u308D\u308A\u3068\u6FC3\u539A\u305D\u3046\u306A\u9EC4\u8272\u3044\u30B8\u30E5\u30FC\u30B9\u3002"
   material1: {fileID: -725015441715178452}
   material2: {fileID: -6523541574003027713}
   _maxStack: 1
@@ -2426,7 +2426,7 @@ MonoBehaviour:
   key: glasses
   itemName: "\u30E1\u30AC\u30CD"
   category: 1
-  description: 
+  description: "\u8996\u754C\u3092\u6574\u3048\u308B\u30E1\u30AC\u30CD\u3002"
   material1: {fileID: 0}
   material2: {fileID: 0}
   _maxStack: 1
@@ -2445,9 +2445,9 @@ MonoBehaviour:
   icon: {fileID: 21300000, guid: 8ba5ba174e73f84499aa862b08dee548, type: 3}
   id: 3103
   key: apple_brown_rice_cream_cookie
-  itemName: "\u308A\u3093\u3054\u3068\u30AF\u30EA\u30FC\u30E0\u7384\u7C73\u30AF\u30C3\u30AD\u30FC"
+  itemName: "\u308A\u3093\u3054\u306E\u30AF\u30EA\u30FC\u30E0\u30DF\u30EB\u30D5\u30A3\u30FC\u30E6"
   category: 2
-  description: 
+  description: "\u8F2A\u5207\u308A\u306E\u308A\u3093\u3054\u3067\u3001\u305F\u3063\u3077\u308A\u306E\u30AF\u30EA\u30FC\u30E0\u3092\u631F\u3093\u3060\u304A\u83D3\u5B50\u3002"
   material1: {fileID: 8561165396911074249}
   material2: {fileID: -3201117879322543463}
   _maxStack: 1
@@ -2467,9 +2467,9 @@ MonoBehaviour:
   icon: {fileID: 21300000, guid: dd32a51126a6ace43b123a6877196baf, type: 3}
   id: 3129
   key: coffee_peach
-  itemName: "\u30B3\u30FC\u30D2\u30FC\u3068\u6843"
+  itemName: "\u6843\u306E\u30DE\u30FC\u30D6\u30EB\u30B3\u30FC\u30D2\u30FC"
   category: 2
-  description: 
+  description: "\u6843\u3092\u6DFB\u3048\u3001\u8868\u9762\u306B\u6DE1\u3044\u6E26\u304C\u5E83\u304C\u308B\u30B3\u30FC\u30D2\u30FC\u3002"
   material1: {fileID: -792122127041355525}
   material2: {fileID: 2510756971122629955}
   _maxStack: 1
@@ -2489,9 +2489,9 @@ MonoBehaviour:
   icon: {fileID: 21300000, guid: f947692dd0d00a14a9d515c9ec6ab62a, type: 3}
   id: 2143
   key: microphone_note
-  itemName: "\u30DE\u30A4\u30AF\u3068\u30CE\u30FC\u30C8"
+  itemName: "\u30DA\u30FC\u30B8\u5F0F\u84C4\u97F3\u6A5F"
   category: 1
-  description: 
+  description: "\u30DE\u30A4\u30AF\u3068\u30CE\u30FC\u30C8\u3067\u5408\u6210\u3055\u308C\u305F\u88C5\u5099\u3002"
   material1: {fileID: 7372939191468712669}
   material2: {fileID: 1491394875471116521}
   _maxStack: 1
@@ -2510,9 +2510,9 @@ MonoBehaviour:
   icon: {fileID: 21300000, guid: 91ea41c5cf064b84185bf9d3f2549e4d, type: 3}
   id: 2133
   key: glasses_microphone
-  itemName: "\u30E1\u30AC\u30CD\u3068\u30DE\u30A4\u30AF"
+  itemName: "\u8776\u30CD\u30AF\u30BF\u30A4\u306E\u4F1D\u58F0\u30BB\u30C3\u30C8"
   category: 1
-  description: 
+  description: "\u30E1\u30AC\u30CD\u3068\u30DE\u30A4\u30AF\u3067\u5408\u6210\u3055\u308C\u305F\u88C5\u5099\u3002"
   material1: {fileID: 6717797442590564354}
   material2: {fileID: 7372939191468712669}
   _maxStack: 1
@@ -2533,7 +2533,7 @@ MonoBehaviour:
   key: microphone
   itemName: "\u30DE\u30A4\u30AF"
   category: 1
-  description: 
+  description: "\u5C0F\u3055\u306A\u58F0\u3092\u5927\u304D\u304F\u5C4A\u3051\u308B\u30DE\u30A4\u30AF\u3002"
   material1: {fileID: 0}
   material2: {fileID: 0}
   _maxStack: 1
@@ -2552,9 +2552,9 @@ MonoBehaviour:
   icon: {fileID: 21300000, guid: 24b4338a30fe2f140861b9d56a257ccc, type: 3}
   id: 3144
   key: peach_white_rice
-  itemName: "\u6843\u3068\u767D\u7C73"
+  itemName: "\u6843\u8272\u306E\u679C\u5B9F\u3054\u98EF"
   category: 2
-  description: 
+  description: "\u6DE1\u3044\u6843\u8272\u306E\u3054\u98EF\u306B\u3001\u5207\u3063\u305F\u6843\u3092\u6DF7\u305C\u8FBC\u3093\u3060\u4E00\u676F\u3002"
   material1: {fileID: 2510756971122629955}
   material2: {fileID: -1353312657710663384}
   _maxStack: 1
@@ -2574,9 +2574,9 @@ MonoBehaviour:
   icon: {fileID: 21300000, guid: a5850748c4586c04b9a8fa2925635176, type: 3}
   id: 3135
   key: grapes_white_rice
-  itemName: "\u3076\u3069\u3046\u3068\u767D\u7C73"
+  itemName: "\u7D2B\u3076\u3069\u3046\u3054\u98EF"
   category: 2
-  description: 
+  description: "\u7D2B\u8272\u306B\u67D3\u307E\u3063\u305F\u3054\u98EF\u306B\u3001\u3076\u3069\u3046\u306E\u5B9F\u3092\u6DF7\u305C\u8FBC\u3093\u3060\u4E00\u676F\u3002"
   material1: {fileID: -5554650038091774464}
   material2: {fileID: -1353312657710663384}
   _maxStack: 1
@@ -2596,9 +2596,9 @@ MonoBehaviour:
   icon: {fileID: 21300000, guid: fe74b3c8ef032ad4a97cf623d1b095a0, type: 3}
   id: 2115
   key: clock_microphone
-  itemName: "\u61D0\u4E2D\u6642\u8A08\u3068\u30DE\u30A4\u30AF"
+  itemName: "\u6642\u5831\u30C6\u30EC\u30D5\u30A9\u30F3"
   category: 1
-  description: 
+  description: "\u61D0\u4E2D\u6642\u8A08\u3068\u30DE\u30A4\u30AF\u3067\u5408\u6210\u3055\u308C\u305F\u88C5\u5099\u3002"
   material1: {fileID: 957348972317786013}
   material2: {fileID: 7372939191468712669}
   _maxStack: 1
@@ -2617,9 +2617,9 @@ MonoBehaviour:
   icon: {fileID: 21300000, guid: 1be2496c3832dc44786de7d56e233f86, type: 3}
   id: 2128
   key: full_body_tights_microphone
-  itemName: "\u5168\u8EAB\u30BF\u30A4\u30C4\u3068\u30DE\u30A4\u30AF"
+  itemName: "\u9EC4\u91D1\u306E\u5171\u9CF4\u30B9\u30FC\u30C4"
   category: 1
-  description: 
+  description: "\u5168\u8EAB\u30BF\u30A4\u30C4\u3068\u30DE\u30A4\u30AF\u3067\u5408\u6210\u3055\u308C\u305F\u88C5\u5099\u3002"
   material1: {fileID: 8829090763925122756}
   material2: {fileID: 7372939191468712669}
   _maxStack: 1
@@ -2640,7 +2640,7 @@ MonoBehaviour:
   key: apple
   itemName: "\u308A\u3093\u3054"
   category: 2
-  description: 
+  description: "\u8D64\u3044\u76AE\u306B\u3064\u3084\u304C\u3042\u308B\u3001\u8449\u3063\u3071\u306E\u4ED8\u3044\u305F\u308A\u3093\u3054\u3002"
   material1: {fileID: 0}
   material2: {fileID: 0}
   _maxStack: 99
@@ -2660,9 +2660,9 @@ MonoBehaviour:
   icon: {fileID: 21300000, guid: 9e50437bf4d519c42935721764a63088, type: 3}
   id: 3114
   key: banana_miso_soup
-  itemName: "\u30D0\u30CA\u30CA\u3068\u5473\u564C\u6C41"
+  itemName: "\u30D0\u30CA\u30CA\u5165\u308A\u5473\u564C\u6C41"
   category: 2
-  description: 
+  description: "\u8F2A\u5207\u308A\u306E\u30D0\u30CA\u30CA\u3068\u8C46\u8150\u304C\u6D6E\u304B\u3076\u5473\u564C\u6C41\u3002"
   material1: {fileID: -725015441715178452}
   material2: {fileID: -3828202121546107835}
   _maxStack: 1
@@ -2682,9 +2682,9 @@ MonoBehaviour:
   icon: {fileID: 21300000, guid: dd4b4fe83fc5b094dbe9cba0ed5190bc, type: 3}
   id: 2107
   key: balloon_microphone
-  itemName: "\u98A8\u8239\u3068\u30DE\u30A4\u30AF"
+  itemName: "\u3075\u304D\u3060\u3057\u30D0\u30EB\u30FC\u30F3"
   category: 1
-  description: 
+  description: "\u98A8\u8239\u3068\u30DE\u30A4\u30AF\u3067\u5408\u6210\u3055\u308C\u305F\u88C5\u5099\u3002"
   material1: {fileID: -7287126184965246600}
   material2: {fileID: 7372939191468712669}
   _maxStack: 1
@@ -2705,7 +2705,7 @@ MonoBehaviour:
   key: full_body_tights
   itemName: "\u5168\u8EAB\u30BF\u30A4\u30C4"
   category: 1
-  description: 
+  description: "\u982D\u304B\u3089\u8DB3\u5148\u307E\u3067\u5305\u3080\u3001\u4F38\u3073\u306E\u3088\u3044\u670D\u3002"
   material1: {fileID: 0}
   material2: {fileID: 0}
   _maxStack: 1
@@ -2724,9 +2724,9 @@ MonoBehaviour:
   icon: {fileID: 21300000, guid: 3ca6ebec373b2ab4e92c8613b6a9ff9a, type: 3}
   id: 2126
   key: full_body_tights_hat
-  itemName: "\u5168\u8EAB\u30BF\u30A4\u30C4\u3068\u5E3D\u5B50"
+  itemName: "\u661F\u591C\u306E\u30DE\u30B8\u30B7\u30E3\u30F3\u30B9\u30FC\u30C4"
   category: 1
-  description: 
+  description: "\u5168\u8EAB\u30BF\u30A4\u30C4\u3068\u5E3D\u5B50\u3067\u5408\u6210\u3055\u308C\u305F\u88C5\u5099\u3002"
   material1: {fileID: 8829090763925122756}
   material2: {fileID: 5905387601538661209}
   _maxStack: 1

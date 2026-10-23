@@ -66,8 +66,8 @@ namespace CreativeAI.Tests.PlayMode
 
         private static bool IsShown(Component ui)
         {
-            var canvas = ui.GetComponent<Canvas>();
-            return ui.gameObject.activeInHierarchy && canvas != null && canvas.enabled;
+            var group = ui.GetComponent<CanvasGroup>();
+            return ui.gameObject.activeInHierarchy && group != null && group.IsShown();
         }
 
         [Test]
@@ -111,8 +111,8 @@ namespace CreativeAI.Tests.PlayMode
         public IEnumerator OpeningAPanel_HidesPromptAndQuickFoodBar_ButKeepsIconBar()
         {
             var prompt = Find<InteractPromptView>();
-            var quickFood = Find<QuickFoodBarController>();
-            var iconBar = Find<HudIconBar>();
+            var quickFood = Find<QuickFoodBarView>();
+            var iconBar = Find<HudIconBarView>();
             var router = _root.GetComponent<UiRouter>();
             InteractPromptService.Show(this, "[E] 扉を開ける");
             yield return null;
@@ -143,8 +143,8 @@ namespace CreativeAI.Tests.PlayMode
         public IEnumerator DuringConversation_HudIsHidden_AndReturnsAfterwards()
         {
             var prompt = Find<InteractPromptView>();
-            var quickFood = Find<QuickFoodBarController>();
-            var iconBar = Find<HudIconBar>();
+            var quickFood = Find<QuickFoodBarView>();
+            var iconBar = Find<HudIconBarView>();
             InteractPromptService.Show(this, "[E] 扉を開ける");
             yield return null;
 
