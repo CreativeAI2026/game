@@ -266,6 +266,7 @@ namespace CreativeAI.Gameplay
             _context.MoveInput = _inputHandler.move;
             _context.HorizontalVelocity = new Vector3(velocity.x, 0f, velocity.z);
             _context.DesiredSpeed = _playerController.DesiredSpeed;
+            _context.DesiredMoveDirection = _playerController.DesiredMoveDirection;
             _context.WalkSpeed = _playerController.MoveSpeed;
             _context.IsTouchingEnemy =
                 Time.time - _lastEnemyContactTime <= EnemyContactGraceSeconds;
