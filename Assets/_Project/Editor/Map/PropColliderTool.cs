@@ -48,7 +48,6 @@ namespace CreativeAI.EditorTools
             "Cash register",
             "portrait monitor",
             "Clock",
-            "light",
             "Blinder",
             "Projector screen",
         };
