@@ -32,10 +32,10 @@ RectTransform:
   m_Children: []
   m_Father: {fileID: 5118925131933247626}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
-  m_AnchorMin: {x: 0.5, y: 0.5}
-  m_AnchorMax: {x: 0.5, y: 0.5}
-  m_AnchoredPosition: {x: 0, y: 7}
-  m_SizeDelta: {x: 336, y: 250}
+  m_AnchorMin: {x: 0, y: 0}
+  m_AnchorMax: {x: 1, y: 1}
+  m_AnchoredPosition: {x: 0, y: 0}
+  m_SizeDelta: {x: 0, y: 200}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!222 &3046426396866025461
 CanvasRenderer:
@@ -57,7 +57,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: fe87c0e1cc204ed48ad3b37840f39efc, type: 3}
   m_Name: 
   m_EditorClassIdentifier: UnityEngine.UI::UnityEngine.UI.Image
-  m_Material: {fileID: 2100000, guid: d6b885b89e34de0429ed827075c96b3c, type: 2}
+  m_Material: {fileID: 0}
   m_Color: {r: 1, g: 1, b: 1, a: 1}
   m_RaycastTarget: 1
   m_RaycastPadding: {x: 0, y: 0, z: 0, w: 0}
@@ -69,7 +69,7 @@ MonoBehaviour:
   m_Type: 0
   m_PreserveAspect: 0
   m_FillCenter: 1
-  m_FillMethod: 4
+  m_FillMethod: 0
   m_FillAmount: 1
   m_FillClockwise: 1
   m_FillOrigin: 0
@@ -112,6 +112,60 @@ RectTransform:
   m_AnchoredPosition: {x: -5, y: 0}
   m_SizeDelta: {x: -10, y: 0}
   m_Pivot: {x: 0.5, y: 0.5}
+--- !u!1 &4259747280110260046
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 2059415073768192057}
+  - component: {fileID: 8867285353088651228}
+  m_Layer: 5
+  m_Name: EquipmentBuffIcons
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!224 &2059415073768192057
+RectTransform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 4259747280110260046}
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 3288237515198396022}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+  m_AnchorMin: {x: 0, y: 0.75}
+  m_AnchorMax: {x: 1, y: 0.75}
+  m_AnchoredPosition: {x: 0, y: 4}
+  m_SizeDelta: {x: -10, y: 40}
+  m_Pivot: {x: 0, y: 0}
+--- !u!114 &8867285353088651228
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 4259747280110260046}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 6cfa92819fc669c42a4abcfe799f389d, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: CreativeAI.UI::CreativeAI.UI.EquipmentBuffIconBarView
+  _iconSet: {fileID: 11400000, guid: eaa71e41c399244468ab3a5e375dd842, type: 2}
+  _hpBarRect: {fileID: 4175569907538714916}
+  _placement: 0
+  _iconSize: 40
+  _iconSpacing: 4
+  _gapFromHpBar: 4
 --- !u!1 &4511293661909525708
 GameObject:
   m_ObjectHideFlags: 0
@@ -170,7 +224,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: UnityEngine.UI::UnityEngine.UI.Image
   m_Material: {fileID: 0}
-  m_Color: {r: 0.45911938, g: 0.45911938, b: 0.45911938, a: 0.5882353}
+  m_Color: {r: 0, g: 0, b: 0, a: 0.78431374}
   m_RaycastTarget: 1
   m_RaycastPadding: {x: 0, y: 0, z: 0, w: 0}
   m_Maskable: 1
@@ -275,8 +329,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 3b2a26ec07e12884ea755a07a4b8ea28, type: 3}
   m_Name: 
   m_EditorClassIdentifier: CreativeAI.UI::CreativeAI.Gameplay.UIGradient
-  leftColor: {r: 1, g: 1, b: 1, a: 1}
-  rightColor: {r: 1, g: 1, b: 1, a: 1}
+  leftColor: {r: 0.050980397, g: 0.59607846, b: 0.3529412, a: 1}
+  rightColor: {r: 0.0627451, g: 0.3647059, b: 0.20784315, a: 1}
 --- !u!1 &8349886378819628792
 GameObject:
   m_ObjectHideFlags: 0
@@ -308,12 +362,13 @@ RectTransform:
   m_Children:
   - {fileID: 4175569907538714916}
   - {fileID: 5118925131933247626}
+  - {fileID: 2059415073768192057}
   m_Father: {fileID: 5576607335315682528}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0.5, y: 0.5}
   m_AnchorMax: {x: 0.5, y: 0.5}
   m_AnchoredPosition: {x: -713, y: -200.85599}
-  m_SizeDelta: {x: 350, y: 100}
+  m_SizeDelta: {x: 425, y: 100}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &6025033910899003790
 MonoBehaviour:
@@ -477,3 +532,5 @@ MonoBehaviour:
     scrollSpeed: 0.75
     hpBarLeftColor: {r: 0.7058824, g: 0.039215688, b: 0.121568635, a: 1}
     hpBarRightColor: {r: 0.52156866, g: 0, b: 0.043137256, a: 1}
+  _ekgArea: 0
+  _reverseHpBarGradient: 0

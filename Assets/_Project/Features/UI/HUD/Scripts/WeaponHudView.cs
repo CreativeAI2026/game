@@ -29,14 +29,18 @@ namespace CreativeAI.UI
     ///   CanvasGroup で出し入れする。
     ///
     /// ■ アニメーション
-    ///   全パネルが楕円上を弧を描いて移動する（角度補間）。並びは「選択中が上、そこから反時計回りに次の武器」なので、
-    ///   E(次の武器) を押すと左隣のパネルが上へ来る = パネルは時計回りに動く。Q(前の武器) はその逆。
+    ///   全パネルが楕円上を弧を描いて移動する（角度補間）。並びは「選択中が上、そこから時計回りに次の武器」なので、
+    ///   E(次の武器) を押すと右隣のパネルが上へ来る = パネルは反時計回りに動く。Q(前の武器) はその逆。
     ///   アニメーション中に次の切替が来たら、その時点の位置から新しい配置へ向けて動き直す(入力を捨てない)。
+    ///
+    /// ■ アイコンの見え方(並べ直しのたびに決める)
+    ///   選択中のアイコンはそのまま、それ以外は _unselectedIconTint を掛けて暗く(薄く)する。
+    ///   4本所持のときだけ、下のパネルのアイコンを出さない。
     ///
     /// ■ 描画順(アニメーション中も毎フレーム更新)
     ///   switchUI → 常に最前面 / 選択中パネル → その直下 /
-    ///   以降は楕円の上下(真上・真下)に近いほど手前、左右の端ほど奥。
-    ///   4本なら「上(選択) → 下 → 左右」の順に重なる。
+    ///   以降は楕円の上にあるほど手前、下にあるほど奥(真下が最背面)。
+    ///   4本なら手前から「上(選択) → 左右 → 下」の順に重なる。
     /// </summary>
     public class WeaponHudView : MonoBehaviour
     {
@@ -65,6 +69,14 @@ namespace CreativeAI.UI
         )]
         private float panelSpacingY = 100f;
 
+        [Header("アイコンの見え方")]
+        [Tooltip(
+            "選択中以外のパネルのアイコンに掛ける色。RGB を下げると暗く、A を下げると薄くなる。"
+                + "4本所持のときの下のパネルだけはアイコンを出さない"
+        )]
+        [SerializeField]
+        private Color _unselectedIconTint = new Color(0.6f, 0.6f, 0.6f, 1f);
+
         [Header("所持本数で出し入れする自分の CanvasGroup(0本=非表示)")]
         [SerializeField]
         private CanvasGroup _group;
@@ -82,6 +94,7 @@ namespace CreativeAI.UI
             public int weaponIndex;
             public RectTransform rect;
             public Image background;
+            public Image icon;
 
             /// <summary>楕円上の現在の角度(ラジアン)。上(選択位置)が π/2。</summary>
             public float angle;
@@ -173,10 +186,10 @@ namespace CreativeAI.UI
             Layout(animate: false, clockwise: true);
         }
 
-        /// <summary>選択が変わったときに、その方向へ回して並べ直す。true: 前の武器(Q) = 反時計回り。</summary>
+        /// <summary>選択が変わったときに、その方向へ回して並べ直す。true: 前の武器(Q) = 時計回り。</summary>
         private void HandleWeaponSwitched(bool isLeftRotation)
         {
-            Layout(animate: true, clockwise: !isLeftRotation);
+            Layout(animate: true, clockwise: isLeftRotation);
         }
 
         private void ApplyOwnedCount() =>
@@ -227,6 +240,7 @@ namespace CreativeAI.UI
                         weaponIndex = i,
                         rect = rect,
                         background = rect.GetComponent<Image>(),
+                        icon = icon,
                     }
                 );
             }
@@ -239,7 +253,7 @@ namespace CreativeAI.UI
         /// 入手ずみの武器と選択中の武器から、各パネルの表示・位置・色・描画順を決める。
         /// </summary>
         /// <param name="animate">true なら現在位置から楕円に沿って動かす。</param>
-        /// <param name="clockwise">動かす向き。true で時計回り(E = 次の武器。左隣が上へ来る)。</param>
+        /// <param name="clockwise">動かす向き。true で時計回り(Q = 前の武器。左隣が上へ来る)。</param>
         private void Layout(bool animate, bool clockwise)
         {
             if (_panels.Count == 0 || _weaponManager == null)
@@ -266,7 +280,7 @@ namespace CreativeAI.UI
                     continue;
                 }
 
-                // 選択中の武器が slot 0(上)。入手ずみの並び(切り替え順)に、上から反時計回りに並べる
+                // 選択中の武器が slot 0(上)。入手ずみの並び(切り替え順)に、上から時計回りに並べる
                 int slot = (position - selectedPosition + count) % count;
                 float target = SlotAngle(slot, count);
 
@@ -277,6 +291,7 @@ namespace CreativeAI.UI
 
                 if (panel.background != null)
                     panel.background.color = slot == 0 ? lightColor : darkColor;
+                ApplyIconLook(panel, slot, count);
             }
 
             _layoutVersion++;
@@ -294,6 +309,18 @@ namespace CreativeAI.UI
                 }
                 ApplyDepthOrder();
             }
+        }
+
+        /// <summary>
+        /// 選択中はそのまま、それ以外は暗く(_unselectedIconTint)する。
+        /// 4本所持のときの下のパネル(slot 2 = 選択中の真向かい)はアイコンを出さない(パネルの背景だけ残す)。
+        /// </summary>
+        private void ApplyIconLook(WeaponPanel panel, int slot, int count)
+        {
+            bool hidden = count == 4 && slot == 2;
+            panel.icon.enabled = panel.icon.sprite != null && !hidden;
+            panel.icon.color =
+                slot == 0 ? _templateIcon.color : _templateIcon.color * _unselectedIconTint;
         }
 
         private async UniTaskVoid AnimatePanels(
@@ -350,9 +377,9 @@ namespace CreativeAI.UI
             );
         }
 
-        /// <summary>slot 番目の角度。slot 0 = 上(π/2)、そこから反時計回りに等間隔(4本なら 上→左→下→右)。</summary>
+        /// <summary>slot 番目の角度。slot 0 = 上(π/2)、そこから時計回りに等間隔(4本なら 上→右→下→左)。</summary>
         private static float SlotAngle(int slot, int count) =>
-            Mathf.PI * 0.5f + slot * (2f * Mathf.PI / count);
+            Mathf.PI * 0.5f - slot * (2f * Mathf.PI / count);
 
         /// <summary>
         /// start から target へ、指定の向きに 1 周未満で回る角度を返す(target ± 2π の中から選ぶ)。
@@ -368,7 +395,7 @@ namespace CreativeAI.UI
         }
 
         /// <summary>
-        /// 描画順: 左右の端(奥)から順に最前面へ送り、上下に近いものほど手前にする。
+        /// 描画順: 楕円の下にあるもの(奥)から順に最前面へ送り、上にあるものほど手前にする。
         /// 最後に選択中のパネル、さらに switchUI を送ると、それらが一番手前になる。
         /// パネルの現在角度で決めるので、回転アニメーション中も重なりが自然に入れ替わる。
         /// </summary>
@@ -381,10 +408,8 @@ namespace CreativeAI.UI
                     _depthOrderBuffer.Add(panel);
             }
 
-            // |sin| が小さい(左右の端)ほど奥 = 先に送る
-            _depthOrderBuffer.Sort(
-                (a, b) => Mathf.Abs(Mathf.Sin(a.angle)).CompareTo(Mathf.Abs(Mathf.Sin(b.angle)))
-            );
+            // sin が小さい(楕円の下側)ほど奥 = 先に送る
+            _depthOrderBuffer.Sort((a, b) => Mathf.Sin(a.angle).CompareTo(Mathf.Sin(b.angle)));
             foreach (var panel in _depthOrderBuffer)
                 panel.rect.SetAsLastSibling();
 
