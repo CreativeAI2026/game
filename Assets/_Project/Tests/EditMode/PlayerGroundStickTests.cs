@@ -29,7 +29,10 @@ namespace CreativeAI.Tests.EditMode
         {
             float stick = PlayerController.GroundStickSpeed(horizontalSpeed, SlopeLimit);
 
-            Assert.That(stick, Is.GreaterThanOrEqualTo(SlopeDescentSpeed(horizontalSpeed, StairSlope)));
+            Assert.That(
+                stick,
+                Is.GreaterThanOrEqualTo(SlopeDescentSpeed(horizontalSpeed, StairSlope))
+            );
         }
 
         [Test]
