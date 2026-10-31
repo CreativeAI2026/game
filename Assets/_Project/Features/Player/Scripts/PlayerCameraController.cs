@@ -21,6 +21,11 @@ namespace CreativeAI.Gameplay
         )]
         public GameObject CinemachineCameraTarget;
 
+        [Tooltip(
+            "掴み演出カメラ(Pull / Escape)の Tracking Target に設定する、プレイヤー配下の空オブジェクト(UpperChestTrackingTarget)"
+        )]
+        public Transform UpperChestTrackingTarget;
+
         [Tooltip("カメラを上方向に動かせる最大角度（度）")]
         public float TopClamp = 70.0f;
 

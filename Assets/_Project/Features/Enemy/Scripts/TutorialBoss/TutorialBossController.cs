@@ -301,6 +301,10 @@ namespace CreativeAI.Gameplay
         [SerializeField]
         private float grabRetractDuration = 0.4f;
 
+        [Tooltip("電撃ダメージフェーズ用カメラ(DamageSceneCamera)の追従ターゲット(GrabTarget)。")]
+        [SerializeField]
+        private Transform grabCameraTarget;
+
         [Header("焦りへの追い込み")]
         [Tooltip(
             "プレイヤーの焦り（PanicDetector）に応じて攻めを強める設定。段階・系統ごとの補正値と歯止め。"
@@ -392,6 +396,7 @@ namespace CreativeAI.Gameplay
         public float GrabPullLateralOffset => grabPullLateralOffset;
         public ParticleSystem ElectricEffectPrefab => electricEffectPrefab;
         public float GrabRetractDuration => grabRetractDuration;
+        public Transform GrabCameraTarget => grabCameraTarget;
         public Transform KamaBone => kamaBone;
         public Vector3 KamaExtendLocalAxis => kamaExtendLocalAxis;
         public float Attack2ReachExtension => attack2ReachExtension;

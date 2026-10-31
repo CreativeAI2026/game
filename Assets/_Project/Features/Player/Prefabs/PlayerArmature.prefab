@@ -24252,6 +24252,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: CreativeAI.Gameplay::CreativeAI.Gameplay.PlayerCameraController
   CinemachineCameraTarget: {fileID: 2329010984694957153}
+  UpperChestTrackingTarget: {fileID: 7309617434048872567}
   TopClamp: 30
   BottomClamp: -25
   CameraAngleOverride: 0

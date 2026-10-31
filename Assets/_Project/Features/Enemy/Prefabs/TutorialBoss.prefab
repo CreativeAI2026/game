@@ -2086,6 +2086,7 @@ MonoBehaviour:
   grabPullLateralOffset: 0.5
   electricEffectPrefab: {fileID: 9027514048236820043, guid: 8e1bf96441ff48241ab0f44e40d0b874, type: 3}
   grabRetractDuration: 0.4
+  grabCameraTarget: {fileID: 3885520623964393432}
   panicPressureSettings:
     _tenseAttackIntervalScale: 0.8
     _tenseDirectAssaultBonus: 0.15

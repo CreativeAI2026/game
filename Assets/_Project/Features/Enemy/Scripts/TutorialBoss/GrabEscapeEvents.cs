@@ -1,4 +1,5 @@
 using System;
+using UnityEngine;
 
 namespace CreativeAI.Gameplay
 {
@@ -24,6 +25,11 @@ namespace CreativeAI.Gameplay
         public static Action OnHideGauge;
 
         // ─── カメラフェーズ通知 ───────────────────────────────
+
+        /// <summary>
+        /// 電撃ダメージカメラ(vcamDamage)の追従ターゲット(ボス側の GrabTarget 等)を通知する。
+        /// </summary>
+        public static Action<Transform> OnSetDamageCameraTarget;
 
         /// <summary>
         /// 掴み引き寄せフェーズ開始。vcamPull を優先させる。

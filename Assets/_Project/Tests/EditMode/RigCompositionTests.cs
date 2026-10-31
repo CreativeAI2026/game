@@ -54,6 +54,33 @@ namespace CreativeAI.Tests.EditMode
         }
 
         [Test]
+        public void CameraRig_HasUnifiedNormalAimAndGrabCameras_WithScaledDistances()
+        {
+            var rig = LoadConfig().cameraRigPrefab;
+            Assert.IsNotNull(rig, "cameraRigPrefab が未割当です");
+
+            var vcams = rig.GetComponentsInChildren<CinemachineCamera>(true);
+            var normalCam = vcams.FirstOrDefault(c => c.name == "NormalCamera");
+            var aimCam = vcams.FirstOrDefault(c => c.name == "AimCamera");
+            Assert.IsNotNull(normalCam, "NormalCamera が CameraRig にありません");
+            Assert.IsNotNull(aimCam, "AimCamera が CameraRig にありません");
+
+            var normalFollow = normalCam.GetComponent<CinemachineThirdPersonFollow>();
+            var aimFollow = aimCam.GetComponent<CinemachineThirdPersonFollow>();
+            Assert.IsNotNull(normalFollow);
+            Assert.IsNotNull(aimFollow);
+            Assert.AreEqual(10f, normalFollow.CameraDistance, 1e-4f, "NormalCamera の距離は 2.5 倍スケール後の 10 に揃える");
+            Assert.AreEqual(5f, aimFollow.CameraDistance, 1e-4f, "AimCamera の距離は 2.5 倍スケール後の 5 に揃える");
+
+            var grabController = rig.GetComponentInChildren<GrabCameraController>(true);
+            Assert.IsNotNull(grabController, "束縛演出用の GrabCameraController が CameraRig に含まれていません");
+            Assert.IsNotNull(grabController.vcamMain);
+            Assert.IsNotNull(grabController.vcamPull);
+            Assert.IsNotNull(grabController.vcamDamage);
+            Assert.IsNotNull(grabController.vcamEscape);
+        }
+
+        [Test]
         public void FieldScenes_HaveNoPlayerOrCamera()
         {
             var paths = Directory.GetFiles(
