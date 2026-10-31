@@ -114,6 +114,10 @@ namespace CreativeAI.Gameplay
             _phase = Phase.WaitBeforePull;
 
             boss.Sounds.PlayGrab();
+            if (boss.GrabCameraTarget != null)
+            {
+                GrabEscapeEvents.OnSetDamageCameraTarget?.Invoke(boss.GrabCameraTarget);
+            }
             GrabEscapeEvents.OnCameraPull?.Invoke();
 
             if (boss.WireRig != null)

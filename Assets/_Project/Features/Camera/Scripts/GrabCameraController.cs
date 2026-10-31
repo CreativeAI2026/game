@@ -23,6 +23,7 @@ public class GrabCameraController : MonoBehaviour
 
     private void OnEnable()
     {
+        GrabEscapeEvents.OnSetDamageCameraTarget += SetDamageCameraTarget;
         GrabEscapeEvents.OnCameraPull += StartPullPhase;
         GrabEscapeEvents.OnCameraDamage += StartDamagePhase;
         GrabEscapeEvents.OnCameraEscape += StartEscapePhase;
@@ -31,10 +32,17 @@ public class GrabCameraController : MonoBehaviour
 
     private void OnDisable()
     {
+        GrabEscapeEvents.OnSetDamageCameraTarget -= SetDamageCameraTarget;
         GrabEscapeEvents.OnCameraPull -= StartPullPhase;
         GrabEscapeEvents.OnCameraDamage -= StartDamagePhase;
         GrabEscapeEvents.OnCameraEscape -= StartEscapePhase;
         GrabEscapeEvents.OnCameraEnd -= EndGrab;
+    }
+
+    public void SetDamageCameraTarget(Transform target)
+    {
+        if (vcamDamage != null && target != null)
+            vcamDamage.Target.TrackingTarget = target;
     }
 
     private void ResetGrabCameras()

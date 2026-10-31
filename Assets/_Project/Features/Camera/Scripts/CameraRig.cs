@@ -17,6 +17,12 @@ namespace CreativeAI.Gameplay
         )]
         private CinemachineCamera[] _followCameras;
 
+        [SerializeField]
+        [Tooltip(
+            "掴み演出時などにプレイヤーの上半身(PlayerCameraController.UpperChestTrackingTarget)を追わせるカメラ"
+        )]
+        private CinemachineCamera[] _upperChestFollowCameras;
+
         private void OnEnable()
         {
             PlayerRegistry.Changed += Bind;
@@ -31,15 +37,30 @@ namespace CreativeAI.Gameplay
         private void Bind(PlayerController player)
         {
             Transform target = null;
+            Transform upperChestTarget = null;
             if (
                 player != null
                 && player.TryGetComponent(out PlayerCameraController cameraController)
             )
-                target = cameraController.CinemachineCameraTarget.transform;
+            {
+                if (cameraController.CinemachineCameraTarget != null)
+                    target = cameraController.CinemachineCameraTarget.transform;
+                upperChestTarget = cameraController.UpperChestTrackingTarget;
+            }
 
-            foreach (var cam in _followCameras)
-                if (cam != null)
-                    cam.Target.TrackingTarget = target;
+            if (_followCameras != null)
+            {
+                foreach (var cam in _followCameras)
+                    if (cam != null)
+                        cam.Target.TrackingTarget = target;
+            }
+
+            if (_upperChestFollowCameras != null)
+            {
+                foreach (var cam in _upperChestFollowCameras)
+                    if (cam != null)
+                        cam.Target.TrackingTarget = upperChestTarget;
+            }
         }
     }
 }
