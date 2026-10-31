@@ -69,11 +69,24 @@ namespace CreativeAI.Tests.EditMode
             var aimFollow = aimCam.GetComponent<CinemachineThirdPersonFollow>();
             Assert.IsNotNull(normalFollow);
             Assert.IsNotNull(aimFollow);
-            Assert.AreEqual(10f, normalFollow.CameraDistance, 1e-4f, "NormalCamera の距離は 2.5 倍スケール後の 10 に揃える");
-            Assert.AreEqual(5f, aimFollow.CameraDistance, 1e-4f, "AimCamera の距離は 2.5 倍スケール後の 5 に揃える");
+            Assert.AreEqual(
+                10f,
+                normalFollow.CameraDistance,
+                1e-4f,
+                "NormalCamera の距離は 2.5 倍スケール後の 10 に揃える"
+            );
+            Assert.AreEqual(
+                5f,
+                aimFollow.CameraDistance,
+                1e-4f,
+                "AimCamera の距離は 2.5 倍スケール後の 5 に揃える"
+            );
 
             var grabController = rig.GetComponentInChildren<GrabCameraController>(true);
-            Assert.IsNotNull(grabController, "束縛演出用の GrabCameraController が CameraRig に含まれていません");
+            Assert.IsNotNull(
+                grabController,
+                "束縛演出用の GrabCameraController が CameraRig に含まれていません"
+            );
             Assert.IsNotNull(grabController.vcamMain);
             Assert.IsNotNull(grabController.vcamPull);
             Assert.IsNotNull(grabController.vcamDamage);
