@@ -12,8 +12,7 @@ namespace CreativeAI.Gameplay
     /// 焦り度のしきい値・重みを実プレイから調整するため、各指標の値を一定間隔でCSVに記録する開発用コンポーネント。
     /// データは他の人に渡したビルドで取るものなので、エディターでは初期状態で記録しない
     /// （動作確認のたびにファイルが増えないように。記録したい時だけ「エディターでも記録する」をオンにする）。
-    /// Development Build では常に記録する。ふつうのビルドでは、テスト用に
-    /// 「ビルドでも記録する」（_recordInPlayerBuild）をオンにした時だけ記録する（製品版ではオフのまま）。
+    /// Development Build では常に記録する。
     ///
     /// 保存先は <see cref="PanicLogLocation"/> が決める（ビルドでは実行ファイルと同じフォルダの PanicLogs）。
     /// 1回の起動ごとに CSV と情報ファイル（<see cref="PanicSessionInfo"/>）を1組。Excel で文字化けしないよう BOM 付き UTF-8 で書く。
@@ -71,13 +70,6 @@ namespace CreativeAI.Gameplay
         private bool _markWithGamepadSelect = true;
 
         [Tooltip(
-            "ふつうのビルドでも記録するか。テスト用のビルドを他の人に渡す時だけオンにする（製品版ではオフ）。\n"
-                + "Development Build では、この設定に関係なく常に記録する"
-        )]
-        [SerializeField]
-        private bool _recordInPlayerBuild = false;
-
-        [Tooltip(
             "エディターでの再生中も記録するか。ふだんはオフ（動作確認のたびにログが増えないように）。\n"
                 + "記録・振り返りの仕組みそのものを確かめる時だけオンにする"
         )]
@@ -125,8 +117,6 @@ namespace CreativeAI.Gameplay
                 return _recordInEditor;
 #elif DEVELOPMENT_BUILD
                 return true;
-#else
-                return _recordInPlayerBuild;
 #endif
             }
         }

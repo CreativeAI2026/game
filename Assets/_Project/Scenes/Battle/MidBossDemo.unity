@@ -3231,6 +3231,7 @@ MonoBehaviour:
   duration: 0.3
   panelSpacingX: 225
   panelSpacingY: 100
+  _unselectedIconTint: {r: 0.6, g: 0.6, b: 0.6, a: 1}
   _group: {fileID: 0}
   switchUI: {fileID: 46926386}
 --- !u!114 &821595766
@@ -6413,7 +6414,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!114 &1405349293
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -7900,7 +7901,7 @@ MonoBehaviour:
   _markerKeys: 1500000060000000
   _markWithMouseSideButtons: 1
   _markWithGamepadSelect: 1
-  _recordInPlayerBuild: 0
+  _recordInEditor: 0
   _showIndicator: 1
   _reviewOnQuit: 1
   _maxReviewMoments: 8
@@ -7927,6 +7928,22 @@ PrefabInstance:
     serializedVersion: 3
     m_TransformParent: {fileID: 1949600494}
     m_Modifications:
+    - target: {fileID: 2059415073768192057, guid: 42d3ea81065841d7aa22a26924da5a49, type: 3}
+      propertyPath: m_Pivot.y
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 2059415073768192057, guid: 42d3ea81065841d7aa22a26924da5a49, type: 3}
+      propertyPath: m_AnchorMax.y
+      value: 0.25
+      objectReference: {fileID: 0}
+    - target: {fileID: 2059415073768192057, guid: 42d3ea81065841d7aa22a26924da5a49, type: 3}
+      propertyPath: m_AnchorMin.y
+      value: 0.25
+      objectReference: {fileID: 0}
+    - target: {fileID: 2059415073768192057, guid: 42d3ea81065841d7aa22a26924da5a49, type: 3}
+      propertyPath: m_AnchoredPosition.y
+      value: -4
+      objectReference: {fileID: 0}
     - target: {fileID: 5576607335315682528, guid: 42d3ea81065841d7aa22a26924da5a49, type: 3}
       propertyPath: m_Pivot.x
       value: 0.5
@@ -10415,7 +10432,13 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 5496514868187160189, guid: 4d30f9d77d1f9c64bb9fe22315f2c5c2, type: 3}
       propertyPath: m_WarningMessage
-      value: 
+      value: "\nBinding warning: Some generic clip(s) animate transforms that are
+        already bound by a Humanoid avatar. These transforms can only be changed
+        by Humanoid clips.\n\tTransform 'mixamorig:LeftHand'\n\tTransform 'mixamorig:LeftHandThumb1'\n\tTransform
+        'mixamorig:RightUpLeg'\n\tTransform 'mixamorig:LeftUpLeg'\n\tTransform 'mixamorig:LeftHandMiddle1'\n\tTransform
+        'mixamorig:Hips'\n\tTransform 'mixamorig:LeftHandIndex1'\n\tTransform 'mixamorig:LeftHandPinky1'\n\tTransform
+        'mixamorig:LeftHandRing1'\n\tTransform 'mixamorig:RightFoot'\n\tand more
+        ...\n\tFrom animation clip 'Player_Die'"
       objectReference: {fileID: 0}
     - target: {fileID: 6027125060283945667, guid: 4d30f9d77d1f9c64bb9fe22315f2c5c2, type: 3}
       propertyPath: m_LocalPosition.x
