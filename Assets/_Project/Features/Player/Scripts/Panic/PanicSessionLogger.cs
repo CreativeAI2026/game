@@ -117,6 +117,8 @@ namespace CreativeAI.Gameplay
                 return _recordInEditor;
 #elif DEVELOPMENT_BUILD
                 return true;
+#else
+                return false;
 #endif
             }
         }
