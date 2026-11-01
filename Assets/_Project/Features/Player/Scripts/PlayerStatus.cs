@@ -27,6 +27,9 @@ namespace CreativeAI.Gameplay
         // 装備による補正合計(素の値に足すと最終ステータス)。装備変更で再計算する。
         private EquipmentBonus _equipment;
 
+        /// <summary>装備品による補正合計(武器は含まない)。バフ表示などの読み取り用。</summary>
+        public EquipmentBonus EquipmentBonus => _equipment;
+
         // 選択中武器による補正合計(素の値に足すと最終ステータス)。武器切替で再計算する。
         // 武器は在庫外なので装備品(_equipment)とは別ルート。出どころは WeaponManager。
         private EquipmentBonus _weapon;
