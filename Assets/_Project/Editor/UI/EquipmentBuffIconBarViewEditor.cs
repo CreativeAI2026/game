@@ -17,7 +17,10 @@ namespace CreativeAI.EditorTools
             DrawDefaultInspector();
 
             EditorGUILayout.Space();
-            EditorGUILayout.LabelField("確認用: アイコンの並びのプレビュー", EditorStyles.boldLabel);
+            EditorGUILayout.LabelField(
+                "確認用: アイコンの並びのプレビュー",
+                EditorStyles.boldLabel
+            );
 
             var view = (EquipmentBuffIconBarView)target;
             using (new EditorGUILayout.HorizontalScope())

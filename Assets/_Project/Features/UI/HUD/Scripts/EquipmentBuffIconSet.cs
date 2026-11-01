@@ -9,7 +9,10 @@ namespace CreativeAI.UI
     /// 装備によるバフ(効果)と、HUD に出すアイコンの組。
     /// 並び順がそのまま HUD の左からの並び順になる。
     /// </summary>
-    [CreateAssetMenu(fileName = "EquipmentBuffIconSet", menuName = "Scriptable Objects/UI/EquipmentBuffIconSet")]
+    [CreateAssetMenu(
+        fileName = "EquipmentBuffIconSet",
+        menuName = "Scriptable Objects/UI/EquipmentBuffIconSet"
+    )]
     public sealed class EquipmentBuffIconSet : ScriptableObject
     {
         [Serializable]

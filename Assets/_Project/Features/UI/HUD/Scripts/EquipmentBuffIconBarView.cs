@@ -206,7 +206,10 @@ namespace CreativeAI.UI
                 rt.anchorMin = corner;
                 rt.anchorMax = corner;
                 // スプライトの Pivot をマスの中心に合わせる(絵が画像の中央に無い画像は、Pivot を絵の中心にすればそろう)
-                rt.pivot = icon.sprite != null ? icon.sprite.pivot / icon.sprite.rect.size : new Vector2(0.5f, 0.5f);
+                rt.pivot =
+                    icon.sprite != null
+                        ? icon.sprite.pivot / icon.sprite.rect.size
+                        : new Vector2(0.5f, 0.5f);
                 rt.anchoredPosition = slotCenter;
                 rt.sizeDelta = Vector2.one * _iconSize;
                 icon.gameObject.SetActive(true);
