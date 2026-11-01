@@ -66,11 +66,68 @@ namespace CreativeAI.UI
         [SerializeField]
         private EkgPhase[] _ekgPhases;
 
+        /// <summary>心電図(EKG)を描く範囲。</summary>
+        private enum EkgDisplayArea
+        {
+            [InspectorName("バー全体(背景の上)")]
+            WholeBar,
+
+            [InspectorName("残りHP(Fill)の中だけ")]
+            FillOnly,
+        }
+
+        [Header("見た目の切り替え(プレイ中に変えてもすぐ反映)")]
+        [Tooltip(
+            "心電図を描く範囲。「残りHP(Fill)の中だけ」は、EKG の Image を Filled にして Fill の右端より右を描かない"
+        )]
+        [SerializeField]
+        private EkgDisplayArea _ekgArea = EkgDisplayArea.WholeBar;
+
+        [Tooltip("オンで HP バーのグラデーションの左右(始端と末端)の色を入れ替える")]
+        [SerializeField]
+        private bool _reverseHpBarGradient;
+
         // プレイヤーは Prefab から実行時に生成されるので、PlayerRegistry から受け取る(未生成の間は null)
         private PlayerStatus _playerStatus;
 
+        // 実際の HP(プレビュー解除時・設定変更時に描き直すため保持する)
+        private float _actualHp;
+        private float _actualMaxHp;
+        private bool _hasActualHp;
+
+        // 確認用に表示だけ差し替える HP 割合(null で実際の HP を表示)
+        private float? _previewHpRatio;
+
+        private Image.Type _ekgOriginalImageType;
+        private readonly Vector3[] _fillCorners = new Vector3[4];
+
+        /// <summary>確認用に HP 割合を差し替えて表示中か。</summary>
+        public bool IsPreviewing => _previewHpRatio.HasValue;
+
+        /// <summary>
+        /// 確認用: 実際の HP を変えずに、表示だけ指定の HP 割合(0〜1)にする。null で実際の HP の表示に戻す。
+        /// ダメージを受けなくても、HP 帯ごとの色・心電図を確かめられるようにするためのもの。
+        /// </summary>
+        public void SetPreviewHpRatio(float? ratio)
+        {
+            _previewHpRatio = ratio.HasValue ? Mathf.Clamp01(ratio.Value) : null;
+            Redraw();
+        }
+
+        /// <summary>HP 帯の境目(hpRatioThreshold)の一覧。確認用 Inspector のボタンに使う。</summary>
+        public float[] GetPhaseThresholds()
+        {
+            var thresholds = new float[_ekgPhases.Length];
+            for (int i = 0; i < _ekgPhases.Length; i++)
+                thresholds[i] = _ekgPhases[i].hpRatioThreshold;
+            return thresholds;
+        }
+
         private void Awake()
         {
+            if (_ekgImage != null)
+                _ekgOriginalImageType = _ekgImage.type;
+
             // マテリアルをインスタンス化してImageに割り当てる。
             // SharedマテリアルをそのままSetTexture/SetFloatするとアセットが汚染され
             // Playモード開始時にテクスチャが黒くなる問題を防ぐ。
@@ -128,7 +185,34 @@ namespace CreativeAI.UI
             }
         }
 
+        // プレイ中に Inspector で切り替えたら、その場で描き直す
+        private void OnValidate()
+        {
+            if (Application.isPlaying && isActiveAndEnabled)
+                Redraw();
+        }
+
         private void UpdateUI(float currentHp, float maxHp)
+        {
+            _actualHp = currentHp;
+            _actualMaxHp = maxHp;
+            _hasActualHp = true;
+            Redraw();
+        }
+
+        /// <summary>実際の HP(プレビュー中はプレビューの割合)で表示を作り直す。</summary>
+        private void Redraw()
+        {
+            // プレイヤー未生成でもプレビューできるよう、最大 HP はスライダーの値で代用する
+            float maxHp = _hasActualHp ? _actualMaxHp : _hpSlider.maxValue;
+            if (!_previewHpRatio.HasValue && !_hasActualHp)
+                return;
+
+            float currentHp = _previewHpRatio.HasValue ? maxHp * _previewHpRatio.Value : _actualHp;
+            Draw(currentHp, maxHp);
+        }
+
+        private void Draw(float currentHp, float maxHp)
         {
             _hpSlider.maxValue = maxHp;
             _hpSlider.value = currentHp;
@@ -147,6 +231,38 @@ namespace CreativeAI.UI
             EkgPhase phase = SelectPhase(ratio);
             ApplyEkgPhase(phase);
             ApplyHpBarColor(phase);
+            ApplyEkgArea();
+        }
+
+        /// <summary>
+        /// 心電図を描く範囲を反映する。EKG のシェーダーは UI 用ではなく RectMask2D / Mask で切り抜けないため、
+        /// Image を Filled(横・左から)にして、Fill の右端までだけ描く。
+        /// </summary>
+        private void ApplyEkgArea()
+        {
+            if (_ekgImage == null)
+                return;
+
+            if (_ekgArea == EkgDisplayArea.WholeBar)
+            {
+                _ekgImage.type = _ekgOriginalImageType;
+                return;
+            }
+
+            _ekgImage.type = Image.Type.Filled;
+            _ekgImage.fillMethod = Image.FillMethod.Horizontal;
+            _ekgImage.fillOrigin = (int)Image.OriginHorizontal.Left;
+            _ekgImage.fillAmount = FillRightEdgeOnEkg();
+        }
+
+        /// <summary>Fill の右端が、EKG の横幅のどこ(0=左端〜1=右端)にあるか。</summary>
+        private float FillRightEdgeOnEkg()
+        {
+            RectTransform ekgRect = _ekgImage.rectTransform;
+            _hpSlider.fillRect.GetWorldCorners(_fillCorners);
+            float fillRight = ekgRect.InverseTransformPoint(_fillCorners[2]).x; // [2] = 右上
+            Rect rect = ekgRect.rect;
+            return Mathf.Clamp01((fillRight - rect.xMin) / rect.width);
         }
 
         /// <summary>
@@ -197,15 +313,19 @@ namespace CreativeAI.UI
         }
 
         /// <summary>
-        /// UIGradientのleftColor・rightColorを適用する。
+        /// UIGradientのleftColor・rightColorを適用する(_reverseHpBarGradient なら左右を入れ替える)。
         /// </summary>
         private void ApplyHpBarColor(EkgPhase phase)
         {
             if (_hpBarGradient == null)
                 return;
 
-            _hpBarGradient.leftColor = phase.hpBarLeftColor;
-            _hpBarGradient.rightColor = phase.hpBarRightColor;
+            _hpBarGradient.leftColor = _reverseHpBarGradient
+                ? phase.hpBarRightColor
+                : phase.hpBarLeftColor;
+            _hpBarGradient.rightColor = _reverseHpBarGradient
+                ? phase.hpBarLeftColor
+                : phase.hpBarRightColor;
             _hpBarGradient.SetVerticesDirty();
         }
     }

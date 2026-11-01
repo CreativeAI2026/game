@@ -285,6 +285,18 @@ namespace CreativeAI.Gameplay
         public float criticalChance;
         public float criticalDamage;
 
+        /// <summary>指定した型の補正値を返す。装備補正に乗らない型(HealAmount)は 0。</summary>
+        public readonly float Get(StatType type) =>
+            type switch
+            {
+                StatType.AttackPct => attackPct,
+                StatType.DefensePct => defensePct,
+                StatType.MaxHpPct => maxHpPct,
+                StatType.CritRate => criticalChance,
+                StatType.CritDamage => criticalDamage,
+                _ => 0f,
+            };
+
         /// <summary>
         /// ロール済み個体ステータスを積み上げる。stat は StatType 名で、旧表記でも補正が消えないよう
         /// 大文字小文字を無視して照合する。未知の名前は無視する。
