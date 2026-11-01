@@ -98,6 +98,87 @@ namespace CreativeAI.Tests.EditMode
             Assert.That(desk.GetComponents<Collider>().Length, Is.EqualTo(1));
         }
 
+        /// <summary>パーツを子に並べた小物(配置ツールが生成した椅子の形)を作る。</summary>
+        private GameObject AddAssembly(string name, float spacing)
+        {
+            var prop = new GameObject(name);
+            prop.transform.SetParent(_root.transform, false);
+            AddMesh("Seat", prop.transform).transform.localPosition = new Vector3(
+                -spacing / 2f,
+                0f,
+                0f
+            );
+            AddMesh("Leg", prop.transform).transform.localPosition = new Vector3(
+                spacing / 2f,
+                0f,
+                0f
+            );
+            return prop;
+        }
+
+        [Test]
+        public void 小さい小物は全体を囲む箱を1つだけ付ける()
+        {
+            var chair = AddAssembly("Chair", spacing: 1f);
+
+            var r = PropColliderTool.AddColliders(_root, _obstacle);
+
+            Assert.That(r.Added, Is.EqualTo(1));
+            Assert.That(chair.GetComponentsInChildren<Collider>().Length, Is.EqualTo(1));
+            var box = chair.GetComponent<BoxCollider>();
+            Assert.That(box, Is.Not.Null, "箱は小物の根に付く");
+            Assert.That(box.size, Is.EqualTo(new Vector3(2f, 1f, 1f)));
+            Assert.That(chair.layer, Is.EqualTo(_obstacle));
+        }
+
+        [Test]
+        public void 大きい小物はメッシュごとに付けて間を塞がない()
+        {
+            var counter = AddAssembly("Counter", spacing: PropColliderTool.MergeMaxFootprint + 1f);
+
+            var r = PropColliderTool.AddColliders(_root, _obstacle);
+
+            Assert.That(r.Added, Is.EqualTo(2));
+            Assert.That(counter.GetComponent<Collider>(), Is.Null);
+            foreach (Transform part in counter.transform)
+                Assert.That(part.GetComponent<BoxCollider>(), Is.Not.Null);
+        }
+
+        [Test]
+        public void 以前メッシュごとに付けた小さい小物は1つの箱に付け直す()
+        {
+            var chair = AddAssembly("Chair", spacing: 1f);
+            foreach (Transform part in chair.transform)
+            {
+                var box = part.gameObject.AddComponent<BoxCollider>();
+                var bounds = part.GetComponent<MeshFilter>().sharedMesh.bounds;
+                box.center = bounds.center;
+                box.size = bounds.size;
+            }
+
+            var r = PropColliderTool.AddColliders(_root, _obstacle);
+            var second = PropColliderTool.AddColliders(_root, _obstacle);
+
+            Assert.That(r.Removed, Is.EqualTo(2));
+            Assert.That(r.Added, Is.EqualTo(1));
+            Assert.That(chair.GetComponentsInChildren<Collider>().Length, Is.EqualTo(1));
+            Assert.That(second.Added + second.Removed, Is.EqualTo(0), "付け直した後はもう触らない");
+        }
+
+        [Test]
+        public void 入れ子の小物の当たりを親の小物が外さない()
+        {
+            var desk = AddMesh("Desk");
+            var lamp = AddMesh("Lamp", desk.transform);
+
+            PropColliderTool.AddColliders(_root, _obstacle);
+            var second = PropColliderTool.AddColliders(_root, _obstacle);
+
+            Assert.That(second.Added + second.Removed, Is.EqualTo(0), "2回目は何も付け直さない");
+            Assert.That(desk.GetComponent<BoxCollider>(), Is.Not.Null);
+            Assert.That(lamp.GetComponent<BoxCollider>(), Is.Not.Null);
+        }
+
         [TestCase("Chair_03", "Chair")]
         [TestCase("Chair (2)", "Chair")]
         [TestCase("Spoon holder", "Spoon holder")]

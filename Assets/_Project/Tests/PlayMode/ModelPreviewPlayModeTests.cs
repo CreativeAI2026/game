@@ -11,6 +11,10 @@ using UnityEngine.TestTools;
 
 namespace CreativeAI.Tests.PlayMode
 {
+    /// <summary>
+    /// 本物のキャラクター画面で3Dプレビューが所持・装備・選択・ドラッグに追従するかの検証。
+    /// UI_Sandbox シーンで実 Prefab を動かし、プレビュー用カメラが要求時だけ描画することも見る。
+    /// </summary>
     public class ModelPreviewPlayModeTests
     {
         [UnityTest]

@@ -51,6 +51,12 @@ namespace CreativeAI.Gameplay
         [Tooltip("キャラクターが地面として認識するレイヤー")]
         public LayerMask GroundLayers;
 
+        /// <summary>
+        /// 接地中に地面へ押し付ける最低限の下向き速度 (m/s)。
+        /// 0 だと CheckSphere との判定タイミング次第で接地→浮遊を繰り返すジッターが発生する。
+        /// </summary>
+        private const float MinGroundStickSpeed = 2f;
+
         private float _speed;
         private float _animationBlend;
         private float _targetRotation = 0.0f;
@@ -127,19 +133,83 @@ namespace CreativeAI.Gameplay
 
         private void GroundedCheck()
         {
-            Vector3 spherePosition = new Vector3(
-                transform.position.x,
-                transform.position.y - GroundedOffset,
-                transform.position.z
-            );
+            GetGroundCheckSphere(out Vector3 spherePosition, out float sphereRadius);
             Grounded = Physics.CheckSphere(
                 spherePosition,
-                GroundedRadius,
+                sphereRadius,
                 GroundLayers,
                 QueryTriggerInteraction.Ignore
             );
 
             _animator.SetBool(PlayerAnimatorParams.Grounded, Grounded);
+        }
+
+        /// <summary>
+        /// 接地判定の球の中心と半径(ワールド座標)。
+        /// GroundedOffset / GroundedRadius は CharacterController と同じくローカルの値なので、
+        /// プレイヤーの拡大率を掛けてカプセルの実寸に合わせる。
+        /// </summary>
+        private void GetGroundCheckSphere(out Vector3 center, out float radius)
+        {
+            float scale = transform.lossyScale.y;
+            center = transform.position + Vector3.down * (GroundedOffset * scale);
+            radius = GroundedRadius * scale;
+        }
+
+        /// <summary>
+        /// 接地を保ったまま坂を下るのに必要な下向きの速さ (m/s)。
+        /// 水平速度 v で傾き slopeLimit の坂を下ると、足元の地面は毎秒 v × tan(slopeLimit) 下がるため、
+        /// 登れる上限の坂までは浮かずに下りられる値にする。
+        /// </summary>
+        public static float GroundStickSpeed(float horizontalSpeed, float slopeLimitDegrees)
+        {
+            return Mathf.Max(
+                MinGroundStickSpeed,
+                horizontalSpeed * Mathf.Tan(slopeLimitDegrees * Mathf.Deg2Rad)
+            );
+        }
+
+        /// <summary>
+        /// 下り坂を進む時に、地面へ押し付ける下向きの速さ (m/s)。下り坂でなければ 0。
+        /// 上りや平地では CharacterController が自力で接地を保つので押し付けない
+        /// (常に強く押し付けると、上りで移動が坂に沿って削られて遅くなるため)。
+        /// </summary>
+        private float DescendingStickSpeed(Vector3 moveDirection)
+        {
+            if (!Grounded || _verticalVelocity > 0.0f || _speed <= 0.0f)
+                return 0.0f;
+
+            float stickSpeed = GroundStickSpeed(_speed, _controller.slopeLimit);
+            if (!TryGetGroundNormal(stickSpeed * Time.deltaTime, out Vector3 groundNormal))
+                return 0.0f;
+
+            // 地面の法線が進む向きへ傾いている = 下り坂
+            if (Vector3.Dot(groundNormal, moveDirection) <= 0.0f)
+                return 0.0f;
+
+            return stickSpeed;
+        }
+
+        /// <summary>カプセルの底を maxDistance だけ下へずらした範囲にある地面の法線を求める。</summary>
+        private bool TryGetGroundNormal(float maxDistance, out Vector3 normal)
+        {
+            float scale = transform.lossyScale.y;
+            float radius = _controller.radius * scale;
+            Vector3 capsuleCenter = transform.TransformPoint(_controller.center);
+            Vector3 bottomSphereCenter =
+                capsuleCenter + Vector3.down * (_controller.height * 0.5f * scale - radius);
+
+            bool hit = Physics.SphereCast(
+                bottomSphereCenter,
+                radius,
+                Vector3.down,
+                out RaycastHit hitInfo,
+                maxDistance + _controller.skinWidth * scale,
+                GroundLayers,
+                QueryTriggerInteraction.Ignore
+            );
+            normal = hit ? hitInfo.normal : Vector3.up;
+            return hit;
         }
 
         private void Move()
@@ -262,9 +332,15 @@ namespace CreativeAI.Gameplay
             DesiredMoveDirection =
                 _input.move != Vector2.zero ? targetDirection.normalized : Vector3.zero;
 
+            // 速度を CharacterController.velocity から読み直すため、Move は1フレーム1回にまとめる
+            float verticalSpeed = Mathf.Min(
+                _verticalVelocity,
+                -DescendingStickSpeed(targetDirection.normalized)
+            );
+
             _controller.Move(
                 targetDirection.normalized * (_speed * Time.deltaTime)
-                    + new Vector3(0.0f, _verticalVelocity, 0.0f) * Time.deltaTime
+                    + new Vector3(0.0f, verticalSpeed, 0.0f) * Time.deltaTime
             );
 
             _animator.SetFloat(PlayerAnimatorParams.Speed, _animationBlend);
@@ -285,7 +361,7 @@ namespace CreativeAI.Gameplay
                 // 接地→浮遊を繰り返すジッターが発生するため、わずかに地面に押し付ける
                 if (_verticalVelocity < 0.0f)
                 {
-                    _verticalVelocity = -2f;
+                    _verticalVelocity = -MinGroundStickSpeed;
                 }
             }
             else
@@ -318,14 +394,8 @@ namespace CreativeAI.Gameplay
             else
                 Gizmos.color = transparentRed;
 
-            Gizmos.DrawSphere(
-                new Vector3(
-                    transform.position.x,
-                    transform.position.y - GroundedOffset,
-                    transform.position.z
-                ),
-                GroundedRadius
-            );
+            GetGroundCheckSphere(out Vector3 spherePosition, out float sphereRadius);
+            Gizmos.DrawSphere(spherePosition, sphereRadius);
         }
     }
 }
