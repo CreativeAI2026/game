@@ -282,6 +282,7 @@ MonoBehaviour:
   duration: 0.3
   panelSpacingX: 225
   panelSpacingY: 100
+  _unselectedIconTint: {r: 0.6, g: 0.6, b: 0.6, a: 1}
   _group: {fileID: 1869553971437658984}
   switchUI: {fileID: 2023643866642084400}
 --- !u!225 &1869553971437658984
