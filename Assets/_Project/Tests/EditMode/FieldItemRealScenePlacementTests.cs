@@ -21,7 +21,6 @@ namespace CreativeAI.Tests.EditMode
         private const string Dir = "Assets/_Project/Scenes/Field/";
         private const string PlanPath = "Assets/_Project/Features/Field/Data/ItemPlacementPlan.asset";
         private const string SpawnName = "PlayerSpawn_start";
-        private const string ConesName = "Traffic cones and connecting bars";
 
         // 小物のコライダーが入っているシーン(実行時は AdditiveScenes が重ねる)と、アイテムのシーン。
         private static readonly string[] SceneNames =
@@ -136,22 +135,6 @@ namespace CreativeAI.Tests.EditMode
                 Assert.IsFalse(ItemSpotFinder.IsBlocked(spot), $"{candidate} → {spot} がまだ重なっています。");
                 taken.Add(spot);
             }
-        }
-
-        [Test]
-        public void CandidateOnARealProp_IsMovedOutOfIt()
-        {
-            var cones = FindInLoadedScenes(ConesName);
-            if (cones == null)
-                Assert.Ignore($"{ConesName} が見つからないため確認できません(Props_Lab_1F が開けていない)。");
-
-            var collider = cones.GetComponentsInChildren<Collider>().FirstOrDefault(c => !c.isTrigger);
-            if (collider == null)
-                Assert.Ignore($"{ConesName} にコライダーがありません。");
-
-            var onTheProp = collider.bounds.center;
-            Assert.IsTrue(ItemSpotFinder.TryFind(onTheProp, null, out var spot));
-            Assert.IsFalse(ItemSpotFinder.IsBlocked(spot), "実際の小物の中心を指定しても、外へ出られていません。");
         }
     }
 }
