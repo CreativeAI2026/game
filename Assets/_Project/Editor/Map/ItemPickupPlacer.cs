@@ -3,7 +3,6 @@ using CreativeAI.Gameplay;
 using UnityEditor;
 using UnityEditor.SceneManagement;
 using UnityEngine;
-using UnityEngine.AI;
 using UnityEngine.SceneManagement;
 
 namespace CreativeAI.EditorTools
@@ -15,7 +14,6 @@ namespace CreativeAI.EditorTools
     public static class ItemPickupPlacer
     {
         public const string ItemsRootName = "Items";
-        private const float SnapDistance = 4f;
 
         /// <summary>
         /// 計画をシーンに置く。置いた <see cref="FieldItemPickup"/> を返す。
@@ -34,6 +32,7 @@ namespace CreativeAI.EditorTools
 
             var root = FindOrCreateRoot(scene);
             var used = new HashSet<Vector3>();
+            var taken = new List<Vector3>(); // 今回置いた位置(近すぎる場所を避ける)
 
             foreach (var entry in plan.entries)
             {
@@ -48,9 +47,20 @@ namespace CreativeAI.EditorTools
                     if (!used.Add(spot))
                         continue; // 同じ場所に重ねて置かない
 
-                    var pickup = PlaceOne(scene, root, plan.pickupPrefab, entry, Snap(spot));
-                    if (pickup != null)
-                        placed.Add(pickup);
+                    // 床に合わせ、小物や壁と重なるなら近くの空いた場所へずらす。
+                    if (!ItemSpotFinder.TryFind(spot, taken, out var ground))
+                    {
+                        Debug.LogWarning(
+                            $"[ItemPickupPlacer] {entry.item.itemName}: {spot} の近くに置ける場所が見つからず、飛ばしました。({ItemSpotFinder.LastFailure})"
+                        );
+                        continue;
+                    }
+
+                    var pickup = PlaceOne(scene, root, plan.pickupPrefab, entry, ground);
+                    if (pickup == null)
+                        continue;
+                    placed.Add(pickup);
+                    taken.Add(ground);
                 }
             }
 
@@ -87,12 +97,6 @@ namespace CreativeAI.EditorTools
             so.ApplyModifiedPropertiesWithoutUndo();
             return pickup;
         }
-
-        /// <summary>候補を NavMesh 上に寄せる(壁や地面の下に埋まらないように)。NavMesh が無ければそのまま。</summary>
-        private static Vector3 Snap(Vector3 position) =>
-            NavMesh.SamplePosition(position, out var hit, SnapDistance, NavMesh.AllAreas)
-                ? hit.position
-                : position;
 
         private static Transform FindOrCreateRoot(Scene scene)
         {
