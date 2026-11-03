@@ -133,7 +133,11 @@ namespace CreativeAI.Tests.EditMode
                     .SelectMany(root => root.GetComponentsInChildren<FieldItemPickup>(true))
                     .ToList();
 
-                Assert.That(pickups, Is.Not.Empty, "Field_Area01_Items にアイテムが置かれていません。");
+                Assert.That(
+                    pickups,
+                    Is.Not.Empty,
+                    "Field_Area01_Items にアイテムが置かれていません。"
+                );
                 Assert.That(
                     pickups.Where(p => p.Item == null).Select(p => p.name),
                     Is.Empty,

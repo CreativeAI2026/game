@@ -40,7 +40,14 @@ namespace CreativeAI.Tests.EditMode
         {
             MakeFloor();
 
-            Assert.IsTrue(ItemSpotFinder.TryFind(new Vector3(1f, 0.15f, 1f), null, out var spot, requireNavMesh: false));
+            Assert.IsTrue(
+                ItemSpotFinder.TryFind(
+                    new Vector3(1f, 0.15f, 1f),
+                    null,
+                    out var spot,
+                    requireNavMesh: false
+                )
+            );
 
             Assert.AreEqual(ItemSpotFinder.LiftAboveFloor, spot.y, 0.01f);
             Assert.AreEqual(1f, spot.x, 0.01f);
@@ -53,7 +60,14 @@ namespace CreativeAI.Tests.EditMode
             MakeFloor();
             MakeBox(new Vector3(0f, 0.5f, 0f), new Vector3(2f, 1f, 2f)); // 小物(机など)
 
-            Assert.IsTrue(ItemSpotFinder.TryFind(new Vector3(0f, 0.1f, 0f), null, out var spot, requireNavMesh: false));
+            Assert.IsTrue(
+                ItemSpotFinder.TryFind(
+                    new Vector3(0f, 0.1f, 0f),
+                    null,
+                    out var spot,
+                    requireNavMesh: false
+                )
+            );
 
             Assert.IsFalse(ItemSpotFinder.IsBlocked(spot), "ずらした先が小物と重なっています。");
             Assert.That(
@@ -69,7 +83,14 @@ namespace CreativeAI.Tests.EditMode
             MakeFloor();
             MakeBox(new Vector3(0f, 0.5f, 0f), new Vector3(2f, 1f, 2f), trigger: true); // イベントの判定など
 
-            Assert.IsTrue(ItemSpotFinder.TryFind(new Vector3(0f, 0f, 0f), null, out var spot, requireNavMesh: false));
+            Assert.IsTrue(
+                ItemSpotFinder.TryFind(
+                    new Vector3(0f, 0f, 0f),
+                    null,
+                    out var spot,
+                    requireNavMesh: false
+                )
+            );
 
             Assert.AreEqual(0f, spot.x, 0.01f);
             Assert.AreEqual(0f, spot.z, 0.01f);
@@ -82,7 +103,12 @@ namespace CreativeAI.Tests.EditMode
             var first = new Vector3(0f, ItemSpotFinder.LiftAboveFloor, 0f);
 
             Assert.IsTrue(
-                ItemSpotFinder.TryFind(new Vector3(0.1f, 0f, 0f), new[] { first }, out var spot, requireNavMesh: false)
+                ItemSpotFinder.TryFind(
+                    new Vector3(0.1f, 0f, 0f),
+                    new[] { first },
+                    out var spot,
+                    requireNavMesh: false
+                )
             );
 
             Assert.That(
@@ -97,7 +123,14 @@ namespace CreativeAI.Tests.EditMode
             MakeFloor();
             MakeBox(new Vector3(0f, 2f, 0f), new Vector3(20f, 4f, 20f)); // 周囲3m以内が全部壁
 
-            Assert.IsFalse(ItemSpotFinder.TryFind(new Vector3(0f, 0.1f, 0f), null, out _, requireNavMesh: false));
+            Assert.IsFalse(
+                ItemSpotFinder.TryFind(
+                    new Vector3(0f, 0.1f, 0f),
+                    null,
+                    out _,
+                    requireNavMesh: false
+                )
+            );
         }
     }
 }

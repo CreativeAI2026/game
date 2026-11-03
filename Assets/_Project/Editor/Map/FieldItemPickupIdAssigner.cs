@@ -77,8 +77,7 @@ namespace CreativeAI.EditorTools
                     continue;
 
                 string id;
-                do
-                    id = $"{scenePrefix}/{Guid.NewGuid():N}";
+                do id = $"{scenePrefix}/{Guid.NewGuid():N}";
                 while (!used.Add(id));
 
                 var so = new SerializedObject(pickup);

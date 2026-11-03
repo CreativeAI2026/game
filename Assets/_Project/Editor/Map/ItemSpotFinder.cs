@@ -43,7 +43,9 @@ namespace CreativeAI.EditorTools
         )
         {
             Physics.SyncTransforms(); // エディタで動かした直後のコライダーの位置を反映する
-            int offNavMesh = 0, blocked = 0, tooClose = 0;
+            int offNavMesh = 0,
+                blocked = 0,
+                tooClose = 0;
 
             foreach (var point in Around(candidate))
             {

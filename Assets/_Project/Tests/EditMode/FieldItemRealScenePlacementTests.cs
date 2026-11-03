@@ -19,7 +19,8 @@ namespace CreativeAI.Tests.EditMode
     public class FieldItemRealScenePlacementTests
     {
         private const string Dir = "Assets/_Project/Scenes/Field/";
-        private const string PlanPath = "Assets/_Project/Features/Field/Data/ItemPlacementPlan.asset";
+        private const string PlanPath =
+            "Assets/_Project/Features/Field/Data/ItemPlacementPlan.asset";
         private const string SpawnName = "PlayerSpawn_start";
 
         // 小物のコライダーが入っているシーン(実行時は AdditiveScenes が重ねる)と、アイテムのシーン。
@@ -83,7 +84,11 @@ namespace CreativeAI.Tests.EditMode
         [Test]
         public void PlacedItems_DoNotOverlapProps()
         {
-            Assert.That(_pickups, Is.Not.Empty, "Field_Area01_Items にアイテムが置かれていません。");
+            Assert.That(
+                _pickups,
+                Is.Not.Empty,
+                "Field_Area01_Items にアイテムが置かれていません。"
+            );
 
             var overlapping = _pickups
                 .Where(p => ItemSpotFinder.IsBlocked(p.transform.position))
@@ -99,7 +104,12 @@ namespace CreativeAI.Tests.EditMode
             var spawn = FindInLoadedScenes(SpawnName);
             Assert.IsNotNull(spawn, $"{SpawnName} が見つかりません。");
             Assert.IsTrue(
-                NavMesh.SamplePosition(spawn.transform.position, out var from, 5f, NavMesh.AllAreas),
+                NavMesh.SamplePosition(
+                    spawn.transform.position,
+                    out var from,
+                    5f,
+                    NavMesh.AllAreas
+                ),
                 "開始位置の近くに NavMesh がありません(ベイクされていますか)。"
             );
 
@@ -132,7 +142,10 @@ namespace CreativeAI.Tests.EditMode
                     ItemSpotFinder.TryFind(candidate, taken, out var spot),
                     $"{candidate} の近くに置ける場所がありません。"
                 );
-                Assert.IsFalse(ItemSpotFinder.IsBlocked(spot), $"{candidate} → {spot} がまだ重なっています。");
+                Assert.IsFalse(
+                    ItemSpotFinder.IsBlocked(spot),
+                    $"{candidate} → {spot} がまだ重なっています。"
+                );
                 taken.Add(spot);
             }
         }
