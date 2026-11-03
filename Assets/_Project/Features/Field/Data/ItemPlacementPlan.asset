@@ -13,7 +13,6 @@ MonoBehaviour:
   m_Name: ItemPlacementPlan
   m_EditorClassIdentifier: CreativeAI.EditorTools::CreativeAI.EditorTools.ItemPlacementPlan
   pickupPrefab: {fileID: 729981108195932767, guid: 0f226e85c645478409025246cfb2b8eb, type: 3}
-  seed: 1
   entries:
   - item: {fileID: 8561165396911074249, guid: 6371385e89bebb6469ce93bca39124a3, type: 2}
     count: 1

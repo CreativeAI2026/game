@@ -1,5 +1,4 @@
 using System.Collections.Generic;
-using System.Linq;
 using CreativeAI.Gameplay;
 using UnityEditor;
 using UnityEditor.SceneManagement;
@@ -20,7 +19,7 @@ namespace CreativeAI.EditorTools
 
         /// <summary>
         /// 計画をシーンに置く。置いた <see cref="FieldItemPickup"/> を返す。
-        /// 候補が足りない行・アイテム未設定の行は警告して飛ばす。既存の配置は触らない。
+        /// アイテム未設定の行は警告して飛ばす。既存の配置は触らない(2回実行するとその分重なる)。
         /// </summary>
         public static List<FieldItemPickup> Place(Scene scene, ItemPlacementPlan plan)
         {
@@ -35,7 +34,6 @@ namespace CreativeAI.EditorTools
 
             var root = FindOrCreateRoot(scene);
             var used = new HashSet<Vector3>();
-            var random = new System.Random(plan.seed);
 
             foreach (var entry in plan.entries)
             {
@@ -45,21 +43,15 @@ namespace CreativeAI.EditorTools
                     continue;
                 }
 
-                var free = entry.candidates.Where(c => !used.Contains(c)).ToList();
-                if (free.Count == 0)
+                foreach (var spot in entry.candidates)
                 {
-                    Debug.LogWarning(
-                        $"[ItemPickupPlacer] {entry.item.itemName}: 使える場所の候補がありません。飛ばしました。"
-                    );
-                    continue;
+                    if (!used.Add(spot))
+                        continue; // 同じ場所に重ねて置かない
+
+                    var pickup = PlaceOne(scene, root, plan.pickupPrefab, entry, Snap(spot));
+                    if (pickup != null)
+                        placed.Add(pickup);
                 }
-
-                var spot = free[random.Next(free.Count)];
-                used.Add(spot);
-
-                var pickup = PlaceOne(scene, root, plan.pickupPrefab, entry, Snap(spot));
-                if (pickup != null)
-                    placed.Add(pickup);
             }
 
             FieldItemPickupIdAssigner.AssignInScene(scene);

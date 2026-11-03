@@ -6,8 +6,8 @@ using UnityEngine;
 namespace CreativeAI.EditorTools
 {
     /// <summary>
-    /// フィールドに置くアイテムの計画。アイテム・個数・場所の候補を並べておくと、
-    /// <see cref="ItemPickupPlacer"/> が <c>ItemPickup</c> Prefab を1行につき1つ、候補のどれかへ置く。
+    /// フィールドに置くアイテムの計画。アイテム・個数・場所を並べておくと、
+    /// <see cref="ItemPickupPlacer"/> が <c>ItemPickup</c> Prefab を、1行につき場所の数だけ置く。
     /// </summary>
     [CreateAssetMenu(fileName = "ItemPlacementPlan", menuName = "CreativeAI/アイテム配置計画")]
     public sealed class ItemPlacementPlan : ScriptableObject
@@ -19,20 +19,17 @@ namespace CreativeAI.EditorTools
             public ItemData item;
 
             [Min(1)]
-            [Tooltip("拾える個数。")]
+            [Tooltip("1か所で拾える個数。置く数は Candidates の数で決まる。")]
             public int count = 1;
 
             [Tooltip(
-                "置く場所の候補(ワールド座標)。置くたびに、まだ使っていない候補から1つ選ぶ。NavMesh 上に寄せる。"
+                "置く場所(ワールド座標)。ここに並べた場所すべてに1個ずつ置く。NavMesh 上に寄せる。"
             )]
             public List<Vector3> candidates = new();
         }
 
         [Tooltip("ItemPickup Prefab。")]
         public GameObject pickupPrefab;
-
-        [Tooltip("候補の選び方を固定する種。同じ種なら同じ配置になる。")]
-        public int seed = 1;
 
         public List<Entry> entries = new();
     }
