@@ -58,6 +58,7 @@ namespace CreativeAI.Tests.EditMode
         {
             if (File.Exists(SavePath))
                 File.Delete(SavePath);
+            PickedItemRegistry.Clear();
 
             _pmGo = new GameObject("PM");
             _pm = _pmGo.AddComponent<ProgressManager>();
@@ -99,6 +100,7 @@ namespace CreativeAI.Tests.EditMode
             foreach (var a in _assets)
                 Object.DestroyImmediate(a);
             _assets.Clear();
+            PickedItemRegistry.Clear();
             if (File.Exists(SavePath))
                 File.Delete(SavePath);
         }
@@ -284,6 +286,113 @@ namespace CreativeAI.Tests.EditMode
             SaveService.Load();
 
             Assert.AreEqual(0, _inv.GetAllItems().Count);
+        }
+
+        // --- フィールドで拾ったアイテムの記録 ---
+
+        private readonly List<GameObject> _pickupGos = new();
+
+        /// <summary>フィールドに置かれた拾えるアイテム(指定の識別子つき)を作る。</summary>
+        private FieldItemPickup PlacePickup(string id, ItemData item)
+        {
+            var go = new GameObject("Pickup_" + id, typeof(BoxCollider));
+            _pickupGos.Add(go);
+            var pickup = go.AddComponent<FieldItemPickup>();
+            TestReflection.SetField(pickup, "_pickupId", id);
+            TestReflection.SetField(pickup, "_item", item);
+            return pickup;
+        }
+
+        [TearDown]
+        public void DestroyPickups()
+        {
+            foreach (var go in _pickupGos)
+                if (go != null)
+                    Object.DestroyImmediate(go);
+            _pickupGos.Clear();
+        }
+
+        [Test]
+        public void PickThenSaveThenLoad_PickedItemIsNotPlacedAgain()
+        {
+            var apple = MakeFood(3001);
+            ItemCatalog.InjectForTests(new ItemData[] { apple });
+            Assert.IsTrue(PlacePickup("Area/apple", apple).TryPickup());
+            SaveService.Save();
+
+            // タイトルから「続きから」で入り直す: 記録は空に戻っているが、ロードで復元される。
+            PickedItemRegistry.Clear();
+            SaveService.Load();
+
+            var again = PlacePickup("Area/apple", apple);
+            again.HideIfAlreadyPicked();
+            Assert.IsFalse(again.gameObject.activeSelf);
+        }
+
+        [Test]
+        public void PickAfterSave_ComesBackOnLoad()
+        {
+            var apple = MakeFood(3001);
+            var pear = MakeFood(3002);
+            ItemCatalog.InjectForTests(new ItemData[] { apple, pear });
+            Assert.IsTrue(PlacePickup("Area/apple", apple).TryPickup());
+            SaveService.Save();
+
+            // セーブより後に拾ったものは、ロードで所持品から消えるので、フィールドにまた置かれる。
+            Assert.IsTrue(PlacePickup("Area/pear", pear).TryPickup());
+            SaveService.Load();
+
+            var appleAgain = PlacePickup("Area/apple", apple);
+            var pearAgain = PlacePickup("Area/pear", pear);
+            appleAgain.HideIfAlreadyPicked();
+            pearAgain.HideIfAlreadyPicked();
+            Assert.IsFalse(appleAgain.gameObject.activeSelf, "セーブ前に拾ったものは出ない");
+            Assert.IsTrue(pearAgain.gameObject.activeSelf, "セーブ後に拾ったものは戻る");
+            Assert.AreEqual(1, _inv.GetItemCount(apple));
+            Assert.AreEqual(0, _inv.GetItemCount(pear));
+        }
+
+        [Test]
+        public void Load_OldSaveWithoutPickedItems_PlacesEverything()
+        {
+            var apple = MakeFood(3001);
+            ItemCatalog.InjectForTests(new ItemData[] { apple });
+            Assert.IsTrue(PlacePickup("Area/apple", apple).TryPickup());
+            SaveService.Save();
+
+            // 拾い済みの項目が無い旧セーブを模す。
+            var json = File.ReadAllText(SavePath);
+            var data = JsonUtility.FromJson<SaveData>(json);
+            data.pickedItemIds = null;
+            File.WriteAllText(SavePath, JsonUtility.ToJson(data));
+
+            SaveService.Load();
+
+            var again = PlacePickup("Area/apple", apple);
+            again.HideIfAlreadyPicked();
+            Assert.IsTrue(again.gameObject.activeSelf);
+        }
+
+        [Test]
+        public void NewGame_ClearingTheRecord_PlacesEverythingAgain()
+        {
+            var apple = MakeFood(3001);
+            Assert.IsTrue(PlacePickup("Area/apple", apple).TryPickup());
+
+            PickedItemRegistry.Clear(); // 「はじめから」(TitleUIController.OnTapToStart)
+
+            var again = PlacePickup("Area/apple", apple);
+            again.HideIfAlreadyPicked();
+            Assert.IsTrue(again.gameObject.activeSelf);
+        }
+
+        [Test]
+        public void PickupWithoutId_IsNotRecorded()
+        {
+            var apple = MakeFood(3001);
+            Assert.IsTrue(PlacePickup("", apple).TryPickup());
+
+            Assert.IsEmpty(PickedItemRegistry.Snapshot());
         }
     }
 }
