@@ -1,0 +1,40 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: c6c60c15649994b4db893da2cbe0b77f, type: 3}
+  m_Name: ItemPlacementPlan
+  m_EditorClassIdentifier: CreativeAI.EditorTools::CreativeAI.EditorTools.ItemPlacementPlan
+  pickupPrefab: {fileID: 729981108195932767, guid: 0f226e85c645478409025246cfb2b8eb, type: 3}
+  entries:
+  - item: {fileID: 8561165396911074249, guid: 6371385e89bebb6469ce93bca39124a3, type: 2}
+    count: 1
+    candidates:
+    - {x: -589, y: -60, z: -30.5}
+  - item: {fileID: 8561165396911074249, guid: 6371385e89bebb6469ce93bca39124a3, type: 2}
+    count: 1
+    candidates:
+    - {x: -595, y: -60, z: -30.5}
+  - item: {fileID: 8561165396911074249, guid: 6371385e89bebb6469ce93bca39124a3, type: 2}
+    count: 1
+    candidates:
+    - {x: -592, y: -60, z: -26.5}
+  - item: {fileID: 8561165396911074249, guid: 6371385e89bebb6469ce93bca39124a3, type: 2}
+    count: 1
+    candidates:
+    - {x: -592, y: -60, z: -34.5}
+  - item: {fileID: -7822687782585050773, guid: 6371385e89bebb6469ce93bca39124a3, type: 2}
+    count: 1
+    candidates:
+    - {x: -577.64, y: -60, z: -20.773}
+  - item: {fileID: 6717797442590564354, guid: 6371385e89bebb6469ce93bca39124a3, type: 2}
+    count: 1
+    candidates:
+    - {x: -578.2, y: -60, z: -20.773}

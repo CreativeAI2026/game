@@ -67,6 +67,8 @@ namespace CreativeAI.Gameplay
                 }
             }
 
+            data.pickedItemIds.AddRange(PickedItemRegistry.Snapshot());
+
             CapturePlayer(data);
 
             File.WriteAllText(FilePath, JsonUtility.ToJson(data, true));
@@ -161,6 +163,10 @@ namespace CreativeAI.Gameplay
                 if (data.items != null && catalog != null)
                     RestoreItems(inv, catalog, data.items);
             }
+
+            // セーブ後に拾ったアイテムは所持品から消えるので、拾った記録もセーブ時点に戻して
+            // フィールドにまた置かれるようにする(旧セーブは項目が無い = 空)。
+            PickedItemRegistry.Restore(data.pickedItemIds);
 
             Debug.Log($"[SaveService] 復元しました: {FilePath}");
             return data;
@@ -281,6 +287,12 @@ namespace CreativeAI.Gameplay
         /// 「どれを持っているか」自体がセーブ対象になる。旧セーブに無ければ空 = 0本で復元される。
         /// </summary>
         public List<string> ownedWeaponKeys = new();
+
+        /// <summary>
+        /// フィールドで拾い済みのアイテムの識別子(<see cref="FieldItemPickup.PickupId"/>)。
+        /// 旧セーブに無ければ空 = 全部まだ拾っていない扱いで復元される。
+        /// </summary>
+        public List<string> pickedItemIds = new();
     }
 
     [System.Serializable]

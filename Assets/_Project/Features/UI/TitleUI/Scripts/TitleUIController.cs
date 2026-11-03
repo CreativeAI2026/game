@@ -60,6 +60,9 @@ namespace CreativeAI.UI
             if (!EnsureSession())
                 return;
 
+            // はじめから: 前回のプレイで拾った記録を持ち越さず、アイテムを全部置き直す。
+            PickedItemRegistry.Clear();
+
             _tapToStartButton.interactable = false;
             SceneController.Instance.LoadScene(
                 _nextSceneName,
