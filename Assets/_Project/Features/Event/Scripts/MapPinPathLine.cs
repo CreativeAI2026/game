@@ -24,6 +24,8 @@ namespace CreativeAI.Core
         private const int StairSmoothPasses = 2; // 階段で線を段の角より上に持ち上げる回数
         private const float BendRadius = 4f; // 曲がり角を丸める大きさ
         private const int BendSteps = 10; // 丸めた角の細かさ
+        private const int BendAttempts = 4; // 丸め方が通れないとき、大きさを半分にして試す回数
+        private const float ObstacleCheckHeight = 0.5f; // 物との当たりを調べる、床からの高さ
         private const float FollowSharpness = 14f; // 新しい形へ近づく速さ(大きいほど速い)
         private const float FloorRayUp = 0.6f;
         private const float FloorRayLength = 1.6f;
@@ -176,7 +178,8 @@ namespace CreativeAI.Core
             return result;
         }
 
-        // 曲がり角だけを小さく丸め、真っすぐな区間は真っすぐのままにする(通路の外へ膨らませない)。
+        // 曲がり角だけを丸め、真っすぐな区間は真っすぐのままにする(通路の外へ膨らませない)。
+        // 丸めた線が壁や物にかかる角は、丸める大きさを小さくして避ける(最後は丸めずに角のまま)。
         // そのあと一定間隔に並べ直して、床の高さに合わせる。
         private void BuildGoal(Vector3[] rawCorners)
         {
@@ -194,19 +197,16 @@ namespace CreativeAI.Core
                     Vector3.Distance(before, corner) * 0.5f,
                     Vector3.Distance(corner, after) * 0.5f
                 );
-                var entry = corner + (before - corner).normalized * radius;
-                var exit = corner + (after - corner).normalized * radius;
-                for (var s = 0; s <= BendSteps; s++)
+                for (var attempt = 0; attempt < BendAttempts && radius > 0.05f; attempt++)
                 {
-                    var t = s / (float)BendSteps;
-                    _dense.Add(
-                        Vector3.Lerp(
-                            Vector3.Lerp(entry, corner, t),
-                            Vector3.Lerp(corner, exit, t),
-                            t
-                        )
-                    );
+                    if (TryRound(before, corner, after, radius))
+                        break;
+                    radius *= 0.5f;
+                    if (attempt == BendAttempts - 1)
+                        radius = 0f;
                 }
+                if (radius <= 0.05f)
+                    _dense.Add(corner); // 丸めずに角のまま
             }
             _dense.Add(corners[corners.Count - 1]);
 
@@ -254,6 +254,47 @@ namespace CreativeAI.Core
                     _goal[i] = p;
                 }
             }
+        }
+
+        // 角を丸めた点が、NavMesh の外へ出たり物にぶつかったりしなければ _dense に足して true を返す。
+        private bool TryRound(Vector3 before, Vector3 corner, Vector3 after, float radius)
+        {
+            var entry = corner + (before - corner).normalized * radius;
+            var exit = corner + (after - corner).normalized * radius;
+            var points = new Vector3[BendSteps + 1];
+            for (var s = 0; s <= BendSteps; s++)
+            {
+                var t = s / (float)BendSteps;
+                points[s] = Vector3.Lerp(
+                    Vector3.Lerp(entry, corner, t),
+                    Vector3.Lerp(corner, exit, t),
+                    t
+                );
+            }
+
+            for (var s = 1; s < points.Length; s++)
+                if (Blocked(points[s - 1], points[s]))
+                    return false;
+
+            _dense.AddRange(points);
+            return true;
+        }
+
+        // 2点の間が、NavMesh の縁(壁の手前)をまたぐ、または物にぶつかるなら true。
+        private bool Blocked(Vector3 a, Vector3 b)
+        {
+            if (NavMesh.Raycast(a, b, out _, NavMesh.AllAreas))
+                return true;
+
+            // NavMesh に載らない小物は、当たり判定で調べる(床と同じ高さだと床に当たるので少し上げる)。
+            var lift = Vector3.up * ObstacleCheckHeight;
+            return Physics.Linecast(
+                    a + lift,
+                    b + lift,
+                    out var hit,
+                    ~0,
+                    QueryTriggerInteraction.Ignore
+                ) && !hit.collider.CompareTag("Player");
         }
 
         // NavMesh の面は見た目の床と少しずれるので、真下の床に合わせる。
