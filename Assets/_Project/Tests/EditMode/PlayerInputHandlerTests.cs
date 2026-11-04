@@ -12,7 +12,7 @@ namespace CreativeAI.Tests.EditMode
     /// </summary>
     public class PlayerInputHandlerTests
     {
-        private GameObject _gmmGo;
+        private readonly TestResidents _residents = new();
         private GameModeManager _gmm;
         private GameObject _go;
         private PlayerInputHandler _input;
@@ -20,9 +20,7 @@ namespace CreativeAI.Tests.EditMode
         [SetUp]
         public void SetUp()
         {
-            _gmmGo = new GameObject("GMM");
-            _gmm = _gmmGo.AddComponent<GameModeManager>();
-            TestReflection.SetStaticProperty("Instance", _gmm);
+            _gmm = _residents.Add<GameModeManager>();
             _go = new GameObject("Player");
             _input = _go.AddComponent<PlayerInputHandler>();
             // EditMode では OnEnable が走らないので、購読を明示的に行う。
@@ -35,9 +33,8 @@ namespace CreativeAI.Tests.EditMode
             TestReflection.Invoke(_input, "OnDisable");
             EventPlaybackService.SetPlaying(false);
             UiPanelService.ResetState();
-            TestReflection.SetStaticProperty<GameModeManager>("Instance", null);
+            _residents.Clear();
             Object.DestroyImmediate(_go);
-            Object.DestroyImmediate(_gmmGo);
         }
 
         [Test]

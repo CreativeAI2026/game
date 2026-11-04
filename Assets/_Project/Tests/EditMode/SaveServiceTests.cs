@@ -17,9 +17,7 @@ namespace CreativeAI.Tests.EditMode
     {
         private string _saveDir;
         private string SavePath => Path.Combine(_saveDir, "save.json");
-        private GameObject _pmGo;
-        private GameObject _invGo;
-        private GameObject _gmmGo;
+        private readonly TestResidents _residents = new();
         private GameObject _playerGo;
         private ProgressManager _pm;
         private InventoryManager _inv;
@@ -61,17 +59,9 @@ namespace CreativeAI.Tests.EditMode
                 File.Delete(SavePath);
             PickedItemRegistry.Clear();
 
-            _pmGo = new GameObject("PM");
-            _pm = _pmGo.AddComponent<ProgressManager>();
-            TestReflection.SetStaticProperty("Instance", _pm);
-
-            _invGo = new GameObject("INV");
-            _inv = _invGo.AddComponent<InventoryManager>();
-            TestReflection.SetStaticProperty("Instance", _inv);
-
-            _gmmGo = new GameObject("GMM");
-            _gmm = _gmmGo.AddComponent<GameModeManager>();
-            TestReflection.SetStaticProperty("Instance", _gmm);
+            _pm = _residents.Add<ProgressManager>();
+            _inv = _residents.Add<InventoryManager>();
+            _gmm = _residents.Add<GameModeManager>();
 
             _playerData = MakeAsset<PlayerParameterData>();
             _playerData.baseMaxLife = 1000f;
@@ -91,13 +81,8 @@ namespace CreativeAI.Tests.EditMode
         {
             EventPlaybackService.SetPlaying(false);
             ItemCatalog.InjectForTests(null);
-            TestReflection.SetStaticProperty<ProgressManager>("Instance", null);
-            TestReflection.SetStaticProperty<InventoryManager>("Instance", null);
-            TestReflection.SetStaticProperty<GameModeManager>("Instance", null);
+            _residents.Clear();
             Object.DestroyImmediate(_playerGo);
-            Object.DestroyImmediate(_gmmGo);
-            Object.DestroyImmediate(_invGo);
-            Object.DestroyImmediate(_pmGo);
             foreach (var a in _assets)
                 Object.DestroyImmediate(a);
             _assets.Clear();

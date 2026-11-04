@@ -12,7 +12,7 @@ namespace CreativeAI.Tests.EditMode
     /// </summary>
     public class QuickFoodBarViewTests
     {
-        private GameObject _gmmGo;
+        private readonly TestResidents _residents = new();
         private GameModeManager _gmm;
         private GameObject _rootGo;
         private UiRouter _router;
@@ -24,9 +24,7 @@ namespace CreativeAI.Tests.EditMode
         [SetUp]
         public void SetUp()
         {
-            _gmmGo = new GameObject("GMM");
-            _gmm = _gmmGo.AddComponent<GameModeManager>();
-            TestReflection.SetStaticProperty("Instance", _gmm);
+            _gmm = _residents.Add<GameModeManager>();
 
             _rootGo = new GameObject("UIRoot");
             _router = _rootGo.AddComponent<UiRouter>();
@@ -48,11 +46,10 @@ namespace CreativeAI.Tests.EditMode
         public void TearDown()
         {
             EventPlaybackService.SetPlaying(false);
-            TestReflection.SetStaticProperty<GameModeManager>("Instance", null);
+            _residents.Clear();
             Object.DestroyImmediate(_barGo);
             Object.DestroyImmediate(_panel);
             Object.DestroyImmediate(_rootGo);
-            Object.DestroyImmediate(_gmmGo);
         }
 
         /// <summary>Update から呼ばれる表示判定を直接叩く。</summary>

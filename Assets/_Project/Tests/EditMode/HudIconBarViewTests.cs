@@ -13,7 +13,7 @@ namespace CreativeAI.Tests.EditMode
     /// </summary>
     public class HudIconBarViewTests
     {
-        private GameObject _gmmGo;
+        private readonly TestResidents _residents = new();
         private GameModeManager _gmm;
         private GameObject _barGo;
         private HudIconBarView _bar;
@@ -22,9 +22,7 @@ namespace CreativeAI.Tests.EditMode
         [SetUp]
         public void SetUp()
         {
-            _gmmGo = new GameObject("GMM");
-            _gmm = _gmmGo.AddComponent<GameModeManager>();
-            TestReflection.SetStaticProperty("Instance", _gmm);
+            _gmm = _residents.Add<GameModeManager>();
 
             _barGo = new GameObject("HudIconBarView");
             _group = _barGo.AddComponent<CanvasGroup>();
@@ -40,9 +38,8 @@ namespace CreativeAI.Tests.EditMode
         {
             TestReflection.Invoke(_bar, "OnDisable");
             EventPlaybackService.SetPlaying(false);
-            TestReflection.SetStaticProperty<GameModeManager>("Instance", null);
+            _residents.Clear();
             Object.DestroyImmediate(_barGo);
-            Object.DestroyImmediate(_gmmGo);
         }
 
         private bool IsShown => _group.IsShown() && _group.blocksRaycasts;

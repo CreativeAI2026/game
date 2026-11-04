@@ -13,9 +13,8 @@ namespace CreativeAI.Tests.EditMode
     /// </summary>
     public class FieldItemPickupTests
     {
-        private GameObject _gmmGo;
+        private readonly TestResidents _residents = new();
         private GameModeManager _gmm;
-        private GameObject _invGo;
         private InventoryManager _inventory;
         private GameObject _pickupGo;
         private FieldItemPickup _pickup;
@@ -24,13 +23,8 @@ namespace CreativeAI.Tests.EditMode
         [SetUp]
         public void SetUp()
         {
-            _gmmGo = new GameObject("GMM");
-            _gmm = _gmmGo.AddComponent<GameModeManager>();
-            TestReflection.SetStaticProperty("Instance", _gmm);
-
-            _invGo = new GameObject(nameof(InventoryManager));
-            _inventory = _invGo.AddComponent<InventoryManager>();
-            TestReflection.SetStaticProperty("Instance", _inventory);
+            _gmm = _residents.Add<GameModeManager>();
+            _inventory = _residents.Add<InventoryManager>();
 
             _pickupGo = new GameObject("FieldItem", typeof(BoxCollider));
             _pickup = _pickupGo.AddComponent<FieldItemPickup>();
@@ -40,11 +34,8 @@ namespace CreativeAI.Tests.EditMode
         public void TearDown()
         {
             EventPlaybackService.SetPlaying(false);
-            TestReflection.SetStaticProperty<GameModeManager>("Instance", null);
-            TestReflection.SetStaticProperty<InventoryManager>("Instance", null);
+            _residents.Clear();
             Object.DestroyImmediate(_pickupGo);
-            Object.DestroyImmediate(_invGo);
-            Object.DestroyImmediate(_gmmGo);
             foreach (var o in _created)
                 Object.DestroyImmediate(o);
             _created.Clear();

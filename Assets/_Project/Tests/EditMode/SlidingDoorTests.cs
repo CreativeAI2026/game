@@ -12,7 +12,7 @@ namespace CreativeAI.Tests.EditMode
     /// </summary>
     public class SlidingDoorTests
     {
-        private GameObject _gmmGo;
+        private readonly TestResidents _residents = new();
         private GameModeManager _gmm;
         private GameObject _doorGo;
         private GameObject _leafGo;
@@ -22,9 +22,7 @@ namespace CreativeAI.Tests.EditMode
         [SetUp]
         public void SetUp()
         {
-            _gmmGo = new GameObject("GMM");
-            _gmm = _gmmGo.AddComponent<GameModeManager>();
-            TestReflection.SetStaticProperty("Instance", _gmm);
+            _gmm = _residents.Add<GameModeManager>();
 
             _doorGo = new GameObject("Door", typeof(SphereCollider));
             _leafGo = new GameObject(SlidingDoor.DefaultLeafName);
@@ -45,9 +43,8 @@ namespace CreativeAI.Tests.EditMode
         {
             EventPlaybackService.SetPlaying(false);
             InteractPromptService.Clear();
-            TestReflection.SetStaticProperty<GameModeManager>("Instance", null);
+            _residents.Clear();
             Object.DestroyImmediate(_doorGo);
-            Object.DestroyImmediate(_gmmGo);
         }
 
         private void PlayerEnters() => TestReflection.SetField(_interactor, "_playerInside", true);

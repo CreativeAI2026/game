@@ -17,14 +17,12 @@ namespace CreativeAI.Tests.EditMode
     {
         private GameObject _titleGo;
         private TitleUIController _title;
-        private GameObject _sceneControllerGo;
+        private readonly TestResidents _residents = new();
 
         [SetUp]
         public void SetUp()
         {
-            _sceneControllerGo = new GameObject("PersistentSystems");
-            var controller = _sceneControllerGo.AddComponent<SceneController>();
-            TestReflection.SetStaticProperty("Instance", controller);
+            _residents.Add<SceneController>();
 
             _titleGo = new GameObject("TitleUI");
             _title = _titleGo.AddComponent<TitleUIController>();
@@ -35,14 +33,13 @@ namespace CreativeAI.Tests.EditMode
         [TearDown]
         public void TearDown()
         {
-            TestReflection.SetStaticProperty<SceneController>("Instance", null);
+            _residents.Clear();
             BattleRunnerService.Current = null;
             DestroyResident<ProgressManager>();
             DestroyResident<GameModeManager>();
             DestroyResident<InventoryManager>();
             DestroyResident<EventPlayer>();
             Object.DestroyImmediate(_titleGo);
-            Object.DestroyImmediate(_sceneControllerGo);
         }
 
         private static void DestroyResident<T>()
