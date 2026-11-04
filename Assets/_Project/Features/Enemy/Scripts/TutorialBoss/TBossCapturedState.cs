@@ -21,8 +21,7 @@ namespace CreativeAI.Gameplay
         private Phase _phase;
         private float _timer;
         private float _damageTimer;
-        private float _escapeGauge;
-        private Vector2 _prevMoveInput;
+        private readonly MashEscapeGauge _escapeGauge = new MashEscapeGauge();
         private ParticleSystem _electricEffect;
         private LoopingSound _electricLoop;
 
@@ -108,8 +107,7 @@ namespace CreativeAI.Gameplay
 
             _timer = 0f;
             _damageTimer = 0f;
-            _escapeGauge = 0f;
-            _prevMoveInput = Vector2.zero;
+            _escapeGauge.Reset(boss.GrabEscapeThreshold, boss.GrabEscapePerInput);
 
             _phase = Phase.WaitBeforePull;
 
@@ -302,27 +300,14 @@ namespace CreativeAI.Gameplay
                 ApplyElectricDamage();
             }
 
-            if (_playerInput != null)
+            if (_playerInput != null && _escapeGauge.Feed(_playerInput.move))
             {
-                Vector2 currentMove = _playerInput.move;
-                bool movedX = HasDirectionChanged(_prevMoveInput.x, currentMove.x);
-                bool movedY = HasDirectionChanged(_prevMoveInput.y, currentMove.y);
+                GrabEscapeEvents.OnUpdateGauge?.Invoke(_escapeGauge.Value, _escapeGauge.Threshold);
 
-                if (movedX || movedY)
+                if (_escapeGauge.IsFull)
                 {
-                    _escapeGauge += boss.GrabEscapePerInput;
-                    _escapeGauge = Mathf.Min(_escapeGauge, boss.GrabEscapeThreshold);
-
-                    GrabEscapeEvents.OnUpdateGauge?.Invoke(_escapeGauge, boss.GrabEscapeThreshold);
-
-                    if (_escapeGauge >= boss.GrabEscapeThreshold)
-                    {
-                        StartEscapeSequence();
-                        _prevMoveInput = currentMove;
-                        return;
-                    }
+                    StartEscapeSequence();
                 }
-                _prevMoveInput = currentMove;
             }
         }
 
@@ -452,19 +437,6 @@ namespace CreativeAI.Gameplay
                     Time.deltaTime * 10f
                 );
             }
-        }
-
-        private static bool HasDirectionChanged(float prev, float current)
-        {
-            if (Mathf.Approximately(prev, 0f) && Mathf.Approximately(current, 0f))
-                return false;
-            if (Mathf.Approximately(prev, 0f) && !Mathf.Approximately(current, 0f))
-                return true;
-            if (prev > 0f && current < 0f)
-                return true;
-            if (prev < 0f && current > 0f)
-                return true;
-            return false;
         }
     }
 }

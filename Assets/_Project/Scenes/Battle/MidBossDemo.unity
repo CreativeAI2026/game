@@ -8645,38 +8645,6 @@ Transform:
   m_CorrespondingSourceObject: {fileID: -307566631835431880, guid: 425589365435244ed8d926af409627e6, type: 3}
   m_PrefabInstance: {fileID: 1649735581}
   m_PrefabAsset: {fileID: 0}
---- !u!1 &1795156346
-GameObject:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  serializedVersion: 6
-  m_Component:
-  - component: {fileID: 1795156347}
-  m_Layer: 0
-  m_Name: KurageBoss
-  m_TagString: Untagged
-  m_Icon: {fileID: 0}
-  m_NavMeshLayer: 0
-  m_StaticEditorFlags: 0
-  m_IsActive: 1
---- !u!4 &1795156347
-Transform:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1795156346}
-  serializedVersion: 2
-  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 0, y: 25.8, z: 35.2}
-  m_LocalScale: {x: 1, y: 1, z: 1}
-  m_ConstrainProportionsScale: 0
-  m_Children:
-  - {fileID: 1982891941}
-  m_Father: {fileID: 0}
-  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &1812639927
 GameObject:
   m_ObjectHideFlags: 0
@@ -9490,68 +9458,6 @@ PrefabInstance:
     m_AddedGameObjects: []
     m_AddedComponents: []
   m_SourcePrefab: {fileID: -4161369568681901532, guid: 425589365435244ed8d926af409627e6, type: 3}
---- !u!1001 &1982891940
-PrefabInstance:
-  m_ObjectHideFlags: 0
-  serializedVersion: 2
-  m_Modification:
-    serializedVersion: 3
-    m_TransformParent: {fileID: 1795156347}
-    m_Modifications:
-    - target: {fileID: -8679921383154817045, guid: 23dcc655eba5f2e43a9bccaa39984af2, type: 3}
-      propertyPath: m_LocalPosition.x
-      value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: -8679921383154817045, guid: 23dcc655eba5f2e43a9bccaa39984af2, type: 3}
-      propertyPath: m_LocalPosition.y
-      value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: -8679921383154817045, guid: 23dcc655eba5f2e43a9bccaa39984af2, type: 3}
-      propertyPath: m_LocalPosition.z
-      value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: -8679921383154817045, guid: 23dcc655eba5f2e43a9bccaa39984af2, type: 3}
-      propertyPath: m_LocalRotation.w
-      value: 1
-      objectReference: {fileID: 0}
-    - target: {fileID: -8679921383154817045, guid: 23dcc655eba5f2e43a9bccaa39984af2, type: 3}
-      propertyPath: m_LocalRotation.x
-      value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: -8679921383154817045, guid: 23dcc655eba5f2e43a9bccaa39984af2, type: 3}
-      propertyPath: m_LocalRotation.y
-      value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: -8679921383154817045, guid: 23dcc655eba5f2e43a9bccaa39984af2, type: 3}
-      propertyPath: m_LocalRotation.z
-      value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: -8679921383154817045, guid: 23dcc655eba5f2e43a9bccaa39984af2, type: 3}
-      propertyPath: m_LocalEulerAnglesHint.x
-      value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: -8679921383154817045, guid: 23dcc655eba5f2e43a9bccaa39984af2, type: 3}
-      propertyPath: m_LocalEulerAnglesHint.y
-      value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: -8679921383154817045, guid: 23dcc655eba5f2e43a9bccaa39984af2, type: 3}
-      propertyPath: m_LocalEulerAnglesHint.z
-      value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 919132149155446097, guid: 23dcc655eba5f2e43a9bccaa39984af2, type: 3}
-      propertyPath: m_Name
-      value: kurage_move_left
-      objectReference: {fileID: 0}
-    m_RemovedComponents: []
-    m_RemovedGameObjects: []
-    m_AddedGameObjects: []
-    m_AddedComponents: []
-  m_SourcePrefab: {fileID: 100100000, guid: 23dcc655eba5f2e43a9bccaa39984af2, type: 3}
---- !u!4 &1982891941 stripped
-Transform:
-  m_CorrespondingSourceObject: {fileID: -8679921383154817045, guid: 23dcc655eba5f2e43a9bccaa39984af2, type: 3}
-  m_PrefabInstance: {fileID: 1982891940}
-  m_PrefabAsset: {fileID: 0}
 --- !u!4 &1983204887 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: -307566631835431880, guid: 425589365435244ed8d926af409627e6, type: 3}
@@ -12537,6 +12443,67 @@ PrefabInstance:
     m_AddedGameObjects: []
     m_AddedComponents: []
   m_SourcePrefab: {fileID: -4161369568681901532, guid: 425589365435244ed8d926af409627e6, type: 3}
+--- !u!1001 &5161012620053616469
+PrefabInstance:
+  m_ObjectHideFlags: 0
+  serializedVersion: 2
+  m_Modification:
+    serializedVersion: 3
+    m_TransformParent: {fileID: 0}
+    m_Modifications:
+    - target: {fileID: 1254817577893401342, guid: c7f978d0c9f6e3945bedfc3add346733, type: 3}
+      propertyPath: m_Name
+      value: KurageBoss
+      objectReference: {fileID: 0}
+    - target: {fileID: 4855762672849716225, guid: c7f978d0c9f6e3945bedfc3add346733, type: 3}
+      propertyPath: _stage
+      value: 
+      objectReference: {fileID: 418004492}
+    - target: {fileID: 8010007481128735186, guid: c7f978d0c9f6e3945bedfc3add346733, type: 3}
+      propertyPath: m_LocalPosition.x
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 8010007481128735186, guid: c7f978d0c9f6e3945bedfc3add346733, type: 3}
+      propertyPath: m_LocalPosition.y
+      value: 25.8
+      objectReference: {fileID: 0}
+    - target: {fileID: 8010007481128735186, guid: c7f978d0c9f6e3945bedfc3add346733, type: 3}
+      propertyPath: m_LocalPosition.z
+      value: 35.2
+      objectReference: {fileID: 0}
+    - target: {fileID: 8010007481128735186, guid: c7f978d0c9f6e3945bedfc3add346733, type: 3}
+      propertyPath: m_LocalRotation.w
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 8010007481128735186, guid: c7f978d0c9f6e3945bedfc3add346733, type: 3}
+      propertyPath: m_LocalRotation.x
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 8010007481128735186, guid: c7f978d0c9f6e3945bedfc3add346733, type: 3}
+      propertyPath: m_LocalRotation.y
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 8010007481128735186, guid: c7f978d0c9f6e3945bedfc3add346733, type: 3}
+      propertyPath: m_LocalRotation.z
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 8010007481128735186, guid: c7f978d0c9f6e3945bedfc3add346733, type: 3}
+      propertyPath: m_LocalEulerAnglesHint.x
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 8010007481128735186, guid: c7f978d0c9f6e3945bedfc3add346733, type: 3}
+      propertyPath: m_LocalEulerAnglesHint.y
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 8010007481128735186, guid: c7f978d0c9f6e3945bedfc3add346733, type: 3}
+      propertyPath: m_LocalEulerAnglesHint.z
+      value: 0
+      objectReference: {fileID: 0}
+    m_RemovedComponents: []
+    m_RemovedGameObjects: []
+    m_AddedGameObjects: []
+    m_AddedComponents: []
+  m_SourcePrefab: {fileID: 100100000, guid: c7f978d0c9f6e3945bedfc3add346733, type: 3}
 --- !u!114 &6024234368346132510
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -12695,4 +12662,4 @@ SceneRoots:
   - {fileID: 1547795885}
   - {fileID: 962047125}
   - {fileID: 418004495}
-  - {fileID: 1795156347}
+  - {fileID: 5161012620053616469}
