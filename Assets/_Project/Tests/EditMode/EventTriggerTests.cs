@@ -289,5 +289,86 @@ namespace CreativeAI.Tests.EditMode
 
             CollectionAssert.AreEqual(new[] { "locked_door" }, _player.Played);
         }
+
+        // --- マップピン ---
+
+        [Test]
+        public void Pin_Off_NeverShows()
+        {
+            AssignEvent(FiringEvent());
+
+            _trigger.RefreshPin();
+
+            Assert.IsFalse(_trigger.PinVisible);
+        }
+
+        [Test]
+        public void Pin_On_ShowsWhileConditionsMet_AtTheTriggerCenter()
+        {
+            AssignEvent(FiringEvent());
+            SetPrivateField(_trigger, "_showPin", true);
+            _triggerGo.transform.position = new Vector3(3f, 2f, 5f);
+
+            _trigger.RefreshPin();
+
+            Assert.IsTrue(_trigger.PinVisible);
+            var pin = UnityEngine.Object.FindFirstObjectByType<MapPin>();
+            Assert.IsNotNull(pin);
+            Assert.That(pin.transform.position, Is.EqualTo(new Vector3(3f, 2f, 5f)));
+        }
+
+        [Test]
+        public void Pin_On_ConditionsNotMet_DoesNotShow()
+        {
+            AssignEvent(EventDefinition.Create("later_event", EventCondition.Progress(5)));
+            SetPrivateField(_trigger, "_showPin", true);
+
+            _trigger.RefreshPin();
+
+            Assert.IsFalse(_trigger.PinVisible);
+        }
+
+        [Test]
+        public void Pin_UsesThePinPointWhenGiven()
+        {
+            AssignEvent(FiringEvent());
+            SetPrivateField(_trigger, "_showPin", true);
+            var point = new GameObject("PinPoint");
+            point.transform.position = new Vector3(10f, 1f, -4f);
+            SetPrivateField(_trigger, "_pinPoint", point.transform);
+
+            _trigger.RefreshPin();
+
+            var pin = UnityEngine.Object.FindFirstObjectByType<MapPin>();
+            Assert.That(pin.transform.position, Is.EqualTo(new Vector3(10f, 1f, -4f)));
+            UnityEngine.Object.DestroyImmediate(point);
+        }
+
+        [Test]
+        public void Pin_DisappearsWhenTheEventFires()
+        {
+            AssignEvent(FiringEvent());
+            SetPrivateField(_trigger, "_showPin", true);
+            _trigger.RefreshPin();
+            Assert.IsTrue(_trigger.PinVisible); // 前提
+
+            EnterTrigger();
+
+            Assert.IsFalse(_trigger.PinVisible);
+            CollectionAssert.AreEqual(new[] { "cave_encounter" }, _player.Played);
+        }
+
+        [Test]
+        public void Pin_DisappearsOnceProgressMovesOn()
+        {
+            AssignEvent(FiringEvent());
+            SetPrivateField(_trigger, "_showPin", true);
+            _trigger.RefreshPin();
+
+            _pm.AdvanceTo(1);
+            _trigger.RefreshPin();
+
+            Assert.IsFalse(_trigger.PinVisible);
+        }
     }
 }
