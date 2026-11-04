@@ -45,13 +45,13 @@ namespace CreativeAI.Tests.PlayMode
                 )
             );
 #else
-            Assert.Ignore("UI_Sandbox is an Editor test scene outside the build scene list.");
+            Assert.Ignore("UI_Sandbox はビルド対象外の Editor 用テストシーン");
             yield break;
 #endif
             yield return null;
             Assert.NotNull(
                 PlayerRegistry.Current,
-                "Direct Play of UI_Sandbox must create the player without test-side spawning"
+                "UI_Sandbox を直接再生すると、テスト側で生成しなくてもプレイヤーが立つ"
             );
             _player = PlayerRegistry.Current.gameObject;
             _manager = _player.GetComponent<WeaponManager>();
@@ -60,7 +60,7 @@ namespace CreativeAI.Tests.PlayMode
             _router.Open(UiRouter.UiId.Character);
             yield return null;
             _controller = UIRoot.Instance.GetComponentInChildren<CharacterPreviewController>(true);
-            Assert.NotNull(_controller, "CharacterPanel prefab must contain preview references");
+            Assert.NotNull(_controller, "CharacterPanel Prefab にプレビューの参照が入っている");
             var previews = _controller.GetComponentsInChildren<ModelPreview>(true);
             _character = previews.Single(p => p.name == "Character3DPreview");
             _weapon = previews.Single(p => p.name == "Weapon3DPreview");
@@ -72,7 +72,7 @@ namespace CreativeAI.Tests.PlayMode
             _manager.RestoreWeapons(System.Array.Empty<string>(), WeaponManager.NoWeapon);
             yield return PlayModeWait.Until(
                 () => !_bar.gameObject.activeSelf && _character.MeshCount > 0,
-                "unarmed preview"
+                "素手のプレビュー"
             );
             yield return PlayModeWait.Frames();
             _bareMeshes = _character.MeshCount;
@@ -97,7 +97,7 @@ namespace CreativeAI.Tests.PlayMode
                 Object
                     .FindObjectsByType<Camera>(FindObjectsSortMode.None)
                     .Count(c => c.CompareTag("MainCamera")),
-                "The UI scene's camera must be reused rather than creating a second MainCamera"
+                "MainCamera を2つ目として作らず、UI シーンのカメラを使い回す"
             );
             Assert.False(_selector.gameObject.activeSelf);
             Assert.False(_bar.gameObject.activeSelf);
@@ -107,14 +107,11 @@ namespace CreativeAI.Tests.PlayMode
                     .Where(c => c.name == "Preview Camera")
             )
             {
-                Assert.False(
-                    stage.enabled,
-                    "Preview cameras must render only on explicit requests"
-                );
+                Assert.False(stage.enabled, "プレビュー用カメラは要求したときだけ描画する");
                 Assert.AreEqual(
                     UIRoot.Instance.gameObject.scene,
                     stage.gameObject.scene,
-                    "Preview resources must survive field scene transitions with the resident UI"
+                    "プレビュー用の資源は常駐 UI と一緒にシーン遷移をまたぐ"
                 );
             }
             Assert.IsNull(_weapon.Texture);
@@ -128,7 +125,7 @@ namespace CreativeAI.Tests.PlayMode
             _manager.GiveWeapon("sword");
             yield return PlayModeWait.Until(
                 () => _bar.gameObject.activeSelf && _character.MeshCount > _bareMeshes,
-                "sword equipped"
+                "剣を装備"
             );
             Assert.True(_selector.gameObject.activeSelf);
             Assert.AreEqual(Sword, _selector.SelectedWeapon.id);
@@ -151,24 +148,27 @@ namespace CreativeAI.Tests.PlayMode
             Assert.AreEqual(
                 _character.gameObject,
                 hits[0].gameObject,
-                "Preview must receive pointer input ahead of the panel background"
+                "ポインタ入力はパネル背景より先にプレビューが受け取る"
             );
 
             _manager.Unequip();
             yield return PlayModeWait.Until(
                 () => _character.MeshCount == _bareMeshes,
-                "unequipped character"
+                "装備を外したキャラクター"
             );
-            Assert.True(_selector.gameObject.activeSelf, "Still owned, so the selector stays");
+            Assert.True(_selector.gameObject.activeSelf, "所持はしているので武器選択は出たまま");
             Assert.True(_bar.gameObject.activeSelf);
 
             _manager.RestoreWeapons(System.Array.Empty<string>(), WeaponManager.NoWeapon);
-            yield return PlayModeWait.Until(() => !_bar.gameObject.activeSelf, "nothing owned");
+            yield return PlayModeWait.Until(
+                () => !_bar.gameObject.activeSelf,
+                "何も所持していない"
+            );
             Assert.AreEqual(_bareMeshes, _character.MeshCount);
             Assert.IsNull(_weapon.Texture);
 
             _manager.GiveWeapon("hammer");
-            yield return PlayModeWait.Until(() => _bar.gameObject.activeSelf, "hammer owned");
+            yield return PlayModeWait.Until(() => _bar.gameObject.activeSelf, "ハンマーを所持");
             Assert.True(_selector.gameObject.activeSelf);
             Assert.AreEqual(Hammer, _selector.SelectedWeapon.id);
             Assert.Greater(_weapon.MeshCount, 0);
@@ -187,7 +187,7 @@ namespace CreativeAI.Tests.PlayMode
             Assert.AreEqual(beforeRotation, _player.transform.rotation);
 
             _character.OnDrag(Drag(PointerEventData.InputButton.Right, 100));
-            Assert.AreEqual(beforeYaw - 40, _character.Yaw, .01f, "Right drag does nothing");
+            Assert.AreEqual(beforeYaw - 40, _character.Yaw, .01f, "右ドラッグでは回らない");
             yield break;
         }
 
@@ -203,32 +203,28 @@ namespace CreativeAI.Tests.PlayMode
             foreach (int id in new[] { Scythe, Hammer, Sword })
             {
                 SelectInSelector(id);
-                Assert.Greater(
-                    _weapon.MeshCount,
-                    0,
-                    "Selection must update the mesh synchronously"
-                );
+                Assert.Greater(_weapon.MeshCount, 0, "選んだその場でメッシュが切り替わる");
                 yield return PlayModeWait.Until(
                     () => _controller.PreviewWeaponId == id,
-                    "preview pose follows selection " + id
+                    "プレビューの姿勢が選択に追従する " + id
                 );
                 Assert.AreEqual(
                     equippedBeforeBrowsing,
                     _manager.CurrentWeaponIndex,
-                    "Browsing must not alter the live player equipment"
+                    "選んで見るだけでは実際の装備は変わらない"
                 );
                 Assert.True(
                     _controller.PreviewIsAnimating,
-                    "All three melee weapons share the idle"
+                    "近接武器3種は共通の待機モーションで動く"
                 );
-                Assert.False(_controller.PreviewIsAttacking, "Weapon changes cancel attacks");
+                Assert.False(_controller.PreviewIsAttacking, "武器を切り替えると攻撃は中断する");
 
                 double animationTime = _controller.PreviewAnimationTime;
                 var bones = PoseBones();
                 var idleStart = bones.Select(b => b.localRotation).ToArray();
                 yield return PlayModeWait.Until(
                     () => AnyBoneMoved(bones, idleStart, .05f),
-                    "idle animates the preview bones"
+                    "待機モーションでボーンが動く"
                 );
                 Assert.Greater(_controller.PreviewAnimationTime, animationTime);
 
@@ -236,21 +232,18 @@ namespace CreativeAI.Tests.PlayMode
                 _character.OnPointerDown(pointer);
                 _character.OnDrag(Drag(PointerEventData.InputButton.Left, 20));
                 _character.OnPointerClick(pointer);
-                Assert.False(
-                    _controller.PreviewIsAttacking,
-                    "Dragging must never trigger an attack"
-                );
+                Assert.False(_controller.PreviewIsAttacking, "ドラッグでは攻撃しない");
 
                 _character.OnPointerDown(pointer);
                 _character.OnPointerClick(pointer);
                 Assert.True(
                     _controller.PreviewIsAttacking,
-                    "A left click starts the selected weapon's normal melee attack"
+                    "左クリックで選んだ武器の通常攻撃が始まる"
                 );
                 var attackStart = bones.Select(b => b.localRotation).ToArray();
                 yield return PlayModeWait.Until(
                     () => AnyBoneMoved(bones, attackStart, 5f),
-                    "attack visibly moves the preview bones"
+                    "攻撃でボーンが目に見えて動く"
                 );
                 AssertVisible(_character, "preview-attack-" + id);
                 Assert.AreEqual(beforePosition, _player.transform.position);
@@ -258,14 +251,14 @@ namespace CreativeAI.Tests.PlayMode
 
                 yield return PlayModeWait.Until(
                     () => !_controller.PreviewIsAttacking,
-                    "attack finishes and returns to idle"
+                    "攻撃が終わって待機に戻る"
                 );
                 Assert.True(_controller.PreviewIsAnimating);
 
                 var right = Click(PointerEventData.InputButton.Right);
                 _character.OnPointerDown(right);
                 _character.OnPointerClick(right);
-                Assert.False(_controller.PreviewIsAttacking, "Right click does not attack");
+                Assert.False(_controller.PreviewIsAttacking, "右クリックでは攻撃しない");
                 AssertVisible(_character, "preview-character-weapon-" + id);
                 AssertVisible(_weapon, "preview-weapon-" + id);
             }
@@ -276,16 +269,13 @@ namespace CreativeAI.Tests.PlayMode
         {
             GiveAll();
             SelectInSelector(Sword);
-            yield return PlayModeWait.Until(
-                () => _controller.PreviewWeaponId == Sword,
-                "sword pose"
-            );
+            yield return PlayModeWait.Until(() => _controller.PreviewWeaponId == Sword, "剣の姿勢");
             ClickAttack();
             Assert.True(_controller.PreviewIsAttacking);
 
             SelectInSelector(Bow);
             yield return PlayModeWait.Frames();
-            Assert.False(_controller.PreviewIsAttacking, "Weapon changes cancel attacks");
+            Assert.False(_controller.PreviewIsAttacking, "武器を切り替えると攻撃は中断する");
             Assert.Greater(_weapon.MeshCount, 0);
             Assert.False(_weapon.transform.parent.Find("ModelUnavailable").gameObject.activeSelf);
         }
@@ -294,7 +284,7 @@ namespace CreativeAI.Tests.PlayMode
         public IEnumerator WeaponPreview_SpinsAtConfiguredSpeed()
         {
             _manager.GiveWeapon("sword");
-            yield return PlayModeWait.Until(() => _weapon.MeshCount > 0, "sword preview");
+            yield return PlayModeWait.Until(() => _weapon.MeshCount > 0, "剣のプレビュー");
 
             // コルーチンは LateUpdate より前に動くので、直後の LateUpdate が足すのは記録前のフレームの時間になる。
             // 経過時刻で比べると重いフレームのぶんずれるため、LateUpdate が足した時間そのものを合計する
@@ -320,7 +310,7 @@ namespace CreativeAI.Tests.PlayMode
             );
             yield return PlayModeWait.Until(
                 () => _bar.gameObject.activeSelf && _character.MeshCount > _bareMeshes,
-                "all weapons given"
+                "全武器を付与"
             );
             Assert.AreEqual(4, _manager.OwnedCount);
             Assert.True(_selector.gameObject.activeSelf);
@@ -332,7 +322,7 @@ namespace CreativeAI.Tests.PlayMode
             );
             yield return PlayModeWait.Until(
                 () => !_bar.gameObject.activeSelf && _character.MeshCount == _bareMeshes,
-                "all weapons removed"
+                "全武器を削除"
             );
             Assert.AreEqual(0, _manager.OwnedCount);
             Assert.False(_selector.gameObject.activeSelf);
@@ -343,10 +333,7 @@ namespace CreativeAI.Tests.PlayMode
         public IEnumerator Attack_FinishesWhileGameTimeIsPaused()
         {
             _manager.GiveWeapon("sword");
-            yield return PlayModeWait.Until(
-                () => _controller.PreviewWeaponId == Sword,
-                "sword pose"
-            );
+            yield return PlayModeWait.Until(() => _controller.PreviewWeaponId == Sword, "剣の姿勢");
             var pauseScale = Time.timeScale;
             try
             {
@@ -355,7 +342,7 @@ namespace CreativeAI.Tests.PlayMode
                 Assert.True(_controller.PreviewIsAttacking);
                 yield return PlayModeWait.Until(
                     () => !_controller.PreviewIsAttacking,
-                    "attack returns to idle while game time is paused"
+                    "ゲーム内時間が止まっていても攻撃は終わって待機に戻る"
                 );
             }
             finally
@@ -368,20 +355,17 @@ namespace CreativeAI.Tests.PlayMode
         public IEnumerator Close_DisposesPreview_AndReopenRendersAgain()
         {
             _manager.GiveWeapon("sword");
-            yield return PlayModeWait.Until(
-                () => _controller.PreviewWeaponId == Sword,
-                "sword pose"
-            );
+            yield return PlayModeWait.Until(() => _controller.PreviewWeaponId == Sword, "剣の姿勢");
             ClickAttack();
             Assert.True(_controller.PreviewIsAttacking);
             var oldTexture = _character.Texture;
 
             _router.CloseAll();
             Assert.IsNull(_character.Texture);
-            Assert.False(_controller.PreviewIsAttacking, "Closing disposes active attack playback");
+            Assert.False(_controller.PreviewIsAttacking, "閉じると再生中の攻撃も破棄する");
             Assert.True(
                 _player.GetComponentsInChildren<Renderer>(true).All(r => r.forceRenderingOff),
-                "The UI-only source player must never be visible outside the panel"
+                "UI 用の元プレイヤーはパネルの外では見えない"
             );
             Assert.False(oldTexture.IsCreated());
 
@@ -389,7 +373,7 @@ namespace CreativeAI.Tests.PlayMode
             _router.Open(UiRouter.UiId.Character);
             yield return PlayModeWait.Until(
                 () => _character.Texture != null && _character.MeshCount > 0,
-                "reopened preview"
+                "開き直したプレビュー"
             );
             yield return PlayModeWait.Frames();
             AssertVisible(_character, "preview-reopened");
@@ -453,7 +437,7 @@ namespace CreativeAI.Tests.PlayMode
                 Assert.Greater(
                     pixels.Count(p => p.a > 20),
                     100,
-                    "Preview must contain rendered geometry"
+                    "プレビューに描画された形が映っている"
                 );
                 Directory.CreateDirectory("Temp/ModelPreviewEvidence");
                 File.WriteAllBytes(
