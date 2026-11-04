@@ -6,7 +6,7 @@ using UnityEngine;
 namespace CreativeAI.Tests.EditMode
 {
     /// <summary>
-    /// 操作で開く UI(キャラ / インベ / セーブ / 調合)の排他表示。
+    /// 操作で開く UI(キャラ / インベ / セーブ / 調合)が1つずつしか開かないことの検証。
     /// 開くのは常に1つで、別のを開くと前のが閉じる。
     /// どれかが開いているかは UiPanelService に伝わる(プレイヤーの操作を止めるため)。
     /// </summary>

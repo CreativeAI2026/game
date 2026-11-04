@@ -12,7 +12,7 @@ using UnityEngine.SceneManagement;
 namespace CreativeAI.Tests.EditMode
 {
     /// <summary>
-    /// 本物の Area01(小物・NavMesh)に置いたアイテムの検証(Issue #109)。
+    /// 本物の Area01(小物・NavMesh)に置いたアイテムの検証。
     /// 人工のコライダーでは分からない「実際の小物と重なっていないか」「プレイヤーが歩いて行けるか」を見る。
     /// シーンはすでに開いているものは触らず、このテストが開いたものだけ最後に閉じる。
     /// </summary>

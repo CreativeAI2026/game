@@ -5,8 +5,8 @@ using UnityEngine;
 namespace CreativeAI.Tests.EditMode
 {
     /// <summary>
-    /// 坂を下る時に地面へ押し付ける速さ(<see cref="PlayerController.GroundStickSpeed"/>)の検証。
-    /// 押し付けが足元の地面の下がる速さに追いつかないと、プレイヤーが浮いて落下モーションになる(Issue #120)。
+    /// 坂を下るときに地面へ押し付ける速さの検証。<see cref="PlayerController.GroundStickSpeed"/> を見る。
+    /// 押し付けが足元の地面の下がる速さに追いつかないと、プレイヤーが浮いて落下モーションになる。
     /// </summary>
     public class PlayerGroundStickTests
     {
@@ -15,7 +15,7 @@ namespace CreativeAI.Tests.EditMode
         private const float MoveSpeed = 5f;
         private const float SlopeLimit = 45f;
 
-        // Issue #120 で報告された Field_Area01 の階段の傾き
+        // Field_Area01 の階段の傾き
         private const float StairSlope = 26.6f;
 
         private static float SlopeDescentSpeed(float horizontalSpeed, float slopeDegrees)
