@@ -8,7 +8,7 @@ using UnityEditor;
 namespace CreativeAI.Tests.EditMode
 {
     /// <summary>
-    /// ItemCatalog の整合性 — ID 重複・参照切れ・登録漏れ・レシピの組み立てに問題が無いことの検証。
+    /// ItemCatalog の整合性の検証(ID の重複・参照切れ・登録漏れ・レシピの組み立て)。
     /// </summary>
     public sealed class ItemCatalogIntegrityTests
     {

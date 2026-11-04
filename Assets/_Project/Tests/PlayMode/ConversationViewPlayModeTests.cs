@@ -1,6 +1,5 @@
 using System.Collections;
 using System.Collections.Generic;
-using System.Reflection;
 using CreativeAI.Core;
 using CreativeAI.UI;
 using NUnit.Framework;
@@ -53,13 +52,13 @@ namespace CreativeAI.Tests.PlayMode
             templateGo.SetActive(false);
 
             _view = _viewGo.AddComponent<ConversationView>();
-            SetPrivate(_view, "_root", _viewGo.GetComponent<CanvasGroup>());
-            SetPrivate(_view, "_windowRoot", _viewGo.GetComponent<RectTransform>());
-            SetPrivate(_view, "_nameText", nameText);
-            SetPrivate(_view, "_bodyText", bodyText);
-            SetPrivate(_view, "_choiceButtonTemplate", template);
-            SetPrivate(_view, "_choiceContainer", _choiceContainer);
-            SetPrivate(_view, "_charInterval", 0f);
+            TestReflection.SetField(_view, "_root", _viewGo.GetComponent<CanvasGroup>());
+            TestReflection.SetField(_view, "_windowRoot", _viewGo.GetComponent<RectTransform>());
+            TestReflection.SetField(_view, "_nameText", nameText);
+            TestReflection.SetField(_view, "_bodyText", bodyText);
+            TestReflection.SetField(_view, "_choiceButtonTemplate", template);
+            TestReflection.SetField(_view, "_choiceContainer", _choiceContainer);
+            TestReflection.SetField(_view, "_charInterval", 0f);
             _viewGo.SetActive(true);
             _viewGo.GetComponent<CanvasGroup>().alpha = 1f;
         }
@@ -68,27 +67,16 @@ namespace CreativeAI.Tests.PlayMode
         public IEnumerator TearDownRoutine()
         {
             Object.Destroy(_viewGo);
-            DialogueViewService.Current = null;
             // Destroy が効くまで待つ。残っていると次のテストの Awake が
             // 二重生成ガードで自滅して、選択肢が並ばなくなる。
             yield return null;
         }
 
-        private static void SetPrivate(object target, string name, object value) =>
-            target
-                .GetType()
-                .GetField(name, BindingFlags.Instance | BindingFlags.NonPublic)
-                .SetValue(target, value);
-
-        private static T GetPrivate<T>(object target, string name) =>
-            (T)
-                target
-                    .GetType()
-                    .GetField(name, BindingFlags.Instance | BindingFlags.NonPublic)
-                    .GetValue(target);
-
         private List<GameObject> Spawned =>
-            GetPrivate<List<GameObject>>(GetPrivate<object>(_view, "_choicePresenter"), "_spawned");
+            TestReflection.GetField<List<GameObject>>(
+                TestReflection.GetField<object>(_view, "_choicePresenter"),
+                "_spawned"
+            );
 
         private void AdvanceUntilChoicesSpawned(NestedCoroutineDriver routine)
         {
@@ -194,14 +182,15 @@ namespace CreativeAI.Tests.PlayMode
             string picked = null;
             _view.StartCoroutine(_view.ShowChoice(TwoOptions(), value => picked = value));
 
-            yield return new WaitForSecondsRealtime(0.45f);
-
-            Assert.AreEqual(2, Spawned.Count);
-            foreach (var choice in Spawned)
-                Assert.Greater(choice.GetComponent<CanvasGroup>().alpha, 0.99f);
+            yield return PlayModeWait.Until(
+                () =>
+                    Spawned.Count == 2
+                    && Spawned.TrueForAll(c => c.GetComponent<CanvasGroup>().alpha > 0.99f),
+                "選択肢の登場演出が終わる"
+            );
 
             Spawned[0].GetComponent<Button>().onClick.Invoke();
-            yield return new WaitForSecondsRealtime(0.3f);
+            yield return PlayModeWait.Until(() => picked != null, "選んだ値が返る");
             Assert.AreEqual("together", picked);
         }
     }

@@ -10,7 +10,7 @@ using UnityEngine.SceneManagement;
 namespace CreativeAI.Tests.EditMode
 {
     /// <summary>
-    /// <c>Field_Area01_Events</c> への配置ミスを検出する(Issue #87)。
+    /// <c>Field_Area01_Events</c> に置いたイベントの配置ミスの検証。
     /// 付け忘れ・Is Trigger の入れ忘れ・敵 Prefab の設定漏れは、どれもエラーが出ないまま発火しないだけになる。
     /// 発火のしかた自体は EventTriggerTests が見る。ここは「シーンに正しく置けているか」だけを見る。
     /// 本物のシーンを開く(作業中のシーンは触らず、このテストが開いたものだけ最後に閉じる)。

@@ -2,6 +2,7 @@
     "name": "CreativeAI.Tests.EditMode",
     "rootNamespace": "CreativeAI.Tests.EditMode",
     "references": [
+        "CreativeAI.Tests.Shared",
         "CreativeAI.Core",
         "CreativeAI.Gameplay",
         "CreativeAI.UI",

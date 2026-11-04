@@ -7,15 +7,12 @@ using UnityEngine;
 namespace CreativeAI.Tests.EditMode
 {
     /// <summary>
-    /// 会話の立ち絵14枚が4の倍数のサイズで、DXT5/BC7に圧縮されているかの検証。
+    /// 会話の立ち絵が4の倍数のサイズで、DXT5/BC7に圧縮されているかの検証。
     /// 圧縮が効かず非圧縮(RGBA32)のままメモリに載り続けるのを防ぐ。
     /// </summary>
     public class ConversationPortraitCompressionTests
     {
         private const string PortraitRoot = "Assets/_Project/Art/UI/Conversation/Character";
-        private const int ExpectedPortraitCount = 14;
-        private const int ExpectedWidth = 924;
-        private const int ExpectedHeight = 1772;
 
         [Test]
         public void Portraits_AreBlockCompressionCompatible()
@@ -30,7 +27,8 @@ namespace CreativeAI.Tests.EditMode
                 .OrderBy(path => path, StringComparer.Ordinal)
                 .ToArray();
 
-            Assert.AreEqual(ExpectedPortraitCount, portraitPaths.Length);
+            // 枚数は立ち絵を足すと変わるので固定しない。フォルダを移して0枚になったときだけ気づければよい
+            Assert.IsNotEmpty(portraitPaths, $"{PortraitRoot} に立ち絵が見つからない");
 
             foreach (string path in portraitPaths)
             {
@@ -38,8 +36,6 @@ namespace CreativeAI.Tests.EditMode
                 Assert.IsNotNull(importer, path);
 
                 importer.GetSourceTextureWidthAndHeight(out int width, out int height);
-                Assert.AreEqual(ExpectedWidth, width, path);
-                Assert.AreEqual(ExpectedHeight, height, path);
                 Assert.AreEqual(0, width % 4, path);
                 Assert.AreEqual(0, height % 4, path);
                 Assert.AreEqual(
