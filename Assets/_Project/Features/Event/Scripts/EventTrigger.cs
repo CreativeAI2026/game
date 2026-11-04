@@ -29,7 +29,7 @@ namespace CreativeAI.Core
         private Transform _spawnPoint;
 
         [Tooltip(
-            "オンにすると、発火できる間だけマップピン(回って浮く2D画像)を出し、発火したら消す。"
+            "オンにすると、発火できる間だけマップピン(横に回って浮く2D画像)を出し、発火したら消す。"
         )]
         [SerializeField]
         private bool _showPin;

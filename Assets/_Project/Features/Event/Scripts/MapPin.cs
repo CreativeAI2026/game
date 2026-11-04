@@ -3,12 +3,14 @@ using UnityEngine;
 namespace CreativeAI.Core
 {
     /// <summary>
-    /// マップピン。地面と水平に寝かせた 2D 画像を、縦軸まわりに回しながら上下に浮かせる。
+    /// マップピン。穴の空いたしずく形の 2D 画像を縦に立て、縦軸まわりに横回転させながら上下に浮かせる。
     /// 子に画像を持ち、このオブジェクト自身を回す・上下させる(基準位置は生成時の位置)。
     /// </summary>
     public sealed class MapPin : MonoBehaviour
     {
         public const string SpriteResource = "EventMapPin";
+        private const float HoverHeight = 0.5f; // 先端が指定位置より浮く高さ
+        private const float Scale = 2f; // 画像(高さ1.5)の拡大率。大きいほど目立つ
 
         [SerializeField]
         private float _spinDegreesPerSecond = 90f;
@@ -46,8 +48,9 @@ namespace CreativeAI.Core
 
             var face = new GameObject("Face");
             face.transform.SetParent(root.transform, false);
-            face.transform.localRotation = Quaternion.Euler(90f, 0f, 0f); // 地面と水平(表が上)
-            face.transform.localScale = Vector3.one * 1.2f;
+            // 縦に立てる(先端が下)。画像の先端が基準なので、HoverHeight だけ地面から浮かせる。
+            face.transform.localPosition = Vector3.up * HoverHeight;
+            face.transform.localScale = Vector3.one * Scale;
             var renderer = face.AddComponent<SpriteRenderer>();
             renderer.sprite = sprite;
             renderer.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
