@@ -16,11 +16,12 @@ namespace CreativeAI.Core
         private const float RefreshSeconds = 0.4f;
         private const float HideWithin = 2.5f; // この近さまで来たら消す
         private const float SnapDistance = 3f; // ピンの真下の NavMesh を探す範囲
-        private const float LiftAboveFloor = 0.08f; // 床に埋まらないよう少し浮かせる
+        private const float LiftAboveFloor = 0.1f; // 床に埋まらないよう少し浮かせる
         private const float Width = 0.9f; // 矢じり1つの幅
         private const float ArrowSpacing = 1.4f; // 矢じりの間隔(ワールド長)
         private const float FlowSpeed = 0.9f; // 矢じりが進む速さ(ワールド長/秒)
-        private const float PointSpacing = 0.5f; // 線の点の間隔(曲線のなめらかさ)
+        private const float PointSpacing = 0.3f; // 線の点の間隔(曲線のなめらかさ)
+        private const int StairSmoothPasses = 2; // 階段で線を段の角より上に持ち上げる回数
         private const float BendRadius = 4f; // 曲がり角を丸める大きさ
         private const int BendSteps = 10; // 丸めた角の細かさ
         private const float FollowSharpness = 14f; // 新しい形へ近づく速さ(大きいほど速い)
@@ -226,6 +227,33 @@ namespace CreativeAI.Core
                 carried = segment - (at - PointSpacing);
             }
             _goal.Add(OnFloor(_dense[_dense.Count - 1]));
+
+            RaiseOverStairEdges();
+        }
+
+        // 階段では、点の間の線が段の角(縁)の下をくぐって見える。隣の点の高さと比べて高いほうに揃え、
+        // 線が段の角にめり込まないようにする。平らな床では高さが変わらないので影響しない。
+        private void RaiseOverStairEdges()
+        {
+            for (var pass = 0; pass < StairSmoothPasses; pass++)
+            {
+                var heights = new float[_goal.Count];
+                for (var i = 0; i < _goal.Count; i++)
+                {
+                    var y = _goal[i].y;
+                    if (i > 0)
+                        y = Mathf.Max(y, _goal[i - 1].y);
+                    if (i < _goal.Count - 1)
+                        y = Mathf.Max(y, _goal[i + 1].y);
+                    heights[i] = y;
+                }
+                for (var i = 0; i < _goal.Count; i++)
+                {
+                    var p = _goal[i];
+                    p.y = heights[i];
+                    _goal[i] = p;
+                }
+            }
         }
 
         // NavMesh の面は見た目の床と少しずれるので、真下の床に合わせる。
