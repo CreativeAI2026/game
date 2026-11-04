@@ -997,7 +997,8 @@ namespace CreativeAI.EditorTools
                             rows,
                             cols,
                             fenceLayout,
-                            i
+                            i,
+                            floorMask
                         );
                 }
 
@@ -1131,6 +1132,36 @@ namespace CreativeAI.EditorTools
                         height - FloorSlabThickness * 0.5f,
                         floorMat
                     );
+                }
+
+                // 踊り場の縁の柵。階高の半分の高さの台なので、壁・階段・踊り場が隣に無い辺から落ちないよう
+                // 天面の高さに柵を立てる(図の `-` は下の階の床の高さに立つので、ここでは使えない)
+                if (handrail == null)
+                    continue;
+                Transform landingFences = null;
+                for (var r = 0; r < rows; r++)
+                for (var c = 0; c < cols; c++)
+                {
+                    if (!mask[r, c])
+                        continue;
+                    foreach (var (dr, dc) in new[] { (1, 0), (-1, 0), (0, 1), (0, -1) })
+                    {
+                        var nr = r + dr;
+                        var nc = c + dc;
+                        var n = nr >= 0 && nc >= 0 && nr < rows && nc < cols ? grid[nr, nc] : Void;
+                        if (n == Landing || n == '#' || IsPanel(n) || IsStair(n))
+                            continue;
+                        landingFences ??= NewGroup("Fences", landingRoot);
+                        CreateHandrail(
+                            landingFences,
+                            handrail,
+                            kit.HandrailScale,
+                            $"LandingHandrail_{r}_{c}_{dr}_{dc}",
+                            new Vector3(Cell * (c + dc * 0.5f), height, Cell * (r + dr * 0.5f)),
+                            dr != 0,
+                            Cell
+                        );
+                    }
                 }
             }
         }
@@ -1544,7 +1575,8 @@ namespace CreativeAI.EditorTools
             int rows,
             int cols,
             LineLayout layout,
-            int runIndex
+            int runIndex,
+            bool[,] hasFloor
         )
         {
             var run = layout.Runs[runIndex];
@@ -1591,6 +1623,41 @@ namespace CreativeAI.EditorTools
                         horizontal,
                         to - from
                     );
+
+                // 列の端の先に床が無ければ、端にも柵を立てる(1マスの柵は1辺にしか立たないので、
+                // 角になった端から落ちられる)。先が柵・床なら不要
+                foreach (var end in new[] { -1, 1 })
+                {
+                    if (end == -1 ? i != 0 : i != run.Length - 1)
+                        continue;
+                    var er = row + (horizontal ? 0 : end);
+                    var ec = col + (horizontal ? end : 0);
+                    var beyondFloor =
+                        er >= 0 && ec >= 0 && er < rows && ec < cols && hasFloor[er, ec];
+                    var beyondFence =
+                        er >= 0 && ec >= 0 && er < rows && ec < cols && grid[er, ec] == Fence;
+                    var beyondStair =
+                        er >= 0 && ec >= 0 && er < rows && ec < cols && IsStair(grid[er, ec]);
+                    // 先が階段(吹き抜けの縁で柵が切れている所)と、角の柵が既にある所は立てない
+                    if (
+                        beyondFloor
+                        || beyondFence
+                        || beyondStair
+                        || PerpendicularRun(layout, grid, rows, cols, row, col, horizontal) >= 0
+                    )
+                        continue;
+                    CreateHandrail(
+                        parent,
+                        prefab,
+                        scale,
+                        $"HandrailEnd_{row}_{col}",
+                        horizontal
+                            ? new Vector3(Cell * (col + end * 0.5f), 0f, Cell * row)
+                            : new Vector3(Cell * col, 0f, Cell * (row + end * 0.5f)),
+                        !horizontal,
+                        Cell
+                    );
+                }
 
                 foreach (var side in new[] { -1, 1 })
                 {
@@ -2978,7 +3045,8 @@ namespace CreativeAI.EditorTools
                             above,
                             rect,
                             halfDir,
-                            hole,
+                            // 下半分(踊り場まで)は上の階に届かないので、上の階の床は抜かない
+                            towardLanding ? new List<Vector2Int>() : hole,
                             towardLanding ? 0f : 0.5f,
                             0.5f
                         )
