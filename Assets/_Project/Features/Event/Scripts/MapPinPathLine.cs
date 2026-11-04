@@ -13,10 +13,10 @@ namespace CreativeAI.Core
     public sealed class MapPinPathLine
     {
         public const string MaterialResource = "MapPinGroundLine";
-        private const float RefreshSeconds = 0.25f;
+        private const float RefreshSeconds = 0.3f;
         private const float HideWithin = 2.5f; // この近さまで来たら消す
         private const float SnapDistance = 3f; // ピンの真下の NavMesh を探す範囲
-        private const float LiftAboveFloor = 0.1f; // 床に埋まらないよう少し浮かせる
+        private const float LiftAboveFloor = 0.15f; // 床に埋まらないよう少し浮かせる
         private const float Width = 0.9f; // 矢じり1つの幅
         private const float ArrowSpacing = 1.4f; // 矢じりの間隔(ワールド長)
         private const float FlowSpeed = 0.9f; // 矢じりが進む速さ(ワールド長/秒)
@@ -28,9 +28,9 @@ namespace CreativeAI.Core
         private const float ObstacleCheckHeight = 0.5f; // 物との当たりを調べる、床からの高さ
         private const float FollowSharpness = 14f; // 新しい形へ近づく速さ(大きいほど速い)
         private const float NearSnapRadius = 5f; // この近さの点は毎フレーム床に合わせ直す
-        private const float FloorRayUp = 1.0f;
-        private const float FloorRayLength = 2.2f;
-        private const float FloorMaxDelta = 0.8f; // NavMesh の高さとこれ以上ずれた床は無視する
+        private const float VerticalTolerance = 1f; // 線の高さを取る NavMesh を探す範囲(階の高さより十分小さく)
+        private const float OnPathTolerance = 0.35f; // 直線の途中の点が NavMesh からずれてよい範囲
+        private const int MaxStraightSamples = 20; // 直線の確認で調べる点の数の上限(重くしないため)
         private static readonly int MainTexSt = Shader.PropertyToID("_MainTex_ST");
 
         private readonly LineRenderer _line;
@@ -167,7 +167,7 @@ namespace CreativeAI.Core
                 var next = from + 1;
                 for (var j = corners.Length - 1; j > from + 1; j--)
                 {
-                    if (!NavMesh.Raycast(corners[from], corners[j], out _, NavMesh.AllAreas))
+                    if (WalksStraight(corners[from], corners[j]))
                     {
                         next = j;
                         break;
@@ -281,10 +281,10 @@ namespace CreativeAI.Core
             return true;
         }
 
-        // 2点の間が、NavMesh の縁(壁の手前)をまたぐ、または物にぶつかるなら true。
+        // 2点の間が、NavMesh から外れる(壁・縁・別の階をまたぐ)、または物にぶつかるなら true。
         private bool Blocked(Vector3 a, Vector3 b)
         {
-            if (NavMesh.Raycast(a, b, out _, NavMesh.AllAreas))
+            if (!WalksStraight(a, b))
                 return true;
 
             // NavMesh に載らない小物は、当たり判定で調べる(床と同じ高さだと床に当たるので少し上げる)。
@@ -298,8 +298,27 @@ namespace CreativeAI.Core
                 ) && !hit.collider.CompareTag("Player");
         }
 
-        // NavMesh の面は見た目の床と少しずれるので、真下の床に合わせる。
-        // 小物の上などに乗らないよう、NavMesh の高さから離れすぎた面は無視する。
+        // 2点を結ぶ直線が、ずっと同じ NavMesh の面の上(高さも含めて)にあるか。
+        // NavMesh.Raycast は縁に当たらないかだけを見るので、階をまたぐ直線(床や天井を貫く線)を通してしまう。
+        // そこで、途中の点がどれも NavMesh の近くにあることも確かめる。
+        private static bool WalksStraight(Vector3 a, Vector3 b)
+        {
+            if (NavMesh.Raycast(a, b, out _, NavMesh.AllAreas))
+                return false;
+
+            var length = Vector3.Distance(a, b);
+            var steps = Mathf.Clamp(Mathf.CeilToInt(length / 0.5f), 1, MaxStraightSamples);
+            for (var i = 1; i < steps; i++)
+            {
+                var p = Vector3.Lerp(a, b, i / (float)steps);
+                if (!NavMesh.SamplePosition(p, out _, OnPathTolerance, NavMesh.AllAreas))
+                    return false;
+            }
+            return true;
+        }
+
+        // 線の高さは物理の床ではなく NavMesh の面から取る。階が重なる建物でも、自分の階の面だけを拾える
+        // (上や下の階の床へ吸い付かない)。見た目の床との差は LiftAboveFloor で埋める。
         private static Vector3 OnFloor(Vector3 point)
         {
             point.y = TryFloorY(point, out var floorY) ? floorY : point.y;
@@ -307,26 +326,13 @@ namespace CreativeAI.Core
             return point;
         }
 
-        // 点の真下の床の高さ。床が見つからない、または基準の高さから離れすぎていれば false。
+        // 点の近くの NavMesh の高さ。近くに面が無ければ false。
         private static bool TryFloorY(Vector3 point, out float y)
         {
             y = point.y;
-            var origin = point + Vector3.up * FloorRayUp;
-            if (
-                !Physics.Raycast(
-                    origin,
-                    Vector3.down,
-                    out var hit,
-                    FloorRayLength,
-                    ~0,
-                    QueryTriggerInteraction.Ignore
-                )
-                || hit.normal.y <= 0.7f
-                || hit.collider.CompareTag("Player")
-                || Mathf.Abs(hit.point.y - point.y) > FloorMaxDelta
-            )
+            if (!NavMesh.SamplePosition(point, out var hit, VerticalTolerance, NavMesh.AllAreas))
                 return false;
-            y = hit.point.y;
+            y = hit.position.y;
             return true;
         }
 
