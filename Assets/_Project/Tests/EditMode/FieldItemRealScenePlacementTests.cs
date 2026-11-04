@@ -24,16 +24,12 @@ namespace CreativeAI.Tests.EditMode
         private const string SpawnName = "PlayerSpawn_start";
 
         // 小物のコライダーが入っているシーン(実行時は AdditiveScenes が重ねる)と、アイテムのシーン。
-        private static readonly string[] SceneNames =
-        {
-            "Field_Area01",
-            "Field_Area01_Props_1F",
-            "Field_Area01_Props_2F",
-            "Field_Area01_Props_3F",
-            "Field_Area01_Props_Lab_1F",
-            "Field_Area01_Props_Lab_2F",
-            "Field_Area01_Items",
-        };
+        // 小物シーンは手で並べると階を足したときに漏れるので、作成ツールの一覧から引く。
+        private static readonly string[] SceneNames = PropSceneWorkflow
+            .Parts.Select(PropSceneWorkflow.SceneName)
+            .Prepend("Field_Area01")
+            .Append("Field_Area01_Items")
+            .ToArray();
 
         private readonly List<Scene> _openedByTest = new();
         private List<FieldItemPickup> _pickups;
