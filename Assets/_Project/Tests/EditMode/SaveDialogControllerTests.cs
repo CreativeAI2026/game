@@ -15,9 +15,8 @@ namespace CreativeAI.Tests.EditMode
     /// </summary>
     public class SaveDialogControllerTests
     {
-        private static string SavePath => Path.Combine(Application.persistentDataPath, "save.json");
-
-        private string _backup;
+        private string _saveDir;
+        private string SavePath => Path.Combine(_saveDir, "save.json");
         private GameObject _root;
         private GameObject _gmmGo;
         private Button _yes;
@@ -26,17 +25,19 @@ namespace CreativeAI.Tests.EditMode
         [OneTimeSetUp]
         public void OneTimeSetUp()
         {
-            // 開発者の実セーブを壊さないよう退避しておく。
-            _backup = File.Exists(SavePath) ? File.ReadAllText(SavePath) : null;
+            _saveDir = Path.Combine(
+                Path.GetTempPath(),
+                "CreativeAI-SaveTests-" + Path.GetRandomFileName()
+            );
+            Directory.CreateDirectory(_saveDir);
+            SaveService.OverrideDirectoryForTests(_saveDir);
         }
 
         [OneTimeTearDown]
         public void OneTimeTearDown()
         {
-            if (_backup != null)
-                File.WriteAllText(SavePath, _backup);
-            else if (File.Exists(SavePath))
-                File.Delete(SavePath);
+            SaveService.OverrideDirectoryForTests(null);
+            Directory.Delete(_saveDir, true);
         }
 
         [SetUp]
