@@ -152,13 +152,37 @@ namespace CreativeAI.Core
             _shown.Clear();
         }
 
+        // NavMesh の経路は「最短」ではなく「コストが最小」の道なので、真っすぐ歩ける所でも遠回りすることがある。
+        // 途中の角のうち、NavMesh の縁に当たらず直接行ける所までは、角を飛ばして近道にする。
+        private static List<Vector3> Shortcut(Vector3[] corners)
+        {
+            var result = new List<Vector3> { corners[0] };
+            var from = 0;
+            while (from < corners.Length - 1)
+            {
+                var next = from + 1;
+                for (var j = corners.Length - 1; j > from + 1; j--)
+                {
+                    if (!NavMesh.Raycast(corners[from], corners[j], out _, NavMesh.AllAreas))
+                    {
+                        next = j;
+                        break;
+                    }
+                }
+                result.Add(corners[next]);
+                from = next;
+            }
+            return result;
+        }
+
         // 曲がり角だけを小さく丸め、真っすぐな区間は真っすぐのままにする(通路の外へ膨らませない)。
         // そのあと一定間隔に並べ直して、床の高さに合わせる。
-        private void BuildGoal(Vector3[] corners)
+        private void BuildGoal(Vector3[] rawCorners)
         {
+            var corners = Shortcut(rawCorners);
             _dense.Clear();
             _dense.Add(corners[0]);
-            for (var i = 1; i < corners.Length - 1; i++)
+            for (var i = 1; i < corners.Count - 1; i++)
             {
                 var before = corners[i - 1];
                 var corner = corners[i];
@@ -183,7 +207,7 @@ namespace CreativeAI.Core
                     );
                 }
             }
-            _dense.Add(corners[corners.Length - 1]);
+            _dense.Add(corners[corners.Count - 1]);
 
             _goal.Clear();
             _goal.Add(OnFloor(_dense[0]));
