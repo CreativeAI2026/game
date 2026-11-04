@@ -13,7 +13,7 @@ namespace CreativeAI.Core
     public sealed class MapPinPathLine
     {
         public const string MaterialResource = "MapPinGroundLine";
-        private const float RefreshSeconds = 0.4f;
+        private const float RefreshSeconds = 0.25f;
         private const float HideWithin = 2.5f; // この近さまで来たら消す
         private const float SnapDistance = 3f; // ピンの真下の NavMesh を探す範囲
         private const float LiftAboveFloor = 0.1f; // 床に埋まらないよう少し浮かせる
@@ -27,9 +27,10 @@ namespace CreativeAI.Core
         private const int BendAttempts = 4; // 丸め方が通れないとき、大きさを半分にして試す回数
         private const float ObstacleCheckHeight = 0.5f; // 物との当たりを調べる、床からの高さ
         private const float FollowSharpness = 14f; // 新しい形へ近づく速さ(大きいほど速い)
-        private const float FloorRayUp = 0.6f;
-        private const float FloorRayLength = 1.6f;
-        private const float FloorMaxDelta = 0.5f; // NavMesh の高さとこれ以上ずれた床は無視する
+        private const float NearSnapRadius = 5f; // この近さの点は毎フレーム床に合わせ直す
+        private const float FloorRayUp = 1.0f;
+        private const float FloorRayLength = 2.2f;
+        private const float FloorMaxDelta = 0.8f; // NavMesh の高さとこれ以上ずれた床は無視する
         private static readonly int MainTexSt = Shader.PropertyToID("_MainTex_ST");
 
         private readonly LineRenderer _line;
@@ -301,9 +302,18 @@ namespace CreativeAI.Core
         // 小物の上などに乗らないよう、NavMesh の高さから離れすぎた面は無視する。
         private static Vector3 OnFloor(Vector3 point)
         {
+            point.y = TryFloorY(point, out var floorY) ? floorY : point.y;
+            point.y += LiftAboveFloor;
+            return point;
+        }
+
+        // 点の真下の床の高さ。床が見つからない、または基準の高さから離れすぎていれば false。
+        private static bool TryFloorY(Vector3 point, out float y)
+        {
+            y = point.y;
             var origin = point + Vector3.up * FloorRayUp;
             if (
-                Physics.Raycast(
+                !Physics.Raycast(
                     origin,
                     Vector3.down,
                     out var hit,
@@ -311,12 +321,13 @@ namespace CreativeAI.Core
                     ~0,
                     QueryTriggerInteraction.Ignore
                 )
-                && hit.normal.y > 0.7f
-                && Mathf.Abs(hit.point.y - point.y) <= FloorMaxDelta
+                || hit.normal.y <= 0.7f
+                || hit.collider.CompareTag("Player")
+                || Mathf.Abs(hit.point.y - point.y) > FloorMaxDelta
             )
-                point.y = hit.point.y;
-            point.y += LiftAboveFloor;
-            return point;
+                return false;
+            y = hit.point.y;
+            return true;
         }
 
         // 描いている形を、最新の道筋へ少しずつ近づける(0.4 秒ごとに形が飛ばないように)。
@@ -335,13 +346,27 @@ namespace CreativeAI.Core
             for (var i = 0; i < _shown.Count; i++)
                 _shown[i] = Vector3.Lerp(_shown[i], _goal[i], k);
 
-            // 出だしはプレイヤーの足元に毎フレーム合わせる(歩いてもすぐ追いつく)。
+            // プレイヤーの近くは、歩いて床の高さが変わる(階段など)ので、毎フレーム床に合わせ直す。
+            // 経路の計算は 0.4 秒おきなので、これをしないと階段で線が床にめり込む。
             if (_player != null)
             {
+                var feet = _player.position;
+                // 出だしはプレイヤーの足元に合わせる(歩いてもすぐ追いつく)。
                 var head = _shown[0];
-                head.x = _player.position.x;
-                head.z = _player.position.z;
+                head.x = feet.x;
+                head.z = feet.z;
                 _shown[0] = head;
+                for (var i = 0; i < _shown.Count; i++)
+                {
+                    var p = _shown[i];
+                    if ((p - feet).sqrMagnitude > NearSnapRadius * NearSnapRadius)
+                        break; // 道筋は手前から順に並ぶので、遠くに出たらそこまで
+                    if (TryFloorY(p, out var y))
+                    {
+                        p.y = y + LiftAboveFloor;
+                        _shown[i] = p;
+                    }
+                }
             }
 
             _line.positionCount = _shown.Count;
