@@ -74,7 +74,8 @@ namespace CreativeAI.UI
                     _duration
                 )
                 .SetEase(_ease)
-                .SetUpdate(true);
+                .SetUpdate(true)
+                .SetTarget(_rect); // ターゲットが無いと _rect.DOKill() で止まらない
         }
 
         private Vector2 GetHiddenPos() =>
