@@ -6,7 +6,8 @@ namespace CreativeAI.Gameplay
     /// <summary>
     /// フィールドに置かれた取得可能アイテム。プレイヤーが触れると在庫へ入れて自分を消す。拾えるのは移動中(Field)だけ。
     /// 装備品は拾った瞬間に付与ステータスをロールするので1個ずつ別スタックで持つ(食材・大事なものは数量ぶん積む)。
-    /// 配置はシーンに手置き: Collider(Is Trigger)とこのコンポーネントを付け、Item と Sparkle をアサインする。
+    /// 配置は ItemPickup Prefab を置いて Item と Count を選ぶだけ(識別子はエディタが自動で振る)。
+    /// 拾ったことは <see cref="PickedItemRegistry"/> に記録されてセーブされ、拾い済みのものはフィールドに入ったとき出さない。
     /// </summary>
     [RequireComponent(typeof(Collider))]
     public sealed class FieldItemPickup : MonoBehaviour
@@ -25,6 +26,12 @@ namespace CreativeAI.Gameplay
         [SerializeField]
         private GameObject _sparkle;
 
+        [Tooltip(
+            "拾い済みの記録に使う識別子。エディタが置いたとき・複製したときに自動で振るので手入力は不要。"
+        )]
+        [SerializeField]
+        private string _pickupId;
+
         [SerializeField]
         private string _playerTag = "Player";
 
@@ -39,6 +46,23 @@ namespace CreativeAI.Gameplay
 
         /// <summary>拾えるアイテム。配置ツール・テストからの確認用。</summary>
         public ItemData Item => _item;
+
+        /// <summary>拾い済みの記録に使う識別子(エディタが自動で振る)。</summary>
+        public string PickupId => _pickupId;
+
+        private void Awake() => HideIfAlreadyPicked();
+
+        /// <summary>前に拾い済み(セーブから復元された記録を含む)なら出さない。在庫は触らず記録だけを見る。</summary>
+        public void HideIfAlreadyPicked()
+        {
+            if (!PickedItemRegistry.IsPicked(_pickupId))
+                return;
+
+            if (Application.isPlaying)
+                Destroy(gameObject);
+            else
+                gameObject.SetActive(false); // EditMode(テスト)では Destroy を呼べない
+        }
 
         private void OnTriggerEnter(Collider other)
         {
@@ -85,6 +109,7 @@ namespace CreativeAI.Gameplay
             inventory.AddAcquired(_item, _count);
 
             _picked = true;
+            PickedItemRegistry.MarkPicked(_pickupId);
             if (_sparkle != null)
                 _sparkle.SetActive(false);
 
