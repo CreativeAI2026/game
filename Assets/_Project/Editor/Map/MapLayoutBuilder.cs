@@ -37,16 +37,20 @@ namespace CreativeAI.EditorTools
                 "MapLayout.md",
                 new[]
                 {
-                    new FloorDef("1F", new Vector3(-218f, -44.8f, -30f)),
-                    new FloorDef("2F", new Vector3(-218f, -36.8f, 10f)),
-                    new FloorDef("3F", new Vector3(-218f, -28.8f, 50f)),
+                    new FloorDef("1F", new Vector3(-238f, -44.8f, -30f)),
+                    new FloorDef("2F", new Vector3(-238f, -36.8f, 10f)),
+                    new FloorDef("3F", new Vector3(-238f, -28.8f, 50f)),
+                    // 原点 X は西へ5列広げたぶん(20u)元の -218 からずらしてある(元からある壁・床の位置は変わらない)。
+                    // 3F の 2倍の高さ(16u)上の離れ。3F の折り返し階段(踊り場で 8u ずつ)で上がる。
+                    // 図には負の行があり、読み込み時に原点の Z をそのぶん南へずらす(row 0 = この Z のまま)
+                    new FloorDef("4F", new Vector3(-238f, -12.8f, 50f), detached: true),
                 },
                 8f,
                 Kit.Standard,
                 perimeter: true
             ),
             // 研究棟。図は列見出し付きの書き方(<see cref="LoadRulerMap"/>)で、全階が真上に重なる。
-            // 地上(3F)の東端 `X`(列見出し 0 / 行 4〜5)が Area01 3F の西端 `X`(col 0 / row 37〜38)の西隣に
+            // 地上(3F)の東端(列見出し 5 / 行 4〜5。Area01 を西へ広げたぶん橋を 5 マス短くした)が Area01 3F の西端 `X`(col 0 / row 37〜38)の西隣に
             // 来るよう、「列見出し 0・行 0」のマスの中心を (-222, 182) に置く(Area01 3F の row 37 は Z=198)。
             // 各階の原点の X/Z は図の範囲から読み込み時に決まるので、ここでは Y だけを使う。
             // 外周は図に壁を描いてあるので外周壁は作らない。
@@ -167,10 +171,15 @@ namespace CreativeAI.EditorTools
             public readonly string Name;
             public readonly Vector3 Origin;
 
-            public FloorDef(string name, Vector3 origin)
+            // 離れの階(Area01 の 4F)。階段でつながるだけで、外周壁・最上階の壁の高さ・吹き抜けの判定・
+            // ガラスの寄せ揃えには入れない。足したことで既存の階の形が変わらない(小物の位置がずれない)ようにする
+            public readonly bool Detached;
+
+            public FloorDef(string name, Vector3 origin, bool detached = false)
             {
                 Name = name;
                 Origin = origin;
+                Detached = detached;
             }
         }
 
@@ -495,7 +504,7 @@ namespace CreativeAI.EditorTools
             var colors = new List<Dictionary<int, string>>();
             List<Dictionary<int, string>> target = null;
             Dictionary<int, string> current = null;
-            var rowPattern = new Regex(@"^\s*(\d+)\|(.*)$");
+            var rowPattern = new Regex(@"^\s*(-?\d+)\|(.*)$");
 
             foreach (var raw in File.ReadAllLines(path))
             {
@@ -532,8 +541,23 @@ namespace CreativeAI.EditorTools
 
             var grids = new List<char[,]>();
             var floorColors = new List<char[,]>();
+            var floors = (FloorDef[])b.Floors.Clone();
             for (var f = 0; f < b.Floors.Length; f++)
             {
+                // 負の行は、図の最下行を row 0 に詰め直し、原点の Z をそのぶん南へずらす(同じ行は同じ場所のまま)
+                var minRow = maps[f].Keys.Min();
+                if (minRow < 0)
+                {
+                    maps[f] = maps[f].ToDictionary(kv => kv.Key - minRow, kv => kv.Value);
+                    if (f < colors.Count)
+                        colors[f] = colors[f].ToDictionary(kv => kv.Key - minRow, kv => kv.Value);
+                    var def = b.Floors[f];
+                    floors[f] = new FloorDef(
+                        def.Name,
+                        def.Origin + new Vector3(0f, 0f, minRow * Cell),
+                        def.Detached
+                    );
+                }
                 var grid = ToGrid(maps[f], $"{b.Name} {b.Floors[f].Name}");
                 grids.Add(grid);
                 floorColors.Add(f < colors.Count ? ToGrid(colors[f], null) : null);
@@ -546,7 +570,7 @@ namespace CreativeAI.EditorTools
             return new BuildingMap
             {
                 Building = b,
-                Floors = b.Floors,
+                Floors = floors,
                 Grids = grids,
                 FloorColors = floorColors,
                 StairDirs = ReadStairDirs(b, path),
@@ -824,21 +848,31 @@ namespace CreativeAI.EditorTools
 
             var stairCells = CollectStairs(grids, floors, map.StairDirs, b.Name);
 
-            var rowOffsets = WorldRowOffsets(floors);
-            var worldRows = Enumerable
-                .Range(0, floors.Length)
-                .Max(f => rowOffsets[f] + grids[f].GetLength(0));
-            var worldCols = grids.Max(g => g.GetLength(1));
-            var perimeter = b.Perimeter
-                ? BuildPerimeterMask(grids, rowOffsets, worldRows, worldCols)
+            // 外周壁・最上階・吹き抜け・寄せ揃えは本棟の階(離れ以外)だけで決める
+            var main = Enumerable.Range(0, floors.Length).Where(f => !floors[f].Detached).ToArray();
+            var mainFloors = main.Select(f => floors[f]).ToArray();
+            var mainGrids = main.Select(f => grids[f]).ToList();
+            var mainOffsets = WorldRowOffsets(mainFloors);
+            var rowOffsets = new int[floors.Length]; // 離れの階は使わない(0 のまま)
+            for (var i = 0; i < main.Length; i++)
+                rowOffsets[main[i]] = mainOffsets[i];
+            var mainTopY = mainFloors.Max(x => x.Origin.y);
+
+            var worldRows = main.Max(f => rowOffsets[f] + grids[f].GetLength(0));
+            var worldCols = mainGrids.Max(g => g.GetLength(1));
+            var perimeterMask = b.Perimeter
+                ? BuildPerimeterMask(mainGrids, mainOffsets, worldRows, worldCols)
                 : new bool[worldRows, worldCols];
+            bool OnPerimeter(int f, int r, int c) =>
+                !floors[f].Detached && perimeterMask[r + rowOffsets[f], c];
             if (b.Perimeter)
                 CreatePerimeterWall(
                     buildingRoot.transform,
                     b,
-                    grids,
-                    rowOffsets,
-                    perimeter,
+                    mainFloors,
+                    mainGrids,
+                    mainOffsets,
+                    perimeterMask,
                     worldRows,
                     worldCols,
                     wallMat
@@ -871,8 +905,17 @@ namespace CreativeAI.EditorTools
                 glassLayouts[f] = LineLayout.Build(g, mask, nr, nc, IsPanel);
             }
             // 上下の階が真上に重なる建物は横の列も同じ世界行なので揃える
-            AlignAcrossFloors(glassLayouts, "ガラス", IsStacked(floors));
-            AlignAcrossFloors(fenceLayouts, "柵", IsStacked(floors));
+            // (離れの階は揃えに加えない。加えると本棟の列の寄せ量が変わりうる)
+            AlignAcrossFloors(
+                main.Select(f => glassLayouts[f]).ToArray(),
+                "ガラス",
+                IsStacked(mainFloors)
+            );
+            AlignAcrossFloors(
+                main.Select(f => fenceLayouts[f]).ToArray(),
+                "柵",
+                IsStacked(mainFloors)
+            );
             for (var f = 0; f < floors.Length; f++)
                 FlushToCorridor(glassLayouts[f], grids[f], floorMasks[f]);
 
@@ -911,10 +954,12 @@ namespace CreativeAI.EditorTools
                 var wallMask = new bool[rows, cols];
                 for (var r = 0; r < rows; r++)
                 for (var c = 0; c < cols; c++)
-                    wallMask[r, c] = grid[r, c] == '#' && !perimeter[r + rowOffsets[f], c];
+                    wallMask[r, c] = grid[r, c] == '#' && !OnPerimeter(f, r, c);
 
                 // 外周壁のある建物の最上階は、`#` とガラス・扉の周りを外周壁の上端まで伸ばす(上に床が無いので床板ぶんも縮めない)
-                var isTop = Mathf.Approximately(floors[f].Origin.y, floors.Max(x => x.Origin.y));
+                // 最上階は本棟の階で決める(離れの階は外周壁の外の話なので普通の高さ)
+                var isTop =
+                    !floors[f].Detached && Mathf.Approximately(floors[f].Origin.y, mainTopY);
                 var wallHeight =
                     isTop && b.Perimeter ? b.StoreyHeight + PerimeterExtraHeight : b.WallHeight;
                 var wallGroup = NewGroup("Walls", parent);
@@ -924,15 +969,11 @@ namespace CreativeAI.EditorTools
                 // 外周壁のある建物では、上のどの階にも床が無いマス(吹き抜けに面した所)のガラス・扉も
                 // 外周壁の上端まで伸ばす。階高で止めると、上の空間に対して囲いが低く見える
                 var openHeight =
-                    floors.Max(x => x.Origin.y)
-                    + b.StoreyHeight
-                    + PerimeterExtraHeight
-                    - floors[f].Origin.y;
+                    mainTopY + b.StoreyHeight + PerimeterExtraHeight - floors[f].Origin.y;
                 bool OpenAbove(int r, int c) =>
                     b.Perimeter
-                    && Enumerable
-                        .Range(0, floors.Length)
-                        .Where(g => floors[g].Origin.y > floors[f].Origin.y + 0.01f)
+                    && !floors[f].Detached
+                    && main.Where(g => floors[g].Origin.y > floors[f].Origin.y + 0.01f)
                         .All(g =>
                         {
                             var ug = grids[g];
@@ -963,7 +1004,7 @@ namespace CreativeAI.EditorTools
                 // ガラス壁: 見た目は1マス1枚の等倍、当たりは run ごとの薄い箱
                 for (var r = 0; r < rows; r++)
                 for (var c = 0; c < cols; c++)
-                    if (IsPanel(grid[r, c]) && perimeter[r + rowOffsets[f], c])
+                    if (IsPanel(grid[r, c]) && OnPerimeter(f, r, c))
                         Debug.LogWarning(
                             $"[MapLayoutBuilder] {where} row {r} col {c}: "
                                 + "`$` が建物の外周にあります。外周は1枚の壁で覆われるのでガラスは埋まります。"
@@ -995,7 +1036,7 @@ namespace CreativeAI.EditorTools
                 {
                     if (!IsDoor(grid[r, c]))
                         continue;
-                    if (perimeter[r + rowOffsets[f], c])
+                    if (OnPerimeter(f, r, c))
                     {
                         Debug.LogWarning(
                             $"[MapLayoutBuilder] {where} row {r} col {c}: "
@@ -1392,6 +1433,7 @@ namespace CreativeAI.EditorTools
         static void CreatePerimeterWall(
             Transform root,
             Building b,
+            FloorDef[] floors, // 本棟の階だけ(grids / rowOffsets と同じ並び)
             List<char[,]> grids,
             int[] rowOffsets,
             bool[,] perimeter,
@@ -1400,7 +1442,6 @@ namespace CreativeAI.EditorTools
             Material mat
         )
         {
-            var floors = b.Floors;
             var bottomY = floors.Min(f => f.Origin.y);
             var topY = floors.Max(f => f.Origin.y) + b.StoreyHeight + PerimeterExtraHeight;
             var height = topY - bottomY;
