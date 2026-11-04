@@ -9,8 +9,11 @@ namespace CreativeAI.Core
     public sealed class MapPin : MonoBehaviour
     {
         public const string SpriteResource = "EventMapPin";
+        public const string MaterialResource = "MapPinAlwaysOnTop"; // 壁に隠されず常に手前に描く
         private const float HoverHeight = 0.5f; // 先端が指定位置より浮く高さ
         private const float Scale = 2f; // 画像(高さ1.5)の拡大率。大きいほど目立つ
+        private const float FullSizeDistance = 15f; // これより遠いと、見失わないよう大きくする
+        private const float MaxDistanceBoost = 3f; // 大きくする倍率の上限
 
         [SerializeField]
         private float _spinDegreesPerSecond = 90f;
@@ -22,6 +25,7 @@ namespace CreativeAI.Core
         private float _bobHertz = 0.6f;
 
         private Vector3 _basePosition;
+        private Transform _face;
 
         private void Awake() => _basePosition = transform.position;
 
@@ -30,6 +34,18 @@ namespace CreativeAI.Core
             transform.Rotate(0f, _spinDegreesPerSecond * Time.deltaTime, 0f, Space.World);
             var offset = Mathf.Sin(Time.time * _bobHertz * Mathf.PI * 2f) * _bobAmplitude;
             transform.position = _basePosition + Vector3.up * offset;
+            ApplyDistanceScale();
+        }
+
+        // 遠くでは小さくて見えなくなるので、カメラから離れるほど大きくする(上限あり)。
+        private void ApplyDistanceScale()
+        {
+            var cam = Camera.main;
+            if (_face == null || cam == null)
+                return;
+            var distance = Vector3.Distance(cam.transform.position, transform.position);
+            var boost = Mathf.Clamp(distance / FullSizeDistance, 1f, MaxDistanceBoost);
+            _face.localScale = Vector3.one * (Scale * boost);
         }
 
         /// <summary>指定位置にピンを作る。画像が無ければ null。</summary>
@@ -54,8 +70,17 @@ namespace CreativeAI.Core
             var renderer = face.AddComponent<SpriteRenderer>();
             renderer.sprite = sprite;
             renderer.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
+            // 壁の後ろでも見えるよう、深度テストを無視する材質にし、隠れ判定でも描画から外されないようにする。
+            var material = Resources.Load<Material>(MaterialResource);
+            if (material != null)
+                renderer.sharedMaterial = material;
+            else
+                Debug.LogWarning($"[MapPin] Resources/{MaterialResource} が見つかりません。");
+            renderer.allowOcclusionWhenDynamic = false;
 
-            return root.AddComponent<MapPin>();
+            var pin = root.AddComponent<MapPin>();
+            pin._face = face.transform;
+            return pin;
         }
     }
 }
