@@ -21,7 +21,8 @@ namespace CreativeAI.Core
         private const float ArrowSpacing = 1.4f; // 矢じりの間隔(ワールド長)
         private const float FlowSpeed = 0.9f; // 矢じりが進む速さ(ワールド長/秒)
         private const float PointSpacing = 0.5f; // 線の点の間隔(曲線のなめらかさ)
-        private const int CurveSteps = 6; // 曲がり角の間を曲線で補う細かさ
+        private const float BendRadius = 1.5f; // 曲がり角を丸める大きさ
+        private const int BendSteps = 6; // 丸めた角の細かさ
         private const float FollowSharpness = 14f; // 新しい形へ近づく速さ(大きいほど速い)
         private const float FloorRayUp = 0.6f;
         private const float FloorRayLength = 1.6f;
@@ -151,18 +152,36 @@ namespace CreativeAI.Core
             _shown.Clear();
         }
 
-        // 曲がり角の点を曲線でなめらかにつなぎ、一定間隔に並べ直して、床の高さに合わせる。
+        // 曲がり角だけを小さく丸め、真っすぐな区間は真っすぐのままにする(通路の外へ膨らませない)。
+        // そのあと一定間隔に並べ直して、床の高さに合わせる。
         private void BuildGoal(Vector3[] corners)
         {
             _dense.Clear();
-            for (var i = 0; i < corners.Length - 1; i++)
+            _dense.Add(corners[0]);
+            for (var i = 1; i < corners.Length - 1; i++)
             {
-                var p0 = corners[Mathf.Max(i - 1, 0)];
-                var p1 = corners[i];
-                var p2 = corners[i + 1];
-                var p3 = corners[Mathf.Min(i + 2, corners.Length - 1)];
-                for (var s = 0; s < CurveSteps; s++)
-                    _dense.Add(CatmullRom(p0, p1, p2, p3, s / (float)CurveSteps));
+                var before = corners[i - 1];
+                var corner = corners[i];
+                var after = corners[i + 1];
+                // 丸める大きさは、前後の区間の半分までに収める(隣の角と重ならないように)。
+                var radius = Mathf.Min(
+                    BendRadius,
+                    Vector3.Distance(before, corner) * 0.5f,
+                    Vector3.Distance(corner, after) * 0.5f
+                );
+                var entry = corner + (before - corner).normalized * radius;
+                var exit = corner + (after - corner).normalized * radius;
+                for (var s = 0; s <= BendSteps; s++)
+                {
+                    var t = s / (float)BendSteps;
+                    _dense.Add(
+                        Vector3.Lerp(
+                            Vector3.Lerp(entry, corner, t),
+                            Vector3.Lerp(corner, exit, t),
+                            t
+                        )
+                    );
+                }
             }
             _dense.Add(corners[corners.Length - 1]);
 
@@ -183,19 +202,6 @@ namespace CreativeAI.Core
                 carried = segment - (at - PointSpacing);
             }
             _goal.Add(OnFloor(_dense[_dense.Count - 1]));
-        }
-
-        private static Vector3 CatmullRom(Vector3 p0, Vector3 p1, Vector3 p2, Vector3 p3, float t)
-        {
-            var t2 = t * t;
-            var t3 = t2 * t;
-            return 0.5f
-                * (
-                    2f * p1
-                    + (-p0 + p2) * t
-                    + (2f * p0 - 5f * p1 + 4f * p2 - p3) * t2
-                    + (-p0 + 3f * p1 - 3f * p2 + p3) * t3
-                );
         }
 
         // NavMesh の面は見た目の床と少しずれるので、真下の床に合わせる。
