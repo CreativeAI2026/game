@@ -37,9 +37,6 @@ namespace CreativeAI.Tests.PlayMode
         [UnityTearDown]
         public IEnumerator TearDown()
         {
-            InteractPromptService.Clear();
-            EventPlaybackService.SetPlaying(false);
-            BattleRunnerService.Current = null;
             if (_root != null)
                 Object.Destroy(_root.gameObject);
             DestroyResident<ProgressManager>();

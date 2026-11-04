@@ -67,7 +67,6 @@ namespace CreativeAI.Tests.PlayMode
         public IEnumerator TearDownRoutine()
         {
             Object.Destroy(_viewGo);
-            DialogueViewService.Current = null;
             // Destroy が効くまで待つ。残っていると次のテストの Awake が
             // 二重生成ガードで自滅して、選択肢が並ばなくなる。
             yield return null;

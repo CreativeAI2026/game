@@ -37,7 +37,6 @@ namespace CreativeAI.Tests.EditMode
         public void TearDown()
         {
             TestReflection.Invoke(_bar, "OnDisable");
-            EventPlaybackService.SetPlaying(false);
             _residents.Clear();
             Object.DestroyImmediate(_barGo);
         }

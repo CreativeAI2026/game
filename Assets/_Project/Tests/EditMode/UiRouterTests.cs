@@ -42,7 +42,6 @@ namespace CreativeAI.Tests.EditMode
         [TearDown]
         public void TearDown()
         {
-            UiPanelService.ResetState();
             Object.DestroyImmediate(_craft);
             Object.DestroyImmediate(_save);
             Object.DestroyImmediate(_inventory);

@@ -41,8 +41,6 @@ namespace CreativeAI.Tests.EditMode
         [TearDown]
         public void TearDown()
         {
-            EventPlaybackService.SetPlaying(false);
-            InteractPromptService.Clear();
             _residents.Clear();
             Object.DestroyImmediate(_doorGo);
         }

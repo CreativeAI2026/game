@@ -34,7 +34,6 @@ namespace CreativeAI.Tests.EditMode
         public void TearDown()
         {
             _residents.Clear();
-            BattleRunnerService.Current = null;
             DestroyResident<ProgressManager>();
             DestroyResident<GameModeManager>();
             DestroyResident<InventoryManager>();

@@ -79,14 +79,11 @@ namespace CreativeAI.Tests.EditMode
         [TearDown]
         public void TearDown()
         {
-            EventPlaybackService.SetPlaying(false);
-            ItemCatalog.InjectForTests(null);
             _residents.Clear();
             Object.DestroyImmediate(_playerGo);
             foreach (var a in _assets)
                 Object.DestroyImmediate(a);
             _assets.Clear();
-            PickedItemRegistry.Clear();
             if (File.Exists(SavePath))
                 File.Delete(SavePath);
         }

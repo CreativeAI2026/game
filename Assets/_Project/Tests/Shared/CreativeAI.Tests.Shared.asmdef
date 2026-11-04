@@ -1,12 +1,18 @@
 {
     "name": "CreativeAI.Tests.Shared",
     "rootNamespace": "CreativeAI.Tests",
-    "references": [],
+    "references": [
+        "CreativeAI.Core",
+        "CreativeAI.Gameplay",
+        "UnityEngine.TestRunner"
+    ],
     "includePlatforms": [],
     "excludePlatforms": [],
     "allowUnsafeCode": false,
-    "overrideReferences": false,
-    "precompiledReferences": [],
+    "overrideReferences": true,
+    "precompiledReferences": [
+        "nunit.framework.dll"
+    ],
     "autoReferenced": false,
     "defineConstraints": [
         "UNITY_INCLUDE_TESTS"

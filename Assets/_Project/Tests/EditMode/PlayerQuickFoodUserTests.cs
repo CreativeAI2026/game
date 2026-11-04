@@ -47,7 +47,6 @@ namespace CreativeAI.Tests.EditMode
         {
             TestReflection.Invoke(_user, "OnDisable");
             TestReflection.Invoke(_input, "OnDisable");
-            UiPanelService.ResetState();
             _residents.Clear();
             Object.DestroyImmediate(_playerGo);
             foreach (var a in _assets)

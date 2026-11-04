@@ -58,9 +58,6 @@ namespace CreativeAI.Tests.EditMode
         public void TearDown()
         {
             TestReflection.Invoke(_trigger, "OnDisable");
-            EventPlayerService.Current = null;
-            ItemGiverService.Current = null;
-            EventPlaybackService.SetPlaying(false);
             _residents.Clear();
             UnityEngine.Object.DestroyImmediate(_playerGo);
             UnityEngine.Object.DestroyImmediate(_triggerGo);

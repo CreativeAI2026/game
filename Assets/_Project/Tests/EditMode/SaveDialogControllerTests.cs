@@ -62,7 +62,6 @@ namespace CreativeAI.Tests.EditMode
         [TearDown]
         public void TearDown()
         {
-            EventPlaybackService.SetPlaying(false);
             _residents.Clear();
             Object.DestroyImmediate(_root);
             if (File.Exists(SavePath))
