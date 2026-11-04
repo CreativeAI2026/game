@@ -5,8 +5,11 @@ namespace CreativeAI.VisualTeam
 {
     public class Inferer : MonoBehaviour
     {
-        [SerializeField] private ModelAsset modelAsset;
-        [SerializeField] private BackendType backendType = BackendType.GPUCompute;
+        [SerializeField]
+        private ModelAsset modelAsset;
+
+        [SerializeField]
+        private BackendType backendType = BackendType.GPUCompute;
 
         private Worker worker;
 
@@ -25,12 +28,11 @@ namespace CreativeAI.VisualTeam
         {
             this.worker.Schedule(sight.Tensorized);
 
-            using var prediction = (this.worker.PeekOutput("prediction") as Tensor<float>).ReadbackAndClone();
+            using var prediction = (
+                this.worker.PeekOutput("prediction") as Tensor<float>
+            ).ReadbackAndClone();
 
-            emotion.Assign(
-                valence: prediction[1],
-                arousal: prediction[0]
-                );
+            emotion.Assign(valence: prediction[1], arousal: prediction[0]);
         }
     }
 }

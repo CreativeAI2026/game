@@ -1,4 +1,3 @@
-
 using Unity.InferenceEngine;
 using UnityEngine;
 
@@ -7,8 +6,7 @@ namespace CreativeAI.VisualTeam
     [CreateAssetMenu(fileName = "Sight", menuName = "Scriptable Objects/Sight")]
     public class Sight : ScriptableObject
     {
-        public float
-            enemy_in_view,
+        public float enemy_in_view,
             enemy_visible,
             enemy_count,
             enemy_distance,

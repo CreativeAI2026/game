@@ -7,8 +7,7 @@ namespace CreativeAI.VisualTeam
     public class Emotion : ScriptableObject
     {
         [SerializeField, Range(-1f, 1f)]
-        private float
-            valence,
+        private float valence,
             arousal;
 
         public float Valence
