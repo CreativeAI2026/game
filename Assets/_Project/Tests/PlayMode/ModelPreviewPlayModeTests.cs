@@ -1,4 +1,5 @@
 using System.Collections;
+using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using CreativeAI.Gameplay;
@@ -14,11 +15,27 @@ namespace CreativeAI.Tests.PlayMode
     /// <summary>
     /// 本物のキャラクター画面で3Dプレビューが所持・装備・選択・ドラッグに追従するかの検証。
     /// UI_Sandbox シーンで実 Prefab を動かし、プレビュー用カメラが要求時だけ描画することも見る。
+    /// プレビューは dirty フラグを LateUpdate でまとめて反映するので、秒数ではなく状態が揃うまで待つ。
     /// </summary>
     public class ModelPreviewPlayModeTests
     {
-        [UnityTest]
-        public IEnumerator RealPrefabs_OwnershipEquipmentSelectionDragAndLifetime()
+        private const int Sword = 1001;
+        private const int Bow = 1002;
+        private const int Scythe = 1003;
+        private const int Hammer = 1004;
+
+        private GameObject _player;
+        private WeaponManager _manager;
+        private UiRouter _router;
+        private CharacterPreviewController _controller;
+        private ModelPreview _character;
+        private ModelPreview _weapon;
+        private CharacterWeaponSelector _selector;
+        private Transform _bar;
+        private int _bareMeshes;
+
+        [UnitySetUp]
+        public IEnumerator SetUp()
         {
 #if UNITY_EDITOR
             yield return UnityEditor.SceneManagement.EditorSceneManager.LoadSceneAsyncInPlayMode(
@@ -36,8 +53,45 @@ namespace CreativeAI.Tests.PlayMode
                 PlayerRegistry.Current,
                 "Direct Play of UI_Sandbox must create the player without test-side spawning"
             );
-            var player = PlayerRegistry.Current.gameObject;
-            Assert.NotNull(EventSystem.current);
+            _player = PlayerRegistry.Current.gameObject;
+            _manager = _player.GetComponent<WeaponManager>();
+            _router = UIRoot.Instance.GetComponentInChildren<UiRouter>(true);
+            Assert.NotNull(_router);
+            _router.Open(UiRouter.UiId.Character);
+            yield return null;
+            _controller = UIRoot.Instance.GetComponentInChildren<CharacterPreviewController>(true);
+            Assert.NotNull(_controller, "CharacterPanel prefab must contain preview references");
+            var previews = _controller.GetComponentsInChildren<ModelPreview>(true);
+            _character = previews.Single(p => p.name == "Character3DPreview");
+            _weapon = previews.Single(p => p.name == "Weapon3DPreview");
+            _selector = _controller.GetComponentInChildren<CharacterWeaponSelector>(true);
+            _bar = _controller
+                .GetComponentsInChildren<Transform>(true)
+                .Single(t => t.name == "WeaponChangeBar");
+
+            _manager.RestoreWeapons(System.Array.Empty<string>(), WeaponManager.NoWeapon);
+            yield return PlayModeWait.Until(
+                () => !_bar.gameObject.activeSelf && _character.MeshCount > 0,
+                "unarmed preview"
+            );
+            yield return PlayModeWait.Frames();
+            _bareMeshes = _character.MeshCount;
+        }
+
+        [UnityTearDown]
+        public IEnumerator TearDown()
+        {
+            if (_router != null)
+                _router.CloseAll();
+            if (_player != null)
+                foreach (var root in _player.scene.GetRootGameObjects())
+                    Object.Destroy(root);
+            yield return null;
+        }
+
+        [UnityTest]
+        public IEnumerator Unarmed_HidesWeaponUi_AndRendersOnlyOnRequest()
+        {
             Assert.AreEqual(
                 1,
                 Object
@@ -45,29 +99,8 @@ namespace CreativeAI.Tests.PlayMode
                     .Count(c => c.CompareTag("MainCamera")),
                 "The UI scene's camera must be reused rather than creating a second MainCamera"
             );
-            var manager = player.GetComponent<WeaponManager>();
-            var router = UIRoot.Instance.GetComponentInChildren<UiRouter>(true);
-            Assert.NotNull(router);
-            router.Open(UiRouter.UiId.Character);
-            yield return null;
-            var controller = UIRoot.Instance.GetComponentInChildren<CharacterPreviewController>(
-                true
-            );
-            Assert.NotNull(controller, "CharacterPanel prefab must contain preview references");
-            var previews = controller.GetComponentsInChildren<ModelPreview>(true);
-            var character = previews.Single(p => p.name == "Character3DPreview");
-            var weapon = previews.Single(p => p.name == "Weapon3DPreview");
-            var selector = controller.GetComponentInChildren<CharacterWeaponSelector>(true);
-            var bar = controller
-                .GetComponentsInChildren<Transform>(true)
-                .Single(t => t.name == "WeaponChangeBar");
-
-            manager.RestoreWeapons(System.Array.Empty<string>(), WeaponManager.NoWeapon);
-            yield return new WaitForSecondsRealtime(.4f);
-            Assert.False(selector.gameObject.activeSelf);
-            Assert.False(bar.gameObject.activeSelf);
-            Assert.Greater(character.MeshCount, 0);
-            int bareMeshes = character.MeshCount;
+            Assert.False(_selector.gameObject.activeSelf);
+            Assert.False(_bar.gameObject.activeSelf);
             foreach (
                 var stage in Object
                     .FindObjectsByType<Camera>(FindObjectsSortMode.None)
@@ -84,296 +117,322 @@ namespace CreativeAI.Tests.PlayMode
                     "Preview resources must survive field scene transitions with the resident UI"
                 );
             }
-            Assert.IsNull(weapon.Texture);
-            AssertVisible(character, "preview-character-unarmed");
-            manager.GiveWeapon("sword");
-            yield return new WaitForSecondsRealtime(.4f);
-            Assert.True(selector.gameObject.activeSelf);
-            Assert.True(bar.gameObject.activeSelf);
-            Assert.AreEqual(1001, selector.SelectedWeapon.id);
-            Assert.Greater(weapon.MeshCount, 0);
-            Assert.Greater(character.MeshCount, bareMeshes);
-            AssertVisible(character, "preview-character-equipped");
-            AssertVisible(weapon, "preview-weapon-sword");
-            var hits = new System.Collections.Generic.List<RaycastResult>();
+            Assert.IsNull(_weapon.Texture);
+            AssertVisible(_character, "preview-character-unarmed");
+            yield break;
+        }
+
+        [UnityTest]
+        public IEnumerator Ownership_TogglesWeaponUiAndCharacterMeshes()
+        {
+            _manager.GiveWeapon("sword");
+            yield return PlayModeWait.Until(
+                () => _bar.gameObject.activeSelf && _character.MeshCount > _bareMeshes,
+                "sword equipped"
+            );
+            Assert.True(_selector.gameObject.activeSelf);
+            Assert.AreEqual(Sword, _selector.SelectedWeapon.id);
+            Assert.Greater(_weapon.MeshCount, 0);
+            AssertVisible(_character, "preview-character-equipped");
+            AssertVisible(_weapon, "preview-weapon-sword");
+
+            var hits = new List<RaycastResult>();
             EventSystem.current.RaycastAll(
                 new PointerEventData(EventSystem.current)
                 {
                     position = RectTransformUtility.WorldToScreenPoint(
                         null,
-                        character.transform.position
+                        _character.transform.position
                     ),
                 },
                 hits
             );
             Assert.IsNotEmpty(hits);
             Assert.AreEqual(
-                character.gameObject,
+                _character.gameObject,
                 hits[0].gameObject,
                 "Preview must receive pointer input ahead of the panel background"
             );
-            if (File.Exists("Temp/preview-interactive.request"))
-            {
-                File.Delete("Temp/preview-interactive.request");
-                float interactiveYaw = character.Yaw;
-                File.WriteAllText(
-                    "Temp/preview-interactive.ready",
-                    "Drag character in Game view now"
-                );
-                yield return new WaitForSecondsRealtime(50);
-                Assert.AreNotEqual(
-                    interactiveYaw,
-                    character.Yaw,
-                    "Real pointer drag must reach the preview"
-                );
-            }
 
-            manager.Unequip();
-            yield return new WaitForSecondsRealtime(.4f);
-            Assert.AreEqual(bareMeshes, character.MeshCount);
-            Assert.True(selector.gameObject.activeSelf);
-            Assert.True(bar.gameObject.activeSelf);
-
-            var beforePosition = player.transform.position;
-            var beforeRotation = player.transform.rotation;
-            float beforeYaw = character.Yaw;
-            character.OnDrag(
-                new PointerEventData(EventSystem.current)
-                {
-                    button = PointerEventData.InputButton.Left,
-                    delta = new Vector2(100, 0),
-                }
+            _manager.Unequip();
+            yield return PlayModeWait.Until(
+                () => _character.MeshCount == _bareMeshes,
+                "unequipped character"
             );
-            Assert.AreEqual(beforeYaw - 40, character.Yaw, .01f);
-            Assert.AreEqual(beforePosition, player.transform.position);
-            Assert.AreEqual(beforeRotation, player.transform.rotation);
-            character.OnDrag(
-                new PointerEventData(EventSystem.current)
-                {
-                    button = PointerEventData.InputButton.Right,
-                    delta = new Vector2(100, 0),
-                }
-            );
-            Assert.AreEqual(beforeYaw - 40, character.Yaw, .01f);
+            Assert.True(_selector.gameObject.activeSelf, "Still owned, so the selector stays");
+            Assert.True(_bar.gameObject.activeSelf);
 
-            manager.GiveWeapon("scythe");
-            manager.GiveWeapon("hammer");
-            manager.GiveWeapon("bow");
-            manager.SelectNext();
-            int equippedBeforeBrowsing = manager.CurrentWeaponIndex;
-            foreach (int id in new[] { 1003, 1004, 1001 })
+            _manager.RestoreWeapons(System.Array.Empty<string>(), WeaponManager.NoWeapon);
+            yield return PlayModeWait.Until(() => !_bar.gameObject.activeSelf, "nothing owned");
+            Assert.AreEqual(_bareMeshes, _character.MeshCount);
+            Assert.IsNull(_weapon.Texture);
+
+            _manager.GiveWeapon("hammer");
+            yield return PlayModeWait.Until(() => _bar.gameObject.activeSelf, "hammer owned");
+            Assert.True(_selector.gameObject.activeSelf);
+            Assert.AreEqual(Hammer, _selector.SelectedWeapon.id);
+            Assert.Greater(_weapon.MeshCount, 0);
+        }
+
+        [UnityTest]
+        public IEnumerator Drag_RotatesOnlyWithLeftButton_AndLeavesPlayerAlone()
+        {
+            var beforePosition = _player.transform.position;
+            var beforeRotation = _player.transform.rotation;
+            float beforeYaw = _character.Yaw;
+
+            _character.OnDrag(Drag(PointerEventData.InputButton.Left, 100));
+            Assert.AreEqual(beforeYaw - 40, _character.Yaw, .01f);
+            Assert.AreEqual(beforePosition, _player.transform.position);
+            Assert.AreEqual(beforeRotation, _player.transform.rotation);
+
+            _character.OnDrag(Drag(PointerEventData.InputButton.Right, 100));
+            Assert.AreEqual(beforeYaw - 40, _character.Yaw, .01f, "Right drag does nothing");
+            yield break;
+        }
+
+        [UnityTest]
+        public IEnumerator BrowsingMeleeWeapons_AnimatesIdleAndAttack_WithoutChangingEquipment()
+        {
+            GiveAll();
+            _manager.SelectNext();
+            var beforePosition = _player.transform.position;
+            var beforeRotation = _player.transform.rotation;
+            int equippedBeforeBrowsing = _manager.CurrentWeaponIndex;
+
+            foreach (int id in new[] { Scythe, Hammer, Sword })
             {
-                for (int i = 0; i < 4; i++)
-                {
-                    selector.Select(i);
-                    if (selector.SelectedWeapon.id == id)
-                        break;
-                }
-                Assert.AreEqual(id, selector.SelectedWeapon.id);
-                Assert.Greater(weapon.MeshCount, 0, "Selection must update the mesh synchronously");
-                yield return null;
-                Assert.AreEqual(id, controller.PreviewWeaponId);
+                SelectInSelector(id);
+                Assert.Greater(
+                    _weapon.MeshCount,
+                    0,
+                    "Selection must update the mesh synchronously"
+                );
+                yield return PlayModeWait.Until(
+                    () => _controller.PreviewWeaponId == id,
+                    "preview pose follows selection " + id
+                );
                 Assert.AreEqual(
                     equippedBeforeBrowsing,
-                    manager.CurrentWeaponIndex,
+                    _manager.CurrentWeaponIndex,
                     "Browsing must not alter the live player equipment"
                 );
                 Assert.True(
-                    controller.PreviewIsAnimating,
+                    _controller.PreviewIsAnimating,
                     "All three melee weapons share the idle"
                 );
-                Assert.False(controller.PreviewIsAttacking, "Weapon changes cancel attacks");
-                double animationTime = controller.PreviewAnimationTime;
-                var poseRoot = Resources
-                    .FindObjectsOfTypeAll<Animator>()
-                    .Single(a => a.name == "UI Character Pose" && a.gameObject.scene.IsValid());
-                var bones = poseRoot.GetComponentsInChildren<Transform>();
-                var rotations = bones.Select(b => b.localRotation).ToArray();
-                yield return new WaitForSecondsRealtime(.4f);
-                Assert.True(
-                    bones
-                        .Where(
-                            (bone, index) =>
-                                Quaternion.Angle(bone.localRotation, rotations[index]) > .05f
-                        )
-                        .Any(),
-                    "Idle must animate the preview bones"
-                );
-                Assert.Greater(controller.PreviewAnimationTime, animationTime);
+                Assert.False(_controller.PreviewIsAttacking, "Weapon changes cancel attacks");
 
-                var pointer = new PointerEventData(EventSystem.current)
-                {
-                    button = PointerEventData.InputButton.Left,
-                };
-                character.OnPointerDown(pointer);
-                character.OnDrag(
-                    new PointerEventData(EventSystem.current)
-                    {
-                        button = PointerEventData.InputButton.Left,
-                        delta = new Vector2(20, 0),
-                    }
+                double animationTime = _controller.PreviewAnimationTime;
+                var bones = PoseBones();
+                var idleStart = bones.Select(b => b.localRotation).ToArray();
+                yield return PlayModeWait.Until(
+                    () => AnyBoneMoved(bones, idleStart, .05f),
+                    "idle animates the preview bones"
                 );
-                character.OnPointerClick(pointer);
+                Assert.Greater(_controller.PreviewAnimationTime, animationTime);
+
+                var pointer = Click(PointerEventData.InputButton.Left);
+                _character.OnPointerDown(pointer);
+                _character.OnDrag(Drag(PointerEventData.InputButton.Left, 20));
+                _character.OnPointerClick(pointer);
                 Assert.False(
-                    controller.PreviewIsAttacking,
+                    _controller.PreviewIsAttacking,
                     "Dragging must never trigger an attack"
                 );
-                character.OnPointerDown(pointer);
-                character.OnPointerClick(pointer);
+
+                _character.OnPointerDown(pointer);
+                _character.OnPointerClick(pointer);
                 Assert.True(
-                    controller.PreviewIsAttacking,
+                    _controller.PreviewIsAttacking,
                     "A left click starts the selected weapon's normal melee attack"
                 );
-                var attackRotations = bones.Select(b => b.localRotation).ToArray();
-                yield return new WaitForSecondsRealtime(.2f);
-                Assert.True(
-                    bones
-                        .Where(
-                            (bone, index) =>
-                                Quaternion.Angle(bone.localRotation, attackRotations[index]) > 5f
-                        )
-                        .Any(),
-                    "Attack must visibly move the preview bones"
+                var attackStart = bones.Select(b => b.localRotation).ToArray();
+                yield return PlayModeWait.Until(
+                    () => AnyBoneMoved(bones, attackStart, 5f),
+                    "attack visibly moves the preview bones"
                 );
-                AssertVisible(character, "preview-attack-" + id);
-                Assert.AreEqual(beforePosition, player.transform.position);
-                Assert.AreEqual(beforeRotation, player.transform.rotation);
-                yield return new WaitForSecondsRealtime(2f);
-                Assert.False(
-                    controller.PreviewIsAttacking,
-                    "Attack must finish and return to idle"
-                );
-                Assert.True(controller.PreviewIsAnimating);
-                character.OnPointerDown(
-                    new PointerEventData(EventSystem.current)
-                    {
-                        button = PointerEventData.InputButton.Right,
-                    }
-                );
-                character.OnPointerClick(
-                    new PointerEventData(EventSystem.current)
-                    {
-                        button = PointerEventData.InputButton.Right,
-                    }
-                );
-                Assert.False(controller.PreviewIsAttacking, "Right click does not attack");
-                AssertVisible(character, "preview-character-weapon-" + id);
-                AssertVisible(weapon, "preview-weapon-" + id);
-            }
-            // Cancel an active attack on weapon change.
-            var leftClick = new PointerEventData(EventSystem.current)
-            {
-                button = PointerEventData.InputButton.Left,
-            };
-            character.OnPointerDown(leftClick);
-            character.OnPointerClick(leftClick);
-            Assert.True(controller.PreviewIsAttacking);
-            // The bow now ships with a model (Bow.fbx), so its preview shows it like other weapons.
-            for (int i = 0; i < 4; i++)
-            {
-                selector.Select(i);
-                if (selector.SelectedWeapon.id == 1002)
-                    break;
-            }
-            Assert.AreEqual(1002, selector.SelectedWeapon.id);
-            yield return null;
-            Assert.False(controller.PreviewIsAttacking);
-            Assert.Greater(weapon.MeshCount, 0);
-            Assert.False(weapon.transform.parent.Find("ModelUnavailable").gameObject.activeSelf);
-            for (int i = 0; i < 4; i++)
-            {
-                selector.Select(i);
-                if (selector.SelectedWeapon.id == 1001)
-                    break;
-            }
-            float yaw = weapon.Yaw;
-            float start = Time.unscaledTime;
-            yield return new WaitForSecondsRealtime(.5f);
-            Assert.AreEqual(20 * (Time.unscaledTime - start), weapon.Yaw - yaw, 3f);
-            manager.SelectNext();
-            yield return new WaitForSecondsRealtime(.4f);
-            Assert.Greater(character.MeshCount, bareMeshes);
+                AssertVisible(_character, "preview-attack-" + id);
+                Assert.AreEqual(beforePosition, _player.transform.position);
+                Assert.AreEqual(beforeRotation, _player.transform.rotation);
 
-            manager.RestoreWeapons(System.Array.Empty<string>(), WeaponManager.NoWeapon);
-            yield return new WaitForSecondsRealtime(.4f);
-            Assert.AreEqual(bareMeshes, character.MeshCount);
-            Assert.IsNull(weapon.Texture);
-            Assert.False(bar.gameObject.activeSelf);
-            manager.GiveWeapon("hammer");
-            yield return new WaitForSecondsRealtime(.4f);
-            Assert.True(selector.gameObject.activeSelf);
-            Assert.True(bar.gameObject.activeSelf);
-            Assert.AreEqual(1004, selector.SelectedWeapon.id);
-            Assert.Greater(weapon.MeshCount, 0);
+                yield return PlayModeWait.Until(
+                    () => !_controller.PreviewIsAttacking,
+                    "attack finishes and returns to idle"
+                );
+                Assert.True(_controller.PreviewIsAnimating);
+
+                var right = Click(PointerEventData.InputButton.Right);
+                _character.OnPointerDown(right);
+                _character.OnPointerClick(right);
+                Assert.False(_controller.PreviewIsAttacking, "Right click does not attack");
+                AssertVisible(_character, "preview-character-weapon-" + id);
+                AssertVisible(_weapon, "preview-weapon-" + id);
+            }
+        }
+
+        [UnityTest]
+        public IEnumerator WeaponChange_CancelsAttack_AndBowShowsItsModel()
+        {
+            GiveAll();
+            SelectInSelector(Sword);
+            yield return PlayModeWait.Until(
+                () => _controller.PreviewWeaponId == Sword,
+                "sword pose"
+            );
+            ClickAttack();
+            Assert.True(_controller.PreviewIsAttacking);
+
+            SelectInSelector(Bow);
+            yield return PlayModeWait.Frames();
+            Assert.False(_controller.PreviewIsAttacking, "Weapon changes cancel attacks");
+            Assert.Greater(_weapon.MeshCount, 0);
+            Assert.False(_weapon.transform.parent.Find("ModelUnavailable").gameObject.activeSelf);
+        }
+
+        [UnityTest]
+        public IEnumerator WeaponPreview_SpinsAtConfiguredSpeed()
+        {
+            _manager.GiveWeapon("sword");
+            yield return PlayModeWait.Until(() => _weapon.MeshCount > 0, "sword preview");
+
+            // コルーチンは LateUpdate より前に動くので、直後の LateUpdate が足すのは記録前のフレームの時間になる。
+            // 経過時刻で比べると重いフレームのぶんずれるため、LateUpdate が足した時間そのものを合計する
+            float yaw = _weapon.Yaw;
+            float elapsed = 0f;
+            float end = Time.realtimeSinceStartup + .5f;
+            do
+            {
+                elapsed += Time.unscaledDeltaTime;
+                yield return null;
+            } while (Time.realtimeSinceStartup < end);
+            Assert.AreEqual(20 * elapsed, _weapon.Yaw - yaw, .1f);
+        }
 
 #if UNITY_EDITOR
+        [UnityTest]
+        public IEnumerator PreviewWeaponsMenu_GivesAndRemovesAllWeapons()
+        {
             Assert.True(
                 UnityEditor.EditorApplication.ExecuteMenuItem(
                     "Tools/CreativeAI/UI/Preview Weapons/All"
                 )
             );
-            yield return new WaitForSecondsRealtime(.4f);
-            Assert.AreEqual(4, manager.OwnedCount);
-            Assert.True(selector.gameObject.activeSelf);
-            Assert.True(bar.gameObject.activeSelf);
-            Assert.Greater(character.MeshCount, bareMeshes);
+            yield return PlayModeWait.Until(
+                () => _bar.gameObject.activeSelf && _character.MeshCount > _bareMeshes,
+                "all weapons given"
+            );
+            Assert.AreEqual(4, _manager.OwnedCount);
+            Assert.True(_selector.gameObject.activeSelf);
+
             Assert.True(
                 UnityEditor.EditorApplication.ExecuteMenuItem(
                     "Tools/CreativeAI/UI/Preview Weapons/None"
                 )
             );
-            yield return new WaitForSecondsRealtime(.4f);
-            Assert.AreEqual(0, manager.OwnedCount);
-            Assert.AreEqual(bareMeshes, character.MeshCount);
-            Assert.False(selector.gameObject.activeSelf);
-            Assert.False(bar.gameObject.activeSelf);
-            Assert.True(
-                UnityEditor.EditorApplication.ExecuteMenuItem(
-                    "Tools/CreativeAI/UI/Preview Weapons/All"
-                )
+            yield return PlayModeWait.Until(
+                () => !_bar.gameObject.activeSelf && _character.MeshCount == _bareMeshes,
+                "all weapons removed"
             );
-            yield return new WaitForSecondsRealtime(.4f);
+            Assert.AreEqual(0, _manager.OwnedCount);
+            Assert.False(_selector.gameObject.activeSelf);
+        }
 #endif
+
+        [UnityTest]
+        public IEnumerator Attack_FinishesWhileGameTimeIsPaused()
+        {
+            _manager.GiveWeapon("sword");
+            yield return PlayModeWait.Until(
+                () => _controller.PreviewWeaponId == Sword,
+                "sword pose"
+            );
             var pauseScale = Time.timeScale;
             try
             {
                 Time.timeScale = 0;
-                character.OnPointerDown(leftClick);
-                character.OnPointerClick(leftClick);
-                Assert.True(controller.PreviewIsAttacking);
-                yield return new WaitForSecondsRealtime(2f);
-                Assert.False(
-                    controller.PreviewIsAttacking,
-                    "Attack returns to idle while game time is paused"
+                ClickAttack();
+                Assert.True(_controller.PreviewIsAttacking);
+                yield return PlayModeWait.Until(
+                    () => !_controller.PreviewIsAttacking,
+                    "attack returns to idle while game time is paused"
                 );
             }
             finally
             {
                 Time.timeScale = pauseScale;
             }
-            character.OnPointerDown(leftClick);
-            character.OnPointerClick(leftClick);
-            Assert.True(controller.PreviewIsAttacking);
-            var oldTexture = character.Texture;
-            router.CloseAll();
-            Assert.IsNull(character.Texture);
-            Assert.False(controller.PreviewIsAttacking, "Closing disposes active attack playback");
+        }
+
+        [UnityTest]
+        public IEnumerator Close_DisposesPreview_AndReopenRendersAgain()
+        {
+            _manager.GiveWeapon("sword");
+            yield return PlayModeWait.Until(
+                () => _controller.PreviewWeaponId == Sword,
+                "sword pose"
+            );
+            ClickAttack();
+            Assert.True(_controller.PreviewIsAttacking);
+            var oldTexture = _character.Texture;
+
+            _router.CloseAll();
+            Assert.IsNull(_character.Texture);
+            Assert.False(_controller.PreviewIsAttacking, "Closing disposes active attack playback");
             Assert.True(
-                player.GetComponentsInChildren<Renderer>(true).All(r => r.forceRenderingOff),
+                _player.GetComponentsInChildren<Renderer>(true).All(r => r.forceRenderingOff),
                 "The UI-only source player must never be visible outside the panel"
             );
             Assert.False(oldTexture.IsCreated());
-            yield return null;
-            router.Open(UiRouter.UiId.Character);
-            yield return new WaitForSecondsRealtime(.4f);
-            Assert.NotNull(character.Texture);
-            AssertVisible(character, "preview-reopened");
-            router.CloseAll();
 
-            foreach (var root in player.scene.GetRootGameObjects())
-                Object.Destroy(root);
             yield return null;
+            _router.Open(UiRouter.UiId.Character);
+            yield return PlayModeWait.Until(
+                () => _character.Texture != null && _character.MeshCount > 0,
+                "reopened preview"
+            );
+            yield return PlayModeWait.Frames();
+            AssertVisible(_character, "preview-reopened");
         }
+
+        private void GiveAll()
+        {
+            foreach (var key in new[] { "sword", "scythe", "hammer", "bow" })
+                _manager.GiveWeapon(key);
+        }
+
+        private void SelectInSelector(int id)
+        {
+            for (int i = 0; i < 4; i++)
+            {
+                _selector.Select(i);
+                if (_selector.SelectedWeapon.id == id)
+                    break;
+            }
+            Assert.AreEqual(id, _selector.SelectedWeapon.id);
+        }
+
+        private void ClickAttack()
+        {
+            var click = Click(PointerEventData.InputButton.Left);
+            _character.OnPointerDown(click);
+            _character.OnPointerClick(click);
+        }
+
+        private static PointerEventData Click(PointerEventData.InputButton button) =>
+            new(EventSystem.current) { button = button };
+
+        private static PointerEventData Drag(PointerEventData.InputButton button, float dx) =>
+            new(EventSystem.current) { button = button, delta = new Vector2(dx, 0) };
+
+        private static Transform[] PoseBones() =>
+            Resources
+                .FindObjectsOfTypeAll<Animator>()
+                .Single(a => a.name == "UI Character Pose" && a.gameObject.scene.IsValid())
+                .GetComponentsInChildren<Transform>();
+
+        private static bool AnyBoneMoved(Transform[] bones, Quaternion[] from, float degrees) =>
+            bones.Where((bone, i) => Quaternion.Angle(bone.localRotation, from[i]) > degrees).Any();
 
         private static void AssertVisible(ModelPreview preview, string fileName)
         {

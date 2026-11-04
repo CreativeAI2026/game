@@ -194,14 +194,15 @@ namespace CreativeAI.Tests.PlayMode
             string picked = null;
             _view.StartCoroutine(_view.ShowChoice(TwoOptions(), value => picked = value));
 
-            yield return new WaitForSecondsRealtime(0.45f);
-
-            Assert.AreEqual(2, Spawned.Count);
-            foreach (var choice in Spawned)
-                Assert.Greater(choice.GetComponent<CanvasGroup>().alpha, 0.99f);
+            yield return PlayModeWait.Until(
+                () =>
+                    Spawned.Count == 2
+                    && Spawned.TrueForAll(c => c.GetComponent<CanvasGroup>().alpha > 0.99f),
+                "選択肢の登場演出が終わる"
+            );
 
             Spawned[0].GetComponent<Button>().onClick.Invoke();
-            yield return new WaitForSecondsRealtime(0.3f);
+            yield return PlayModeWait.Until(() => picked != null, "選んだ値が返る");
             Assert.AreEqual("together", picked);
         }
     }
