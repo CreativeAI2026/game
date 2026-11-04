@@ -2,14 +2,14 @@ using System;
 using System.Collections.Generic;
 using Object = UnityEngine.Object;
 
-namespace CreativeAI.Tests.EditMode
+namespace CreativeAI.Tests
 {
     /// <summary>
     /// 静的 Instance を持つ常駐クラスをテスト用に立て、まとめて片付ける。
     /// EditMode では Awake が走らず Instance が立たないので差し込む。片付けを1つでも書き忘れると
     /// Instance が次のテストへ持ち越され、無関係なテストが落ちるため、登録したものは <see cref="Clear"/> で全部戻す。
     /// </summary>
-    internal sealed class TestResidents
+    public sealed class TestResidents
     {
         private readonly List<Action> _cleanups = new();
 

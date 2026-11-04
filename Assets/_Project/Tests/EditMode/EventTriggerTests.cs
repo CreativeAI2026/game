@@ -1,6 +1,5 @@
 using System;
 using System.Collections.Generic;
-using System.Reflection;
 using CreativeAI.Core;
 using NUnit.Framework;
 using UnityEngine;
@@ -38,14 +37,6 @@ namespace CreativeAI.Tests.EditMode
         private Collider _playerCollider;
         private RecordingEventPlayer _player;
 
-        private static void SetPrivateField(object target, string name, object value)
-        {
-            target
-                .GetType()
-                .GetField(name, BindingFlags.Instance | BindingFlags.NonPublic)
-                .SetValue(target, value);
-        }
-
         [SetUp]
         public void SetUp()
         {
@@ -75,13 +66,11 @@ namespace CreativeAI.Tests.EditMode
             UnityEngine.Object.DestroyImmediate(_triggerGo);
         }
 
-        private void AssignEvent(EventDefinition ev) => SetPrivateField(_trigger, "_event", ev);
+        private void AssignEvent(EventDefinition ev) =>
+            TestReflection.SetField(_trigger, "_event", ev);
 
         private void EnterTrigger() =>
-            _trigger
-                .GetType()
-                .GetMethod("OnTriggerEnter", BindingFlags.Instance | BindingFlags.NonPublic)
-                .Invoke(_trigger, new object[] { _playerCollider });
+            TestReflection.Invoke(_trigger, "OnTriggerEnter", _playerCollider);
 
         private void ExitTrigger() =>
             TestReflection.Invoke(_trigger, "OnTriggerExit", _playerCollider);
@@ -141,10 +130,7 @@ namespace CreativeAI.Tests.EditMode
             var other = new GameObject("Enemy", typeof(BoxCollider));
             try
             {
-                _trigger
-                    .GetType()
-                    .GetMethod("OnTriggerEnter", BindingFlags.Instance | BindingFlags.NonPublic)
-                    .Invoke(_trigger, new object[] { other.GetComponent<Collider>() });
+                TestReflection.Invoke(_trigger, "OnTriggerEnter", other.GetComponent<Collider>());
 
                 CollectionAssert.IsEmpty(_player.Played);
             }

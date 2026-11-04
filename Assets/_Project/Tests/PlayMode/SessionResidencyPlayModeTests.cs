@@ -1,5 +1,4 @@
 using System.Collections;
-using System.Reflection;
 using CreativeAI.Core;
 using CreativeAI.Gameplay;
 using CreativeAI.UI;
@@ -31,7 +30,7 @@ namespace CreativeAI.Tests.PlayMode
             _titleGo.SetActive(false);
             _title = _titleGo.AddComponent<TitleUIController>();
             var button = _titleGo.AddComponent<Button>();
-            SetPrivate(_title, "_tapToStartButton", button);
+            TestReflection.SetField(_title, "_tapToStartButton", button);
             _titleGo.SetActive(true);
         }
 
@@ -55,18 +54,7 @@ namespace CreativeAI.Tests.PlayMode
                 Object.Destroy(found.gameObject);
         }
 
-        private static void SetPrivate(object target, string name, object value) =>
-            target
-                .GetType()
-                .GetField(name, BindingFlags.Instance | BindingFlags.NonPublic)
-                .SetValue(target, value);
-
-        private bool EnsureSession() =>
-            (bool)
-                _title
-                    .GetType()
-                    .GetMethod("EnsureSession", BindingFlags.Instance | BindingFlags.NonPublic)
-                    .Invoke(_title, null);
+        private bool EnsureSession() => (bool)TestReflection.Invoke(_title, "EnsureSession");
 
         private static int CountOf<T>()
             where T : MonoBehaviour =>

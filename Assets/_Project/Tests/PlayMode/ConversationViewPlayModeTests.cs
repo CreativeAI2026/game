@@ -1,6 +1,5 @@
 using System.Collections;
 using System.Collections.Generic;
-using System.Reflection;
 using CreativeAI.Core;
 using CreativeAI.UI;
 using NUnit.Framework;
@@ -53,13 +52,13 @@ namespace CreativeAI.Tests.PlayMode
             templateGo.SetActive(false);
 
             _view = _viewGo.AddComponent<ConversationView>();
-            SetPrivate(_view, "_root", _viewGo.GetComponent<CanvasGroup>());
-            SetPrivate(_view, "_windowRoot", _viewGo.GetComponent<RectTransform>());
-            SetPrivate(_view, "_nameText", nameText);
-            SetPrivate(_view, "_bodyText", bodyText);
-            SetPrivate(_view, "_choiceButtonTemplate", template);
-            SetPrivate(_view, "_choiceContainer", _choiceContainer);
-            SetPrivate(_view, "_charInterval", 0f);
+            TestReflection.SetField(_view, "_root", _viewGo.GetComponent<CanvasGroup>());
+            TestReflection.SetField(_view, "_windowRoot", _viewGo.GetComponent<RectTransform>());
+            TestReflection.SetField(_view, "_nameText", nameText);
+            TestReflection.SetField(_view, "_bodyText", bodyText);
+            TestReflection.SetField(_view, "_choiceButtonTemplate", template);
+            TestReflection.SetField(_view, "_choiceContainer", _choiceContainer);
+            TestReflection.SetField(_view, "_charInterval", 0f);
             _viewGo.SetActive(true);
             _viewGo.GetComponent<CanvasGroup>().alpha = 1f;
         }
@@ -74,21 +73,11 @@ namespace CreativeAI.Tests.PlayMode
             yield return null;
         }
 
-        private static void SetPrivate(object target, string name, object value) =>
-            target
-                .GetType()
-                .GetField(name, BindingFlags.Instance | BindingFlags.NonPublic)
-                .SetValue(target, value);
-
-        private static T GetPrivate<T>(object target, string name) =>
-            (T)
-                target
-                    .GetType()
-                    .GetField(name, BindingFlags.Instance | BindingFlags.NonPublic)
-                    .GetValue(target);
-
         private List<GameObject> Spawned =>
-            GetPrivate<List<GameObject>>(GetPrivate<object>(_view, "_choicePresenter"), "_spawned");
+            TestReflection.GetField<List<GameObject>>(
+                TestReflection.GetField<object>(_view, "_choicePresenter"),
+                "_spawned"
+            );
 
         private void AdvanceUntilChoicesSpawned(NestedCoroutineDriver routine)
         {

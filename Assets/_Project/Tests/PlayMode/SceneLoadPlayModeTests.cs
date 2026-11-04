@@ -50,8 +50,8 @@ namespace CreativeAI.Tests.PlayMode
 
             // Awake が GetComponentInChildren<ILoadingOverlay> で拾えるよう、子に置いてから足す。
             _controller = _go.AddComponent<SceneController>();
-            SetPrivate(_controller, "_minDisplaySeconds", 0f);
-            SetPrivate(_controller, "_fadeSeconds", 0f);
+            TestReflection.SetField(_controller, "_minDisplaySeconds", 0f);
+            TestReflection.SetField(_controller, "_fadeSeconds", 0f);
         }
 
         [UnityTearDown]
@@ -63,27 +63,6 @@ namespace CreativeAI.Tests.PlayMode
             // SceneController の Awake が「まだ生きている Instance」を見て自滅する。
             yield return null;
         }
-
-        private static void SetPrivate(object target, string name, object value) =>
-            target
-                .GetType()
-                .GetField(
-                    name,
-                    System.Reflection.BindingFlags.Instance
-                        | System.Reflection.BindingFlags.NonPublic
-                )
-                .SetValue(target, value);
-
-        private static T GetPrivate<T>(object target, string name) =>
-            (T)
-                target
-                    .GetType()
-                    .GetField(
-                        name,
-                        System.Reflection.BindingFlags.Instance
-                            | System.Reflection.BindingFlags.NonPublic
-                    )
-                    .GetValue(target);
 
         [UnityTest]
         public IEnumerator LoadScene_RunsOverlayThenSceneThenArrivalCallback()
@@ -100,12 +79,11 @@ namespace CreativeAI.Tests.PlayMode
                 }
             );
 
-            float timeout = Time.realtimeSinceStartup + 20f;
-            while (GetPrivate<bool>(_controller, "_isLoading"))
-            {
-                Assert.Less(Time.realtimeSinceStartup, timeout, "ロードが終わらない");
-                yield return null;
-            }
+            yield return PlayModeWait.Until(
+                () => !TestReflection.GetField<bool>(_controller, "_isLoading"),
+                "ロードが終わる",
+                20f
+            );
 
             CollectionAssert.AreEqual(
                 new[] { "Show", "Hide" },
@@ -121,12 +99,11 @@ namespace CreativeAI.Tests.PlayMode
         {
             _controller.LoadScene("Title");
 
-            float timeout = Time.realtimeSinceStartup + 20f;
-            while (GetPrivate<bool>(_controller, "_isLoading"))
-            {
-                Assert.Less(Time.realtimeSinceStartup, timeout, "ロードが終わらない");
-                yield return null;
-            }
+            yield return PlayModeWait.Until(
+                () => !TestReflection.GetField<bool>(_controller, "_isLoading"),
+                "ロードが終わる",
+                20f
+            );
 
             Assert.Greater(_overlay.Progress.Count, 0, "進捗が1回以上通知される");
             Assert.AreEqual(1f, _overlay.Progress[^1], 1e-3f, "最後は 100%");
@@ -140,12 +117,11 @@ namespace CreativeAI.Tests.PlayMode
             // 「常に1つだけロードされ互いに相互排他」。Single ロードなので加算されない。
             _controller.LoadScene("Title");
 
-            float timeout = Time.realtimeSinceStartup + 20f;
-            while (GetPrivate<bool>(_controller, "_isLoading"))
-            {
-                Assert.Less(Time.realtimeSinceStartup, timeout, "ロードが終わらない");
-                yield return null;
-            }
+            yield return PlayModeWait.Until(
+                () => !TestReflection.GetField<bool>(_controller, "_isLoading"),
+                "ロードが終わる",
+                20f
+            );
 
             Assert.AreEqual(1, SceneManager.sceneCount, "フィールド/タイトルは相互排他で1つだけ");
         }
@@ -161,12 +137,11 @@ namespace CreativeAI.Tests.PlayMode
             _controller.LoadScene("Title");
             _controller.LoadScene("Title"); // ロード中の2本目
 
-            float timeout = Time.realtimeSinceStartup + 20f;
-            while (GetPrivate<bool>(_controller, "_isLoading"))
-            {
-                Assert.Less(Time.realtimeSinceStartup, timeout, "ロードが終わらない");
-                yield return null;
-            }
+            yield return PlayModeWait.Until(
+                () => !TestReflection.GetField<bool>(_controller, "_isLoading"),
+                "ロードが終わる",
+                20f
+            );
 
             CollectionAssert.AreEqual(
                 new[] { "Show", "Hide" },
