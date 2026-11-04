@@ -21,8 +21,9 @@ namespace CreativeAI.Core
         private const float ArrowSpacing = 1.4f; // 矢じりの間隔(ワールド長)
         private const float FlowSpeed = 0.9f; // 矢じりが進む速さ(ワールド長/秒)
         private const float PointSpacing = 0.5f; // 線の点の間隔(曲線のなめらかさ)
-        private const float BendRadius = 1.5f; // 曲がり角を丸める大きさ
-        private const int BendSteps = 6; // 丸めた角の細かさ
+        private const float MaxLength = 25f; // プレイヤーからこれより先は描かない(遠くの細かい曲がりを見せない)
+        private const float BendRadius = 4f; // 曲がり角を丸める大きさ
+        private const int BendSteps = 10; // 丸めた角の細かさ
         private const float FollowSharpness = 14f; // 新しい形へ近づく速さ(大きいほど速い)
         private const float FloorRayUp = 0.6f;
         private const float FloorRayLength = 1.6f;
@@ -226,6 +227,11 @@ namespace CreativeAI.Core
                 carried = segment - (at - PointSpacing);
             }
             _goal.Add(OnFloor(_dense[_dense.Count - 1]));
+
+            // 遠くは描かない。点は PointSpacing おきなので、数で切る(先は薄く消える)。
+            var maxPoints = Mathf.CeilToInt(MaxLength / PointSpacing) + 1;
+            if (_goal.Count > maxPoints)
+                _goal.RemoveRange(maxPoints, _goal.Count - maxPoints);
         }
 
         // NavMesh の面は見た目の床と少しずれるので、真下の床に合わせる。
