@@ -26,6 +26,7 @@ namespace CreativeAI.Core
 
         private Vector3 _basePosition;
         private Transform _face;
+        private MapPinPathLine _pathLine;
 
         private void Awake() => _basePosition = transform.position;
 
@@ -35,7 +36,24 @@ namespace CreativeAI.Core
             var offset = Mathf.Sin(Time.time * _bobHertz * Mathf.PI * 2f) * _bobAmplitude;
             transform.position = _basePosition + Vector3.up * offset;
             ApplyDistanceScale();
+            _pathLine?.Tick(_basePosition);
         }
+
+        private void OnDestroy() => _pathLine?.Destroy();
+
+        /// <summary>ピンと地面の線をまとめて消す(エディットモードでも OnDestroy が走らないため明示する)。</summary>
+        public void Remove()
+        {
+            _pathLine?.Destroy();
+            _pathLine = null;
+            if (Application.isPlaying)
+                Destroy(gameObject);
+            else
+                DestroyImmediate(gameObject);
+        }
+
+        /// <summary>プレイヤーからピンまでの道筋を表す地面の線が出ているか。</summary>
+        public bool PathLineVisible => _pathLine != null && _pathLine.Visible;
 
         // 遠くでは小さくて見えなくなるので、カメラから離れるほど大きくする(上限あり)。
         private void ApplyDistanceScale()
@@ -80,6 +98,7 @@ namespace CreativeAI.Core
 
             var pin = root.AddComponent<MapPin>();
             pin._face = face.transform;
+            pin._pathLine = new MapPinPathLine();
             return pin;
         }
     }

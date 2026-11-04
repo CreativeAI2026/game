@@ -1,10 +1,11 @@
-// マップピン用。壁や床に隠されず、常に手前に描く(深度テストを無視する)。
+// マップピン用。既定では壁や床に隠されず常に手前に描く(深度テストを無視する)。_ZTest を 4 にすると普通の描き方になる。
 Shader "CreativeAI/MapPinAlwaysOnTop"
 {
     Properties
     {
         [PerRendererData] _MainTex ("Sprite Texture", 2D) = "white" {}
         _Color ("Tint", Color) = (1, 1, 1, 1)
+        [Enum(UnityEngine.Rendering.CompareFunction)] _ZTest ("ZTest", Float) = 8 // 8=Always(壁越しに見える) / 4=LessEqual(普通)
     }
 
     SubShader
@@ -19,7 +20,7 @@ Shader "CreativeAI/MapPinAlwaysOnTop"
 
         Cull Off
         ZWrite Off
-        ZTest Always
+        ZTest [_ZTest]
         Blend SrcAlpha OneMinusSrcAlpha
 
         Pass

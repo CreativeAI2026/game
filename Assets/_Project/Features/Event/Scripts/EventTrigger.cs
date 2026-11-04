@@ -145,12 +145,7 @@ namespace CreativeAI.Core
         private void HidePin()
         {
             if (_pin != null)
-            {
-                if (Application.isPlaying)
-                    Destroy(_pin.gameObject);
-                else
-                    DestroyImmediate(_pin.gameObject);
-            }
+                _pin.Remove();
             _pin = null;
         }
 
