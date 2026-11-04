@@ -19,6 +19,7 @@ namespace CreativeAI.EditorTools
     {
         public const char Void = ' '; // 床が無いマス
         public const float Cell = 4f; // 1マスの一辺(u)
+        const char Landing = '='; // 折り返し階段の踊り場。上の階との中間の高さの台
 
         const float FloorSlabThickness = 0.4f;
 
@@ -1025,13 +1026,72 @@ namespace CreativeAI.EditorTools
 
             if (stairs != null)
                 foreach (var s in stairCells)
+                {
+                    var storey = floors[s.UpperFloor].Origin.y - floors[s.LowerFloor].Origin.y;
+                    var group = NewGroup("Stairs", floorRoots[s.LowerFloor]);
                     CreateStairs(
-                        NewGroup("Stairs", floorRoots[s.LowerFloor]),
+                        group,
                         stairs,
                         kit.Stairs,
                         s,
-                        floors[s.UpperFloor].Origin.y - floors[s.LowerFloor].Origin.y
+                        storey * s.RiseFraction,
+                        storey * s.BaseFraction
                     );
+                    // 踊り場から上る階段は宙に浮くので、下を台で埋める(下の階から潜り込めないように)
+                    if (s.BaseFraction > 0f)
+                        CreateBox(
+                            group,
+                            "StairsBase",
+                            new RectInt(s.Col0, s.Row0, s.Col1 - s.Col0 + 1, s.Row1 - s.Row0 + 1),
+                            storey * s.BaseFraction,
+                            storey * s.BaseFraction * 0.5f,
+                            wallMat
+                        );
+                }
+
+            // 踊り場: 上の階との中間の高さの台。天面は床として歩ける(Floor の下に置く)
+            for (var f = 0; f < floors.Length; f++)
+            {
+                var grid = grids[f];
+                var rows = grid.GetLength(0);
+                var cols = grid.GetLength(1);
+                var mask = new bool[rows, cols];
+                var any = false;
+                for (var r = 0; r < rows; r++)
+                for (var c = 0; c < cols; c++)
+                    any |= mask[r, c] = grid[r, c] == Landing;
+                if (!any)
+                    continue;
+                var above = floors
+                    .Where(x => x.Origin.y > floors[f].Origin.y + 0.01f)
+                    .OrderBy(x => x.Origin.y)
+                    .FirstOrDefault();
+                var storey =
+                    above.Name != null ? above.Origin.y - floors[f].Origin.y : b.StoreyHeight;
+                var height = storey * 0.5f;
+                var landingRoot = NewGroup("Landings", floorRoots[f]);
+                var landingFloor = NewGroup("Floor", landingRoot);
+                foreach (var rect in MergeRects(mask, rows, cols))
+                {
+                    var baseHeight = height - FloorSlabThickness;
+                    CreateBox(
+                        landingRoot,
+                        "LandingBase",
+                        rect,
+                        baseHeight,
+                        baseHeight * 0.5f,
+                        wallMat
+                    );
+                    CreateBox(
+                        landingFloor,
+                        "Landing",
+                        rect,
+                        FloorSlabThickness,
+                        height - FloorSlabThickness * 0.5f,
+                        floorMat
+                    );
+                }
+            }
         }
 
         /// <summary>
@@ -2381,7 +2441,8 @@ namespace CreativeAI.EditorTools
             GameObject prefab,
             StairsModel model,
             StairCells s,
-            float rise
+            float rise,
+            float baseY = 0f
         )
         {
             var go = (GameObject)PrefabUtility.InstantiatePrefab(prefab, parent);
@@ -2397,10 +2458,10 @@ namespace CreativeAI.EditorTools
             var cz = Cell * (s.Row0 + s.Row1) * 0.5f;
             var basePos = s.Dir switch
             {
-                StairDir.North => new Vector3(cx, 0f, Cell * s.Row0 - Cell * 0.5f),
-                StairDir.South => new Vector3(cx, 0f, Cell * s.Row1 + Cell * 0.5f),
-                StairDir.East => new Vector3(Cell * s.Col0 - Cell * 0.5f, 0f, cz),
-                _ => new Vector3(Cell * s.Col1 + Cell * 0.5f, 0f, cz),
+                StairDir.North => new Vector3(cx, baseY, Cell * s.Row0 - Cell * 0.5f),
+                StairDir.South => new Vector3(cx, baseY, Cell * s.Row1 + Cell * 0.5f),
+                StairDir.East => new Vector3(Cell * s.Col0 - Cell * 0.5f, baseY, cz),
+                _ => new Vector3(Cell * s.Col1 + Cell * 0.5f, baseY, cz),
             };
             var heading = Quaternion.Euler(0f, 90f * (int)s.Dir, 0f);
             var yScale = rise / model.Rise;
@@ -2612,15 +2673,23 @@ namespace CreativeAI.EditorTools
             public readonly StairDir Dir;
             public readonly List<Vector2Int> Hole; // x = col, y = row
 
+            // 折り返し階段(踊り場 `=` に面した階段)は階高の半分ずつ: 下半分は 0〜0.5、上半分は 0.5〜1
+            public readonly float BaseFraction,
+                RiseFraction;
+
             public StairCells(
                 char letter,
                 int lower,
                 int upper,
                 RectInt cells,
                 StairDir dir,
-                List<Vector2Int> hole
+                List<Vector2Int> hole,
+                float baseFraction = 0f,
+                float riseFraction = 1f
             )
             {
+                BaseFraction = baseFraction;
+                RiseFraction = riseFraction;
                 Letter = letter;
                 LowerFloor = lower;
                 UpperFloor = upper;
@@ -2812,6 +2881,70 @@ namespace CreativeAI.EditorTools
 
                 var rect = lower.Rect;
                 var (r0, r1, c0, c1) = (rect.yMin, rect.yMax - 1, rect.xMin, rect.xMax - 1);
+                var hole = lower.Cells.Select(v => new Vector2Int(v.x, v.y + rowShift)).ToList();
+
+                // 折り返し: 端が踊り場 `=` に面した階段は階高の半分。上る先が踊り場なら下半分、
+                // 上り始めが踊り場なら上半分(踊り場から上の階へ)。向きは本文の指定が要る
+                var grid0 = grids[lower.Floor];
+                bool LandingEdge(int ra, int rb, int ca, int cb)
+                {
+                    for (var r = ra; r <= rb; r++)
+                    for (var c = ca; c <= cb; c++)
+                        if (
+                            r >= 0
+                            && c >= 0
+                            && r < grid0.GetLength(0)
+                            && c < grid0.GetLength(1)
+                            && grid0[r, c] == Landing
+                        )
+                            return true;
+                    return false;
+                }
+                var landingNorth = LandingEdge(r1 + 1, r1 + 1, c0, c1);
+                var landingSouth = LandingEdge(r0 - 1, r0 - 1, c0, c1);
+                var landingEast = LandingEdge(r0, r1, c1 + 1, c1 + 1);
+                var landingWest = LandingEdge(r0, r1, c0 - 1, c0 - 1);
+                if (landingNorth || landingSouth || landingEast || landingWest)
+                {
+                    if (!dirs.TryGetValue(letter, out var halfDir))
+                    {
+                        halfDir =
+                            landingNorth ? StairDir.North
+                            : landingSouth ? StairDir.South
+                            : landingEast ? StairDir.East
+                            : StairDir.West;
+                        Debug.LogWarning(
+                            $"[MapLayoutBuilder] {where}: 階段 '{letter}' は踊り場に面していますが向きの指定がありません。"
+                                + $"踊り場へ上る({halfDir})向きにします。"
+                        );
+                    }
+                    var towardLanding = halfDir switch
+                    {
+                        StairDir.North => landingNorth,
+                        StairDir.South => landingSouth,
+                        StairDir.East => landingEast,
+                        _ => landingWest,
+                    };
+                    Debug.Log(
+                        $"[MapLayoutBuilder] {where}: 階段 '{letter}' は折り返しの"
+                            + (towardLanding ? "下半分(踊り場へ)" : "上半分(踊り場から)")
+                            + $"。{halfDir} へ上る。"
+                    );
+                    result.Add(
+                        new StairCells(
+                            letter,
+                            lower.Floor,
+                            above,
+                            rect,
+                            halfDir,
+                            hole,
+                            towardLanding ? 0f : 0.5f,
+                            0.5f
+                        )
+                    );
+                    continue;
+                }
+
                 StairDir single;
                 bool fwd,
                     back;
@@ -2860,7 +2993,6 @@ namespace CreativeAI.EditorTools
                             + $"{single} へ上る向きにします。"
                     );
 
-                var hole = lower.Cells.Select(v => new Vector2Int(v.x, v.y + rowShift)).ToList();
                 result.Add(new StairCells(letter, lower.Floor, above, rect, single, hole));
             }
 
