@@ -4,7 +4,7 @@ using UnityEngine.AI;
 namespace CreativeAI.Core
 {
     /// <summary>
-    /// プレイヤーからマップピンまでの道筋を、地面に沿う線で描く(NavMesh の経路)。
+    /// プレイヤーからマップピンまでの道筋を、地面に沿って矢じりを並べた線で描く(NavMesh の経路)。
     /// MapPin が持ち、Tick を毎フレーム呼ぶ。経路の計算は一定間隔でだけ行う。
     /// 経路が無い(NavMesh が途切れている、別の階など)・近づいた・プレイヤーが居ないときは線を消す。
     /// </summary>
@@ -15,7 +15,8 @@ namespace CreativeAI.Core
         private const float HideWithin = 2.5f; // この近さまで来たら消す
         private const float SnapDistance = 3f; // ピンの真下の NavMesh を探す範囲
         private const float LiftAboveFloor = 0.08f; // 床に埋まらないよう少し浮かせる
-        private const float Width = 0.3f;
+        private const float Width = 0.9f; // 矢じり1つの幅
+        private const float ArrowSpacing = 1.4f; // 矢じりの間隔(ワールド長)
 
         private readonly LineRenderer _line;
         private readonly NavMeshPath _path = new();
@@ -31,7 +32,10 @@ namespace CreativeAI.Core
             _line.useWorldSpace = true;
             _line.alignment = LineAlignment.TransformZ;
             _line.widthMultiplier = Width;
-            _line.numCornerVertices = 4;
+            _line.numCornerVertices = 2;
+            // 矢じりの画像を道筋に沿って並べる(画像の向き=進む向き)。
+            _line.textureMode = LineTextureMode.Tile;
+            _line.textureScale = new Vector2(1f / ArrowSpacing, 1f);
             _line.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
             _line.receiveShadows = false;
             _line.allowOcclusionWhenDynamic = false;
