@@ -14,7 +14,17 @@ namespace CreativeAI.Gameplay
     {
         private const string PlayerTag = "Player";
 
-        private static string FilePath => Path.Combine(Application.persistentDataPath, "save.json");
+        private static string _directoryOverride;
+
+        private static string FilePath =>
+            Path.Combine(_directoryOverride ?? Application.persistentDataPath, "save.json");
+
+        /// <summary>
+        /// テスト専用: 保存先フォルダを差し替える。null を渡すと persistentDataPath に戻す。
+        /// 開発者の手元のセーブをテストが読み書きしないようにするための口。
+        /// </summary>
+        public static void OverrideDirectoryForTests(string directory) =>
+            _directoryOverride = directory;
 
         public static bool HasSave() => File.Exists(FilePath);
 

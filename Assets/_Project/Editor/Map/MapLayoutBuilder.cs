@@ -19,6 +19,7 @@ namespace CreativeAI.EditorTools
     {
         public const char Void = ' '; // 床が無いマス
         public const float Cell = 4f; // 1マスの一辺(u)
+        const char Landing = '='; // 折り返し階段の踊り場。上の階との中間の高さの台
 
         const float FloorSlabThickness = 0.4f;
 
@@ -36,16 +37,20 @@ namespace CreativeAI.EditorTools
                 "MapLayout.md",
                 new[]
                 {
-                    new FloorDef("1F", new Vector3(-218f, -44.8f, -30f)),
-                    new FloorDef("2F", new Vector3(-218f, -36.8f, 10f)),
-                    new FloorDef("3F", new Vector3(-218f, -28.8f, 50f)),
+                    new FloorDef("1F", new Vector3(-238f, -44.8f, -30f)),
+                    new FloorDef("2F", new Vector3(-238f, -36.8f, 10f)),
+                    new FloorDef("3F", new Vector3(-238f, -28.8f, 50f)),
+                    // 原点 X は西へ5列広げたぶん(20u)元の -218 からずらしてある(元からある壁・床の位置は変わらない)。
+                    // 3F の 2倍の高さ(16u)上の離れ。3F の折り返し階段(踊り場で 8u ずつ)で上がる。
+                    // 図には負の行があり、読み込み時に原点の Z をそのぶん南へずらす(row 0 = この Z のまま)
+                    new FloorDef("4F", new Vector3(-238f, -12.8f, 50f), detached: true),
                 },
                 8f,
                 Kit.Standard,
                 perimeter: true
             ),
             // 研究棟。図は列見出し付きの書き方(<see cref="LoadRulerMap"/>)で、全階が真上に重なる。
-            // 地上(3F)の東端 `X`(列見出し 0 / 行 4〜5)が Area01 3F の西端 `X`(col 0 / row 37〜38)の西隣に
+            // 地上(3F)の東端(列見出し 5 / 行 4〜5。Area01 を西へ広げたぶん橋を 5 マス短くした)が Area01 3F の西端 `X`(col 0 / row 37〜38)の西隣に
             // 来るよう、「列見出し 0・行 0」のマスの中心を (-222, 182) に置く(Area01 3F の row 37 は Z=198)。
             // 各階の原点の X/Z は図の範囲から読み込み時に決まるので、ここでは Y だけを使う。
             // 外周は図に壁を描いてあるので外周壁は作らない。
@@ -166,10 +171,15 @@ namespace CreativeAI.EditorTools
             public readonly string Name;
             public readonly Vector3 Origin;
 
-            public FloorDef(string name, Vector3 origin)
+            // 離れの階(Area01 の 4F)。階段でつながるだけで、外周壁・最上階の壁の高さ・吹き抜けの判定・
+            // ガラスの寄せ揃えには入れない。足したことで既存の階の形が変わらない(小物の位置がずれない)ようにする
+            public readonly bool Detached;
+
+            public FloorDef(string name, Vector3 origin, bool detached = false)
             {
                 Name = name;
                 Origin = origin;
+                Detached = detached;
             }
         }
 
@@ -494,7 +504,7 @@ namespace CreativeAI.EditorTools
             var colors = new List<Dictionary<int, string>>();
             List<Dictionary<int, string>> target = null;
             Dictionary<int, string> current = null;
-            var rowPattern = new Regex(@"^\s*(\d+)\|(.*)$");
+            var rowPattern = new Regex(@"^\s*(-?\d+)\|(.*)$");
 
             foreach (var raw in File.ReadAllLines(path))
             {
@@ -531,8 +541,23 @@ namespace CreativeAI.EditorTools
 
             var grids = new List<char[,]>();
             var floorColors = new List<char[,]>();
+            var floors = (FloorDef[])b.Floors.Clone();
             for (var f = 0; f < b.Floors.Length; f++)
             {
+                // 負の行は、図の最下行を row 0 に詰め直し、原点の Z をそのぶん南へずらす(同じ行は同じ場所のまま)
+                var minRow = maps[f].Keys.Min();
+                if (minRow < 0)
+                {
+                    maps[f] = maps[f].ToDictionary(kv => kv.Key - minRow, kv => kv.Value);
+                    if (f < colors.Count)
+                        colors[f] = colors[f].ToDictionary(kv => kv.Key - minRow, kv => kv.Value);
+                    var def = b.Floors[f];
+                    floors[f] = new FloorDef(
+                        def.Name,
+                        def.Origin + new Vector3(0f, 0f, minRow * Cell),
+                        def.Detached
+                    );
+                }
                 var grid = ToGrid(maps[f], $"{b.Name} {b.Floors[f].Name}");
                 grids.Add(grid);
                 floorColors.Add(f < colors.Count ? ToGrid(colors[f], null) : null);
@@ -545,7 +570,7 @@ namespace CreativeAI.EditorTools
             return new BuildingMap
             {
                 Building = b,
-                Floors = b.Floors,
+                Floors = floors,
                 Grids = grids,
                 FloorColors = floorColors,
                 StairDirs = ReadStairDirs(b, path),
@@ -823,21 +848,31 @@ namespace CreativeAI.EditorTools
 
             var stairCells = CollectStairs(grids, floors, map.StairDirs, b.Name);
 
-            var rowOffsets = WorldRowOffsets(floors);
-            var worldRows = Enumerable
-                .Range(0, floors.Length)
-                .Max(f => rowOffsets[f] + grids[f].GetLength(0));
-            var worldCols = grids.Max(g => g.GetLength(1));
-            var perimeter = b.Perimeter
-                ? BuildPerimeterMask(grids, rowOffsets, worldRows, worldCols)
+            // 外周壁・最上階・吹き抜け・寄せ揃えは本棟の階(離れ以外)だけで決める
+            var main = Enumerable.Range(0, floors.Length).Where(f => !floors[f].Detached).ToArray();
+            var mainFloors = main.Select(f => floors[f]).ToArray();
+            var mainGrids = main.Select(f => grids[f]).ToList();
+            var mainOffsets = WorldRowOffsets(mainFloors);
+            var rowOffsets = new int[floors.Length]; // 離れの階は使わない(0 のまま)
+            for (var i = 0; i < main.Length; i++)
+                rowOffsets[main[i]] = mainOffsets[i];
+            var mainTopY = mainFloors.Max(x => x.Origin.y);
+
+            var worldRows = main.Max(f => rowOffsets[f] + grids[f].GetLength(0));
+            var worldCols = mainGrids.Max(g => g.GetLength(1));
+            var perimeterMask = b.Perimeter
+                ? BuildPerimeterMask(mainGrids, mainOffsets, worldRows, worldCols)
                 : new bool[worldRows, worldCols];
+            bool OnPerimeter(int f, int r, int c) =>
+                !floors[f].Detached && perimeterMask[r + rowOffsets[f], c];
             if (b.Perimeter)
                 CreatePerimeterWall(
                     buildingRoot.transform,
                     b,
-                    grids,
-                    rowOffsets,
-                    perimeter,
+                    mainFloors,
+                    mainGrids,
+                    mainOffsets,
+                    perimeterMask,
                     worldRows,
                     worldCols,
                     wallMat
@@ -870,8 +905,17 @@ namespace CreativeAI.EditorTools
                 glassLayouts[f] = LineLayout.Build(g, mask, nr, nc, IsPanel);
             }
             // 上下の階が真上に重なる建物は横の列も同じ世界行なので揃える
-            AlignAcrossFloors(glassLayouts, "ガラス", IsStacked(floors));
-            AlignAcrossFloors(fenceLayouts, "柵", IsStacked(floors));
+            // (離れの階は揃えに加えない。加えると本棟の列の寄せ量が変わりうる)
+            AlignAcrossFloors(
+                main.Select(f => glassLayouts[f]).ToArray(),
+                "ガラス",
+                IsStacked(mainFloors)
+            );
+            AlignAcrossFloors(
+                main.Select(f => fenceLayouts[f]).ToArray(),
+                "柵",
+                IsStacked(mainFloors)
+            );
             for (var f = 0; f < floors.Length; f++)
                 FlushToCorridor(glassLayouts[f], grids[f], floorMasks[f]);
 
@@ -910,10 +954,12 @@ namespace CreativeAI.EditorTools
                 var wallMask = new bool[rows, cols];
                 for (var r = 0; r < rows; r++)
                 for (var c = 0; c < cols; c++)
-                    wallMask[r, c] = grid[r, c] == '#' && !perimeter[r + rowOffsets[f], c];
+                    wallMask[r, c] = grid[r, c] == '#' && !OnPerimeter(f, r, c);
 
                 // 外周壁のある建物の最上階は、`#` とガラス・扉の周りを外周壁の上端まで伸ばす(上に床が無いので床板ぶんも縮めない)
-                var isTop = Mathf.Approximately(floors[f].Origin.y, floors.Max(x => x.Origin.y));
+                // 最上階は本棟の階で決める(離れの階は外周壁の外の話なので普通の高さ)
+                var isTop =
+                    !floors[f].Detached && Mathf.Approximately(floors[f].Origin.y, mainTopY);
                 var wallHeight =
                     isTop && b.Perimeter ? b.StoreyHeight + PerimeterExtraHeight : b.WallHeight;
                 var wallGroup = NewGroup("Walls", parent);
@@ -923,15 +969,11 @@ namespace CreativeAI.EditorTools
                 // 外周壁のある建物では、上のどの階にも床が無いマス(吹き抜けに面した所)のガラス・扉も
                 // 外周壁の上端まで伸ばす。階高で止めると、上の空間に対して囲いが低く見える
                 var openHeight =
-                    floors.Max(x => x.Origin.y)
-                    + b.StoreyHeight
-                    + PerimeterExtraHeight
-                    - floors[f].Origin.y;
+                    mainTopY + b.StoreyHeight + PerimeterExtraHeight - floors[f].Origin.y;
                 bool OpenAbove(int r, int c) =>
                     b.Perimeter
-                    && Enumerable
-                        .Range(0, floors.Length)
-                        .Where(g => floors[g].Origin.y > floors[f].Origin.y + 0.01f)
+                    && !floors[f].Detached
+                    && main.Where(g => floors[g].Origin.y > floors[f].Origin.y + 0.01f)
                         .All(g =>
                         {
                             var ug = grids[g];
@@ -955,14 +997,15 @@ namespace CreativeAI.EditorTools
                             rows,
                             cols,
                             fenceLayout,
-                            i
+                            i,
+                            floorMask
                         );
                 }
 
                 // ガラス壁: 見た目は1マス1枚の等倍、当たりは run ごとの薄い箱
                 for (var r = 0; r < rows; r++)
                 for (var c = 0; c < cols; c++)
-                    if (IsPanel(grid[r, c]) && perimeter[r + rowOffsets[f], c])
+                    if (IsPanel(grid[r, c]) && OnPerimeter(f, r, c))
                         Debug.LogWarning(
                             $"[MapLayoutBuilder] {where} row {r} col {c}: "
                                 + "`$` が建物の外周にあります。外周は1枚の壁で覆われるのでガラスは埋まります。"
@@ -994,7 +1037,7 @@ namespace CreativeAI.EditorTools
                 {
                     if (!IsDoor(grid[r, c]))
                         continue;
-                    if (perimeter[r + rowOffsets[f], c])
+                    if (OnPerimeter(f, r, c))
                     {
                         Debug.LogWarning(
                             $"[MapLayoutBuilder] {where} row {r} col {c}: "
@@ -1025,13 +1068,102 @@ namespace CreativeAI.EditorTools
 
             if (stairs != null)
                 foreach (var s in stairCells)
+                {
+                    var storey = floors[s.UpperFloor].Origin.y - floors[s.LowerFloor].Origin.y;
+                    var group = NewGroup("Stairs", floorRoots[s.LowerFloor]);
                     CreateStairs(
-                        NewGroup("Stairs", floorRoots[s.LowerFloor]),
+                        group,
                         stairs,
                         kit.Stairs,
                         s,
-                        floors[s.UpperFloor].Origin.y - floors[s.LowerFloor].Origin.y
+                        storey * s.RiseFraction,
+                        storey * s.BaseFraction
                     );
+                    // 踊り場から上る階段は宙に浮くので、下を台で埋める(下の階から潜り込めないように)
+                    if (s.BaseFraction > 0f)
+                        CreateBox(
+                            group,
+                            "StairsBase",
+                            new RectInt(s.Col0, s.Row0, s.Col1 - s.Col0 + 1, s.Row1 - s.Row0 + 1),
+                            storey * s.BaseFraction,
+                            storey * s.BaseFraction * 0.5f,
+                            wallMat
+                        );
+                }
+
+            // 踊り場: 上の階との中間の高さの台。天面は床として歩ける(Floor の下に置く)
+            for (var f = 0; f < floors.Length; f++)
+            {
+                var grid = grids[f];
+                var rows = grid.GetLength(0);
+                var cols = grid.GetLength(1);
+                var mask = new bool[rows, cols];
+                var any = false;
+                for (var r = 0; r < rows; r++)
+                for (var c = 0; c < cols; c++)
+                    any |= mask[r, c] = grid[r, c] == Landing;
+                if (!any)
+                    continue;
+                var above = floors
+                    .Where(x => x.Origin.y > floors[f].Origin.y + 0.01f)
+                    .OrderBy(x => x.Origin.y)
+                    .FirstOrDefault();
+                var storey =
+                    above.Name != null ? above.Origin.y - floors[f].Origin.y : b.StoreyHeight;
+                var height = storey * 0.5f;
+                var landingRoot = NewGroup("Landings", floorRoots[f]);
+                var landingFloor = NewGroup("Floor", landingRoot);
+                foreach (var rect in MergeRects(mask, rows, cols))
+                {
+                    var baseHeight = height - FloorSlabThickness;
+                    CreateBox(
+                        landingRoot,
+                        "LandingBase",
+                        rect,
+                        baseHeight,
+                        baseHeight * 0.5f,
+                        wallMat
+                    );
+                    CreateBox(
+                        landingFloor,
+                        "Landing",
+                        rect,
+                        FloorSlabThickness,
+                        height - FloorSlabThickness * 0.5f,
+                        floorMat
+                    );
+                }
+
+                // 踊り場の縁の柵。階高の半分の高さの台なので、壁・階段・踊り場が隣に無い辺から落ちないよう
+                // 天面の高さに柵を立てる(図の `-` は下の階の床の高さに立つので、ここでは使えない)
+                if (handrail == null)
+                    continue;
+                Transform landingFences = null;
+                for (var r = 0; r < rows; r++)
+                for (var c = 0; c < cols; c++)
+                {
+                    if (!mask[r, c])
+                        continue;
+                    foreach (var (dr, dc) in new[] { (1, 0), (-1, 0), (0, 1), (0, -1) })
+                    {
+                        var nr = r + dr;
+                        var nc = c + dc;
+                        var n = nr >= 0 && nc >= 0 && nr < rows && nc < cols ? grid[nr, nc] : Void;
+                        if (n == Landing || n == '#' || IsPanel(n) || IsStair(n))
+                            continue;
+                        landingFences ??= NewGroup("Fences", landingRoot);
+                        CreateHandrail(
+                            landingFences,
+                            handrail,
+                            kit.HandrailScale,
+                            $"LandingHandrail_{r}_{c}_{dr}_{dc}",
+                            new Vector3(Cell * (c + dc * 0.5f), height, Cell * (r + dr * 0.5f)),
+                            dr != 0,
+                            Cell
+                        );
+                    }
+                }
+            }
         }
 
         /// <summary>
@@ -1332,6 +1464,7 @@ namespace CreativeAI.EditorTools
         static void CreatePerimeterWall(
             Transform root,
             Building b,
+            FloorDef[] floors, // 本棟の階だけ(grids / rowOffsets と同じ並び)
             List<char[,]> grids,
             int[] rowOffsets,
             bool[,] perimeter,
@@ -1340,7 +1473,6 @@ namespace CreativeAI.EditorTools
             Material mat
         )
         {
-            var floors = b.Floors;
             var bottomY = floors.Min(f => f.Origin.y);
             var topY = floors.Max(f => f.Origin.y) + b.StoreyHeight + PerimeterExtraHeight;
             var height = topY - bottomY;
@@ -1443,7 +1575,8 @@ namespace CreativeAI.EditorTools
             int rows,
             int cols,
             LineLayout layout,
-            int runIndex
+            int runIndex,
+            bool[,] hasFloor
         )
         {
             var run = layout.Runs[runIndex];
@@ -1490,6 +1623,41 @@ namespace CreativeAI.EditorTools
                         horizontal,
                         to - from
                     );
+
+                // 列の端の先に床が無ければ、端にも柵を立てる(1マスの柵は1辺にしか立たないので、
+                // 角になった端から落ちられる)。先が柵・床なら不要
+                foreach (var end in new[] { -1, 1 })
+                {
+                    if (end == -1 ? i != 0 : i != run.Length - 1)
+                        continue;
+                    var er = row + (horizontal ? 0 : end);
+                    var ec = col + (horizontal ? end : 0);
+                    var beyondFloor =
+                        er >= 0 && ec >= 0 && er < rows && ec < cols && hasFloor[er, ec];
+                    var beyondFence =
+                        er >= 0 && ec >= 0 && er < rows && ec < cols && grid[er, ec] == Fence;
+                    var beyondStair =
+                        er >= 0 && ec >= 0 && er < rows && ec < cols && IsStair(grid[er, ec]);
+                    // 先が階段(吹き抜けの縁で柵が切れている所)と、角の柵が既にある所は立てない
+                    if (
+                        beyondFloor
+                        || beyondFence
+                        || beyondStair
+                        || PerpendicularRun(layout, grid, rows, cols, row, col, horizontal) >= 0
+                    )
+                        continue;
+                    CreateHandrail(
+                        parent,
+                        prefab,
+                        scale,
+                        $"HandrailEnd_{row}_{col}",
+                        horizontal
+                            ? new Vector3(Cell * (col + end * 0.5f), 0f, Cell * row)
+                            : new Vector3(Cell * col, 0f, Cell * (row + end * 0.5f)),
+                        !horizontal,
+                        Cell
+                    );
+                }
 
                 foreach (var side in new[] { -1, 1 })
                 {
@@ -2381,7 +2549,8 @@ namespace CreativeAI.EditorTools
             GameObject prefab,
             StairsModel model,
             StairCells s,
-            float rise
+            float rise,
+            float baseY = 0f
         )
         {
             var go = (GameObject)PrefabUtility.InstantiatePrefab(prefab, parent);
@@ -2397,10 +2566,10 @@ namespace CreativeAI.EditorTools
             var cz = Cell * (s.Row0 + s.Row1) * 0.5f;
             var basePos = s.Dir switch
             {
-                StairDir.North => new Vector3(cx, 0f, Cell * s.Row0 - Cell * 0.5f),
-                StairDir.South => new Vector3(cx, 0f, Cell * s.Row1 + Cell * 0.5f),
-                StairDir.East => new Vector3(Cell * s.Col0 - Cell * 0.5f, 0f, cz),
-                _ => new Vector3(Cell * s.Col1 + Cell * 0.5f, 0f, cz),
+                StairDir.North => new Vector3(cx, baseY, Cell * s.Row0 - Cell * 0.5f),
+                StairDir.South => new Vector3(cx, baseY, Cell * s.Row1 + Cell * 0.5f),
+                StairDir.East => new Vector3(Cell * s.Col0 - Cell * 0.5f, baseY, cz),
+                _ => new Vector3(Cell * s.Col1 + Cell * 0.5f, baseY, cz),
             };
             var heading = Quaternion.Euler(0f, 90f * (int)s.Dir, 0f);
             var yScale = rise / model.Rise;
@@ -2612,15 +2781,23 @@ namespace CreativeAI.EditorTools
             public readonly StairDir Dir;
             public readonly List<Vector2Int> Hole; // x = col, y = row
 
+            // 折り返し階段(踊り場 `=` に面した階段)は階高の半分ずつ: 下半分は 0〜0.5、上半分は 0.5〜1
+            public readonly float BaseFraction,
+                RiseFraction;
+
             public StairCells(
                 char letter,
                 int lower,
                 int upper,
                 RectInt cells,
                 StairDir dir,
-                List<Vector2Int> hole
+                List<Vector2Int> hole,
+                float baseFraction = 0f,
+                float riseFraction = 1f
             )
             {
+                BaseFraction = baseFraction;
+                RiseFraction = riseFraction;
                 Letter = letter;
                 LowerFloor = lower;
                 UpperFloor = upper;
@@ -2812,6 +2989,71 @@ namespace CreativeAI.EditorTools
 
                 var rect = lower.Rect;
                 var (r0, r1, c0, c1) = (rect.yMin, rect.yMax - 1, rect.xMin, rect.xMax - 1);
+                var hole = lower.Cells.Select(v => new Vector2Int(v.x, v.y + rowShift)).ToList();
+
+                // 折り返し: 端が踊り場 `=` に面した階段は階高の半分。上る先が踊り場なら下半分、
+                // 上り始めが踊り場なら上半分(踊り場から上の階へ)。向きは本文の指定が要る
+                var grid0 = grids[lower.Floor];
+                bool LandingEdge(int ra, int rb, int ca, int cb)
+                {
+                    for (var r = ra; r <= rb; r++)
+                    for (var c = ca; c <= cb; c++)
+                        if (
+                            r >= 0
+                            && c >= 0
+                            && r < grid0.GetLength(0)
+                            && c < grid0.GetLength(1)
+                            && grid0[r, c] == Landing
+                        )
+                            return true;
+                    return false;
+                }
+                var landingNorth = LandingEdge(r1 + 1, r1 + 1, c0, c1);
+                var landingSouth = LandingEdge(r0 - 1, r0 - 1, c0, c1);
+                var landingEast = LandingEdge(r0, r1, c1 + 1, c1 + 1);
+                var landingWest = LandingEdge(r0, r1, c0 - 1, c0 - 1);
+                if (landingNorth || landingSouth || landingEast || landingWest)
+                {
+                    if (!dirs.TryGetValue(letter, out var halfDir))
+                    {
+                        halfDir =
+                            landingNorth ? StairDir.North
+                            : landingSouth ? StairDir.South
+                            : landingEast ? StairDir.East
+                            : StairDir.West;
+                        Debug.LogWarning(
+                            $"[MapLayoutBuilder] {where}: 階段 '{letter}' は踊り場に面していますが向きの指定がありません。"
+                                + $"踊り場へ上る({halfDir})向きにします。"
+                        );
+                    }
+                    var towardLanding = halfDir switch
+                    {
+                        StairDir.North => landingNorth,
+                        StairDir.South => landingSouth,
+                        StairDir.East => landingEast,
+                        _ => landingWest,
+                    };
+                    Debug.Log(
+                        $"[MapLayoutBuilder] {where}: 階段 '{letter}' は折り返しの"
+                            + (towardLanding ? "下半分(踊り場へ)" : "上半分(踊り場から)")
+                            + $"。{halfDir} へ上る。"
+                    );
+                    result.Add(
+                        new StairCells(
+                            letter,
+                            lower.Floor,
+                            above,
+                            rect,
+                            halfDir,
+                            // 下半分(踊り場まで)は上の階に届かないので、上の階の床は抜かない
+                            towardLanding ? new List<Vector2Int>() : hole,
+                            towardLanding ? 0f : 0.5f,
+                            0.5f
+                        )
+                    );
+                    continue;
+                }
+
                 StairDir single;
                 bool fwd,
                     back;
@@ -2860,7 +3102,6 @@ namespace CreativeAI.EditorTools
                             + $"{single} へ上る向きにします。"
                     );
 
-                var hole = lower.Cells.Select(v => new Vector2Int(v.x, v.y + rowShift)).ToList();
                 result.Add(new StairCells(letter, lower.Floor, above, rect, single, hole));
             }
 

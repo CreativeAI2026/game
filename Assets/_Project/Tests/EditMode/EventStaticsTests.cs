@@ -47,9 +47,6 @@ namespace CreativeAI.Tests.EditMode
             }
         }
 
-        [TearDown]
-        public void TearDown() => EventStatics.ResetForPlaySession();
-
         [Test]
         public void Reset_ClearsPlayingFlag_WithoutNotifying()
         {

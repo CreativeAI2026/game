@@ -1,3 +1,4 @@
+using System.Text.RegularExpressions;
 using CreativeAI.Gameplay;
 using NUnit.Framework;
 using UnityEngine;
@@ -44,7 +45,6 @@ namespace CreativeAI.Tests.EditMode
         [TearDown]
         public void TearDown()
         {
-            LogAssert.ignoreFailingMessages = false;
             Object.DestroyImmediate(_go);
             Object.DestroyImmediate(_data);
         }
@@ -141,7 +141,8 @@ namespace CreativeAI.Tests.EditMode
         [Test]
         public void TakeDamage_LethalHit_KillsOnceAndStopsReactingAfterwards()
         {
-            LogAssert.ignoreFailingMessages = true; // 死亡時の Destroy(遅延)が EditMode ではエラーログになる
+            // 死亡時の Destroy(遅延)は EditMode では呼べずエラーログになる。それ以外のエラーは見逃さない
+            LogAssert.Expect(LogType.Error, new Regex("Destroy may not be called from edit mode"));
 
             _status.TakeDamage(1000f, false);
 

@@ -66,6 +66,7 @@ namespace CreativeAI.UI
 
         private void OnDisable()
         {
+            _icon?.DOKill();
             _selectedBackground?.DOKill();
             _selectedBackground?.rectTransform.DOKill();
             _selectedUnderlineImage?.DOKill();
@@ -211,9 +212,8 @@ namespace CreativeAI.UI
                 if (duration <= 0f)
                     _icon.color = targetColor;
                 else
-                    DOTween
-                        .To(() => _icon.color, x => _icon.color = x, targetColor, duration)
-                        .SetEase(Ease.OutQuad);
+                    // DOTween.To だとターゲットが付かず、上の DOKill でも破棄時にも止まらない
+                    _icon.DOColor(targetColor, duration).SetEase(Ease.OutQuad);
             }
 
             _hoverScale?.SetBounceAllowed(_hasVisualHoverTarget && allowSelectedBounce);
