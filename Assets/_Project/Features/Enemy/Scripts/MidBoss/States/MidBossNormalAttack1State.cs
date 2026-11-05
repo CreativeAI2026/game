@@ -15,6 +15,7 @@ namespace CreativeAI.Gameplay
             Done,
         }
 
+        private readonly Collider[] _hitBuffer = new Collider[32];
         private Phase _phase;
         private float _phaseTimer;
         private bool _hitChecked;
@@ -142,10 +143,15 @@ namespace CreativeAI.Gameplay
             if (con.ArmTransform == null)
                 return;
 
-            Collider[] hits = Physics.OverlapSphere(con.ArmTransform.position, con.ArmHitRadius);
+            int hitCount = Physics.OverlapSphereNonAlloc(
+                con.ArmTransform.position,
+                con.ArmHitRadius,
+                _hitBuffer
+            );
 
-            foreach (var col in hits)
+            for (int i = 0; i < hitCount; i++)
             {
+                var col = _hitBuffer[i];
                 if (col.CompareTag("Player"))
                 {
                     var damageable = col.GetComponentInParent<IDamageable>();

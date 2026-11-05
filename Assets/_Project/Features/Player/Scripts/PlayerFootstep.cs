@@ -13,6 +13,7 @@ namespace CreativeAI.Gameplay
     /// 敵AIへの通知は音の割り当てと関係なく行う(音素材が無くても敵の聴覚の挙動が変わらないようにするため)。
     /// </summary>
     [RequireComponent(typeof(PlayerController))]
+    [RequireComponent(typeof(CharacterController))]
     public class PlayerFootstep : MonoBehaviour
     {
         // ブレンドツリーでは再生中の複数クリップから同時にイベントが届く。主に再生されているクリップの分だけ鳴らす

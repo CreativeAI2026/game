@@ -13,6 +13,10 @@ namespace CreativeAI.Gameplay
     /// </summary>
     public class TutorialBossController : EnemyBaseController
     {
+        private static readonly int VelocityXHash = Animator.StringToHash("VelocityX");
+        private static readonly int VelocityZHash = Animator.StringToHash("VelocityZ");
+        private static readonly int IsRunningHash = Animator.StringToHash("IsRunning");
+
         [Header("懐中電灯（視界）設定")]
         [Tooltip("懐中電灯オブジェクトのTransform。回転制御に使用する。")]
         [SerializeField]
@@ -648,15 +652,14 @@ namespace CreativeAI.Gameplay
             PanicPressure.PressureStarted += OnPressureStarted;
             PanicPressure.PressureEnded += OnPressureEnded;
 
-            _eyeGlint = GetComponent<TBossEyeGlint>();
-            if (_eyeGlint == null)
+            if (!TryGetComponent(out _eyeGlint))
             {
                 Debug.LogWarning(
                     $"{name}: TBossEyeGlint が無いため、追い込み開始の合図は音だけになります"
                 );
             }
 
-            Sounds = GetComponent<TutorialBossSounds>();
+            Sounds = TryGetComponent(out TutorialBossSounds sounds) ? sounds : null;
             Assert.IsNotNull(Sounds, $"{name}: TutorialBossSounds が同じ GameObject にありません");
         }
 
@@ -913,8 +916,8 @@ namespace CreativeAI.Gameplay
                 return;
             }
             Vector3 localVelocity = transform.InverseTransformDirection(Agent.velocity);
-            Animator.SetFloat("VelocityX", localVelocity.x);
-            Animator.SetFloat("VelocityZ", localVelocity.z);
+            Animator.SetFloat(VelocityXHash, localVelocity.x);
+            Animator.SetFloat(VelocityZHash, localVelocity.z);
             UpdateRunAnimation();
         }
 
@@ -947,7 +950,7 @@ namespace CreativeAI.Gameplay
             if (shouldRun != _isRunAnimationActive)
             {
                 _isRunAnimationActive = shouldRun;
-                Animator.SetBool("IsRunning", shouldRun);
+                Animator.SetBool(IsRunningHash, shouldRun);
             }
         }
 

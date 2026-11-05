@@ -47,8 +47,8 @@ namespace CreativeAI.Gameplay
 
         private void Awake()
         {
-            _flinchHandler = GetComponent<PlayerFlinchHandler>();
-            _weaponManager = GetComponent<WeaponManager>();
+            TryGetComponent(out _flinchHandler);
+            TryGetComponent(out _weaponManager);
         }
 
         private void OnEnable()

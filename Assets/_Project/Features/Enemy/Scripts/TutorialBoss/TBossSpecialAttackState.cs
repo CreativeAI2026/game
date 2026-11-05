@@ -10,6 +10,16 @@ namespace CreativeAI.Gameplay
     /// </summary>
     public class TBossSpecialAttackState : TBossBaseState
     {
+        private static readonly int SpecialAttackTriggerHash = Animator.StringToHash(
+            "SpecialAttack"
+        );
+
+        // 先端の当たり判定用バッファ（NonAlloc）
+        private static readonly IComparer<RaycastHit> HitDistanceComparer =
+            Comparer<RaycastHit>.Create((a, b) => a.distance.CompareTo(b.distance));
+        private readonly RaycastHit[] _sweepBuffer = new RaycastHit[64];
+        private readonly Collider[] _overlapBuffer = new Collider[64];
+
         private float _timer;
         private bool _hasHit;
 
@@ -77,7 +87,7 @@ namespace CreativeAI.Gameplay
 
             if (boss.Animator != null)
             {
-                boss.Animator.SetTrigger("SpecialAttack");
+                boss.Animator.SetTrigger(SpecialAttackTriggerHash);
             }
 
             if (boss.WireRig != null)
@@ -184,8 +194,10 @@ namespace CreativeAI.Gameplay
             if (!_hasHit && boss.WireBone != null)
             {
                 // リセット
-                boss.WireBone.localPosition = boss.InitialWireBoneLocalPosition;
-                boss.WireBone.localRotation = _initialLocalRot;
+                boss.WireBone.SetLocalPositionAndRotation(
+                    boss.InitialWireBoneLocalPosition,
+                    _initialLocalRot
+                );
             }
 
             if (boss.Agent != null)
@@ -280,8 +292,7 @@ namespace CreativeAI.Gameplay
             else
             {
                 // スクリプトで強制的にワールド座標系で位置と回転を真正面に上書きする
-                boss.WireBone.position = originPos + forward * currentLength;
-                boss.WireBone.rotation = finalRot;
+                boss.WireBone.SetPositionAndRotation(originPos + forward * currentLength, finalRot);
             }
         }
 
@@ -440,35 +451,37 @@ namespace CreativeAI.Gameplay
 
             if (delta.sqrMagnitude > 1e-6f)
             {
-                RaycastHit[] sweep = Physics.SphereCastAll(
+                int sweepCount = Physics.SphereCastNonAlloc(
                     tipPosition - delta,
                     boss.WireHitRadius,
                     delta.normalized,
+                    _sweepBuffer,
                     delta.magnitude,
                     ~0,
                     QueryTriggerInteraction.Ignore
                 );
 
                 // 掃引結果は距離順ではないため、手前に当たったものを優先して評価する
-                System.Array.Sort(sweep, (a, b) => a.distance.CompareTo(b.distance));
+                System.Array.Sort(_sweepBuffer, 0, sweepCount, HitDistanceComparer);
 
-                foreach (RaycastHit hit in sweep)
+                for (int i = 0; i < sweepCount; i++)
                 {
-                    if (EvaluateCollider(hit.collider))
+                    if (EvaluateCollider(_sweepBuffer[i].collider))
                         return;
                 }
             }
 
             // 密着状態は掃引で検出できないため重なり判定で補完する
-            Collider[] overlaps = Physics.OverlapSphere(
+            int overlapCount = Physics.OverlapSphereNonAlloc(
                 tipPosition,
                 boss.WireHitRadius,
+                _overlapBuffer,
                 ~0,
                 QueryTriggerInteraction.Ignore
             );
-            foreach (Collider col in overlaps)
+            for (int i = 0; i < overlapCount; i++)
             {
-                if (EvaluateCollider(col))
+                if (EvaluateCollider(_overlapBuffer[i]))
                     return;
             }
         }

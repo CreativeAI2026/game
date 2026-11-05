@@ -177,8 +177,10 @@ namespace CreativeAI.Tests.PlayMode
         [UnityTest]
         public IEnumerator Drag_RotatesOnlyWithLeftButton_AndLeavesPlayerAlone()
         {
-            var beforePosition = _player.transform.position;
-            var beforeRotation = _player.transform.rotation;
+            _player.transform.GetPositionAndRotation(
+                out var beforePosition,
+                out var beforeRotation
+            );
             float beforeYaw = _character.Yaw;
 
             _character.OnDrag(Drag(PointerEventData.InputButton.Left, 100));
@@ -196,8 +198,10 @@ namespace CreativeAI.Tests.PlayMode
         {
             GiveAll();
             _manager.SelectNext();
-            var beforePosition = _player.transform.position;
-            var beforeRotation = _player.transform.rotation;
+            _player.transform.GetPositionAndRotation(
+                out var beforePosition,
+                out var beforeRotation
+            );
             int equippedBeforeBrowsing = _manager.CurrentWeaponIndex;
 
             foreach (int id in new[] { Scythe, Hammer, Sword })

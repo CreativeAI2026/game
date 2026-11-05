@@ -152,7 +152,7 @@ namespace CreativeAI.UI
         private void AutoAssignReferences()
         {
             if (_frame == null)
-                _frame = GetComponent<Image>();
+                TryGetComponent(out _frame);
             if (_frame != null)
                 return;
 

@@ -12,6 +12,8 @@ namespace CreativeAI.Gameplay
     /// </summary>
     public class TBossNormalAttackState : TBossBaseState
     {
+        private static readonly int AttackTriggerHash = Animator.StringToHash("Attack");
+
         // プレイヤーへ向き直る区間の終わり（クリップの正規化時間）。
         // 計測では振りが前へ出てくるのが0.46付近のため、その直前まで向き直り、振り始めてからは追わない（避けられるようにする）
         private const float HomingEndTime = 0.44f;
@@ -68,7 +70,7 @@ namespace CreativeAI.Gameplay
 
             if (boss.Animator != null)
             {
-                boss.Animator.SetTrigger("Attack");
+                boss.Animator.SetTrigger(AttackTriggerHash);
             }
 
             _hasPlannedStepIn = false;

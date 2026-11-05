@@ -60,7 +60,7 @@ namespace CreativeAI.UI
         private void Awake()
         {
             _button = GetComponent<Button>();
-            _hoverScale = GetComponent<HoverScaleOnPointer>();
+            TryGetComponent(out _hoverScale);
             if (_selectedBackground != null)
                 _selectionBackgroundScale = _selectedBackground.rectTransform.localScale;
             if (_showSelectedUnderline && _selectedUnderline != null)

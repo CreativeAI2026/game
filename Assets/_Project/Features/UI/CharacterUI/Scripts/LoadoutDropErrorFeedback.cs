@@ -111,7 +111,7 @@ namespace CreativeAI.UI.CharacterUI
             if (_canvasGroup == null)
                 _canvasGroup = GetComponent<CanvasGroup>();
             if (_label == null)
-                _label = GetComponent<TMP_Text>();
+                TryGetComponent(out _label);
 
             if (_canvasGroup != null)
             {

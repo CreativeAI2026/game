@@ -11,6 +11,8 @@ namespace CreativeAI.Gameplay
     /// </summary>
     public class TBossNormalAttack2State : TBossBaseState
     {
+        private static readonly int Attack2TriggerHash = Animator.StringToHash("Attack2");
+
         // Attack2ステートに入れないまま経過したら、トリガー取りこぼしとみなして復帰する
         private const float AttackStateTimeout = 3f;
 
@@ -85,7 +87,7 @@ namespace CreativeAI.Gameplay
 
             if (boss.Animator != null)
             {
-                boss.Animator.SetTrigger("Attack2");
+                boss.Animator.SetTrigger(Attack2TriggerHash);
             }
 
             // プレイヤー方向へ向く
@@ -204,8 +206,10 @@ namespace CreativeAI.Gameplay
             // 中断（怯み等）でリーチが伸びたまま残らないよう、初期姿勢へ戻す
             if (boss.KamaBone != null)
             {
-                boss.KamaBone.localPosition = boss.InitialKamaBoneLocalPosition;
-                boss.KamaBone.localRotation = boss.InitialKamaBoneLocalRotation;
+                boss.KamaBone.SetLocalPositionAndRotation(
+                    boss.InitialKamaBoneLocalPosition,
+                    boss.InitialKamaBoneLocalRotation
+                );
             }
 
             // OnAttack2ReachExtendで落としたアニメーション再生速度を必ず戻す

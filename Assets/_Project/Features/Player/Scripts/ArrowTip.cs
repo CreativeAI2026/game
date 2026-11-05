@@ -99,7 +99,7 @@ namespace CreativeAI.Gameplay
                 enemy.TakeDamage(finalDamage, isCritical);
             }
 
-            ContactPoint contact = collision.contacts[0];
+            ContactPoint contact = collision.GetContact(0);
             SpawnHitEffect(contact.point, contact.normal);
             WorldSoundPlayer.Play(_enemyHitSound, contact.point, this);
 
@@ -111,7 +111,7 @@ namespace CreativeAI.Gameplay
             _projectile.StopFlying();
             _projectile.transform.SetParent(collision.transform, true);
 
-            Vector3 impactPoint = collision.contacts[0].point;
+            Vector3 impactPoint = collision.GetContact(0).point;
             WorldSoundPlayer.Play(_stickSound, impactPoint, this);
 
             // 着弾位置をSoundEventBusで敵AIに通知する

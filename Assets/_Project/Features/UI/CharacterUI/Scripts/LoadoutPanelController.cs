@@ -442,9 +442,7 @@ namespace CreativeAI.UI.CharacterUI
 
             for (int i = 0; i < root.childCount; i++)
             {
-                LoadoutAssignmentSlotView slot = root.GetChild(i)
-                    .GetComponent<LoadoutAssignmentSlotView>();
-                if (slot != null)
+                if (root.GetChild(i).TryGetComponent(out LoadoutAssignmentSlotView slot))
                     destination.Add(slot);
             }
         }
@@ -1240,7 +1238,7 @@ namespace CreativeAI.UI.CharacterUI
             PlayDetailText(_detailName, item.itemName, 0);
             PlayDetailText(_detailDescription, item.description, 1);
             if (_detailCount != null)
-                _detailCount.text = $"x{stack.Count}";
+                _detailCount.SetText("x{0}", stack.Count);
 
             RefreshDetailParameters(stack);
             RefreshSlotAvailability(item);

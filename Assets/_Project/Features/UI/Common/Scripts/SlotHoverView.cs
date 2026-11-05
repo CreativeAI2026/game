@@ -102,9 +102,9 @@ namespace CreativeAI.UI
         private void AutoAssignReferences()
         {
             if (_hoverScale == null)
-                _hoverScale = GetComponent<HoverScaleOnPointer>();
+                TryGetComponent(out _hoverScale);
             if (_animationTarget == null)
-                _animationTarget = GetComponent<RectTransform>();
+                TryGetComponent(out _animationTarget);
         }
 #endif
 

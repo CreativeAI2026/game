@@ -8,6 +8,8 @@ namespace CreativeAI.Gameplay
     /// </summary>
     public class TBossDeathState : TBossBaseState
     {
+        private static readonly int DieTriggerHash = Animator.StringToHash("Die");
+
         public TBossDeathState(TutorialBossController controller)
             : base(controller) { }
 
@@ -29,7 +31,7 @@ namespace CreativeAI.Gameplay
 
             if (boss.Animator != null)
             {
-                boss.Animator.SetTrigger("Die");
+                boss.Animator.SetTrigger(DieTriggerHash);
             }
         }
 

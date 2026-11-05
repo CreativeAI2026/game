@@ -100,7 +100,7 @@ namespace CreativeAI.UI.CharacterUI
             _slotIndex = slotIndex;
             ResolveReferences();
             if (_slotNumber != null)
-                _slotNumber.text = (slotIndex + 1).ToString();
+                _slotNumber.SetText("{0}", slotIndex + 1);
             if (_emptyLabel != null)
                 _emptyLabel.text = origin == ItemSlotDragOrigin.Quick ? "ここに登録" : "ここに装備";
             Refresh();
@@ -300,7 +300,7 @@ namespace CreativeAI.UI.CharacterUI
         private void RefreshOpacity()
         {
             if (_canvasGroup == null)
-                _canvasGroup = GetComponent<CanvasGroup>();
+                TryGetComponent(out _canvasGroup);
             if (_canvasGroup == null)
                 _canvasGroup = gameObject.AddComponent<CanvasGroup>();
 

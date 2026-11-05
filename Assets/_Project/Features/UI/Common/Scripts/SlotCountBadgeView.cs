@@ -92,7 +92,7 @@ namespace CreativeAI.UI
                 return;
             }
 
-            _countText.text = count.ToString();
+            _countText.SetText("{0}", count);
             _container.gameObject.SetActive(true);
             _container.SetAsLastSibling();
             _countText.gameObject.SetActive(true);

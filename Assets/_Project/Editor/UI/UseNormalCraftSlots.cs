@@ -69,8 +69,7 @@ namespace CreativeAI.EditorTools
                         (RectTransform)previous.transform,
                         (RectTransform)replacement.transform
                     );
-                    var oldLayout = previous.GetComponent<LayoutElement>();
-                    if (oldLayout != null)
+                    if (previous.TryGetComponent(out LayoutElement oldLayout))
                     {
                         var layout = replacement.TryGetComponent(out LayoutElement existing)
                             ? existing
@@ -78,8 +77,7 @@ namespace CreativeAI.EditorTools
                         EditorUtility.CopySerialized(oldLayout, layout);
                     }
                     Object.DestroyImmediate(replacement.GetComponent<ItemSlot>());
-                    var count = replacement.GetComponent<SlotCountBadgeView>();
-                    if (count != null)
+                    if (replacement.TryGetComponent(out SlotCountBadgeView count))
                         Object.DestroyImmediate(count);
                     foreach (var child in replacement.GetComponentsInChildren<Transform>(true))
                         if (

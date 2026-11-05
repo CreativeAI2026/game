@@ -181,8 +181,7 @@ namespace CreativeAI.EditorTools
                 quickRect.pivot = new Vector2(.5f, 1);
                 quickRect.anchoredPosition = Vector2.zero;
                 quickRect.sizeDelta = new Vector2(0, 80);
-                var quickRowLayout = quickRow.GetComponent<LayoutElement>();
-                if (quickRowLayout != null)
+                if (quickRow.TryGetComponent(out LayoutElement quickRowLayout))
                     quickRowLayout.ignoreLayout = true;
                 Set(layout, "_quickParameters", quickPattern.gameObject);
                 Set(layout, "_equipmentParameters", equipPattern.gameObject);

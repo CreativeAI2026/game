@@ -317,8 +317,7 @@ namespace CreativeAI.EditorTools
                 label.alignment = TextAlignmentOptions.Center;
                 label.raycastTarget = false;
             }
-            var outline = button.GetComponent<Outline>();
-            if (outline != null)
+            if (button.TryGetComponent(out Outline outline))
                 outline.enabled = false;
             Text(label, 36, UiVisualTheme.ActionInk);
             label.fontStyle = FontStyles.Bold;

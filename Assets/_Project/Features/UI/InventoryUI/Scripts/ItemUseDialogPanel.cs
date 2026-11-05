@@ -140,8 +140,7 @@ namespace CreativeAI.UI
             if (!_backgroundImage.raycastTarget)
                 invalidSettings.Add("_backgroundImage.raycastTarget");
 
-            var dialogGraphic = _dialogRoot.GetComponent<Graphic>();
-            if (dialogGraphic == null)
+            if (!_dialogRoot.TryGetComponent(out Graphic dialogGraphic))
                 invalidSettings.Add("_dialogRoot.Graphic");
             else if (!dialogGraphic.raycastTarget)
                 invalidSettings.Add("_dialogRoot.Graphic.raycastTarget");
@@ -232,9 +231,9 @@ namespace CreativeAI.UI
             if (_backgroundImage == null)
                 _backgroundImage = FindComponentInChildren<Image>("Background");
             if (_backgroundImage == null)
-                _backgroundImage = GetComponent<Image>();
+                TryGetComponent(out _backgroundImage);
             if (_closeOnSelfClick == null)
-                _closeOnSelfClick = GetComponent<CloseOnSelfClick>();
+                TryGetComponent(out _closeOnSelfClick);
             if (_closeOnSelfClick == null && _backgroundImage != null)
                 _closeOnSelfClick = _backgroundImage.GetComponent<CloseOnSelfClick>();
             if (_dialogRoot == null)

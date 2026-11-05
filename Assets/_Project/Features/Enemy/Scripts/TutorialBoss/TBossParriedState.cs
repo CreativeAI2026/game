@@ -24,6 +24,7 @@ namespace CreativeAI.Gameplay
         private const float RecoilEndNormalizedTime = 0.8f;
 
         private static readonly int ParriedStateHash = Animator.StringToHash("Parried");
+        private static readonly int ParriedTriggerHash = Animator.StringToHash("Parried");
 
         private float _timer;
 
@@ -47,7 +48,7 @@ namespace CreativeAI.Gameplay
 
             if (boss.Animator != null)
             {
-                boss.Animator.SetTrigger("Parried");
+                boss.Animator.SetTrigger(ParriedTriggerHash);
             }
         }
 

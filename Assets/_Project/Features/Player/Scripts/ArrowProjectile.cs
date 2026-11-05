@@ -69,8 +69,7 @@ namespace CreativeAI.Gameplay
                 col.enabled = true;
             }
 
-            Rigidbody rb = GetComponent<Rigidbody>();
-            if (rb == null)
+            if (!TryGetComponent(out Rigidbody rb))
             {
                 rb = gameObject.AddComponent<Rigidbody>();
             }
@@ -86,8 +85,7 @@ namespace CreativeAI.Gameplay
         {
             IsFlying = false;
 
-            Rigidbody rb = GetComponent<Rigidbody>();
-            if (rb != null)
+            if (TryGetComponent(out Rigidbody rb))
             {
                 rb.linearVelocity = Vector3.zero;
                 rb.angularVelocity = Vector3.zero;

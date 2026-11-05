@@ -35,8 +35,7 @@ namespace CreativeAI.Core
         // 追加した時点で Is Trigger にする(付け忘れるとただの壁になり、エラーも出ずに発火しない)。
         private void Reset()
         {
-            var col = GetComponent<Collider>();
-            if (col != null)
+            if (TryGetComponent(out Collider col))
                 col.isTrigger = true;
         }
 

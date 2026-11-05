@@ -298,7 +298,7 @@ namespace CreativeAI.UI
             if (_controller != null)
                 _controller.ClearSelection();
             if (_dragCanvasGroup == null)
-                _dragCanvasGroup = GetComponent<CanvasGroup>();
+                TryGetComponent(out _dragCanvasGroup);
             if (_dragCanvasGroup == null)
                 _dragCanvasGroup = gameObject.AddComponent<CanvasGroup>();
             _dragOriginalAlpha = _dragCanvasGroup.alpha;

@@ -83,8 +83,7 @@ namespace CreativeAI.EditorTools
             go.transform.position = position;
             go.name = $"ItemPickup_{entry.item.itemName}";
 
-            var pickup = go.GetComponent<FieldItemPickup>();
-            if (pickup == null)
+            if (!go.TryGetComponent(out FieldItemPickup pickup))
             {
                 Debug.LogWarning("[ItemPickupPlacer] Prefab に FieldItemPickup がありません。");
                 Object.DestroyImmediate(go);

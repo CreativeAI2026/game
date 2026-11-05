@@ -79,8 +79,7 @@ namespace CreativeAI.EditorTools
                 UnityEngine.SceneManagement.SceneManager.MoveGameObjectToScene(holder, scene);
             }
 
-            var comp = holder.GetComponent<AdditiveScenes>();
-            if (comp == null)
+            if (!holder.TryGetComponent(out AdditiveScenes comp))
                 comp = holder.AddComponent<AdditiveScenes>();
 
             var so = new SerializedObject(comp);

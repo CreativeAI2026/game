@@ -78,8 +78,7 @@ namespace CreativeAI.Gameplay
             transform.position = _enemyTransform.position + _startOffset;
             _prevPos = transform.position;
 
-            Collider existingCol = GetComponent<Collider>();
-            if (existingCol == null)
+            if (!TryGetComponent(out Collider existingCol))
             {
                 SphereCollider col = gameObject.AddComponent<SphereCollider>();
                 col.isTrigger = true;
@@ -91,8 +90,7 @@ namespace CreativeAI.Gameplay
             }
 
             // KinematicRigidbody（物理演算に流されないようにする）
-            Rigidbody rb = GetComponent<Rigidbody>();
-            if (rb == null)
+            if (!TryGetComponent(out Rigidbody rb))
                 rb = gameObject.AddComponent<Rigidbody>();
             rb.isKinematic = true;
         }

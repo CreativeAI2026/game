@@ -78,8 +78,7 @@ namespace CreativeAI.UI
                 var button = UnityEngine.Object.Instantiate(_template, _container);
                 button.gameObject.SetActive(true);
                 button.navigation = new Navigation { mode = Navigation.Mode.None };
-                var group = button.GetComponent<CanvasGroup>();
-                if (group == null)
+                if (!button.TryGetComponent(out CanvasGroup group))
                     group = button.gameObject.AddComponent<CanvasGroup>();
                 group.alpha = 0f;
                 var label = button.GetComponentInChildren<TMP_Text>(true);
@@ -92,8 +91,7 @@ namespace CreativeAI.UI
                     label.fontSizeMax = label.fontSize;
                 }
                 float buttonHeight = EstimateButtonHeight(option.Text);
-                var layout = button.GetComponent<LayoutElement>();
-                if (layout != null)
+                if (button.TryGetComponent(out LayoutElement layout))
                 {
                     layout.minHeight = buttonHeight;
                     layout.preferredHeight = buttonHeight;
@@ -178,8 +176,7 @@ namespace CreativeAI.UI
             for (int i = 0; i < _spawnedHeights.Count; i++)
                 height += _spawnedHeights[i];
             height += (count - 1) * _spacing;
-            var layout = _container.GetComponent<VerticalLayoutGroup>();
-            if (layout != null)
+            if (_container.TryGetComponent(out VerticalLayoutGroup layout))
                 layout.spacing = _spacing;
             _container.anchorMin = _container.anchorMax = new Vector2(0.5f, 1f);
             _container.pivot = new Vector2(0.5f, 0f);
@@ -205,8 +202,7 @@ namespace CreativeAI.UI
             if (image != null)
                 _baseColors[button] = image.color;
 
-            var trigger = button.GetComponent<UIEventTrigger>();
-            if (trigger == null)
+            if (!button.TryGetComponent(out UIEventTrigger trigger))
                 trigger = button.gameObject.AddComponent<UIEventTrigger>();
             trigger.triggers ??= new List<UIEventTrigger.Entry>();
             AddTrigger(trigger, EventTriggerType.PointerEnter, _ => Select(ButtonIndex(button)));
