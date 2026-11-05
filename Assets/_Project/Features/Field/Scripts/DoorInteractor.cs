@@ -15,7 +15,7 @@ namespace CreativeAI.Gameplay
     {
         [Tooltip("開閉する扉。未設定なら同じ GameObject から探す。")]
         [SerializeField]
-        private SlidingDoor _door;
+        private SwingDoor _door;
 
         [SerializeField]
         private string _playerTag = "Player";
@@ -40,7 +40,7 @@ namespace CreativeAI.Gameplay
         private void Awake()
         {
             if (_door == null)
-                _door = GetComponent<SlidingDoor>();
+                _door = GetComponent<SwingDoor>();
         }
 
         private void OnTriggerEnter(Collider other)
