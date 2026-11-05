@@ -94,16 +94,14 @@ namespace CreativeAI.Tests.PlayMode
         {
             Assert.AreEqual(
                 1,
-                Object
-                    .FindObjectsByType<Camera>(FindObjectsSortMode.None)
-                    .Count(c => c.CompareTag("MainCamera")),
+                Object.FindObjectsByType<Camera>().Count(c => c.CompareTag("MainCamera")),
                 "MainCamera を2つ目として作らず、UI シーンのカメラを使い回す"
             );
             Assert.False(_selector.gameObject.activeSelf);
             Assert.False(_bar.gameObject.activeSelf);
             foreach (
                 var stage in Object
-                    .FindObjectsByType<Camera>(FindObjectsSortMode.None)
+                    .FindObjectsByType<Camera>()
                     .Where(c => c.name == "Preview Camera")
             )
             {
@@ -177,8 +175,10 @@ namespace CreativeAI.Tests.PlayMode
         [UnityTest]
         public IEnumerator Drag_RotatesOnlyWithLeftButton_AndLeavesPlayerAlone()
         {
-            var beforePosition = _player.transform.position;
-            var beforeRotation = _player.transform.rotation;
+            _player.transform.GetPositionAndRotation(
+                out var beforePosition,
+                out var beforeRotation
+            );
             float beforeYaw = _character.Yaw;
 
             _character.OnDrag(Drag(PointerEventData.InputButton.Left, 100));
@@ -196,8 +196,10 @@ namespace CreativeAI.Tests.PlayMode
         {
             GiveAll();
             _manager.SelectNext();
-            var beforePosition = _player.transform.position;
-            var beforeRotation = _player.transform.rotation;
+            _player.transform.GetPositionAndRotation(
+                out var beforePosition,
+                out var beforeRotation
+            );
             int equippedBeforeBrowsing = _manager.CurrentWeaponIndex;
 
             foreach (int id in new[] { Scythe, Hammer, Sword })

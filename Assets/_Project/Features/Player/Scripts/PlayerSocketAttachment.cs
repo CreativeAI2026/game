@@ -26,8 +26,7 @@ namespace CreativeAI.Gameplay
         {
             Transform socket = PlayerModel.Of(this).GetSocket(_socket);
             transform.SetParent(socket, false);
-            transform.localPosition = Vector3.zero;
-            transform.localRotation = Quaternion.identity;
+            transform.SetLocalPositionAndRotation(Vector3.zero, Quaternion.identity);
         }
 
 #if UNITY_EDITOR

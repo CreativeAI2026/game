@@ -1045,7 +1045,8 @@ namespace CreativeAI.EditorTools
                         );
                         continue;
                     }
-                    doorGroup ??= NewGroup("Doors", parent);
+                    if (doorGroup == null)
+                        doorGroup = NewGroup("Doors", parent);
                     var def = Doors.First(d => d.Symbol == grid[r, c]);
                     doorPrefabs.TryGetValue(def.Symbol, out var prefab);
                     var eastWest = IsEastWest(grid, rows, cols, r, c);
@@ -1151,7 +1152,8 @@ namespace CreativeAI.EditorTools
                         var n = nr >= 0 && nc >= 0 && nr < rows && nc < cols ? grid[nr, nc] : Void;
                         if (n == Landing || n == '#' || IsPanel(n) || IsStair(n))
                             continue;
-                        landingFences ??= NewGroup("Fences", landingRoot);
+                        if (landingFences == null)
+                            landingFences = NewGroup("Fences", landingRoot);
                         CreateHandrail(
                             landingFences,
                             handrail,
@@ -1753,8 +1755,10 @@ namespace CreativeAI.EditorTools
         )
         {
             var offset = prefab.transform.localPosition;
-            go.transform.localPosition = pos + rot * (offset * scale);
-            go.transform.localRotation = rot * prefab.transform.localRotation;
+            go.transform.SetLocalPositionAndRotation(
+                pos + rot * (offset * scale),
+                rot * prefab.transform.localRotation
+            );
             go.transform.localScale = prefab.transform.localScale * scale;
         }
 
@@ -2328,6 +2332,7 @@ namespace CreativeAI.EditorTools
             PlaceModel(go, prefab, Vector3.zero, Quaternion.identity);
             FitToWallHeight(go, modelHeight, wallHeight);
 
+            var vertices = new List<Vector3>();
             foreach (var filter in go.GetComponentsInChildren<MeshFilter>(true))
             {
                 var key = (filter.sharedMesh, min, max, wallHeight);
@@ -2342,15 +2347,15 @@ namespace CreativeAI.EditorTools
                 var fromParent = toParent.inverse;
                 var mesh = Object.Instantiate(filter.sharedMesh);
                 mesh.name = $"{filter.sharedMesh.name}_{name}";
-                var vertices = mesh.vertices;
-                for (var i = 0; i < vertices.Length; i++)
+                mesh.GetVertices(vertices);
+                for (var i = 0; i < vertices.Count; i++)
                 {
                     var p = toParent.MultiplyPoint3x4(vertices[i]);
                     p.x = Mathf.Clamp(p.x, min.x, max.x);
                     p.y = Mathf.Clamp(p.y, min.y, max.y);
                     vertices[i] = fromParent.MultiplyPoint3x4(p);
                 }
-                mesh.vertices = vertices;
+                mesh.SetVertices(vertices);
                 mesh.RecalculateBounds();
                 ClippedMeshes[key] = mesh;
                 filter.sharedMesh = mesh;
@@ -2573,8 +2578,10 @@ namespace CreativeAI.EditorTools
             };
             var heading = Quaternion.Euler(0f, 90f * (int)s.Dir, 0f);
             var yScale = rise / model.Rise;
-            go.transform.localPosition = basePos;
-            go.transform.localRotation = heading * Quaternion.Euler(0f, 180f, 0f);
+            go.transform.SetLocalPositionAndRotation(
+                basePos,
+                heading * Quaternion.Euler(0f, 180f, 0f)
+            );
             go.transform.localScale = new Vector3(width / model.Width, yScale, run / model.Run);
 
             // モデルは見た目だけ。当たりは斜面の箱で別に作る
@@ -2603,8 +2610,7 @@ namespace CreativeAI.EditorTools
             // 以下はローカルの +Z を上る向きとして組む
             var root = new GameObject($"StairsRamp_{s.Letter}");
             root.transform.SetParent(parent, false);
-            root.transform.localPosition = basePos;
-            root.transform.localRotation = heading;
+            root.transform.SetLocalPositionAndRotation(basePos, heading);
 
             var tread = run / model.Steps;
 
@@ -2612,15 +2618,9 @@ namespace CreativeAI.EditorTools
             // 上端は最上段の1つ手前の段鼻(= 上階の床面)で終わるので、最上段の踏面は下の Top で埋める
             var slope = new GameObject("Slope");
             slope.transform.SetParent(root.transform, false);
-            slope.transform.localPosition = new Vector3(
-                0f,
-                rise * 0.5f + RampLift,
-                run * 0.5f - tread
-            );
-            slope.transform.localRotation = Quaternion.Euler(
-                -Mathf.Atan2(rise, run) * Mathf.Rad2Deg,
-                0f,
-                0f
+            slope.transform.SetLocalPositionAndRotation(
+                new Vector3(0f, rise * 0.5f + RampLift, run * 0.5f - tread),
+                Quaternion.Euler(-Mathf.Atan2(rise, run) * Mathf.Rad2Deg, 0f, 0f)
             );
 
             var length = Mathf.Sqrt(run * run + rise * rise);
@@ -2653,7 +2653,9 @@ namespace CreativeAI.EditorTools
             if (mat != null)
                 return mat;
 
-            var shader = Shader.Find("Universal Render Pipeline/Lit") ?? Shader.Find("Standard");
+            var shader = Shader.Find("Universal Render Pipeline/Lit");
+            if (shader == null)
+                shader = Shader.Find("Standard");
             mat = new Material(shader) { name = name };
             mat.SetColor("_BaseColor", color);
             mat.color = color;

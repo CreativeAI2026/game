@@ -241,10 +241,10 @@ namespace CreativeAI.UI
                 float t = elapsed / duration;
                 if (effect == ConversationView.PortraitEffect.Shake)
                     rect.anchoredPosition =
-                        basePosition + Vector2.right * Mathf.Sin(t * Mathf.PI * 8f) * 10f;
+                        basePosition + Vector2.right * (Mathf.Sin(t * Mathf.PI * 8f) * 10f);
                 else if (effect == ConversationView.PortraitEffect.Jump)
                     rect.anchoredPosition =
-                        basePosition + Vector2.up * Mathf.Sin(t * Mathf.PI) * 28f;
+                        basePosition + Vector2.up * (Mathf.Sin(t * Mathf.PI) * 28f);
                 else if (effect == ConversationView.PortraitEffect.Fade)
                     portrait.color = new Color(
                         baseColor.r,

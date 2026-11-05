@@ -60,13 +60,14 @@ namespace CreativeAI.Gameplay
             {
                 GameObject visual = GameObject.CreatePrimitive(PrimitiveType.Cylinder);
                 visual.transform.SetParent(transform);
-                visual.transform.localPosition = Vector3.zero;
                 // UnityのCylinderは初期状態でY軸方向を向いているため、進行方向(Z軸)と視覚的な向きを一致させる
-                visual.transform.localRotation = Quaternion.Euler(90f, 0f, 0f);
+                visual.transform.SetLocalPositionAndRotation(
+                    Vector3.zero,
+                    Quaternion.Euler(90f, 0f, 0f)
+                );
                 visual.transform.localScale = new Vector3(0.05f, 0.4f, 0.05f);
 
-                var renderer = visual.GetComponent<Renderer>();
-                if (renderer != null)
+                if (visual.TryGetComponent(out Renderer renderer))
                 {
                     renderer.material.color = Color.black;
                 }
@@ -74,8 +75,7 @@ namespace CreativeAI.Gameplay
                 Destroy(visual.GetComponent<Collider>());
             }
 
-            Collider existingCol = gameObject.GetComponent<Collider>();
-            if (existingCol == null)
+            if (!gameObject.TryGetComponent(out Collider existingCol))
             {
                 SphereCollider col = gameObject.AddComponent<SphereCollider>();
                 col.isTrigger = true;
@@ -87,8 +87,7 @@ namespace CreativeAI.Gameplay
             }
 
             // 外部の物理演算（重力や他のオブジェクトとの衝突応答）による意図しない軌道逸脱を防ぐためKinematicに設定
-            Rigidbody rb = gameObject.GetComponent<Rigidbody>();
-            if (rb == null)
+            if (!gameObject.TryGetComponent(out Rigidbody rb))
             {
                 rb = gameObject.AddComponent<Rigidbody>();
             }

@@ -55,19 +55,16 @@ namespace CreativeAI.Gameplay
                 Transform spawnPoint = GetNextValidSpawnPoint();
                 if (spawnPoint != null)
                 {
-                    spawnPosition = spawnPoint.position;
-                    spawnRotation = spawnPoint.rotation;
+                    spawnPoint.GetPositionAndRotation(out spawnPosition, out spawnRotation);
                 }
                 else
                 {
-                    spawnPosition = transform.position;
-                    spawnRotation = transform.rotation;
+                    transform.GetPositionAndRotation(out spawnPosition, out spawnRotation);
                 }
             }
             else
             {
-                spawnPosition = transform.position;
-                spawnRotation = transform.rotation;
+                transform.GetPositionAndRotation(out spawnPosition, out spawnRotation);
             }
 
             GameObject spawned = Instantiate(_enemyPrefab, spawnPosition, spawnRotation);

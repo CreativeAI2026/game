@@ -78,7 +78,8 @@ namespace CreativeAI.UI
             if (stack?.Data is not FoodData)
                 return;
 
-            InventoryManager.Instance?.TryUse(stack);
+            if (InventoryManager.Instance != null)
+                InventoryManager.Instance.TryUse(stack);
         }
 
         private bool EnsureInitialized()
@@ -139,8 +140,7 @@ namespace CreativeAI.UI
             if (!_backgroundImage.raycastTarget)
                 invalidSettings.Add("_backgroundImage.raycastTarget");
 
-            var dialogGraphic = _dialogRoot.GetComponent<Graphic>();
-            if (dialogGraphic == null)
+            if (!_dialogRoot.TryGetComponent(out Graphic dialogGraphic))
                 invalidSettings.Add("_dialogRoot.Graphic");
             else if (!dialogGraphic.raycastTarget)
                 invalidSettings.Add("_dialogRoot.Graphic.raycastTarget");
@@ -166,7 +166,8 @@ namespace CreativeAI.UI
 
         private void BindButtons()
         {
-            _closeOnSelfClick?.SetClickAction(Hide);
+            if (_closeOnSelfClick != null)
+                _closeOnSelfClick.SetClickAction(Hide);
 
             if (_useButton != null)
             {
@@ -177,7 +178,8 @@ namespace CreativeAI.UI
 
         private void UnbindButtons()
         {
-            _closeOnSelfClick?.ClearClickAction(Hide);
+            if (_closeOnSelfClick != null)
+                _closeOnSelfClick.ClearClickAction(Hide);
 
             if (_useButton != null)
                 _useButton.onClick.RemoveListener(UseCurrentItem);
@@ -226,19 +228,30 @@ namespace CreativeAI.UI
         [ContextMenu("Auto Assign References")]
         private void AutoAssignReferences()
         {
-            _backgroundImage ??= FindComponentInChildren<Image>("Background");
-            _backgroundImage ??= GetComponent<Image>();
-            _closeOnSelfClick ??= GetComponent<CloseOnSelfClick>();
+            if (_backgroundImage == null)
+                _backgroundImage = FindComponentInChildren<Image>("Background");
+            if (_backgroundImage == null)
+                TryGetComponent(out _backgroundImage);
+            if (_closeOnSelfClick == null)
+                TryGetComponent(out _closeOnSelfClick);
             if (_closeOnSelfClick == null && _backgroundImage != null)
                 _closeOnSelfClick = _backgroundImage.GetComponent<CloseOnSelfClick>();
-            _dialogRoot ??= FindChild("DialogRoot") as RectTransform;
-            _dialogRoot ??= FindChild("ItemUseDialog") as RectTransform;
-            _itemIconImage ??= FindComponentInChildren<Image>("ItemIcon");
-            _itemNameText ??= FindComponentInChildren<TMP_Text>("ItemName");
-            _itemEffectText ??= FindComponentInChildren<TMP_Text>("EffectText");
-            _itemEffectText ??= FindComponentInChildren<TMP_Text>("ItemEffect");
-            _useButton ??= FindButton("UseButton");
-            _useButton ??= FindButton("YesButton");
+            if (_dialogRoot == null)
+                _dialogRoot = FindChild("DialogRoot") as RectTransform;
+            if (_dialogRoot == null)
+                _dialogRoot = FindChild("ItemUseDialog") as RectTransform;
+            if (_itemIconImage == null)
+                _itemIconImage = FindComponentInChildren<Image>("ItemIcon");
+            if (_itemNameText == null)
+                _itemNameText = FindComponentInChildren<TMP_Text>("ItemName");
+            if (_itemEffectText == null)
+                _itemEffectText = FindComponentInChildren<TMP_Text>("EffectText");
+            if (_itemEffectText == null)
+                _itemEffectText = FindComponentInChildren<TMP_Text>("ItemEffect");
+            if (_useButton == null)
+                _useButton = FindButton("UseButton");
+            if (_useButton == null)
+                _useButton = FindButton("YesButton");
         }
 
         private Button FindButton(string objectName)

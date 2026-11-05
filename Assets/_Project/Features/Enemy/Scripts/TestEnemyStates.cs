@@ -9,6 +9,14 @@ namespace CreativeAI.Gameplay
     /// </summary>
     public class TestEnemyBaseState : IEnemyState
     {
+        protected static readonly int IsRunningHash = Animator.StringToHash("IsRunning");
+        protected static readonly int AttackHash = Animator.StringToHash("Attack");
+        protected static readonly int BackStepHash = Animator.StringToHash("BackStep");
+        protected static readonly int FlinchHash = Animator.StringToHash("Flinch");
+        protected static readonly int ParriedHash = Animator.StringToHash("Parried");
+        protected static readonly int DieHash = Animator.StringToHash("Die");
+        protected static readonly int RoarHash = Animator.StringToHash("Roar");
+
         protected TestEnemyController testCon;
 
         public TestEnemyBaseState(TestEnemyController controller)
@@ -65,7 +73,7 @@ namespace CreativeAI.Gameplay
 
             if (testCon.Animator != null)
             {
-                testCon.Animator.SetBool("IsRunning", true);
+                testCon.Animator.SetBool(IsRunningHash, true);
             }
         }
 
@@ -112,7 +120,7 @@ namespace CreativeAI.Gameplay
 
             if (testCon.Animator != null)
             {
-                testCon.Animator.SetBool("IsRunning", false);
+                testCon.Animator.SetBool(IsRunningHash, false);
             }
         }
     }
@@ -245,7 +253,7 @@ namespace CreativeAI.Gameplay
 
             if (testCon.Animator != null)
             {
-                testCon.Animator.SetBool("IsRunning", true);
+                testCon.Animator.SetBool(IsRunningHash, true);
             }
         }
 
@@ -282,7 +290,7 @@ namespace CreativeAI.Gameplay
 
             if (testCon.Animator != null)
             {
-                testCon.Animator.SetBool("IsRunning", false);
+                testCon.Animator.SetBool(IsRunningHash, false);
             }
         }
     }
@@ -315,7 +323,7 @@ namespace CreativeAI.Gameplay
 
             if (testCon.Animator != null)
             {
-                testCon.Animator.SetTrigger("Attack");
+                testCon.Animator.SetTrigger(AttackHash);
             }
 
             if (testCon.EnemyCollider != null && testCon.PlayerCollider != null)
@@ -426,7 +434,7 @@ namespace CreativeAI.Gameplay
 
             if (testCon.Animator != null)
             {
-                testCon.Animator.SetTrigger("BackStep");
+                testCon.Animator.SetTrigger(BackStepHash);
             }
 
             if (testCon.Agent != null)
@@ -574,7 +582,7 @@ namespace CreativeAI.Gameplay
 
             if (testCon.Animator != null)
             {
-                testCon.Animator.SetTrigger("Flinch");
+                testCon.Animator.SetTrigger(FlinchHash);
             }
         }
 
@@ -626,7 +634,7 @@ namespace CreativeAI.Gameplay
 
             if (testCon.Animator != null)
             {
-                testCon.Animator.SetTrigger("Parried");
+                testCon.Animator.SetTrigger(ParriedHash);
             }
         }
 
@@ -675,7 +683,7 @@ namespace CreativeAI.Gameplay
 
             if (testCon.Animator != null)
             {
-                testCon.Animator.SetTrigger("Die");
+                testCon.Animator.SetTrigger(DieHash);
             }
         }
 
@@ -707,8 +715,8 @@ namespace CreativeAI.Gameplay
 
             if (testCon.Animator != null)
             {
-                testCon.Animator.SetBool("IsRunning", false);
-                testCon.Animator.SetTrigger("Roar");
+                testCon.Animator.SetBool(IsRunningHash, false);
+                testCon.Animator.SetTrigger(RoarHash);
             }
 
             testCon.NeedleAttackTimer = testCon.NeedleAttackCooldown;
@@ -726,8 +734,7 @@ namespace CreativeAI.Gameplay
                     needleObj = new GameObject("NeedleProjectile");
                 }
 
-                var needle = needleObj.GetComponent<EnemyNeedleProjectile>();
-                if (needle == null)
+                if (!needleObj.TryGetComponent(out EnemyNeedleProjectile needle))
                 {
                     needle = needleObj.AddComponent<EnemyNeedleProjectile>();
                 }

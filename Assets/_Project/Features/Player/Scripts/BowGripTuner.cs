@@ -33,6 +33,7 @@ namespace CreativeAI.Gameplay
         [SerializeField]
         private bool _previewEnabled;
 
+#pragma warning disable CS0414 // エディタ専用(#if UNITY_EDITOR)でのみ読む。プレイヤービルドでは未使用になる
         [Tooltip("どちらの姿勢を合わせるか。弓の値は姿勢ごとに別に持つ")]
         [SerializeField]
         private MockWeaponPoseKey _previewPose = MockWeaponPoseKey.Aim;
@@ -43,6 +44,7 @@ namespace CreativeAI.Gameplay
         [Range(0f, 1f)]
         [SerializeField]
         private float _previewNormalizedTime = 1f;
+#pragma warning restore CS0414
 
 #if UNITY_EDITOR
         // 構えクリップの中で矢をつがえる位置(DrawComplete イベント)。イベントが無ければ引き切りでつがえる

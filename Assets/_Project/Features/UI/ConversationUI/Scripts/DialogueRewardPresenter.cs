@@ -202,8 +202,7 @@ namespace CreativeAI.UI
         {
             if (target == null)
                 return;
-            var group = target.GetComponent<CanvasGroup>();
-            if (group == null)
+            if (!target.TryGetComponent(out CanvasGroup group))
                 group = target.AddComponent<CanvasGroup>();
             group.alpha = 0f;
             target.transform.localScale = Vector3.one * 0.86f;
@@ -240,8 +239,7 @@ namespace CreativeAI.UI
             {
                 if (target == null)
                     continue;
-                var group = target.GetComponent<CanvasGroup>();
-                if (group != null)
+                if (target.TryGetComponent(out CanvasGroup group))
                     group.alpha = alpha;
                 target.transform.localScale = Vector3.one * scale;
             }

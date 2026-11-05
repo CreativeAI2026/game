@@ -60,7 +60,7 @@ namespace CreativeAI.UI
             for (int i = 0; i < textInfo.meshInfo.Length; i++)
             {
                 TMP_MeshInfo meshInfo = textInfo.meshInfo[i];
-                meshInfo.mesh.vertices = meshInfo.vertices;
+                meshInfo.mesh.SetVertices(meshInfo.vertices);
                 _text.UpdateGeometry(meshInfo.mesh, i);
             }
         }

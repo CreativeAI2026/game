@@ -30,6 +30,9 @@ namespace CreativeAI.Gameplay
         // (TutorialBoss ではこの高さが頭のボーンとほぼ一致する)
         private const float LookHeightRatio = 0.75f;
 
+        // OverlapSphere の結果を受ける再利用バッファ
+        private readonly Collider[] _overlapHits = new Collider[64];
+
         /// <summary>
         /// 現在の最寄りの敵の「見る位置」。コライダーの下から <see cref="LookHeightRatio"/> の高さ(顔のあたり)。
         /// ターゲットがいなければ null。
@@ -64,12 +67,18 @@ namespace CreativeAI.Gameplay
 
         private Collider FindNearestCollider(float radius)
         {
-            Collider[] hitColliders = Physics.OverlapSphere(transform.position, radius, enemyLayer);
+            int hitCount = Physics.OverlapSphereNonAlloc(
+                transform.position,
+                radius,
+                _overlapHits,
+                enemyLayer
+            );
             Collider nearest = null;
             float minDistance = float.MaxValue;
 
-            foreach (var hitCollider in hitColliders)
+            for (int i = 0; i < hitCount; i++)
             {
+                Collider hitCollider = _overlapHits[i];
                 float distance = Vector3.Distance(
                     transform.position,
                     hitCollider.transform.position

@@ -72,7 +72,9 @@ namespace CreativeAI.UI
             yield return _presenter.AnimateSelection(pickedButton);
             _presenter.Clear();
             _setActive(false);
-            _history()?.AddChoiceEntry(options, pickedText);
+            var history = _history();
+            if (history != null)
+                history.AddChoiceEntry(options, pickedText);
             _sessionState.MarkChoiceSelected(picked);
             _blockAdvance(0.15f);
             onSelected?.Invoke(picked);

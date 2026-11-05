@@ -81,7 +81,9 @@ namespace CreativeAI.UI
             _setTypingSound(_typingSound);
             _sessionState.BeginReward(message);
             _chrome.PlayLineTextEntrance(_nameText, _bodyText, false);
-            _history()?.AddRewardEntry(DialogueMarkupParser.Parse(message).Text, weapon);
+            var history = _history();
+            if (history != null)
+                history.AddRewardEntry(DialogueMarkupParser.Parse(message).Text, weapon);
         }
     }
 }

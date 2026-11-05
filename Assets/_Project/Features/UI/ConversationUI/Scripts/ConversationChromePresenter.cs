@@ -311,7 +311,7 @@ namespace CreativeAI.UI
             for (int i = 0; i < textInfo.meshInfo.Length; i++)
             {
                 var meshInfo = textInfo.meshInfo[i];
-                meshInfo.mesh.vertices = meshInfo.vertices;
+                meshInfo.mesh.SetVertices(meshInfo.vertices);
                 _autoIndicator.UpdateGeometry(meshInfo.mesh, i);
             }
         }

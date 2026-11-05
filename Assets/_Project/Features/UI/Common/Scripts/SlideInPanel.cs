@@ -29,7 +29,7 @@ namespace CreativeAI.UI
 
         private void Awake()
         {
-            _rect = GetComponent<RectTransform>();
+            TryGetComponent(out _rect);
         }
 
         private void Start()

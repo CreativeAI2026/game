@@ -40,7 +40,7 @@ namespace CreativeAI.Gameplay
         private void Awake()
         {
             if (_door == null)
-                _door = GetComponent<SwingDoor>();
+                TryGetComponent(out _door);
         }
 
         private void OnTriggerEnter(Collider other)

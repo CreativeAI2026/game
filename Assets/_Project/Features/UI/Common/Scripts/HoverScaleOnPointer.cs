@@ -63,7 +63,8 @@ namespace CreativeAI.UI
 
         private void Awake()
         {
-            _targetRect ??= GetComponent<RectTransform>();
+            if (_targetRect == null)
+                _targetRect = GetComponent<RectTransform>();
             CacheBaseScale();
             CacheBasePosition();
         }

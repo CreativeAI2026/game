@@ -44,9 +44,12 @@ namespace CreativeAI.UI
 
         private void ApplyStates()
         {
-            _equippedMarker?.SetActive(_isEquipped);
-            _equippedDimOverlay?.SetActive(_isEquipped);
-            _craftAssignedMarker?.SetActive(_isCraftAssigned && !_isEquipped);
+            if (_equippedMarker != null)
+                _equippedMarker.SetActive(_isEquipped);
+            if (_equippedDimOverlay != null)
+                _equippedDimOverlay.SetActive(_isEquipped);
+            if (_craftAssignedMarker != null)
+                _craftAssignedMarker.SetActive(_isCraftAssigned && !_isEquipped);
         }
 
 #if UNITY_EDITOR
@@ -55,20 +58,25 @@ namespace CreativeAI.UI
         [ContextMenu("Auto Assign References")]
         private void AutoAssignReferences()
         {
-            _equippedMarker ??= FindExisting("VisualRoot/EquippedMarker", "EquippedMarker");
-            _craftAssignedMarker ??= FindExisting(
-                "VisualRoot/CraftAssignedMarker",
-                "CraftAssignedMarker"
-            );
-            _equippedDimOverlay ??= FindExisting(
-                "VisualRoot/EquippedDimOverlay",
-                "EquippedDimOverlay"
-            );
+            if (_equippedMarker == null)
+                _equippedMarker = FindExisting("VisualRoot/EquippedMarker", "EquippedMarker");
+            if (_craftAssignedMarker == null)
+                _craftAssignedMarker = FindExisting(
+                    "VisualRoot/CraftAssignedMarker",
+                    "CraftAssignedMarker"
+                );
+            if (_equippedDimOverlay == null)
+                _equippedDimOverlay = FindExisting(
+                    "VisualRoot/EquippedDimOverlay",
+                    "EquippedDimOverlay"
+                );
         }
 
         private GameObject FindExisting(string primaryPath, string fallbackPath)
         {
-            var target = transform.Find(primaryPath) ?? transform.Find(fallbackPath);
+            var target = transform.Find(primaryPath);
+            if (target == null)
+                target = transform.Find(fallbackPath);
             return target != null ? target.gameObject : null;
         }
 #endif

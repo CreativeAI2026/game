@@ -205,8 +205,7 @@ namespace CreativeAI.Gameplay
             Vector3 spawnPos = position + normal * 0.05f;
             GameObject areaObj = Instantiate(_damageAreaPrefab, spawnPos, rotation);
 
-            var area = areaObj.GetComponent<MidBossPoisonArea>();
-            if (area == null)
+            if (!areaObj.TryGetComponent(out MidBossPoisonArea area))
             {
                 area = areaObj.AddComponent<MidBossPoisonArea>();
             }

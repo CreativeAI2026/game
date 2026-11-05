@@ -19,7 +19,8 @@ namespace CreativeAI.UI
         {
             base.Awake();
             WarnMissingReferencesOnce();
-            _itemUseDialogPanel?.Hide();
+            if (_itemUseDialogPanel != null)
+                _itemUseDialogPanel.Hide();
         }
 
         private void OnEnable()
@@ -33,7 +34,8 @@ namespace CreativeAI.UI
         {
             UnsubscribeFromInventoryChanges();
             UnbindInventoryEvents();
-            _itemUseDialogPanel?.Hide();
+            if (_itemUseDialogPanel != null)
+                _itemUseDialogPanel.Hide();
         }
 
         private void OnDestroy()
@@ -82,7 +84,8 @@ namespace CreativeAI.UI
 
         private void OnInventoryChanged()
         {
-            _inventory?.RefreshCurrentTab();
+            if (_inventory != null)
+                _inventory.RefreshCurrentTab();
         }
 
         private void OnInventoryDisplayRefreshRequested(
@@ -96,7 +99,8 @@ namespace CreativeAI.UI
 
             if (definition is AllItemsTabDefinition)
             {
-                _inventory.SetItems(InventoryManager.Instance?.GetAllItems(), scrollMode);
+                var inventory = InventoryManager.Instance;
+                _inventory.SetItems(inventory != null ? inventory.GetAllItems() : null, scrollMode);
                 return;
             }
 
@@ -118,7 +122,8 @@ namespace CreativeAI.UI
             if (_inventory == null)
                 return;
 
-            var items = InventoryManager.Instance?.GetItemsByCategory(category);
+            var inventory = InventoryManager.Instance;
+            var items = inventory != null ? inventory.GetItemsByCategory(category) : null;
             _inventory.SetItems(items, scrollMode);
         }
 
@@ -127,7 +132,8 @@ namespace CreativeAI.UI
             if (stack?.Data is not FoodData)
                 return;
 
-            GetComponent<InventoryScreenView>()?.FocusUseButton(stack);
+            if (TryGetComponent(out InventoryScreenView screen))
+                screen.FocusUseButton(stack);
         }
 
         private void WarnMissingReferencesOnce()
@@ -180,8 +186,10 @@ namespace CreativeAI.UI
         [ContextMenu("Auto Assign References")]
         private void AutoAssignReferences()
         {
-            _inventory ??= GetComponentInChildren<InventoryView>(true);
-            _itemUseDialogPanel ??= GetComponentInChildren<ItemUseDialogPanel>(true);
+            if (_inventory == null)
+                _inventory = GetComponentInChildren<InventoryView>(true);
+            if (_itemUseDialogPanel == null)
+                _itemUseDialogPanel = GetComponentInChildren<ItemUseDialogPanel>(true);
         }
 #endif
     }

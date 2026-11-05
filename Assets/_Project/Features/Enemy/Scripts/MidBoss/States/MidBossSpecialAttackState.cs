@@ -89,8 +89,7 @@ namespace CreativeAI.Gameplay
                     obj = new GameObject("MidBossMinion");
                 }
 
-                var minion = obj.GetComponent<MidBossMinionProjectile>();
-                if (minion == null)
+                if (!obj.TryGetComponent(out MidBossMinionProjectile minion))
                 {
                     minion = obj.AddComponent<MidBossMinionProjectile>();
                 }
