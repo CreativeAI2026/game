@@ -91,9 +91,9 @@ namespace CreativeAI.EditorTools
         /// <summary>扉板は開閉するので焼く対象から外す(閉じた形で焼くと戸口が通れなくなる)。</summary>
         static void IgnoreDoorLeaves(GameObject map)
         {
-            foreach (var door in map.GetComponentsInChildren<SlidingDoor>(true))
+            foreach (var door in map.GetComponentsInChildren<SwingDoor>(true))
             {
-                var leaf = door.Leaf != null ? door.Leaf : SlidingDoor.FindLeaf(door.transform);
+                var leaf = door.Leaf != null ? door.Leaf : SwingDoor.FindLeaf(door.transform);
                 if (leaf == null)
                     continue;
                 if (!leaf.TryGetComponent<NavMeshModifier>(out var modifier))

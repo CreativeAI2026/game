@@ -1257,9 +1257,9 @@ namespace CreativeAI.EditorTools
         static void ApplyStaticFlags(GameObject root)
         {
             var moving = new HashSet<Transform>();
-            foreach (var door in root.GetComponentsInChildren<SlidingDoor>(true))
+            foreach (var door in root.GetComponentsInChildren<SwingDoor>(true))
             {
-                var leaf = door.Leaf != null ? door.Leaf : SlidingDoor.FindLeaf(door.transform);
+                var leaf = door.Leaf != null ? door.Leaf : SwingDoor.FindLeaf(door.transform);
                 if (leaf != null)
                     moving.Add(leaf);
             }
@@ -2474,27 +2474,27 @@ namespace CreativeAI.EditorTools
         }
 
         /// <summary>
-        /// 扉ルートに <see cref="DoorInteractor"/> と <see cref="SlidingDoor"/> を付け、glb 内の扉板("Leaf")を割り当てる。
+        /// 扉ルートに <see cref="DoorInteractor"/> と <see cref="SwingDoor"/> を付け、glb 内の扉板("Leaf")を割り当てる。
         /// 扉板が見つからない(結合された古い glb)場合は警告だけ出してそのままにする。
         /// </summary>
         static void AddDoorInteraction(GameObject root, GameObject model, float modelScale = 1f)
         {
-            var leaf = SlidingDoor.FindLeaf(model.transform);
+            var leaf = SwingDoor.FindLeaf(model.transform);
             if (leaf == null)
             {
                 Debug.LogWarning(
-                    $"[MapLayoutBuilder] {root.name}: 扉板 \"{SlidingDoor.DefaultLeafName}\" が "
+                    $"[MapLayoutBuilder] {root.name}: 扉板 \"{SwingDoor.DefaultLeafName}\" が "
                         + "モデルにありません(結合された古い glb?)。開閉は付けません。"
                 );
                 return;
             }
 
-            var door = root.AddComponent<SlidingDoor>();
+            var door = root.AddComponent<SwingDoor>();
             var so = new SerializedObject(door);
             so.FindProperty("_leaf").objectReferenceValue = leaf;
             so.ApplyModifiedPropertiesWithoutUndo();
 
-            // 扉板そのものに当たりを付ける。開くと扉板ごと袖壁の内側へ逃げるので、
+            // 扉板そのものに当たりを付ける。開くと扉板ごと室内側へ回って開口の脇に寄るので、
             // 「閉まっていれば通れない / 開ければ通れる」が当たりの付け外し無しで成立する。
             // 厚みは板の実寸ではなく 0.4u にする(薄すぎるとすり抜ける)。
             // size はモデルのローカル空間なので、拡大して置いた扉では拡大率で割って
