@@ -44,10 +44,12 @@ namespace CreativeAI.UI.CharacterUI
         [SerializeField]
         private Color _tabSelectedTextColor = new Color32(0xff, 0xc3, 0x46, 0xff);
 
+#pragma warning disable CS0414 // エディタ専用(#if UNITY_EDITOR)でのみ読む。プレイヤービルドでは未使用になる
         [Header("開発用プレビュー")]
         [SerializeField]
         [Tooltip("所持品が空の開発用シーンでは、確認用の所持品を生成します。")]
         private bool _seedPreviewInventoryWhenEmpty = true;
+#pragma warning restore CS0414
 
         [Header("詳細テキストアニメーション")]
         [SerializeField]

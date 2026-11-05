@@ -94,16 +94,14 @@ namespace CreativeAI.Tests.PlayMode
         {
             Assert.AreEqual(
                 1,
-                Object
-                    .FindObjectsByType<Camera>(FindObjectsSortMode.None)
-                    .Count(c => c.CompareTag("MainCamera")),
+                Object.FindObjectsByType<Camera>().Count(c => c.CompareTag("MainCamera")),
                 "MainCamera を2つ目として作らず、UI シーンのカメラを使い回す"
             );
             Assert.False(_selector.gameObject.activeSelf);
             Assert.False(_bar.gameObject.activeSelf);
             foreach (
                 var stage in Object
-                    .FindObjectsByType<Camera>(FindObjectsSortMode.None)
+                    .FindObjectsByType<Camera>()
                     .Where(c => c.name == "Preview Camera")
             )
             {
