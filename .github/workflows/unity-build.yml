@@ -45,6 +45,8 @@ jobs:
           unityVersion: 6000.4.5f1
           targetPlatform: StandaloneLinux64
           allowDirtyBuild: true
+          # 指定しないと GameCI が自前のビルドスクリプトを差し込み、解析ルールと警告のエラー化で落ちる
+          buildMethod: CreativeAI.EditorTools.CiBuild.Build
 
       - name: Save Library
         if: github.ref == 'refs/heads/main' && steps.library.outputs.cache-hit != 'true'
