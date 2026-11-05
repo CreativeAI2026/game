@@ -197,7 +197,8 @@ namespace CreativeAI.Gameplay
                 $"プレイヤーは {finalDamage} ダメージを受けた！ 残りHP: {CurrentHp}/{CurrentMaxHp}"
             );
 
-            CameraShakeManager.Instance?.Shake(0.5f);
+            if (CameraShakeManager.Instance != null)
+                CameraShakeManager.Instance.Shake(0.5f);
             // 画面演出(赤ビネット等)は UI 側がこのイベントを購読して行う(プレイヤーは UI を知らない)
             Damaged?.Invoke();
 
@@ -209,7 +210,8 @@ namespace CreativeAI.Gameplay
 
             if (!suppressFlinch)
             {
-                _flinchHandler?.TriggerFlinch();
+                if (_flinchHandler != null)
+                    _flinchHandler.TriggerFlinch();
             }
         }
 

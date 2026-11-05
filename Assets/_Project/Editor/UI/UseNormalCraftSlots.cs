@@ -72,9 +72,9 @@ namespace CreativeAI.EditorTools
                     var oldLayout = previous.GetComponent<LayoutElement>();
                     if (oldLayout != null)
                     {
-                        var layout =
-                            replacement.GetComponent<LayoutElement>()
-                            ?? replacement.AddComponent<LayoutElement>();
+                        var layout = replacement.TryGetComponent(out LayoutElement existing)
+                            ? existing
+                            : replacement.AddComponent<LayoutElement>();
                         EditorUtility.CopySerialized(oldLayout, layout);
                     }
                     Object.DestroyImmediate(replacement.GetComponent<ItemSlot>());

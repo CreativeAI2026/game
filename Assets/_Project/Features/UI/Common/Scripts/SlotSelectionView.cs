@@ -43,8 +43,9 @@ namespace CreativeAI.UI
             if (_selectedFrame != null)
                 return;
 
-            var frameTransform =
-                transform.Find("VisualRoot/SelectedFrame") ?? transform.Find("SelectedFrame");
+            var frameTransform = transform.Find("VisualRoot/SelectedFrame");
+            if (frameTransform == null)
+                frameTransform = transform.Find("SelectedFrame");
             _selectedFrame = frameTransform != null ? frameTransform.gameObject : null;
         }
 #endif

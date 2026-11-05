@@ -36,7 +36,15 @@ namespace CreativeAI.UI
         private float _selectionStartScale = 0.9f;
 
         private Button _button;
-        public Button Button => _button ??= GetComponent<Button>();
+        public Button Button
+        {
+            get
+            {
+                if (_button == null)
+                    _button = GetComponent<Button>();
+                return _button;
+            }
+        }
         public Image Icon => _icon;
         private HoverScaleOnPointer _hoverScale;
         private bool _hasVisualHoverTarget;
@@ -66,11 +74,16 @@ namespace CreativeAI.UI
 
         private void OnDisable()
         {
-            _icon?.DOKill();
-            _selectedBackground?.DOKill();
-            _selectedBackground?.rectTransform.DOKill();
-            _selectedUnderlineImage?.DOKill();
-            _selectedUnderline?.DOKill();
+            if (_icon != null)
+                _icon.DOKill();
+            if (_selectedBackground != null)
+                _selectedBackground.DOKill();
+            if (_selectedBackground != null)
+                _selectedBackground.rectTransform.DOKill();
+            if (_selectedUnderlineImage != null)
+                _selectedUnderlineImage.DOKill();
+            if (_selectedUnderline != null)
+                _selectedUnderline.DOKill();
         }
 
         private void ConfigureHoverScaleTarget()
@@ -216,7 +229,8 @@ namespace CreativeAI.UI
                     _icon.DOColor(targetColor, duration).SetEase(Ease.OutQuad);
             }
 
-            _hoverScale?.SetBounceAllowed(_hasVisualHoverTarget && allowSelectedBounce);
+            if (_hoverScale != null)
+                _hoverScale.SetBounceAllowed(_hasVisualHoverTarget && allowSelectedBounce);
 
             if (_hoverScale == null || !_hasVisualHoverTarget)
                 return;
@@ -284,7 +298,10 @@ namespace CreativeAI.UI
                     _selectionUnderlineScale.y,
                     _selectionUnderlineScale.z
                 );
-                _selectedUnderlineImage?.DOFade(1f, _selectionShowDuration).SetEase(Ease.OutQuad);
+                if (_selectedUnderlineImage != null)
+                    _selectedUnderlineImage
+                        .DOFade(1f, _selectionShowDuration)
+                        .SetEase(Ease.OutQuad);
                 _selectedUnderline
                     .DOScaleX(_selectionUnderlineScale.x, _selectionShowDuration)
                     .SetEase(Ease.OutCubic);
@@ -320,10 +337,14 @@ namespace CreativeAI.UI
 
         private void KillSelectionTweens()
         {
-            _selectedBackground?.DOKill();
-            _selectedBackground?.rectTransform.DOKill();
-            _selectedUnderlineImage?.DOKill();
-            _selectedUnderline?.DOKill();
+            if (_selectedBackground != null)
+                _selectedBackground.DOKill();
+            if (_selectedBackground != null)
+                _selectedBackground.rectTransform.DOKill();
+            if (_selectedUnderlineImage != null)
+                _selectedUnderlineImage.DOKill();
+            if (_selectedUnderline != null)
+                _selectedUnderline.DOKill();
         }
 
         private static void SetAlpha(Graphic graphic, float alpha)

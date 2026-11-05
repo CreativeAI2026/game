@@ -50,9 +50,9 @@ namespace CreativeAI.EditorTools
                             // so a layout rebuild preserves the small optical baseline correction.
                             var layout = title.GetComponent<HorizontalLayoutGroup>();
                             layout.padding.left = 58;
-                            var element =
-                                icon.GetComponent<LayoutElement>()
-                                ?? icon.gameObject.AddComponent<LayoutElement>();
+                            var element = icon.TryGetComponent(out LayoutElement existing)
+                                ? existing
+                                : icon.gameObject.AddComponent<LayoutElement>();
                             element.ignoreLayout = true;
                             icon.anchorMin = icon.anchorMax = new Vector2(0, .5f);
                             icon.pivot = new Vector2(0, .5f);
@@ -169,7 +169,9 @@ namespace CreativeAI.EditorTools
             if (preview == null)
                 preview = Rect("WeaponPreview", view);
             Fill(preview, 32);
-            var image = preview.GetComponent<Image>() ?? preview.gameObject.AddComponent<Image>();
+            var image = preview.TryGetComponent(out Image existingImage)
+                ? existingImage
+                : preview.gameObject.AddComponent<Image>();
             image.preserveAspect = true;
             image.raycastTarget = false;
             image.color = Color.white;
@@ -218,9 +220,9 @@ namespace CreativeAI.EditorTools
                 var rect = graphic.rectTransform;
                 rect.SetSizeWithCurrentAnchors(RectTransform.Axis.Horizontal, 48);
                 rect.SetSizeWithCurrentAnchors(RectTransform.Axis.Vertical, 48);
-                var size =
-                    graphic.GetComponent<LayoutElement>()
-                    ?? graphic.gameObject.AddComponent<LayoutElement>();
+                var size = graphic.TryGetComponent(out LayoutElement existing)
+                    ? existing
+                    : graphic.gameObject.AddComponent<LayoutElement>();
                 size.minWidth = size.preferredWidth = 48;
                 size.minHeight = size.preferredHeight = 48;
                 size.flexibleWidth = size.flexibleHeight = 0;
@@ -266,8 +268,9 @@ namespace CreativeAI.EditorTools
                 backIcon = Rect("BackIcon", back);
             backIcon.gameObject.SetActive(true);
             Fill(backIcon, 18);
-            var backImage =
-                backIcon.GetComponent<Image>() ?? backIcon.gameObject.AddComponent<Image>();
+            var backImage = backIcon.TryGetComponent(out Image existingBackImage)
+                ? existingBackImage
+                : backIcon.gameObject.AddComponent<Image>();
             backImage.sprite = AssetDatabase.LoadAssetAtPath<Sprite>(
                 "Assets/_Project/Art/UI/Common/Icon_Back_Chevron.png"
             );
@@ -282,7 +285,8 @@ namespace CreativeAI.EditorTools
             card.anchorMax = new Vector2(.81f, .74f);
             card.offsetMin = card.offsetMax = Vector2.zero;
             Paint(card.gameObject, UiVisualTheme.Panel);
-            var title = card.Find("Title")?.GetComponent<TMP_Text>();
+            var titleTransform = card.Find("Title");
+            var title = titleTransform != null ? titleTransform.GetComponent<TMP_Text>() : null;
             if (title == null)
                 title = Text("Title", card, font);
             title.text = "セーブ";
@@ -373,7 +377,9 @@ namespace CreativeAI.EditorTools
 
         private static void Paint(GameObject root, Color color)
         {
-            var image = root.GetComponent<Image>() ?? root.AddComponent<Image>();
+            var image = root.TryGetComponent(out Image existing)
+                ? existing
+                : root.AddComponent<Image>();
             image.sprite = Rounded;
             image.type = Image.Type.Sliced;
             image.color = color;

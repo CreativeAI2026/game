@@ -179,7 +179,8 @@ namespace CreativeAI.UI
                     _panelGroup.alpha = 0f;
                 _panel.transform.SetAsLastSibling();
                 _scrollController.ScrollToLatest();
-                EventSystem.current?.SetSelectedGameObject(null);
+                if (EventSystem.current != null)
+                    EventSystem.current.SetSelectedGameObject(null);
             }
 
             if (!Application.isPlaying)
@@ -236,11 +237,9 @@ namespace CreativeAI.UI
                 AlignSearchText(_searchField.placeholder as TMP_Text);
             }
 
-            CenterButtonLabel(
-                _panel != null
-                    ? _panel.transform.Find("ArchiveHeader/CloseButton")?.gameObject
-                    : null
-            );
+            var closeButton =
+                _panel != null ? _panel.transform.Find("ArchiveHeader/CloseButton") : null;
+            CenterButtonLabel(closeButton != null ? closeButton.gameObject : null);
             CenterButtonLabel(_latestButton);
         }
 

@@ -173,8 +173,8 @@ namespace CreativeAI.EditorTools
         {
             foreach (var row in root.GetComponentsInChildren<HorizontalLayoutGroup>(true))
                 if (
-                    row.transform.Find("Label")?.GetComponent<TMP_Text>() != null
-                    && row.transform.Find("Value")?.GetComponent<TMP_Text>() != null
+                    FindComponent<TMP_Text>(row.transform, "Label") != null
+                    && FindComponent<TMP_Text>(row.transform, "Value") != null
                 )
                     StyleParameter(row.transform);
 
@@ -226,9 +226,10 @@ namespace CreativeAI.EditorTools
                 so.FindProperty("_tabNormalTextColor").colorValue = UiVisualTheme.Ink;
                 so.FindProperty("_tabSelectedTextColor").colorValue = UiVisualTheme.Gold;
                 so.ApplyModifiedPropertiesWithoutUndo();
-                var button = loadout
-                    .transform.Find("InventoryArea/DetailArea/ItemRow/ButtonArea/Button")
-                    ?.GetComponent<Button>();
+                var button = FindComponent<Button>(
+                    loadout.transform,
+                    "InventoryArea/DetailArea/ItemRow/ButtonArea/Button"
+                );
                 if (button != null)
                     ActionButton(button);
             }
@@ -260,8 +261,9 @@ namespace CreativeAI.EditorTools
             layout.childForceExpandHeight = true;
             layout.childForceExpandWidth = false;
             layout.childScaleHeight = layout.childScaleWidth = false;
-            var size =
-                root.GetComponent<LayoutElement>() ?? root.gameObject.AddComponent<LayoutElement>();
+            var size = root.TryGetComponent(out LayoutElement existing)
+                ? existing
+                : root.gameObject.AddComponent<LayoutElement>();
             size.minWidth = size.preferredWidth = 0;
             size.flexibleWidth = 1;
             size.minHeight = 44;
@@ -283,9 +285,9 @@ namespace CreativeAI.EditorTools
             value.fontSizeMax = UiVisualTheme.ParameterValueSize;
             foreach (var text in new[] { label, value })
             {
-                var element =
-                    text.GetComponent<LayoutElement>()
-                    ?? text.gameObject.AddComponent<LayoutElement>();
+                var element = text.TryGetComponent(out LayoutElement existingElement)
+                    ? existingElement
+                    : text.gameObject.AddComponent<LayoutElement>();
                 element.minWidth = element.preferredWidth = 0;
                 element.flexibleWidth = 1;
                 element.minHeight = element.preferredHeight = -1;
@@ -320,9 +322,9 @@ namespace CreativeAI.EditorTools
                 outline.enabled = false;
             Text(label, 36, UiVisualTheme.ActionInk);
             label.fontStyle = FontStyles.Bold;
-            var style =
-                button.GetComponent<UiActionButtonStyle>()
-                ?? button.gameObject.AddComponent<UiActionButtonStyle>();
+            var style = button.TryGetComponent(out UiActionButtonStyle existing)
+                ? existing
+                : button.gameObject.AddComponent<UiActionButtonStyle>();
             var so = new SerializedObject(style);
             so.FindProperty("_button").objectReferenceValue = button;
             so.FindProperty("_label").objectReferenceValue = label;
@@ -371,6 +373,13 @@ namespace CreativeAI.EditorTools
             layout.childControlWidth = layout.childControlHeight = true;
             layout.childForceExpandWidth = true;
             layout.childForceExpandHeight = false;
+        }
+
+        private static T FindComponent<T>(Transform root, string path)
+            where T : Component
+        {
+            var target = root != null ? root.Find(path) : null;
+            return target != null ? target.GetComponent<T>() : null;
         }
     }
 }

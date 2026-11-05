@@ -1045,7 +1045,8 @@ namespace CreativeAI.EditorTools
                         );
                         continue;
                     }
-                    doorGroup ??= NewGroup("Doors", parent);
+                    if (doorGroup == null)
+                        doorGroup = NewGroup("Doors", parent);
                     var def = Doors.First(d => d.Symbol == grid[r, c]);
                     doorPrefabs.TryGetValue(def.Symbol, out var prefab);
                     var eastWest = IsEastWest(grid, rows, cols, r, c);
@@ -1151,7 +1152,8 @@ namespace CreativeAI.EditorTools
                         var n = nr >= 0 && nc >= 0 && nr < rows && nc < cols ? grid[nr, nc] : Void;
                         if (n == Landing || n == '#' || IsPanel(n) || IsStair(n))
                             continue;
-                        landingFences ??= NewGroup("Fences", landingRoot);
+                        if (landingFences == null)
+                            landingFences = NewGroup("Fences", landingRoot);
                         CreateHandrail(
                             landingFences,
                             handrail,
@@ -2653,7 +2655,9 @@ namespace CreativeAI.EditorTools
             if (mat != null)
                 return mat;
 
-            var shader = Shader.Find("Universal Render Pipeline/Lit") ?? Shader.Find("Standard");
+            var shader = Shader.Find("Universal Render Pipeline/Lit");
+            if (shader == null)
+                shader = Shader.Find("Standard");
             mat = new Material(shader) { name = name };
             mat.SetColor("_BaseColor", color);
             mat.color = color;

@@ -46,8 +46,9 @@ namespace CreativeAI.UI
             if (_emptyObject != null)
                 return;
 
-            var emptyTransform =
-                transform.Find("VisualRoot/EmptyText") ?? transform.Find("EmptyText");
+            var emptyTransform = transform.Find("VisualRoot/EmptyText");
+            if (emptyTransform == null)
+                emptyTransform = transform.Find("EmptyText");
             _emptyObject = emptyTransform != null ? emptyTransform.gameObject : null;
         }
 #endif

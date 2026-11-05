@@ -82,7 +82,11 @@ namespace CreativeAI.UI.CharacterUI
 
         private void PositionAbove(RectTransform target)
         {
-            if (target == null || _rectTransform?.parent is not RectTransform parent)
+            if (
+                target == null
+                || _rectTransform == null
+                || _rectTransform.parent is not RectTransform parent
+            )
                 return;
 
             var corners = new Vector3[4];
@@ -102,9 +106,12 @@ namespace CreativeAI.UI.CharacterUI
 
         private void ResolveReferences()
         {
-            _rectTransform ??= transform as RectTransform;
-            _canvasGroup ??= GetComponent<CanvasGroup>();
-            _label ??= GetComponent<TMP_Text>();
+            if (_rectTransform == null)
+                _rectTransform = transform as RectTransform;
+            if (_canvasGroup == null)
+                _canvasGroup = GetComponent<CanvasGroup>();
+            if (_label == null)
+                _label = GetComponent<TMP_Text>();
 
             if (_canvasGroup != null)
             {

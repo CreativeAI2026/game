@@ -304,9 +304,9 @@ namespace CreativeAI.EditorTools
 
                 inventory.transform.SetParent(items, false);
                 inventory.name = "Inventory";
-                var inventoryLayout =
-                    inventory.GetComponent<LayoutElement>()
-                    ?? inventory.gameObject.AddComponent<LayoutElement>();
+                var inventoryLayout = inventory.TryGetComponent(out LayoutElement existing)
+                    ? existing
+                    : inventory.gameObject.AddComponent<LayoutElement>();
                 inventoryLayout.minHeight = inventoryLayout.preferredHeight = 0;
                 inventoryLayout.flexibleHeight = 1;
                 Object.DestroyImmediate(inventory.GetComponent<SlideInPanel>());
@@ -544,7 +544,9 @@ namespace CreativeAI.EditorTools
         }
 
         private static LayoutElement Element(GameObject target) =>
-            target.GetComponent<LayoutElement>() ?? target.AddComponent<LayoutElement>();
+            target.TryGetComponent(out LayoutElement existing)
+                ? existing
+                : target.AddComponent<LayoutElement>();
 
         private static void Height(GameObject target, float height)
         {
@@ -572,9 +574,9 @@ namespace CreativeAI.EditorTools
 
         private static VerticalLayoutGroup Vertical(GameObject target, float spacing, int padding)
         {
-            var layout =
-                target.GetComponent<VerticalLayoutGroup>()
-                ?? target.AddComponent<VerticalLayoutGroup>();
+            var layout = target.TryGetComponent(out VerticalLayoutGroup existing)
+                ? existing
+                : target.AddComponent<VerticalLayoutGroup>();
             layout.enabled = true;
             layout.padding = new RectOffset(padding, padding, padding, padding);
             layout.spacing = spacing;

@@ -119,7 +119,8 @@ namespace CreativeAI.Gameplay
                 float finalDamage = _playerStatus.RollDamage(_meleeMultiplier, out bool isCritical);
                 enemy.TakeDamage(finalDamage, isCritical);
 
-                CameraShakeManager.Instance?.Shake(0.3f);
+                if (CameraShakeManager.Instance != null)
+                    CameraShakeManager.Instance.Shake(0.3f);
 
                 SpawnHitEffect(hitPoint, hitNormal);
                 WorldSoundPlayer.Play(_hitSound, hitPoint, this);

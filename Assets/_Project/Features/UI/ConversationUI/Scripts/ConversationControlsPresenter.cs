@@ -26,10 +26,14 @@ namespace CreativeAI.UI
             if (_bound)
                 return;
             _bound = true;
-            _auto?.onClick.AddListener(() => toggleAuto());
-            _skip?.onClick.AddListener(() => toggleSkip());
-            _speed?.onClick.AddListener(() => cycleSpeed());
-            _hide?.onClick.AddListener(() => toggleHide());
+            if (_auto != null)
+                _auto.onClick.AddListener(() => toggleAuto());
+            if (_skip != null)
+                _skip.onClick.AddListener(() => toggleSkip());
+            if (_speed != null)
+                _speed.onClick.AddListener(() => cycleSpeed());
+            if (_hide != null)
+                _hide.onClick.AddListener(() => toggleHide());
         }
 
         public void SetAvailability(bool historyOpen, bool hidden, bool rewardActive, bool choices)

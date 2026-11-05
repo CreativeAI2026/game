@@ -246,7 +246,8 @@ namespace CreativeAI.UI
             if (button == null || !button.IsInteractable())
                 return;
             _selectedIndex = index;
-            EventSystem.current?.SetSelectedGameObject(button.gameObject);
+            if (EventSystem.current != null)
+                EventSystem.current.SetSelectedGameObject(button.gameObject);
             SetFocused(button, true);
         }
 

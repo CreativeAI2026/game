@@ -33,9 +33,9 @@ namespace CreativeAI.EditorTools
                 rect.anchoredPosition = Vector2.zero;
                 rect.sizeDelta = new Vector2(0, 160);
                 rect.localScale = Vector3.one;
-                var layout =
-                    text.GetComponent<LayoutElement>()
-                    ?? text.gameObject.AddComponent<LayoutElement>();
+                var layout = text.TryGetComponent(out LayoutElement existing)
+                    ? existing
+                    : text.gameObject.AddComponent<LayoutElement>();
                 layout.ignoreLayout = true;
                 text.alignment = TextAlignmentOptions.Center;
                 text.enableAutoSizing = true;
