@@ -83,9 +83,16 @@ namespace CreativeAI.EditorTools
             if (comp == null)
                 comp = holder.AddComponent<AdditiveScenes>();
 
-            var names = Parts.Select(PropSceneWorkflow.SceneName).ToArray();
             var so = new SerializedObject(comp);
             var arr = so.FindProperty("_sceneNames");
+
+            // 小物シーンを先頭に並べ、手で足された小物以外のシーン(Items / Events など)は後ろに残す
+            var propNames = Parts.Select(PropSceneWorkflow.SceneName).ToArray();
+            var others = Enumerable
+                .Range(0, arr.arraySize)
+                .Select(i => arr.GetArrayElementAtIndex(i).stringValue)
+                .Where(n => !string.IsNullOrEmpty(n) && !propNames.Contains(n));
+            var names = propNames.Concat(others).ToArray();
             arr.arraySize = names.Length;
             for (var i = 0; i < names.Length; i++)
                 arr.GetArrayElementAtIndex(i).stringValue = names[i];
