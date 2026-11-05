@@ -16,6 +16,13 @@ jobs:
     name: Compile (StandaloneLinux64)
     runs-on: ubuntu-latest
     steps:
+      # Unity エディタの Docker イメージで空きが足りなくなるので、使わない SDK を先に消す
+      - name: Free disk space
+        run: |
+          sudo rm -rf /usr/share/dotnet /usr/local/lib/android /opt/ghc /opt/hostedtoolcache/CodeQL
+          sudo docker image prune --all --force
+          df -h /
+
       - uses: actions/checkout@v7
 
       - name: Restore Library
