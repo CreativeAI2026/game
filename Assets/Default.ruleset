@@ -6,8 +6,8 @@
     <Rule Id="UNT0003" Action="Warning" />
     <Rule Id="UNT0004" Action="Warning" />
     <Rule Id="UNT0006" Action="Warning" />
-    <Rule Id="UNT0007" Action="Warning" />
-    <Rule Id="UNT0008" Action="Warning" />
+    <Rule Id="UNT0007" Action="Error" />
+    <Rule Id="UNT0008" Action="Error" />
     <Rule Id="UNT0009" Action="Warning" />
     <Rule Id="UNT0010" Action="Warning" />
     <Rule Id="UNT0011" Action="Warning" />
@@ -21,7 +21,7 @@
     <Rule Id="UNT0019" Action="Warning" />
     <Rule Id="UNT0020" Action="Warning" />
     <Rule Id="UNT0022" Action="Warning" />
-    <Rule Id="UNT0023" Action="Warning" />
+    <Rule Id="UNT0023" Action="Error" />
     <Rule Id="UNT0024" Action="Warning" />
     <Rule Id="UNT0025" Action="Warning" />
     <Rule Id="UNT0026" Action="Warning" />
