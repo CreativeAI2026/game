@@ -34,6 +34,7 @@ namespace CreativeAI.Tests
             EventStatics.ResetForPlaySession();
             UiPanelService.ResetState();
             InteractPromptService.Clear();
+            PendingSceneLoads.Clear();
             PickedItemRegistry.Clear();
             ItemCatalog.InjectForTests(null);
         }
