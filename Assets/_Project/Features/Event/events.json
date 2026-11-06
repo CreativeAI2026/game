@@ -7,10 +7,12 @@
                 {"type":"progress","value": 0 }
             ],
             "steps":[
+                {"kind": "command", "command": "background.black" },
                 {"kind": "command", "command": "portrait.left.obscure" },
                 {"kind":"line","speaker": "？？？","portrait":"hero_normal","text":"「…っ、<wait=0.2>う……。<wait=0.5>い、てて……」"},
                 {"kind":"line","speaker": "？？？", "portrait":"hero_normal","text":"「…あれ。 <wait=0.5>俺、<wait=0.2>なんでこんな床で……？」"},
                 {"kind":"line","text":"痛む頭を押さえながら、<wait=0.2>ゆっくりと上体を起こす。"},
+                {"kind": "command", "command": "background.black.clear", "arg": "1.5" },
                 {"kind":"line","text":"周囲を見渡すが、<wait=0.2>そこは見覚えのない殺風景な部屋だった。"},
                 {"kind":"line","text":"壁際には用途の分からない物品が並び、<wait=0.2>\n床には割れたガラスや書類が無造作に散乱している。"},
                 {"kind":"line","speaker": "？？？", "portrait":"hero_normal","text":"「なんだここ、<wait=0.2>倉庫…？<wait=0.5> いや、<wait=0.2>なんかの研究施設って感じか」"},

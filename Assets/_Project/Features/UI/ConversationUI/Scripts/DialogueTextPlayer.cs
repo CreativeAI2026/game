@@ -32,6 +32,7 @@ namespace CreativeAI.UI
             int total = body.textInfo.characterCount;
             body.maxVisibleCharacters = 0;
             Vector2 basePosition = body.rectTransform.anchoredPosition;
+            float speedScale = 1f;
 
             for (int shown = 1; shown <= total; shown++)
             {
@@ -48,6 +49,8 @@ namespace CreativeAI.UI
                     break;
                 }
 
+                if (parsed.TryGetSpeedChange(shown - 1, out float changedScale))
+                    speedScale = changedScale;
                 body.maxVisibleCharacters = shown;
                 if (audioSource != null && typingSound != null && shown % 2 == 0)
                     audioSource.PlayOneShot(typingSound);
@@ -55,7 +58,8 @@ namespace CreativeAI.UI
                     ? basePosition + UnityEngine.Random.insideUnitCircle * 2.5f
                     : basePosition;
 
-                float delay = Mathf.Max(0f, characterInterval) * SpeedMultiplier(speed);
+                float delay =
+                    Mathf.Max(0f, characterInterval) * SpeedMultiplier(speed) / speedScale;
                 if (IsPunctuation(body.textInfo.characterInfo[shown - 1].character))
                     delay += Mathf.Max(0f, punctuationDelay);
                 delay += parsed.GetWaitAfter(shown - 1);

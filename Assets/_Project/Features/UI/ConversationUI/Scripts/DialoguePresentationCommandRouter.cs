@@ -18,6 +18,8 @@ namespace CreativeAI.UI
             IEnumerator
         > _playEffect;
         private readonly Func<IEnumerator> _close;
+        private readonly Func<string, IEnumerator> _showPortrait;
+        private readonly DialogueStageCommands _stage;
         private readonly Action<string, string> _external;
 
         public DialoguePresentationCommandRouter(
@@ -31,6 +33,8 @@ namespace CreativeAI.UI
                 IEnumerator
             > playEffect,
             Func<IEnumerator> close,
+            Func<string, IEnumerator> showPortrait,
+            DialogueStageCommands stage,
             Action<string, string> external
         )
         {
@@ -39,6 +43,8 @@ namespace CreativeAI.UI
             _setObscured = setObscured;
             _playEffect = playEffect;
             _close = close;
+            _showPortrait = showPortrait;
+            _stage = stage;
             _external = external;
         }
 
@@ -109,11 +115,17 @@ namespace CreativeAI.UI
                     )
                         yield return new WaitForSecondsRealtime(Mathf.Clamp(seconds, 0f, 10f));
                     break;
+                case "portrait.show":
+                    yield return _showPortrait(argument?.Trim());
+                    break;
                 case "conversation.close":
                     yield return _close();
                     break;
                 default:
-                    if (
+                    IEnumerator stage = _stage.Create(command, argument);
+                    if (stage != null)
+                        yield return stage;
+                    else if (
                         command != null
                         && (
                             command.StartsWith("camera.", StringComparison.OrdinalIgnoreCase)
