@@ -32,7 +32,8 @@ namespace CreativeAI.Gameplay
             FaceStage();
 
             _timer += Time.deltaTime;
-            if (_timer >= _duration)
+            // 自動の攻撃を止めている間(デバッグで1つずつ確かめる時)は回り続ける
+            if (_timer >= _duration && boss.AutoAttacks)
                 boss.StartNextAttack();
         }
     }

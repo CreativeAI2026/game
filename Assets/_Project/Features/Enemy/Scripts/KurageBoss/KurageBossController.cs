@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.Assertions;
 
@@ -203,6 +204,46 @@ namespace CreativeAI.Gameplay
                 return;
             }
             ChangeState(new KurageStabState(this));
+        }
+
+        /// <summary>周回の後に自分で攻撃を選ぶか。デバッグで攻撃を1つずつ確かめる時は止める。</summary>
+        public bool AutoAttacks { get; set; } = true;
+
+        /// <summary>ボスに並べた地面の触手の出し方。</summary>
+        public IReadOnlyList<KurageTentaclePattern> TentaclePatterns => _tentaclePatterns;
+
+        /// <summary>今のステートの名前(デバッグ表示用)。</summary>
+        public string CurrentStateName => currentState != null ? currentState.GetType().Name : "-";
+
+        /// <summary>
+        /// 指定した攻撃をすぐに始める(デバッグ用)。倒れている・わっかで締めている間は始めない。
+        /// わっか投げは、わっかが頭上に戻っていなければ始めない。
+        /// </summary>
+        /// <param name="tentaclePattern">地面の触手を出す時の出し方。null なら並べた中から選ぶ</param>
+        /// <returns>始められたか</returns>
+        public bool TryStartAttack(
+            KurageDebugAttack attack,
+            KurageTentaclePattern tentaclePattern = null
+        )
+        {
+            if (currentState is KurageDeathState or KurageIdleState)
+                return false;
+
+            switch (attack)
+            {
+                case KurageDebugAttack.Stab:
+                    ChangeState(new KurageStabState(this));
+                    return true;
+                case KurageDebugAttack.Tentacles:
+                    ChangeState(new KurageTentacleSummonState(this, tentaclePattern));
+                    return true;
+                case KurageDebugAttack.Ring:
+                    if (!Halo.IsOnHead)
+                        return false;
+                    ChangeState(new KurageRingThrowState(this));
+                    return true;
+            }
+            return false;
         }
 
         /// <summary>地面の触手の出し方をパターンの中から1つ選ぶ。</summary>

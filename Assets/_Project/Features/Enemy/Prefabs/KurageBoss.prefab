@@ -228,7 +228,9 @@ MonoBehaviour:
   _stabHitbox: {fileID: 2004251456376075394}
   _groundTentaclePrefab: {fileID: 7343544422754005719, guid: 6c5dc6caf992857478e6b88c72965e67, type: 3}
   _tentaclePatterns:
-  - {fileID: 11400000, guid: e87563865ee7a0d40a039a27f8952fdf, type: 2}
+  - {fileID: 11400000, guid: bc54e6b59c18c7d4d8d1b6d04c561efe, type: 2}
+  - {fileID: 11400000, guid: 9aa6bd376bc7cff44bb54f8af9abe1f6, type: 2}
+  - {fileID: 11400000, guid: e638c914d8b508945bfdc2ff2cf2f70e, type: 2}
   _tentacleCooldown: 8
   _drillRecoverDuration: 1.4
   _ringCooldown: 15

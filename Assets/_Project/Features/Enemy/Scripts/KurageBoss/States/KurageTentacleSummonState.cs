@@ -14,11 +14,22 @@ namespace CreativeAI.Gameplay
         private const float DiveFallbackTime = 0.8f;
 
         private readonly List<KurageTentacleSpawn> _pending = new List<KurageTentacleSpawn>();
+        private KurageTentaclePattern _pattern;
         private float _timer;
         private float _diveTime = -1f;
 
         public KurageTentacleSummonState(KurageBossController controller)
             : base(controller) { }
+
+        /// <param name="pattern">使う出し方。null ならボスに並べた中から選ぶ(デバッグで決めて出す時に指定する)</param>
+        public KurageTentacleSummonState(
+            KurageBossController controller,
+            KurageTentaclePattern pattern
+        )
+            : base(controller)
+        {
+            _pattern = pattern;
+        }
 
         public override void Enter()
         {
@@ -51,9 +62,10 @@ namespace CreativeAI.Gameplay
         private void Dive()
         {
             _diveTime = _timer;
-            KurageTentaclePattern pattern = boss.PickTentaclePattern();
+            if (_pattern == null)
+                _pattern = boss.PickTentaclePattern();
             _pending.AddRange(
-                pattern.Build(boss.Player.transform.position, boss.Mover.Path.StageBounds)
+                _pattern.Build(boss.Player.transform.position, boss.Mover.Path.StageBounds)
             );
         }
 
@@ -66,9 +78,15 @@ namespace CreativeAI.Gameplay
                 if (elapsed < spawn.Delay)
                     continue;
 
+                // 位置は出す瞬間に決め直せる(プレイヤーを追いかけるパターン用)
+                Vector3 position = _pattern.ResolvePosition(
+                    spawn,
+                    boss.Player.transform.position,
+                    boss.Mover.Path.StageBounds
+                );
                 KurageGroundTentacle tentacle = Object.Instantiate(
                     boss.GroundTentaclePrefab,
-                    spawn.Position,
+                    position,
                     Quaternion.identity
                 );
                 tentacle.Begin(

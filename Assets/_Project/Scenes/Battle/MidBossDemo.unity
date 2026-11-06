@@ -560,6 +560,17 @@ BoxCollider:
   serializedVersion: 3
   m_Size: {x: 18.27, y: 1.2499999, z: 0.112583295}
   m_Center: {x: 0, y: 0.59499997, z: 10}
+--- !u!114 &168440392 stripped
+MonoBehaviour:
+  m_CorrespondingSourceObject: {fileID: 5706340402820222297, guid: c7f978d0c9f6e3945bedfc3add346733, type: 3}
+  m_PrefabInstance: {fileID: 5161012620053616469}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: b18ee930dbf4b4e4bb3b0ef44fa9b713, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: CreativeAI.Gameplay::CreativeAI.Gameplay.KurageBossController
 --- !u!1 &211963033
 GameObject:
   m_ObjectHideFlags: 0
@@ -9381,6 +9392,53 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1949600493}
   m_CullTransparentMesh: 1
+--- !u!1 &1967694008
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 1967694010}
+  - component: {fileID: 1967694009}
+  m_Layer: 0
+  m_Name: KurageDebugControls
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!114 &1967694009
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1967694008}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: a01b9a30fcd37c24db6909ef445bb07b, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: CreativeAI.Gameplay::CreativeAI.Gameplay.KurageDebugControls
+  _boss: {fileID: 168440392}
+  _toggleKey: 99
+  _visibleOnStart: 1
+--- !u!4 &1967694010
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1967694008}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1001 &1981615406
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -12663,3 +12721,4 @@ SceneRoots:
   - {fileID: 962047125}
   - {fileID: 418004495}
   - {fileID: 5161012620053616469}
+  - {fileID: 1967694010}
