@@ -148,5 +148,45 @@ namespace CreativeAI.Tests.EditMode
             var json = System.IO.File.ReadAllText(DevState.AssetPath);
             Assert.IsTrue(DevState.Parse(json).HasHp);
         }
+
+        [Test]
+        public void Parse_SpawnFields_AreReadAndDefaultToOff()
+        {
+            var withSpawn = DevState.Parse(
+                @"{ ""useSpawn"": true, ""spawnPosition"": { ""x"": -592, ""y"": -60.8, ""z"": -30.5 }, ""spawnYaw"": 90 }"
+            );
+            var without = DevState.Parse(@"{ ""progress"": 1 }");
+
+            Assert.IsTrue(withSpawn.useSpawn);
+            Assert.AreEqual(new Vector3(-592f, -60.8f, -30.5f), withSpawn.spawnPosition);
+            Assert.AreEqual(90f, withSpawn.spawnYaw);
+            Assert.IsFalse(without.useSpawn);
+        }
+
+        [Test]
+        public void ApplySpawn_PlacesThePlayerOnlyWhenEnabled()
+        {
+            var player = new GameObject("Player");
+            try
+            {
+                var off = new DevState { spawnPosition = new Vector3(1f, 2f, 3f) };
+                Assert.IsFalse(off.ApplySpawn(player));
+                Assert.AreEqual(Vector3.zero, player.transform.position);
+
+                var on = new DevState
+                {
+                    useSpawn = true,
+                    spawnPosition = new Vector3(1f, 2f, 3f),
+                    spawnYaw = 90f,
+                };
+                Assert.IsTrue(on.ApplySpawn(player));
+                Assert.AreEqual(new Vector3(1f, 2f, 3f), player.transform.position);
+                Assert.AreEqual(90f, player.transform.eulerAngles.y, 0.01f);
+            }
+            finally
+            {
+                Object.DestroyImmediate(player);
+            }
+        }
     }
 }
