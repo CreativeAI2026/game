@@ -97,3 +97,7 @@ crashlytics-build.properties
 /AudioLoudnessBackup/
 # 音声エディタ（SoundKit の AudioClipEditWindow）が保存する、上書き前の音声ファイルと編集の記録
 /AudioEditBackup/
+
+# Unity crash recovery scenes
+/Assets/_Recovery/
+/Assets/_Recovery.meta
