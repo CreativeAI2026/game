@@ -33,6 +33,15 @@ namespace CreativeAI.Core
         private const float OnPathTolerance = 0.35f; // 直線の途中の点が NavMesh からずれてよい範囲
         private const int MaxStraightSamples = 20; // 直線の確認で調べる点の数の上限(重くしないため)
         private const float FadeSeconds = 0.25f; // 出入りの透明度が変わりきるまで
+        private const float MaxVerticalReach = 4f; // プレイヤーの足元からこれ以上高さが違う所で線を打ち切る(上下の階まで抜けて見えないように)
+        private const float NearFadeLength = 2.5f; // 線の出だしが薄い長さ(ワールド長。道筋の長さによらない)
+        private const float FarFadeLength = 4f; // 線の終わりが薄れていく長さ
+        private const float EdgeClearance = 2f; // 広い所で線を NavMesh の縁(壁・手すり)から離す距離。幅がこの2倍以下の所は真ん中に合わせる
+        private const float EdgeSearchWidth = 8f; // 反対側の縁までの幅を測る範囲(これより広ければ「広い所」)
+        private const float EdgeClearanceRange = 30f; // 縁から離す処理をかける、プレイヤーからの道のり
+        private const float JoinLookaheadPerOffset = 4f; // 道筋から横にずれた分の何倍先へ斜めにつなぐか
+        private const float MaxJoinLookahead = 2f; // 斜めにつなぐ先の上限(道筋に沿った距離)
+        private const int NearSearchPoints = 60; // 足元に一番近い線分を探す範囲(手前から数えた点の数)
         private static readonly int MainTexSt = Shader.PropertyToID("_MainTex_ST");
         private static readonly int ColorId = Shader.PropertyToID("_Color");
 
@@ -45,6 +54,17 @@ namespace CreativeAI.Core
         private readonly List<Vector3> _corners = new(); // 近道にした後の角(使い回す)
         private readonly List<float> _heights = new(); // 階段の持ち上げ用(使い回す)
         private readonly Vector3[] _bend = new Vector3[BendSteps + 1]; // 丸めた角の点(使い回す)
+        private readonly List<bool> _moved = new(); // 縁から寄せて動いた点(横ずれをならす範囲を絞る。使い回す)
+        private readonly List<Vector3> _smoothed = new(); // 横ずれをならす作業用(使い回す)
+        private readonly List<Vector3> _display = new(); // 実際に線へ渡す点(足元から先だけ)
+        private float _displayLength; // _display の長さ(矢じりの模様の位置と薄れの計算に使う)
+        private readonly Gradient _fade = new();
+        private readonly GradientColorKey[] _fadeColors =
+        {
+            new(Color.white, 0f),
+            new(Color.white, 1f),
+        };
+        private readonly GradientAlphaKey[] _fadeAlphas = new GradientAlphaKey[4];
         private Color _baseColor = Color.white; // 材質の色(透明度だけを掛けて変える)
         private float _nextRefresh;
         private bool _visible; // 見せたい状態。false なら透明になってから消す
@@ -64,7 +84,7 @@ namespace CreativeAI.Core
             // 矢じりの画像を道筋に沿って並べる(画像の向き=進む向き)。
             _line.textureMode = LineTextureMode.Tile;
             _line.textureScale = new Vector2(1f / ArrowSpacing, 1f);
-            _line.colorGradient = FadeGradient();
+            UpdateFade(Mathf.Infinity);
             _line.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
             _line.receiveShadows = false;
             _line.allowOcclusionWhenDynamic = false;
@@ -106,24 +126,23 @@ namespace CreativeAI.Core
         }
 
         // 手前と奥を薄くして、線の出だしと終わりが急に切れて見えないようにする。
-        private static Gradient FadeGradient()
+        // 薄れる長さは道筋の長さによらず一定にする(割合だと長い道で手元の矢じりが長く薄いままになる)。
+        private void UpdateFade(float length)
         {
-            var gradient = new Gradient();
-            gradient.SetKeys(
-                new[]
-                {
-                    new GradientColorKey(Color.white, 0f),
-                    new GradientColorKey(Color.white, 1f),
-                },
-                new[]
-                {
-                    new GradientAlphaKey(0f, 0f),
-                    new GradientAlphaKey(1f, 0.12f),
-                    new GradientAlphaKey(1f, 0.8f),
-                    new GradientAlphaKey(0f, 1f),
-                }
-            );
-            return gradient;
+            var inEnd =
+                length > 0f && !float.IsInfinity(length)
+                    ? Mathf.Min(NearFadeLength, length * 0.4f) / length
+                    : 0.12f;
+            var outStart =
+                length > 0f && !float.IsInfinity(length)
+                    ? 1f - Mathf.Min(FarFadeLength, length * 0.4f) / length
+                    : 0.8f;
+            _fadeAlphas[0] = new GradientAlphaKey(0f, 0f);
+            _fadeAlphas[1] = new GradientAlphaKey(1f, inEnd);
+            _fadeAlphas[2] = new GradientAlphaKey(1f, outStart);
+            _fadeAlphas[3] = new GradientAlphaKey(0f, 1f);
+            _fade.SetKeys(_fadeColors, _fadeAlphas);
+            _line.colorGradient = _fade;
         }
 
         private void Refresh(Vector3 target)
@@ -232,13 +251,15 @@ namespace CreativeAI.Core
             }
             _dense.Add(corners[corners.Count - 1]);
 
+            // 点は終点から数えて一定間隔に並べる。プレイヤーが歩いて出だしが動いても、終点側の点の
+            // ワールド位置が変わらないので、計算し直したときに線がずれたり、矢じりが前後に揺れたりしない。
             _goal.Clear();
-            _goal.Add(OnFloor(_dense[0]));
+            _goal.Add(OnFloor(_dense[_dense.Count - 1]));
             var carried = 0f; // 直前の点から進んだ距離
-            for (var i = 1; i < _dense.Count; i++)
+            for (var i = _dense.Count - 1; i > 0; i--)
             {
-                var a = _dense[i - 1];
-                var b = _dense[i];
+                var a = _dense[i];
+                var b = _dense[i - 1];
                 var segment = Vector3.Distance(a, b);
                 var at = PointSpacing - carried;
                 while (at <= segment)
@@ -248,9 +269,140 @@ namespace CreativeAI.Core
                 }
                 carried = segment - (at - PointSpacing);
             }
-            _goal.Add(OnFloor(_dense[_dense.Count - 1]));
+            _goal.Add(OnFloor(_dense[0]));
+            _goal.Reverse(); // 並びはプレイヤー側から終点へ
 
+            KeepOffEdges();
             RaiseOverStairEdges();
+        }
+
+        // NavMesh の経路は角を最短で通るので、階段や通路の縁(壁・手すり)ぎりぎりにはり付く。
+        // 線はざっくりした案内なので、少し大回りになってもよい。縁から離して、歩ける幅の内側へ寄せる。
+        //   幅が狭い所(ドア・1マスの通路・階段) … 左右の縁の真ん中に合わせる
+        //   広い所 … 縁から EdgeClearance まで離す
+        // 手すりのように NavMesh に反映されない物でも、縁から離れていれば重ならない。
+        // 遠くは見えにくく計算も重いので EdgeClearanceRange までを対象にし、その手前から少しずつ効きを弱める。
+        // 高さは寄せた先の NavMesh の面から取り直す(階をまたがない)。
+        private void KeepOffEdges()
+        {
+            var travelled = 0f;
+            var last = 0;
+            _moved.Clear();
+            for (var i = 0; i < _goal.Count; i++)
+            {
+                if (i > 0)
+                    travelled += Vector3.Distance(_goal[i - 1], _goal[i]);
+                if (travelled > EdgeClearanceRange)
+                    break;
+                last = i;
+                var strength =
+                    1f
+                    - Mathf.SmoothStep(
+                        0f,
+                        1f,
+                        Mathf.InverseLerp(EdgeClearanceRange * 0.75f, EdgeClearanceRange, travelled)
+                    );
+                var centered = CenterWithinWalkable(_goal[i], strength);
+                _moved.Add((centered - _goal[i]).sqrMagnitude > 0.0001f);
+                _goal[i] = centered;
+            }
+            SmoothSideways(last);
+        }
+
+        // 点を、歩ける幅の内側へ寄せた位置を返す。寄せられない・寄せる必要がなければそのまま返す。
+        private static Vector3 CenterWithinWalkable(Vector3 point, float strength)
+        {
+            var onFloor = point - Vector3.up * LiftAboveFloor;
+            // 一番近い縁の向きを「幅を測る軸」にする(縁のどちら側かは次の測定で決める)。
+            if (!NavMesh.FindClosestEdge(onFloor, out var edge, NavMesh.AllAreas))
+                return point;
+            // 縁から EdgeClearance 以上離れた点は広い所なので動かさない(幅を測る問い合わせを省く)。
+            if (edge.distance >= EdgeClearance)
+                return point;
+            var axis = new Vector3(edge.normal.x, 0f, edge.normal.z);
+            if (axis.sqrMagnitude < 0.0001f)
+                return point;
+            axis.Normalize();
+
+            var plus = WalkableDistance(onFloor, axis);
+            var minus = WalkableDistance(onFloor, -axis);
+            var near = Mathf.Min(plus, minus);
+            var far = Mathf.Max(plus, minus);
+            var towardFar = plus >= minus ? axis : -axis;
+
+            // 反対側の縁が測れた(= 幅が狭い)なら真ん中へ。測れない(広い)なら縁から EdgeClearance まで。
+            var narrow = far < EdgeSearchWidth && near + far <= 2f * EdgeClearance;
+            var shift = narrow ? (far - near) * 0.5f : Mathf.Max(0f, EdgeClearance - near);
+            shift *= strength;
+            if (shift <= 0.01f)
+                return point;
+
+            var target = onFloor + towardFar * shift;
+            if (
+                !NavMesh.SamplePosition(target, out var onMesh, VerticalTolerance, NavMesh.AllAreas)
+            )
+                return point;
+            return onMesh.position + Vector3.up * LiftAboveFloor;
+        }
+
+        // direction へ NavMesh の縁にぶつかるまでの距離。EdgeSearchWidth まで縁が無ければ EdgeSearchWidth。
+        private static float WalkableDistance(Vector3 from, Vector3 direction) =>
+            NavMesh.Raycast(from, from + direction * EdgeSearchWidth, out var hit, NavMesh.AllAreas)
+                ? hit.distance
+                : EdgeSearchWidth;
+
+        // 寄せたあとの横ずれの段差をならす(隣の点と少し混ぜる)。NavMesh から外れる所は動かさない。
+        private void SmoothSideways(int last)
+        {
+            if (last < 2)
+                return;
+            _smoothed.Clear();
+            _smoothed.AddRange(_goal);
+            for (var i = 1; i < last; i++)
+            {
+                // 動いていない点の周りは、ならす必要がない(問い合わせを省く)。
+                if (!_moved[i - 1] && !_moved[i] && !_moved[i + 1])
+                    continue;
+                var p = _goal[i];
+                var blended = (_goal[i - 1] + 2f * p + _goal[i + 1]) * 0.25f;
+                blended.y = p.y; // 高さは混ぜない(階段で線が面からずれないように)
+                var onFloor = blended - Vector3.up * LiftAboveFloor;
+                if (
+                    NavMesh.SamplePosition(
+                        onFloor,
+                        out var onMesh,
+                        OnPathTolerance,
+                        NavMesh.AllAreas
+                    )
+                )
+                    _smoothed[i] = onMesh.position + Vector3.up * LiftAboveFloor;
+            }
+            for (var i = 1; i < last; i++)
+                _goal[i] = _smoothed[i];
+        }
+
+        // 階段などで、プレイヤーの足元から高さが大きく離れた所から先は描かない。
+        // 床や天井は片面だけの面のことがあり、下の階から上の階の線が抜けて見えてしまうため。
+        // 上り始めは段の分だけ先まで見え、上るにつれて先が伸びていく。
+        // 点の並びを変えるので、_goal ではなく描く直前の _display に対して毎フレーム行う
+        // (_goal は終点側をそろえて _shown と対応づけるので、終点側を削ると対応がずれる)。
+        private void TrimDisplayToReach(float baseY)
+        {
+            for (var i = 2; i < _display.Count; i++)
+            {
+                if (Mathf.Abs(_display[i].y - baseY) <= MaxVerticalReach)
+                    continue;
+                _display.RemoveRange(i, _display.Count - i);
+                break;
+            }
+        }
+
+        private static float PathLength(List<Vector3> points)
+        {
+            var length = 0f;
+            for (var i = 1; i < points.Count; i++)
+                length += Vector3.Distance(points[i - 1], points[i]);
+            return length;
         }
 
         // 階段では、点の間の線が段の角(縁)の下をくぐって見える。隣の点の高さと比べて高いほうに揃え、
@@ -363,11 +515,13 @@ namespace CreativeAI.Core
             if (_goal.Count < 2)
                 return;
 
-            // 点の数が変わったときは、足りない分を目標の形で補い、余った分は切る。
-            while (_shown.Count < _goal.Count)
-                _shown.Add(_goal[_shown.Count]);
-            if (_shown.Count > _goal.Count)
-                _shown.RemoveRange(_goal.Count, _shown.Count - _goal.Count);
+            // 点の数が変わったときは、終点側をそろえて、増減した分を手前(プレイヤー側)で補う・切る。
+            // 手前の点は歩くたびに増減するので、終点側をそろえないと形全体が前後にずれる。
+            var extra = _goal.Count - _shown.Count;
+            for (var i = extra - 1; i >= 0; i--)
+                _shown.Insert(0, _goal[i]);
+            if (extra < 0)
+                _shown.RemoveRange(0, -extra);
 
             var k = 1f - Mathf.Exp(-FollowSharpness * Time.deltaTime);
             for (var i = 0; i < _shown.Count; i++)
@@ -376,14 +530,9 @@ namespace CreativeAI.Core
             // プレイヤーの近くは、歩いて床の高さが変わる(階段など)ので、毎フレーム床に合わせ直す。
             // 経路の計算は一定間隔なので、これをしないと階段で線が床にめり込む。
             var player = MapPin.PlayerTransform;
+            var feet = player != null ? player.position : _shown[0];
             if (player != null)
             {
-                var feet = player.position;
-                // 出だしはプレイヤーの足元に合わせる(歩いてもすぐ追いつく)。
-                var head = _shown[0];
-                head.x = feet.x;
-                head.z = feet.z;
-                _shown[0] = head;
                 for (var i = 0; i < _shown.Count; i++)
                 {
                     var p = _shown[i];
@@ -397,15 +546,80 @@ namespace CreativeAI.Core
                 }
             }
 
-            _line.positionCount = _shown.Count;
-            for (var i = 0; i < _shown.Count; i++)
-                _line.SetPosition(i, _shown[i]);
+            BuildDisplay(feet);
+            _line.positionCount = _display.Count;
+            for (var i = 0; i < _display.Count; i++)
+                _line.SetPosition(i, _display[i]);
+            UpdateFade(_displayLength);
         }
 
-        // 矢じりをピンの向きへ流す(画像の模様をずらすだけ)。
+        // 描く線は「道筋の上の、プレイヤーの足元に一番近い点」から先だけにする。
+        // 経路は一定間隔でしか計算し直さないので、歩いて追い越した分の古い出だしが残る。
+        // それを足元からつなぐと、足元から古い出だしへ戻ってから進む「Uターン」に見えてしまう。
+        private void BuildDisplay(Vector3 feet)
+        {
+            _display.Clear();
+            var bestSegment = 0;
+            var bestPoint = _shown[0];
+            var bestSqr = float.MaxValue;
+            var searchEnd = Mathf.Min(_shown.Count - 1, NearSearchPoints);
+            for (var i = 0; i < searchEnd; i++)
+            {
+                var point = ClosestOnSegment(_shown[i], _shown[i + 1], feet);
+                var sqr = (point - feet).sqrMagnitude;
+                if (sqr < bestSqr)
+                {
+                    bestSqr = sqr;
+                    bestSegment = i;
+                    bestPoint = point;
+                }
+            }
+
+            // 根元は足元に付ける(左右に動いても線がついてくる)。道筋から横にずれているほど、道筋の少し先へ
+            // 斜めにつなぎ、真後ろの古い点には戻らない。道筋の上にいるときは、そのまま道筋をたどる。
+            var offset = Vector2.Distance(
+                new Vector2(feet.x, feet.z),
+                new Vector2(bestPoint.x, bestPoint.z)
+            );
+            var lookahead = Mathf.Min(offset * JoinLookaheadPerOffset, MaxJoinLookahead);
+            _display.Add(new Vector3(feet.x, bestPoint.y, feet.z));
+            var next = bestSegment + 1;
+            var travelled = 0f;
+            var previous = bestPoint;
+            while (next < _shown.Count - 1)
+            {
+                var step = Vector3.Distance(previous, _shown[next]);
+                if (travelled + step > lookahead)
+                    break;
+                travelled += step;
+                previous = _shown[next];
+                next++;
+            }
+            for (var i = next; i < _shown.Count; i++)
+                _display.Add(_shown[i]);
+            if (_display.Count < 2)
+                _display.Add(_shown[_shown.Count - 1]);
+
+            TrimDisplayToReach(feet.y);
+            _displayLength = PathLength(_display);
+        }
+
+        private static Vector3 ClosestOnSegment(Vector3 a, Vector3 b, Vector3 point)
+        {
+            var ab = b - a;
+            var lengthSqr = ab.sqrMagnitude;
+            if (lengthSqr <= 0f)
+                return a;
+            var t = Mathf.Clamp01(Vector3.Dot(point - a, ab) / lengthSqr);
+            return a + ab * t;
+        }
+
+        // 矢じりを終点へ向けて流す(画像の模様をずらすだけ)。
+        // 模様は終点から数えた位置に固定し、そこへ流れる分だけ足す。出だし(足元)を基準にすると、
+        // 歩いて足元が動くたびに矢じり全体が一緒にずれて、カクカク進んで見える。
         private void Flow()
         {
-            var offset = -(Time.time * FlowSpeed / ArrowSpacing) % 1f;
+            var offset = Mathf.Repeat(-(_displayLength + Time.time * FlowSpeed) / ArrowSpacing, 1f);
             _block.SetVector(MainTexSt, new Vector4(1f, 1f, offset, 0f));
             var color = _baseColor;
             color.a *= _alpha;

@@ -21,6 +21,9 @@ Shader "CreativeAI/MapPinAlwaysOnTop"
         Cull Off
         ZWrite Off
         ZTest [_ZTest]
+        // 地面の線(ZTest を普通にした使い方)が階段の段の角や床にめり込んで消えないよう、深度を少し手前へ寄せる。
+        // 常に手前に描く(ZTest Always)使い方には影響しない。
+        Offset -1, -1
         Blend SrcAlpha OneMinusSrcAlpha
 
         Pass
