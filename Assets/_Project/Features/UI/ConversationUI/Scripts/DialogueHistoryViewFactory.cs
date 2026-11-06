@@ -376,7 +376,7 @@ namespace CreativeAI.UI
                 new Vector2(22f, 22f),
                 new Vector2(0.5f, 0.5f)
             );
-            var keyLabel = CreateText("Label", key.transform, "D", 14f, FontStyles.Bold);
+            var keyLabel = CreateText("Label", key.transform, "L", 14f, FontStyles.Bold);
             keyLabel.alignment = TextAlignmentOptions.Center;
             Stretch(keyLabel.rectTransform);
 
