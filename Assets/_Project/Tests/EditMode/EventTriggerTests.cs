@@ -278,6 +278,7 @@ namespace CreativeAI.Tests.EditMode
             AssignEvent(FiringEvent());
             TestReflection.SetField(_trigger, "_showPin", true);
             _triggerGo.transform.position = new Vector3(3f, 2f, 5f);
+            Physics.SyncTransforms(); // 動かした位置を Collider の bounds に反映させる
 
             _trigger.RefreshPin();
 
