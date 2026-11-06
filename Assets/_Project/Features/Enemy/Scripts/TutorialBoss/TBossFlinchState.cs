@@ -4,7 +4,7 @@ using UnityEngine.AI;
 namespace CreativeAI.Gameplay
 {
     /// <summary>
-    /// 攻撃を受けて怯むステート。TestEnemyFlinchStateと同構造。
+    /// 攻撃を受けて怯むステート。
     /// </summary>
     public class TBossFlinchState : TBossBaseState
     {

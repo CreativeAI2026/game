@@ -3,7 +3,7 @@ using UnityEngine;
 namespace CreativeAI.Gameplay
 {
     /// <summary>
-    /// 手下（MidBossMinionProjectile）を生成してプレイヤーへ向かわせる特殊攻撃。TestEnemyNeedleAttackState ベースで上昇を魚のような揺らぎに変更。
+    /// 手下（MidBossMinionProjectile）を生成してプレイヤーへ向かわせる特殊攻撃。上昇は魚のような揺らぎにする。
     /// 予備動作アニメ導入時は TODO 箇所に Animator.SetTrigger("Roar") を追加する。
     /// </summary>
     public class MidBossSpecialAttackState : MidBossBaseState
@@ -94,7 +94,7 @@ namespace CreativeAI.Gameplay
                     minion = obj.AddComponent<MidBossMinionProjectile>();
                 }
 
-                // TestEnemyと同様に円周状に分散させる（angleStep * i）
+                // 円周状に分散させる（angleStep * i）
                 float delay = i * FireInterval;
                 minion.Initialize(
                     con.transform,

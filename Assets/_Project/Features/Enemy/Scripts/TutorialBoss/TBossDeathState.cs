@@ -4,7 +4,7 @@ using UnityEngine.AI;
 namespace CreativeAI.Gameplay
 {
     /// <summary>
-    /// AI制御と物理を停止させる終端ステート。TestEnemyDeathStateと同構造。
+    /// AI制御と物理を停止させる終端ステート。
     /// </summary>
     public class TBossDeathState : TBossBaseState
     {
