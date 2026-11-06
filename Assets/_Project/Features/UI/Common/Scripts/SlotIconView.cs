@@ -6,6 +6,8 @@ using UnityEngine;
 using UnityEngine.UI;
 
 [assembly: InternalsVisibleTo("CreativeAI.Tests.EditMode")]
+// Editor の DialogueDebugSkipHotkey が、会話の全スキップの旗(DialogueDebugSkip)を立てるため。
+[assembly: InternalsVisibleTo("CreativeAI.EditorTools")]
 
 namespace CreativeAI.UI
 {

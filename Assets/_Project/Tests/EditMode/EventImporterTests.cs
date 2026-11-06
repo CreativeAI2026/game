@@ -355,6 +355,45 @@ namespace CreativeAI.Tests.EditMode
         }
 
         [Test]
+        public void Parse_Command_StageCommands_AreAllowed()
+        {
+            const string json =
+                @"{ ""events"": [ {
+                    ""id"": ""stage"",
+                    ""conditions"": [ { ""type"": ""progress"", ""value"": 1 } ],
+                    ""steps"": [
+                        { ""kind"": ""command"", ""command"": ""background.black"" },
+                        { ""kind"": ""command"", ""command"": ""background.flash"", ""arg"": ""#FFFFFF,0.3"" },
+                        { ""kind"": ""command"", ""command"": ""camera.shake"", ""arg"": ""0.8"" },
+                        { ""kind"": ""command"", ""command"": ""sound.se"", ""arg"": ""door_open"" },
+                        { ""kind"": ""command"", ""command"": ""portrait.show"", ""arg"": ""girl_normal"" },
+                        { ""kind"": ""line"", ""text"": ""……。"" }
+                    ],
+                    ""nextProgress"": 2
+                } ] }";
+
+            var report = EventImporter.Parse(json);
+
+            Assert.IsFalse(report.HasErrors, string.Join("\n", report.Diagnostics));
+        }
+
+        [Test]
+        public void Parse_Command_KeyCommandWithoutArg_IsError()
+        {
+            const string json =
+                @"{ ""events"": [ {
+                    ""id"": ""noarg"",
+                    ""conditions"": [ { ""type"": ""progress"", ""value"": 1 } ],
+                    ""steps"": [ { ""kind"": ""command"", ""command"": ""sound.se"" } ],
+                    ""nextProgress"": 2
+                } ] }";
+
+            var report = EventImporter.Parse(json);
+
+            Assert.IsTrue(report.HasErrors);
+        }
+
+        [Test]
         public void Parse_Command_UnknownName_IsError()
         {
             const string json =

@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using CreativeAI.Core;
 using CreativeAI.Gameplay;
 using UnityEngine;
+using UnityEngine.AI;
 
 namespace CreativeAI.UI
 {
@@ -16,6 +17,16 @@ namespace CreativeAI.UI
     {
         /// <summary>Assets からの相対パス。events.json と同じ場所に置き、書く人が迷わないようにする。</summary>
         public const string AssetPath = "Assets/_Project/Features/Event/dev_state.json";
+
+        /// <summary>
+        /// 個人用の置き場(.gitignore 済み)。あればこちらが <see cref="AssetPath"/> より優先される。
+        /// 開始位置のように人ごとに違う設定は、共有の dev_state.json ではなくこちらへ書く。
+        /// </summary>
+        public const string LocalAssetPath = "Assets/_Project/Features/Event/dev_state.local.json";
+
+        /// <summary>読む dev_state のパス。個人用があればそれ、無ければ共有のもの(どちらも無くても共有のパスを返す)。</summary>
+        public static string ResolvePath() =>
+            System.IO.File.Exists(LocalAssetPath) ? LocalAssetPath : AssetPath;
 
         public int progress;
         public FlagEntry[] flags = Array.Empty<FlagEntry>();
@@ -32,6 +43,43 @@ namespace CreativeAI.UI
 
         /// <summary>hp が書かれているか。JsonUtility は省略を区別できないので負の既定値で見分ける。</summary>
         public bool HasHp => hp >= 0f;
+
+        /// <summary>true なら、開始位置を <see cref="spawnPosition"/> / <see cref="spawnYaw"/> で上書きする。</summary>
+        public bool useSpawn;
+
+        /// <summary>開始位置(足元のワールド座標)。歩ける床(NavMesh)が近くにあれば、その高さに合わせる。</summary>
+        public Vector3 spawnPosition;
+
+        /// <summary>開始時の向き(Y 軸まわりの角度)。</summary>
+        public float spawnYaw;
+
+        /// <summary>NavMesh の床へ合わせる範囲。イベント位置から求めた座標が多少ずれていても床に乗せる。</summary>
+        private const float SpawnSnapDistance = 1.5f;
+
+        /// <summary>
+        /// <see cref="useSpawn"/> なら、プレイヤーを指定の開始位置へ置く。false なら何もしない。
+        /// 近くに歩ける床があればその高さへ合わせ、無ければ指定の座標のまま置く。
+        /// </summary>
+        public bool ApplySpawn(GameObject player)
+        {
+            if (!useSpawn || player == null)
+                return false;
+
+            var position = spawnPosition;
+            if (
+                NavMesh.SamplePosition(position, out var floor, SpawnSnapDistance, NavMesh.AllAreas)
+            )
+                position = floor.position;
+            // CharacterController は自前で位置を保持するので、当てが効かないよう一旦切ってから動かす
+            // (SpawnPoint.Place と同じ扱い。Core は触らず、開発用の置き方はここで完結させる)。
+            bool hasController = player.TryGetComponent(out CharacterController controller);
+            if (hasController)
+                controller.enabled = false;
+            player.transform.SetPositionAndRotation(position, Quaternion.Euler(0f, spawnYaw, 0f));
+            if (hasController)
+                controller.enabled = true;
+            return true;
+        }
 
         // JsonUtility は Dictionary を読めないので key/value の配列で書く。
         [Serializable]

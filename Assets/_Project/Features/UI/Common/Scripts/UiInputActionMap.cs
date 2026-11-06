@@ -314,7 +314,7 @@ namespace CreativeAI.UI
             auto.AddBinding("<Gamepad>/buttonWest");
 
             var history = _fallbackMap.AddAction(DialogueHistory, InputActionType.Button);
-            history.AddBinding("<Keyboard>/d");
+            history.AddBinding("<Keyboard>/l");
             history.AddBinding("<Gamepad>/buttonNorth");
 
             var hide = _fallbackMap.AddAction(DialogueHide, InputActionType.Button);

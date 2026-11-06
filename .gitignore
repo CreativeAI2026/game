@@ -101,3 +101,7 @@ crashlytics-build.properties
 # Unity crash recovery scenes
 /Assets/_Recovery/
 /Assets/_Recovery.meta
+
+# 開発用の個人設定(人ごとの開始位置など)。共有の dev_state.json とは別に、自分だけで使う。
+Assets/_Project/Features/Event/dev_state.local.json
+Assets/_Project/Features/Event/dev_state.local.json.meta
