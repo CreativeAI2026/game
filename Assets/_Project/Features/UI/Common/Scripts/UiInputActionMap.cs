@@ -58,7 +58,8 @@ namespace CreativeAI.UI
         public static bool WasSubmitPressedThisFrame()
         {
             var module = GetUiInputModule();
-            var submitAction = module != null ? module.submit?.action : null;
+            var submitAction =
+                module != null && module.submit != null ? module.submit.action : null;
             submitAction ??= ResolveAction(Submit);
             return submitAction != null && submitAction.WasPressedThisFrame();
         }
@@ -66,7 +67,8 @@ namespace CreativeAI.UI
         public static bool WasCancelPressedThisFrame()
         {
             var module = GetUiInputModule();
-            var cancelAction = module != null ? module.cancel?.action : null;
+            var cancelAction =
+                module != null && module.cancel != null ? module.cancel.action : null;
             cancelAction ??= ResolveAction(Cancel);
             return cancelAction != null && cancelAction.WasPressedThisFrame();
         }
@@ -74,7 +76,8 @@ namespace CreativeAI.UI
         public static bool WasClickPressedThisFrame()
         {
             var module = GetUiInputModule();
-            var clickAction = module != null ? module.leftClick?.action : null;
+            var clickAction =
+                module != null && module.leftClick != null ? module.leftClick.action : null;
             clickAction ??= ResolveAction(Click);
             return clickAction != null && clickAction.WasPressedThisFrame();
         }
@@ -82,7 +85,8 @@ namespace CreativeAI.UI
         public static bool IsClickPressed()
         {
             var module = GetUiInputModule();
-            var clickAction = module != null ? module.leftClick?.action : null;
+            var clickAction =
+                module != null && module.leftClick != null ? module.leftClick.action : null;
             clickAction ??= ResolveAction(Click);
             return clickAction != null && clickAction.IsPressed();
         }
@@ -90,7 +94,7 @@ namespace CreativeAI.UI
         public static bool TryReadPointerPosition(out Vector2 position)
         {
             var module = GetUiInputModule();
-            var pointAction = module != null ? module.point?.action : null;
+            var pointAction = module != null && module.point != null ? module.point.action : null;
             pointAction ??= ResolveAction(Point);
             if (pointAction != null)
             {
@@ -105,7 +109,7 @@ namespace CreativeAI.UI
         public static Vector2 ReadNavigate()
         {
             var module = GetUiInputModule();
-            var moveAction = module != null ? module.move?.action : null;
+            var moveAction = module != null && module.move != null ? module.move.action : null;
             moveAction ??= ResolveAction(Navigate);
             return moveAction != null ? moveAction.ReadValue<Vector2>() : Vector2.zero;
         }
@@ -203,9 +207,13 @@ namespace CreativeAI.UI
             }
 
             var player = PlayerRegistry.Current;
-            if (player != null && player.TryGetComponent<PlayerInput>(out var playerInput))
+            if (
+                player != null
+                && player.TryGetComponent<PlayerInput>(out var playerInput)
+                && playerInput.actions != null
+            )
             {
-                var uiMap = playerInput.actions?.FindActionMap(UiMapName, false);
+                var uiMap = playerInput.actions.FindActionMap(UiMapName, false);
                 var action = uiMap?.FindAction(actionName, false);
                 if (action != null)
                 {

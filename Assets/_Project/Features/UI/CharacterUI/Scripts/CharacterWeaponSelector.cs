@@ -198,12 +198,18 @@ namespace CreativeAI.UI.CharacterUI
             {
                 if (weapon != null)
                 {
-                    weapon.Button?.SetSelected(weapon == selectedWeapon);
-                    var icon = weapon.Button?.transform.Find("WeaponIcon")?.GetComponent<Image>();
+                    if (weapon.Button != null)
+                        weapon.Button.SetSelected(weapon == selectedWeapon);
+                    Transform iconTransform =
+                        weapon.Button != null ? weapon.Button.transform.Find("WeaponIcon") : null;
+                    var icon = iconTransform != null ? iconTransform.GetComponent<Image>() : null;
                     if (icon != null)
                         icon.color =
                             weapon == selectedWeapon ? Color.white : new Color(.62f, .65f, .7f, 1);
-                    var label = weapon.Button?.GetComponentInChildren<TMP_Text>(true);
+                    var label =
+                        weapon.Button != null
+                            ? weapon.Button.GetComponentInChildren<TMP_Text>(true)
+                            : null;
                     if (label != null)
                         label.color =
                             weapon == selectedWeapon
@@ -254,17 +260,27 @@ namespace CreativeAI.UI.CharacterUI
 
         private void ResolveReferences()
         {
-            _weaponName ??= transform.Find("ViewArea/Name")?.GetComponent<TMP_Text>();
-            _weaponDescription ??= transform.Find("ViewArea/Description")?.GetComponent<TMP_Text>();
-            _attackValue ??= FindStatusValue("ATK");
-            _criticalRateValue ??= FindStatusValue("CRTR");
-            _criticalDamageValue ??= FindStatusValue("CRTD");
+            if (_weaponName == null)
+                _weaponName = FindComponent<TMP_Text>(transform, "ViewArea/Name");
+            if (_weaponDescription == null)
+                _weaponDescription = FindComponent<TMP_Text>(transform, "ViewArea/Description");
+            if (_attackValue == null)
+                _attackValue = FindStatusValue("ATK");
+            if (_criticalRateValue == null)
+                _criticalRateValue = FindStatusValue("CRTR");
+            if (_criticalDamageValue == null)
+                _criticalDamageValue = FindStatusValue("CRTD");
         }
 
         private TMP_Text FindStatusValue(string rowName) =>
-            transform
-                .Find($"WeaponStatusArea/{rowName}/TextArea/ValueText")
-                ?.GetComponent<TMP_Text>();
+            FindComponent<TMP_Text>(transform, $"WeaponStatusArea/{rowName}/TextArea/ValueText");
+
+        private static T FindComponent<T>(Transform root, string path)
+            where T : Component
+        {
+            Transform t = root != null ? root.Find(path) : null;
+            return t != null ? t.GetComponent<T>() : null;
+        }
 
         private CharacterWeaponSelection GetWeapon(int index) =>
             IsValidIndex(index) ? _weapons[index] : null;

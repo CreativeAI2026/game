@@ -21,7 +21,8 @@ namespace CreativeAI.Gameplay
             {
                 if (_injected != null)
                     return _injected;
-                _instance ??= Resources.Load<ItemCatalog>("ItemCatalog");
+                if (_instance == null)
+                    _instance = Resources.Load<ItemCatalog>("ItemCatalog");
                 return _instance;
             }
         }
@@ -89,7 +90,7 @@ namespace CreativeAI.Gameplay
             var map = new Dictionary<(ItemData, ItemData), CraftRecipe>();
             foreach (var item in items)
             {
-                if (item?.material1 == null || item.material2 == null)
+                if (item == null || item.material1 == null || item.material2 == null)
                     continue;
                 var recipe = new CraftRecipe
                 {

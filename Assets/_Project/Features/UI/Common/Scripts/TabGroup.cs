@@ -251,7 +251,7 @@ namespace CreativeAI.UI
             _interactionEnabled = enabled;
             foreach (var button in _buttons)
             {
-                if (button?.Button != null)
+                if (button != null && button.Button != null)
                     button.Button.interactable = enabled;
             }
         }

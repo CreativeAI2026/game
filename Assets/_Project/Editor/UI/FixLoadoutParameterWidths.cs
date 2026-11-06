@@ -82,8 +82,9 @@ namespace CreativeAI.EditorTools
 
         private static void SetWidth(GameObject target)
         {
-            var layout =
-                target.GetComponent<LayoutElement>() ?? target.AddComponent<LayoutElement>();
+            var layout = target.TryGetComponent(out LayoutElement existing)
+                ? existing
+                : target.AddComponent<LayoutElement>();
             layout.minWidth = 0;
             layout.preferredWidth = 0;
             layout.flexibleWidth = 1;

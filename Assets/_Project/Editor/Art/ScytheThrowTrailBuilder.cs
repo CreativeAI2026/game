@@ -54,8 +54,7 @@ namespace CreativeAI.EditorTools
             GameObject contents = PrefabUtility.LoadPrefabContents(BoomerangPrefabPath);
             try
             {
-                var boomerang = contents.GetComponent<ScytheBoomerang>();
-                if (boomerang == null)
+                if (!contents.TryGetComponent(out ScytheBoomerang boomerang))
                 {
                     Debug.LogError(
                         $"{LogPrefix} {BoomerangPrefabPath} のルートに ScytheBoomerang が見つかりません"

@@ -28,6 +28,19 @@ namespace CreativeAI.Core
         [SerializeField]
         private Transform _spawnPoint;
 
+        [Tooltip(
+            "オンにすると、発火できる間だけマップピン(横に回って浮く2D画像)を出し、発火したら消す。"
+        )]
+        [SerializeField]
+        private bool _showPin;
+
+        [Tooltip(
+            "ピンを出す位置(任意)。未設定ならこのトリガーの Collider の中心に出す。別の場所に出したいときに置く。"
+        )]
+        [SerializeField]
+        private Transform _pinPoint;
+
+        private MapPin _pin;
         private Collider _playerInside; // トリガー内に居るプレイヤー(居なければ null)
         private bool _recheckPending; // 次フレームで条件を見直す
         private ProgressManager _progress;
@@ -35,8 +48,7 @@ namespace CreativeAI.Core
         // 追加した時点で Is Trigger にする(付け忘れるとただの壁になり、エラーも出ずに発火しない)。
         private void Reset()
         {
-            var col = GetComponent<Collider>();
-            if (col != null)
+            if (TryGetComponent(out Collider col))
                 col.isTrigger = true;
         }
 
@@ -56,10 +68,12 @@ namespace CreativeAI.Core
             _progress = ProgressManager.Instance;
             if (_progress != null)
                 _progress.OnProgressChanged += OnProgressChanged;
+            _recheckPending = true; // 初回のピン表示も次フレームの見直しで決める
         }
 
         private void OnDisable()
         {
+            HidePin();
             EventPlaybackService.PlayingChanged -= OnPlayingChanged;
             if (_progress != null)
                 _progress.OnProgressChanged -= OnProgressChanged;
@@ -99,8 +113,52 @@ namespace CreativeAI.Core
             if (!_recheckPending)
                 return;
             _recheckPending = false;
+            RefreshPin();
             if (_playerInside != null)
                 TryFire();
+        }
+
+        /// <summary>ピンが出ているか。</summary>
+        public bool PinVisible => _pin != null;
+
+        /// <summary>
+        /// ピンを出す/消す。「ピンあり」で、イベントの発火条件を満たしている間だけ出す。
+        /// 進行度が進む(=発火済み)と条件を外れるので、再び出ることはない。
+        /// </summary>
+        public void RefreshPin()
+        {
+            var shouldShow = _showPin && _event != null && ConditionsMet();
+            if (!shouldShow)
+            {
+                HidePin();
+                return;
+            }
+            if (_pin != null)
+                return;
+
+            var position =
+                _pinPoint != null ? _pinPoint.position : GetComponent<Collider>().bounds.center;
+            _pin = MapPin.Create(position);
+        }
+
+        private void HidePin()
+        {
+            if (_pin != null)
+                _pin.Remove();
+            _pin = null;
+        }
+
+        private bool ConditionsMet()
+        {
+            var progress = ProgressManager.Instance;
+            if (progress == null)
+                return false;
+
+            // hasItem 条件用の所持判定。Inventory は Gameplay 側にあり Core から直接触れないため
+            // ItemGiverService seam 経由(未登録なら所持なし扱い)。giveItem と同じ経路。
+            var giver = ItemGiverService.Current;
+            System.Func<string, bool> hasItem = giver != null ? giver.HasImportantItem : null;
+            return _event.ConditionsMet(progress.Progress, progress.GetFlag, hasItem);
         }
 
         private void TryFire()
@@ -126,11 +184,7 @@ namespace CreativeAI.Core
                 return;
             }
 
-            // hasItem 条件用の所持判定。Inventory は Gameplay 側にあり Core から直接触れないため
-            // ItemGiverService seam 経由(未登録なら所持なし扱い)。giveItem と同じ経路。
-            var giver = ItemGiverService.Current;
-            System.Func<string, bool> hasItem = giver != null ? giver.HasImportantItem : null;
-            if (!_event.ConditionsMet(progress.Progress, progress.GetFlag, hasItem))
+            if (!ConditionsMet())
                 return;
 
             var player = EventPlayerService.Current;
@@ -144,6 +198,7 @@ namespace CreativeAI.Core
             }
 
             var spawn = _spawnPoint != null ? _spawnPoint : transform;
+            HidePin();
             player.Play(_event, new BattleSetup(_enemy, spawn.position, spawn.rotation));
         }
     }

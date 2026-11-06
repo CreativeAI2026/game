@@ -108,7 +108,8 @@ namespace CreativeAI.UI
 
         private static void CreateGhost(Component source, Sprite sprite)
         {
-            Canvas canvas = source.GetComponentInParent<Canvas>()?.rootCanvas;
+            var parentCanvas = source.GetComponentInParent<Canvas>();
+            Canvas canvas = parentCanvas != null ? parentCanvas.rootCanvas : null;
             if (canvas == null || sprite == null)
                 return;
 
@@ -240,18 +241,25 @@ namespace CreativeAI.UI
         public void SetShowCount(bool show)
         {
             _showCount = show;
+            if (_countBadgeView == null)
+                return;
             if (show)
-                _countBadgeView?.SetCount(_item, _count);
+                _countBadgeView.SetCount(_item, _count);
             else
-                _countBadgeView?.Hide();
+                _countBadgeView.Hide();
         }
 
-        public void RefreshCountLayout() => _countBadgeView?.RefreshLayout();
+        public void RefreshCountLayout()
+        {
+            if (_countBadgeView != null)
+                _countBadgeView.RefreshLayout();
+        }
 
         public void SetReleaseSelectionOnOutsideClick(bool release)
         {
             ResolveViewReferences();
-            _hoverView?.SetReleaseLockOnOutsideClick(release);
+            if (_hoverView != null)
+                _hoverView.SetReleaseLockOnOutsideClick(release);
         }
 
         public void OnPointerClick(PointerEventData eventData)
@@ -289,9 +297,12 @@ namespace CreativeAI.UI
             )
                 return;
 
-            _controller?.ClearSelection();
-            _dragCanvasGroup ??= GetComponent<CanvasGroup>();
-            _dragCanvasGroup ??= gameObject.AddComponent<CanvasGroup>();
+            if (_controller != null)
+                _controller.ClearSelection();
+            if (_dragCanvasGroup == null)
+                TryGetComponent(out _dragCanvasGroup);
+            if (_dragCanvasGroup == null)
+                _dragCanvasGroup = gameObject.AddComponent<CanvasGroup>();
             _dragOriginalAlpha = _dragCanvasGroup.alpha;
             _dragCanvasGroup.alpha = 0.45f;
             _dragging = true;
@@ -329,7 +340,8 @@ namespace CreativeAI.UI
         private void ConfigureVisualRootHover()
         {
             ResolveViewReferences();
-            _hoverView?.Bind();
+            if (_hoverView != null)
+                _hoverView.Bind();
         }
 
         private void ResolveViewReferences()
@@ -348,12 +360,18 @@ namespace CreativeAI.UI
         [ContextMenu("Auto Assign References")]
         private void AutoAssignReferences()
         {
-            _visualRootRect ??= transform.Find("VisualRoot") as RectTransform;
-            _iconView ??= GetComponentInChildren<SlotIconView>(true);
-            _countBadgeView ??= GetComponentInChildren<SlotCountBadgeView>(true);
-            _frameView ??= GetComponentInChildren<SlotFrameView>(true);
-            _hoverView ??= GetComponentInChildren<SlotHoverView>(true);
-            _markerView ??= GetComponentInChildren<SlotMarkerView>(true);
+            if (_visualRootRect == null)
+                _visualRootRect = transform.Find("VisualRoot") as RectTransform;
+            if (_iconView == null)
+                _iconView = GetComponentInChildren<SlotIconView>(true);
+            if (_countBadgeView == null)
+                _countBadgeView = GetComponentInChildren<SlotCountBadgeView>(true);
+            if (_frameView == null)
+                _frameView = GetComponentInChildren<SlotFrameView>(true);
+            if (_hoverView == null)
+                _hoverView = GetComponentInChildren<SlotHoverView>(true);
+            if (_markerView == null)
+                _markerView = GetComponentInChildren<SlotMarkerView>(true);
         }
 #endif
 
@@ -371,19 +389,22 @@ namespace CreativeAI.UI
         protected override void RefreshSelectionVisuals()
         {
             ResolveViewReferences();
-            _frameView?.SetSelected(_isSlotSelected);
+            if (_frameView != null)
+                _frameView.SetSelected(_isSlotSelected);
         }
 
         public void SetEquipped(bool isEquipped)
         {
             ResolveViewReferences();
-            _markerView?.SetEquipped(isEquipped);
+            if (_markerView != null)
+                _markerView.SetEquipped(isEquipped);
         }
 
         public void SetCraftAssigned(bool isAssigned)
         {
             ResolveViewReferences();
-            _markerView?.SetCraftAssigned(isAssigned);
+            if (_markerView != null)
+                _markerView.SetCraftAssigned(isAssigned);
         }
     }
 }

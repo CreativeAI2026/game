@@ -14,8 +14,7 @@ namespace CreativeAI.UI
             if (button == null)
                 return;
 
-            var hoverScale = button.GetComponent<HoverScaleOnPointer>();
-            if (hoverScale == null)
+            if (!button.TryGetComponent(out HoverScaleOnPointer hoverScale))
             {
                 WarnMissingHoverScaleOnce(button);
                 return;

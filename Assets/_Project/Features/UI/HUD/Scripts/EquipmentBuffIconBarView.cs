@@ -259,17 +259,17 @@ namespace CreativeAI.UI
             return _iconPool[index];
         }
 
+#if UNITY_EDITOR
         private void OnValidate()
         {
             // 編集中・プレイ中とも、並べ方を変えたらその場で並べ直す(OnValidate 中は RectTransform を触れないため1拍遅らせる)
-#if UNITY_EDITOR
             UnityEditor.EditorApplication.delayCall += () =>
             {
                 // プレハブアセット本体(シーンに無いもの)は並べ直さない
                 if (this != null && gameObject.scene.IsValid())
                     Layout();
             };
-#endif
         }
+#endif
     }
 }

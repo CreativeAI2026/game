@@ -8,6 +8,9 @@ namespace CreativeAI.Gameplay
     /// </summary>
     public class TestEnemyController : EnemyBaseController
     {
+        private static readonly int VelocityXHash = Animator.StringToHash("VelocityX");
+        private static readonly int VelocityZHash = Animator.StringToHash("VelocityZ");
+
         [Header("移動設定")]
         [SerializeField]
         private float chaseSpeed = 5f;
@@ -44,7 +47,6 @@ namespace CreativeAI.Gameplay
         private float backStepChance = 0.5f;
 
         [Header("針攻撃設定")]
-        [SerializeField]
         public GameObject needlePrefab;
 
         [SerializeField]
@@ -146,8 +148,8 @@ namespace CreativeAI.Gameplay
             }
 
             Vector3 localVelocity = transform.InverseTransformDirection(Agent.velocity);
-            Animator.SetFloat("VelocityX", localVelocity.x);
-            Animator.SetFloat("VelocityZ", localVelocity.z);
+            Animator.SetFloat(VelocityXHash, localVelocity.x);
+            Animator.SetFloat(VelocityZHash, localVelocity.z);
         }
 
         /// <summary>

@@ -72,19 +72,16 @@ namespace CreativeAI.UI
                     if (_previewOnlyPlayer)
                     {
                         player.AddComponent<PreviewOnlyPlayer>();
-                        var controller = player.GetComponent<PlayerController>();
-                        if (controller != null)
+                        if (player.TryGetComponent(out PlayerController controller))
                             controller.enabled = false;
-                        var input = player.GetComponent<PlayerInputHandler>();
-                        if (input != null)
+                        if (player.TryGetComponent(out PlayerInputHandler input))
                         {
                             input.cursorLocked = false;
                             input.enabled = false;
                         }
                         Cursor.lockState = CursorLockMode.None;
                         Cursor.visible = true;
-                        var collider = player.GetComponent<CharacterController>();
-                        if (collider != null)
+                        if (player.TryGetComponent(out CharacterController collider))
                             collider.enabled = false;
                     }
                 }

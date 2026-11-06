@@ -23,7 +23,8 @@ namespace CreativeAI.UI
 
         public static Button FindButton(Transform root, string objectName)
         {
-            return Find(root, objectName)?.GetComponent<Button>();
+            var target = Find(root, objectName);
+            return target != null ? target.GetComponent<Button>() : null;
         }
 
         public static T FindComponent<T>(Transform root, string objectName)

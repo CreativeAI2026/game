@@ -11,16 +11,13 @@ namespace CreativeAI.Tests.EditMode
 {
     /// <summary>
     /// SaveService の保存→復元の往復(マネージャから取り込み→書き→読み→戻す)と、セーブ可否のゲートの検証。
-    /// 実ファイル(persistentDataPath/save.json)を使うので、既存のセーブは退避して必ず戻す。
+    /// 保存先は一時フォルダに差し替え、開発者の手元のセーブには触れない。
     /// </summary>
     public class SaveServiceTests
     {
-        private static string SavePath => Path.Combine(Application.persistentDataPath, "save.json");
-
-        private string _backup;
-        private GameObject _pmGo;
-        private GameObject _invGo;
-        private GameObject _gmmGo;
+        private string _saveDir;
+        private string SavePath => Path.Combine(_saveDir, "save.json");
+        private readonly TestResidents _residents = new();
         private GameObject _playerGo;
         private ProgressManager _pm;
         private InventoryManager _inv;
@@ -32,17 +29,19 @@ namespace CreativeAI.Tests.EditMode
         [OneTimeSetUp]
         public void OneTimeSetUp()
         {
-            // 開発者の実セーブを壊さないよう退避しておく。
-            _backup = File.Exists(SavePath) ? File.ReadAllText(SavePath) : null;
+            _saveDir = Path.Combine(
+                Path.GetTempPath(),
+                "CreativeAI-SaveTests-" + Path.GetRandomFileName()
+            );
+            Directory.CreateDirectory(_saveDir);
+            SaveService.OverrideDirectoryForTests(_saveDir);
         }
 
         [OneTimeTearDown]
         public void OneTimeTearDown()
         {
-            if (_backup != null)
-                File.WriteAllText(SavePath, _backup);
-            else if (File.Exists(SavePath))
-                File.Delete(SavePath);
+            SaveService.OverrideDirectoryForTests(null);
+            Directory.Delete(_saveDir, true);
         }
 
         private T MakeAsset<T>()
@@ -60,17 +59,9 @@ namespace CreativeAI.Tests.EditMode
                 File.Delete(SavePath);
             PickedItemRegistry.Clear();
 
-            _pmGo = new GameObject("PM");
-            _pm = _pmGo.AddComponent<ProgressManager>();
-            TestReflection.SetStaticProperty("Instance", _pm);
-
-            _invGo = new GameObject("INV");
-            _inv = _invGo.AddComponent<InventoryManager>();
-            TestReflection.SetStaticProperty("Instance", _inv);
-
-            _gmmGo = new GameObject("GMM");
-            _gmm = _gmmGo.AddComponent<GameModeManager>();
-            TestReflection.SetStaticProperty("Instance", _gmm);
+            _pm = _residents.Add<ProgressManager>();
+            _inv = _residents.Add<InventoryManager>();
+            _gmm = _residents.Add<GameModeManager>();
 
             _playerData = MakeAsset<PlayerParameterData>();
             _playerData.baseMaxLife = 1000f;
@@ -88,19 +79,11 @@ namespace CreativeAI.Tests.EditMode
         [TearDown]
         public void TearDown()
         {
-            EventPlaybackService.SetPlaying(false);
-            ItemCatalog.InjectForTests(null);
-            TestReflection.SetStaticProperty<ProgressManager>("Instance", null);
-            TestReflection.SetStaticProperty<InventoryManager>("Instance", null);
-            TestReflection.SetStaticProperty<GameModeManager>("Instance", null);
+            _residents.Clear();
             Object.DestroyImmediate(_playerGo);
-            Object.DestroyImmediate(_gmmGo);
-            Object.DestroyImmediate(_invGo);
-            Object.DestroyImmediate(_pmGo);
             foreach (var a in _assets)
                 Object.DestroyImmediate(a);
             _assets.Clear();
-            PickedItemRegistry.Clear();
             if (File.Exists(SavePath))
                 File.Delete(SavePath);
         }

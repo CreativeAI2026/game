@@ -29,7 +29,7 @@ namespace CreativeAI.UI
 
         private void Awake()
         {
-            _rect = GetComponent<RectTransform>();
+            TryGetComponent(out _rect);
         }
 
         private void Start()
@@ -74,7 +74,8 @@ namespace CreativeAI.UI
                     _duration
                 )
                 .SetEase(_ease)
-                .SetUpdate(true);
+                .SetUpdate(true)
+                .SetTarget(_rect); // ターゲットが無いと _rect.DOKill() で止まらない
         }
 
         private Vector2 GetHiddenPos() =>

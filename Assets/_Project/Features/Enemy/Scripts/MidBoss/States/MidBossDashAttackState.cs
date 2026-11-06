@@ -147,7 +147,7 @@ namespace CreativeAI.Gameplay
             // 直線突進（NavMeshAgentのMoveで移動）
             if (con.Agent != null)
             {
-                con.Agent.Move(_dashDir * con.DashSpeed * Time.deltaTime);
+                con.Agent.Move(_dashDir * (con.DashSpeed * Time.deltaTime));
             }
         }
 

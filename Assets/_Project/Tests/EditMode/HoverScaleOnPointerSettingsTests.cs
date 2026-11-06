@@ -1,4 +1,3 @@
-using System.Reflection;
 using CreativeAI.UI;
 using NUnit.Framework;
 using UnityEngine;
@@ -65,8 +64,6 @@ namespace CreativeAI.Tests.EditMode
         }
 
         private object GetPrivateField(string fieldName) =>
-            typeof(HoverScaleOnPointer)
-                .GetField(fieldName, BindingFlags.Instance | BindingFlags.NonPublic)
-                ?.GetValue(_hover);
+            TestReflection.GetField<object>(_hover, fieldName);
     }
 }
