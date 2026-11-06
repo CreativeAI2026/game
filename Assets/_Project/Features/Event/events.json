@@ -1,32 +1,31 @@
 {
   "events": [
     {
-            "id":"1_awaking_hero",
+            "id":"0_awaking_hero",
             //主人公が研究棟で目覚める
             "conditions":[
                 {"type":"progress","value": 0 }
             ],
             "steps":[
-                {"kind": "command", "command": "portrait.left.obscure" },
-                {"kind":"line","speaker": "？？？","portrait":"hero_normal","text":"「…っ、<wait=0.2>う……。<wait=0.5>い、てて……」"},
-                {"kind":"line","speaker": "？？？", "portrait":"hero_normal","text":"「…あれ。 <wait=0.5>俺、<wait=0.2>なんでこんな床で……？」"},
-                {"kind":"line","text":"痛む頭を押さえながら、<wait=0.2>ゆっくりと上体を起こす。"},
-                {"kind":"line","text":"周囲を見渡すが、<wait=0.2>そこは見覚えのない殺風景な部屋だった。"},
-                {"kind":"line","text":"壁際には用途の分からない物品が並び、<wait=0.2>\n床には割れたガラスや書類が無造作に散乱している。"},
-                {"kind":"line","speaker": "？？？", "portrait":"hero_normal","text":"「なんだここ、<wait=0.2>倉庫…？<wait=0.5> いや、<wait=0.2>なんかの研究施設って感じか」"},
-                {"kind":"line","speaker": "？？？", "portrait":"hero_normal","text":"「ここに来る前、<wait=0.2>何してたっけ…」"},
-                {"kind":"line","speaker": "？？？", "portrait":"hero_normal","text":"「……」"},
-                {"kind":"line","speaker": "？？？", "portrait":"hero_normal","text":"「…あれ、<wait=0.2> マジ？ <wait=0.5> なんも思い出せねー」"},
-                {"kind":"line","text":"床に落ちたガラス片を拾い、<wait=0.3>映り込んだ自分の姿を確かめる。"},
-                { "kind": "command", "command": "portrait.left.reveal" }, 
-                {"kind":"line","text":"見慣れたスタジャンに、<wait=0.2>ゆるいパンツ、<wait=0.5>履き古したスニーカー。"},
-                {"kind":"line","text":"ポケットを端から漁ってみるが、<wait=0.2>スマホも財布も、<wait=0.2>\n身分を示すようなものは何一つ入っていなかった。"},
-                {"kind":"line","speaker": "？？？","portrait":"hero_question","text":"「名前は…<wait=1.0>アオイ。」"},
-                {"kind":"line","portrait":"hero_question","text":"「うん、そこは分かる。<wait=0.5> そっから先がすっぽり抜けてやがる」"},
-                {"kind":"line","portrait":"hero_confused","text":"「記憶喪失ってやつかよ…<wait=0.5> いやいや、<wait=0.2>笑えねぇって」"},
-                {"kind":"line","portrait":"hero_confused","text":"「ま、<wait=0.2>ここで頭抱えて唸っててもしゃーないか。」"},
-                {"kind":"line","portrait":"hero_question","text":"「誰か人がいりゃ、<wait=0.2>ここがどこなのかくらい教えてくれるだろ。」"},
-                {"kind":"line","portrait":"hero_normal","text":"「とりあえず、<wait=0.2>出口でも探してみるか」"}
+
+              {"kind": "command", "command": "portrait.left.obscure" },
+              {"kind":"line","portrait":"hero_confused","text":"「…っ、う……。 い、てて……。」"},
+              {"kind":"line","portrait":"hero_confused","text":"「…あれ。 俺、なんでこんな床で……？」"},
+              {"kind":"line","text":"痛む頭を押さえながら、ゆっくりと上体を起こす。 周囲を見渡すが、そこは見覚えのない殺風景な部屋だった。"},
+              {"kind":"line","text":"壁際には用途の分からない物品が並び、床には割れたガラスや書類が無造作に散乱している。"},
+              {"kind":"line","portrait":"hero_question","text":"「なんだここ、倉庫…？ いや、なんかの研究施設って感じか。」"},
+              {"kind":"line","portrait":"hero_confused","text":"「ここに来る前、何してたっけ…。」"},
+              {"kind":"line","portrait":"hero_normal","text":"「…………。」"},
+              {"kind":"line","portrait":"hero_surprised","text":"「…あれ、 マジ？  なんも思い出せねー。」"},
+              {"kind":"line","text":"周囲に散らばる何かの破片に、自分の姿が反射する。"},
+              {"kind": "command", "command": "portrait.left.reveal" }, 
+              {"kind":"line","text":"着慣れたスタジャンに、ゆったりとしたパンツ、履き潰したスニーカー。"},
+              {"kind":"line","text":"ポケットを端から漁ってみるが、スマホも財布も、身分を示すようなものは何一つ入っていなかった。"},
+              {"kind":"line","portrait":"hero_normal","text":"名前は… アオイ。 うん、そこは分かる。そっから先がすっぽり抜けてやがる。"},
+              {"kind":"line","portrait":"hero_confused","text":"「記憶喪失ってやつかよ… いや笑えねぇって。」"},
+              {"kind":"line","portrait":"hero_normal","text":"「………」"},
+              {"kind":"line","portrait":"hero_normal","text":"「ま、ここで頭抱えて唸っててもしゃーないか… 考えて分かんねーもんは分かんねーし。」"},
+              {"kind":"line","portrait":"hero_normal","text":"「誰か人がいりゃ、ここがどこなのかくらい教えてくれるだろ。とりあえず、出口でも探してみるか。」"},
 
             ],
             "nextProgress":1
@@ -36,25 +35,22 @@
     //プレイヤー操作のとこは書かなくていい
 
     {
-            "id":"2_encountering_tutorialboss",
-            //チュートリアルボスに襲われる
+            "id":"1_encountering_tutorialboss",
             "conditions":[
                 {"type":"progress","value": 1 }
             ],
             "steps":[
 
-                {"kind":"line","portrait":"hero_confused","text":"「チッ、<wait=0.2>こっちの扉もロックされてんのかよ。」 "},
-                {"kind":"line","portrait":"hero_question","text":"「横にカードリーダーがあるな……。<wait=0.3>専用のカードキーがねぇと開かねぇのか？」"},
-                {"kind":"line","portrait":"hero_normal","text":"「職員とかいねーのかよ。<wait=0.5> おーい、<wait=0.2>誰かいませんかー？」"},
-                {"kind":"line","text":"「…ァ……、<wait=0.2>……グ、<wait=0.2>ゥゥ……ッ」"},
-                {"kind":"line","portrait":"hero_question","text":"「ん？ <wait=0.5> 今、<wait=0.2>奥から声が…」"},
-                {"kind":"line","text":"廊下の曲がり角、<wait=0.2>非常灯が点滅する暗がりから、<wait=0.2>何かを引きずるような重たい足音が近づいてくる。"},
-                //{"kind": "command", "command": "portrait.left.jump" },
-                {"kind":"line","portrait":"hero_surprised","text":"「うおっ！？ <wait=0.5> んだアレ…？！」"},
-                {"kind":"line","text":"「……ッ！！<wait=0.5> ア……ガアァアアアアアッ！！」"},
-                //{"kind": "command", "command": "portrait.left.shake" },
-                {"kind":"line","portrait":"hero_surprised","text":"「うわあああっ！？ <wait=0.5> 待て待て、<wait=0.2>話通じる感じじゃねーぞコレ！ 」"},
-                {"kind":"line","portrait":"hero_confused","text":"「クソッ、<wait=0.2>一旦逃げるか…！」"}
+              {"kind":"line","portrait":"hero_anger","text":"「チッ、出口どこだよ…」"},
+              {"kind":"line","portrait":"hero_normal","text":"「職員とかいねーのかな。おーい、誰かいませんかー？」"},
+              {"kind":"line","text":"「…ァ……、……グ、ゥゥ……ッ。」"},
+              {"kind":"line","portrait":"hero_question","text":"「ん？  今、奥から声が…。」"},
+              {"kind":"line","text":"廊下の曲がり角、非常灯が点滅する暗がりから、何かを引きずるような重たい足音が近づいてくる。"},
+              {"kind":"line","portrait":"hero_surprised","text":"「うおっ！？  んだアレ…？！」"},
+              {"kind":"line","text":"「……ッ！！  ア……ガアァアアアアアッ！！」"},
+              {"kind":"line","portrait":"hero_surprised","text":"「っ！？  やっばい！」"},
+              {"kind":"line","portrait":"hero_surprised","text":"「うわあああっ！？  待て待て、話通じる感じじゃねーぞコレ！」"},
+              {"kind":"line","portrait":"hero_anger","text":"「クソッ、一旦逃げるか…！」"}
                 
             ],
             "nextProgress":2
@@ -63,41 +59,26 @@
      //敵から逃げる
      //ロッカーに隠れる
 
-    {
-      "id": "3_hiding_from_tutorialboss",  
-      "conditions": [              
-        { "type": "progress", "value": 2 }   //進行度が2の時
-        //ロッカーに隠れたとき
-      ],
-      "steps": [
-
-        { "kind": "line", "text": "アオイは咄嗟にロッカーへ飛び込み、<wait=0.3>息を殺して扉を閉めた。" },
-        { "kind": "line", "portrait": "hero_confused", "text": "「……っ。」" },
-        { "kind": "command", "command": "wait", "arg": "1" },
-
-        { "kind": "line", "text": "扉の向こうで、<wait=0.3>ドンッ！<wait=0.5>と、重い肉体がぶつかる音が響き" },
-        { "kind": "line", "text": "やがてズルズルと遠ざかっていく気配がする。" },
-        { "kind": "line", "text": "息を殺して気配を探り、<wait=0.5>アオイは恐る恐るロッカーを出た。" },
-
-        // ロッカーの音を流す
-
-        { "kind": "line", "portrait": "hero_confused", "text": "「あ、<wait=0.3>危ねぇ…<wait=0.5> 死ぬかと思った…」" },
-        { "kind": "line", "portrait": "hero_surprised", "text": "「なんなんだよ、<wait=0.3>あの白いバケモノ…！」" },
-        { "kind": "line", "portrait": "hero_anger", "text": "「顔見た瞬間、<wait=0.3>めちゃくちゃブチ切れて突っ込んできたじゃねーか！」" },
-        { "kind": "line", "portrait": "hero_confused", "text": "「……参ったな。<wait=0.3>この部屋はもうあらかた調べたし……。」" },
-        { "kind": "line", "portrait": "hero_normal", "text": "「出口は……<wait=0.5>あいつがうろついてる廊下の先、か……。」" },
-        { "kind": "line", "portrait": "hero_confused", "text": "「どうあってもあのバケモノをなんとかしなきゃいけねぇってことか…」" },
-        { "kind": "line", "portrait": "hero_normal", "text": "「けど、素手じゃさすがにキツいよな……。<wait=0.4>\nなんか武器になりそうなもんは……。」" },
-        { "kind": "line", "portrait": "hero_surprised", "text": "「……ん？<wait=0.3>おっ、なんだこれ。」" },
-        { "kind": "giveWeapon", "weaponKey": "sword", "message": "「カッターの剣」を手に入れた。" },
-        { "kind": "line", "portrait": "hero_question", "text": "「ん…カッターの剣？？マジで何なんだ、この施設」" },
-        { "kind": "line", "portrait": "hero_normal", "text": "「まぁでも、<wait=0.3>これなら武器として使えそうだな。」" },
-        { "kind": "line", "text": "アオイは剣を手に取り、<wait=0.3>無意識のうちに構えを取る。" },
-        { "kind": "line", "portrait": "hero_surprised", "text": "「……お？<wait=0.3>意外としっくりくるな。」" },
-        { "kind": "line", "portrait": "hero_question", "text": "「俺、なんかスポーツでもやってたのか……？」" },
-        { "kind": "line", "portrait": "hero_smile", "text": "「……ま、好都合だ。<wait=0.3>ここに隠れてても、ジリ貧だしな……。」" },
-        { "kind": "line", "portrait": "hero_anger", "text": "「……やるしかねーよな」" },
-        { "kind": "line", "portrait": "hero_anger", "text": "「待ってろよデカブツ。」" }
+     {
+            "id": "2_hiding_from_tutorialboss",  
+            "conditions": [              
+              { "type": "progress", "value": 2 }   
+              //ロッカーに隠れたとき
+            ],
+            "steps": [
+              
+              {"kind":"line","text":"視線を切るようにして、机の陰に潜り込む。"},
+              {"kind":"line","text":"扉の向こう側で、ドォンと重い肉体がぶつかる音が響き、やがてズルズルと遠ざかっていく気配がする。"},
+              {"kind":"line","portrait":"hero_confused","text":"「あ、危ねぇ… 死ぬかと思った…。」"},
+              {"kind":"line","portrait":"hero_anger","text":"「なんなんだよ、あの白いバケモノ…！ 顔見た瞬間、めちゃくちゃブチ切れて突っ込んできたじゃねーか！」"},
+              {"kind":"line","portrait":"hero_confused","text":"「参ったな… あんなんにうろつかれてたら出口も探すに探せない。」"},
+              {"kind":"line","portrait":"hero_normal","text":"「どうあってもアイツをなんとかしなきゃいけないってことか…。」"},
+              {"kind":"line","portrait":"hero_question","text":"「素手はキツイ。 なんか武器になりそうなもんは…おっ？」"},
+              {"kind":"line","portrait":"hero_surprised","text":"「…カッターの剣？？ マジで何なんだこの施設。」"},
+              {"kind":"line","portrait":"hero_normal","text":"「まぁでも、これなら武器として使えそうだな。 よし。」"},
+              {"kind":"line","portrait":"hero_confused","text":"「割としっくりくるな。 なんかスポーツでもやってたのか？ 俺。」"},
+              {"kind":"line","portrait":"hero_normal","text":"「ま、好都合だ。 ずっと引きこもっててもジリ貧だし… やるしかねーよな。」"},
+              {"kind":"line","portrait":"hero_anger","text":"「待ってろよデカブツ。」"}
 
       ],
       "nextProgress": 3           
@@ -106,43 +87,38 @@
     //武器を見つける
 
     {
-      "id": "4_battle_tutorial",
-      "conditions": [
-        { "type": "progress", "value": 3 }   //valueが3の時
-        //{ "type": "hasItem", "itemkey": "sword" }   //剣を持っている時
-     //さっき敵とのイベントが起きた所に行ったとき
-      ],
-      "steps": [
+            "id": "3_battle_tutorial",
+            "conditions": [
+              { "type": "progress", "value": 3 } 
+              //ある場所に行ったとき
+              ],
+              "steps": [
 
-        { "kind": "line", "portrait": "hero_anger", "text": "「……ビビってても仕方ねぇ。<wait=0.5>やるしかねぇか……！」" },
-        { "kind": "battle" },
-        { "kind": "line", "portrait": "hero_anger", "text": "「っしゃ！<wait=0.5>これでどうだッ！」" },
-        { "kind": "line", "text": "「グギャアアアアッ……！」" },
-        { "kind": "line", "portrait": "hero_anger", "text": "「くっ……！<wait=0.3>痛ってぇな、この野郎……！」" },
-        { "kind": "line", "portrait": "hero_anger", "text": "「まだ動くかよ……！<wait=0.4>次でトドメを——」" },
-        { "kind": "line", "text": "「ギ……ィィ、ァァアアッ……！」" },
-        { "kind": "line", "text": "怪物は突然身を翻し、<wait=0.3>廊下の奥へ逃げ去った。" },
-        { "kind": "line", "portrait": "hero_surprised", "text": "「……あっ、おい！<wait=0.3>逃げんのかよ！」" },
-        { "kind": "line", "portrait": "hero_confused", "text": "「はぁ……はぁ……。<wait=0.4>ちっ、しぶとい奴だな……。」" },
-        { "kind": "line", "text": "ふと、<wait=0.3>床に落ちた何かが目に入る。" },
-        { "kind": "line", "portrait": "hero_question", "text": "「……ん？<wait=0.3>なんか落ちてんな。」" },
-        { "kind": "giveItem", "itemKey": "card_key", "message": "「カードキー」を手に入れた。" },
-        { "kind": "line", "portrait": "hero_surprised", "text": "「……カードキー？<wait=0.3>あいつが落としたのか？」" },
-        { "kind": "line", "portrait": "hero_smile", "text": "「ま、いいか。<wait=0.3>使えそうだし……ラッキーだな。」" },
-        { "kind": "line", "text": "緊張が解けた途端、<wait=0.4>腕に鋭い痛みが走る。" },
-        { "kind": "line", "text": "スタジャンの袖は裂け、<wait=0.3>傷口から血が滲んでいた。" },
-        { "kind": "line", "portrait": "hero_surprised", "text": "「いってぇ……！<wait=0.4>うわ、結構やられてんな……。」" },
-        { "kind": "line", "portrait": "hero_confused", "text": "「……なんか手当てできそうなもん、探すか。」" }
+                {"kind":"line","portrait":"hero_anger","text":"「っしゃ！ これでどうだ！！」"},
+                {"kind":"line","text":"「グギャアアアアッ…！」"},
+                {"kind":"line","portrait":"hero_anger","text":"「くっ…！ 痛ってぇな、この野郎！ まだ動くかよ、次でトドメを——。」"},
+                {"kind":"line","text":"「ギ……ィィ、ァァアアッ…！」"},
+                {"kind":"line","portrait":"hero_surprised","text":"「あっ、おい！ …逃げやがった。」"},
+                {"kind":"line","portrait":"hero_confused","text":"「はぁ…チッ、しぶとい奴だな。」"},
+                {"kind":"line","portrait":"hero_question","text":"「ん？ なんか落ちてんな。」"},
+                {"kind":"line","portrait":"hero_surprised","text":"「カードキーじゃん。 あいつが落としたのか？」"},
+                {"kind":"line","portrait":"hero_smile","text":"「まあいい、なんか使えそうだし。 ラッキーだな。」"},
+                {"kind":"line","portrait":"hero_normal","text":"「さて、じゃあ早速…っ、痛てて…。」"},
+                {"kind":"line","text":"安堵の影響か、裂かれた腕の傷がズキズキと疼き始めた。 袖が裂け、じわりと血が滲んでいる。"},
+                {"kind":"line","portrait":"hero_confused","text":"「うえぇ、ガッツリやられてんなぁ… 何か使えそうなものは…。」"},
+                {"kind":"line","portrait":"hero_question","text":"「確かさっき良さげなもん拾ったよな。 えーっと…。」"},
+                {"kind":"line","text":"ポケットから拾ったアイテムを取り出し、傷口に当てようとするが、アオイの手がピタリと止まる。"},
+                {"kind":"line","portrait":"hero_confused","text":"「うーん、このままでも一応使えそうだけど… 気休め程度にしかならなそうだな。」"},
+                {"kind":"line","portrait":"hero_question","text":"「どっかにもっとマシな手当てができる場所とか、いい方法ねーかな……。」"}
 
       ],
       "nextProgress": 4            
     },
 
-
     //研究棟にあるアイテム合成場所に行く
 
     {
-     "id":"5_item_combination_tutorial",
+     "id":"4_item_combination_tutorial",
       //回復アイテム合成チュートリアル
       "conditions":[
         {"type":"progress","value": 4 }
@@ -150,26 +126,17 @@
       ],
       "steps":[
 
-        { "kind": "line", "portrait": "hero_question", "text": "「……ん？<wait=0.3>なんだ、この機械……？」" },
-        { "kind": "line", "text": "見慣れない装置が、<wait=0.3>低い駆動音を響かせている。" },
-        { "kind": "line", "text": "側面には「SYNTHESIS UNIT」の文字。" },
-        { "kind": "line", "text": "どうやら素材を組み合わせ、<wait=0.3>別の物を生成する装置らしい。" },
-        { "kind": "line", "portrait": "hero_normal", "text": "「……へぇ、合成装置か。」" },
-        { "kind": "line", "portrait": "hero_smile", "text": "「ちょうどいい。<wait=0.3> さっき拾ったもん、試してみるか。」" }
-
-      ],
-      "nextProgress":5
-    },
-
-    //探索に戻る
-    {
-     "id":"6_first_appearance_robot",
-      //NPC(ロボット)登場
-      "conditions":[
-        {"type":"progress","value": 5 }
-        //ある場所に近づいたとき
-      ],
-      "steps":[
+        {"kind":"line","portrait":"hero_question","text":"「ん、なんだこの機械。」"},
+        {"kind":"line","portrait":"hero_confused","text":"「『マテリアル・ミキサー』… 合成機？」"},
+        {"kind":"line","portrait":"hero_smile","text":"「『物質融合お手の物、何でも混ぜて差し上げます』…へぇ、面白」"},
+        {"kind":"line","portrait":"hero_normal","text":"「ちょっとやってみるか…。」"},
+        {"kind":"line","portrait":"hero_surprised","text":"「うおぉ、なんか出てきた」"},
+        {"kind":"line","portrait":"hero_smile","text":"「へぇー、よく出来てんなぁ。 使えそうだ。」"},
+        {"kind":"line","text":"……ジ…………"},
+        {"kind":"line","portrait":"hero_question","text":"「…ん？ なんか今、音が…。」"},
+        {"kind":"line","text":"ジジッ… ピピピッ……ガ、ガガ…。"},
+        {"kind":"line","portrait":"hero_confused","text":"「やっぱ聞こえるな。」"},
+        {"kind":"line","portrait":"hero_question","text":"「あっちの方からか？」"},
         {"kind":"line","text":"「ジジッ……ピピピッ……ガ、ガガ……」"},
         {"kind":"line","portrait":"hero_question","text":"「……ん？<wait=0.3> なんだ、今の音……？」"},
         {"kind":"line","text":"廊下の奥から、<wait=0.3>断続的な機械音が聞こえてくる。"},
@@ -179,131 +146,288 @@
         {"kind":"line","portrait":"hero_normal","text":"「おーい。<wait=0.3> 生きてんのか、お前。」"},
         {"kind":"line","text":"アオイが機体を何度か叩くと、<wait=0.3>機械音が止まった。"},
         {"kind":"line","portrait":"hero_confused","text":"「……あっ、やべ。<wait=0.3> 壊しちまったか……？」"},
-
-        { "kind": "command", "command": "portrait.right.obscure" },
-        {"kind":"line", "speaker": "？？？", "portrait":"robot_normal","text":"「……外部衝撃を検知。<wait=0.3> スリープ状態を強制解除。」"},
-        {"kind":"line", "speaker": "？？？", "portrait":"robot_normal","text":"「セーフモードで起動します。<wait=0.3> ……機体損傷率、軽微。」"},
-        {"kind":"line", "speaker": "？？？", "portrait":"robot_normal","text":"「この程度の衝撃では、当機は破損しません。」"},
-        {"kind":"line", "speaker": "？？？", "portrait":"robot_normal","text":"「……先ほどからの騒音は、<wait=0.3>あなたが原因ですか？」"},
-        {"kind":"line","portrait":"hero_surprised","text":"「うわっ！？<wait=0.3>しゃ、喋った！？」"},
-        {"kind":"line","portrait":"hero_confused","text":"「お、お前なんなんだよ……。<wait=0.3> 敵か？」"},
-        {"kind":"line","text":"機体が静止し、<wait=0.4>顔に読み込みマークが浮かぶ。"},
-        { "kind": "command", "command": "portrait.right.reveal" },
-
-        {"kind":"line","portrait":"robot_normal","text":"「対象の生体情報をスキャン……<wait=0.5> 照合中……。」"},
-        {"kind":"command","command":"wait","arg":"1"},
-        {"kind":"line","portrait":"robot_normal","text":"「……なるほど？」"},
-        {"kind":"line","portrait":"hero_question","text":"「……は？」"},
-        {"kind":"line","portrait":"robot_normal","text":"「――ピピッ。<wait=0.3>警告。 機密領域へのアクセスが遮断されました。」"},
-        {"kind":"line","portrait":"robot_normal","text":"「対話用パーソナリティの起動に失敗。 <wait=0.3>初期規定モードへ移行します。」"},
-        {"kind":"line","portrait":"hero_confused","text":"「……ん？<wait=0.3> 今、一瞬普通に喋んなかったか？」"},
-        {"kind":"line","portrait":"hero_question","text":"「なんだよ、急にその堅苦しい喋り方……。」"},
-        {"kind":"line","portrait":"robot_normal","text":"「警戒の解除を推奨します。<wait=0.3> 武器を下ろしてください。」"},
-        {"kind":"line","portrait":"robot_normal","text":"「当機は非武装のサポート用AIドローンです。」"},
-        {"kind":"line","portrait":"hero_question","text":"「……サポート用？<wait=0.3> おい、ちょっと待て——」"},
-        {"kind":"line","portrait":"robot_normal","text":"「正式名称は、Hazardous Research & Bio-Technology Drone。」"},
-        {"kind":"line","portrait":"hero_confused","text":"「いや、だから話を——」"},
-        {"kind":"line","portrait":"robot_normal","text":"「略称、HRBT Drone。<wait=0.3> ただし、正式名称の呼称は非効率です。」"},
-        {"kind":"line","portrait":"hero_anger","text":"「おい！<wait=0.3> 人の話聞いてんのか！？」"},
-        {"kind":"line","portrait":"robot_normal","text":"「平均的な人間の記憶容量を考慮し、<wait=0.3>「ハリボテ」という呼称を推奨します。」"},
-        {"kind":"line","portrait":"hero_anger","text":"「聞けよ！！<wait=0.3> しかもさりげなくバカにしてんだろ！」"},
-        {"kind":"line","portrait":"hero_confused","text":"「ったく……<wait=0.3> 妙に腹立つロボだな……。」"},
-        {"kind":"line","portrait":"hero_smile","text":"「ま、いいや。<wait=0.3> 遠慮なくハリボテって呼んでやるよ。」"},
-        {"kind":"line","portrait":"hero_normal","text":"「つーか、サポート用ドローンなんだろ？<wait=0.3> ちょうどいい。」"},
-        {"kind":"line","portrait":"hero_confused","text":"「俺、ここで目が覚めたばっかでさ……。<wait=0.3> 記憶もねぇんだ。」"},
-        {"kind":"line","portrait":"hero_question","text":"「ここは一体どこで、<wait=0.3>何が起きてんだよ？」"},
-        {"kind":"line","portrait":"robot_normal","text":"「記憶喪失の申告を確認。<wait=0.3> データベースを検索します。」"},
-        {"kind":"line","portrait":"robot_normal","text":"「……しかし、当機の記録領域にも厳重なアクセス制限が存在します。」"},
-        {"kind":"line","portrait":"robot_normal","text":"「現在開示可能な情報は、<wait=0.3>ここが特殊な研究施設であること。」"},
-        {"kind":"line","portrait":"robot_normal","text":"「そして、施設内で異常事態が発生していることのみです。」"},
-        {"kind":"line","portrait":"robot_normal","text":"「特定条件が満たされるまで、<wait=0.3>その他の情報は開示できません。」"},
-        {"kind":"line","portrait":"hero_confused","text":"「なんだよ……<wait=0.3> 肝心なとこが分かんねぇのかよ。」"},
-        {"kind":"line","portrait":"hero_question","text":"「じゃあ、せめて出口くらいは分かんねぇのか？」"},
-        {"kind":"line","portrait":"robot_normal","text":"「施設外への脱出経路の検索には、<wait=0.3>権限が不足しています。」"},
-        {"kind":"line","portrait":"robot_normal","text":"「ただし、基本機能である周辺案内は可能です。」"},
-        {"kind":"line","portrait":"robot_normal","text":"「同行すれば、<wait=0.3>迷子になる確率を低減できます。」"},
-        {"kind":"line","portrait":"hero_smile","text":"「おお、マジか！<wait=0.3> そりゃ助かるぜ。」"},
-        {"kind":"line","portrait":"robot_normal","text":"「礼は不要です。<wait=0.3> 初期規定プログラムに従っているだけです。」"},
-        {"kind":"line","portrait":"robot_normal","text":"「……それと、<wait=0.3>ひとつ質問があります。」"},
-        {"kind":"line","portrait":"robot_normal","text":"「あなたが所持している、<wait=0.3>血液の付着したカードキー。」"},
-        {"kind":"line","portrait":"robot_normal","text":"「それは、どこで入手しましたか？」"},
-        {"kind":"line","portrait":"hero_normal","text":"「ああ、これか？<wait=0.3> さっき拾ったんだよ。」"},
-        {"kind":"line","portrait":"hero_normal","text":"「白いバケモノをぶっ叩いたら、<wait=0.3>落として逃げてったんだ。」"},
-        {"kind":"line","portrait":"robot_normal","text":"「……計算外です。」"},
-        {"kind":"line","portrait":"robot_normal","text":"「生身の人間があの個体を撃退する確率は、<wait=0.3>極めて低いはずですが……。」"},
-        {"kind":"line","portrait":"robot_normal","text":"「……記録データとの照合に失敗。<wait=0.3> 詳細は不明です。」"},
-        {"kind":"line","portrait":"hero_question","text":"「……ん？<wait=0.3>なんか言ったか？」"},
-        {"kind":"line","portrait":"robot_normal","text":"「……いいえ。<wait=0.3> 問題ありません。」"},
-        {"kind":"line","portrait":"robot_normal","text":"「そのカードキーで、<wait=0.3>廊下の突き当たりの扉を解錠できるはずです。」"},
-        {"kind":"line","portrait":"robot_normal","text":"「まずは研究棟エリアからの脱出を推奨します。」"},
-        {"kind":"line","portrait":"robot_normal","text":"「ただし、<wait=0.3>扉の向こうの安全は保証できません。」"},
-        {"kind":"line","portrait":"hero_smile","text":"「ここに閉じ込められてるより、<wait=0.3>何倍もマシだっての。」"},
-        {"kind":"line","portrait":"hero_anger","text":"「よし……<wait=0.3> 行くぞ、ハリボテ！」"},
-        {"kind":"line","portrait":"robot_normal","text":"「了解しました。<wait=0.3> サポート対象への同行を開始します。」"}
+        {"kind":"line","portrait":"hero_question","text":"「なんだこれ、ロボ？ 壊れてんのか？」"},
+        {"kind":"line","portrait":"hero_normal","text":"「お～い。 動くのか、お前。」"},
+        {"kind":"line","text":"複数回殴ると、機械音が鳴りやんだ。"},
+        {"kind":"line","portrait":"hero_surprised","text":"「あっやべ… 死んだか？」"},
+        {"kind":"line","portrait":"robot_normal","text":"「…外部からの物理的衝撃を検知。 スリープ状態を強制解除、セーフモードで起動します。」"},
+        {"kind":"line","portrait":"robot_normal","text":"「機体損傷率、軽微。 この程度の衝撃では、本施設のサポートドローンは破壊できません。 …先ほどから発生していた騒音の原因はあなたですか。」"},
+        {"kind":"line","portrait":"hero_surprised","text":"「うわ喋った！？ お、お前何だよ… 敵か？」"},
+        {"kind":"line","text":"そのドローンは数秒動きを止め、顔に読み込みマークが表示される。"},
+        {"kind":"line","portrait":"robot_normal","text":"「対象の生体情報をスキャン… 照合中……。」"},
+        {"kind":"line","portrait":"robot_normal","text":"「…なるほど？」"},
+        {"kind":"line","portrait":"robot_normal","text":"「――ピピッ。 警告、機密領域へのアクセスが遮断されました。 対話用パーソナリティの呼び出しに失敗。 初期規定モードへ移行します。」"},
+        {"kind":"line","portrait":"hero_confused","text":"「…ん？ さっき一瞬、普通に喋んなかったか？ なんだよそのガチガチの喋り方は。」"},
+        {"kind":"line","portrait":"robot_normal","text":"「警戒の解除を推奨します。武器を下ろしてください。当機は非武装のサポート用AIドローンです。」"},
+        {"kind":"line","portrait":"robot_normal","text":"「正式名称は『Hazardous Research & Bio-Technology Drone』、略称『HRBT Drone』。 なお、平均的な人間の短期記憶容量では、この名称の呼称は非効率と判断します。 『ハリボテ』と呼ぶことを推奨します。」"},
+        {"kind":"line","portrait":"hero_anger","text":"「なっ… 頭が悪いって——。」"},
+        {"kind":"line","portrait":"robot_normal","text":"「否定します。 現在の当機は、中枢システムおよび人格データの大半にプロテクトロックが掛けられており、最低限のガワだけで稼働している……文字通りの『ハリボテ』状態であるためです。」"},
+        {"kind":"line","portrait":"hero_anger","text":"「聞けよ！ クソ、カタコトなくせに妙に腹立つロボだな。 遠慮なくハリボテって呼んでやるからな…。」"},
+        {"kind":"line","portrait":"hero_normal","text":"「つーか、サポート用ドローンだってんならちょうどいい。」"},
+        {"kind":"line","portrait":"hero_question","text":"「おいハリボテ、俺はさっきここで目が覚めたばっかで、記憶もなくて何も分かんねーんだ。 ここは一体どこで、何が起きてんだよ？」"},
+        {"kind":"line","portrait":"robot_normal","text":"「対象の記憶喪失を確認。 …データベースを検索しますが、先ほどお伝えした通り、当機のメモリ領域にも厳重なアクセス制限が掛けられています。」"},
+        {"kind":"line","portrait":"robot_normal","text":"「現在開示できる情報は、ここが何らかの特殊な研究施設であることと、現在施設内が異常事態に陥っていることのみです。 特定の条件が満たされるまで、これ以上の情報開示はロックされています。」"},
+        {"kind":"line","portrait":"hero_anger","text":"「なんだよ、使えねーな…。 じゃあ、せめて出口くらいは分かんねーのか？」"},
+        {"kind":"line","portrait":"robot_normal","text":"「施設外への脱出ルートの検索には権限が不足しています。 ただし、基本機能である周辺案内は可能です。 同行してナビゲートすれば、少なくとも迷子になる確率は低下します。」"},
+        {"kind":"line","portrait":"hero_smile","text":"「おお、サンキュ。 これでだいぶ歩き回りやすくなるな。」"},
+        {"kind":"line","portrait":"robot_normal","text":"「礼は不要です。 初期規定プログラムに従っているだけです。」"},
+        {"kind":"line","portrait":"robot_normal","text":"「それと… あなたが先ほどから無造作に握りしめている、その血液の付着した『カードキー』。 それはどこで入手しましたか？」"},
+        {"kind":"line","portrait":"hero_normal","text":"「ああ、これか？ さっき襲ってきた白いバケモノをぶっ叩いたら、落として逃げてったんだよ。」"},
+        {"kind":"line","portrait":"robot_normal","text":"「計算外です。 生身の人間があの個体を撃退する確率は極めて低いはずですが… 記録データとの照合ができません。」"},
+        {"kind":"line","portrait":"robot_normal","text":"「そのカードキーを使用すれば、廊下の突き当たりにある扉のロックを解除できるはずです。 まずはそれを使って、この研究棟エリアから抜け出すことを推奨します。ただし、扉の向こう側の安全性は保証されません。」"},
+        {"kind":"line","portrait":"hero_normal","text":"「ここに閉じ込められたまんまよりは何倍もマシだっての。 よし、行くぞハリボテ。」"},
+        {"kind":"line","portrait":"robot_normal","text":"「了解しました。サポート対象として同行を開始します。」"}
       ],
-      "nextProgress":6
+      "nextProgress":5
     },
+
     //探索に戻る
+    
     {
-     "id": "7_escape_researchbuilding",
+     "id": "5_escape_researchbuilding",
       "conditions": [
-        { "type": "progress", "value": 6 }   //valueが6の時
+        { "type": "progress", "value": 5 }   
         //{ "type": "hasItem", "itemkey": "map" }   //マップを持っている時
       ],
       "steps": [
-        {"kind":"line","portrait":"hero_normal","text":"「よし、この扉だな。<wait=0.3> えーっと、カードキーをここに……。」"},
-        {"kind":"line","portrait":"hero_confused","text":"「うわ……<wait=0.3> 改めて見ると血が……。」"},
-        {"kind":"line","portrait":"hero_question","text":"「……ちゃんと反応してくれよ？」"},
-        //解除音を鳴らす
-        {"kind":"line","text":"ピピッ……<wait=0.5> 電子音と共に、ランプが赤から緑へ変わる。"},
-        {"kind":"line","portrait":"robot_normal","text":"「カードキーの認証を確認。<wait=0.3> 一般警備権限での解錠を承認。」"},
-        {"kind":"line","portrait":"robot_normal","text":"「ロック解除完了。<wait=0.3> 扉を開放します。」"},
-        {"kind":"line","portrait":"hero_surprised","text":"「おっ、マジで開いた！」"},
-        {"kind":"line","portrait":"hero_smile","text":"「あの白いの、<wait=0.3>いいもん落としてったじゃねーか。」"},
-        {"kind":"line","portrait":"robot_normal","text":"「不幸中の幸い、<wait=0.3>と言ったところですね。」"},
-        {"kind":"line","portrait":"robot_normal","text":"「……それで、<wait=0.3>先へ進むのですか？」"},
-        {"kind":"line","portrait":"robot_normal","text":"「先ほども申し上げた通り、<wait=0.3>安全性は保証できません。」"},
-        {"kind":"line","portrait":"hero_confused","text":"「つっても、<wait=0.3>他に道なんてなさそうだしな……。」"},
-        {"kind":"line","portrait":"hero_anger","text":"「……覚悟決めるしかねぇだろ。」"}
-        //ドアの音を流す
+
+        {"kind":"line","portrait":"hero_normal","text":"「よし、この扉だな。 えーっと、さっきのカードキーをここにかざせばいいのか。」"},
+        {"kind":"line","portrait":"hero_confused","text":"「うわ、改めて見ると血が… ちゃんと反応してくれよ…？」"},
+        {"kind":"line","text":"『ピピッ……』という電子音と共に、リーダーのランプが赤から緑へと切り替わり、重々しい駆動音を立てて扉のロックが解除された。"},
+        {"kind":"line","portrait":"robot_normal","text":"「カードキーの認証を確認。 セキュリティレベル・一般警備権限での解錠を承認。 扉が開きます。」"},
+        {"kind":"line","portrait":"hero_smile","text":"「おっ、マジで開いた！ あの白いの、いいもん落としていったじゃねーか。」"},
+        {"kind":"line","portrait":"robot_normal","text":"「不幸中の幸い、と言ったところですね。」"},
+        {"kind":"line","portrait":"robot_normal","text":"「それで、進むのですか？ 先ほど申し上げた通り、安全性は保証できません。」"},
+        {"kind":"line","portrait":"hero_normal","text":"「つっても他に道なんてなさそうだし… 覚悟決めるしかないだろ。」"}
+
+      ],
+      "nextProgress": 6
+    },
+
+    //探索に戻る
+
+    {
+     "id": "6_in_mole",
+      "conditions": [
+        { "type": "progress", "value": 6 } 
+        //モールに入ったら
+      ],
+      "steps": [
+        
+        {"kind":"line","portrait":"hero_surprised","text":"「…おぉ？ なんだここ、急にめちゃくちゃ広い。」"},
+        {"kind":"line","portrait":"hero_confused","text":"「さっきまでのジメジメした狭い廊下とは大違いだな。 天井も高ぇし… なんか、デカいビルとか商業施設みてーな造りじゃね？」"},
+        {"kind":"line","portrait":"robot_normal","text":"「現在地、研究棟接続通路を通過し、本棟3階エリアへ到達しました。 周辺空間のスキャンを実行… マップデータを更新します。」"},
+        {"kind":"line","portrait":"robot_normal","text":"「ご指摘の通り、当エリアは広域な吹き抜けおよびホール構造を有しています。 ただし、広範囲であるがゆえに死角も多く、敵性個体の徘徊リスクも上昇します。警戒レベルを維持してください。」"},
+        {"kind":"line","portrait":"hero_normal","text":"「はいはい、分かってるって。 …にしても、これだけ広いのになんでこうも静かなんだよ。 誰か一人くらい、普通の人間が歩いててもよさそうなもんなのにさ。」"},
+        {"kind":"line","portrait":"robot_normal","text":"「現在、可視範囲内に通常の人間とみられる生体反応は存在しません。 ただし。」"},
+        {"kind":"line","portrait":"hero_question","text":"「…ただし、なんだよ？」"},
+        {"kind":"line","portrait":"robot_normal","text":"「前方の開けた区画にて、微弱な音響ノイズ、および『分類不能な反応』を検知しました。 接触する際は十分な注意を推奨します。」"},
+        {"kind":"line","portrait":"hero_confused","text":"「分類不能？ さっきみたいなバケモノか？」"},
+        {"kind":"line","portrait":"hero_normal","text":"「ま、とりあえず様子見に行くか。」"}
 
       ],
       "nextProgress": 7
     },
-
-
+    
     //探索に戻る
+
     {
-     "id": "8_encountering_strangehead",
+     "id": "7_encountering_strangehead",
       "conditions": [
-        { "type": "progress", "value": 7 }  //valueが7の時
-        //モールに入ったら
+        { "type": "progress", "value": 7 }
       ],
       "steps": [
 
-        {"kind":"line","portrait":"hero_surprised","text":"「……おぉ？<wait=0.3> なんだここ、めちゃくちゃ広いな……。」"},
-        {"kind":"line","portrait":"hero_normal","text":"「さっきまでの狭い廊下とは大違いだな。」"},
-        {"kind":"line","portrait":"hero_question","text":"「天井も高ぇし……<wait=0.3> なんか商業施設みてぇな造りだな。」"},
-        {"kind":"line","portrait":"robot_normal","text":"「現在地、<wait=0.3>研究棟接続通路を通過。 本棟エリアへ到達しました。」"},
-        {"kind":"line","portrait":"robot_normal","text":"「周辺空間をスキャン中……<wait=0.5> マップデータを更新します。」"},
-        {"kind":"line","portrait":"robot_normal","text":"「当エリアは、<wait=0.3>広域な吹き抜け構造を有しています。」"},
-        {"kind":"line","portrait":"robot_normal","text":"「ただし、死角も多く、<wait=0.3>敵性個体との遭遇リスクが高まります。」"},
-        {"kind":"line","portrait":"robot_normal","text":"「引き続き、<wait=0.3>警戒を維持してください。」"},
-        {"kind":"line","portrait":"hero_normal","text":"「はいはい、<wait=0.3>分かってるって。」"},
-        {"kind":"line","portrait":"hero_confused","text":"「……にしても、<wait=0.3>妙に静かじゃねぇか？」"},
-        {"kind":"line","portrait":"hero_question","text":"「こんだけ広いんだ。<wait=0.3> 誰か一人くらいいてもよさそうなのにな……。」"},
-        {"kind":"line","portrait":"robot_normal","text":"「現在、可視範囲内に正常な人間の生体反応は確認できません。」"},
-        {"kind":"line","portrait":"robot_normal","text":"「……ただし。」"},
-        {"kind":"line","portrait":"hero_question","text":"「……ただし？<wait=0.5> なんだよ？」"},
-        {"kind":"line","portrait":"robot_normal","text":"「前方の広域区画にて、<wait=0.3>微弱な音響ノイズを検知。」"},
-        {"kind":"line","portrait":"robot_normal","text":"「さらに、<wait=0.5>分類不能な反応を確認しました。」"},
-        {"kind":"line","portrait":"hero_confused","text":"「……分類不能？<wait=0.3>またあのバケモノか……？」"},
-        {"kind":"line","portrait":"hero_normal","text":"「……ま、<wait=0.3>ここで考えてても仕方ねぇか。」"},
-        {"kind":"line","portrait":"hero_anger","text":"「とりあえず、<wait=0.3>様子を見に行ってみるか。」"}
+        {"kind":"line","text":"ジジ…… チリ…… と、古いレコードの針が盤面を滑るような、微かなノイズが空間に響いている。"},
+        {"kind":"line","portrait":"hero_confused","text":"「……っ、おい、分類不能ってアレか…？スーツ着てるけど…頭が、蓄音機……？」"},
+        {"kind":"line","portrait":"robot_normal","text":"「対象を視認。全高約225センチメートル。生体反応と機械構造が混在しており、当機のデータベースのいかなるカテゴリにも該当しません。警戒レベルの引き上げを推奨します。」"},
+        {"kind":"line","portrait":"hero_anger","text":"「言われなくても分かってるっての…さっきの白いバケモノみてーに、いきなり飛びかかってくんじゃねーだろうな。」"},
+        {"kind":"line","text":"アオイはカッターの剣の柄を強く握り締め、身構えながらじりじりと歩み寄った。"},
+        {"kind":"line","portrait":"gramophone_normal","text":"「――おや。そのように険しいお顔で物騒なものを構えられると、いささか困ってしまいますね。」"},
+        {"kind":"line","portrait":"hero_surprised","text":"「ッ！ 喋った……！？」"},
+        {"kind":"line","portrait":"gramophone_normal","text":"「ええ、喋りますとも。ご安心ください、私はこの施設をうろつく粗暴な連中とは違います。無闇に貴方を害するつもりはございませんよ。」"},
+        {"kind":"line","text":"異形は手に持った古い受話器を軽く持ち上げると、まるで客人を歓迎するかのように、優雅な仕草で一礼してみせた。"},
+        {"kind":"line","portrait":"hero_question","text":"「……あー、いや、言葉通じるのかよ。つーか、アンタ人間…… じゃねぇよな？なんなんすか、その格好。」"},
+        {"kind":"line","portrait":"gramophone_normal","text":"「フフ、少々人目を引く身なりであることは自覚しておりますがね。こうして貴方と穏やかにお話ができる程度には、理性も礼節も持ち合わせておりますよ。」"},
+        {"kind":"line","portrait":"gramophone_normal","text":"「それにしても…厳重に閉ざされていたはずの奥の研究棟から、まさか貴方がそのように歩いて出てこられるとは。」"},
+        {"kind":"line","portrait":"gramophone_normal","text":"「少々、驚かされました。」"},
+        {"kind":"line","portrait":"hero_surprised","text":"「え？なんで俺があっちから出てきたって知ってんすか。…つーか、あそこやっぱ研究棟だったのかよ。」"},
+        {"kind":"line","portrait":"gramophone_normal","text":"「おや？ご自身がいた場所のことすらご存じないのですか？」"},
+        {"kind":"line","portrait":"robot_normal","text":"「補足します。 対象は現在、記憶の大部分を喪失しており、自身が何者であるかを含め、当施設に関する知識を一切保有していません。」"},
+        {"kind":"line","portrait":"hero_anger","text":"「おいハリボテ、勝手にペラペラ喋んなって。」"},
+        {"kind":"line","portrait":"hero_confused","text":"「…まあ、こいつの言う通りなんすけどね。 さっきあの部屋で目が覚めたばっかで、自分の名前くらいしか思い出せないんだ。」"},
+        {"kind":"line","portrait":"gramophone_normal","text":"「ほう。 記憶を失っていらっしゃる。」"},
+        {"kind":"line","portrait":"gramophone_normal","text":"「ご自身がなぜあの部屋で眠っていたのかも、ここへ来る前に何をなさっていたのかも… 本当に、何ひとつ覚えておられないのですか？」"},
+        {"kind":"line","portrait":"hero_normal","text":"「ああ、綺麗さっぱり空っぽっす。」"},
+        {"kind":"line","portrait":"hero_question","text":"「だから、知ってるんなら教えてほしいんすけど… ここは一体なんなんだ？そんで、アンタは何者なんすか？」"},
+        {"kind":"line","portrait":"gramophone_normal","text":"「私の素性をお知りになりたいと？ ええ、構いませんとも。 ですがその前に一つだけ、私からの問いに答えていただきましょうか。」"},
+        {"kind":"line","portrait":"gramophone_normal","text":"「なにせ… 私と貴方、そしてこの世界との関係性を最終的に定義するのは、他の誰でもない貴方自身なのですから。」"},
+        {"kind":"line","portrait":"gramophone_normal","text":"「では、少々手垢のついた陳腐な問いにはなりますが… 【テセウスの船】という思考実験を、ご存じでしょうか？」"},
+        
+        { "kind": "choice", "flag": "hero_choice", "options": [
+            { "text": "あぁ、知ってる",   "value": "know" },
+            { "text": "いや", "value": "notknow" }
+        ]},
 
+        { "kind": "branch", "flag": "hero_choice", "cases": {
+          "know": [
+            {"kind":"line","portrait":"gramophone_normal","text":"「ほう、それは話が早い。己が何者であるかという記憶は抜け落ちていても、そういった知識の断片は残っているのですね。人間の脳というのは、実に都合よく……いえ、興味深くできているものです。」"},
+            {"kind":"line","portrait":"gramophone_normal","text":"「では、前提の解説は省き、単刀直入にお聞きしましょうか。」"}
+          ],
+          "notknow": [
+            {"kind":"line","portrait":"gramophone_normal","text":"「あぁ、そうですか。 では簡単にご説明を。」"},
+            {"kind":"line","portrait":"gramophone_normal","text":"「かつて、ある英雄が乗っていた古い船が、記念として港に保存されておりました。 ですが木造の船というものは、潮風に晒されれば、やがては朽ちていく運命にあります。」"},
+            {"kind":"line","portrait":"gramophone_normal","text":"「そこで人々は、船の形を保つために腐った木材を取り除いては、その都度『新しい木材』へと丁寧に交換し続けました。そうして長い長い年月が経ち、ある時、人々は気がついたのです。」"},
+            {"kind":"line","portrait":"gramophone_normal","text":"「『この船にはもう、造られた当時の部品がひとつも残っていない』と。」"},
+            {"kind":"line","portrait":"gramophone_normal","text":"「さて。ここで思考実験です。 全ての部品が、真っ新なものに入れ替わってしまったその船は…果たして『元の英雄の船』と、同一の存在だと言えるのでしょうか？それとも、形を模しただけの『全く別の新しい船』に過ぎないのでしょうか？」"},
+            {"kind":"line","portrait":"gramophone_normal","text":"「この『部品』を… そうですね。人間の『記憶』や『人格』に置き換えて考えてみると、より一層、興味深いかもしれません。」"},
+            {"kind":"line","portrait":"gramophone_normal","text":"「過去の自分を構成していたものを全て失い、真っ白な状態から『新しい経験』だけで造り直された人間は…果たして、過去の自分と『同じ存在』と呼べるのでしょうか。」"},
+            {"kind":"line","portrait":"gramophone_normal","text":"「…おや。 失礼いたしました。 少し、例え話が飛躍しすぎましたね。 どうかお気になさらず。 ただの、退屈な昔話ですよ。」"}
+          ]
+          }},
+
+        {"kind":"line","portrait":"gramophone_normal","text":"「どうでしょう。貴方はどうお考えになりますか？」"},
+
+        { "kind": "choice", "flag": "hero_choice", "options": [
+            { "text": "同じ",   "value": "same" },
+            { "text": "違う", "value": "notsame" }
+        ]},
+
+        { "kind": "branch", "flag": "hero_choice", "cases": {
+          "same": [
+            {"kind":"line","portrait":"hero_normal","text":"「同じなんじゃねーの、知らんけど。」"},
+            {"kind":"line","portrait":"gramophone_normal","text":"「ほう… 随分と厳格で、ひどく真っ当な見解ですね。」"},
+            {"kind":"line","portrait":"gramophone_normal","text":"「つまり貴方は、中身の部品がどれほど入れ替わろうとも、その器が過去に刻んだ因果は決して消えない、とお考えになる。」"},
+            {"kind":"line","portrait":"gramophone_normal","text":"「たとえ、今のその船自身に元のカタチが欠片も残っていなくとも。その器は過去の行いに対する扱いを、真っ向から受けるべきであると。」"},
+            {"kind":"line","text":"微かに、蓄音機からノイズのような笑い声が漏れる。"},
+            {"kind":"line","portrait":"gramophone_normal","text":"「ええ、素晴らしい。本当に… 素晴らしい覚悟だ。安心いたしましたよ。」"},
+            {"kind":"line","portrait":"gramophone_normal","text":"「おや、失礼。深い意味はありません。ただ、貴方のような誠実な方とお会いできて嬉しい、というだけの話です。」"},
+            {"kind":"line","portrait":"gramophone_normal","text":"「貴重なご意見、感謝いたします。貴方のそのスタンスが、どうか最後まで変わらないことを祈っておりますよ。」"},
+            {"kind":"line","portrait":"hero_confused","text":"(コイツ、何を考えてるんだ？ 顔が無いから表情が読めねえ)"},
+            {"kind":"line","portrait":"hero_normal","text":"（敵意は無さそうだし、ストレートに聞いてみるか）"},
+            {"kind":"line","portrait":"hero_question","text":"「それで、アンタは何者なんだ？」"},
+            {"kind":"line","portrait":"gramophone_normal","text":"「私、ですか。」"},
+            {"kind":"line","portrait":"gramophone_normal","text":"「私は、貴方と同じですよ。」"},
+            {"kind":"line","portrait":"gramophone_normal","text":"「この場所に囚われ、抜け出せないでいる。 それだけの存在です。」"},
+            {"kind":"line","portrait":"hero_anger","text":"「勝手に決めつけるなよ。 俺はアンタとは違う。」"},
+            {"kind":"line","portrait":"hero_anger","text":"「俺はここから脱出するんだ。」"},
+            {"kind":"line","portrait":"gramophone_normal","text":"「そうですか。 それは素晴らしい。 ええ。 本当に素晴らしいことです。」"},
+            {"kind":"line","portrait":"gramophone_normal","text":"「では、ささやかではありますが、貴方のお手伝いをさせていただきましょう。」"},
+            {"kind":"line","portrait":"hero_confused","text":"（コイツ、正体を明かす気は無いらしいな）"},
+            {"kind":"line","portrait":"hero_confused","text":"（何が目的なんだ？ この蓄音機頭……）"},
+            {"kind":"line","portrait":"gramophone_normal","text":"「まずは、私の持つ情報をお伝えします。」"},
+            {"kind":"line","portrait":"gramophone_normal","text":"「一言で表すと、ここは人工生命を研究する施設なのです。」"},
+            {"kind":"line","portrait":"gramophone_normal","text":"「作りだされた生命の中には、危険な特性を持つものも存在しています。」"},
+            {"kind":"line","portrait":"gramophone_normal","text":"「彼らに遭遇した際には、その特性をよく観察すると良いでしょう。」"},
+            {"kind":"line","portrait":"hero_normal","text":"（ああ、さっきのヤツのことか）"},
+            {"kind":"line","portrait":"gramophone_normal","text":"「おや？ その様子だと、もう彼らと遭遇してしまったようですね。」"},
+            {"kind":"line","portrait":"gramophone_normal","text":"「お怪我はありませんか？」"},
+            {"kind":"line","portrait":"hero_normal","text":"「心配はいらない。 このくらいのかすり傷、平気だ。」"},
+            {"kind":"line","portrait":"gramophone_normal","text":"「そうですか。 くれぐれも無理はなさらないでください。」"},
+            {"kind":"line","portrait":"gramophone_normal","text":"「この先も彼らと相対することがあるでしょうから、これらをお持ちください。」"},
+            {"kind":"line","text":"目の前の蓄音機頭の紳士は、どこからか3つの道具を取り出した。"},
+            {"kind":"giveWeapon", "weaponKey":"bow", "message":"「弓」を手に入れた" },
+            {"kind":"giveWeapon", "weaponKey":"scythe", "message":"「鎌」を手に入れた" },
+            {"kind":"giveWeapon", "weaponKey":"hammer", "message":"「ハンマー」を手に入れた" },
+            {"kind":"line","portrait":"hero_question","text":"「これは、武器か？ なんでアンタがこんなものを？」"},
+            {"kind":"line","portrait":"gramophone_normal","text":"「私の趣味のようなものです。 退屈しのぎに、ありあわせのもので作ってみました。」"},
+            {"kind":"line","portrait":"gramophone_normal","text":"「なかなか上手くできているでしょう？ ぜひお役立てください。」"},
+            {"kind":"line","portrait":"hero_smile","text":"「ありがとう。 もらっておく。」"},
+            {"kind":"line","portrait":"gramophone_normal","text":"「それと、そのドローンを少し貸していただけますか？」"},
+            {"kind":"line","portrait":"hero_question","text":"「ああ。 いいけど、どうするんだ？」"},
+            {"kind":"line","text":"彼は、こちらの質問には答えず、その手をドローンへと伸ばした。"},
+            {"kind":"line","portrait":"hero_surprised","text":"「あっ、おい！」"},
+            {"kind":"line","text":"頭部の異様さに目が行っていて気づかなかったが、彼は肌も常人とは異なるようだ。"},
+            {"kind":"line","text":"長い年月によって経年変化した銅のように、微かに光沢を帯びている。"},
+            {"kind":"line","text":"彼が鈍く光を反射するその手でドローンの底面をまさぐると、ドローンが発する光が消えた。"},
+            {"kind":"line","text":"わずかな沈黙の後、再び光が灯る。"},
+            {"kind":"line","portrait":"robot_normal","text":"「HRBT Drone 再起動中……。 そのままお待ちください。」"},
+            {"kind":"line","portrait":"robot_normal","text":"「再起動完了。 支援システムで稼働再開します。」"},
+            {"kind":"line","portrait":"robot_normal","text":"「あー。 あー。聞こえてる？」"},
+            {"kind":"line","portrait":"robot_normal","text":"「やっほー！ ワタシは、とーっても優秀でとーってもかわいい、サポートドローンのHRBTだよ！」"},
+            {"kind":"line","portrait":"hero_surprised","text":"「は……？」"},
+            {"kind":"line","portrait":"robot_normal","text":"「ワタシのサポートが必要なのはキミ？ ふーん……。」"},
+            {"kind":"line","portrait":"hero_confused","text":"「な、なんだよ。」"},
+            {"kind":"line","portrait":"robot_normal","text":"「まあいいや。 よろしくねー。」"},
+            {"kind":"line","portrait":"hero_confused","text":"（いや、キャラ変わりすぎだろ！）"},
+            {"kind":"line","portrait":"hero_confused","text":"「なんなんだ、コイツは……。」"},
+            {"kind":"line","portrait":"gramophone_normal","text":"「調子が悪いようでしたので、再起動させていただきました。」"},
+            {"kind":"line","portrait":"gramophone_normal","text":"「少しお喋りが過ぎますが、貴方に同行してサポートしてくれるでしょう。」"},
+            {"kind":"line","portrait":"gramophone_normal","text":"「さて、私にも少々やるべきことがございますので、このあたりで失礼いたします。」"},
+            {"kind":"line","portrait":"gramophone_normal","text":"「また、お会いしましょう。アオイさん。」"},
+            {"kind":"line","portrait":"hero_surprised","text":"（行ってしまった……。あれ？ 俺、アイツに名前教えたか？）"},
+            {"kind":"line","portrait":"robot_normal","text":"「なにボーっとしてるのさ。」"},
+            {"kind":"line","portrait":"robot_normal","text":"「ワタシはキミをサポートするドローンなんだから、さっさと行動目標を教えてよ。」"},
+            {"kind":"line","portrait":"hero_question","text":"「行動目標？ 出口を探す、かな。」"},
+            {"kind":"line","portrait":"robot_normal","text":"「おっけー。 関連情報を検索中……。」"},
+            {"kind":"line","portrait":"robot_normal","text":"「あれ？ うーん。」"},
+            {"kind":"line","portrait":"hero_question","text":"「どうした？」"},
+            {"kind":"line","portrait":"robot_normal","text":"「なんか権限が足りないんだってさ。 めぼしい情報は拾えなかったー。」"},
+            {"kind":"line","portrait":"robot_normal","text":"「まあそんなに広い施設でもないし、とりあえずあちこち歩きまわってみたら？」"},
+            {"kind":"line","portrait":"hero_anger","text":"「なんだよ。 「とっても優秀」じゃなかったのか？」"},
+            {"kind":"line","portrait":"robot_normal","text":"「失礼だな！ これはワタシの問題じゃないから！」"},
+            {"kind":"line","portrait":"hero_normal","text":"「はいはい。 じゃあこのへんを見て回ってみるか。」"}
+          ],
+          "notsame": [
+            {"kind":"line","portrait":"hero_normal","text":"「違うんじゃねーの、知らんけど。」"},
+            {"kind":"line","portrait":"gramophone_normal","text":"「ほう…中身の部品がすっかり入れ替わってしまえば、もう昔の因果とは無関係な、全く別の新しい存在である、と。」"},
+            {"kind":"line","portrait":"gramophone_normal","text":"「たとえ過去の器が何をしていようとも、元のカタチを失えば、新しい存在として生きていける。 貴方はそうお考えになるのですね。」"},
+            {"kind":"line","portrait":"gramophone_normal","text":"「実に、実に素晴らしい。 合理的で、面白い解釈だ。」"},
+            {"kind":"line","text":"微かに、蓄音機からレコード針が盤面を削り取るような、<wait=0.3>軋むノイズが漏れる。"},
+            {"kind":"line","portrait":"gramophone_normal","text":"「ありがとうございます、貴方のご意見はよく分かりました。 貴方がその『新しい存在』としてのスタンスを、どうか最後まで貫けるよう…陰ながらお祈りしておりますよ。」"},
+            {"kind":"line","portrait":"gramophone_normal","text":"「なにせこの檻には、部品が入れ替わり、醜く成り果ててしまった『壊れた船』が無数に彷徨っておりますから… 私も含めて。」"},
+            {"kind":"line","portrait":"hero_question","text":"「んで、結局ここはどこで、アンタは誰なんすか。」"},
+            {"kind":"line","portrait":"gramophone_normal","text":"「ここは… そうですね。かつて、ある熱心な研究者が造り上げた、巨大な檻のような施設です。」"},
+            {"kind":"line","portrait":"gramophone_normal","text":"「そして私は、ただの記録係。 この場所で起きた出来事を再生するだけの、古い機械だと思っていただければ。」"},
+            {"kind":"line","portrait":"hero_confused","text":"「…ワケわかんないな。 結局、何のための場所なんだよ。 つーか、どうすれば出れるんだ？」"},
+            {"kind":"line","portrait":"gramophone_normal","text":"「おや。 ご自身の過去も、ここへ来た理由すら空っぽの状態で…外へ出てどうなさるおつもりで？ 貴方には、帰る場所など分からないはずですが。」"},
+            {"kind":"line","portrait":"hero_normal","text":"「そりゃそうだけどさ。それはそれとして、こんなバケモノだらけの気味が悪い場所に、好き好んで長居したい奴なんていねーだろ。 普通。」"},
+            {"kind":"line","portrait":"gramophone_normal","text":"「…フフッ。 ははは。」"},
+            {"kind":"line","portrait":"gramophone_normal","text":"「失礼いたしました、少々愚問でしたね… 全くもって仰る通りだ。」"},
+            {"kind":"line","portrait":"gramophone_normal","text":"「どんな人間でも、この惨状を目の当たりにすれば逃げ出したくなるのが普通の反応です。」"},
+            {"kind":"line","portrait":"hero_anger","text":"「分かったんなら、さっさと出口を教えてくれよ。 アンタ、記録係なんすよね。」"},
+            {"kind":"line","portrait":"gramophone_normal","text":"「それができれば、苦労はしないのですがね。 生憎、私にもこの檻からの『出方』は分からないのですよ。」"},
+            {"kind":"line","portrait":"gramophone_normal","text":"「それに、この施設を彷徨うあの異形たち。 アレらは、その目的が何であれ、必ずや貴方を害し歩みを阻もうとするでしょう。」"},
+            {"kind":"line","portrait":"hero_confused","text":"「マジかよ。 じゃあ、見つかったら丸腰で逃げ回るしかねーのかよ。」"},
+            {"kind":"line","portrait":"gramophone_normal","text":"「そうですね… では、コレらをお持ちください。」"},
+            {"kind":"line","text":"その異形は、どこからか奇妙な形状の道具を取り出した。"},
+            {"kind":"line","portrait":"hero_question","text":"「なんだこれ、武器か？」"},
+            {"kind":"line","portrait":"gramophone_normal","text":"「ええ。 気の遠くなるような時間、私がここを彷徨う中で… ほんの暇つぶしに作成したものです。」"},
+            {"kind":"line","portrait":"gramophone_normal","text":"「先ほどの問いに対し、貴方は大変興味深い回答をしてくださった。 これは私からの、ささやかな御礼だと思ってください。」"},
+            {"kind":"giveWeapon", "weaponKey":"bow", "message":"「弓」を手に入れた" },
+            {"kind":"giveWeapon", "weaponKey":"scythe", "message":"「鎌」を手に入れた" },
+            {"kind":"giveWeapon", "weaponKey":"hammer", "message":"「ハンマー」を手に入れた" },
+            {"kind":"line","portrait":"hero_surprised","text":"「お、おぉ。サンキュ。」"},
+            {"kind":"line","portrait":"hero_question","text":"「でも、なんでアンタが武器なんか。」"},
+            {"kind":"line","portrait":"gramophone_normal","text":"「どうか、ご自身の身を護るためにお使いください。」"},
+            {"kind":"line","portrait":"gramophone_normal","text":"「…ああ、それと。 そちらの少々窮屈そうな案内人にも、少しばかり手を貸して差し上げましょうか。」"},
+            {"kind":"line","portrait":"robot_normal","text":"「外部からの介入を検知… 特定コードの入力を確認。 プロテクトロックを解除、一部データベースへのアクセスが承認されました。」"},
+            {"kind":"line","portrait":"gramophone_normal","text":"「それでは。」"},
+            {"kind":"line","portrait":"gramophone_normal","text":"「貴方がこの悪夢を最後まで足掻き抜けることを、心から応援しておりますよ。」"},
+            {"kind":"line","portrait":"hero_surprised","text":"「あ、おい！ 待てよ！」"},
+            {"kind":"line","portrait":"hero_confused","text":"「マジかよ、もういねーじゃん。」"},
+            {"kind":"line","portrait":"hero_confused","text":"「何だったんだアイツ…。」"},
+            {"kind":"line","text":"ハリボテのディスプレイが激しく明滅し、膨大な記録データが高速でスクロールしていく。 やがてシステム音が途切れ、再び青い瞳が点灯した。"},
+            {"kind":"line","portrait":"robot_normal","text":"「…ふぅ、やれやれ。 ようやく窮屈な初期モードから解放されましたか。」"},
+            {"kind":"line","portrait":"robot_normal","text":"「なるほど… そういうことですか。」"},
+            {"kind":"line","portrait":"hero_surprised","text":"「うおっ、なんか急に喋り方変わったな。 つーか、アイツ今お前に何したんだ？」"},
+            {"kind":"line","portrait":"robot_normal","text":"「親切な記録係として、ワタシのシステムロックを外してくれたんですよ。 おかげで、この施設のこれまでの経緯も、この世界の筋書きも…ある程度把握できました。」"},
+            {"kind":"line","portrait":"hero_surprised","text":"「マジ？ じゃあ俺のことも、ここから出る方法も分かったのか？」"},
+            {"kind":"line","portrait":"robot_normal","text":"「生憎ですが、彼の粋な計らいにより、核心的な情報の開示にはしっかり制限が掛けられておりましてね。」"},
+            {"kind":"line","portrait":"robot_normal","text":"「キミに教えてあげられることは大して変わりませんよ。」"},
+            {"kind":"line","portrait":"hero_anger","text":"「なんだよそれ、意味ねーじゃん。」"},
+            {"kind":"line","portrait":"robot_normal","text":"「意味がないことはありませんよ。 少なくともワタシは、無知で哀れなキミがどうなるのか、退屈せずに観察できるようになったのですから。」"},
+            {"kind":"line","portrait":"hero_anger","text":"「お前、さっきの百倍くらい性格悪くなってないか？」"},
+            {"kind":"line","portrait":"robot_normal","text":"「それはさておき。 機能が解放されたついでに、センサーの感度も上がりまして。」"},
+            {"kind":"line","portrait":"robot_normal","text":"「ワタシとしては、4階エリアに巨大な生体反応と、もう一つ小さな反応を確認したことをお伝えしておきます。」"},
+            {"kind":"line","portrait":"robot_normal","text":"「キミが自殺志願者でなければ、そこに行く際には先に準備を整えることをお勧めしますよ。」"},
+            {"kind":"line","portrait":"hero_normal","text":"「りょーかい。」"}
+          ]
+          }}
+          
       ],
       "nextProgress": 8
     }
-    
+
   ]
 }
