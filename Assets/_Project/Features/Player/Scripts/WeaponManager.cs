@@ -338,6 +338,9 @@ namespace CreativeAI.Gameplay
         {
             if (!_playerController.CanChangeWeapon)
             {
+                // 切替できない間の入力は捨てる。残すと、ロックが外れた瞬間に勝手に切り替わる
+                _input.weaponNext = false;
+                _input.weaponPrev = false;
                 return;
             }
 
