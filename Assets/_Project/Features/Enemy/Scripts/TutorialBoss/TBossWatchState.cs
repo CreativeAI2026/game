@@ -4,7 +4,7 @@ using UnityEngine.AI;
 namespace CreativeAI.Gameplay
 {
     /// <summary>
-    /// 発見後に攻撃の機会を伺う様子見ステート（TestEnemy の StrafeState 相当）。交戦全体の時計（TBossCombatTempo）で攻撃時刻が来たら仕掛ける。
+    /// 発見後に攻撃の機会を伺う様子見ステート。交戦全体の時計（TBossCombatTempo）で攻撃時刻が来たら仕掛ける。
     /// 近すぎれば下がり、遠すぎれば詰め、適正距離ではプレイヤーの視野外側へ回り込む（間合い管理）。
     /// プレイヤーが走って離れたら歩いて追わず、追跡（走り）へ切り替える。
     /// </summary>

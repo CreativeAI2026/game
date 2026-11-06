@@ -3,8 +3,8 @@ using UnityEngine;
 namespace CreativeAI.Gameplay
 {
     /// <summary>
-    /// MidBoss 特殊攻撃の手下弾。TestEnemyNeedleProjectile ベースで、Rising のみ Sin/Cos による魚のような揺らぎ上昇（回転なし・進行方向へ LookRotation）に変更。
-    /// Aiming（プレイヤーへ向く）→ Firing（前方へ直線飛翔）は TestEnemy と同じ。
+    /// MidBoss 特殊攻撃の手下弾。Rising は Sin/Cos による魚のような揺らぎ上昇（回転なし・進行方向へ LookRotation）。
+    /// その後 Aiming（プレイヤーへ向く）→ Firing（前方へ直線飛翔）。
     /// </summary>
     public class MidBossMinionProjectile : MonoBehaviour
     {
@@ -52,7 +52,7 @@ namespace CreativeAI.Gameplay
         private Vector3 _prevPos;
 
         /// <summary>
-        /// 初期化（TestEnemyNeedleProjectile.Initialize と同じシグネチャ）。angle は円周分散用（angleStep * i）、delay は Aiming までの遅れ。
+        /// 初期化。angle は円周分散用（angleStep * i）、delay は Aiming までの遅れ。
         /// </summary>
         public void Initialize(
             Transform enemy,
@@ -69,7 +69,7 @@ namespace CreativeAI.Gameplay
             _spawnTime = Time.time;
             _currentPhase = Phase.Rising;
 
-            // 上昇の始点・終点（TestEnemyと同様に円周分散）
+            // 上昇の始点・終点（円周分散）
             _startOffset = Vector3.up * 1.0f;
             _endOffset =
                 Vector3.up * _riseHeight

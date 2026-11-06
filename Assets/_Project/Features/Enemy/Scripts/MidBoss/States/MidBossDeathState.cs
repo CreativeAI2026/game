@@ -3,7 +3,7 @@ using UnityEngine;
 namespace CreativeAI.Gameplay
 {
     /// <summary>
-    /// 死亡ステート。TestEnemyDeathState と同等の実装。
+    /// 死亡ステート。
     /// AI制御と物理演算を停止する終端ステート。
     /// </summary>
     public class MidBossDeathState : MidBossBaseState

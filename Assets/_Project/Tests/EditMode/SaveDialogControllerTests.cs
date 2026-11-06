@@ -43,8 +43,8 @@ namespace CreativeAI.Tests.EditMode
         [SetUp]
         public void SetUp()
         {
-            if (File.Exists(SavePath))
-                File.Delete(SavePath);
+            foreach (var path in Directory.GetFiles(_saveDir, "save.json*"))
+                File.Delete(path);
 
             _root = new GameObject("SaveDialog");
             _yes = new GameObject("Yes").AddComponent<Button>();
@@ -64,8 +64,8 @@ namespace CreativeAI.Tests.EditMode
         {
             _residents.Clear();
             Object.DestroyImmediate(_root);
-            if (File.Exists(SavePath))
-                File.Delete(SavePath);
+            foreach (var path in Directory.GetFiles(_saveDir, "save.json*"))
+                File.Delete(path);
         }
 
         [Test]

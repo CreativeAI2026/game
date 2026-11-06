@@ -55,8 +55,7 @@ namespace CreativeAI.Tests.EditMode
         [SetUp]
         public void SetUp()
         {
-            if (File.Exists(SavePath))
-                File.Delete(SavePath);
+            DeleteSaveFiles();
             PickedItemRegistry.Clear();
 
             _pm = _residents.Add<ProgressManager>();
@@ -84,8 +83,14 @@ namespace CreativeAI.Tests.EditMode
             foreach (var a in _assets)
                 Object.DestroyImmediate(a);
             _assets.Clear();
-            if (File.Exists(SavePath))
-                File.Delete(SavePath);
+            DeleteSaveFiles();
+        }
+
+        // 本体のほか、差し替え前の予備(.bak)と書きかけ(.tmp)も消す
+        private void DeleteSaveFiles()
+        {
+            foreach (var path in Directory.GetFiles(_saveDir, "save.json*"))
+                File.Delete(path);
         }
 
         private FoodData MakeFood(int id)
@@ -145,6 +150,60 @@ namespace CreativeAI.Tests.EditMode
         public void Load_WithoutSaveFile_ReturnsNull()
         {
             Assert.IsNull(SaveService.Load());
+        }
+
+        // --- 壊れたセーブ ---
+
+        [Test]
+        public void Load_WhenSaveIsCorrupted_FallsBackToPreviousSave()
+        {
+            _pm.LoadState(3, new Dictionary<string, string>());
+            SaveService.Save();
+            _pm.LoadState(5, new Dictionary<string, string>());
+            SaveService.Save(); // 1回目の内容が予備に回る
+
+            File.WriteAllText(SavePath, "{ \"progress\": 9, \"items\": [");
+            LogAssert.Expect(
+                LogType.Warning,
+                new System.Text.RegularExpressions.Regex("読み込みに失敗")
+            );
+            LogAssert.Expect(
+                LogType.Warning,
+                new System.Text.RegularExpressions.Regex("1つ前のセーブ")
+            );
+
+            var data = SaveService.Load();
+
+            Assert.IsNotNull(data);
+            Assert.AreEqual(3, _pm.Progress);
+        }
+
+        [Test]
+        public void Load_WhenSaveAndBackupAreCorrupted_ReturnsNull()
+        {
+            File.WriteAllText(SavePath, "{ broken");
+            File.WriteAllText(SavePath + ".bak", "{ broken");
+            LogAssert.Expect(
+                LogType.Warning,
+                new System.Text.RegularExpressions.Regex("読み込みに失敗")
+            );
+            LogAssert.Expect(
+                LogType.Warning,
+                new System.Text.RegularExpressions.Regex("読み込みに失敗")
+            );
+            LogAssert.Expect(LogType.Error, new System.Text.RegularExpressions.Regex("壊れていて"));
+
+            Assert.IsNull(SaveService.Load());
+        }
+
+        [Test]
+        public void Save_LeavesNoTempFile()
+        {
+            SaveService.Save();
+            SaveService.Save();
+
+            Assert.IsFalse(File.Exists(SavePath + ".tmp"));
+            Assert.IsTrue(File.Exists(SavePath + ".bak"));
         }
 
         // --- 保存 → 復元の往復 ---

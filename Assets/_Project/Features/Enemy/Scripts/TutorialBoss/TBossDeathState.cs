@@ -4,7 +4,7 @@ using UnityEngine.AI;
 namespace CreativeAI.Gameplay
 {
     /// <summary>
-    /// AI制御と物理を停止させる終端ステート。TestEnemyDeathStateと同構造。
+    /// AI制御と物理を停止させる終端ステート。
     /// </summary>
     public class TBossDeathState : TBossBaseState
     {
@@ -16,6 +16,9 @@ namespace CreativeAI.Gameplay
         public override void Enter()
         {
             Debug.Log("[TutorialBoss] 死亡ステート開始");
+
+            // 戦闘曲を止めて通常時の BGM へ戻す(TBossAlertAudio が変化を見て切り替える)
+            boss.IsAlerted = false;
 
             if (boss.Agent != null)
             {
