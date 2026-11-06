@@ -301,7 +301,7 @@ namespace CreativeAI.Gameplay
             }
             else
             {
-                _angularVelocity[index] -= _angularVelocity[index] * damping * dt;
+                _angularVelocity[index] -= _angularVelocity[index] * (damping * dt);
             }
 
             float speed = _angularVelocity[index].magnitude;

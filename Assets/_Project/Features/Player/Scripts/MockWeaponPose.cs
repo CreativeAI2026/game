@@ -130,11 +130,9 @@ namespace CreativeAI.Gameplay
                 return;
 
             float t = Time.deltaTime * _blendSpeed;
-            Target.localRotation = Quaternion.Slerp(Target.localRotation, _goalRotation, t);
-            Target.localPosition = Vector3.Lerp(
-                Target.localPosition,
-                _baseLocalPosition + _goalOffset,
-                t
+            Target.SetLocalPositionAndRotation(
+                Vector3.Lerp(Target.localPosition, _baseLocalPosition + _goalOffset, t),
+                Quaternion.Slerp(Target.localRotation, _goalRotation, t)
             );
         }
     }

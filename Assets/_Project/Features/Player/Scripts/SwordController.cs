@@ -96,7 +96,8 @@ namespace CreativeAI.Gameplay
                         SpawnParryEffect(hitPoint);
                         WorldSoundPlayer.Play(_parrySound, hitPoint, this);
 
-                        CameraShakeManager.Instance?.Shake(0.4f);
+                        if (CameraShakeManager.Instance != null)
+                            CameraShakeManager.Instance.Shake(0.4f);
 
                         if (isMeleeAttack && attacker != null)
                         {
@@ -118,7 +119,8 @@ namespace CreativeAI.Gameplay
                     SpawnGuardEffect(hitPoint);
                     WorldSoundPlayer.Play(_guardSound, hitPoint, this);
 
-                    CameraShakeManager.Instance?.Shake(0.2f);
+                    if (CameraShakeManager.Instance != null)
+                        CameraShakeManager.Instance.Shake(0.2f);
 
                     GuardHitCount++;
 

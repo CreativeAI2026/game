@@ -11,7 +11,7 @@ using UnityEngine.SceneManagement;
 namespace CreativeAI.Tests.EditMode
 {
     /// <summary>
-    /// フィールドのアイテムの識別子の自動採番と、<c>Field_Area01_Items</c> への配置ミスの検出(Issue #109)。
+    /// フィールドのアイテムの識別子の自動採番と、<c>Field_Area01_Items</c> への配置ミスの検証。
     /// 識別子の重複・付け忘れ・キラキラの付け忘れは、エラーが出ないまま「拾ったのに復活する」「光らない」になるだけ。
     /// </summary>
     public class FieldItemPickupPlacementTests

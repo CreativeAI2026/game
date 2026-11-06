@@ -141,7 +141,6 @@ namespace CreativeAI.Tests.EditMode
         [TearDown]
         public void TearDown()
         {
-            EventPlaybackService.SetPlaying(false);
             UnityEngine.Object.DestroyImmediate(_pmGo);
             UnityEngine.Object.DestroyImmediate(_epGo);
         }

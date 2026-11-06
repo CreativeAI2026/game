@@ -7,7 +7,8 @@ using NUnit.Framework;
 namespace CreativeAI.Tests.EditMode
 {
     /// <summary>
-    /// 終了時の振り返りの検証: 見せる場面の選び方（数を絞り、系統が偏らず、起きた順）と、答えの集計。
+    /// 終了時の振り返りで見せる場面の選び方と、答えの集計の検証。
+    /// 場面は数を絞り、系統が偏らないように選び、起きた順に並べる。
     /// </summary>
     public class PanicReviewTests
     {

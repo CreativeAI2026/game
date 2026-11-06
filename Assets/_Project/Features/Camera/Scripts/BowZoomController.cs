@@ -41,7 +41,7 @@ namespace CreativeAI.Gameplay
         private void Awake()
         {
             if (_aimCamera == null)
-                _aimCamera = GetComponent<CinemachineCamera>();
+                TryGetComponent(out _aimCamera);
             Assert.IsNotNull(_aimCamera, $"{name}: CinemachineCamera が見つかりません");
 
             _defaultFov = _aimCamera.Lens.FieldOfView;

@@ -76,9 +76,13 @@ namespace CreativeAI.EditorTools
         {
             var frame = root.GetComponent<SlotFrameView>();
             var so = new SerializedObject(frame);
-            Sprite Load(string name) =>
-                AssetDatabase.LoadAssetAtPath<Sprite>(Art + name + ".png")
-                ?? throw new InvalidOperationException("Missing sprite: " + name);
+            Sprite Load(string name)
+            {
+                var sprite = AssetDatabase.LoadAssetAtPath<Sprite>(Art + name + ".png");
+                return sprite != null
+                    ? sprite
+                    : throw new InvalidOperationException("Missing sprite: " + name);
+            }
             so.FindProperty("_normalSprite").objectReferenceValue = Load("Slot_Item_Normal");
             so.FindProperty("_selectedSprite").objectReferenceValue = Load("Slot_Item_Selected");
             so.FindProperty("_itemWithCountSprite").objectReferenceValue = Load(

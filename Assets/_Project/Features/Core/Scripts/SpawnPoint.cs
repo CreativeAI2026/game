@@ -61,11 +61,11 @@ namespace CreativeAI.Core
             var position = point != null ? point.transform.position : Vector3.zero;
             var rotation = point != null ? point.transform.rotation : Quaternion.identity;
 
-            var controller = target.GetComponent<CharacterController>();
-            if (controller != null)
+            bool hasController = target.TryGetComponent(out CharacterController controller);
+            if (hasController)
                 controller.enabled = false;
             target.transform.SetPositionAndRotation(position, rotation);
-            if (controller != null)
+            if (hasController)
                 controller.enabled = true;
 
             return point != null;

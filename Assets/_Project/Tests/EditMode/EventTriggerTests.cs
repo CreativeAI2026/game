@@ -1,6 +1,5 @@
 using System;
 using System.Collections.Generic;
-using System.Reflection;
 using CreativeAI.Core;
 using NUnit.Framework;
 using UnityEngine;
@@ -29,8 +28,7 @@ namespace CreativeAI.Tests.EditMode
             public bool HasImportantItem(string itemKey) => Owned.Contains(itemKey);
         }
 
-        private GameObject _pmGo;
-        private GameObject _gmmGo;
+        private readonly TestResidents _residents = new();
         private GameObject _triggerGo;
         private GameObject _playerGo;
         private ProgressManager _pm;
@@ -39,32 +37,11 @@ namespace CreativeAI.Tests.EditMode
         private Collider _playerCollider;
         private RecordingEventPlayer _player;
 
-        /// <summary>Awake 未実行でも Instance が要る。private set の静的プロパティへ直接入れる。</summary>
-        private static void SetInstance<T>(T value)
-        {
-            typeof(T)
-                .GetProperty("Instance", BindingFlags.Public | BindingFlags.Static)
-                .GetSetMethod(nonPublic: true)
-                .Invoke(null, new object[] { value });
-        }
-
-        private static void SetPrivateField(object target, string name, object value)
-        {
-            target
-                .GetType()
-                .GetField(name, BindingFlags.Instance | BindingFlags.NonPublic)
-                .SetValue(target, value);
-        }
-
         [SetUp]
         public void SetUp()
         {
-            _pmGo = new GameObject("PM");
-            _pm = _pmGo.AddComponent<ProgressManager>();
-            _gmmGo = new GameObject("GMM");
-            _gmm = _gmmGo.AddComponent<GameModeManager>();
-            SetInstance(_pm);
-            SetInstance(_gmm);
+            _pm = _residents.Add<ProgressManager>();
+            _gmm = _residents.Add<GameModeManager>();
 
             _player = new RecordingEventPlayer();
             EventPlayerService.Current = _player;
@@ -85,21 +62,16 @@ namespace CreativeAI.Tests.EditMode
             ItemGiverService.Current = null;
             EventPlaybackService.SetPlaying(false);
             UiPanelService.SetOpen(false);
-            SetInstance<ProgressManager>(null);
-            SetInstance<GameModeManager>(null);
+            _residents.Clear();
             UnityEngine.Object.DestroyImmediate(_playerGo);
             UnityEngine.Object.DestroyImmediate(_triggerGo);
-            UnityEngine.Object.DestroyImmediate(_gmmGo);
-            UnityEngine.Object.DestroyImmediate(_pmGo);
         }
 
-        private void AssignEvent(EventDefinition ev) => SetPrivateField(_trigger, "_event", ev);
+        private void AssignEvent(EventDefinition ev) =>
+            TestReflection.SetField(_trigger, "_event", ev);
 
         private void EnterTrigger() =>
-            _trigger
-                .GetType()
-                .GetMethod("OnTriggerEnter", BindingFlags.Instance | BindingFlags.NonPublic)
-                .Invoke(_trigger, new object[] { _playerCollider });
+            TestReflection.Invoke(_trigger, "OnTriggerEnter", _playerCollider);
 
         private void ExitTrigger() =>
             TestReflection.Invoke(_trigger, "OnTriggerExit", _playerCollider);
@@ -159,10 +131,7 @@ namespace CreativeAI.Tests.EditMode
             var other = new GameObject("Enemy", typeof(BoxCollider));
             try
             {
-                _trigger
-                    .GetType()
-                    .GetMethod("OnTriggerEnter", BindingFlags.Instance | BindingFlags.NonPublic)
-                    .Invoke(_trigger, new object[] { other.GetComponent<Collider>() });
+                TestReflection.Invoke(_trigger, "OnTriggerEnter", other.GetComponent<Collider>());
 
                 CollectionAssert.IsEmpty(_player.Played);
             }
@@ -307,7 +276,7 @@ namespace CreativeAI.Tests.EditMode
         public void Pin_On_ShowsWhileConditionsMet_AtTheTriggerCenter()
         {
             AssignEvent(FiringEvent());
-            SetPrivateField(_trigger, "_showPin", true);
+            TestReflection.SetField(_trigger, "_showPin", true);
             _triggerGo.transform.position = new Vector3(3f, 2f, 5f);
 
             _trigger.RefreshPin();
@@ -322,7 +291,7 @@ namespace CreativeAI.Tests.EditMode
         public void Pin_On_ConditionsNotMet_DoesNotShow()
         {
             AssignEvent(EventDefinition.Create("later_event", EventCondition.Progress(5)));
-            SetPrivateField(_trigger, "_showPin", true);
+            TestReflection.SetField(_trigger, "_showPin", true);
 
             _trigger.RefreshPin();
 
@@ -333,10 +302,10 @@ namespace CreativeAI.Tests.EditMode
         public void Pin_UsesThePinPointWhenGiven()
         {
             AssignEvent(FiringEvent());
-            SetPrivateField(_trigger, "_showPin", true);
+            TestReflection.SetField(_trigger, "_showPin", true);
             var point = new GameObject("PinPoint");
             point.transform.position = new Vector3(10f, 1f, -4f);
-            SetPrivateField(_trigger, "_pinPoint", point.transform);
+            TestReflection.SetField(_trigger, "_pinPoint", point.transform);
 
             _trigger.RefreshPin();
 
@@ -349,7 +318,7 @@ namespace CreativeAI.Tests.EditMode
         public void Pin_DisappearsWhenTheEventFires()
         {
             AssignEvent(FiringEvent());
-            SetPrivateField(_trigger, "_showPin", true);
+            TestReflection.SetField(_trigger, "_showPin", true);
             _trigger.RefreshPin();
             Assert.IsTrue(_trigger.PinVisible); // 前提
 
@@ -363,7 +332,7 @@ namespace CreativeAI.Tests.EditMode
         public void Pin_DisappearsOnceProgressMovesOn()
         {
             AssignEvent(FiringEvent());
-            SetPrivateField(_trigger, "_showPin", true);
+            TestReflection.SetField(_trigger, "_showPin", true);
             _trigger.RefreshPin();
 
             _pm.AdvanceTo(1);
@@ -376,7 +345,7 @@ namespace CreativeAI.Tests.EditMode
         public void Pin_HidesWhileAnEventPlaysOrAMenuIsOpen()
         {
             AssignEvent(FiringEvent());
-            SetPrivateField(_trigger, "_showPin", true);
+            TestReflection.SetField(_trigger, "_showPin", true);
             _trigger.RefreshPin();
             var pin = UnityEngine.Object.FindFirstObjectByType<MapPin>();
             var face = pin.transform.Find("Face").gameObject;

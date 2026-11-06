@@ -17,7 +17,7 @@ namespace CreativeAI.Gameplay
         private void Awake()
         {
             _input = GetComponent<PlayerInputHandler>();
-            _status = GetComponent<PlayerStatus>();
+            TryGetComponent(out _status);
         }
 
         private void OnEnable() => _input.QuickFoodPressed += Use;

@@ -8,6 +8,7 @@ using UnityEngine.UI;
 namespace CreativeAI.UI
 {
     /// <summary>Binds the authored CraftPanel prefab without generating UI at runtime.</summary>
+    [RequireComponent(typeof(CraftPanelController))]
     public sealed class CraftUiLayout : MonoBehaviour
     {
         [SerializeField]

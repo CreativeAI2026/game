@@ -14,8 +14,8 @@ namespace CreativeAI.Gameplay
             StringBuilder sb = new StringBuilder();
             sb.AppendLine("=== [RigDebugger] 調査開始 ===");
 
-            Animator anim = GetComponent<Animator>();
-            RigBuilder rb = GetComponent<RigBuilder>();
+            TryGetComponent(out Animator anim);
+            TryGetComponent(out RigBuilder rb);
 
             sb.AppendLine($"1. Animator取得: {(anim != null ? "成功" : "失敗")}");
             if (anim != null)

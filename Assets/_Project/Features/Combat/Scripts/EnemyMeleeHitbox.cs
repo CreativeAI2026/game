@@ -44,6 +44,10 @@ namespace CreativeAI.Gameplay
         private Vector3 _previousPosition;
         private HashSet<Collider> _alreadyHitTargets = new HashSet<Collider>();
 
+        // 物理クエリ結果の再利用バッファ(_targetLayer が広い場合も取りこぼさないよう大きめ)
+        private readonly RaycastHit[] _castHits = new RaycastHit[64];
+        private readonly Collider[] _overlapHits = new Collider[64];
+
         /// <summary>
         /// プレイヤーに武器が接触した瞬間に発火する（ガード成立・ダメージ無効時も発火する）。
         /// 攻撃側が「当たったこと自体」に対する演出（引き寄せ等）を行いたい場合に使う。
@@ -75,15 +79,17 @@ namespace CreativeAI.Gameplay
             // 前フレームから現フレームまでの軌跡全体を太いRayで判定する
             if (distance > 0)
             {
-                RaycastHit[] hits = Physics.SphereCastAll(
+                int hitCount = Physics.SphereCastNonAlloc(
                     _previousPosition,
                     _hitboxRadius,
                     direction.normalized,
+                    _castHits,
                     distance,
                     _targetLayer
                 );
-                foreach (var hit in hits)
+                for (int i = 0; i < hitCount; i++)
                 {
+                    RaycastHit hit = _castHits[i];
                     // SphereCastAll は始点でコライダーと既に重なっている場合
                     // hit.point に Vector3.zero を返す仕様上の問題があるため、
                     // その場合はClosestPointで代替する
@@ -97,13 +103,15 @@ namespace CreativeAI.Gameplay
 
             // SphereCastは始点内部の重なりを検出できないため、
             // 密着・めり込み状態をOverlapSphereで補完する
-            Collider[] overlaps = Physics.OverlapSphere(
+            int overlapCount = Physics.OverlapSphereNonAlloc(
                 currentPosition,
                 _hitboxRadius,
+                _overlapHits,
                 _targetLayer
             );
-            foreach (var col in overlaps)
+            for (int i = 0; i < overlapCount; i++)
             {
+                Collider col = _overlapHits[i];
                 // OverlapSphereは接触点を返さないため、エフェクト表示用にClosestPointで近似する
                 Vector3 hitPoint = col.ClosestPoint(currentPosition);
                 Vector3 hitNormal = (currentPosition - hitPoint).normalized;

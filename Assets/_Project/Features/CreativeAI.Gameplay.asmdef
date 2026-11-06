@@ -9,7 +9,10 @@
         "Unity.Animation.Rigging",
         "UniTask",
         "SoundKit",
-        "SoundKit.UGUI"
+        "SoundKit.UGUI",
+        "Unity.InferenceEngine",
+        "Unity.RenderPipelines.Universal.Runtime",
+        "Unity.RenderPipelines.Core.Runtime"
     ],
     "includePlatforms": [],
     "excludePlatforms": [],

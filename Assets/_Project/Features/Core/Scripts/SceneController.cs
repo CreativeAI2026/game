@@ -15,6 +15,14 @@ namespace CreativeAI.Core
         [SerializeField, Min(0f)]
         private float _fadeSeconds = 0.3f;
 
+        [SerializeField, Range(0f, 1f)]
+        [Tooltip(
+            "プログレスバーのうち、本体のあとに重ねて読むシーン(小物など)に割く割合。"
+                + "Field_Area01 は本体と重ねるシーンのファイルの大きさがおよそ 2:8 なので 0.8。"
+                + "重ねるシーンの無い遷移では、本体が読み終わった時点で 100% へ飛ぶ"
+        )]
+        private float _additiveLoadShare = 0.8f;
+
         private ILoadingOverlay _overlay;
         private bool _isLoading;
 
@@ -31,7 +39,8 @@ namespace CreativeAI.Core
         }
 
         /// <param name="onSceneActivated">
-        /// 対象シーンが有効化された直後(オーバーレイを閉じる前)に一度だけ呼ばれる。
+        /// 対象シーンが有効化され、それにつられて始まった追加の読み込み(<see cref="PendingSceneLoads"/>)も
+        /// 終わったあと(オーバーレイを閉じる前)に一度だけ呼ばれる。
         /// セーブ復元でプレイヤーを保存座標へ配置する等、ロード後処理をここで行う(画面はまだ暗幕の下)。
         /// </param>
         public void LoadScene(string sceneName, System.Action onSceneActivated = null)
@@ -49,20 +58,27 @@ namespace CreativeAI.Core
         private IEnumerator LoadRoutine(string sceneName, System.Action onSceneActivated)
         {
             _isLoading = true;
+            // 前の遷移やエディタでの直接再生で登録された読み込みを持ち越さない
+            PendingSceneLoads.Clear();
 
             if (_overlay != null)
                 yield return _overlay.ShowCoroutine(_fadeSeconds);
 
+            // 画面は暗転の下なので、フレームの滑らかさより読み込みの速さを優先する
+            var loadingPriority = Application.backgroundLoadingPriority;
+            Application.backgroundLoadingPriority = ThreadPriority.High;
+
+            float mainShare = 1f - _additiveLoadShare;
             float startTime = Time.unscaledTime;
             var op = SceneManager.LoadSceneAsync(sceneName);
             op.allowSceneActivation = false;
 
             while (op.progress < 0.9f)
             {
-                _overlay?.SetProgress(op.progress / 0.9f);
+                _overlay?.SetProgress(mainShare * op.progress / 0.9f);
                 yield return null;
             }
-            _overlay?.SetProgress(1f);
+            _overlay?.SetProgress(mainShare);
 
             float elapsed = Time.unscaledTime - startTime;
             if (elapsed < _minDisplaySeconds)
@@ -74,7 +90,19 @@ namespace CreativeAI.Core
             while (!op.isDone)
                 yield return null;
 
-            // シーン有効化直後・暗幕を閉じる前にロード後処理(プレイヤー配置など)を実行する。
+            // 本体の有効化(Awake)で始まった追加の読み込み(小物シーンなど)を、暗転の下で待ち切る。
+            while (!PendingSceneLoads.AllDone)
+            {
+                _overlay?.SetProgress(
+                    mainShare + _additiveLoadShare * PendingSceneLoads.Progress01
+                );
+                yield return null;
+            }
+            PendingSceneLoads.Clear();
+            _overlay?.SetProgress(1f);
+            Application.backgroundLoadingPriority = loadingPriority;
+
+            // 重ねるシーンまで揃ったあと・暗転を明ける前にロード後処理(プレイヤー配置など)を実行する。
             onSceneActivated?.Invoke();
 
             if (_overlay != null)

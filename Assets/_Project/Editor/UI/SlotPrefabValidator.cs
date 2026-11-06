@@ -549,8 +549,7 @@ namespace CreativeAI.EditorTools
             UIValidationReport report
         )
         {
-            var itemSlot = root.GetComponent<ItemSlot>();
-            if (itemSlot != null)
+            if (root.TryGetComponent(out ItemSlot itemSlot))
             {
                 ValidateLocalReferences(
                     itemSlot,
@@ -565,8 +564,7 @@ namespace CreativeAI.EditorTools
                 );
             }
 
-            var materialSlot = root.GetComponent<MaterialSlot>();
-            if (materialSlot != null)
+            if (root.TryGetComponent(out MaterialSlot materialSlot))
             {
                 ValidateLocalReferences(
                     materialSlot,
@@ -581,8 +579,7 @@ namespace CreativeAI.EditorTools
                 );
             }
 
-            var equipmentSlot = root.GetComponent<EquipmentSlot>();
-            if (equipmentSlot != null)
+            if (root.TryGetComponent(out EquipmentSlot equipmentSlot))
             {
                 ValidateLocalReferences(
                     equipmentSlot,

@@ -41,32 +41,44 @@ namespace CreativeAI.UI
 
         public void SetGroup(string group)
         {
-            ResolveHoverScale()?.SetGroup(group);
+            var hoverScale = ResolveHoverScale();
+            if (hoverScale != null)
+                hoverScale.SetGroup(group);
         }
 
         public void SetHoverScale(float scale)
         {
-            ResolveHoverScale()?.SetHoverScale(scale);
+            var hoverScale = ResolveHoverScale();
+            if (hoverScale != null)
+                hoverScale.SetHoverScale(scale);
         }
 
         public void SetBounceHeight(float height)
         {
-            ResolveHoverScale()?.SetBounceHeight(height);
+            var hoverScale = ResolveHoverScale();
+            if (hoverScale != null)
+                hoverScale.SetBounceHeight(height);
         }
 
         public void SetBounceEnabled(bool enabled)
         {
-            ResolveHoverScale()?.SetBounceEnabled(enabled);
+            var hoverScale = ResolveHoverScale();
+            if (hoverScale != null)
+                hoverScale.SetBounceEnabled(enabled);
         }
 
         public void SetReleaseLockOnOutsideClick(bool release)
         {
-            ResolveHoverScale()?.SetReleaseLockOnOutsideClick(release);
+            var hoverScale = ResolveHoverScale();
+            if (hoverScale != null)
+                hoverScale.SetReleaseLockOnOutsideClick(release);
         }
 
         public void AcquireLock()
         {
-            ResolveHoverScale()?.AcquireLock();
+            var hoverScale = ResolveHoverScale();
+            if (hoverScale != null)
+                hoverScale.AcquireLock();
         }
 
         public void ReleaseLock()
@@ -89,8 +101,10 @@ namespace CreativeAI.UI
         [ContextMenu("Auto Assign References")]
         private void AutoAssignReferences()
         {
-            _hoverScale ??= GetComponent<HoverScaleOnPointer>();
-            _animationTarget ??= GetComponent<RectTransform>();
+            if (_hoverScale == null)
+                TryGetComponent(out _hoverScale);
+            if (_animationTarget == null)
+                TryGetComponent(out _animationTarget);
         }
 #endif
 

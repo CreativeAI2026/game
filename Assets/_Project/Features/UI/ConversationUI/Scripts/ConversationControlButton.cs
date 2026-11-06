@@ -63,7 +63,11 @@ namespace CreativeAI.UI
         private void Update()
         {
             if (_hovered)
-                ResolveControlBar()?.NotifyInteraction();
+            {
+                var hoveredBar = ResolveControlBar();
+                if (hoveredBar != null)
+                    hoveredBar.NotifyInteraction();
+            }
             bool feedback = Time.unscaledTime < _feedbackUntil;
             bool visuallyPressed = _pressed || feedback;
             float targetScale =
@@ -126,26 +130,34 @@ namespace CreativeAI.UI
         public void PlayShortcutFeedback()
         {
             _feedbackUntil = Time.unscaledTime + 0.12f;
-            ResolveControlBar()?.NotifyInteraction();
+            var controlBar = ResolveControlBar();
+            if (controlBar != null)
+                controlBar.NotifyInteraction();
         }
 
         public void OnPointerEnter(PointerEventData eventData)
         {
             _hovered = true;
-            ResolveControlBar()?.RequestTooltip(_description, transform as RectTransform);
+            var controlBar = ResolveControlBar();
+            if (controlBar != null)
+                controlBar.RequestTooltip(_description, transform as RectTransform);
         }
 
         public void OnPointerExit(PointerEventData eventData)
         {
             _hovered = false;
             _pressed = false;
-            ResolveControlBar()?.HideTooltip();
+            var controlBar = ResolveControlBar();
+            if (controlBar != null)
+                controlBar.HideTooltip();
         }
 
         public void OnPointerDown(PointerEventData eventData)
         {
             _pressed = true;
-            ResolveControlBar()?.NotifyInteraction();
+            var controlBar = ResolveControlBar();
+            if (controlBar != null)
+                controlBar.NotifyInteraction();
         }
 
         public void OnPointerUp(PointerEventData eventData) => _pressed = false;

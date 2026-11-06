@@ -75,7 +75,7 @@ namespace CreativeAI.Gameplay
                 );
 
             Vector3 beforePos = ctx.PlayerTransform.position;
-            ctx.CharacterController.Move(dir.normalized * ctx.dashSpeed * Time.deltaTime);
+            ctx.CharacterController.Move(dir.normalized * (ctx.dashSpeed * Time.deltaTime));
             Vector3 afterPos = ctx.PlayerTransform.position;
 
             // 射程内に入った、または壁等に引っかかって物理的に前進不能になった場合に攻撃へ移行。
