@@ -144,19 +144,19 @@ namespace CreativeAI.UI
             marker.Root.gameObject.SetActive(true);
             marker.Arrow.gameObject.SetActive(!onScreen);
             marker.Label.fontSize = height * FontSizeRatio;
-            marker.Label.text = $"{Mathf.RoundToInt(meters)}m";
+            marker.Label.SetText("{0}m", Mathf.RoundToInt(meters));
             marker.Label.rectTransform.sizeDelta = new Vector2(arrowSize * 4f, arrowSize);
 
             if (onScreen)
             {
-                marker.Root.anchoredPosition = new Vector2(top.x, top.y);
+                marker.Root.anchoredPosition = top;
                 marker.Label.rectTransform.anchoredPosition = Vector2.zero;
                 return;
             }
 
             // 画面の外: 中心から見たピンの向きに沿って、画面の端へ矢印を置く。
             var center = new Vector2(width, height) * 0.5f;
-            var direction = new Vector2(top.x, top.y) - center;
+            var direction = (Vector2)top - center;
             if (top.z < 0f)
                 direction = -direction; // カメラの後ろにあるときは、画面上の向きが逆になる
             if (direction.sqrMagnitude < 1f)
@@ -179,7 +179,8 @@ namespace CreativeAI.UI
             );
 
             // 距離は矢印の内側(画面の中心寄り)に置く。端に出ると切れるため。
-            marker.Label.rectTransform.anchoredPosition = -direction.normalized * arrowSize * 1.1f;
+            marker.Label.rectTransform.anchoredPosition =
+                -(arrowSize * 1.1f) * direction.normalized;
         }
     }
 }
