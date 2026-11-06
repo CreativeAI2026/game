@@ -1,0 +1,4 @@
+# 以下の変更は担当者の承認がないと main にマージできない
+/CLAUDE.md          @shunto-ishiguro
+/docs/              @shunto-ishiguro
+/.github/CODEOWNERS @shunto-ishiguro
