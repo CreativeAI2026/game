@@ -412,7 +412,10 @@ namespace CreativeAI.UI
             }
 
             if (_selectFirstSlotOnRefresh)
+            {
+                CreativeAI.UI.SlotKeyboardFocus.Claim(this);
                 SelectSlot(_visibleSlots[0]);
+            }
             else
                 ClearSelectionAfterRefresh();
         }
@@ -704,24 +707,39 @@ namespace CreativeAI.UI
             )
                 return;
 
-            var keyboard = Keyboard.current;
-            if (keyboard == null)
-                return;
-
-            if (keyboard.leftArrowKey.wasPressedThisFrame)
-                SelectSlotByOffset(-1);
-            else if (keyboard.rightArrowKey.wasPressedThisFrame)
-                SelectSlotByOffset(1);
-            else if (keyboard.upArrowKey.wasPressedThisFrame)
-                SelectSlotVertically(-1);
-            else if (keyboard.downArrowKey.wasPressedThisFrame)
-                SelectSlotVertically(1);
-            else if (
-                keyboard.enterKey.wasPressedThisFrame
-                || keyboard.numpadEnterKey.wasPressedThisFrame
-                || keyboard.spaceKey.wasPressedThisFrame
-            )
+            if (UiInputActionMap.TryReadDiscreteMove(out Vector2Int step))
+            {
+                if (step.x < 0)
+                    SelectSlotByOffset(-1);
+                else if (step.x > 0)
+                    SelectSlotByOffset(1);
+                else if (step.y > 0)
+                    SelectSlotVertically(-1);
+                else if (step.y < 0)
+                    SelectSlotVertically(1);
+            }
+            else if (UiInputActionMap.WasSubmitPressedThisFrame())
+            {
                 SubmitSelectedSlot();
+            }
+        }
+
+        public bool SelectFirstVisibleSlotAndClaimFocus()
+        {
+            if (!_interactionEnabled || _visibleSlots.Count <= 0)
+                return false;
+
+            var target =
+                _currentSelectedSlot != null && _visibleSlots.Contains(_currentSelectedSlot)
+                    ? _currentSelectedSlot
+                    : _visibleSlots[0];
+            if (target == null || !target.gameObject.activeSelf)
+                return false;
+
+            CreativeAI.UI.SlotKeyboardFocus.Claim(this);
+            SelectSlot(target);
+            OnSlotClicked?.Invoke(target.Stack);
+            return true;
         }
 
         public void SubmitSelectedSlot()
@@ -819,7 +837,10 @@ namespace CreativeAI.UI
 
             var slot = _visibleSlots[index];
             if (slot != null && slot.gameObject.activeInHierarchy)
+            {
                 SelectSlot(slot);
+                OnSlotClicked?.Invoke(slot.Stack);
+            }
         }
     }
 }

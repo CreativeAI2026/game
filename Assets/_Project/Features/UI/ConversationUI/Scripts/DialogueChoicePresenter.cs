@@ -145,20 +145,16 @@ namespace CreativeAI.UI
         {
             if (_spawned.Count == 0)
                 return;
-            var keyboard = Keyboard.current;
-            if (keyboard == null)
-                return;
 
-            if (keyboard.upArrowKey.wasPressedThisFrame)
-                SelectRelative(-1);
-            else if (keyboard.downArrowKey.wasPressedThisFrame)
-                SelectRelative(1);
+            if (UiInputActionMap.TryReadDiscreteMove(out Vector2Int step))
+            {
+                if (step.y > 0)
+                    SelectRelative(-1);
+                else if (step.y < 0)
+                    SelectRelative(1);
+            }
 
-            if (
-                keyboard.enterKey.wasPressedThisFrame
-                || keyboard.numpadEnterKey.wasPressedThisFrame
-                || keyboard.spaceKey.wasPressedThisFrame
-            )
+            if (UiInputActionMap.WasSubmitPressedThisFrame())
             {
                 if (_selectedIndex < 0)
                     Select(0);

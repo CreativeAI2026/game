@@ -1,6 +1,7 @@
 using CreativeAI.Core;
 using CreativeAI.Gameplay;
 using UnityEngine;
+using UnityEngine.EventSystems;
 using UnityEngine.UI;
 
 namespace CreativeAI.UI
@@ -39,6 +40,37 @@ namespace CreativeAI.UI
             {
                 _continueButton.onClick.AddListener(OnContinue);
                 _continueButton.interactable = SaveService.HasSave();
+            }
+        }
+
+        private void Start()
+        {
+            SelectDefaultButton();
+        }
+
+        private void Update()
+        {
+            if (
+                EventSystem.current != null
+                && EventSystem.current.currentSelectedGameObject == null
+            )
+            {
+                SelectDefaultButton();
+            }
+        }
+
+        private void SelectDefaultButton()
+        {
+            if (EventSystem.current == null)
+                return;
+
+            Button defaultButton =
+                _continueButton != null && _continueButton.interactable
+                    ? _continueButton
+                    : _tapToStartButton;
+            if (defaultButton != null && defaultButton.interactable)
+            {
+                EventSystem.current.SetSelectedGameObject(defaultButton.gameObject);
             }
         }
 

@@ -1,5 +1,6 @@
 using CreativeAI.Gameplay;
 using UnityEngine;
+using UnityEngine.EventSystems;
 using UnityEngine.UI;
 
 namespace CreativeAI.UI
@@ -19,6 +20,26 @@ namespace CreativeAI.UI
                 _yesButton.onClick.AddListener(OnYes);
             if (_noButton != null)
                 _noButton.onClick.AddListener(OnNo);
+        }
+
+        private void OnEnable()
+        {
+            if (_yesButton != null && EventSystem.current != null)
+            {
+                EventSystem.current.SetSelectedGameObject(_yesButton.gameObject);
+            }
+        }
+
+        private void Update()
+        {
+            if (
+                EventSystem.current != null
+                && EventSystem.current.currentSelectedGameObject == null
+                && _yesButton != null
+            )
+            {
+                EventSystem.current.SetSelectedGameObject(_yesButton.gameObject);
+            }
         }
 
         private void OnDestroy()

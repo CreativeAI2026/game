@@ -485,6 +485,7 @@ namespace CreativeAI.UI.CharacterUI
             {
                 _inventory.OnSlotClicked += OnInventorySlotClicked;
                 _inventory.OnSlotDoubleClicked += OnInventorySlotDoubleClicked;
+                _inventory.OnSlotSubmitted += OnInventorySlotSubmitted;
                 _inventory.DisplayRefreshRequested += OnInventoryRefreshRequested;
             }
 
@@ -534,6 +535,7 @@ namespace CreativeAI.UI.CharacterUI
             {
                 _inventory.OnSlotClicked -= OnInventorySlotClicked;
                 _inventory.OnSlotDoubleClicked -= OnInventorySlotDoubleClicked;
+                _inventory.OnSlotSubmitted -= OnInventorySlotSubmitted;
                 _inventory.DisplayRefreshRequested -= OnInventoryRefreshRequested;
             }
 
@@ -641,6 +643,7 @@ namespace CreativeAI.UI.CharacterUI
             SyncEquipmentAssignments();
             RefreshEquipmentSlots();
             RefreshTargetSelection();
+            FocusInventoryOrSlots();
         }
 
         private void SelectFilter(int index)
@@ -654,6 +657,77 @@ namespace CreativeAI.UI.CharacterUI
             RefreshInventory(InventoryView.ScrollRefreshMode.ScrollToTop);
             RefreshTargetSelection();
             ShowEmptyDetail();
+            FocusInventoryOrSlots();
+        }
+
+        private void FocusInventoryOrSlots()
+        {
+            if (_inventory != null && _inventory.SelectFirstVisibleSlotAndClaimFocus())
+                return;
+
+            SlotKeyboardFocus.Claim(this);
+            SelectFocusedAssignmentSlot(0);
+        }
+
+        private void Update()
+        {
+            if (!_initialized)
+                return;
+
+            if (
+                UiInputActionMap.WasPressedThisFrame(UiInputActionMap.SubTabPrev)
+                || UiInputActionMap.WasPressedThisFrame(UiInputActionMap.SubTabNext)
+            )
+            {
+                SelectFilter(_filter == Filter.Quick ? (int)Filter.Equipment : (int)Filter.Quick);
+                return;
+            }
+
+            if (UiInputActionMap.WasPressedThisFrame(UiInputActionMap.AuxAction))
+            {
+                if (SlotKeyboardFocus.IsFocused(this))
+                {
+                    if (_inventory == null || !_inventory.SelectFirstVisibleSlotAndClaimFocus())
+                        SelectFocusedAssignmentSlot(1);
+                }
+                else
+                {
+                    SlotKeyboardFocus.Claim(this);
+                    SelectFocusedAssignmentSlot(0);
+                }
+                return;
+            }
+
+            if (!SlotKeyboardFocus.IsFocused(this))
+                return;
+
+            if (UiInputActionMap.TryReadDiscreteMove(out Vector2Int step))
+            {
+                int delta = step.x != 0 ? step.x : -step.y;
+                if (delta != 0)
+                    SelectFocusedAssignmentSlot(delta > 0 ? 1 : -1);
+            }
+            else if (UiInputActionMap.WasSubmitPressedThisFrame())
+            {
+                ExecuteDetailAction();
+            }
+        }
+
+        private void SelectFocusedAssignmentSlot(int offset)
+        {
+            if (_filter == Filter.Quick && _quickSlots.Count > 0)
+            {
+                _selectedQuickSlot =
+                    (_selectedQuickSlot + offset + _quickSlots.Count) % _quickSlots.Count;
+                OnQuickSlotClicked(_quickSlots[_selectedQuickSlot]);
+            }
+            else if (_filter == Filter.Equipment && _equipmentSlots.Count > 0)
+            {
+                _selectedEquipmentSlot =
+                    (_selectedEquipmentSlot + offset + _equipmentSlots.Count)
+                    % _equipmentSlots.Count;
+                OnEquipmentSlotClicked(_equipmentSlots[_selectedEquipmentSlot]);
+            }
         }
 
         private void RefreshTabVisuals()
@@ -760,6 +834,12 @@ namespace CreativeAI.UI.CharacterUI
         {
             OnInventorySlotClicked(stack);
             AssignSelectedStack();
+        }
+
+        private void OnInventorySlotSubmitted(ItemStack stack)
+        {
+            OnInventorySlotClicked(stack);
+            ExecuteDetailAction();
         }
 
         private void SelectTargetFor(ItemCategory category)

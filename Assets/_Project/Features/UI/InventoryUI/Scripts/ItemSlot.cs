@@ -154,14 +154,16 @@ namespace CreativeAI.UI
     {
         private void LateUpdate()
         {
-            Pointer pointer = Pointer.current;
-            if (pointer == null || !pointer.press.isPressed)
+            if (
+                !UiInputActionMap.IsClickPressed()
+                || !UiInputActionMap.TryReadPointerPosition(out Vector2 position)
+            )
             {
                 ItemSlotDragContext.Clear();
                 return;
             }
 
-            ItemSlotDragContext.MoveToScreenPosition(pointer.position.ReadValue());
+            ItemSlotDragContext.MoveToScreenPosition(position);
         }
     }
 

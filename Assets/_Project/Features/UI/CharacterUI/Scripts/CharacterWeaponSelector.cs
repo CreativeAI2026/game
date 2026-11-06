@@ -132,6 +132,36 @@ namespace CreativeAI.UI.CharacterUI
             }
         }
 
+        private void Update()
+        {
+            if (_weapons.Count <= 1)
+                return;
+
+            if (!UiInputActionMap.TryReadDiscreteMove(out Vector2Int step))
+                return;
+
+            int direction = step.x != 0 ? step.x : -step.y;
+            if (direction != 0)
+                SelectRelative(direction > 0 ? 1 : -1);
+        }
+
+        private void SelectRelative(int step)
+        {
+            if (_weapons.Count == 0)
+                return;
+
+            int start = IsValidIndex(CurrentIndex) ? CurrentIndex : 0;
+            for (int i = 1; i <= _weapons.Count; i++)
+            {
+                int candidate = (start + step * i + _weapons.Count) % _weapons.Count;
+                if (IsOwned(_weapons[candidate]?.Data))
+                {
+                    Select(candidate);
+                    return;
+                }
+            }
+        }
+
         public void Select(int index)
         {
             if (!IsValidIndex(index) || !IsOwned(_weapons[index]?.Data))

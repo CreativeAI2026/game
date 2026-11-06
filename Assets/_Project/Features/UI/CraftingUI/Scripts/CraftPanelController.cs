@@ -732,24 +732,85 @@ namespace CreativeAI.UI
         private void UpdateMaterialSlotKeyboardNavigation()
         {
             if (
-                IsCraftInteractionLocked
-                || _selectedMaterialSlotIndex < 0
-                || !SlotKeyboardFocus.IsFocused(this)
+                _resultCanvasGroup != null
+                && ResultRoot.activeSelf
+                && _resultCanvasGroup.interactable
             )
+            {
+                if (
+                    UiInputActionMap.WasSubmitPressedThisFrame()
+                    || UiInputActionMap.WasCancelPressedThisFrame()
+                )
+                {
+                    HideResult();
+                }
+                return;
+            }
+
+            if (IsCraftInteractionLocked)
                 return;
 
-            var keyboard = Keyboard.current;
-            if (keyboard == null)
-                return;
-
-            int offset =
-                keyboard.leftArrowKey.wasPressedThisFrame ? -1
-                : keyboard.rightArrowKey.wasPressedThisFrame ? 1
-                : 0;
-            if (offset != 0)
-                SelectSlot(
-                    (_selectedMaterialSlotIndex + offset + MaterialSlotCount) % MaterialSlotCount
+            if (
+                UiInputActionMap.WasPressedThisFrame(UiInputActionMap.TabPrev)
+                || UiInputActionMap.WasPressedThisFrame(UiInputActionMap.TabNext)
+            )
+            {
+                SelectMaterialCategory(
+                    _materialCategory == ItemCategory.Food
+                        ? ItemCategory.Equipment
+                        : ItemCategory.Food
                 );
+                return;
+            }
+
+            if (UiInputActionMap.WasPressedThisFrame(UiInputActionMap.CraftExecute))
+            {
+                StartCraft();
+                return;
+            }
+
+            if (UiInputActionMap.WasPressedThisFrame(UiInputActionMap.AuxAction))
+            {
+                if (SlotKeyboardFocus.IsFocused(this))
+                {
+                    if (_inventory != null)
+                        _inventory.SelectFirstVisibleSlotAndClaimFocus();
+                }
+                else
+                {
+                    if (_selectedMaterialSlotIndex < 0)
+                        SelectSlot(0);
+                    ClaimMaterialSlotFocus();
+                }
+                return;
+            }
+
+            if (_selectedMaterialSlotIndex < 0 || !SlotKeyboardFocus.IsFocused(this))
+                return;
+
+            if (UiInputActionMap.TryReadDiscreteMove(out Vector2Int step))
+            {
+                if (step.x != 0)
+                {
+                    int offset = step.x > 0 ? 1 : -1;
+                    SelectSlot(
+                        (_selectedMaterialSlotIndex + offset + MaterialSlotCount)
+                            % MaterialSlotCount
+                    );
+                }
+                else if (step.y < 0)
+                {
+                    if (_inventory != null)
+                        _inventory.SelectFirstVisibleSlotAndClaimFocus();
+                }
+            }
+            else if (UiInputActionMap.WasSubmitPressedThisFrame())
+            {
+                if (_materials[_selectedMaterialSlotIndex] != null)
+                    ClearSlotAnimated(_selectedMaterialSlotIndex);
+                else if (_inventory != null)
+                    _inventory.SelectFirstVisibleSlotAndClaimFocus();
+            }
         }
 
         private void SetCraftInteractionEnabled(bool enabled)

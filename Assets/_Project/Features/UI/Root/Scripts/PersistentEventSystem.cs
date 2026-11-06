@@ -1,5 +1,6 @@
 using UnityEngine;
 using UnityEngine.EventSystems;
+using UnityEngine.InputSystem.UI;
 
 namespace CreativeAI.UI
 {
@@ -21,6 +22,14 @@ namespace CreativeAI.UI
             }
             _instance = this;
             DontDestroyOnLoad(gameObject);
+
+            if (
+                TryGetComponent<InputSystemUIInputModule>(out var module)
+                && module.actionsAsset != null
+            )
+            {
+                module.actionsAsset.FindActionMap("UI", false)?.Enable();
+            }
         }
 
         private void OnDestroy()

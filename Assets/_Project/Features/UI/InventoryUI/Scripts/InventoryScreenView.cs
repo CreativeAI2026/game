@@ -44,6 +44,7 @@ namespace CreativeAI.UI
         private void OnEnable()
         {
             _inventory.SetReleaseSelectionOnOutsideClick(false);
+            _inventory.OnSlotSubmitted += OnSlotSubmitted;
             _tabs.OnTabDefinitionSelected += OnTabSelected;
             _useButton.onClick.AddListener(UseSelected);
             StartCoroutine(RefreshAfterStart());
@@ -59,6 +60,8 @@ namespace CreativeAI.UI
         {
             StopAllCoroutines();
             _cursorTween?.Kill();
+            if (_inventory != null)
+                _inventory.OnSlotSubmitted -= OnSlotSubmitted;
             _tabs.OnTabDefinitionSelected -= OnTabSelected;
             _useButton.onClick.RemoveListener(UseSelected);
             if (_manager != null)
@@ -66,8 +69,26 @@ namespace CreativeAI.UI
             _manager = null;
         }
 
+        private void OnSlotSubmitted(ItemStack stack)
+        {
+            UseSelected();
+        }
+
         private void LateUpdate()
         {
+            if (_tabs != null && _tabs.ButtonCount > 1)
+            {
+                if (UiInputActionMap.WasPressedThisFrame(UiInputActionMap.TabPrev))
+                {
+                    _tabs.SelectTab(
+                        (_tabs.CurrentIndex - 1 + _tabs.ButtonCount) % _tabs.ButtonCount
+                    );
+                }
+                else if (UiInputActionMap.WasPressedThisFrame(UiInputActionMap.TabNext))
+                {
+                    _tabs.SelectTab((_tabs.CurrentIndex + 1) % _tabs.ButtonCount);
+                }
+            }
             if (_manager != InventoryManager.Instance)
             {
                 if (_manager != null)

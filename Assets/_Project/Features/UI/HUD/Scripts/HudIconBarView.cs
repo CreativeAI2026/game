@@ -75,6 +75,7 @@ namespace CreativeAI.UI
             {
                 _uiInput.CharacterPressed -= OnCharacterPressed;
                 _uiInput.InventoryPressed -= OnInventoryPressed;
+                _uiInput.SavePressed -= OnSavePressed;
                 _uiInput.CancelPressed -= OnCancelPressed;
             }
 
@@ -84,6 +85,7 @@ namespace CreativeAI.UI
             {
                 _uiInput.CharacterPressed += OnCharacterPressed;
                 _uiInput.InventoryPressed += OnInventoryPressed;
+                _uiInput.SavePressed += OnSavePressed;
                 _uiInput.CancelPressed += OnCancelPressed;
             }
         }
@@ -98,6 +100,8 @@ namespace CreativeAI.UI
         private void OnCharacterPressed() => ToggleByKey(UiRouter.UiId.Character);
 
         private void OnInventoryPressed() => ToggleByKey(UiRouter.UiId.Inventory);
+
+        private void OnSavePressed() => ToggleByKey(UiRouter.UiId.Save);
 
         private void ToggleByKey(UiRouter.UiId id)
         {
