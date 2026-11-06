@@ -282,7 +282,7 @@ namespace CreativeAI.Tests.EditMode
             _trigger.RefreshPin();
 
             Assert.IsTrue(_trigger.PinVisible);
-            var pin = UnityEngine.Object.FindFirstObjectByType<MapPin>();
+            var pin = UnityEngine.Object.FindAnyObjectByType<MapPin>();
             Assert.IsNotNull(pin);
             Assert.That(pin.transform.position, Is.EqualTo(new Vector3(3f, 2f, 5f)));
         }
@@ -309,7 +309,7 @@ namespace CreativeAI.Tests.EditMode
 
             _trigger.RefreshPin();
 
-            var pin = UnityEngine.Object.FindFirstObjectByType<MapPin>();
+            var pin = UnityEngine.Object.FindAnyObjectByType<MapPin>();
             Assert.That(pin.transform.position, Is.EqualTo(new Vector3(10f, 1f, -4f)));
             UnityEngine.Object.DestroyImmediate(point);
         }
@@ -347,7 +347,7 @@ namespace CreativeAI.Tests.EditMode
             AssignEvent(FiringEvent());
             TestReflection.SetField(_trigger, "_showPin", true);
             _trigger.RefreshPin();
-            var pin = UnityEngine.Object.FindFirstObjectByType<MapPin>();
+            var pin = UnityEngine.Object.FindAnyObjectByType<MapPin>();
             var face = pin.transform.Find("Face").gameObject;
             TestReflection.Invoke(pin, "Update");
             Assert.IsTrue(pin.Shown);
