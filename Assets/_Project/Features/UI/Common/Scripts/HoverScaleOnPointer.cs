@@ -488,8 +488,7 @@ namespace CreativeAI.UI
             if (
                 !_releaseLockOnOutsideClick
                 || !_isLocked
-                || Mouse.current == null
-                || !Mouse.current.leftButton.wasPressedThisFrame
+                || !UiInputActionMap.WasClickPressedThisFrame()
                 || IsPointerOverSelf()
             )
                 return;
@@ -523,12 +522,15 @@ namespace CreativeAI.UI
 
         private bool IsPointerOverSelf()
         {
-            if (EventSystem.current == null || Mouse.current == null)
+            if (
+                EventSystem.current == null
+                || !UiInputActionMap.TryReadPointerPosition(out Vector2 pointerPosition)
+            )
                 return false;
 
             var eventData = new PointerEventData(EventSystem.current)
             {
-                position = Mouse.current.position.ReadValue(),
+                position = pointerPosition,
             };
 
             var results = new List<RaycastResult>();

@@ -83,31 +83,19 @@ namespace CreativeAI.UI
         private static bool IsPunctuation(char character) =>
             character is '。' or '、' or '！' or '？' or '!' or '?' or '…' or '・' or ',';
 
-        private static bool SkipReadHeld(bool wasRead) =>
-            wasRead && Keyboard.current != null && Keyboard.current.sKey.isPressed;
+        private static bool SkipReadHeld(bool wasRead)
+        {
+            return wasRead && UiInputActionMap.IsPressed(UiInputActionMap.DialogueSkip);
+        }
 
         private static bool FastForwardHeld()
         {
-            var keyboard = Keyboard.current;
-            if (
-                keyboard != null
-                && (keyboard.leftCtrlKey.isPressed || keyboard.rightCtrlKey.isPressed)
-            )
-                return true;
-            var gamepad = Gamepad.current;
-            return gamepad != null && gamepad.rightShoulder.isPressed;
+            return UiInputActionMap.IsPressed(UiInputActionMap.DialogueFastForward);
         }
 
         private static bool AdvancePressed()
         {
-            var keyboard = Keyboard.current;
-            if (
-                keyboard != null
-                && (keyboard.enterKey.wasPressedThisFrame || keyboard.spaceKey.wasPressedThisFrame)
-            )
-                return true;
-            var gamepad = Gamepad.current;
-            return gamepad != null && gamepad.buttonSouth.wasPressedThisFrame;
+            return UiInputActionMap.WasPressedThisFrame(UiInputActionMap.DialogueAdvance);
         }
     }
 }

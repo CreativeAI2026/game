@@ -75,11 +75,7 @@ namespace CreativeAI.UI
 
         private void Update()
         {
-            var keyboard = Keyboard.current;
-            if (keyboard == null)
-                return;
-
-            if (keyboard.dKey.wasPressedThisFrame)
+            if (UiInputActionMap.WasPressedThisFrame(UiInputActionMap.DialogueHistory))
             {
                 if (
                     _openButton != null
@@ -88,8 +84,26 @@ namespace CreativeAI.UI
                     control.PlayShortcutFeedback();
                 SetOpen(!IsOpen);
             }
-            else if (IsOpen && keyboard.escapeKey.wasPressedThisFrame)
+            else if (IsOpen && UiInputActionMap.WasCancelPressedThisFrame())
+            {
                 SetOpen(false);
+            }
+
+            if (IsOpen && _scrollRect != null)
+            {
+                float scrollInput = UiInputActionMap.ReadNavigate().y;
+                if (Mathf.Abs(scrollInput) >= 0.2f)
+                {
+                    float contentHeight = _content != null ? _content.rect.height : 0f;
+                    float viewportHeight =
+                        _scrollRect.viewport != null ? _scrollRect.viewport.rect.height : 0f;
+                    float scrollable = Mathf.Max(1f, contentHeight - viewportHeight);
+                    float delta = (scrollInput * 600f * Time.unscaledDeltaTime) / scrollable;
+                    _scrollRect.verticalNormalizedPosition = Mathf.Clamp01(
+                        _scrollRect.verticalNormalizedPosition + delta
+                    );
+                }
+            }
         }
 
         public void AddEntry(

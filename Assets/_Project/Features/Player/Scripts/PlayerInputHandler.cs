@@ -242,6 +242,22 @@ namespace CreativeAI.Gameplay
         /// </summary>
         public event Action<int> QuickFoodPressed;
 
+        /// <summary>調べる/開閉アクション(E / A / X)が押された瞬間に発火する。</summary>
+        public event Action InteractPressed;
+
+        public void OnInteract(InputValue value)
+        {
+            if (value.isPressed)
+                InteractInput();
+        }
+
+        public void InteractInput()
+        {
+            if (Blocked)
+                return;
+            InteractPressed?.Invoke();
+        }
+
         public void QuickFoodInput(int slot, bool pressed)
         {
             if (!pressed || Blocked)

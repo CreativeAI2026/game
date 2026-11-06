@@ -32,6 +32,8 @@ namespace CreativeAI.Gameplay
         [SerializeField]
         private Key _key = Key.E;
 
+        private PlayerInputHandler _inputHandler;
+        private PlayerInput _playerInput;
         private bool _playerInside;
 
         /// <summary>プレイヤーが範囲内にいる。</summary>
@@ -41,6 +43,12 @@ namespace CreativeAI.Gameplay
         {
             if (_door == null)
                 _door = GetComponent<SlidingDoor>();
+        }
+
+        private void OnEnable()
+        {
+            PlayerRegistry.Changed += BindPlayer;
+            BindPlayer(PlayerRegistry.Current);
         }
 
         private void OnTriggerEnter(Collider other)
@@ -60,8 +68,28 @@ namespace CreativeAI.Gameplay
 
         private void OnDisable()
         {
+            PlayerRegistry.Changed -= BindPlayer;
+            BindPlayer(null);
             _playerInside = false;
             InteractPromptService.Hide(this);
+        }
+
+        private void BindPlayer(PlayerController player)
+        {
+            if (_inputHandler != null)
+                _inputHandler.InteractPressed -= OnInteractPressed;
+
+            _inputHandler = player != null ? player.GetComponent<PlayerInputHandler>() : null;
+            _playerInput = player != null ? player.GetComponent<PlayerInput>() : null;
+
+            if (_inputHandler != null)
+                _inputHandler.InteractPressed += OnInteractPressed;
+        }
+
+        private void OnInteractPressed()
+        {
+            if (!UiPanelService.IsOpen)
+                TryInteract();
         }
 
         private void Update()
@@ -73,10 +101,6 @@ namespace CreativeAI.Gameplay
             }
 
             InteractPromptService.Show(this, BuildLabel());
-
-            var keyboard = Keyboard.current;
-            if (keyboard != null && keyboard[_key].wasPressedThisFrame)
-                TryInteract();
         }
 
         /// <summary>いま操作を受け付けられるか(範囲内 / 移動中 / 会話も戦闘もしていない)。</summary>
@@ -105,7 +129,8 @@ namespace CreativeAI.Gameplay
         private string BuildLabel()
         {
             string action = _door.IsOpen ? _closeLabel : _openLabel;
-            return $"[{_key}] {action}";
+            bool isGamepad = _playerInput != null && _playerInput.currentControlScheme == "Gamepad";
+            return isGamepad ? $"[A] {action}" : $"[{_key}] {action}";
         }
     }
 }
