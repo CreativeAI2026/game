@@ -13,7 +13,7 @@ MonoBehaviour:
   m_Name: KurageBoss
   m_EditorClassIdentifier: CreativeAI.Gameplay::CreativeAI.Gameplay.EnemyParameterData
   characterName: KurageBoss
-  baseMaxLife: 30000
+  baseMaxLife: 50000
   baseAttackPower: 300
   baseDefense: 250
   baseMoveSpeed: 6

@@ -12,7 +12,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 541156cb2d53ec445aa5cd23417c786d, type: 3}
   m_Name: KurageTentacleCirclePlayerPattern
   m_EditorClassIdentifier: CreativeAI.Gameplay::CreativeAI.Gameplay.KurageTentacleCirclePlayerPattern
-  _count: 8
-  _radius: 5
+  _count: 12
+  _radius: 6
   _edgeInset: 2
   _minSpacing: 2

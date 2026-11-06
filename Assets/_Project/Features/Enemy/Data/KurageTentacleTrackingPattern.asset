@@ -12,7 +12,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 8fbfccf011855b6458edd10d04ad1ba1, type: 3}
   m_Name: KurageTentacleTrackingPattern
   m_EditorClassIdentifier: CreativeAI.Gameplay::CreativeAI.Gameplay.KurageTentacleTrackingPattern
-  _count: 6
-  _interval: 0.6
-  _sweep: 0
+  _count: 10
+  _interval: 0.5
+  _sweep: 1
   _edgeInset: 2

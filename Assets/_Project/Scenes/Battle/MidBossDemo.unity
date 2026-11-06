@@ -9424,6 +9424,7 @@ MonoBehaviour:
   _boss: {fileID: 168440392}
   _toggleKey: 99
   _visibleOnStart: 1
+  _keepPlayerHpFull: 0
 --- !u!4 &1967694010
 Transform:
   m_ObjectHideFlags: 0

@@ -12,10 +12,10 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 153c0ca923ac1b14484123b08425e261, type: 3}
   m_Name: KurageTentacleRandomPattern
   m_EditorClassIdentifier: CreativeAI.Gameplay::CreativeAI.Gameplay.KurageTentacleRandomPattern
-  _spawnCount: 5
+  _spawnCount: 10
   _waveMinCount: 3
   _waveMaxCount: 5
-  _sweepChance: 0.3
-  _interval: 1
+  _sweepChance: 0.25
+  _interval: 1.5
   _edgeInset: 2
   _minSpacing: 4
