@@ -240,16 +240,7 @@ namespace CreativeAI.UI
             if (!_showOnlyBaseItems)
                 return items;
 
-            return items.FindAll(stack => stack != null && IsBaseItem(stack.Data));
-        }
-
-        private static bool IsBaseItem(ItemData item)
-        {
-            if (item == null)
-                return false;
-
-            string id = Mathf.Abs(item.id).ToString();
-            return id.Length >= 2 && id[1] == '0';
+            return items.FindAll(stack => stack?.Data != null && stack.Data.IsBaseMaterial);
         }
 
         private void WarnMissingReferencesOnce() { }

@@ -108,9 +108,7 @@ namespace CreativeAI.UI
                 {
                     if (stack?.Data == null || stack.Count <= 0)
                         continue;
-                    // Same base-material filter as this inventory prefab.
-                    string id = Mathf.Abs(stack.Data.id).ToString(CultureInfo.InvariantCulture);
-                    if (id.Length < 2 || id[1] != '0')
+                    if (!stack.Data.IsBaseMaterial)
                         continue;
                     if (stack.Data.category == ItemCategory.Food)
                         quick++;

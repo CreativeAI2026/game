@@ -306,7 +306,7 @@ namespace CreativeAI.Gameplay
                 return;
 
             var testItems = ItemCatalog
-                .Instance.Items.Where(item => item != null && HasZeroSecondDigit(item))
+                .Instance.Items.Where(item => item != null && item.IsBaseMaterial)
                 .ToList();
             foreach (var item in testItems)
             {
@@ -356,15 +356,6 @@ namespace CreativeAI.Gameplay
         private void OnQuickFoodChanged()
         {
             QuickFoodChanged?.Invoke();
-        }
-
-        private static bool HasZeroSecondDigit(ItemData item)
-        {
-            if (item == null)
-                return false;
-
-            string id = Mathf.Abs(item.id).ToString();
-            return id.Length >= 2 && id[1] == '0';
         }
     }
 }
