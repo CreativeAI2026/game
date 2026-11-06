@@ -80,7 +80,9 @@ namespace CreativeAI.UI
             {
                 if (UiInputActionMap.WasPressedThisFrame(UiInputActionMap.TabPrev))
                 {
-                    _tabs.SelectTab((_tabs.CurrentIndex - 1 + _tabs.ButtonCount) % _tabs.ButtonCount);
+                    _tabs.SelectTab(
+                        (_tabs.CurrentIndex - 1 + _tabs.ButtonCount) % _tabs.ButtonCount
+                    );
                 }
                 else if (UiInputActionMap.WasPressedThisFrame(UiInputActionMap.TabNext))
                 {
