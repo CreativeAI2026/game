@@ -387,7 +387,6 @@ namespace CreativeAI.Tests.EditMode
             EventPlaybackService.SetPlaying(true);
             TestReflection.Invoke(pin, "Update");
             Assert.IsFalse(pin.Shown, "会話中は隠す");
-            Assert.IsFalse(face.activeSelf);
 
             EventPlaybackService.SetPlaying(false);
             UiPanelService.SetOpen(true);

@@ -32,7 +32,9 @@ namespace CreativeAI.Core
         private const float VerticalTolerance = 1f; // 線の高さを取る NavMesh を探す範囲(階の高さより十分小さく)
         private const float OnPathTolerance = 0.35f; // 直線の途中の点が NavMesh からずれてよい範囲
         private const int MaxStraightSamples = 20; // 直線の確認で調べる点の数の上限(重くしないため)
+        private const float FadeSeconds = 0.25f; // 出入りの透明度が変わりきるまで
         private static readonly int MainTexSt = Shader.PropertyToID("_MainTex_ST");
+        private static readonly int ColorId = Shader.PropertyToID("_Color");
 
         private readonly LineRenderer _line;
         private readonly NavMeshPath _path = new();
@@ -43,7 +45,10 @@ namespace CreativeAI.Core
         private readonly List<Vector3> _corners = new(); // 近道にした後の角(使い回す)
         private readonly List<float> _heights = new(); // 階段の持ち上げ用(使い回す)
         private readonly Vector3[] _bend = new Vector3[BendSteps + 1]; // 丸めた角の点(使い回す)
+        private Color _baseColor = Color.white; // 材質の色(透明度だけを掛けて変える)
         private float _nextRefresh;
+        private bool _visible; // 見せたい状態。false なら透明になってから消す
+        private float _alpha; // 線の透明度の倍率(0 で見えない)
 
         public MapPinPathLine()
         {
@@ -65,7 +70,10 @@ namespace CreativeAI.Core
             _line.allowOcclusionWhenDynamic = false;
             var material = Resources.Load<Material>(MaterialResource);
             if (material != null)
+            {
                 _line.sharedMaterial = material;
+                _baseColor = material.GetColor(ColorId);
+            }
             else
                 Debug.LogWarning($"[MapPin] Resources/{MaterialResource} が見つかりません。");
             _line.enabled = false;
@@ -77,21 +85,24 @@ namespace CreativeAI.Core
             if (_line == null)
                 return;
             if (!wanted)
-            {
-                if (_line.enabled)
-                    Hide();
-                return;
-            }
-            if (Time.time >= _nextRefresh)
+                _visible = false;
+            else if (Time.time >= _nextRefresh)
             {
                 _nextRefresh = Time.time + RefreshSeconds;
                 Refresh(target);
             }
-            if (_line.enabled)
+            if (!_line.enabled)
+                return;
+
+            // 消すときも、すぐには切らずに透明にしてから消す。
+            _alpha = Mathf.MoveTowards(_alpha, _visible ? 1f : 0f, Time.deltaTime / FadeSeconds);
+            if (!_visible && _alpha <= 0f)
             {
-                FollowGoal();
-                Flow();
+                Hide();
+                return;
             }
+            FollowGoal();
+            Flow();
         }
 
         // 手前と奥を薄くして、線の出だしと終わりが急に切れて見えないようにする。
@@ -127,7 +138,7 @@ namespace CreativeAI.Core
             var from = player.position;
             if (Vector3.Distance(from, target) < HideWithin)
             {
-                Hide();
+                _visible = false;
                 return;
             }
 
@@ -139,22 +150,25 @@ namespace CreativeAI.Core
                 || _path.corners.Length < 2
             )
             {
-                Hide();
+                _visible = false;
                 return;
             }
 
             BuildGoal(_path.corners);
+            _visible = true;
             if (!_line.enabled)
             {
                 // 出始めは目標の形をそのまま使う(遠くから縮んでくるのを避ける)。
                 _shown.Clear();
                 _shown.AddRange(_goal);
+                _alpha = 0f;
                 _line.enabled = true;
             }
         }
 
         private void Hide()
         {
+            _alpha = 0f;
             _line.enabled = false;
             _goal.Clear();
             _shown.Clear();
@@ -393,6 +407,9 @@ namespace CreativeAI.Core
         {
             var offset = -(Time.time * FlowSpeed / ArrowSpacing) % 1f;
             _block.SetVector(MainTexSt, new Vector4(1f, 1f, offset, 0f));
+            var color = _baseColor;
+            color.a *= _alpha;
+            _block.SetColor(ColorId, color);
             _line.SetPropertyBlock(_block);
         }
 

@@ -20,12 +20,15 @@ namespace CreativeAI.Core
         private const float SpinDegreesPerSecond = 90f;
         private const float BobAmplitude = 0.15f;
         private const float BobHertz = 0.6f;
+        private const float FadeSeconds = 0.25f; // 出入りの透明度が変わりきるまで
 
         private static readonly List<MapPin> s_active = new();
         private static Transform s_player;
 
         private Vector3 _basePosition;
         private Transform _face;
+        private SpriteRenderer _renderer;
+        private float _alpha; // 画像の透明度(0 で見えない)
         private MapPinPathLine _pathLine;
 
         /// <summary>今ある(作られて消えていない)ピン。HUD が距離や方向の表示に使う。</summary>
@@ -76,18 +79,37 @@ namespace CreativeAI.Core
 
         private void Update()
         {
-            SetShown(!IsBusy());
+            Shown = !IsBusy();
+            UpdateFade();
             if (!Shown)
             {
                 _pathLine?.Tick(_basePosition, false);
+                if (_alpha > 0f)
+                    Animate(); // 消える間も回して、止まって見えないようにする
                 return;
             }
 
+            Animate();
+            _pathLine?.Tick(_basePosition, IsClosestShownPin());
+        }
+
+        private void Animate()
+        {
             transform.Rotate(0f, SpinDegreesPerSecond * Time.deltaTime, 0f, Space.World);
             var offset = Mathf.Sin(Time.time * BobHertz * Mathf.PI * 2f) * BobAmplitude;
             transform.position = _basePosition + Vector3.up * offset;
             ApplyDistanceScale();
-            _pathLine?.Tick(_basePosition, IsClosestShownPin());
+        }
+
+        // 出し入れで急に現れたり消えたりしないよう、画像を透明度で出し入れする。
+        private void UpdateFade()
+        {
+            _alpha = Mathf.MoveTowards(_alpha, Shown ? 1f : 0f, Time.deltaTime / FadeSeconds);
+            if (_face == null)
+                return;
+            _face.gameObject.SetActive(Shown || _alpha > 0f);
+            if (_renderer != null)
+                _renderer.color = new Color(1f, 1f, 1f, _alpha);
         }
 
         /// <summary>ピンと地面の線をまとめて消す(エディットモードでは OnDestroy が走らないため明示する)。</summary>
@@ -108,15 +130,6 @@ namespace CreativeAI.Core
             return EventPlaybackService.IsPlaying
                 || UiPanelService.IsOpen
                 || (mode != null && mode.CurrentMode == GameMode.Battle);
-        }
-
-        private void SetShown(bool shown)
-        {
-            if (Shown == shown)
-                return;
-            Shown = shown;
-            if (_face != null)
-                _face.gameObject.SetActive(shown);
         }
 
         // 見せているピンのうち、プレイヤーに一番近いのが自分か(同じ近さなら先に作られたほうを優先)。
@@ -184,6 +197,8 @@ namespace CreativeAI.Core
 
             var pin = root.AddComponent<MapPin>();
             pin._face = face.transform;
+            pin._renderer = renderer;
+            renderer.color = new Color(1f, 1f, 1f, 0f); // 出始めは透明から
             pin._pathLine = new MapPinPathLine();
             return pin;
         }
