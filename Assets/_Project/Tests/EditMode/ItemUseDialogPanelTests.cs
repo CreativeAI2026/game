@@ -17,7 +17,7 @@ namespace CreativeAI.Tests.EditMode
         private GameObject _panelGo;
         private ItemUseDialogPanel _panel;
         private Button _useButton;
-        private GameObject _invGo;
+        private readonly TestResidents _residents = new();
         private InventoryManager _inv;
         private GameObject _playerGo;
         private PlayerStatus _status;
@@ -26,9 +26,7 @@ namespace CreativeAI.Tests.EditMode
         [SetUp]
         public void SetUp()
         {
-            _invGo = new GameObject("INV");
-            _inv = _invGo.AddComponent<InventoryManager>();
-            TestReflection.SetStaticProperty("Instance", _inv);
+            _inv = _residents.Add<InventoryManager>();
 
             var playerData = ScriptableObject.CreateInstance<PlayerParameterData>();
             playerData.baseMaxLife = 1000f;
@@ -44,10 +42,9 @@ namespace CreativeAI.Tests.EditMode
         [TearDown]
         public void TearDown()
         {
-            TestReflection.SetStaticProperty<InventoryManager>("Instance", null);
+            _residents.Clear();
             Object.DestroyImmediate(_panelGo);
             Object.DestroyImmediate(_playerGo);
-            Object.DestroyImmediate(_invGo);
             foreach (var a in _assets)
                 Object.DestroyImmediate(a);
             _assets.Clear();

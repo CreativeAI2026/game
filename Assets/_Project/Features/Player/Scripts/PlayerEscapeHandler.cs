@@ -12,6 +12,7 @@ namespace CreativeAI.Gameplay
     /// 後退中は全操作を制限する。重力は PlayerController が制限中もかけ続けるので、ここでは水平移動だけを扱う。
     /// </summary>
     [RequireComponent(typeof(PlayerController))]
+    [RequireComponent(typeof(CharacterController))]
     public class PlayerEscapeHandler : MonoBehaviour
     {
         [Tooltip(

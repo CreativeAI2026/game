@@ -12,7 +12,7 @@ namespace CreativeAI.Tests.EditMode
     /// </summary>
     public class PlayerQuickFoodUserTests
     {
-        private GameObject _inventoryGo;
+        private readonly TestResidents _residents = new();
         private InventoryManager _inventory;
         private GameObject _playerGo;
         private PlayerInputHandler _input;
@@ -23,9 +23,7 @@ namespace CreativeAI.Tests.EditMode
         [SetUp]
         public void SetUp()
         {
-            _inventoryGo = new GameObject("InventoryManager");
-            _inventory = _inventoryGo.AddComponent<InventoryManager>();
-            TestReflection.SetStaticProperty("Instance", _inventory);
+            _inventory = _residents.Add<InventoryManager>();
 
             var playerData = ScriptableObject.CreateInstance<PlayerParameterData>();
             playerData.baseMaxLife = 1000f;
@@ -49,10 +47,8 @@ namespace CreativeAI.Tests.EditMode
         {
             TestReflection.Invoke(_user, "OnDisable");
             TestReflection.Invoke(_input, "OnDisable");
-            UiPanelService.ResetState();
-            TestReflection.SetStaticProperty<InventoryManager>("Instance", null);
+            _residents.Clear();
             Object.DestroyImmediate(_playerGo);
-            Object.DestroyImmediate(_inventoryGo);
             foreach (var a in _assets)
                 Object.DestroyImmediate(a);
             _assets.Clear();

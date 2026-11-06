@@ -185,15 +185,16 @@ namespace CreativeAI.UI.CharacterUI
             if (source.IsChildOf(origin))
             {
                 node.SetParent(CopyTransform(source.parent, origin, copies), false);
-                node.localPosition = source.localPosition;
-                node.localRotation = source.localRotation;
+                node.SetLocalPositionAndRotation(source.localPosition, source.localRotation);
                 node.localScale = source.localScale;
             }
             else
             {
                 node.SetParent(_content.transform, false);
-                node.localPosition = origin.InverseTransformPoint(source.position);
-                node.localRotation = Quaternion.Inverse(origin.rotation) * source.rotation;
+                node.SetLocalPositionAndRotation(
+                    origin.InverseTransformPoint(source.position),
+                    Quaternion.Inverse(origin.rotation) * source.rotation
+                );
                 var scale = source.lossyScale;
                 var rootScale = origin.lossyScale;
                 node.localScale = new Vector3(

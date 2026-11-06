@@ -220,8 +220,7 @@ namespace CreativeAI.Gameplay
 
             ArrowProjectile arrow = ArrowPool.Instance.Get();
             arrow.transform.SetParent(_arrowHandHoldPoint);
-            arrow.transform.localPosition = Vector3.zero;
-            arrow.transform.localRotation = Quaternion.identity;
+            arrow.transform.SetLocalPositionAndRotation(Vector3.zero, Quaternion.identity);
             _nockedArrow = arrow.gameObject;
         }
 

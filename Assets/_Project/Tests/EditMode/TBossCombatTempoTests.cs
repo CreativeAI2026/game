@@ -5,7 +5,7 @@ using UnityEngine;
 namespace CreativeAI.Tests.EditMode
 {
     /// <summary>
-    /// TutorialBoss の交戦の時計のうち、追い込み開始時の前倒し（Expedite）の検証。
+    /// TutorialBoss が追い込みを始めるときに、交戦の時計を前倒しする処理(Expedite)の検証。
     /// EditMode では Time.time が進まないため、「今」は Time.time のまま固定として比べる。
     /// </summary>
     public class TBossCombatTempoTests

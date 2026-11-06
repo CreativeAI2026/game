@@ -108,7 +108,8 @@ namespace CreativeAI.UI
                     continue;
 
                 bool selected = tab == selectedTab;
-                tab.Button?.SetSelected(selected);
+                if (tab.Button != null)
+                    tab.Button.SetSelected(selected);
                 if (tab.Panel != null)
                     tab.Panel.SetActive(selected);
             }

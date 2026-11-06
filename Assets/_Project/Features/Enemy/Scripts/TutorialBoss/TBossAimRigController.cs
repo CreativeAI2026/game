@@ -173,7 +173,7 @@ namespace CreativeAI.Gameplay
         private Vector3 GetForwardPoint()
         {
             // 正面に置く距離は意味を持たない（方向だけが効く）ため、体格に比例した適当な距離にしている
-            return headBone.position + boss.transform.forward * boss.BodyScale * 2f;
+            return headBone.position + boss.transform.forward * (boss.BodyScale * 2f);
         }
     }
 }

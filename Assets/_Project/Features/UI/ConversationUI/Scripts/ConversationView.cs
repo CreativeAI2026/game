@@ -733,7 +733,7 @@ namespace CreativeAI.UI
         private void EnsureHistoryPanel()
         {
             if (_historyPanel == null)
-                _historyPanel = GetComponent<DialogueHistoryPanel>();
+                TryGetComponent(out _historyPanel);
             if (_historyPanel == null)
                 _historyPanel = gameObject.AddComponent<DialogueHistoryPanel>();
 

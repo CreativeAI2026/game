@@ -57,8 +57,16 @@ namespace CreativeAI.UI
         {
             ResolveViewReferences();
             Button = GetComponent<Button>();
-            _iconView?.SetEmptyAlpha(EmptyIconAlpha);
-            _countBadgeView?.SetPositionReference(_iconView?.FitRect ?? _iconView?.IconRect);
+            if (_iconView != null)
+                _iconView.SetEmptyAlpha(EmptyIconAlpha);
+            if (_countBadgeView != null)
+            {
+                RectTransform positionReference = null;
+                if (_iconView != null)
+                    positionReference =
+                        _iconView.FitRect != null ? _iconView.FitRect : _iconView.IconRect;
+                _countBadgeView.SetPositionReference(positionReference);
+            }
             ConfigureHover();
             Refresh();
         }
@@ -78,9 +86,11 @@ namespace CreativeAI.UI
         protected override void Refresh()
         {
             ResolveViewReferences();
-            _iconView?.SetEmptyAlpha(EmptyIconAlpha);
+            if (_iconView != null)
+                _iconView.SetEmptyAlpha(EmptyIconAlpha);
             base.Refresh();
-            _emptyView?.SetEmpty(_item == null || _item.icon == null);
+            if (_emptyView != null)
+                _emptyView.SetEmpty(_item == null || _item.icon == null);
             ConfigureHover();
         }
 
@@ -88,7 +98,8 @@ namespace CreativeAI.UI
         {
             _stack = null;
             base.Clear();
-            _emptyView?.SetEmpty(true);
+            if (_emptyView != null)
+                _emptyView.SetEmpty(true);
         }
 
         public new void ClearAnimated(Action onComplete = null)
@@ -154,7 +165,9 @@ namespace CreativeAI.UI
             if (item == null)
                 return 0;
 
-            var stack = InventoryManager.Instance?.GetAllItems().Find(s => s.Data == item);
+            InventoryManager inventory = InventoryManager.Instance;
+            var stack =
+                inventory != null ? inventory.GetAllItems().Find(s => s.Data == item) : null;
             return stack?.Count ?? 1;
         }
 
@@ -190,12 +203,18 @@ namespace CreativeAI.UI
         [ContextMenu("Auto Assign References")]
         private void AutoAssignReferences()
         {
-            _visualRootRect ??= transform.Find("VisualRoot") as RectTransform;
-            _iconView ??= GetComponentInChildren<SlotIconView>(true);
-            _countBadgeView ??= GetComponentInChildren<SlotCountBadgeView>(true);
-            _emptyView ??= GetComponentInChildren<SlotEmptyView>(true);
-            _hoverView ??= GetComponentInChildren<SlotHoverView>(true);
-            _frameView ??= GetComponentInChildren<SlotFrameView>(true);
+            if (_visualRootRect == null)
+                _visualRootRect = transform.Find("VisualRoot") as RectTransform;
+            if (_iconView == null)
+                _iconView = GetComponentInChildren<SlotIconView>(true);
+            if (_countBadgeView == null)
+                _countBadgeView = GetComponentInChildren<SlotCountBadgeView>(true);
+            if (_emptyView == null)
+                _emptyView = GetComponentInChildren<SlotEmptyView>(true);
+            if (_hoverView == null)
+                _hoverView = GetComponentInChildren<SlotHoverView>(true);
+            if (_frameView == null)
+                _frameView = GetComponentInChildren<SlotFrameView>(true);
         }
 #endif
 

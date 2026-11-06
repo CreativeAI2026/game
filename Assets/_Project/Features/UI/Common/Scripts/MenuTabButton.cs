@@ -106,7 +106,9 @@ namespace CreativeAI.UI
 
             if (_selectedUnderline == null)
             {
-                Transform underline = transform.Find("Underline") ?? transform.Find("UnderBar");
+                Transform underline = transform.Find("Underline");
+                if (underline == null)
+                    underline = transform.Find("UnderBar");
                 if (underline != null)
                     _selectedUnderline = underline.gameObject;
             }
@@ -184,7 +186,8 @@ namespace CreativeAI.UI
 
         private void KillUnderlineTween()
         {
-            _selectedUnderlineTransform?.DOKill();
+            if (_selectedUnderlineTransform != null)
+                _selectedUnderlineTransform.DOKill();
         }
     }
 }

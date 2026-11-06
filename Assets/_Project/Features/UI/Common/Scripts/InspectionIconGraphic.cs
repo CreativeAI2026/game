@@ -31,7 +31,7 @@ namespace CreativeAI.UI
                 );
             }
             Vector2 direction = new Vector2(1, -1).normalized;
-            Vector2 normal = new Vector2(1, 1).normalized * thickness * .6f;
+            Vector2 normal = new Vector2(1, 1).normalized * (thickness * .6f);
             Vector2 start = center + direction * (radius - thickness * .5f);
             Vector2 end = center + direction * (.58f * size);
             Quad(vh, start - normal, end - normal, end + normal, start + normal);

@@ -28,7 +28,7 @@ namespace CreativeAI.Gameplay
         protected virtual void Awake()
         {
             // モデルの差し替え等でPrefabの階層構造が変化しても、参照の欠損でスクリプトが破損するのを防ぐためのフォールバック
-            Agent = GetComponent<NavMeshAgent>();
+            Agent = TryGetComponent(out NavMeshAgent agent) ? agent : null;
             if (Agent == null)
             {
                 Agent = GetComponentInChildren<NavMeshAgent>();
@@ -36,19 +36,19 @@ namespace CreativeAI.Gameplay
 
             Player = GameObject.FindGameObjectWithTag("Player");
 
-            Animator = GetComponent<Animator>();
+            Animator = TryGetComponent(out Animator animator) ? animator : null;
             if (Animator == null)
             {
                 Animator = GetComponentInChildren<Animator>();
             }
 
-            Status = GetComponent<EnemyStatus>();
+            Status = TryGetComponent(out EnemyStatus status) ? status : null;
             if (Status == null)
             {
                 Status = GetComponentInChildren<EnemyStatus>();
             }
 
-            EnemyCollider = GetComponent<Collider>();
+            EnemyCollider = TryGetComponent(out Collider enemyCollider) ? enemyCollider : null;
             if (Player != null)
             {
                 PlayerCollider = Player.GetComponent<Collider>();
@@ -60,7 +60,7 @@ namespace CreativeAI.Gameplay
             // Unityのライフサイクルの不定性（非アクティブ状態での生成など）に起因するNullReferenceExceptionを防止するため
             if (Status == null)
             {
-                Status = GetComponent<EnemyStatus>();
+                Status = TryGetComponent(out EnemyStatus status) ? status : null;
                 if (Status == null)
                 {
                     Status = GetComponentInChildren<EnemyStatus>();

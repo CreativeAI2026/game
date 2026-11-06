@@ -100,7 +100,7 @@ namespace CreativeAI.UI.CharacterUI
             _slotIndex = slotIndex;
             ResolveReferences();
             if (_slotNumber != null)
-                _slotNumber.text = (slotIndex + 1).ToString();
+                _slotNumber.SetText("{0}", slotIndex + 1);
             if (_emptyLabel != null)
                 _emptyLabel.text = origin == ItemSlotDragOrigin.Quick ? "ここに登録" : "ここに装備";
             Refresh();
@@ -212,11 +212,14 @@ namespace CreativeAI.UI.CharacterUI
         {
             ResolveReferences();
             ItemStack displayedStack = _hasPreview ? _previewStack : Stack;
-            Sprite sprite = displayedStack?.Data?.icon;
-            bool hasItem = displayedStack?.Data != null;
+            ItemData displayedData = displayedStack?.Data;
+            Sprite sprite = displayedData != null ? displayedData.icon : null;
+            bool hasItem = displayedData != null;
 
-            _filledPattern?.SetActive(hasItem);
-            _emptyPattern?.SetActive(!hasItem);
+            if (_filledPattern != null)
+                _filledPattern.SetActive(hasItem);
+            if (_emptyPattern != null)
+                _emptyPattern.SetActive(!hasItem);
 
             if (_icon != null)
             {
@@ -233,29 +236,47 @@ namespace CreativeAI.UI.CharacterUI
             if (_background == null)
                 _background = GetComponent<Image>();
             if (_filledPattern == null)
-                _filledPattern = transform.Find("FillPattern")?.gameObject;
+                _filledPattern = FindGameObject(transform, "FillPattern");
             if (_emptyPattern == null)
-                _emptyPattern =
-                    transform.Find("EmptyPattern")?.gameObject
-                    ?? transform.Find("EnptyPattern")?.gameObject;
+            {
+                _emptyPattern = FindGameObject(transform, "EmptyPattern");
+                if (_emptyPattern == null)
+                    _emptyPattern = FindGameObject(transform, "EnptyPattern");
+            }
             if (_icon == null)
-                _icon = transform.Find("FillPattern/Icon")?.GetComponent<Image>();
+                _icon = FindComponent<Image>(transform, "FillPattern/Icon");
             if (_slotNumber == null)
-                _slotNumber = transform.Find("Superscript/Number")?.GetComponent<TMP_Text>();
+                _slotNumber = FindComponent<TMP_Text>(transform, "Superscript/Number");
             if (_emptyLabel == null)
-                _emptyLabel =
-                    transform.Find("EmptyPattern/label")?.GetComponent<TMP_Text>()
-                    ?? transform.Find("EnptyPattern/label")?.GetComponent<TMP_Text>();
+            {
+                _emptyLabel = FindComponent<TMP_Text>(transform, "EmptyPattern/label");
+                if (_emptyLabel == null)
+                    _emptyLabel = FindComponent<TMP_Text>(transform, "EnptyPattern/label");
+            }
+        }
+
+        private static GameObject FindGameObject(Transform root, string path)
+        {
+            Transform t = root != null ? root.Find(path) : null;
+            return t != null ? t.gameObject : null;
+        }
+
+        private static T FindComponent<T>(Transform root, string path)
+            where T : Component
+        {
+            Transform t = root != null ? root.Find(path) : null;
+            return t != null ? t.GetComponent<T>() : null;
         }
 
         private bool CanAccept(ItemSlotDragPayload payload)
         {
+            ItemData data = payload.Stack?.Data;
+            ItemCategory? category = data != null ? data.category : null;
             return _dragOrigin switch
             {
-                ItemSlotDragOrigin.Quick => payload.Stack?.Data?.category == ItemCategory.Food
+                ItemSlotDragOrigin.Quick => category == ItemCategory.Food
                     && payload.Origin is ItemSlotDragOrigin.Inventory or ItemSlotDragOrigin.Quick,
-                ItemSlotDragOrigin.Equipment => payload.Stack?.Data?.category
-                    == ItemCategory.Equipment
+                ItemSlotDragOrigin.Equipment => category == ItemCategory.Equipment
                     && payload.Origin
                         is ItemSlotDragOrigin.Inventory
                             or ItemSlotDragOrigin.Equipment,
@@ -279,7 +300,7 @@ namespace CreativeAI.UI.CharacterUI
         private void RefreshOpacity()
         {
             if (_canvasGroup == null)
-                _canvasGroup = GetComponent<CanvasGroup>();
+                TryGetComponent(out _canvasGroup);
             if (_canvasGroup == null)
                 _canvasGroup = gameObject.AddComponent<CanvasGroup>();
 

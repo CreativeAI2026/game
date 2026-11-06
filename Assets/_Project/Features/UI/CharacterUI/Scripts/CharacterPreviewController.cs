@@ -61,7 +61,8 @@ namespace CreativeAI.UI.CharacterUI
             Unsubscribe();
             _posedModel?.Dispose();
             _posedModel = null;
-            _characterPreview?.SetSources(null, System.Array.Empty<Renderer>());
+            if (_characterPreview != null)
+                _characterPreview.SetSources(null, System.Array.Empty<Renderer>());
             _player = player;
             _manager = player != null ? player.GetComponent<WeaponManager>() : null;
             if (_manager != null)
@@ -79,8 +80,10 @@ namespace CreativeAI.UI.CharacterUI
         private void RefreshOwnership()
         {
             bool owned = _manager != null && _manager.OwnedCount > 0;
-            _weaponPanel?.SetActive(owned);
-            _weaponChangeBar?.SetActive(owned);
+            if (_weaponPanel != null)
+                _weaponPanel.SetActive(owned);
+            if (_weaponChangeBar != null)
+                _weaponChangeBar.SetActive(owned);
             if (_selector != null && _manager != null)
                 _selector.SetOwnedWeapons(_manager);
             _shownWeapon = null;

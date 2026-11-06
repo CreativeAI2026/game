@@ -89,10 +89,14 @@ namespace CreativeAI.EditorTools
             var root = PrefabUtility.LoadPrefabContents(Path);
             try
             {
-                Transform Find(string name) =>
-                    root.GetComponentsInChildren<Transform>(true)
-                        .FirstOrDefault(t => t.name == name)
-                    ?? throw new InvalidOperationException($"Missing UI: {name}");
+                Transform Find(string name)
+                {
+                    var found = root.GetComponentsInChildren<Transform>(true)
+                        .FirstOrDefault(t => t.name == name);
+                    return found != null
+                        ? found
+                        : throw new InvalidOperationException($"Missing UI: {name}");
+                }
                 void Set(Object target, string field, Object value)
                 {
                     var so = new SerializedObject(target);
@@ -144,9 +148,9 @@ namespace CreativeAI.EditorTools
                 scroll.viewport.anchorMax = Vector2.one;
                 scroll.viewport.offsetMin = Vector2.zero;
                 scroll.viewport.offsetMax = new Vector2(-20, 0);
-                var inventoryLayout =
-                    inventory.GetComponent<LayoutElement>()
-                    ?? inventory.gameObject.AddComponent<LayoutElement>();
+                var inventoryLayout = inventory.TryGetComponent(out LayoutElement existingLayout)
+                    ? existingLayout
+                    : inventory.gameObject.AddComponent<LayoutElement>();
                 inventoryLayout.flexibleHeight = 1;
                 inventoryLayout.minHeight = 100;
 
@@ -177,8 +181,7 @@ namespace CreativeAI.EditorTools
                 quickRect.pivot = new Vector2(.5f, 1);
                 quickRect.anchoredPosition = Vector2.zero;
                 quickRect.sizeDelta = new Vector2(0, 80);
-                var quickRowLayout = quickRow.GetComponent<LayoutElement>();
-                if (quickRowLayout != null)
+                if (quickRow.TryGetComponent(out LayoutElement quickRowLayout))
                     quickRowLayout.ignoreLayout = true;
                 Set(layout, "_quickParameters", quickPattern.gameObject);
                 Set(layout, "_equipmentParameters", equipPattern.gameObject);

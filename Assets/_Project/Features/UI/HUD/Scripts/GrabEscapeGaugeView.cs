@@ -60,8 +60,7 @@ namespace CreativeAI.UI
                 );
             }
 
-            _canvasGroup = GetComponent<CanvasGroup>();
-            if (_canvasGroup == null)
+            if (!TryGetComponent(out _canvasGroup))
             {
                 _canvasGroup = gameObject.AddComponent<CanvasGroup>();
             }
@@ -171,7 +170,7 @@ namespace CreativeAI.UI
 
             if (_labelText != null)
             {
-                _labelText.text = $"{Mathf.RoundToInt(ratio * 100f)}%";
+                _labelText.SetText("{0}%", Mathf.RoundToInt(ratio * 100f));
             }
         }
     }

@@ -80,7 +80,8 @@ namespace CreativeAI.UI
         {
             _showItemCounts = show;
             foreach (var slot in _pooledSlots)
-                slot?.SetShowCount(show);
+                if (slot != null)
+                    slot.SetShowCount(show);
         }
 
         public void SetInteractionEnabled(bool enabled)
@@ -140,7 +141,7 @@ namespace CreativeAI.UI
         private void RefreshCurrentTab(ScrollRefreshMode scrollMode)
         {
             int tabIndex = _tabGroup != null ? Mathf.Max(0, _tabGroup.CurrentIndex) : 0;
-            TabDefinition definition = _tabGroup?.CurrentDefinition;
+            TabDefinition definition = _tabGroup != null ? _tabGroup.CurrentDefinition : null;
             if (definition == null && _tabGroup != null)
                 definition = _tabGroup.GetDefinitionForButtonIndex(tabIndex);
 
@@ -271,8 +272,10 @@ namespace CreativeAI.UI
         [ContextMenu("Auto Assign References")]
         private void AutoAssignReferences()
         {
-            _tabGroup ??= GetComponentInChildren<TabGroup>(true);
-            _detailPanel ??= GetComponentInChildren<ItemDetailPanel>(true);
+            if (_tabGroup == null)
+                _tabGroup = GetComponentInChildren<TabGroup>(true);
+            if (_detailPanel == null)
+                _detailPanel = GetComponentInChildren<ItemDetailPanel>(true);
         }
 #endif
 
@@ -291,8 +294,10 @@ namespace CreativeAI.UI
         {
             KillScrollTween();
             var scrollRect = GetScrollRect();
-            float previousVerticalPosition = scrollRect?.verticalNormalizedPosition ?? 1f;
-            float previousHorizontalPosition = scrollRect?.horizontalNormalizedPosition ?? 0f;
+            float previousVerticalPosition =
+                scrollRect != null ? scrollRect.verticalNormalizedPosition : 1f;
+            float previousHorizontalPosition =
+                scrollRect != null ? scrollRect.horizontalNormalizedPosition : 0f;
             ClearSlots();
 
             if (_slotsRoot == null || _slotPrefab == null || items == null)
@@ -401,7 +406,8 @@ namespace CreativeAI.UI
                 _currentSelectedSlot = selectedSlot;
                 _selectedStack = selectedSlot.Stack;
                 selectedSlot.Select();
-                _detailPanel?.Show(selectedSlot.Stack);
+                if (_detailPanel != null)
+                    _detailPanel.Show(selectedSlot.Stack);
                 return;
             }
 
@@ -414,7 +420,8 @@ namespace CreativeAI.UI
         private void ClearSelectionAfterRefresh()
         {
             ClearSelection();
-            _detailPanel?.Clear();
+            if (_detailPanel != null)
+                _detailPanel.Clear();
         }
 
         private ScrollRect GetScrollRect()
@@ -438,7 +445,8 @@ namespace CreativeAI.UI
             LayoutRebuilder.ForceRebuildLayoutImmediate(contentRect);
             Canvas.ForceUpdateCanvases();
             foreach (var slot in _visibleSlots)
-                slot?.RefreshCountLayout();
+                if (slot != null)
+                    slot.RefreshCountLayout();
 
             if (scrollRect == null)
                 return;
@@ -516,7 +524,8 @@ namespace CreativeAI.UI
             slot.Select();
             _currentSelectedSlot = slot;
             _selectedStack = slot.Stack;
-            _detailPanel?.Show(slot.Stack);
+            if (_detailPanel != null)
+                _detailPanel.Show(slot.Stack);
 
             DisableNavigationOnce();
         }
@@ -584,7 +593,8 @@ namespace CreativeAI.UI
 
             _selectedStack = stack;
             _currentSelectedSlot = FindVisibleSlot(stack);
-            _currentSelectedSlot?.Select();
+            if (_currentSelectedSlot != null)
+                _currentSelectedSlot.Select();
         }
 
         public void ClearSelection()
@@ -600,9 +610,11 @@ namespace CreativeAI.UI
         public void ResetViewState()
         {
             ClearSelection();
-            _detailPanel?.Clear();
+            if (_detailPanel != null)
+                _detailPanel.Clear();
 
-            _tabGroup?.ResetToFirstTab();
+            if (_tabGroup != null)
+                _tabGroup.ResetToFirstTab();
 
             if (_tabGroup == null)
                 RefreshCurrentTab(ScrollRefreshMode.ScrollToTop);

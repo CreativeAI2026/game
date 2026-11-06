@@ -124,8 +124,7 @@ namespace CreativeAI.Gameplay
                     spawnPos,
                     Quaternion.identity
                 );
-                var proj = obj.GetComponent<MidBossLiquidProjectile>();
-                if (proj == null)
+                if (!obj.TryGetComponent(out MidBossLiquidProjectile proj))
                 {
                     proj = obj.AddComponent<MidBossLiquidProjectile>();
                 }

@@ -8,6 +8,8 @@ namespace CreativeAI.Gameplay
     /// </summary>
     public class TBossFlinchState : TBossBaseState
     {
+        private static readonly int FlinchTriggerHash = Animator.StringToHash("Flinch");
+
         // Flinchステートに入れないまま経過したら、トリガー取りこぼしとみなして復帰する
         private const float FlinchStateTimeout = 3f;
 
@@ -33,7 +35,7 @@ namespace CreativeAI.Gameplay
 
             if (boss.Animator != null)
             {
-                boss.Animator.SetTrigger("Flinch");
+                boss.Animator.SetTrigger(FlinchTriggerHash);
             }
         }
 

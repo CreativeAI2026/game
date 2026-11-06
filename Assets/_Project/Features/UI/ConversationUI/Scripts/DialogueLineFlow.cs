@@ -80,8 +80,9 @@ namespace CreativeAI.UI
             bool portraitObscured =
                 !narration
                 && (_portraits.IsObscured(resolved.Side) || displayName is "？？？" or "???");
-            _history()
-                ?.AddEntry(
+            var history = _history();
+            if (history != null)
+                history.AddEntry(
                     displayName,
                     DialogueMarkupParser.Parse(text).Text,
                     resolved.Icon,
