@@ -52,8 +52,19 @@ namespace CreativeAI.Core
                 );
                 return;
             }
+            // 読めないシーン名だと LoadSceneAsync が null を返し、暗転したまま止まるので先に弾く
+            if (!CanLoad(sceneName))
+            {
+                Debug.LogError(
+                    $"[SceneController] Build Settings に無いシーンは読み込めません: {sceneName}"
+                );
+                return;
+            }
             StartCoroutine(LoadRoutine(sceneName, onSceneActivated));
         }
+
+        public static bool CanLoad(string sceneName) =>
+            !string.IsNullOrEmpty(sceneName) && Application.CanStreamedLevelBeLoaded(sceneName);
 
         private IEnumerator LoadRoutine(string sceneName, System.Action onSceneActivated)
         {
