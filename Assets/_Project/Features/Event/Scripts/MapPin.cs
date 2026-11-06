@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using UnityEngine;
 
 namespace CreativeAI.Core
@@ -5,43 +6,91 @@ namespace CreativeAI.Core
     /// <summary>
     /// マップピン。穴の空いたしずく形の 2D 画像を縦に立て、縦軸まわりに横回転させながら上下に浮かせる。
     /// 子に画像を持ち、このオブジェクト自身を回す・上下させる(基準位置は生成時の位置)。
+    /// 会話・戦闘・メニュー中は隠す。地面の道筋の線は、出ているピンのうちプレイヤーに一番近い1つだけに出す。
     /// </summary>
     public sealed class MapPin : MonoBehaviour
     {
-        public const string SpriteResource = "EventMapPin";
-        public const string MaterialResource = "MapPinAlwaysOnTop"; // 壁に隠されず常に手前に描く
+        private const string SpriteResource = "EventMapPin";
+        private const string MaterialResource = "MapPinAlwaysOnTop"; // 壁に隠されず常に手前に描く
         private const float HoverHeight = 0.5f; // 先端が指定位置より浮く高さ
-        private const float Scale = 2f; // 画像(高さ1.5)の拡大率。大きいほど目立つ
+        private const float SpriteHeight = 1.5f; // 画像の高さ(ワールド長、拡大前)
+        private const float Scale = 2f; // 画像の拡大率。大きいほど目立つ
         private const float FullSizeDistance = 15f; // これより遠いと、見失わないよう大きくする
         private const float MaxDistanceBoost = 3f; // 大きくする倍率の上限
+        private const float SpinDegreesPerSecond = 90f;
+        private const float BobAmplitude = 0.15f;
+        private const float BobHertz = 0.6f;
 
-        [SerializeField]
-        private float _spinDegreesPerSecond = 90f;
-
-        [SerializeField]
-        private float _bobAmplitude = 0.15f;
-
-        [SerializeField]
-        private float _bobHertz = 0.6f;
+        private static readonly List<MapPin> s_active = new();
+        private static Transform s_player;
 
         private Vector3 _basePosition;
         private Transform _face;
         private MapPinPathLine _pathLine;
 
+        /// <summary>今ある(作られて消えていない)ピン。HUD が距離や方向の表示に使う。</summary>
+        public static IReadOnlyList<MapPin> Active => s_active;
+
+        /// <summary>プレイヤー(Player タグ)。見つからなければ null。</summary>
+        public static Transform PlayerTransform
+        {
+            get
+            {
+                if (s_player == null)
+                {
+                    var go = GameObject.FindGameObjectWithTag("Player");
+                    s_player = go != null ? go.transform : null;
+                }
+                return s_player;
+            }
+        }
+
+        /// <summary>ピンの先端の位置(浮き沈みを除く)。</summary>
+        public Vector3 Anchor => _basePosition;
+
+        /// <summary>ピンの頭の少し上。距離の表示を出す位置に使う。</summary>
+        public Vector3 Top =>
+            _basePosition
+            + Vector3.up
+                * (
+                    HoverHeight + (_face != null ? _face.localScale.y : Scale) * SpriteHeight + 0.3f
+                );
+
+        /// <summary>見せている最中か。会話・戦闘・メニュー中は false。</summary>
+        public bool Shown { get; private set; } = true;
+
+        [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
+        private static void ResetState()
+        {
+            s_active.Clear();
+            s_player = null;
+        }
+
         private void Awake() => _basePosition = transform.position;
 
-        private void Update()
-        {
-            transform.Rotate(0f, _spinDegreesPerSecond * Time.deltaTime, 0f, Space.World);
-            var offset = Mathf.Sin(Time.time * _bobHertz * Mathf.PI * 2f) * _bobAmplitude;
-            transform.position = _basePosition + Vector3.up * offset;
-            ApplyDistanceScale();
-            _pathLine?.Tick(_basePosition);
-        }
+        private void OnEnable() => s_active.Add(this);
+
+        private void OnDisable() => s_active.Remove(this);
 
         private void OnDestroy() => _pathLine?.Destroy();
 
-        /// <summary>ピンと地面の線をまとめて消す(エディットモードでも OnDestroy が走らないため明示する)。</summary>
+        private void Update()
+        {
+            SetShown(!IsBusy());
+            if (!Shown)
+            {
+                _pathLine?.Tick(_basePosition, false);
+                return;
+            }
+
+            transform.Rotate(0f, SpinDegreesPerSecond * Time.deltaTime, 0f, Space.World);
+            var offset = Mathf.Sin(Time.time * BobHertz * Mathf.PI * 2f) * BobAmplitude;
+            transform.position = _basePosition + Vector3.up * offset;
+            ApplyDistanceScale();
+            _pathLine?.Tick(_basePosition, IsClosestShownPin());
+        }
+
+        /// <summary>ピンと地面の線をまとめて消す(エディットモードでは OnDestroy が走らないため明示する)。</summary>
         public void Remove()
         {
             _pathLine?.Destroy();
@@ -52,8 +101,45 @@ namespace CreativeAI.Core
                 DestroyImmediate(gameObject);
         }
 
-        /// <summary>プレイヤーからピンまでの道筋を表す地面の線が出ているか。</summary>
-        public bool PathLineVisible => _pathLine != null && _pathLine.Visible;
+        // 会話・戦闘・メニューの最中は、画面の邪魔になるので隠す。
+        private static bool IsBusy()
+        {
+            var mode = GameModeManager.Instance;
+            return EventPlaybackService.IsPlaying
+                || UiPanelService.IsOpen
+                || (mode != null && mode.CurrentMode == GameMode.Battle);
+        }
+
+        private void SetShown(bool shown)
+        {
+            if (Shown == shown)
+                return;
+            Shown = shown;
+            if (_face != null)
+                _face.gameObject.SetActive(shown);
+        }
+
+        // 見せているピンのうち、プレイヤーに一番近いのが自分か(同じ近さなら先に作られたほうを優先)。
+        private bool IsClosestShownPin()
+        {
+            var player = PlayerTransform;
+            if (player == null)
+                return true;
+
+            var mine = (_basePosition - player.position).sqrMagnitude;
+            foreach (var other in s_active)
+            {
+                if (other == this || !other.Shown)
+                    continue;
+                var theirs = (other._basePosition - player.position).sqrMagnitude;
+                if (
+                    theirs < mine
+                    || (theirs == mine && s_active.IndexOf(other) < s_active.IndexOf(this))
+                )
+                    return false;
+            }
+            return true;
+        }
 
         // 遠くでは小さくて見えなくなるので、カメラから離れるほど大きくする(上限あり)。
         private void ApplyDistanceScale()

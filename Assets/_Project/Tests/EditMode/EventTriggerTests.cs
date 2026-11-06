@@ -84,6 +84,7 @@ namespace CreativeAI.Tests.EditMode
             EventPlayerService.Current = null;
             ItemGiverService.Current = null;
             EventPlaybackService.SetPlaying(false);
+            UiPanelService.SetOpen(false);
             SetInstance<ProgressManager>(null);
             SetInstance<GameModeManager>(null);
             UnityEngine.Object.DestroyImmediate(_playerGo);
@@ -369,6 +370,34 @@ namespace CreativeAI.Tests.EditMode
             _trigger.RefreshPin();
 
             Assert.IsFalse(_trigger.PinVisible);
+        }
+
+        [Test]
+        public void Pin_HidesWhileAnEventPlaysOrAMenuIsOpen()
+        {
+            AssignEvent(FiringEvent());
+            SetPrivateField(_trigger, "_showPin", true);
+            _trigger.RefreshPin();
+            var pin = UnityEngine.Object.FindFirstObjectByType<MapPin>();
+            var face = pin.transform.Find("Face").gameObject;
+            TestReflection.Invoke(pin, "Update");
+            Assert.IsTrue(pin.Shown);
+            Assert.IsTrue(face.activeSelf);
+
+            EventPlaybackService.SetPlaying(true);
+            TestReflection.Invoke(pin, "Update");
+            Assert.IsFalse(pin.Shown, "会話中は隠す");
+            Assert.IsFalse(face.activeSelf);
+
+            EventPlaybackService.SetPlaying(false);
+            UiPanelService.SetOpen(true);
+            TestReflection.Invoke(pin, "Update");
+            Assert.IsFalse(pin.Shown, "メニューを開いている間は隠す");
+
+            UiPanelService.SetOpen(false);
+            TestReflection.Invoke(pin, "Update");
+            Assert.IsTrue(pin.Shown);
+            Assert.IsTrue(face.activeSelf);
         }
     }
 }

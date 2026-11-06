@@ -12,7 +12,7 @@ namespace CreativeAI.Core
     /// </summary>
     public sealed class MapPinPathLine
     {
-        public const string MaterialResource = "MapPinGroundLine";
+        private const string MaterialResource = "MapPinGroundLine";
         private const float RefreshSeconds = 0.3f;
         private const float HideWithin = 2.5f; // この近さまで来たら消す
         private const float SnapDistance = 3f; // ピンの真下の NavMesh を探す範囲
@@ -25,6 +25,7 @@ namespace CreativeAI.Core
         private const float BendRadius = 4f; // 曲がり角を丸める大きさ
         private const int BendSteps = 10; // 丸めた角の細かさ
         private const int BendAttempts = 4; // 丸め方が通れないとき、大きさを半分にして試す回数
+        private const float MinBendRadius = 0.05f; // これより小さい丸めは意味がないので角のままにする
         private const float ObstacleCheckHeight = 0.5f; // 物との当たりを調べる、床からの高さ
         private const float FollowSharpness = 14f; // 新しい形へ近づく速さ(大きいほど速い)
         private const float NearSnapRadius = 5f; // この近さの点は毎フレーム床に合わせ直す
@@ -39,7 +40,9 @@ namespace CreativeAI.Core
         private readonly List<Vector3> _goal = new(); // 計算で求めた最新の道筋(目標の形)
         private readonly List<Vector3> _shown = new(); // 実際に描いている道筋(目標へ近づけていく)
         private readonly List<Vector3> _dense = new();
-        private Transform _player;
+        private readonly List<Vector3> _corners = new(); // 近道にした後の角(使い回す)
+        private readonly List<float> _heights = new(); // 階段の持ち上げ用(使い回す)
+        private readonly Vector3[] _bend = new Vector3[BendSteps + 1]; // 丸めた角の点(使い回す)
         private float _nextRefresh;
 
         public MapPinPathLine()
@@ -68,12 +71,17 @@ namespace CreativeAI.Core
             _line.enabled = false;
         }
 
-        public bool Visible => _line != null && _line.enabled;
-
-        public void Tick(Vector3 target)
+        /// <summary>wanted が false の間は線を隠す(計算もしない)。</summary>
+        public void Tick(Vector3 target, bool wanted)
         {
             if (_line == null)
                 return;
+            if (!wanted)
+            {
+                if (_line.enabled)
+                    Hide();
+                return;
+            }
             if (Time.time >= _nextRefresh)
             {
                 _nextRefresh = Time.time + RefreshSeconds;
@@ -109,18 +117,14 @@ namespace CreativeAI.Core
 
         private void Refresh(Vector3 target)
         {
-            if (_player == null)
-            {
-                var go = GameObject.FindGameObjectWithTag("Player");
-                _player = go != null ? go.transform : null;
-            }
-            if (_player == null)
+            var player = MapPin.PlayerTransform;
+            if (player == null)
             {
                 Hide();
                 return;
             }
 
-            var from = _player.position;
+            var from = player.position;
             if (Vector3.Distance(from, target) < HideWithin)
             {
                 Hide();
@@ -158,9 +162,11 @@ namespace CreativeAI.Core
 
         // NavMesh の経路は「最短」ではなく「コストが最小」の道なので、真っすぐ歩ける所でも遠回りすることがある。
         // 途中の角のうち、NavMesh の縁に当たらず直接行ける所までは、角を飛ばして近道にする。
-        private static List<Vector3> Shortcut(Vector3[] corners)
+        private List<Vector3> Shortcut(Vector3[] corners)
         {
-            var result = new List<Vector3> { corners[0] };
+            var result = _corners;
+            result.Clear();
+            result.Add(corners[0]);
             var from = 0;
             while (from < corners.Length - 1)
             {
@@ -198,16 +204,17 @@ namespace CreativeAI.Core
                     Vector3.Distance(before, corner) * 0.5f,
                     Vector3.Distance(corner, after) * 0.5f
                 );
-                for (var attempt = 0; attempt < BendAttempts && radius > 0.05f; attempt++)
+                // 通れなければ大きさを半分にして試し、どれもだめなら丸めずに角のままにする。
+                var rounded = false;
+                for (var attempt = 0; attempt < BendAttempts && radius > MinBendRadius; attempt++)
                 {
-                    if (TryRound(before, corner, after, radius))
+                    rounded = TryRound(before, corner, after, radius);
+                    if (rounded)
                         break;
                     radius *= 0.5f;
-                    if (attempt == BendAttempts - 1)
-                        radius = 0f;
                 }
-                if (radius <= 0.05f)
-                    _dense.Add(corner); // 丸めずに角のまま
+                if (!rounded)
+                    _dense.Add(corner);
             }
             _dense.Add(corners[corners.Count - 1]);
 
@@ -238,7 +245,7 @@ namespace CreativeAI.Core
         {
             for (var pass = 0; pass < StairSmoothPasses; pass++)
             {
-                var heights = new float[_goal.Count];
+                _heights.Clear();
                 for (var i = 0; i < _goal.Count; i++)
                 {
                     var y = _goal[i].y;
@@ -246,12 +253,12 @@ namespace CreativeAI.Core
                         y = Mathf.Max(y, _goal[i - 1].y);
                     if (i < _goal.Count - 1)
                         y = Mathf.Max(y, _goal[i + 1].y);
-                    heights[i] = y;
+                    _heights.Add(y);
                 }
                 for (var i = 0; i < _goal.Count; i++)
                 {
                     var p = _goal[i];
-                    p.y = heights[i];
+                    p.y = _heights[i];
                     _goal[i] = p;
                 }
             }
@@ -262,7 +269,7 @@ namespace CreativeAI.Core
         {
             var entry = corner + (before - corner).normalized * radius;
             var exit = corner + (after - corner).normalized * radius;
-            var points = new Vector3[BendSteps + 1];
+            var points = _bend;
             for (var s = 0; s <= BendSteps; s++)
             {
                 var t = s / (float)BendSteps;
@@ -336,7 +343,7 @@ namespace CreativeAI.Core
             return true;
         }
 
-        // 描いている形を、最新の道筋へ少しずつ近づける(0.4 秒ごとに形が飛ばないように)。
+        // 描いている形を、最新の道筋へ少しずつ近づける(経路を計算し直すたびに形が飛ばないように)。
         private void FollowGoal()
         {
             if (_goal.Count < 2)
@@ -353,10 +360,11 @@ namespace CreativeAI.Core
                 _shown[i] = Vector3.Lerp(_shown[i], _goal[i], k);
 
             // プレイヤーの近くは、歩いて床の高さが変わる(階段など)ので、毎フレーム床に合わせ直す。
-            // 経路の計算は 0.4 秒おきなので、これをしないと階段で線が床にめり込む。
-            if (_player != null)
+            // 経路の計算は一定間隔なので、これをしないと階段で線が床にめり込む。
+            var player = MapPin.PlayerTransform;
+            if (player != null)
             {
-                var feet = _player.position;
+                var feet = player.position;
                 // 出だしはプレイヤーの足元に合わせる(歩いてもすぐ追いつく)。
                 var head = _shown[0];
                 head.x = feet.x;
