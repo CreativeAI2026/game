@@ -104,7 +104,10 @@ namespace CreativeAI.EditorTools
                 ArrowPool pool = FindAnyObjectByType<ArrowPool>(FindObjectsInactive.Include);
                 if (pool != null)
                 {
-                    var prefab = new SerializedObject(pool).FindProperty(ArrowPrefabField).objectReferenceValue as Component;
+                    var prefab =
+                        new SerializedObject(pool)
+                            .FindProperty(ArrowPrefabField)
+                            .objectReferenceValue as Component;
                     _arrowPrefab = prefab != null ? prefab.gameObject : null;
                 }
             }
@@ -115,9 +118,19 @@ namespace CreativeAI.EditorTools
             using (new EditorGUI.DisabledScope(IsPreviewing || EditorApplication.isPlaying))
             {
                 _player = (PlayerController)
-                    EditorGUILayout.ObjectField("プレイヤー", _player, typeof(PlayerController), true);
+                    EditorGUILayout.ObjectField(
+                        "プレイヤー",
+                        _player,
+                        typeof(PlayerController),
+                        true
+                    );
                 _arrowPrefab = (GameObject)
-                    EditorGUILayout.ObjectField("矢の Prefab", _arrowPrefab, typeof(GameObject), false);
+                    EditorGUILayout.ObjectField(
+                        "矢の Prefab",
+                        _arrowPrefab,
+                        typeof(GameObject),
+                        false
+                    );
                 if (GUILayout.Button("シーンから探し直す"))
                 {
                     _player = null;
@@ -128,7 +141,10 @@ namespace CreativeAI.EditorTools
 
             if (EditorApplication.isPlaying)
             {
-                EditorGUILayout.HelpBox("プレイ中は使えません。止めてから使ってください。", MessageType.Info);
+                EditorGUILayout.HelpBox(
+                    "プレイ中は使えません。止めてから使ってください。",
+                    MessageType.Info
+                );
                 return;
             }
 
@@ -168,7 +184,12 @@ namespace CreativeAI.EditorTools
                     new[] { $"引く ({_drawClip.name})", $"引き切って保持 ({_holdClip.name})" }
                 );
             AnimationClip clip = CurrentClip;
-            _time = EditorGUILayout.Slider("再生位置(秒)", Mathf.Min(_time, clip.length), 0f, clip.length);
+            _time = EditorGUILayout.Slider(
+                "再生位置(秒)",
+                Mathf.Min(_time, clip.length),
+                0f,
+                clip.length
+            );
             if (EditorGUI.EndChangeCheck())
                 Resample();
 
@@ -179,8 +200,8 @@ namespace CreativeAI.EditorTools
                 EditorGUILayout.LabelField(
                     $"矢を出す {generate:F2} 秒 / つがえる {nock:F2} 秒",
                     _time < generate ? "矢はまだ無い"
-                    : _time < nock ? "矢は引き手(ArrowHold)の向き"
-                    : "つがえ済み(尾は弦、ArrowRestPoint へ向く)"
+                        : _time < nock ? "矢は引き手(ArrowHold)の向き"
+                        : "つがえ済み(尾は弦、ArrowRestPoint へ向く)"
                 );
                 using (new EditorGUILayout.HorizontalScope())
                 {
@@ -232,7 +253,11 @@ namespace CreativeAI.EditorTools
             bool unsaved = _preview.HasUnsavedArrowChanges();
             using (new EditorGUI.DisabledScope(!unsaved))
             {
-                if (GUILayout.Button(unsaved ? "矢の Prefab へ保存（未保存の変更あり）" : "矢の Prefab へ保存"))
+                if (
+                    GUILayout.Button(
+                        unsaved ? "矢の Prefab へ保存（未保存の変更あり）" : "矢の Prefab へ保存"
+                    )
+                )
                 {
                     if (_preview.SaveArrowToPrefab())
                     {
@@ -328,7 +353,9 @@ namespace CreativeAI.EditorTools
             Animator animator = PlayerModel.Of(_player).Animator;
             RuntimeAnimatorController runtime = animator.runtimeAnimatorController;
             var overrides = runtime as AnimatorOverrideController;
-            var controller = (overrides != null ? overrides.runtimeAnimatorController : runtime) as AnimatorController;
+            var controller =
+                (overrides != null ? overrides.runtimeAnimatorController : runtime)
+                as AnimatorController;
             if (controller == null)
             {
                 error = $"{animator.name} の Animator に AnimatorController がありません";
@@ -353,8 +380,10 @@ namespace CreativeAI.EditorTools
             }
 
             error =
-                _drawClip == null ? $"「{PlayerAnimatorStates.UpperBodyLayerName}」に Aim ステートのクリップがありません"
-                : _holdClip == null ? $"「{PlayerAnimatorStates.UpperBodyLayerName}」に {AimHoldStateName} ステートのクリップがありません"
+                _drawClip == null
+                    ? $"「{PlayerAnimatorStates.UpperBodyLayerName}」に Aim ステートのクリップがありません"
+                : _holdClip == null
+                    ? $"「{PlayerAnimatorStates.UpperBodyLayerName}」に {AimHoldStateName} ステートのクリップがありません"
                 : null;
             return error == null;
         }

@@ -119,7 +119,10 @@ namespace CreativeAI.EditorTools
                 new TransformSnapshot(_bow),
                 new TransformSnapshot(_stringNockBone),
             };
-            _modelRoot.GetLocalPositionAndRotation(out _modelLocalPosition, out _modelLocalRotation);
+            _modelRoot.GetLocalPositionAndRotation(
+                out _modelLocalPosition,
+                out _modelLocalRotation
+            );
             AnimationMode.StartAnimationMode();
         }
 
@@ -232,7 +235,9 @@ namespace CreativeAI.EditorTools
                 {
                     // バウンディングボックスの8隅を、矢のルートから見た座標にして、いちばん後ろを探す
                     Vector3 corner = b.center + Vector3.Scale(b.extents, Corner(i));
-                    Vector3 local = root.InverseTransformPoint(filter.transform.TransformPoint(corner));
+                    Vector3 local = root.InverseTransformPoint(
+                        filter.transform.TransformPoint(corner)
+                    );
                     tailZ = Mathf.Min(tailZ, local.z);
                 }
             }
@@ -261,7 +266,9 @@ namespace CreativeAI.EditorTools
                     Transform target = contents.transform.Find(previewChild.name);
                     if (target == null)
                     {
-                        Debug.LogError($"[弓の構え調整] {path} に子「{previewChild.name}」がありません");
+                        Debug.LogError(
+                            $"[弓の構え調整] {path} に子「{previewChild.name}」がありません"
+                        );
                         continue;
                     }
                     previewChild.GetLocalPositionAndRotation(out Vector3 p, out Quaternion r);
@@ -304,7 +311,8 @@ namespace CreativeAI.EditorTools
         {
             if (!PrefabUtility.IsPartOfPrefabInstance(_player))
             {
-                message = "シーンの Prefab インスタンスではありません。Prefab モードなら Prefab を保存してください";
+                message =
+                    "シーンの Prefab インスタンスではありません。Prefab モードなら Prefab を保存してください";
                 return false;
             }
 
@@ -356,7 +364,8 @@ namespace CreativeAI.EditorTools
         }
 
         /// <summary>この時間に矢を出す・つがえる(イベントの時間)。スライダーの目印用。</summary>
-        public static float GenerateArrowTime(AnimationClip clip) => EventTime(clip, GenerateArrowEvent, 0f);
+        public static float GenerateArrowTime(AnimationClip clip) =>
+            EventTime(clip, GenerateArrowEvent, 0f);
 
         public static float NockTime(AnimationClip clip) => EventTime(clip, NockEvent, clip.length);
     }
