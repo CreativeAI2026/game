@@ -21,7 +21,7 @@ AnimatorState:
   m_MirrorParameterActive: 0
   m_CycleOffsetParameterActive: 0
   m_TimeParameterActive: 0
-  m_Motion: {fileID: 0}
+  m_Motion: {fileID: 7400000, guid: 75a603e49537a7d4189c1aad34f4460a, type: 2}
   m_Tag: 
   m_SpeedParameter: 
   m_MirrorParameter: 
@@ -35,7 +35,7 @@ AnimatorState:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_Name: Stab
-  m_Speed: 1
+  m_Speed: 0.75
   m_CycleOffset: 0
   m_Transitions:
   - {fileID: 7204123720416500322}
@@ -62,7 +62,7 @@ AnimatorState:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_Name: Ring
-  m_Speed: 1
+  m_Speed: 0.5
   m_CycleOffset: 0
   m_Transitions:
   - {fileID: 2440452185561125478}
@@ -162,7 +162,7 @@ AnimatorState:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_Name: Move
-  m_Speed: 1
+  m_Speed: 0.5
   m_CycleOffset: 0
   m_Transitions:
   - {fileID: 1163749158025188532}
@@ -372,22 +372,22 @@ AnimatorStateMachine:
   m_ChildStates:
   - serializedVersion: 1
     m_State: {fileID: -2185356462492805168}
-    m_Position: {x: 200, y: 0, z: 0}
+    m_Position: {x: 250, y: 0, z: 0}
   - serializedVersion: 1
     m_State: {fileID: -8068271138227982965}
-    m_Position: {x: 235, y: 65, z: 0}
+    m_Position: {x: 210, y: -160, z: 0}
   - serializedVersion: 1
     m_State: {fileID: 8616287226487743725}
-    m_Position: {x: 270, y: 130, z: 0}
+    m_Position: {x: 500, y: -160, z: 0}
   - serializedVersion: 1
     m_State: {fileID: -7988560259612337767}
-    m_Position: {x: 305, y: 195, z: 0}
+    m_Position: {x: 520, y: 0, z: 0}
   - serializedVersion: 1
     m_State: {fileID: -8192300507004032385}
-    m_Position: {x: 340, y: 260, z: 0}
+    m_Position: {x: -30, y: -150, z: 0}
   - serializedVersion: 1
     m_State: {fileID: -3106439453137962824}
-    m_Position: {x: 375, y: 325, z: 0}
+    m_Position: {x: -210, y: 0, z: 0}
   m_ChildStateMachines: []
   m_AnyStateTransitions:
   - {fileID: -3025102345406803735}
@@ -395,7 +395,7 @@ AnimatorStateMachine:
   m_EntryTransitions: []
   m_StateMachineTransitions: {}
   m_StateMachineBehaviours: []
-  m_AnyStatePosition: {x: 50, y: 20, z: 0}
+  m_AnyStatePosition: {x: 50, y: 10, z: 0}
   m_EntryPosition: {x: 50, y: 120, z: 0}
   m_ExitPosition: {x: 800, y: 120, z: 0}
   m_ParentStateMachinePosition: {x: 800, y: 20, z: 0}
@@ -486,7 +486,7 @@ AnimatorState:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_Name: Drill
-  m_Speed: 1
+  m_Speed: 0.5
   m_CycleOffset: 0
   m_Transitions:
   - {fileID: -5169324548832611658}

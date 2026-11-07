@@ -4,18 +4,14 @@ namespace CreativeAI.Gameplay
 {
     /// <summary>
     /// わっか投げ。リングのクリップで頭上のわっかを掴み(RingGrab)、プレイヤーの今いる場所へ投げ上げる(RingThrow)。
-    /// 投げた後のわっかは <see cref="KurageHaloRing"/> が自分で動かすので、ボスはクリップが終われば周回に戻る。
+    /// 投げた後のわっかは <see cref="KurageHaloRing"/> が自分で動かすので、ボスはクリップが終われば次の行動へ移る。
     /// 捕まえた時の待機への切り替えは <see cref="KurageBossController"/> が行う。
     /// </summary>
     public class KurageRingThrowState : KurageBaseState
     {
-        // RingThrow のイベントが来なかった場合に投げる時間（秒）。クリップにイベントを置き忘れても攻撃が成立するように
-        private const float ThrowFallbackTime = 1.0f;
-
         // 落下地点をステージの縁から内側へ離す距離（m）。縁ぎりぎりに落として避け場所が無くならないように
         private const float LandingEdgeInset = 1f;
 
-        private float _timer;
         private bool _thrown;
 
         public KurageRingThrowState(KurageBossController controller)
@@ -23,22 +19,17 @@ namespace CreativeAI.Gameplay
 
         public override void Enter()
         {
-            _timer = 0f;
             _thrown = false;
             boss.Animator.SetTrigger(KurageAnimatorParams.Ring);
         }
 
         public override void Update()
         {
-            _timer += Time.deltaTime;
             boss.Mover.Move(0f, 0f);
             FaceStage();
 
-            if (!_thrown && _timer >= ThrowFallbackTime)
-                Throw();
-
-            if (_timer >= boss.RingRecoverDuration)
-                boss.ChangeState(new KurageOrbitState(boss));
+            if (IsAnimationFinished(KurageAnimatorParams.Ring))
+                boss.FinishAttack();
         }
 
         public override void OnAnimationEvent(KurageAnimationEvent animationEvent)

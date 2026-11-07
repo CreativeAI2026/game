@@ -3,14 +3,6 @@ using UnityEngine.InputSystem;
 
 namespace CreativeAI.Gameplay
 {
-    /// <summary>デバッグでクラゲボスに出させる攻撃の種類。</summary>
-    public enum KurageDebugAttack
-    {
-        Stab,
-        Tentacles,
-        Ring,
-    }
-
     /// <summary>
     /// クラゲボスの攻撃を1つずつ確かめるためのデバッグ操作。シーンに置き、表示キー(既定: F6)で表示を切り替える。
     /// 表示中だけ数字キーで攻撃を出せる(普段の操作でうっかり出さないため)。自動の攻撃を止めればボスは周回し続けるので、
@@ -106,7 +98,7 @@ namespace CreativeAI.Gameplay
                 return;
 
             if (keyboard.digit4Key.wasPressedThisFrame)
-                StartAttack(KurageDebugAttack.Stab, null, "突き");
+                StartAttack(KurageAttackKind.Stab, null, "突き");
             if (keyboard.digit5Key.wasPressedThisFrame)
                 StartTentacles<KurageTentacleTrackingPattern>("地面の触手(追いかける)");
             if (keyboard.digit6Key.wasPressedThisFrame)
@@ -114,7 +106,7 @@ namespace CreativeAI.Gameplay
             if (keyboard.digit7Key.wasPressedThisFrame)
                 StartTentacles<KurageTentacleRandomPattern>("地面の触手(ランダム)");
             if (keyboard.digit8Key.wasPressedThisFrame)
-                StartAttack(KurageDebugAttack.Ring, null, "わっか");
+                StartAttack(KurageAttackKind.Ring, null, "わっか");
             if (keyboard.digit9Key.wasPressedThisFrame)
             {
                 _boss.AutoAttacks = !_boss.AutoAttacks;
@@ -167,7 +159,7 @@ namespace CreativeAI.Gameplay
             {
                 if (pattern is T)
                 {
-                    StartAttack(KurageDebugAttack.Tentacles, pattern, label);
+                    StartAttack(KurageAttackKind.Tentacles, pattern, label);
                     return;
                 }
             }
@@ -175,7 +167,7 @@ namespace CreativeAI.Gameplay
         }
 
         private void StartAttack(
-            KurageDebugAttack attack,
+            KurageAttackKind attack,
             KurageTentaclePattern pattern,
             string label
         )

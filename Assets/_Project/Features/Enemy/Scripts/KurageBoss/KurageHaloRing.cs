@@ -43,6 +43,13 @@ namespace CreativeAI.Gameplay
         [SerializeField]
         private Transform _gripB;
 
+        [Tooltip(
+            "本体と一緒に動く節(モデルのアーマチュア)。頭上にある間、わっかはこれに付いて行く。"
+                + "怯みのクリップは本体ごと揺らすが、わっかは投げで親を付け替えるためクリップでは動かさない"
+        )]
+        [SerializeField]
+        private Transform _bodyAnchor;
+
         [Header("投げ上げ")]
         [Tooltip("投げ上げの最高点の、落下地点からの高さ（m）")]
         [SerializeField]
@@ -100,7 +107,9 @@ namespace CreativeAI.Gameplay
         private Transform _headParent;
         private Vector3 _headLocalPosition;
         private Quaternion _headLocalRotation;
-        private Vector3 _headCenterInParent;
+        private Vector3 _headCenterInAnchor;
+        private Vector3 _haloPositionInAnchor;
+        private Quaternion _haloRotationInAnchor;
 
         private Phase _phase = Phase.OnHead;
         private float _timer;
@@ -130,6 +139,10 @@ namespace CreativeAI.Gameplay
             Assert.IsNotNull(_halo, $"{name}: わっか(RingRadiusDeformer)が設定されていません");
             Assert.IsNotNull(_gripA, $"{name}: わっかを掴む触手の先端(1本目)が設定されていません");
             Assert.IsNotNull(_gripB, $"{name}: わっかを掴む触手の先端(2本目)が設定されていません");
+            Assert.IsNotNull(
+                _bodyAnchor,
+                $"{name}: 本体と一緒に動く節(アーマチュア)が設定されていません"
+            );
             _sounds = GetComponent<KurageBossSounds>();
             Assert.IsNotNull(_sounds, $"{name}: KurageBossSounds が同じ GameObject にありません");
 
@@ -137,13 +150,17 @@ namespace CreativeAI.Gameplay
             _headParent = haloTransform.parent;
             _headLocalPosition = haloTransform.localPosition;
             _headLocalRotation = haloTransform.localRotation;
+            // Animator が動かす前の、本体に対するわっかの置き場所
+            _haloPositionInAnchor = _bodyAnchor.InverseTransformPoint(haloTransform.position);
+            _haloRotationInAnchor =
+                Quaternion.Inverse(_bodyAnchor.rotation) * haloTransform.rotation;
             _pivot = new GameObject($"{haloTransform.name}_Pivot").transform;
         }
 
         private void Start()
         {
             // 輪の中心は RingRadiusDeformer の Awake で決まるので、全員の Awake が終わった後に取る
-            _headCenterInParent = _headParent.InverseTransformPoint(_halo.WorldCenter);
+            _headCenterInAnchor = _bodyAnchor.InverseTransformPoint(_halo.WorldCenter);
         }
 
         private void OnDestroy()
@@ -206,6 +223,10 @@ namespace CreativeAI.Gameplay
             _timer += Time.deltaTime;
             switch (_phase)
             {
+                case Phase.OnHead:
+                    FollowBody();
+                    break;
+
                 case Phase.Held:
                     Vector3 grip = (_gripA.position + _gripB.position) * 0.5f;
                     _pivot.position = Vector3.Lerp(
@@ -372,7 +393,7 @@ namespace CreativeAI.Gameplay
         private void UpdateReturning()
         {
             float t = Mathf.SmoothStep(0f, 1f, _timer / _returnDuration);
-            Vector3 head = _headParent.TransformPoint(_headCenterInParent);
+            Vector3 head = _bodyAnchor.TransformPoint(_headCenterInAnchor);
             _pivot.position = Vector3.Lerp(_from, head, t);
             _halo.SetRadius(Mathf.Lerp(_fromRadius, _halo.OriginalRadius, t));
 
@@ -394,7 +415,17 @@ namespace CreativeAI.Gameplay
             haloTransform.SetLocalPositionAndRotation(_headLocalPosition, _headLocalRotation);
             _halo.ResetRadius();
             EnterPhase(Phase.OnHead);
+            FollowBody();
             ReturnedToHead?.Invoke();
+        }
+
+        /// <summary>頭上にある間、本体(怯みで揺れる)に付いて行く。触手の根元がわっかから外れて見えないようにする。</summary>
+        private void FollowBody()
+        {
+            _halo.transform.SetPositionAndRotation(
+                _bodyAnchor.TransformPoint(_haloPositionInAnchor),
+                _bodyAnchor.rotation * _haloRotationInAnchor
+            );
         }
 
         private void EnterPhase(Phase phase)

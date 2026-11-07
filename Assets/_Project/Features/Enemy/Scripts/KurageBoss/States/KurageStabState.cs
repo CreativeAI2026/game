@@ -68,8 +68,8 @@ namespace CreativeAI.Gameplay
 
                 case Phase.Attack:
                     UpdateReachWeight();
-                    if (_timer >= boss.StabRecoverDuration)
-                        boss.ChangeState(new KurageOrbitState(boss));
+                    if (IsAnimationFinished(KurageAnimatorParams.Stab))
+                        boss.FinishAttack();
                     break;
             }
         }

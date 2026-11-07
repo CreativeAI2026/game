@@ -19,6 +19,7 @@ namespace CreativeAI.Gameplay
         public event Action OnFlinchTriggered;
         public event Action OnAlertTriggered;
         public event Action OnDeathTriggered;
+        public event Action<float, float> HpChanged;
         public float MaxHp => _enemyData.baseMaxLife;
 
         /// <summary>HP が 0 になったか。死亡後は被ダメージを受け付けない(破棄までの間に当たっても怯み・警戒・死亡を再発火させない)。</summary>
@@ -56,6 +57,9 @@ namespace CreativeAI.Gameplay
 
             _currentHp -= finalDamage;
 
+            //HPが変化するのは攻撃を受けた時のみ（回復はしない）なので、攻撃を受けた直後に現在のHPと最大HPとを一緒にHPの値が変わったことを知らせる。ここでは段階を変えることはしない。
+            HpChanged?.Invoke(_currentHp, MaxHp);
+
             // StatusクラスがAIの現在の状態（未発見等）に依存するのを防ぎ、状態管理の責務をコントローラ側に集約するため、イベントは無条件で発火させる
             OnAlertTriggered?.Invoke();
 
@@ -80,20 +84,6 @@ namespace CreativeAI.Gameplay
             {
                 Die();
             }
-        }
-
-        public void Heal(float amount)
-        {
-            _currentHp = Mathf.Min(_currentHp + amount, MaxHp);
-            Debug.Log(
-                $"{_enemyData.characterName}は {amount} 回復した！ 残りHP: {_currentHp}/{MaxHp}"
-            );
-        }
-
-        // バフ・デバフの適用タイミングで外部から呼び出し、パラメータ再計算のフックとする
-        public void OnStatusChanged()
-        {
-            // TODO : 攻撃力、防御力などの変動処理。
         }
 
         private void Die()

@@ -19,6 +19,7 @@ GameObject:
   - component: {fileID: 2121731818348144815}
   - component: {fileID: 5706340402820222297}
   - component: {fileID: 249553817374106429}
+  - component: {fileID: 3487277980888971487}
   m_Layer: 9
   m_Name: KurageBoss
   m_TagString: Enemy
@@ -171,13 +172,14 @@ MonoBehaviour:
   _halo: {fileID: 6704097575574395445}
   _gripA: {fileID: 830374544325268766}
   _gripB: {fileID: 8879232703811336493}
+  _bodyAnchor: {fileID: 181065763417932436}
   _apexHeight: 25
   _riseDuration: 1
   _hoverDuration: 0.5
   _dropDuration: 0.3
   _gripFollowSharpness: 12
   _restraintRadius: 0.55
-  _restraintHeight: 1.5
+  _restraintHeight: 3
   _chestHoverDuration: 0.6
   _squeezeDuration: 0.2
   _missHoldDuration: 0.5
@@ -212,7 +214,8 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: CreativeAI.Gameplay::CreativeAI.Gameplay.KurageBossController
   _orbitSpeed: 6
-  _orbitDurationRange: {x: 2, y: 4}
+  _highOrbitSpeed: 10
+  _speedUpDurationRatio: 0.4
   _orbitTowardPlayerChance: 0.7
   _turnSpeed: 90
   _stabWeight: 3
@@ -221,7 +224,6 @@ MonoBehaviour:
   _stabChaseDuration: 2.5
   _stabChaseSpeed: 10
   _stabWindupDuration: 0.5
-  _stabRecoverDuration: 1.4
   _stabTurnSpeed: 240
   _stabExtendDuration: 0.1
   _stabRetractDuration: 0.15
@@ -232,10 +234,7 @@ MonoBehaviour:
   - {fileID: 11400000, guid: 9aa6bd376bc7cff44bb54f8af9abe1f6, type: 2}
   - {fileID: 11400000, guid: e638c914d8b508945bfdc2ff2cf2f70e, type: 2}
   _tentacleCooldown: 8
-  _drillRecoverDuration: 1.4
   _ringCooldown: 15
-  _ringRecoverDuration: 1.4
-  _flinchDuration: 1
 --- !u!114 &249553817374106429
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -259,7 +258,35 @@ MonoBehaviour:
   - {fileID: 7209515962329172844}
   - {fileID: 106455746325303249}
   _maxExtension: 30
-  _targetHeight: 1
+  _targetHeight: 3
+--- !u!114 &3487277980888971487
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1254817577893401342}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: c49c5da9d1202f747a82d6357fb7ffbd, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: CreativeAI.Gameplay::CreativeAI.Gameplay.KuragePhaseTracker
+  _phases:
+  - _hpRatio: 1
+    _orbitDurationRange: {x: 4, y: 8}
+    _speedUpProbability: 0
+    _turnProbability: 0
+    _doubleAttackProbability: 0
+  - _hpRatio: 0.66
+    _orbitDurationRange: {x: 3, y: 6}
+    _speedUpProbability: 0.35
+    _turnProbability: 0.25
+    _doubleAttackProbability: 0.25
+  - _hpRatio: 0.33
+    _orbitDurationRange: {x: 1.5, y: 3}
+    _speedUpProbability: 0.5
+    _turnProbability: 0.5
+    _doubleAttackProbability: 0.5
 --- !u!1 &3134970511177144099
 GameObject:
   m_ObjectHideFlags: 0
@@ -384,6 +411,11 @@ PrefabInstance:
 --- !u!4 &106455746325303249 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: 6283160676056891601, guid: 23dcc655eba5f2e43a9bccaa39984af2, type: 3}
+  m_PrefabInstance: {fileID: 6217344318845734656}
+  m_PrefabAsset: {fileID: 0}
+--- !u!4 &181065763417932436 stripped
+Transform:
+  m_CorrespondingSourceObject: {fileID: 6110038813433990548, guid: 23dcc655eba5f2e43a9bccaa39984af2, type: 3}
   m_PrefabInstance: {fileID: 6217344318845734656}
   m_PrefabAsset: {fileID: 0}
 --- !u!4 &830374544325268766 stripped

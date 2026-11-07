@@ -12514,6 +12514,10 @@ PrefabInstance:
       propertyPath: m_Name
       value: KurageBoss
       objectReference: {fileID: 0}
+    - target: {fileID: 1627639548763541260, guid: c7f978d0c9f6e3945bedfc3add346733, type: 3}
+      propertyPath: _restraintHeight
+      value: 5
+      objectReference: {fileID: 0}
     - target: {fileID: 4855762672849716225, guid: c7f978d0c9f6e3945bedfc3add346733, type: 3}
       propertyPath: _stage
       value: 

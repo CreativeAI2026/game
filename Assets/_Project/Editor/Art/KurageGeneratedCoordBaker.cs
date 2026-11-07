@@ -72,15 +72,19 @@ namespace CreativeAI.EditorTools
             var generated = new List<Vector3>(blenderCoords.Length);
             foreach (var c in blenderCoords)
             {
-                generated.Add(new Vector3(
-                    SafeDivide(c.x - min.x, size.x),
-                    SafeDivide(c.y - min.y, size.y),
-                    SafeDivide(c.z - min.z, size.z)));
+                generated.Add(
+                    new Vector3(
+                        SafeDivide(c.x - min.x, size.x),
+                        SafeDivide(c.y - min.y, size.y),
+                        SafeDivide(c.z - min.z, size.z)
+                    )
+                );
             }
             mesh.SetUVs(GeneratedCoordUvChannel, generated);
         }
 
         // 厚みのない平面メッシュでは範囲が 0 になるため。
-        private static float SafeDivide(float value, float range) => range > Mathf.Epsilon ? value / range : 0f;
+        private static float SafeDivide(float value, float range) =>
+            range > Mathf.Epsilon ? value / range : 0f;
     }
 }

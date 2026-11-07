@@ -11,6 +11,8 @@ namespace CreativeAI.Gameplay
     /// 各攻撃の中身はステート(States/)と、攻撃ごとの部品(地面の触手・わっか・拘束)が持つ。
     /// ここは攻撃の選択と、部品どうしのつなぎ(わっかが捕まえたら拘束し、ボスは待機する等)だけを行う。
     /// </summary>
+    [RequireComponent(typeof(EnemyStatus))]
+    [RequireComponent(typeof(KuragePhaseTracker))]
     [RequireComponent(typeof(KurageOrbitMover))]
     [RequireComponent(typeof(KurageBossSounds))]
     [RequireComponent(typeof(KurageHaloRing))]
@@ -23,9 +25,21 @@ namespace CreativeAI.Gameplay
         [SerializeField]
         private float _orbitSpeed = 6f;
 
-        [Tooltip("攻撃の合間に周回する時間（秒）。この範囲からランダムに決める")]
+        [Tooltip("スピードアップ時の周回の速さ（m/秒）")]
         [SerializeField]
-        private Vector2 _orbitDurationRange = new Vector2(2f, 4f);
+        private float _highOrbitSpeed = 10f;
+
+        [Tooltip(
+            "スピードアップする長さ。その周回の時間に対する割合（0〜1）。段階で周回時間が短くなっても、普通の速さと混ざるよう秒ではなく割合で決める"
+        )]
+        [SerializeField, Range(0f, 1f)]
+        private float _speedUpDurationRatio = 0.4f;
+
+        [Tooltip(
+            "周回の速さを変える時の加速度（m/秒²）。スピードアップや切り返しで一瞬で切り替わってカクッと見えないよう、少しずつ変える"
+        )]
+        [SerializeField]
+        private float _orbitAcceleration = 20f;
 
         [Tooltip("周回する時にプレイヤーの方へ回り込む確率。外れると逆へ回る")]
         [SerializeField, Range(0f, 1f)]
@@ -45,6 +59,12 @@ namespace CreativeAI.Gameplay
         [SerializeField]
         private float _ringWeight = 1.5f;
 
+        [Tooltip(
+            "直前と同じ攻撃の重みに掛ける倍率（0〜1）。同じ攻撃が続いて行動が読まれないようにする。2回続いた攻撃は3回目には選ばない"
+        )]
+        [SerializeField, Range(0f, 1f)]
+        private float _repeatWeightScale = 0.4f;
+
         [Header("触手の突き")]
         [Tooltip("突く前にプレイヤーを追いかける時間（秒）")]
         [SerializeField]
@@ -57,10 +77,6 @@ namespace CreativeAI.Gameplay
         [Tooltip("立ち止まってから突くまでの溜め（秒）。プレイヤーへの予兆")]
         [SerializeField]
         private float _stabWindupDuration = 0.5f;
-
-        [Tooltip("突きのクリップを始めてから周回に戻るまで（秒）。クリップの長さに合わせる")]
-        [SerializeField]
-        private float _stabRecoverDuration = 1.4f;
 
         [Tooltip("溜めの間に、体を狙った場所へ向ける速さ（度/秒）")]
         [SerializeField]
@@ -91,26 +107,22 @@ namespace CreativeAI.Gameplay
         [SerializeField]
         private float _tentacleCooldown = 8f;
 
-        [Tooltip("ドリルのクリップを始めてから周回に戻るまで（秒）。クリップの長さに合わせる")]
-        [SerializeField]
-        private float _drillRecoverDuration = 1.4f;
-
         [Header("わっか投げ")]
         [Tooltip("一度使ってから次に使えるまで（秒）")]
         [SerializeField]
         private float _ringCooldown = 15f;
 
-        [Tooltip("リングのクリップを始めてから周回に戻るまで（秒）。クリップの長さに合わせる")]
-        [SerializeField]
-        private float _ringRecoverDuration = 1.4f;
-
-        [Header("怯み")]
-        [Tooltip("怯んで止まっている時間（秒）。怯みのクリップが来たら長さに合わせる")]
-        [SerializeField]
-        private float _flinchDuration = 1.0f;
-
         private float _nextTentacleTime;
         private float _nextRingTime;
+
+        // 直前の攻撃と、それが何回続いたか。同じ攻撃の偏りを防ぐのに使う
+        private KurageAttackKind? _lastAttack;
+        private int _repeatCount;
+
+        /// <summary>今の攻撃が終わった後に、もう1回攻撃を続けるか。</summary>
+        private bool _followUpPending;
+
+        private KuragePhaseTracker _phase;
 
         public KurageOrbitMover Mover { get; private set; }
         public KurageBossSounds Sounds { get; private set; }
@@ -118,22 +130,24 @@ namespace CreativeAI.Gameplay
         public KurageRingRestraint Restraint { get; private set; }
 
         public float OrbitSpeed => _orbitSpeed;
-        public Vector2 OrbitDurationRange => _orbitDurationRange;
+        public float HighOrbitSpeed => _highOrbitSpeed;
+        public float OrbitAcceleration => _orbitAcceleration;
+        public float SpeedUpDurationRatio => _speedUpDurationRatio;
+        public float SpeedUpProbability => _phase.CurrentPhase.SpeedUpProbability;
+        public Vector2 OrbitDurationRange => _phase.CurrentPhase.OrbitDurationRange;
+        public float TurnProbability => _phase.CurrentPhase.TurnProbability;
+        public float DoubleAttackProbability => _phase.CurrentPhase.DoubleAttackProbability;
         public float OrbitTowardPlayerChance => _orbitTowardPlayerChance;
         public float TurnSpeed => _turnSpeed;
         public float StabChaseDuration => _stabChaseDuration;
         public float StabChaseSpeed => _stabChaseSpeed;
         public float StabWindupDuration => _stabWindupDuration;
-        public float StabRecoverDuration => _stabRecoverDuration;
         public EnemyMeleeHitbox StabHitbox => _stabHitbox;
         public float StabTurnSpeed => _stabTurnSpeed;
         public float StabExtendDuration => _stabExtendDuration;
         public float StabRetractDuration => _stabRetractDuration;
         public KurageStabReach StabReach { get; private set; }
         public KurageGroundTentacle GroundTentaclePrefab => _groundTentaclePrefab;
-        public float DrillRecoverDuration => _drillRecoverDuration;
-        public float RingRecoverDuration => _ringRecoverDuration;
-        public float FlinchDuration => _flinchDuration;
 
         public override bool IsAttacking =>
             currentState is KurageStabState or KurageTentacleSummonState or KurageRingThrowState;
@@ -157,6 +171,7 @@ namespace CreativeAI.Gameplay
             Halo = GetComponent<KurageHaloRing>();
             Restraint = GetComponent<KurageRingRestraint>();
             StabReach = GetComponent<KurageStabReach>();
+            _phase = GetComponent<KuragePhaseTracker>();
         }
 
         protected override void OnEnable()
@@ -181,29 +196,83 @@ namespace CreativeAI.Gameplay
             ChangeState(new KurageOrbitState(this));
         }
 
-        /// <summary>周回を終えた時に呼ぶ。使える攻撃の中から重みで選んで始める。</summary>
+        /// <summary>周回を終えた時に呼ぶ。2連続にするかを抽選し、使える攻撃の中から重みで選んで始める。</summary>
         public void StartNextAttack()
         {
             bool canTentacle = Time.time >= _nextTentacleTime;
             bool canRing = Time.time >= _nextRingTime && Halo.IsOnHead;
 
-            float total =
-                _stabWeight + (canTentacle ? _tentacleWeight : 0f) + (canRing ? _ringWeight : 0f);
-            float pick = Random.value * total;
+            _followUpPending = Random.value < DoubleAttackProbability;
+            StartWeightedAttack(canTentacle, canRing);
+        }
 
-            if (canTentacle && (pick -= _tentacleWeight) < 0f)
+        /// <summary>
+        /// 攻撃ステートが終わった時に呼ぶ。2連続が決まっていれば2回目を始め、なければ周回に戻る。
+        /// 2回目の内容は、1回目の間に変わった状況(わっかの有無)を反映するためここで選ぶ。
+        /// </summary>
+        public void FinishAttack()
+        {
+            if (!_followUpPending || !AutoAttacks)
+            {
+                ChangeState(new KurageOrbitState(this));
+                return;
+            }
+
+            _followUpPending = false;
+            // 2回目はクールダウンを無視する。ただし、わっかは1つしかないので頭上にある時だけ投げられる。
+            // 触手を2回続けると地面が触手で埋まって避け場所が無くなるため、触手の後に触手は出さない
+            StartWeightedAttack(
+                canTentacle: _lastAttack != KurageAttackKind.Tentacles,
+                canRing: Halo.IsOnHead
+            );
+        }
+
+        /// <summary>使える攻撃の中から重みで1つ選び、クールダウンを入れて始める。直前と同じ攻撃は選ばれにくくする。</summary>
+        private void StartWeightedAttack(bool canTentacle, bool canRing)
+        {
+            float stab = RepeatAdjustedWeight(KurageAttackKind.Stab, _stabWeight);
+            float tentacle = canTentacle
+                ? RepeatAdjustedWeight(KurageAttackKind.Tentacles, _tentacleWeight)
+                : 0f;
+            float ring = canRing ? RepeatAdjustedWeight(KurageAttackKind.Ring, _ringWeight) : 0f;
+            // 使える攻撃が続けて出した突きしか無い時は、偏りを防ぐより攻撃が止まらないことを優先する
+            if (stab + tentacle + ring <= 0f)
+                stab = _stabWeight;
+            float pick = Random.value * (stab + tentacle + ring);
+
+            if ((pick -= tentacle) < 0f)
             {
                 _nextTentacleTime = Time.time + _tentacleCooldown;
+                RecordAttack(KurageAttackKind.Tentacles);
                 ChangeState(new KurageTentacleSummonState(this));
                 return;
             }
-            if (canRing && (pick -= _ringWeight) < 0f)
+            if ((pick -= ring) < 0f)
             {
                 _nextRingTime = Time.time + _ringCooldown;
+                // わっかは投げた後も飛び続け、捕まえるのが次の攻撃の最中になりうる。
+                // その時に出した地面の触手が拘束中のプレイヤーに当たらないよう、わっかの後は続けない
+                _followUpPending = false;
+                RecordAttack(KurageAttackKind.Ring);
                 ChangeState(new KurageRingThrowState(this));
                 return;
             }
+            RecordAttack(KurageAttackKind.Stab);
             ChangeState(new KurageStabState(this));
+        }
+
+        /// <summary>直前に続けて出した攻撃ほど重みを下げる。2回続いた攻撃は0にする。</summary>
+        private float RepeatAdjustedWeight(KurageAttackKind kind, float weight)
+        {
+            if (kind != _lastAttack)
+                return weight;
+            return _repeatCount >= 2 ? 0f : weight * _repeatWeightScale;
+        }
+
+        private void RecordAttack(KurageAttackKind kind)
+        {
+            _repeatCount = kind == _lastAttack ? _repeatCount + 1 : 1;
+            _lastAttack = kind;
         }
 
         /// <summary>周回の後に自分で攻撃を選ぶか。デバッグで攻撃を1つずつ確かめる時は止める。</summary>
@@ -222,22 +291,25 @@ namespace CreativeAI.Gameplay
         /// <param name="tentaclePattern">地面の触手を出す時の出し方。null なら並べた中から選ぶ</param>
         /// <returns>始められたか</returns>
         public bool TryStartAttack(
-            KurageDebugAttack attack,
+            KurageAttackKind attack,
             KurageTentaclePattern tentaclePattern = null
         )
         {
             if (currentState is KurageDeathState or KurageIdleState)
                 return false;
 
+            // デバッグで単発の攻撃を確かめる時に、前の抽選結果で2回目が出ないようにする
+            _followUpPending = false;
+
             switch (attack)
             {
-                case KurageDebugAttack.Stab:
+                case KurageAttackKind.Stab:
                     ChangeState(new KurageStabState(this));
                     return true;
-                case KurageDebugAttack.Tentacles:
+                case KurageAttackKind.Tentacles:
                     ChangeState(new KurageTentacleSummonState(this, tentaclePattern));
                     return true;
-                case KurageDebugAttack.Ring:
+                case KurageAttackKind.Ring:
                     if (!Halo.IsOnHead)
                         return false;
                     ChangeState(new KurageRingThrowState(this));
