@@ -285,7 +285,8 @@ namespace CreativeAI.Gameplay
         /// <summary>
         /// 画面中央（クロスヘアー位置）からRaycastして実際のワールド上の着弾点を求め、
         /// つがえた矢の位置からその着弾点への方向ベクトルを返す。
-        /// これにより三人称視点でもカメラが向いている方向に矢が正確に飛ぶ。
+        /// これにより三人称視点でもカメラが向いている方向に矢が飛ぶ。
+        /// 矢は重力で落ちる(ArrowProjectile)が、その分は補正しない。遠くを狙う時はプレイヤーが照準を上げる。
         /// </summary>
         private Vector3 GetShootDirection()
         {
