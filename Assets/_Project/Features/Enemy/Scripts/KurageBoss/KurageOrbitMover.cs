@@ -37,8 +37,8 @@ namespace CreativeAI.Gameplay
         {
             // 配置した場所に一番近い周回路上の点から回り始める
             CurrentS = _path.FindClosestS(transform.position);
-            transform.position = _path.Evaluate(CurrentS, out Vector3 outward);
-            transform.rotation = Quaternion.LookRotation(-outward);
+            Vector3 position = _path.Evaluate(CurrentS, out Vector3 outward);
+            transform.SetPositionAndRotation(position, Quaternion.LookRotation(-outward));
         }
 
         /// <summary>

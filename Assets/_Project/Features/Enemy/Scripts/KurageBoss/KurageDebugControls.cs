@@ -56,7 +56,7 @@ namespace CreativeAI.Gameplay
             }
 
             if (_boss == null)
-                _boss = FindFirstObjectByType<KurageBossController>();
+                _boss = FindAnyObjectByType<KurageBossController>();
             if (_boss == null)
             {
                 Debug.LogError(

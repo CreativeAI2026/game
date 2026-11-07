@@ -13,6 +13,7 @@ namespace CreativeAI.Gameplay
     /// わっかは締めている間プレイヤーに付いて行き、振りほどかれたら広がってから頭上へ戻る。
     /// わっかのメッシュは原点が輪の中心に無いため、動かす間は輪の中心に置いた Pivot の子にして扱う。
     /// </summary>
+    [RequireComponent(typeof(KurageBossSounds))]
     public class KurageHaloRing : MonoBehaviour
     {
         private enum Phase

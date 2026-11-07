@@ -505,9 +505,12 @@ namespace CreativeAI.Gameplay
 
             Vector3 chain = tip.position - root.position;
             _chainLength = chain.magnitude;
-            _tentacleModel.rotation =
-                Quaternion.FromToRotation(chain.normalized, Vector3.up) * _tentacleModel.rotation;
-            _tentacleModel.position += _pivot.position - root.position;
+            Quaternion deltaRotation = Quaternion.FromToRotation(chain.normalized, Vector3.up);
+            Vector3 rotatedRootOffset = deltaRotation * (root.position - _tentacleModel.position);
+            _tentacleModel.SetPositionAndRotation(
+                _pivot.position - rotatedRootOffset,
+                deltaRotation * _tentacleModel.rotation
+            );
         }
 
         /// <summary>buried=1 で触手全体が地面の下、0 で根元まで地上に出る。</summary>

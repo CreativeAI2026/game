@@ -11,6 +11,7 @@ namespace CreativeAI.Gameplay
     /// TutorialBoss の掴みと違い、カメラの演出は使わず、抜け出しても後ろへ下がらない(高台の端から落ちてしまうため)。
     /// わっかの見た目の動きは <see cref="KurageHaloRing"/> の担当。
     /// </summary>
+    [RequireComponent(typeof(EnemyStatus))]
     public class KurageRingRestraint : MonoBehaviour
     {
         [Header("レバガチャ")]
