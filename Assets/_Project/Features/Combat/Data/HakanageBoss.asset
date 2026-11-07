@@ -10,7 +10,7 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: f68f2a1b1f9bb4a40b6e8d704cc39f8c, type: 3}
-  m_Name: MidBoss
+  m_Name: HakanageBoss
   m_EditorClassIdentifier: CreativeAI.Gameplay::CreativeAI.Gameplay.EnemyParameterData
   characterName: MidBoss
   baseMaxLife: 31250

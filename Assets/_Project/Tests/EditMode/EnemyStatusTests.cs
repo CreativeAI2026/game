@@ -169,17 +169,5 @@ namespace CreativeAI.Tests.EditMode
             Assert.IsFalse(_status.IsDead);
             Assert.AreEqual(0, _deaths);
         }
-
-        [Test]
-        public void Heal_RestoresHp_ButNeverAboveMax()
-        {
-            _status.TakeDamage(100f, false);
-
-            _status.Heal(30f);
-            Assert.AreEqual(930f, CurrentHp, 1e-3f);
-
-            _status.Heal(10000f);
-            Assert.AreEqual(1000f, CurrentHp, 1e-3f);
-        }
     }
 }

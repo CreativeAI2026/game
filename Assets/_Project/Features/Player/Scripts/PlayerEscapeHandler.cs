@@ -57,6 +57,12 @@ namespace CreativeAI.Gameplay
             _retreatCoroutine = StartCoroutine(RetreatCoroutine(awayDirection));
         }
 
+        /// <summary>
+        /// 脱出モーションだけを再生し、その場から動かさない。高台の端など、後ろへ下がると落ちてしまう拘束で使う。
+        /// モーション中の操作制限は後退する時と同じ時間かける。
+        /// </summary>
+        public void TriggerEscapeInPlace() => TriggerEscape(Vector3.zero);
+
         /// <summary>後退を途中で打ち切り、自分の行動制限を外す。</summary>
         public void Cancel()
         {

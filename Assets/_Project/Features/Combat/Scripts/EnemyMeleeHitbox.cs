@@ -137,29 +137,15 @@ namespace CreativeAI.Gameplay
 
                 float finalDamage = _enemyStatus.CurrentAttackPower * _meleeMultiplier;
 
-                // ガード・パリィ判定を先に行い、成立した場合はダメージ処理をスキップする。
-                // これにより防御側の応答を攻撃側で一元管理できる。
-                SwordController sword = other.GetComponentInChildren<SwordController>();
-
-                if (sword != null && sword.gameObject.activeInHierarchy)
-                {
-                    bool isBlocked = sword.ReceiveAttack(
+                if (
+                    EnemyAttackHit.ApplyToPlayer(
+                        other,
                         finalDamage,
-                        true,
                         _enemyStatus.transform,
                         hitPoint
-                    );
-
-                    if (isBlocked)
-                    {
-                        return;
-                    }
-                }
-
-                if (other.TryGetComponent(out IDamageable target))
+                    )
+                )
                 {
-                    target.TakeDamage(finalDamage, false);
-
                     SpawnHitEffect(hitPoint, hitNormal);
                     WorldSoundPlayer.Play(_hitSound, hitPoint, this);
                 }
