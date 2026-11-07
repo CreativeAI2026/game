@@ -121,7 +121,24 @@ namespace CreativeAI.Tests.EditMode
         public void InvalidJson_WritesNothing()
         {
             File.WriteAllText(_jsonPath, @"{ ""events"": [ { ""id"": ""sample"" } ] }"); // 必須項目なし
-            LogAssert.ignoreFailingMessages = true; // 取り込みエラーを LogError で出すため
+            // 取り込みエラーは LogError で出る。出るはずのものだけ許す
+            foreach (
+                var missing in new[]
+                {
+                    "conditions が",
+                    "progress 条件",
+                    "steps が",
+                    "nextProgress",
+                }
+            )
+                LogAssert.Expect(
+                    LogType.Error,
+                    new Regex(@"\(sample\) .*" + Regex.Escape(missing))
+                );
+            LogAssert.Expect(
+                LogType.Error,
+                new Regex(@"^\[EventImporter\] エラー \d+ 件のため中止")
+            );
 
             Assert.IsFalse(EventImporterMenu.ImportInto(_jsonPath, OutputDir));
 

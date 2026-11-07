@@ -57,9 +57,9 @@ namespace CreativeAI.EditorTools
                 var selectorData = new SerializedObject(selector);
                 selectorData.FindProperty("_weaponPreview").objectReferenceValue = null;
                 selectorData.ApplyModifiedPropertiesWithoutUndo();
-                var controller =
-                    view.GetComponent<CharacterPreviewController>()
-                    ?? view.gameObject.AddComponent<CharacterPreviewController>();
+                var controller = view.TryGetComponent(out CharacterPreviewController existing)
+                    ? existing
+                    : view.gameObject.AddComponent<CharacterPreviewController>();
                 var settings = new SerializedObject(controller);
                 foreach (
                     var asset in AssetDatabase.LoadAllAssetsAtPath(

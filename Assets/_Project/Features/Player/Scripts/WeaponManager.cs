@@ -294,7 +294,7 @@ namespace CreativeAI.Gameplay
 
         private void Awake()
         {
-            _input = GetComponent<PlayerInputHandler>();
+            TryGetComponent(out _input);
             // EditMode テストでは WeaponManager 単体で生成されモデル層が無いため、無ければ Animator 操作をしない
             PlayerModel model = GetComponentInChildren<PlayerModel>(true);
             if (model != null)
@@ -302,7 +302,7 @@ namespace CreativeAI.Gameplay
                 _animator = model.Animator;
                 _defaultAnimatorController = _animator.runtimeAnimatorController;
             }
-            _playerController = GetComponent<PlayerController>();
+            TryGetComponent(out _playerController);
 
             // giveWeapon の届け先として自身を登録する(IItemGiver / InventoryManager と同じ思想)。
             WeaponGiverService.Current = this;
@@ -338,6 +338,9 @@ namespace CreativeAI.Gameplay
         {
             if (!_playerController.CanChangeWeapon)
             {
+                // 切替できない間の入力は捨てる。残すと、ロックが外れた瞬間に勝手に切り替わる
+                _input.weaponNext = false;
+                _input.weaponPrev = false;
                 return;
             }
 

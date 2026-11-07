@@ -67,7 +67,8 @@ namespace CreativeAI.UI
             SetTextImmediately(_category, string.Empty);
             SetTextImmediately(_stats, string.Empty);
             SetTextImmediately(_description, string.Empty);
-            _parameters?.SetItem(null);
+            if (_parameters != null)
+                _parameters.SetItem(null);
         }
 
         // 個体ごとにロール値が違うので、ItemData ではなく所持品1つ分(ItemStack)を表示する。
@@ -123,7 +124,7 @@ namespace CreativeAI.UI
             if (_icon == null)
                 return;
 
-            bool hasIcon = item?.icon != null;
+            bool hasIcon = item != null && item.icon != null;
             _icon.sprite = hasIcon ? item.icon : null;
             _icon.color = hasIcon ? Color.white : Color.clear;
 
@@ -148,7 +149,8 @@ namespace CreativeAI.UI
                 _description.gameObject.SetActive(
                     hasItem && !string.IsNullOrWhiteSpace(item.description)
                 );
-            _parameters?.SetItem(stack);
+            if (_parameters != null)
+                _parameters.SetItem(stack);
             RebuildLayout();
             if (_parameters != null)
             {
@@ -177,17 +179,26 @@ namespace CreativeAI.UI
             DOTween.Kill(_category);
             DOTween.Kill(_stats);
             DOTween.Kill(_description);
-            _icon?.rectTransform.DOKill();
+            if (_icon != null)
+                _icon.rectTransform.DOKill();
         }
 
         private void ResolveReferences()
         {
-            _icon ??= FindComponent<Image>("Icon");
-            _name ??= FindComponent<TMP_Text>("Name");
-            _category ??= FindComponent<TMP_Text>("Category");
-            _stats ??= FindComponent<TMP_Text>("Stats");
-            _description ??=
-                FindComponent<TMP_Text>("Description") ?? FindComponent<TMP_Text>("PassiveDesc");
+            if (_icon == null)
+                _icon = FindComponent<Image>("Icon");
+            if (_name == null)
+                _name = FindComponent<TMP_Text>("Name");
+            if (_category == null)
+                _category = FindComponent<TMP_Text>("Category");
+            if (_stats == null)
+                _stats = FindComponent<TMP_Text>("Stats");
+            if (_description == null)
+            {
+                _description = FindComponent<TMP_Text>("Description");
+                if (_description == null)
+                    _description = FindComponent<TMP_Text>("PassiveDesc");
+            }
             CaptureDefaultNameFontStyle();
         }
 

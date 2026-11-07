@@ -32,7 +32,10 @@ namespace CreativeAI.UI
 
         public void SetItem(ItemStack stack)
         {
-            bool equipment = stack?.Data?.category == ItemCategory.Equipment;
+            bool equipment =
+                stack != null
+                && stack.Data != null
+                && stack.Data.category == ItemCategory.Equipment;
             var bonus = new EquipmentBonus();
             if (equipment && stack.IsInstance)
                 bonus.Add(stack.RolledStats);

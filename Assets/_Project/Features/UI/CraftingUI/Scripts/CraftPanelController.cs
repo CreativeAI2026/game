@@ -133,13 +133,15 @@ namespace CreativeAI.UI
         [ContextMenu("Auto Assign References")]
         private void AutoAssignReferences()
         {
-            _inventory ??= GetComponentInChildren<InventoryView>(true);
+            if (_inventory == null)
+                _inventory = GetComponentInChildren<InventoryView>(true);
             if (_materialSlots.Any(slot => slot == null))
                 _materialSlots = GetComponentsInChildren<MaterialSlot>(true)
                     .OrderBy(slot => slot.transform.GetSiblingIndex())
                     .Take(MaterialSlotCount)
                     .ToArray();
-            _craftButton ??= UIChildFinder.FindButton(transform, "CraftButton");
+            if (_craftButton == null)
+                _craftButton = UIChildFinder.FindButton(transform, "CraftButton");
         }
 #endif
 
@@ -225,7 +227,8 @@ namespace CreativeAI.UI
                 _hasWarningBasePosition = true;
             }
 
-            _craftedItemSlot.GetComponent<SlotFrameView>()?.SetRole(SlotFrameRole.ItemSet);
+            if (_craftedItemSlot.TryGetComponent(out SlotFrameView craftedFrame))
+                craftedFrame.SetRole(SlotFrameRole.ItemSet);
             _inventory.SetSelectFirstSlotOnRefresh(false);
             _inventory.SetReleaseSelectionOnOutsideClick(false);
             UIButtonHoverScaleUtility.ApplyTo(_craftButton);
@@ -305,7 +308,8 @@ namespace CreativeAI.UI
             }
             if (definition is AllItemsTabDefinition)
             {
-                _inventory.SetItems(InventoryManager.Instance?.GetAllItems(), scrollMode);
+                var inventory = InventoryManager.Instance;
+                _inventory.SetItems(inventory != null ? inventory.GetAllItems() : null, scrollMode);
                 return;
             }
 
@@ -326,7 +330,8 @@ namespace CreativeAI.UI
             InventoryView.ScrollRefreshMode scrollMode
         )
         {
-            var items = InventoryManager.Instance?.GetItemsByCategory(category);
+            var inventory = InventoryManager.Instance;
+            var items = inventory != null ? inventory.GetItemsByCategory(category) : null;
             _inventory.SetItems(items, scrollMode);
         }
 
@@ -383,7 +388,8 @@ namespace CreativeAI.UI
                 slot.SetSelected(false);
             }
             _previewedCraftedItem = null;
-            _craftedItemSlot?.Clear();
+            if (_craftedItemSlot != null)
+                _craftedItemSlot.Clear();
             if (resetSelection)
                 _selectedMaterialSlotIndex = -1;
 
@@ -576,7 +582,10 @@ namespace CreativeAI.UI
 
         private void SyncInventoryAssignedColors()
         {
-            _inventory?.SetCraftAssignedStacks(_materials.Where(stack => stack != null).ToList());
+            if (_inventory != null)
+                _inventory.SetCraftAssignedStacks(
+                    _materials.Where(stack => stack != null).ToList()
+                );
         }
 
         private bool HasAllMaterials() => _materials.All(stack => stack != null);
@@ -589,18 +598,18 @@ namespace CreativeAI.UI
 
         private CraftRecipe FindAssignedRecipe()
         {
-            return HasAllMaterials()
-                ? ItemCatalog.Instance?.FindRecipe(_materials[0].Data, _materials[1].Data)
+            var catalog = ItemCatalog.Instance;
+            return HasAllMaterials() && catalog != null
+                ? catalog.FindRecipe(_materials[0].Data, _materials[1].Data)
                 : null;
         }
 
         private bool CanCraft(CraftRecipe recipe)
         {
+            var inventory = InventoryManager.Instance;
             return recipe != null
-                && (
-                    InventoryManager.Instance?.CanCraft(recipe, _materials[0], _materials[1])
-                    ?? false
-                );
+                && inventory != null
+                && inventory.CanCraft(recipe, _materials[0], _materials[1]);
         }
 
         private void UpdateCraftButton()
@@ -723,29 +732,91 @@ namespace CreativeAI.UI
         private void UpdateMaterialSlotKeyboardNavigation()
         {
             if (
-                IsCraftInteractionLocked
-                || _selectedMaterialSlotIndex < 0
-                || !SlotKeyboardFocus.IsFocused(this)
+                _resultCanvasGroup != null
+                && ResultRoot.activeSelf
+                && _resultCanvasGroup.interactable
             )
+            {
+                if (
+                    UiInputActionMap.WasSubmitPressedThisFrame()
+                    || UiInputActionMap.WasCancelPressedThisFrame()
+                )
+                {
+                    HideResult();
+                }
+                return;
+            }
+
+            if (IsCraftInteractionLocked)
                 return;
 
-            var keyboard = Keyboard.current;
-            if (keyboard == null)
-                return;
-
-            int offset =
-                keyboard.leftArrowKey.wasPressedThisFrame ? -1
-                : keyboard.rightArrowKey.wasPressedThisFrame ? 1
-                : 0;
-            if (offset != 0)
-                SelectSlot(
-                    (_selectedMaterialSlotIndex + offset + MaterialSlotCount) % MaterialSlotCount
+            if (
+                UiInputActionMap.WasPressedThisFrame(UiInputActionMap.TabPrev)
+                || UiInputActionMap.WasPressedThisFrame(UiInputActionMap.TabNext)
+            )
+            {
+                SelectMaterialCategory(
+                    _materialCategory == ItemCategory.Food
+                        ? ItemCategory.Equipment
+                        : ItemCategory.Food
                 );
+                return;
+            }
+
+            if (UiInputActionMap.WasPressedThisFrame(UiInputActionMap.CraftExecute))
+            {
+                StartCraft();
+                return;
+            }
+
+            if (UiInputActionMap.WasPressedThisFrame(UiInputActionMap.AuxAction))
+            {
+                if (SlotKeyboardFocus.IsFocused(this))
+                {
+                    if (_inventory != null)
+                        _inventory.SelectFirstVisibleSlotAndClaimFocus();
+                }
+                else
+                {
+                    if (_selectedMaterialSlotIndex < 0)
+                        SelectSlot(0);
+                    ClaimMaterialSlotFocus();
+                }
+                return;
+            }
+
+            if (_selectedMaterialSlotIndex < 0 || !SlotKeyboardFocus.IsFocused(this))
+                return;
+
+            if (UiInputActionMap.TryReadDiscreteMove(out Vector2Int step))
+            {
+                if (step.x != 0)
+                {
+                    int offset = step.x > 0 ? 1 : -1;
+                    SelectSlot(
+                        (_selectedMaterialSlotIndex + offset + MaterialSlotCount)
+                            % MaterialSlotCount
+                    );
+                }
+                else if (step.y < 0)
+                {
+                    if (_inventory != null)
+                        _inventory.SelectFirstVisibleSlotAndClaimFocus();
+                }
+            }
+            else if (UiInputActionMap.WasSubmitPressedThisFrame())
+            {
+                if (_materials[_selectedMaterialSlotIndex] != null)
+                    ClearSlotAnimated(_selectedMaterialSlotIndex);
+                else if (_inventory != null)
+                    _inventory.SelectFirstVisibleSlotAndClaimFocus();
+            }
         }
 
         private void SetCraftInteractionEnabled(bool enabled)
         {
-            _inventory?.SetInteractionEnabled(enabled);
+            if (_inventory != null)
+                _inventory.SetInteractionEnabled(enabled);
             UpdateCraftButton();
         }
 
@@ -1074,7 +1145,8 @@ namespace CreativeAI.UI
             _resultSequence?.Kill();
             _resultSequence = null;
             DOTween.Kill(ResultRoot);
-            rect?.DOKill();
+            if (rect != null)
+                rect.DOKill();
             _resultCanvasGroup.DOKill();
         }
 

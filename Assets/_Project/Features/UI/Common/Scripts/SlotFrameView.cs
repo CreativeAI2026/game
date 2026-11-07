@@ -151,11 +151,14 @@ namespace CreativeAI.UI
         [ContextMenu("Auto Assign References")]
         private void AutoAssignReferences()
         {
-            _frame ??= GetComponent<Image>();
+            if (_frame == null)
+                TryGetComponent(out _frame);
             if (_frame != null)
                 return;
 
-            var frameTransform = transform.Find("VisualRoot/Frame") ?? transform.Find("Frame");
+            var frameTransform = transform.Find("VisualRoot/Frame");
+            if (frameTransform == null)
+                frameTransform = transform.Find("Frame");
             _frame = frameTransform != null ? frameTransform.GetComponent<Image>() : null;
         }
 #endif

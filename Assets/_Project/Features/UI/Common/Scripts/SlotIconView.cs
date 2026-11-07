@@ -6,6 +6,8 @@ using UnityEngine;
 using UnityEngine.UI;
 
 [assembly: InternalsVisibleTo("CreativeAI.Tests.EditMode")]
+// Editor の DialogueDebugSkipHotkey が、会話の全スキップの旗(DialogueDebugSkip)を立てるため。
+[assembly: InternalsVisibleTo("CreativeAI.EditorTools")]
 
 namespace CreativeAI.UI
 {
@@ -276,9 +278,12 @@ namespace CreativeAI.UI
             if (_image != null)
                 return;
 
-            var iconTransform = transform.Find("VisualRoot/Icon") ?? transform.Find("Icon");
+            var iconTransform = transform.Find("VisualRoot/Icon");
+            if (iconTransform == null)
+                iconTransform = transform.Find("Icon");
             _image = iconTransform != null ? iconTransform.GetComponent<Image>() : null;
-            _fitRect ??= _image != null ? _image.rectTransform.parent as RectTransform : null;
+            if (_fitRect == null)
+                _fitRect = _image != null ? _image.rectTransform.parent as RectTransform : null;
         }
 #endif
 

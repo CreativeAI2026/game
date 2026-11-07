@@ -39,7 +39,8 @@ namespace CreativeAI.UI
             _count = 0;
             _isSlotSelected = false;
             Refresh();
-            FrameView?.SetSelected(false);
+            if (FrameView != null)
+                FrameView.SetSelected(false);
             RefreshSelectionVisuals();
             ResetItemVisuals();
         }
@@ -52,25 +53,32 @@ namespace CreativeAI.UI
 
         protected virtual void Refresh()
         {
-            IconView?.SetIcon(_item);
-            CountBadgeView?.SetCount(_item, _count);
-            FrameView?.SetContent(_item, _count);
+            if (IconView != null)
+                IconView.SetIcon(_item);
+            if (CountBadgeView != null)
+                CountBadgeView.SetCount(_item, _count);
+            if (FrameView != null)
+                FrameView.SetContent(_item, _count);
         }
 
         public virtual void Select()
         {
             _isSlotSelected = true;
-            FrameView?.SetSelected(true);
+            if (FrameView != null)
+                FrameView.SetSelected(true);
             RefreshSelectionVisuals();
-            HoverView?.AcquireLock();
+            if (HoverView != null)
+                HoverView.AcquireLock();
         }
 
         public virtual void Deselect()
         {
             _isSlotSelected = false;
-            FrameView?.SetSelected(false);
+            if (FrameView != null)
+                FrameView.SetSelected(false);
             RefreshSelectionVisuals();
-            HoverView?.ReleaseLock();
+            if (HoverView != null)
+                HoverView.ReleaseLock();
         }
 
         protected virtual void RefreshSelectionVisuals() { }
@@ -80,8 +88,10 @@ namespace CreativeAI.UI
         public void SetItemAnimated(ItemData item, int count = 1)
         {
             SetItem(item, count);
-            IconView?.PlayAppear(ItemTransitionDuration);
-            CountBadgeView?.AnimateAppear(ItemTransitionDuration);
+            if (IconView != null)
+                IconView.PlayAppear(ItemTransitionDuration);
+            if (CountBadgeView != null)
+                CountBadgeView.AnimateAppear(ItemTransitionDuration);
         }
 
         public void ClearAnimated(Action onComplete = null)
@@ -90,7 +100,8 @@ namespace CreativeAI.UI
             _item = null;
             _count = 0;
 
-            CountBadgeView?.PlayHide(ItemTransitionDuration);
+            if (CountBadgeView != null)
+                CountBadgeView.PlayHide(ItemTransitionDuration);
             if (
                 IconView == null
                 || !IconView.PlayHide(
@@ -110,14 +121,18 @@ namespace CreativeAI.UI
 
         private void KillItemTransition()
         {
-            IconView?.KillTween();
-            CountBadgeView?.KillTween();
+            if (IconView != null)
+                IconView.KillTween();
+            if (CountBadgeView != null)
+                CountBadgeView.KillTween();
         }
 
         private void ResetItemVisuals()
         {
-            IconView?.ResetVisual();
-            CountBadgeView?.ResetVisual();
+            if (IconView != null)
+                IconView.ResetVisual();
+            if (CountBadgeView != null)
+                CountBadgeView.ResetVisual();
         }
     }
 }

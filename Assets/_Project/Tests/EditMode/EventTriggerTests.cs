@@ -1,6 +1,5 @@
 using System;
 using System.Collections.Generic;
-using System.Reflection;
 using CreativeAI.Core;
 using NUnit.Framework;
 using UnityEngine;
@@ -29,8 +28,7 @@ namespace CreativeAI.Tests.EditMode
             public bool HasImportantItem(string itemKey) => Owned.Contains(itemKey);
         }
 
-        private GameObject _pmGo;
-        private GameObject _gmmGo;
+        private readonly TestResidents _residents = new();
         private GameObject _triggerGo;
         private GameObject _playerGo;
         private ProgressManager _pm;
@@ -39,32 +37,11 @@ namespace CreativeAI.Tests.EditMode
         private Collider _playerCollider;
         private RecordingEventPlayer _player;
 
-        /// <summary>Awake 未実行でも Instance が要る。private set の静的プロパティへ直接入れる。</summary>
-        private static void SetInstance<T>(T value)
-        {
-            typeof(T)
-                .GetProperty("Instance", BindingFlags.Public | BindingFlags.Static)
-                .GetSetMethod(nonPublic: true)
-                .Invoke(null, new object[] { value });
-        }
-
-        private static void SetPrivateField(object target, string name, object value)
-        {
-            target
-                .GetType()
-                .GetField(name, BindingFlags.Instance | BindingFlags.NonPublic)
-                .SetValue(target, value);
-        }
-
         [SetUp]
         public void SetUp()
         {
-            _pmGo = new GameObject("PM");
-            _pm = _pmGo.AddComponent<ProgressManager>();
-            _gmmGo = new GameObject("GMM");
-            _gmm = _gmmGo.AddComponent<GameModeManager>();
-            SetInstance(_pm);
-            SetInstance(_gmm);
+            _pm = _residents.Add<ProgressManager>();
+            _gmm = _residents.Add<GameModeManager>();
 
             _player = new RecordingEventPlayer();
             EventPlayerService.Current = _player;
@@ -84,21 +61,17 @@ namespace CreativeAI.Tests.EditMode
             EventPlayerService.Current = null;
             ItemGiverService.Current = null;
             EventPlaybackService.SetPlaying(false);
-            SetInstance<ProgressManager>(null);
-            SetInstance<GameModeManager>(null);
+            UiPanelService.SetOpen(false);
+            _residents.Clear();
             UnityEngine.Object.DestroyImmediate(_playerGo);
             UnityEngine.Object.DestroyImmediate(_triggerGo);
-            UnityEngine.Object.DestroyImmediate(_gmmGo);
-            UnityEngine.Object.DestroyImmediate(_pmGo);
         }
 
-        private void AssignEvent(EventDefinition ev) => SetPrivateField(_trigger, "_event", ev);
+        private void AssignEvent(EventDefinition ev) =>
+            TestReflection.SetField(_trigger, "_event", ev);
 
         private void EnterTrigger() =>
-            _trigger
-                .GetType()
-                .GetMethod("OnTriggerEnter", BindingFlags.Instance | BindingFlags.NonPublic)
-                .Invoke(_trigger, new object[] { _playerCollider });
+            TestReflection.Invoke(_trigger, "OnTriggerEnter", _playerCollider);
 
         private void ExitTrigger() =>
             TestReflection.Invoke(_trigger, "OnTriggerExit", _playerCollider);
@@ -158,10 +131,7 @@ namespace CreativeAI.Tests.EditMode
             var other = new GameObject("Enemy", typeof(BoxCollider));
             try
             {
-                _trigger
-                    .GetType()
-                    .GetMethod("OnTriggerEnter", BindingFlags.Instance | BindingFlags.NonPublic)
-                    .Invoke(_trigger, new object[] { other.GetComponent<Collider>() });
+                TestReflection.Invoke(_trigger, "OnTriggerEnter", other.GetComponent<Collider>());
 
                 CollectionAssert.IsEmpty(_player.Played);
             }
@@ -288,6 +258,115 @@ namespace CreativeAI.Tests.EditMode
             EnterTrigger();
 
             CollectionAssert.AreEqual(new[] { "locked_door" }, _player.Played);
+        }
+
+        // --- マップピン ---
+
+        [Test]
+        public void Pin_Off_NeverShows()
+        {
+            AssignEvent(FiringEvent());
+
+            _trigger.RefreshPin();
+
+            Assert.IsFalse(_trigger.PinVisible);
+        }
+
+        [Test]
+        public void Pin_On_ShowsWhileConditionsMet_AtTheTriggerCenter()
+        {
+            AssignEvent(FiringEvent());
+            TestReflection.SetField(_trigger, "_showPin", true);
+            _triggerGo.transform.position = new Vector3(3f, 2f, 5f);
+            Physics.SyncTransforms(); // 動かした位置を Collider の bounds に反映させる
+
+            _trigger.RefreshPin();
+
+            Assert.IsTrue(_trigger.PinVisible);
+            var pin = UnityEngine.Object.FindAnyObjectByType<MapPin>();
+            Assert.IsNotNull(pin);
+            Assert.That(pin.transform.position, Is.EqualTo(new Vector3(3f, 2f, 5f)));
+        }
+
+        [Test]
+        public void Pin_On_ConditionsNotMet_DoesNotShow()
+        {
+            AssignEvent(EventDefinition.Create("later_event", EventCondition.Progress(5)));
+            TestReflection.SetField(_trigger, "_showPin", true);
+
+            _trigger.RefreshPin();
+
+            Assert.IsFalse(_trigger.PinVisible);
+        }
+
+        [Test]
+        public void Pin_UsesThePinPointWhenGiven()
+        {
+            AssignEvent(FiringEvent());
+            TestReflection.SetField(_trigger, "_showPin", true);
+            var point = new GameObject("PinPoint");
+            point.transform.position = new Vector3(10f, 1f, -4f);
+            TestReflection.SetField(_trigger, "_pinPoint", point.transform);
+
+            _trigger.RefreshPin();
+
+            var pin = UnityEngine.Object.FindAnyObjectByType<MapPin>();
+            Assert.That(pin.transform.position, Is.EqualTo(new Vector3(10f, 1f, -4f)));
+            UnityEngine.Object.DestroyImmediate(point);
+        }
+
+        [Test]
+        public void Pin_DisappearsWhenTheEventFires()
+        {
+            AssignEvent(FiringEvent());
+            TestReflection.SetField(_trigger, "_showPin", true);
+            _trigger.RefreshPin();
+            Assert.IsTrue(_trigger.PinVisible); // 前提
+
+            EnterTrigger();
+
+            Assert.IsFalse(_trigger.PinVisible);
+            CollectionAssert.AreEqual(new[] { "cave_encounter" }, _player.Played);
+        }
+
+        [Test]
+        public void Pin_DisappearsOnceProgressMovesOn()
+        {
+            AssignEvent(FiringEvent());
+            TestReflection.SetField(_trigger, "_showPin", true);
+            _trigger.RefreshPin();
+
+            _pm.AdvanceTo(1);
+            _trigger.RefreshPin();
+
+            Assert.IsFalse(_trigger.PinVisible);
+        }
+
+        [Test]
+        public void Pin_HidesWhileAnEventPlaysOrAMenuIsOpen()
+        {
+            AssignEvent(FiringEvent());
+            TestReflection.SetField(_trigger, "_showPin", true);
+            _trigger.RefreshPin();
+            var pin = UnityEngine.Object.FindAnyObjectByType<MapPin>();
+            var face = pin.transform.Find("Face").gameObject;
+            TestReflection.Invoke(pin, "Update");
+            Assert.IsTrue(pin.Shown);
+            Assert.IsTrue(face.activeSelf);
+
+            EventPlaybackService.SetPlaying(true);
+            TestReflection.Invoke(pin, "Update");
+            Assert.IsFalse(pin.Shown, "会話中は隠す");
+
+            EventPlaybackService.SetPlaying(false);
+            UiPanelService.SetOpen(true);
+            TestReflection.Invoke(pin, "Update");
+            Assert.IsFalse(pin.Shown, "メニューを開いている間は隠す");
+
+            UiPanelService.SetOpen(false);
+            TestReflection.Invoke(pin, "Update");
+            Assert.IsTrue(pin.Shown);
+            Assert.IsTrue(face.activeSelf);
         }
     }
 }

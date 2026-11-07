@@ -1,6 +1,7 @@
 using CreativeAI.Core;
 using CreativeAI.Gameplay;
 using UnityEngine;
+using UnityEngine.EventSystems;
 using UnityEngine.UI;
 
 namespace CreativeAI.UI
@@ -42,6 +43,37 @@ namespace CreativeAI.UI
             }
         }
 
+        private void Start()
+        {
+            SelectDefaultButton();
+        }
+
+        private void Update()
+        {
+            if (
+                EventSystem.current != null
+                && EventSystem.current.currentSelectedGameObject == null
+            )
+            {
+                SelectDefaultButton();
+            }
+        }
+
+        private void SelectDefaultButton()
+        {
+            if (EventSystem.current == null)
+                return;
+
+            Button defaultButton =
+                _continueButton != null && _continueButton.interactable
+                    ? _continueButton
+                    : _tapToStartButton;
+            if (defaultButton != null && defaultButton.interactable)
+            {
+                EventSystem.current.SetSelectedGameObject(defaultButton.gameObject);
+            }
+        }
+
         private void OnDestroy()
         {
             if (_tapToStartButton != null)
@@ -78,20 +110,36 @@ namespace CreativeAI.UI
 
             // 進行度・フラグ・所持品はここで同期復元される(ItemCatalog は Resources 経由でシーン非依存)。
             var data = SaveService.Load();
+            if (data == null)
+            {
+                // セーブが壊れていて読めない。押しても毎回失敗するのでボタンを塞ぐ
+                if (_continueButton != null)
+                    _continueButton.interactable = false;
+                return;
+            }
 
-            // 座標・現在HP はシーンロード後でないと配置できないため、完了コールバックで復元する。
-            string scene = !string.IsNullOrEmpty(data?.sceneName) ? data.sceneName : _nextSceneName;
+            // 保存したシーンが読めない(名前が変わった等)ときは開始シーンの開始位置から再開する。
+            // 座標はそのシーンのものではないので使わない。
+            bool sceneLoadable = SceneController.CanLoad(data.sceneName);
+            if (!sceneLoadable && !string.IsNullOrEmpty(data.sceneName))
+                Debug.LogWarning(
+                    $"[TitleUIController] 保存シーン {data.sceneName} を読み込めないため {_nextSceneName} から再開します。"
+                );
+            string scene = sceneLoadable ? data.sceneName : _nextSceneName;
 
             _tapToStartButton.interactable = false;
             if (_continueButton != null)
                 _continueButton.interactable = false;
 
+            // 座標・現在HP はシーンロード後でないと配置できないため、完了コールバックで復元する。
             SceneController.Instance.LoadScene(
                 scene,
                 onSceneActivated: () =>
                 {
-                    SpawnRigs();
+                    var player = SpawnRigs();
                     SaveService.RestorePlayerState(data);
+                    if (!sceneLoadable)
+                        SpawnPoint.Place(player, SpawnPoint.StartId);
                 }
             );
         }

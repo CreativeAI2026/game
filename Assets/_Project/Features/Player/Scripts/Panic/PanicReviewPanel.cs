@@ -138,7 +138,7 @@ namespace CreativeAI.Gameplay
             _image.texture = moment.Thumbnail;
             _image.color =
                 moment.Thumbnail != null ? Color.white : new Color(0.15f, 0.15f, 0.15f, 1f);
-            _progressText.text = $"全{_moments.Count}場面のうち {_current + 1} つ目";
+            _progressText.SetText("全{0}場面のうち {1} つ目", _moments.Count, _current + 1);
             _descriptionText.text = $"{moment.ReviewText}\nこの場面で、あなたは焦っていましたか？";
         }
 

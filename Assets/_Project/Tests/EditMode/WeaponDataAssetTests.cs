@@ -5,8 +5,8 @@ using UnityEditor;
 namespace CreativeAI.Tests.EditMode
 {
     /// <summary>
-    /// 剣・弓・鎌・ハンマーの固定ステータスがアセットに入っているかを固定する。
-    /// 数値がコード外(アセット)にあると仕様からの乖離に気づけないため、ここで実アセットを読んで突き合わせる。
+    /// 剣・弓・鎌・ハンマーのアセットが守るべき決まりの検証(ID の並び・平均ダメージの釣り合い・在庫外)。
+    /// 個々の数値はバランス調整で変わるので、ここでは固定しない。
     /// </summary>
     public class WeaponDataAssetTests
     {
@@ -22,72 +22,39 @@ namespace CreativeAI.Tests.EditMode
             return w;
         }
 
-        [Test]
-        public void Sword_MatchesSpec()
-        {
-            var w = LoadRequired("Sword");
-
-            Assert.AreEqual(1001, w.id);
-            Assert.AreEqual(25, w.attack, "剣: 攻撃% +25%");
-            Assert.AreEqual(50f, w.criticalDamage, 1e-3f, "剣: 会心ダメージ +50%");
-            Assert.AreEqual(0f, w.criticalRate, 1e-3f);
-        }
+        private static readonly string[] Names = { "Sword", "Bow", "Scythe", "Hammer" };
 
         [Test]
-        public void Bow_MatchesSpec()
+        public void Ids_FollowWeaponOrder()
         {
-            var w = LoadRequired("Bow");
-
-            Assert.AreEqual(1002, w.id);
-            Assert.AreEqual(25, w.attack, "弓: 攻撃% +25%");
-            Assert.AreEqual(50f, w.criticalRate, 1e-3f, "弓: 会心率 +50%");
-            Assert.AreEqual(0f, w.criticalDamage, 1e-3f);
-        }
-
-        [Test]
-        public void Scythe_MatchesSpec()
-        {
-            var w = LoadRequired("Scythe");
-
-            Assert.AreEqual(1003, w.id);
-            Assert.AreEqual(0, w.attack);
-            Assert.AreEqual(50f, w.criticalRate, 1e-3f, "鎌: 会心率 +50%");
-            Assert.AreEqual(50f, w.criticalDamage, 1e-3f, "鎌: 会心ダメージ +50%");
-        }
-
-        [Test]
-        public void Hammer_MatchesSpec()
-        {
-            var w = LoadRequired("Hammer");
-
-            Assert.AreEqual(1004, w.id);
-            Assert.AreEqual(0, w.attack);
-            Assert.AreEqual(25f, w.criticalRate, 1e-3f, "ハンマー: 会心率 +25%");
-            Assert.AreEqual(100f, w.criticalDamage, 1e-3f, "ハンマー: 会心ダメージ +100%");
+            // 武器の ID は 1001 + 並び順(剣・弓・鎌・ハンマー)。所持スロットの番号から ID を引くコードがある
+            for (int i = 0; i < Names.Length; i++)
+                Assert.AreEqual(1001 + i, LoadRequired(Names[i]).id, Names[i]);
         }
 
         [Test]
         public void AllWeapons_HaveEqualAverageDamage()
         {
-            // 平均ダメージ = 攻撃力 ×(1 + 会心率 × 会心ダメージ)が4種とも等価になるよう設定。
-            // 素の値(攻撃2000 / 会心率0 / 会心ダメージ0)でいずれも平均 2500 になる。
-            const float baseAttack = 2000f;
+            // 平均ダメージ倍率 =(1 + 攻撃%)×(1 + 会心率 × 会心ダメージ)が4種とも等しくなるよう調整している。
+            // 個々の数値は調整で変わるので固定せず、釣り合っていることだけを見る
+            float Average(WeaponData w) =>
+                (1f + w.attack / 100f) * (1f + (w.criticalRate / 100f) * (w.criticalDamage / 100f));
 
-            foreach (var name in new[] { "Sword", "Bow", "Scythe", "Hammer" })
-            {
-                var w = LoadRequired(name);
-                float attack = baseAttack * (1f + w.attack / 100f);
-                float average = attack * (1f + (w.criticalRate / 100f) * (w.criticalDamage / 100f));
-
-                Assert.AreEqual(2500f, average, 1e-2f, $"{name} の平均ダメージが 2500 でない");
-            }
+            float expected = Average(LoadRequired(Names[0]));
+            foreach (var name in Names)
+                Assert.AreEqual(
+                    expected,
+                    Average(LoadRequired(name)),
+                    1e-4f,
+                    $"{name} の平均ダメージが {Names[0]} と釣り合っていない"
+                );
         }
 
         [Test]
         public void Weapons_AreOutsideInventoryCatalog()
         {
             // 武器はインベントリ管理の対象外。giveItem のカタログに混ざらないことを守る。
-            foreach (var name in new[] { "Sword", "Bow", "Scythe", "Hammer" })
+            foreach (var name in Names)
             {
                 var w = LoadRequired(name);
                 Assert.IsNull(

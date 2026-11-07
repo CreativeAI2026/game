@@ -12,7 +12,7 @@ using UnityEngine.SceneManagement;
 namespace CreativeAI.Tests.EditMode
 {
     /// <summary>
-    /// 本物の Area01(小物・NavMesh)に置いたアイテムの検証(Issue #109)。
+    /// 本物の Area01(小物・NavMesh)に置いたアイテムの検証。
     /// 人工のコライダーでは分からない「実際の小物と重なっていないか」「プレイヤーが歩いて行けるか」を見る。
     /// シーンはすでに開いているものは触らず、このテストが開いたものだけ最後に閉じる。
     /// </summary>
@@ -24,16 +24,12 @@ namespace CreativeAI.Tests.EditMode
         private const string SpawnName = "PlayerSpawn_start";
 
         // 小物のコライダーが入っているシーン(実行時は AdditiveScenes が重ねる)と、アイテムのシーン。
-        private static readonly string[] SceneNames =
-        {
-            "Field_Area01",
-            "Field_Area01_Props_1F",
-            "Field_Area01_Props_2F",
-            "Field_Area01_Props_3F",
-            "Field_Area01_Props_Lab_1F",
-            "Field_Area01_Props_Lab_2F",
-            "Field_Area01_Items",
-        };
+        // 小物シーンは手で並べると階を足したときに漏れるので、作成ツールの一覧から引く。
+        private static readonly string[] SceneNames = PropSceneWorkflow
+            .Parts.Select(PropSceneWorkflow.SceneName)
+            .Prepend("Field_Area01")
+            .Append("Field_Area01_Items")
+            .ToArray();
 
         private readonly List<Scene> _openedByTest = new();
         private List<FieldItemPickup> _pickups;

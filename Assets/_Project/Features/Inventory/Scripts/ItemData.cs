@@ -29,6 +29,20 @@ namespace CreativeAI.Gameplay
 
         /// <summary>1スタックに積める上限。既定は1(装備品・大事なもの=積まない)。カテゴリで積めるものは派生でルール化する。</summary>
         public virtual int MaxStack => Mathf.Max(1, _maxStack);
+
+        /// <summary>基礎素材(調合で作られたものでない)か。ID の上から2桁目が 0 のものが基礎素材。</summary>
+        public bool IsBaseMaterial
+        {
+            get
+            {
+                int n = Mathf.Abs(id);
+                if (n < 10)
+                    return false;
+                while (n >= 100)
+                    n /= 10;
+                return n % 10 == 0;
+            }
+        }
     }
 
     /// <summary>

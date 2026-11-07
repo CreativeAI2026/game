@@ -228,6 +228,8 @@ MonoBehaviour:
   _playerTag: Player
   _enemy: {fileID: 0}
   _spawnPoint: {fileID: 0}
+  _showPin: 0
+  _pinPoint: {fileID: 0}
 --- !u!1 &111557710
 GameObject:
   m_ObjectHideFlags: 0
@@ -298,6 +300,8 @@ MonoBehaviour:
   _playerTag: Player
   _enemy: {fileID: 0}
   _spawnPoint: {fileID: 0}
+  _showPin: 0
+  _pinPoint: {fileID: 0}
 --- !u!1 &111557720
 GameObject:
   m_ObjectHideFlags: 0
@@ -325,10 +329,11 @@ Transform:
   m_GameObject: {fileID: 111557720}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: -405.5, y: -40.8, z: 112}
+  m_LocalPosition: {x: -714, y: -40.8, z: 15}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
-  m_Children: []
+  m_Children:
+  - {fileID: 729155236}
   m_Father: {fileID: 111557608}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!65 &111557723
@@ -350,7 +355,7 @@ BoxCollider:
   m_ProvidesContacts: 0
   m_Enabled: 1
   serializedVersion: 3
-  m_Size: {x: 8, y: 8, z: 16}
+  m_Size: {x: 8, y: 8, z: 1}
   m_Center: {x: 0, y: 0, z: 0}
 --- !u!114 &111557724
 MonoBehaviour:
@@ -368,6 +373,8 @@ MonoBehaviour:
   _playerTag: Player
   _enemy: {fileID: 0}
   _spawnPoint: {fileID: 0}
+  _showPin: 1
+  _pinPoint: {fileID: 729155236}
 --- !u!1 &111557730
 GameObject:
   m_ObjectHideFlags: 0
@@ -439,6 +446,8 @@ MonoBehaviour:
   _playerTag: Player
   _enemy: {fileID: 9072946834079532967, guid: 7ebfa4e675c9e394a9cc1c70bfde687f, type: 3}
   _spawnPoint: {fileID: 111557791}
+  _showPin: 0
+  _pinPoint: {fileID: 0}
 --- !u!1 &111557740
 GameObject:
   m_ObjectHideFlags: 0
@@ -509,6 +518,8 @@ MonoBehaviour:
   _playerTag: Player
   _enemy: {fileID: 0}
   _spawnPoint: {fileID: 0}
+  _showPin: 0
+  _pinPoint: {fileID: 0}
 --- !u!1 &111557750
 GameObject:
   m_ObjectHideFlags: 0
@@ -579,6 +590,8 @@ MonoBehaviour:
   _playerTag: Player
   _enemy: {fileID: 0}
   _spawnPoint: {fileID: 0}
+  _showPin: 0
+  _pinPoint: {fileID: 0}
 --- !u!1 &111557760
 GameObject:
   m_ObjectHideFlags: 0
@@ -649,6 +662,8 @@ MonoBehaviour:
   _playerTag: Player
   _enemy: {fileID: 0}
   _spawnPoint: {fileID: 0}
+  _showPin: 0
+  _pinPoint: {fileID: 0}
 --- !u!1 &111557770
 GameObject:
   m_ObjectHideFlags: 0
@@ -719,6 +734,8 @@ MonoBehaviour:
   _playerTag: Player
   _enemy: {fileID: 0}
   _spawnPoint: {fileID: 0}
+  _showPin: 0
+  _pinPoint: {fileID: 0}
 --- !u!1 &111557790
 GameObject:
   m_ObjectHideFlags: 0
@@ -749,6 +766,37 @@ Transform:
   m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 111557731}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!1 &729155235
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 729155236}
+  m_Layer: 0
+  m_Name: MapPinPos
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &729155236
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 729155235}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: -4, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 111557721}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1660057539 &9223372036854775807
 SceneRoots:

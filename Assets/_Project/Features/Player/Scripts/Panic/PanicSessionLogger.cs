@@ -69,12 +69,14 @@ namespace CreativeAI.Gameplay
         [SerializeField]
         private bool _markWithGamepadSelect = true;
 
+#pragma warning disable CS0414 // エディタ専用(#if UNITY_EDITOR)でのみ読む。プレイヤービルドでは未使用になる
         [Tooltip(
             "エディターでの再生中も記録するか。ふだんはオフ（動作確認のたびにログが増えないように）。\n"
                 + "記録・振り返りの仕組みそのものを確かめる時だけオンにする"
         )]
         [SerializeField]
         private bool _recordInEditor = false;
+#pragma warning restore CS0414
 
         [Tooltip("記録中であることと保存先を、画面の右上に表示するか")]
         [SerializeField]

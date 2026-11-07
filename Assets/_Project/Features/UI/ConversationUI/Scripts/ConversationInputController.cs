@@ -53,28 +53,31 @@ namespace CreativeAI.UI
 
         public void Tick()
         {
-            var keyboard = Keyboard.current;
             bool historyOpen = _historyOpen();
             bool hidden = _windowHidden() || _state() == ConversationView.ConversationState.Hidden;
             bool choices = _state() == ConversationView.ConversationState.ShowingChoices;
 
-            if (keyboard != null && keyboard.aKey.wasPressedThisFrame && !historyOpen && !hidden)
+            if (
+                UiInputActionMap.WasPressedThisFrame(UiInputActionMap.DialogueAuto)
+                && !historyOpen
+                && !hidden
+            )
             {
                 _controls.PlayAutoShortcut();
                 _setAutoMode(!_autoMode());
             }
+
             if (
-                keyboard != null
-                && keyboard.sKey.wasPressedThisFrame
+                UiInputActionMap.WasPressedThisFrame(UiInputActionMap.DialogueSkip)
                 && !historyOpen
                 && !hidden
                 && !_rewardActive()
                 && !choices
             )
                 _controls.PlaySkipShortcut();
+
             if (
-                keyboard != null
-                && keyboard.hKey.wasPressedThisFrame
+                UiInputActionMap.WasPressedThisFrame(UiInputActionMap.DialogueHide)
                 && !choices
                 && !_rewardActive()
                 && !historyOpen
@@ -83,7 +86,12 @@ namespace CreativeAI.UI
                 _controls.PlayHideShortcut();
                 _setWindowHidden(!_windowHidden());
             }
-            if (keyboard != null && keyboard.tKey.wasPressedThisFrame && !historyOpen && !hidden)
+
+            if (
+                UiInputActionMap.WasPressedThisFrame(UiInputActionMap.DialogueSpeed)
+                && !historyOpen
+                && !hidden
+            )
             {
                 _controls.PlaySpeedShortcut();
                 _setTextSpeed((ConversationView.TextSpeed)(((int)_textSpeed() + 1) % 4));

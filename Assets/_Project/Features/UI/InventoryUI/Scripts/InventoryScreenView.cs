@@ -44,6 +44,7 @@ namespace CreativeAI.UI
         private void OnEnable()
         {
             _inventory.SetReleaseSelectionOnOutsideClick(false);
+            _inventory.OnSlotSubmitted += OnSlotSubmitted;
             _tabs.OnTabDefinitionSelected += OnTabSelected;
             _useButton.onClick.AddListener(UseSelected);
             StartCoroutine(RefreshAfterStart());
@@ -59,6 +60,8 @@ namespace CreativeAI.UI
         {
             StopAllCoroutines();
             _cursorTween?.Kill();
+            if (_inventory != null)
+                _inventory.OnSlotSubmitted -= OnSlotSubmitted;
             _tabs.OnTabDefinitionSelected -= OnTabSelected;
             _useButton.onClick.RemoveListener(UseSelected);
             if (_manager != null)
@@ -66,8 +69,26 @@ namespace CreativeAI.UI
             _manager = null;
         }
 
+        private void OnSlotSubmitted(ItemStack stack)
+        {
+            UseSelected();
+        }
+
         private void LateUpdate()
         {
+            if (_tabs != null && _tabs.ButtonCount > 1)
+            {
+                if (UiInputActionMap.WasPressedThisFrame(UiInputActionMap.TabPrev))
+                {
+                    _tabs.SelectTab(
+                        (_tabs.CurrentIndex - 1 + _tabs.ButtonCount) % _tabs.ButtonCount
+                    );
+                }
+                else if (UiInputActionMap.WasPressedThisFrame(UiInputActionMap.TabNext))
+                {
+                    _tabs.SelectTab((_tabs.CurrentIndex + 1) % _tabs.ButtonCount);
+                }
+            }
             if (_manager != InventoryManager.Instance)
             {
                 if (_manager != null)
@@ -97,8 +118,11 @@ namespace CreativeAI.UI
                 _lastSelection = selected;
                 _lastCount = count;
                 _quantity.text = count > 0 ? $"{count} 個" : string.Empty;
+                var selectedData = selected?.Data;
                 if (_categoryLabel != null)
-                    _categoryLabel.text = selected?.Data?.category switch
+                    _categoryLabel.text = (
+                        selectedData != null ? selectedData.category : (ItemCategory?)null
+                    ) switch
                     {
                         ItemCategory.Food => "食べ物",
                         ItemCategory.Equipment => "装備",
@@ -121,7 +145,8 @@ namespace CreativeAI.UI
 
         private void RefreshCounts()
         {
-            var items = InventoryManager.Instance?.GetAllItems();
+            var inventory = InventoryManager.Instance;
+            var items = inventory != null ? inventory.GetAllItems() : null;
             for (int i = 0; i < _tabs.ButtonCount; i++)
             {
                 var button = _tabs.GetButton(i);
@@ -145,9 +170,9 @@ namespace CreativeAI.UI
                 foreach (var label in button.GetComponentsInChildren<TMP_Text>(true))
                 {
                     label.text =
-                        label.name == "Count"
-                            ? count.ToString()
-                            : definition?.Label ?? string.Empty;
+                        label.name == "Count" ? count.ToString()
+                        : definition != null ? definition.Label ?? string.Empty
+                        : string.Empty;
                     label.color = i == _tabs.CurrentIndex ? Gold : Ink;
                 }
                 button.SetIconColor(i == _tabs.CurrentIndex ? Gold : Ink);
@@ -158,7 +183,8 @@ namespace CreativeAI.UI
         {
             _cursorTween?.Kill();
             if (_inventory.SelectedStack?.Data is FoodData)
-                InventoryManager.Instance?.TryUse(_inventory.SelectedStack);
+                if (InventoryManager.Instance != null)
+                    InventoryManager.Instance.TryUse(_inventory.SelectedStack);
         }
 
         public void FocusUseButton(ItemStack stack)
@@ -167,7 +193,8 @@ namespace CreativeAI.UI
                 return;
             _useButton.gameObject.SetActive(true);
             Canvas.ForceUpdateCanvases();
-            EventSystem.current?.SetSelectedGameObject(_useButton.gameObject);
+            if (EventSystem.current != null)
+                EventSystem.current.SetSelectedGameObject(_useButton.gameObject);
             var mouse = Mouse.current;
             if (mouse == null)
                 return;

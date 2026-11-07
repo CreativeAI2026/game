@@ -21,7 +21,16 @@ namespace CreativeAI.EditorTools
         const string Prefix = "Field_Area01_Props_";
 
         // 小物シーンの区切り(シーン名・ルート名に入るキー)。本棟は作成済みのシーン名を変えないよう建物名を付けない
-        public static readonly string[] Parts = { "1F", "2F", "3F", "Lab_1F", "Lab_2F", "Lab_3F" };
+        public static readonly string[] Parts =
+        {
+            "1F",
+            "2F",
+            "3F",
+            "4F",
+            "Lab_1F",
+            "Lab_2F",
+            "Lab_3F",
+        };
 
         public static string SceneName(string part) => $"{Prefix}{part}";
 
@@ -81,6 +90,9 @@ namespace CreativeAI.EditorTools
 
         [MenuItem("Tools/CreativeAI/Map/小物シーン/3F を開く")]
         public static void Open3F() => OpenForWork("3F");
+
+        [MenuItem("Tools/CreativeAI/Map/小物シーン/4F を開く")]
+        public static void Open4F() => OpenForWork("4F");
 
         [MenuItem("Tools/CreativeAI/Map/小物シーン/研究棟/1F を開く")]
         public static void OpenLab1F() => OpenForWork("Lab_1F");

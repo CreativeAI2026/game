@@ -187,15 +187,9 @@ namespace CreativeAI.Gameplay
                 float t = Mathf.Clamp01(_timer / boss.GrabRetractDuration);
                 if (boss.WireBone != null)
                 {
-                    boss.WireBone.localPosition = Vector3.Lerp(
-                        _escapeStartLocalPos,
-                        boss.InitialWireBoneLocalPosition,
-                        t
-                    );
-                    boss.WireBone.localRotation = Quaternion.Slerp(
-                        _escapeStartLocalRot,
-                        _initialLocalRot,
-                        t
+                    boss.WireBone.SetLocalPositionAndRotation(
+                        Vector3.Lerp(_escapeStartLocalPos, boss.InitialWireBoneLocalPosition, t),
+                        Quaternion.Slerp(_escapeStartLocalRot, _initialLocalRot, t)
                     );
                 }
             }
@@ -236,8 +230,10 @@ namespace CreativeAI.Gameplay
             }
             if (boss.WireBone != null)
             {
-                boss.WireBone.localPosition = boss.InitialWireBoneLocalPosition;
-                boss.WireBone.localRotation = _initialLocalRot;
+                boss.WireBone.SetLocalPositionAndRotation(
+                    boss.InitialWireBoneLocalPosition,
+                    _initialLocalRot
+                );
             }
         }
 
@@ -267,13 +263,13 @@ namespace CreativeAI.Gameplay
                 {
                     float speed = dist / Mathf.Max(0.01f, boss.GrabPullDuration - _timer);
                     Vector3 moveDir = (targetPos - boss.Player.transform.position).normalized;
-                    _playerRb.MovePosition(_playerRb.position + moveDir * speed * Time.deltaTime);
+                    _playerRb.MovePosition(_playerRb.position + moveDir * (speed * Time.deltaTime));
                 }
                 else if (_playerCC != null && _playerCC.enabled)
                 {
                     Vector3 moveDir = (targetPos - boss.Player.transform.position).normalized;
                     float speed = dist / Mathf.Max(0.01f, boss.GrabPullDuration - _timer);
-                    _playerCC.Move(moveDir * speed * Time.deltaTime);
+                    _playerCC.Move(moveDir * (speed * Time.deltaTime));
                 }
             }
             else
@@ -374,11 +370,10 @@ namespace CreativeAI.Gameplay
                 if (!boss.ForceStraightWireByRig && boss.WireBone != null)
                 {
                     // ワイヤーをプレイヤーの首元に直接移動
-                    boss.WireBone.position = _neckBone.position;
                     // ワイヤーの向きをボスの正面（プレイヤーのいる方向）へ向ける
-                    boss.WireBone.rotation = Quaternion.FromToRotation(
-                        Vector3.up,
-                        boss.transform.forward
+                    boss.WireBone.SetPositionAndRotation(
+                        _neckBone.position,
+                        Quaternion.FromToRotation(Vector3.up, boss.transform.forward)
                     );
                 }
             }

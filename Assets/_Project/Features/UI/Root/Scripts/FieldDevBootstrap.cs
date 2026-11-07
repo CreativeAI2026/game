@@ -57,6 +57,9 @@ namespace CreativeAI.UI
             GameSession.EnsureResidents(config != null ? config.uiRootPrefab : null);
             EnsureEventSystem();
 
+            // dev_state はプレイヤーを置く前に読む(開始位置を上書きできるように)。
+            _devState = LoadDevState();
+
             // プレイヤーリグも Title と同じ経路で出し、配置も本番と同じ SpawnPoint 経由にする。
             // プレイヤーは Awake で MainCamera を探すので、カメラリグを先に出す。
             if (_spawnPlayerRig)
@@ -69,22 +72,21 @@ namespace CreativeAI.UI
                 if (player != null)
                 {
                     SpawnPoint.Place(player, _spawnPointId);
+                    // dev_state に開始位置があれば、シーンの SpawnPoint より優先する(個人用の開始位置)。
+                    _devState?.ApplySpawn(player);
                     if (_previewOnlyPlayer)
                     {
                         player.AddComponent<PreviewOnlyPlayer>();
-                        var controller = player.GetComponent<PlayerController>();
-                        if (controller != null)
+                        if (player.TryGetComponent(out PlayerController controller))
                             controller.enabled = false;
-                        var input = player.GetComponent<PlayerInputHandler>();
-                        if (input != null)
+                        if (player.TryGetComponent(out PlayerInputHandler input))
                         {
                             input.cursorLocked = false;
                             input.enabled = false;
                         }
                         Cursor.lockState = CursorLockMode.None;
                         Cursor.visible = true;
-                        var collider = player.GetComponent<CharacterController>();
-                        if (collider != null)
+                        if (player.TryGetComponent(out CharacterController collider))
                             collider.enabled = false;
                     }
                 }
@@ -94,7 +96,6 @@ namespace CreativeAI.UI
             if (_seedTestItems && InventoryManager.Instance != null)
                 InventoryManager.Instance.SeedTestItems();
 
-            _devState = LoadDevState();
             _devState?.Apply(ProgressManager.Instance, InventoryManager.Instance);
         }
 
@@ -128,18 +129,19 @@ namespace CreativeAI.UI
         private static DevState LoadDevState()
         {
 #if UNITY_EDITOR
-            if (!System.IO.File.Exists(DevState.AssetPath))
+            var path = DevState.ResolvePath();
+            if (!System.IO.File.Exists(path))
                 return null;
 
             DevState state;
             try
             {
-                state = DevState.Parse(System.IO.File.ReadAllText(DevState.AssetPath));
+                state = DevState.Parse(System.IO.File.ReadAllText(path));
             }
             catch (System.ArgumentException e)
             {
                 Debug.LogWarning(
-                    $"[FieldDevBootstrap] {DevState.AssetPath} を読めません(JSON の書き方を確認): {e.Message}"
+                    $"[FieldDevBootstrap] {path} を読めません(JSON の書き方を確認): {e.Message}"
                 );
                 return null;
             }
@@ -148,12 +150,12 @@ namespace CreativeAI.UI
             if (!state.HasHp)
             {
                 Debug.LogError(
-                    $"[FieldDevBootstrap] {DevState.AssetPath} に hp がありません(必須)。この状態は反映しません。"
+                    $"[FieldDevBootstrap] {path} に hp がありません(必須)。この状態は反映しません。"
                 );
                 return null;
             }
             Debug.Log(
-                $"[FieldDevBootstrap] {DevState.AssetPath} の状態で開始(進行度 {state.progress}, HP {state.hp})"
+                $"[FieldDevBootstrap] {path} の状態で開始(進行度 {state.progress}, HP {state.hp})"
             );
             return state;
 #else

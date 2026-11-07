@@ -1,4 +1,5 @@
 #if UNITY_EDITOR
+using System.Collections.Generic;
 using System.IO;
 using CreativeAI.Gameplay;
 using Unity.AI.Navigation;
@@ -13,6 +14,8 @@ namespace CreativeAI.EditorTools
     /// <summary>
     /// Field_Area01 の NavMesh(敵が歩ける範囲)を焼く。Map の当たり(Ground / Obstacle レイヤーの Collider)から作るので、
     /// 当たりの無い小物は対象外(プレイヤーも擦り抜けるのと揃う)。扉板は開閉するので通れる扱いにする。
+    /// 小物(机・椅子など)は別の小物シーンにあるので、ベイクの間だけ Additive で重ねて当たりを含める
+    /// (含めないと NavMesh が小物の上を通ってしまい、道筋の線や敵の経路が小物を貫く)。
     /// NavMeshSurface は Map の外の `NavMesh` ルートに置く(Rebuild で Map ごと消えないように)。
     /// </summary>
     public static class AreaNavMeshBaker
@@ -61,7 +64,16 @@ namespace CreativeAI.EditorTools
             surface.collectObjects = CollectObjects.All;
             surface.useGeometry = NavMeshCollectGeometry.PhysicsColliders;
             surface.layerMask = mask;
-            surface.BuildNavMesh();
+            var openedPropScenes = OpenPropScenes(scene);
+            try
+            {
+                surface.BuildNavMesh();
+            }
+            finally
+            {
+                foreach (var propScene in openedPropScenes)
+                    EditorSceneManager.CloseScene(propScene, true);
+            }
             if (surface.navMeshData == null)
             {
                 Debug.LogError("[AreaNavMeshBaker] NavMesh のベイクに失敗しました。");
@@ -88,12 +100,31 @@ namespace CreativeAI.EditorTools
             return true;
         }
 
+        /// <summary>
+        /// 小物シーンのうち開いていないものを Additive で開いて返す(閉じるのは呼び出し側)。
+        /// すでに開いているものは触らない。
+        /// </summary>
+        static List<Scene> OpenPropScenes(Scene mapScene)
+        {
+            var opened = new List<Scene>();
+            foreach (var part in PropSceneWorkflow.Parts)
+            {
+                var path = PropSceneWorkflow.ScenePath(part);
+                if (!File.Exists(path) || SceneManager.GetSceneByPath(path).isLoaded)
+                    continue;
+                opened.Add(EditorSceneManager.OpenScene(path, OpenSceneMode.Additive));
+            }
+            if (mapScene.IsValid())
+                SceneManager.SetActiveScene(mapScene);
+            return opened;
+        }
+
         /// <summary>扉板は開閉するので焼く対象から外す(閉じた形で焼くと戸口が通れなくなる)。</summary>
         static void IgnoreDoorLeaves(GameObject map)
         {
-            foreach (var door in map.GetComponentsInChildren<SlidingDoor>(true))
+            foreach (var door in map.GetComponentsInChildren<SwingDoor>(true))
             {
-                var leaf = door.Leaf != null ? door.Leaf : SlidingDoor.FindLeaf(door.transform);
+                var leaf = door.Leaf != null ? door.Leaf : SwingDoor.FindLeaf(door.transform);
                 if (leaf == null)
                     continue;
                 if (!leaf.TryGetComponent<NavMeshModifier>(out var modifier))

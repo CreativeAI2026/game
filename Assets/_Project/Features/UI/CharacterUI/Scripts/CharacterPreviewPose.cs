@@ -86,8 +86,7 @@ namespace CreativeAI.UI.CharacterUI
                 _previewAnimator.enabled = false;
             foreach (var pair in _standing)
             {
-                pair.Key.localPosition = pair.Value.position;
-                pair.Key.localRotation = pair.Value.rotation;
+                pair.Key.SetLocalPositionAndRotation(pair.Value.position, pair.Value.rotation);
                 pair.Key.localScale = pair.Value.scale;
             }
         }
@@ -347,8 +346,7 @@ namespace CreativeAI.UI.CharacterUI
             map[source] = copy;
             if (!root)
             {
-                copy.localPosition = source.localPosition;
-                copy.localRotation = source.localRotation;
+                copy.SetLocalPositionAndRotation(source.localPosition, source.localRotation);
                 copy.localScale = source.localScale;
             }
             foreach (Transform child in source)

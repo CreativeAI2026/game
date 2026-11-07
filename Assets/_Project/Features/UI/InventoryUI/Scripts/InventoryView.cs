@@ -80,7 +80,8 @@ namespace CreativeAI.UI
         {
             _showItemCounts = show;
             foreach (var slot in _pooledSlots)
-                slot?.SetShowCount(show);
+                if (slot != null)
+                    slot.SetShowCount(show);
         }
 
         public void SetInteractionEnabled(bool enabled)
@@ -140,7 +141,7 @@ namespace CreativeAI.UI
         private void RefreshCurrentTab(ScrollRefreshMode scrollMode)
         {
             int tabIndex = _tabGroup != null ? Mathf.Max(0, _tabGroup.CurrentIndex) : 0;
-            TabDefinition definition = _tabGroup?.CurrentDefinition;
+            TabDefinition definition = _tabGroup != null ? _tabGroup.CurrentDefinition : null;
             if (definition == null && _tabGroup != null)
                 definition = _tabGroup.GetDefinitionForButtonIndex(tabIndex);
 
@@ -239,16 +240,7 @@ namespace CreativeAI.UI
             if (!_showOnlyBaseItems)
                 return items;
 
-            return items.FindAll(stack => stack != null && IsBaseItem(stack.Data));
-        }
-
-        private static bool IsBaseItem(ItemData item)
-        {
-            if (item == null)
-                return false;
-
-            string id = Mathf.Abs(item.id).ToString();
-            return id.Length >= 2 && id[1] == '0';
+            return items.FindAll(stack => stack?.Data != null && stack.Data.IsBaseMaterial);
         }
 
         private void WarnMissingReferencesOnce() { }
@@ -271,8 +263,10 @@ namespace CreativeAI.UI
         [ContextMenu("Auto Assign References")]
         private void AutoAssignReferences()
         {
-            _tabGroup ??= GetComponentInChildren<TabGroup>(true);
-            _detailPanel ??= GetComponentInChildren<ItemDetailPanel>(true);
+            if (_tabGroup == null)
+                _tabGroup = GetComponentInChildren<TabGroup>(true);
+            if (_detailPanel == null)
+                _detailPanel = GetComponentInChildren<ItemDetailPanel>(true);
         }
 #endif
 
@@ -291,8 +285,10 @@ namespace CreativeAI.UI
         {
             KillScrollTween();
             var scrollRect = GetScrollRect();
-            float previousVerticalPosition = scrollRect?.verticalNormalizedPosition ?? 1f;
-            float previousHorizontalPosition = scrollRect?.horizontalNormalizedPosition ?? 0f;
+            float previousVerticalPosition =
+                scrollRect != null ? scrollRect.verticalNormalizedPosition : 1f;
+            float previousHorizontalPosition =
+                scrollRect != null ? scrollRect.horizontalNormalizedPosition : 0f;
             ClearSlots();
 
             if (_slotsRoot == null || _slotPrefab == null || items == null)
@@ -401,12 +397,16 @@ namespace CreativeAI.UI
                 _currentSelectedSlot = selectedSlot;
                 _selectedStack = selectedSlot.Stack;
                 selectedSlot.Select();
-                _detailPanel?.Show(selectedSlot.Stack);
+                if (_detailPanel != null)
+                    _detailPanel.Show(selectedSlot.Stack);
                 return;
             }
 
             if (_selectFirstSlotOnRefresh)
+            {
+                CreativeAI.UI.SlotKeyboardFocus.Claim(this);
                 SelectSlot(_visibleSlots[0]);
+            }
             else
                 ClearSelectionAfterRefresh();
         }
@@ -414,7 +414,8 @@ namespace CreativeAI.UI
         private void ClearSelectionAfterRefresh()
         {
             ClearSelection();
-            _detailPanel?.Clear();
+            if (_detailPanel != null)
+                _detailPanel.Clear();
         }
 
         private ScrollRect GetScrollRect()
@@ -438,7 +439,8 @@ namespace CreativeAI.UI
             LayoutRebuilder.ForceRebuildLayoutImmediate(contentRect);
             Canvas.ForceUpdateCanvases();
             foreach (var slot in _visibleSlots)
-                slot?.RefreshCountLayout();
+                if (slot != null)
+                    slot.RefreshCountLayout();
 
             if (scrollRect == null)
                 return;
@@ -516,7 +518,8 @@ namespace CreativeAI.UI
             slot.Select();
             _currentSelectedSlot = slot;
             _selectedStack = slot.Stack;
-            _detailPanel?.Show(slot.Stack);
+            if (_detailPanel != null)
+                _detailPanel.Show(slot.Stack);
 
             DisableNavigationOnce();
         }
@@ -584,7 +587,8 @@ namespace CreativeAI.UI
 
             _selectedStack = stack;
             _currentSelectedSlot = FindVisibleSlot(stack);
-            _currentSelectedSlot?.Select();
+            if (_currentSelectedSlot != null)
+                _currentSelectedSlot.Select();
         }
 
         public void ClearSelection()
@@ -600,9 +604,11 @@ namespace CreativeAI.UI
         public void ResetViewState()
         {
             ClearSelection();
-            _detailPanel?.Clear();
+            if (_detailPanel != null)
+                _detailPanel.Clear();
 
-            _tabGroup?.ResetToFirstTab();
+            if (_tabGroup != null)
+                _tabGroup.ResetToFirstTab();
 
             if (_tabGroup == null)
                 RefreshCurrentTab(ScrollRefreshMode.ScrollToTop);
@@ -692,24 +698,39 @@ namespace CreativeAI.UI
             )
                 return;
 
-            var keyboard = Keyboard.current;
-            if (keyboard == null)
-                return;
-
-            if (keyboard.leftArrowKey.wasPressedThisFrame)
-                SelectSlotByOffset(-1);
-            else if (keyboard.rightArrowKey.wasPressedThisFrame)
-                SelectSlotByOffset(1);
-            else if (keyboard.upArrowKey.wasPressedThisFrame)
-                SelectSlotVertically(-1);
-            else if (keyboard.downArrowKey.wasPressedThisFrame)
-                SelectSlotVertically(1);
-            else if (
-                keyboard.enterKey.wasPressedThisFrame
-                || keyboard.numpadEnterKey.wasPressedThisFrame
-                || keyboard.spaceKey.wasPressedThisFrame
-            )
+            if (UiInputActionMap.TryReadDiscreteMove(out Vector2Int step))
+            {
+                if (step.x < 0)
+                    SelectSlotByOffset(-1);
+                else if (step.x > 0)
+                    SelectSlotByOffset(1);
+                else if (step.y > 0)
+                    SelectSlotVertically(-1);
+                else if (step.y < 0)
+                    SelectSlotVertically(1);
+            }
+            else if (UiInputActionMap.WasSubmitPressedThisFrame())
+            {
                 SubmitSelectedSlot();
+            }
+        }
+
+        public bool SelectFirstVisibleSlotAndClaimFocus()
+        {
+            if (!_interactionEnabled || _visibleSlots.Count <= 0)
+                return false;
+
+            var target =
+                _currentSelectedSlot != null && _visibleSlots.Contains(_currentSelectedSlot)
+                    ? _currentSelectedSlot
+                    : _visibleSlots[0];
+            if (target == null || !target.gameObject.activeSelf)
+                return false;
+
+            CreativeAI.UI.SlotKeyboardFocus.Claim(this);
+            SelectSlot(target);
+            OnSlotClicked?.Invoke(target.Stack);
+            return true;
         }
 
         public void SubmitSelectedSlot()
@@ -807,7 +828,10 @@ namespace CreativeAI.UI
 
             var slot = _visibleSlots[index];
             if (slot != null && slot.gameObject.activeInHierarchy)
+            {
                 SelectSlot(slot);
+                OnSlotClicked?.Invoke(slot.Stack);
+            }
         }
     }
 }

@@ -23,6 +23,7 @@ namespace CreativeAI.UI
             public string Portrait { get; }
         }
 
+        private static readonly WaitForSecondsRealtime LoopInterval = new(0.4f);
         private static readonly Speaker Protagonist = new("hero_normal");
         private static readonly Speaker Robot = new("robot_normal");
         private static readonly Speaker FragileGirl = new("girl_normal");
@@ -100,7 +101,7 @@ namespace CreativeAI.UI
                 do
                 {
                     yield return PlayEventPreview(_event, view);
-                    yield return new WaitForSecondsRealtime(0.4f);
+                    yield return LoopInterval;
                 } while (_loop);
                 yield break;
             }
@@ -189,7 +190,7 @@ namespace CreativeAI.UI
             if (view is ConversationView closingView)
             {
                 yield return closingView.HideAnimated();
-                yield return new WaitForSecondsRealtime(0.4f);
+                yield return LoopInterval;
             }
         }
 

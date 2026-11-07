@@ -14,9 +14,24 @@ namespace CreativeAI.Gameplay
     {
         private const string PlayerTag = "Player";
 
-        private static string FilePath => Path.Combine(Application.persistentDataPath, "save.json");
+        private static string _directoryOverride;
 
-        public static bool HasSave() => File.Exists(FilePath);
+        private static string FilePath =>
+            Path.Combine(_directoryOverride ?? Application.persistentDataPath, "save.json");
+
+        // 書きかけのファイルで本体を壊さないよう、一時ファイルに書き切ってから差し替える。
+        // 差し替え前の本体は 1 世代だけ残し、本体が読めないときの予備にする。
+        private static string TempPath => FilePath + ".tmp";
+        private static string BackupPath => FilePath + ".bak";
+
+        /// <summary>
+        /// テスト専用: 保存先フォルダを差し替える。null を渡すと persistentDataPath に戻す。
+        /// 開発者の手元のセーブをテストが読み書きしないようにするための口。
+        /// </summary>
+        public static void OverrideDirectoryForTests(string directory) =>
+            _directoryOverride = directory;
+
+        public static bool HasSave() => File.Exists(FilePath) || File.Exists(BackupPath);
 
         /// <summary>現在の進行度・フラグ・所持品をディスクへ全書きする。</summary>
         public static void Save()
@@ -71,8 +86,17 @@ namespace CreativeAI.Gameplay
 
             CapturePlayer(data);
 
-            File.WriteAllText(FilePath, JsonUtility.ToJson(data, true));
+            WriteAtomically(JsonUtility.ToJson(data, true));
             Debug.Log($"[SaveService] 保存しました: {FilePath}");
+        }
+
+        private static void WriteAtomically(string json)
+        {
+            File.WriteAllText(TempPath, json);
+            if (File.Exists(FilePath))
+                File.Replace(TempPath, FilePath, BackupPath);
+            else
+                File.Move(TempPath, FilePath);
         }
 
         /// <summary>
@@ -129,18 +153,24 @@ namespace CreativeAI.Gameplay
         }
 
         /// <summary>
-        /// ディスクから進行度・フラグ・所持品を復元し、読み込んだ SaveData を返す(セーブが無ければ null)。
+        /// ディスクから進行度・フラグ・所持品を復元し、読み込んだ SaveData を返す(セーブが無いか、本体も予備も壊れていれば null)。
         /// プレイヤーの座標・HP は対象シーンのロード後でないと配置できないため、ここでは復元しない。
         /// 呼び出し側は戻り値の sceneName でシーンをロードし、その完了時に <see cref="RestorePlayerState"/> を呼ぶ。
         /// </summary>
         public static SaveData Load()
         {
-            if (!HasSave())
-                return null;
-
-            var data = JsonUtility.FromJson<SaveData>(File.ReadAllText(FilePath));
-            if (data == null)
-                return null;
+            if (!TryRead(FilePath, out var data))
+            {
+                if (!TryRead(BackupPath, out data))
+                {
+                    if (HasSave())
+                        Debug.LogError("[SaveService] セーブデータが壊れていて読み込めません。");
+                    return null;
+                }
+                Debug.LogWarning(
+                    "[SaveService] セーブが読めないため、1つ前のセーブから復元します。"
+                );
+            }
 
             var pm = ProgressManager.Instance;
             if (pm != null)
@@ -198,6 +228,23 @@ namespace CreativeAI.Gameplay
             var status = player.GetComponentInChildren<PlayerStatus>();
             if (status != null)
                 status.RestoreHp(data.currentHp);
+        }
+
+        private static bool TryRead(string path, out SaveData data)
+        {
+            data = null;
+            if (!File.Exists(path))
+                return false;
+            try
+            {
+                data = JsonUtility.FromJson<SaveData>(File.ReadAllText(path));
+            }
+            catch (System.Exception e) when (e is System.ArgumentException || e is IOException)
+            {
+                Debug.LogWarning($"[SaveService] 読み込みに失敗しました: {path}\n{e.Message}");
+                return false;
+            }
+            return data != null;
         }
 
         private static void RestoreItems(

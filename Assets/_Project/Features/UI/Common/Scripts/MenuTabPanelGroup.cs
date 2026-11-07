@@ -70,6 +70,17 @@ namespace CreativeAI.UI
             }
         }
 
+        private void Update()
+        {
+            if (_tabs.Count <= 1)
+                return;
+
+            if (UiInputActionMap.WasPressedThisFrame(UiInputActionMap.TabPrev))
+                Select((CurrentIndex - 1 + _tabs.Count) % _tabs.Count);
+            else if (UiInputActionMap.WasPressedThisFrame(UiInputActionMap.TabNext))
+                Select((CurrentIndex + 1) % _tabs.Count);
+        }
+
         public void Select(int index)
         {
             if (!IsValidIndex(index))
@@ -108,7 +119,8 @@ namespace CreativeAI.UI
                     continue;
 
                 bool selected = tab == selectedTab;
-                tab.Button?.SetSelected(selected);
+                if (tab.Button != null)
+                    tab.Button.SetSelected(selected);
                 if (tab.Panel != null)
                     tab.Panel.SetActive(selected);
             }

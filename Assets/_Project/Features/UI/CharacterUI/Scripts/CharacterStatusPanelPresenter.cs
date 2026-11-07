@@ -80,7 +80,8 @@ namespace CreativeAI.UI.CharacterUI
             if (!_useTestValues)
                 Subscribe();
             RefreshAll(false, _animateTextOnOpen);
-            _hpBar?.PlayOpenAnimation();
+            if (_hpBar != null)
+                _hpBar.PlayOpenAnimation();
         }
 
         private void OnValidate()
@@ -109,7 +110,8 @@ namespace CreativeAI.UI.CharacterUI
             ResolveReferences();
             _typewriter ??= new TmpTypewriterPlayer(this);
             RefreshAll(false, _animateTextOnOpen);
-            _hpBar?.PlayOpenAnimation();
+            if (_hpBar != null)
+                _hpBar.PlayOpenAnimation();
         }
 
         private void OnHpChanged(float current, float maximum)
@@ -167,7 +169,8 @@ namespace CreativeAI.UI.CharacterUI
                 animateText
             );
 
-            _hpBar?.SetValue(clampedCurrent, clampedMaximum, animateBar);
+            if (_hpBar != null)
+                _hpBar.SetValue(clampedCurrent, clampedMaximum, animateBar);
         }
 
         private void SetNumber(TMP_Text text, float value, int rowIndex, bool animate)
@@ -217,15 +220,27 @@ namespace CreativeAI.UI.CharacterUI
             if (_playerStatus == null)
                 _playerStatus = FindAnyObjectByType<PlayerStatus>();
 
-            _hpValue ??= FindValueText("HP");
-            _attackValue ??= FindValueText("ATK");
-            _defenseValue ??= FindValueText("DEF");
-            _criticalRateValue ??= FindValueText("CRIR");
-            _criticalDamageValue ??= FindValueText("CRID");
-            _hpBar ??= transform.Find("StatusArea/HP/Bar")?.GetComponent<AnimatedValueBar>();
+            if (_hpValue == null)
+                _hpValue = FindValueText("HP");
+            if (_attackValue == null)
+                _attackValue = FindValueText("ATK");
+            if (_defenseValue == null)
+                _defenseValue = FindValueText("DEF");
+            if (_criticalRateValue == null)
+                _criticalRateValue = FindValueText("CRIR");
+            if (_criticalDamageValue == null)
+                _criticalDamageValue = FindValueText("CRID");
+            if (_hpBar == null)
+            {
+                Transform hpBar = transform.Find("StatusArea/HP/Bar");
+                _hpBar = hpBar != null ? hpBar.GetComponent<AnimatedValueBar>() : null;
+            }
         }
 
-        private TMP_Text FindValueText(string rowName) =>
-            transform.Find($"StatusArea/{rowName}/TextArea/ValueText")?.GetComponent<TMP_Text>();
+        private TMP_Text FindValueText(string rowName)
+        {
+            Transform valueText = transform.Find($"StatusArea/{rowName}/TextArea/ValueText");
+            return valueText != null ? valueText.GetComponent<TMP_Text>() : null;
+        }
     }
 }

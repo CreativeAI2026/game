@@ -4,10 +4,12 @@ using UnityEngine.AI;
 namespace CreativeAI.Gameplay
 {
     /// <summary>
-    /// 攻撃を受けて怯むステート。TestEnemyFlinchStateと同構造。
+    /// 攻撃を受けて怯むステート。
     /// </summary>
     public class TBossFlinchState : TBossBaseState
     {
+        private static readonly int FlinchTriggerHash = Animator.StringToHash("Flinch");
+
         // Flinchステートに入れないまま経過したら、トリガー取りこぼしとみなして復帰する
         private const float FlinchStateTimeout = 3f;
 
@@ -33,7 +35,7 @@ namespace CreativeAI.Gameplay
 
             if (boss.Animator != null)
             {
-                boss.Animator.SetTrigger("Flinch");
+                boss.Animator.SetTrigger(FlinchTriggerHash);
             }
         }
 

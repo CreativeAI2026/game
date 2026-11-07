@@ -37,9 +37,6 @@ namespace CreativeAI.Tests.PlayMode
         [UnityTearDown]
         public IEnumerator TearDown()
         {
-            InteractPromptService.Clear();
-            EventPlaybackService.SetPlaying(false);
-            BattleRunnerService.Current = null;
             if (_root != null)
                 Object.Destroy(_root.gameObject);
             DestroyResident<ProgressManager>();
@@ -67,7 +64,19 @@ namespace CreativeAI.Tests.PlayMode
         private static bool IsShown(Component ui)
         {
             var group = ui.GetComponent<CanvasGroup>();
-            return ui.gameObject.activeInHierarchy && group != null && group.IsShown();
+            return ui.gameObject.activeInHierarchy
+                && group != null
+                && group.IsShown()
+                && CanvasesEnabled(ui);
+        }
+
+        /// <summary>親の Canvas がすべて有効か(Canvas がオフだと CanvasGroup が表示でも何も描かれない)。</summary>
+        private static bool CanvasesEnabled(Component ui)
+        {
+            foreach (var canvas in ui.GetComponentsInParent<Canvas>(true))
+                if (!canvas.enabled)
+                    return false;
+            return true;
         }
 
         [Test]

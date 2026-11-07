@@ -121,7 +121,7 @@ namespace CreativeAI.Gameplay
         {
             if (boss == null)
             {
-                boss = GetComponent<TutorialBossController>();
+                TryGetComponent(out boss);
             }
         }
 
@@ -359,8 +359,7 @@ namespace CreativeAI.Gameplay
                     continue;
                 }
 
-                bone.localPosition = _capturedPositions[i];
-                bone.localRotation = _capturedRotations[i];
+                bone.SetLocalPositionAndRotation(_capturedPositions[i], _capturedRotations[i]);
                 bone.localScale = _capturedScales[i];
             }
         }

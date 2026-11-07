@@ -31,6 +31,10 @@ MonoBehaviour:
     _message: 
     _command: 
     _arg: 
+    _cases: []
+    _thenTarget: 0
+    _elseTarget: 0
+    _joinTarget: 0
   - _kind: 4
     _speaker: 
     _portrait: 
@@ -42,6 +46,10 @@ MonoBehaviour:
     _message: 
     _command: 
     _arg: 
+    _cases: []
+    _thenTarget: 0
+    _elseTarget: 0
+    _joinTarget: 0
   - _kind: 0
     _speaker: 
     _portrait: hero_anger
@@ -53,6 +61,10 @@ MonoBehaviour:
     _message: 
     _command: 
     _arg: 
+    _cases: []
+    _thenTarget: 0
+    _elseTarget: 0
+    _joinTarget: 0
   - _kind: 0
     _speaker: 
     _portrait: 
@@ -64,6 +76,10 @@ MonoBehaviour:
     _message: 
     _command: 
     _arg: 
+    _cases: []
+    _thenTarget: 0
+    _elseTarget: 0
+    _joinTarget: 0
   - _kind: 0
     _speaker: 
     _portrait: hero_anger
@@ -75,6 +91,10 @@ MonoBehaviour:
     _message: 
     _command: 
     _arg: 
+    _cases: []
+    _thenTarget: 0
+    _elseTarget: 0
+    _joinTarget: 0
   - _kind: 0
     _speaker: 
     _portrait: hero_anger
@@ -86,6 +106,10 @@ MonoBehaviour:
     _message: 
     _command: 
     _arg: 
+    _cases: []
+    _thenTarget: 0
+    _elseTarget: 0
+    _joinTarget: 0
   - _kind: 0
     _speaker: 
     _portrait: 
@@ -97,6 +121,10 @@ MonoBehaviour:
     _message: 
     _command: 
     _arg: 
+    _cases: []
+    _thenTarget: 0
+    _elseTarget: 0
+    _joinTarget: 0
   - _kind: 0
     _speaker: 
     _portrait: 
@@ -108,6 +136,10 @@ MonoBehaviour:
     _message: 
     _command: 
     _arg: 
+    _cases: []
+    _thenTarget: 0
+    _elseTarget: 0
+    _joinTarget: 0
   - _kind: 0
     _speaker: 
     _portrait: hero_surprised
@@ -119,6 +151,10 @@ MonoBehaviour:
     _message: 
     _command: 
     _arg: 
+    _cases: []
+    _thenTarget: 0
+    _elseTarget: 0
+    _joinTarget: 0
   - _kind: 0
     _speaker: 
     _portrait: hero_confused
@@ -130,6 +166,10 @@ MonoBehaviour:
     _message: 
     _command: 
     _arg: 
+    _cases: []
+    _thenTarget: 0
+    _elseTarget: 0
+    _joinTarget: 0
   - _kind: 0
     _speaker: 
     _portrait: 
@@ -141,6 +181,10 @@ MonoBehaviour:
     _message: 
     _command: 
     _arg: 
+    _cases: []
+    _thenTarget: 0
+    _elseTarget: 0
+    _joinTarget: 0
   - _kind: 0
     _speaker: 
     _portrait: hero_question
@@ -152,6 +196,10 @@ MonoBehaviour:
     _message: 
     _command: 
     _arg: 
+    _cases: []
+    _thenTarget: 0
+    _elseTarget: 0
+    _joinTarget: 0
   - _kind: 2
     _speaker: 
     _portrait: 
@@ -163,6 +211,10 @@ MonoBehaviour:
     _message: "\u300C\u30AB\u30FC\u30C9\u30AD\u30FC\u300D\u3092\u624B\u306B\u5165\u308C\u305F\u3002"
     _command: 
     _arg: 
+    _cases: []
+    _thenTarget: 0
+    _elseTarget: 0
+    _joinTarget: 0
   - _kind: 0
     _speaker: 
     _portrait: hero_surprised
@@ -174,6 +226,10 @@ MonoBehaviour:
     _message: 
     _command: 
     _arg: 
+    _cases: []
+    _thenTarget: 0
+    _elseTarget: 0
+    _joinTarget: 0
   - _kind: 0
     _speaker: 
     _portrait: hero_smile
@@ -185,6 +241,10 @@ MonoBehaviour:
     _message: 
     _command: 
     _arg: 
+    _cases: []
+    _thenTarget: 0
+    _elseTarget: 0
+    _joinTarget: 0
   - _kind: 0
     _speaker: 
     _portrait: 
@@ -196,6 +256,10 @@ MonoBehaviour:
     _message: 
     _command: 
     _arg: 
+    _cases: []
+    _thenTarget: 0
+    _elseTarget: 0
+    _joinTarget: 0
   - _kind: 0
     _speaker: 
     _portrait: 
@@ -207,6 +271,10 @@ MonoBehaviour:
     _message: 
     _command: 
     _arg: 
+    _cases: []
+    _thenTarget: 0
+    _elseTarget: 0
+    _joinTarget: 0
   - _kind: 0
     _speaker: 
     _portrait: hero_surprised
@@ -218,6 +286,10 @@ MonoBehaviour:
     _message: 
     _command: 
     _arg: 
+    _cases: []
+    _thenTarget: 0
+    _elseTarget: 0
+    _joinTarget: 0
   - _kind: 0
     _speaker: 
     _portrait: hero_confused
@@ -229,4 +301,8 @@ MonoBehaviour:
     _message: 
     _command: 
     _arg: 
+    _cases: []
+    _thenTarget: 0
+    _elseTarget: 0
+    _joinTarget: 0
   _nextProgress: 4

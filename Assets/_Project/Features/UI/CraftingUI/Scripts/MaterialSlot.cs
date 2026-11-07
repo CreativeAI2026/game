@@ -46,7 +46,8 @@ namespace CreativeAI.UI
         protected override void Awake()
         {
             WarnMissingViews();
-            _iconView?.SetEmptyAlpha(EmptyIconAlpha);
+            if (_iconView != null)
+                _iconView.SetEmptyAlpha(EmptyIconAlpha);
             base.Awake();
             ConfigureHover();
             Clear();
@@ -78,7 +79,8 @@ namespace CreativeAI.UI
         public void NormalizeVisualState()
         {
             Refresh();
-            _frameView?.SetSelected(_isSelected);
+            if (_frameView != null)
+                _frameView.SetSelected(_isSelected);
             ConfigureHover();
         }
 
@@ -96,9 +98,11 @@ namespace CreativeAI.UI
         protected override void Refresh()
         {
             WarnMissingViews();
-            _iconView?.SetEmptyAlpha(EmptyIconAlpha);
+            if (_iconView != null)
+                _iconView.SetEmptyAlpha(EmptyIconAlpha);
             base.Refresh();
-            _emptyView?.SetEmpty(_item == null);
+            if (_emptyView != null)
+                _emptyView.SetEmpty(_item == null);
             if (_materialHint != null)
                 _materialHint.SetActive(_item == null);
         }
@@ -106,7 +110,8 @@ namespace CreativeAI.UI
         public override void Clear()
         {
             base.Clear();
-            _emptyView?.SetEmpty(true);
+            if (_emptyView != null)
+                _emptyView.SetEmpty(true);
             if (_materialHint != null)
                 _materialHint.SetActive(true);
         }
@@ -156,7 +161,8 @@ namespace CreativeAI.UI
 
             if (animatedRect != null)
                 animatedRect.localScale = Vector3.one;
-            _frameView?.SetSelected(_isSelected);
+            if (_frameView != null)
+                _frameView.SetSelected(_isSelected);
             _materialAnimationRoutine = null;
         }
 
@@ -222,11 +228,16 @@ namespace CreativeAI.UI
         [ContextMenu("Auto Assign References")]
         private void AutoAssignReferences()
         {
-            _visualRootRect ??= transform.Find("VisualRoot") as RectTransform;
-            _iconView ??= GetComponentInChildren<SlotIconView>(true);
-            _emptyView ??= GetComponentInChildren<SlotEmptyView>(true);
-            _hoverView ??= GetComponentInChildren<SlotHoverView>(true);
-            _frameView ??= GetComponentInChildren<SlotFrameView>(true);
+            if (_visualRootRect == null)
+                _visualRootRect = transform.Find("VisualRoot") as RectTransform;
+            if (_iconView == null)
+                _iconView = GetComponentInChildren<SlotIconView>(true);
+            if (_emptyView == null)
+                _emptyView = GetComponentInChildren<SlotEmptyView>(true);
+            if (_hoverView == null)
+                _hoverView = GetComponentInChildren<SlotHoverView>(true);
+            if (_frameView == null)
+                _frameView = GetComponentInChildren<SlotFrameView>(true);
         }
 #endif
 

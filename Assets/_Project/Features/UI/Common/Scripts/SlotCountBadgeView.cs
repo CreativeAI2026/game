@@ -92,7 +92,7 @@ namespace CreativeAI.UI
                 return;
             }
 
-            _countText.text = count.ToString();
+            _countText.SetText("{0}", count);
             _container.gameObject.SetActive(true);
             _container.SetAsLastSibling();
             _countText.gameObject.SetActive(true);
@@ -216,8 +216,10 @@ namespace CreativeAI.UI
         {
             if (_countText != null)
                 _countText.rectTransform.DOKill();
-            _countTextCanvasGroup?.DOKill();
-            _containerCanvasGroup?.DOKill();
+            if (_countTextCanvasGroup != null)
+                _countTextCanvasGroup.DOKill();
+            if (_containerCanvasGroup != null)
+                _containerCanvasGroup.DOKill();
         }
 
         public void ResetVisual()
@@ -259,8 +261,14 @@ namespace CreativeAI.UI
             if (_frameRect != null)
                 return true;
 
-            _frameRect = GetComponentInChildren<SlotFrameView>(true)?.FrameRect;
+            _frameRect = FindFrameRectInChildren();
             return _frameRect != null;
+        }
+
+        private RectTransform FindFrameRectInChildren()
+        {
+            var frameView = GetComponentInChildren<SlotFrameView>(true);
+            return frameView != null ? frameView.FrameRect : null;
         }
 
         private RectTransform ResolvePositionRect()
@@ -277,18 +285,24 @@ namespace CreativeAI.UI
         [ContextMenu("Auto Assign References")]
         private void AutoAssignReferences()
         {
-            _container ??= FindContainer();
+            if (_container == null)
+                _container = FindContainer();
             if (_container != null)
             {
-                _countText ??= _container.GetComponentInChildren<TMP_Text>(true);
-                _containerCanvasGroup ??= _container.GetComponent<CanvasGroup>();
-                _backgroundImage ??= _container.GetComponent<Image>();
+                if (_countText == null)
+                    _countText = _container.GetComponentInChildren<TMP_Text>(true);
+                if (_containerCanvasGroup == null)
+                    _containerCanvasGroup = _container.GetComponent<CanvasGroup>();
+                if (_backgroundImage == null)
+                    _backgroundImage = _container.GetComponent<Image>();
             }
 
             if (_countText != null)
-                _countTextCanvasGroup ??= _countText.GetComponent<CanvasGroup>();
+                if (_countTextCanvasGroup == null)
+                    _countTextCanvasGroup = _countText.GetComponent<CanvasGroup>();
 
-            _frameRect ??= GetComponentInChildren<SlotFrameView>(true)?.FrameRect;
+            if (_frameRect == null)
+                _frameRect = FindFrameRectInChildren();
         }
 
         private RectTransform FindContainer()
@@ -299,10 +313,21 @@ namespace CreativeAI.UI
             )
                 return selfRect;
 
-            return transform.Find("VisualRoot/CountBadge") as RectTransform
-                ?? transform.Find("VisualRoot/numberSlot") as RectTransform
-                ?? transform.Find("CountBadge") as RectTransform
-                ?? transform.Find("numberSlot") as RectTransform;
+            foreach (
+                var path in new[]
+                {
+                    "VisualRoot/CountBadge",
+                    "VisualRoot/numberSlot",
+                    "CountBadge",
+                    "numberSlot",
+                }
+            )
+            {
+                var rect = transform.Find(path) as RectTransform;
+                if (rect != null)
+                    return rect;
+            }
+            return null;
         }
 #endif
 

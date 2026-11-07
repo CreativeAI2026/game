@@ -181,6 +181,15 @@ namespace CreativeAI.UI
         private DialogueCharacterDefinition[] _characters =
             Array.Empty<DialogueCharacterDefinition>();
 
+        [Header("演出コマンドの素材(events.json にはキーだけ書く)")]
+        [SerializeField]
+        [Tooltip("sound.se / sound.bgm のキーと SoundCue(Audio/SoundCue に置いたものを割り当てる)")]
+        private DialogueSoundEntry[] _sounds = Array.Empty<DialogueSoundEntry>();
+
+        [SerializeField]
+        [Tooltip("background.image のキーと背景画像")]
+        private DialogueBackgroundEntry[] _backgrounds = Array.Empty<DialogueBackgroundEntry>();
+
         [Header("アイテム受け取り表示")]
         [SerializeField]
         private Sprite _itemGetSprite; // 受け取ったアイテムのダミー画像(将来は giveItem の itemKey から解決)
@@ -247,6 +256,7 @@ namespace CreativeAI.UI
         private readonly ConversationControlsPresenter _controlsPresenter = new();
         private ConversationSpeedPresenter _speedPresenter;
         private DialoguePresentationCommandRouter _presentationCommandRouter;
+        private DialogueBackdropPresenter _backdropPresenter;
         private readonly DialogueAdvanceController _advanceController = new();
         private DialogueRewardPresenter _rewardPresenter;
         private DialogueRewardFlow _rewardFlow;
@@ -390,12 +400,17 @@ namespace CreativeAI.UI
                 SetTextSpeed,
                 () => _choicePresenter?.HandleKeyboardInput()
             );
+            _backdropPresenter ??= new DialogueBackdropPresenter(
+                _root != null ? _root.transform : transform
+            );
             _presentationCommandRouter ??= new DialoguePresentationCommandRouter(
                 SetWindowHidden,
                 SetPortraitVisible,
                 SetPortraitObscured,
                 PlayPortraitEffect,
                 () => HideAnimated(),
+                ShowPortraitByKey,
+                new DialogueStageCommands(_backdropPresenter, FindSound, FindBackground),
                 (command, argument) =>
                     ExternalPresentationCommandRequested?.Invoke(command, argument)
             );
@@ -471,8 +486,44 @@ namespace CreativeAI.UI
             _currentTypingSound = _lineFlow.TypingSound;
 
             yield return TypeBody(text ?? string.Empty);
-            yield return WaitForAdvance();
+            var parsed = DialogueMarkupParser.Parse(text);
+            if (parsed.HasAutoAdvance)
+                yield return WaitAutoAdvance(parsed.AutoAdvanceSeconds);
+            else
+                yield return WaitForAdvance();
             _sessionState.MarkCurrentLineRead();
+        }
+
+        /// <summary>
+        /// &lt;auto=秒&gt; の行: 表示しきってから秒数だけ待って、送り入力なしで次へ進む。
+        /// 送り入力を押せばその場で進める。通常の送り待ち(<see cref="WaitForAdvance"/>)と同じく、
+        /// ウィンドウを隠している間・ログを開いている間・入力ブロック中は、待ち時間を数えず、送り入力も受け付けない。
+        /// 既読スキップと開発用の全スキップのときは、待たずに進む。
+        /// </summary>
+        private IEnumerator WaitAutoAdvance(float seconds)
+        {
+            State = ConversationState.WaitingForAdvance;
+            yield return null;
+            float elapsed = 0f;
+            while (elapsed < seconds)
+            {
+                bool blocked =
+                    _windowManuallyHidden
+                    || (_historyPanel != null && _historyPanel.IsOpen)
+                    || Time.unscaledTime < _advanceBlockedUntil;
+                if (!blocked)
+                {
+                    if (
+                        DialogueAdvanceController.AdvancePressed()
+                        || DialogueDebugSkip.Active
+                        || (_sessionState.CurrentLineWasRead && _skipMode)
+                    )
+                        break;
+                    elapsed += Time.unscaledDeltaTime;
+                }
+                yield return null;
+            }
+            State = ConversationState.Entering;
         }
 
         /// <summary>選択肢を提示し、選ばれた値を <paramref name="onSelected"/> で返す。</summary>
@@ -580,10 +631,10 @@ namespace CreativeAI.UI
                 _charInterval,
                 _punctuationDelay,
                 _fastForwardMultiplier,
-                _sessionState.CurrentLineWasRead,
+                _sessionState.CurrentLineWasRead || DialogueDebugSkip.Active,
                 _typingAudioSource,
                 _currentTypingSound,
-                () => _skipMode,
+                () => _skipMode || DialogueDebugSkip.Active,
                 () => _windowManuallyHidden
             );
         }
@@ -594,9 +645,9 @@ namespace CreativeAI.UI
             _chromePresenter.StartBounce();
             yield return _advanceController.Wait(
                 _bodyText,
-                _sessionState.CurrentLineWasRead,
+                _sessionState.CurrentLineWasRead || DialogueDebugSkip.Active,
                 () => allowAuto && IsAutoMode && !_windowManuallyHidden,
-                () => _skipMode,
+                () => _skipMode || DialogueDebugSkip.Active,
                 () => _windowManuallyHidden || Time.unscaledTime < _advanceBlockedUntil,
                 () => _historyPanel != null && _historyPanel.IsOpen,
                 _autoAdvanceDelay
@@ -680,6 +731,37 @@ namespace CreativeAI.UI
             yield return _portraitPresenter.SetObscured(side, obscured, duration);
         }
 
+        // 登録した素材からキーで引く。同じキーが複数あれば先に登録したほうを使う。
+        private SoundKit.SoundCue FindSound(string key)
+        {
+            foreach (var entry in _sounds ?? Array.Empty<DialogueSoundEntry>())
+                if (entry.Key == key)
+                    return entry.Cue;
+            return null;
+        }
+
+        private Sprite FindBackground(string key)
+        {
+            foreach (var entry in _backgrounds ?? Array.Empty<DialogueBackgroundEntry>())
+                if (entry.Key == key)
+                    return entry.Sprite;
+            return null;
+        }
+
+        /// <summary>portrait.show: セリフなしで、キーの立ち絵をその人の立ち位置に出す。</summary>
+        private IEnumerator ShowPortraitByKey(string portraitKey)
+        {
+            if (string.IsNullOrEmpty(portraitKey))
+                yield break;
+            var resolved = DialoguePortraitResolver.Resolve(
+                portraitKey,
+                _characters,
+                _defaultPortrait,
+                _defaultPortraitSide
+            );
+            yield return _portraitPresenter.Set(resolved);
+        }
+
         public IEnumerator RunPresentationCommand(string command, string argument = null)
         {
             InitializePresenters();
@@ -733,7 +815,7 @@ namespace CreativeAI.UI
         private void EnsureHistoryPanel()
         {
             if (_historyPanel == null)
-                _historyPanel = GetComponent<DialogueHistoryPanel>();
+                TryGetComponent(out _historyPanel);
             if (_historyPanel == null)
                 _historyPanel = gameObject.AddComponent<DialogueHistoryPanel>();
 
@@ -790,6 +872,7 @@ namespace CreativeAI.UI
 
         private void ResetTransientModes()
         {
+            _backdropPresenter?.Reset();
             _rewardPresentationActive = false;
             _skipMode = false;
             _windowManuallyHidden = false;

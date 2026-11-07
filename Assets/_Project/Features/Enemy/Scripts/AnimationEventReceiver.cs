@@ -20,15 +20,13 @@ namespace CreativeAI.Gameplay
                 return;
             }
 
-            var enemyHitbox = _meleeHitbox.GetComponent<EnemyMeleeHitbox>();
-            if (enemyHitbox != null)
+            if (_meleeHitbox.TryGetComponent(out EnemyMeleeHitbox enemyHitbox))
             {
                 enemyHitbox.EnableHitbox();
                 return;
             }
 
-            var playerHitbox = _meleeHitbox.GetComponent<PlayerMeleeHitbox>();
-            if (playerHitbox != null)
+            if (_meleeHitbox.TryGetComponent(out PlayerMeleeHitbox playerHitbox))
             {
                 playerHitbox.EnableHitbox();
                 return;
@@ -42,15 +40,13 @@ namespace CreativeAI.Gameplay
                 return;
             }
 
-            var enemyHitbox = _meleeHitbox.GetComponent<EnemyMeleeHitbox>();
-            if (enemyHitbox != null)
+            if (_meleeHitbox.TryGetComponent(out EnemyMeleeHitbox enemyHitbox))
             {
                 enemyHitbox.DisableHitbox();
                 return;
             }
 
-            var playerHitbox = _meleeHitbox.GetComponent<PlayerMeleeHitbox>();
-            if (playerHitbox != null)
+            if (_meleeHitbox.TryGetComponent(out PlayerMeleeHitbox playerHitbox))
             {
                 playerHitbox.DisableHitbox();
                 return;

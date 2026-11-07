@@ -59,26 +59,14 @@ namespace CreativeAI.UI
 
         public static bool AdvancePressed()
         {
-            var keyboard = Keyboard.current;
-            if (
-                keyboard != null
-                && (
-                    keyboard.spaceKey.wasPressedThisFrame
-                    || keyboard.enterKey.wasPressedThisFrame
-                    || keyboard.numpadEnterKey.wasPressedThisFrame
-                    || keyboard.zKey.wasPressedThisFrame
-                )
-            )
-                return true;
-            var mouse = Mouse.current;
-            if (mouse != null && mouse.leftButton.wasPressedThisFrame)
-                return true;
-            var gamepad = Gamepad.current;
-            return gamepad != null && gamepad.buttonSouth.wasPressedThisFrame;
+            return UiInputActionMap.WasPressedThisFrame(UiInputActionMap.DialogueAdvance)
+                || UiInputActionMap.WasClickPressedThisFrame();
         }
 
-        private static bool SkipReadHeld(bool wasRead) =>
-            wasRead && Keyboard.current != null && Keyboard.current.sKey.isPressed;
+        private static bool SkipReadHeld(bool wasRead)
+        {
+            return wasRead && UiInputActionMap.IsPressed(UiInputActionMap.DialogueSkip);
+        }
 
         private static float CalculateAutoDelay(TMP_Text body, float baseDelay)
         {

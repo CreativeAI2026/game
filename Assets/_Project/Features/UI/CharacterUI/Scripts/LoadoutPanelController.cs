@@ -44,10 +44,12 @@ namespace CreativeAI.UI.CharacterUI
         [SerializeField]
         private Color _tabSelectedTextColor = new Color32(0xff, 0xc3, 0x46, 0xff);
 
+#pragma warning disable CS0414 // エディタ専用(#if UNITY_EDITOR)でのみ読む。プレイヤービルドでは未使用になる
         [Header("開発用プレビュー")]
         [SerializeField]
         [Tooltip("所持品が空の開発用シーンでは、確認用の所持品を生成します。")]
         private bool _seedPreviewInventoryWhenEmpty = true;
+#pragma warning restore CS0414
 
         [Header("詳細テキストアニメーション")]
         [SerializeField]
@@ -136,7 +138,8 @@ namespace CreativeAI.UI.CharacterUI
                 return;
 
             _selectedStack = null;
-            _inventory?.ClearSelection();
+            if (_inventory != null)
+                _inventory.ClearSelection();
             ShowEmptyDetail(replayText: true);
             PlaySlotAppearance();
             BindDataEvents();
@@ -203,8 +206,10 @@ namespace CreativeAI.UI.CharacterUI
 
             BindUiEvents();
 
-            _inventory?.SetSelectFirstSlotOnRefresh(false);
-            _inventory?.SetShowItemCounts(true);
+            if (_inventory != null)
+                _inventory.SetSelectFirstSlotOnRefresh(false);
+            if (_inventory != null)
+                _inventory.SetShowItemCounts(true);
             if (_equipmentTitle != null)
                 _equipmentTitle.text = "装備";
 
@@ -265,74 +270,128 @@ namespace CreativeAI.UI.CharacterUI
                 _detailAreaLayout = detail != null ? detail.GetComponent<LayoutElement>() : null;
                 _detailExpandedHeight =
                     _detailAreaLayout != null ? _detailAreaLayout.preferredHeight : 0;
-                _detailParameterRow = detail?.Find("ParamaterRow")?.gameObject;
+                _detailParameterRow = FindGameObject(detail, "ParamaterRow");
                 var parameterLayout =
                     _detailParameterRow != null
                         ? _detailParameterRow.GetComponent<LayoutElement>()
                         : null;
                 _detailParameterHeight =
                     parameterLayout != null ? Mathf.Max(0, parameterLayout.preferredHeight) : 0;
-                _detailIconArea = detail?.Find("ItemRow/IconArea")?.gameObject;
-                _detailButtonArea = detail?.Find("ItemRow/ButtonArea")?.gameObject;
+                _detailIconArea = FindGameObject(detail, "ItemRow/IconArea");
+                _detailButtonArea = FindGameObject(detail, "ItemRow/ButtonArea");
             }
-            _inventory ??= transform
-                .Find("InventoryArea/ScrollViewArea")
-                ?.GetComponentInChildren<InventoryView>(true);
-            _detailIcon ??= transform
-                .Find("InventoryArea/DetailArea/ItemRow/IconArea/Background/Icon")
-                ?.GetComponent<Image>();
-            _detailName ??= transform
-                .Find("InventoryArea/DetailArea/ItemRow/DescriptionArea/Title")
-                ?.GetComponent<TMP_Text>();
-            _detailDescription ??= transform
-                .Find("InventoryArea/DetailArea/ItemRow/DescriptionArea/Description")
-                ?.GetComponent<TMP_Text>();
-            _detailCount ??= transform
-                .Find("InventoryArea/DetailArea/ItemRow/ButtonArea/Quantity")
-                ?.GetComponent<TMP_Text>();
-            _actionButton ??= transform
-                .Find("InventoryArea/DetailArea/ItemRow/ButtonArea/Button")
-                ?.GetComponent<Button>();
-            _actionLabel ??= _actionButton?.GetComponentInChildren<TMP_Text>(true);
-            _equipmentTitle ??= transform
-                .Find("EquipArea/TitleArea/Title")
-                ?.GetComponent<TMP_Text>();
-            _dropErrorFeedback ??= transform
-                .Find("DropErrorMessage")
-                ?.GetComponent<LoadoutDropErrorFeedback>();
+            if (_inventory == null)
+            {
+                Transform scrollViewArea = transform.Find("InventoryArea/ScrollViewArea");
+                _inventory =
+                    scrollViewArea != null
+                        ? scrollViewArea.GetComponentInChildren<InventoryView>(true)
+                        : null;
+            }
+            if (_detailIcon == null)
+                _detailIcon = FindComponent<Image>(
+                    transform,
+                    "InventoryArea/DetailArea/ItemRow/IconArea/Background/Icon"
+                );
+            if (_detailName == null)
+                _detailName = FindComponent<TMP_Text>(
+                    transform,
+                    "InventoryArea/DetailArea/ItemRow/DescriptionArea/Title"
+                );
+            if (_detailDescription == null)
+                _detailDescription = FindComponent<TMP_Text>(
+                    transform,
+                    "InventoryArea/DetailArea/ItemRow/DescriptionArea/Description"
+                );
+            if (_detailCount == null)
+                _detailCount = FindComponent<TMP_Text>(
+                    transform,
+                    "InventoryArea/DetailArea/ItemRow/ButtonArea/Quantity"
+                );
+            if (_actionButton == null)
+                _actionButton = FindComponent<Button>(
+                    transform,
+                    "InventoryArea/DetailArea/ItemRow/ButtonArea/Button"
+                );
+            if (_actionLabel == null)
+                _actionLabel =
+                    _actionButton != null
+                        ? _actionButton.GetComponentInChildren<TMP_Text>(true)
+                        : null;
+            if (_equipmentTitle == null)
+                _equipmentTitle = FindComponent<TMP_Text>(transform, "EquipArea/TitleArea/Title");
+            if (_dropErrorFeedback == null)
+                _dropErrorFeedback = FindComponent<LoadoutDropErrorFeedback>(
+                    transform,
+                    "DropErrorMessage"
+                );
 
             Transform parameterRoot = transform.Find("InventoryArea/DetailArea/ParamaterRow");
-            _quickParameterPattern ??= parameterRoot?.Find("QuickItemPattern")?.gameObject;
-            _equipmentParameterPattern ??= parameterRoot?.Find("EquipPattern")?.gameObject;
+            if (_quickParameterPattern == null)
+                _quickParameterPattern = FindGameObject(parameterRoot, "QuickItemPattern");
+            if (_equipmentParameterPattern == null)
+                _equipmentParameterPattern = FindGameObject(parameterRoot, "EquipPattern");
 
-            Transform quickParameter = parameterRoot?.Find("QuickItemPattern/ItemParamaterArea");
-            _quickParameterLabel ??= quickParameter?.Find("Label")?.GetComponent<TMP_Text>();
-            _quickParameterValue ??= quickParameter?.Find("Value")?.GetComponent<TMP_Text>();
+            Transform quickParameter =
+                parameterRoot != null
+                    ? parameterRoot.Find("QuickItemPattern/ItemParamaterArea")
+                    : null;
+            if (_quickParameterLabel == null)
+                _quickParameterLabel = FindComponent<TMP_Text>(quickParameter, "Label");
+            if (_quickParameterValue == null)
+                _quickParameterValue = FindComponent<TMP_Text>(quickParameter, "Value");
 
-            _attackParameterValue ??= FindParameterValue(
-                parameterRoot,
-                "EquipPattern/UpperArea/ATK"
-            );
-            _defenseParameterValue ??= FindParameterValue(
-                parameterRoot,
-                "EquipPattern/UpperArea/DEF"
-            );
-            _maxHpParameterValue ??= FindParameterValue(
-                parameterRoot,
-                "EquipPattern/UpperArea/MaxHP"
-            );
-            _criticalRateParameterValue ??= FindParameterValue(
-                parameterRoot,
-                "EquipPattern/LowerArea/CRTR"
-            );
-            _criticalDamageParameterValue ??= FindParameterValue(
-                parameterRoot,
-                "EquipPattern/LowerArea/CRTD"
-            );
+            if (_attackParameterValue == null)
+                _attackParameterValue = FindParameterValue(
+                    parameterRoot,
+                    "EquipPattern/UpperArea/ATK"
+                );
+            if (_defenseParameterValue == null)
+                _defenseParameterValue = FindParameterValue(
+                    parameterRoot,
+                    "EquipPattern/UpperArea/DEF"
+                );
+            if (_maxHpParameterValue == null)
+                _maxHpParameterValue = FindParameterValue(
+                    parameterRoot,
+                    "EquipPattern/UpperArea/MaxHP"
+                );
+            if (_criticalRateParameterValue == null)
+                _criticalRateParameterValue = FindParameterValue(
+                    parameterRoot,
+                    "EquipPattern/LowerArea/CRTR"
+                );
+            if (_criticalDamageParameterValue == null)
+                _criticalDamageParameterValue = FindParameterValue(
+                    parameterRoot,
+                    "EquipPattern/LowerArea/CRTD"
+                );
         }
 
-        private static TMP_Text FindParameterValue(Transform root, string path) =>
-            root?.Find(path)?.Find("Value")?.GetComponent<TMP_Text>();
+        private static TMP_Text FindParameterValue(Transform root, string path)
+        {
+            Transform t = root != null ? root.Find(path) : null;
+            return FindComponent<TMP_Text>(t, "Value");
+        }
+
+        private static T FindComponent<T>(Transform root, string path)
+            where T : Component
+        {
+            Transform t = root != null ? root.Find(path) : null;
+            return t != null ? t.GetComponent<T>() : null;
+        }
+
+        private static GameObject FindGameObject(Transform root, string path)
+        {
+            Transform t = root != null ? root.Find(path) : null;
+            return t != null ? t.gameObject : null;
+        }
+
+        private static ItemCategory? GetCategory(ItemStack stack)
+        {
+            ItemData data = stack?.Data;
+            return data != null ? data.category : null;
+        }
 
         private void ResolveFilterButtons()
         {
@@ -350,10 +409,8 @@ namespace CreativeAI.UI.CharacterUI
                     continue;
 
                 _filterButtons.Add(button);
-                _filterLabels.Add(button.transform.Find("Label")?.GetComponent<TMP_Text>());
-                _filterCountLabels.Add(
-                    button.transform.Find("Image/Number")?.GetComponent<TMP_Text>()
-                );
+                _filterLabels.Add(FindComponent<TMP_Text>(button.transform, "Label"));
+                _filterCountLabels.Add(FindComponent<TMP_Text>(button.transform, "Image/Number"));
             }
         }
 
@@ -387,9 +444,7 @@ namespace CreativeAI.UI.CharacterUI
 
             for (int i = 0; i < root.childCount; i++)
             {
-                LoadoutAssignmentSlotView slot = root.GetChild(i)
-                    .GetComponent<LoadoutAssignmentSlotView>();
-                if (slot != null)
+                if (root.GetChild(i).TryGetComponent(out LoadoutAssignmentSlotView slot))
                     destination.Add(slot);
             }
         }
@@ -430,13 +485,15 @@ namespace CreativeAI.UI.CharacterUI
             {
                 _inventory.OnSlotClicked += OnInventorySlotClicked;
                 _inventory.OnSlotDoubleClicked += OnInventorySlotDoubleClicked;
+                _inventory.OnSlotSubmitted += OnInventorySlotSubmitted;
                 _inventory.DisplayRefreshRequested += OnInventoryRefreshRequested;
             }
 
             ItemSlotDragContext.Started += OnItemDragStarted;
             ItemSlotDragContext.Ended += OnItemDragEnded;
 
-            _actionButton?.onClick.AddListener(ExecuteDetailAction);
+            if (_actionButton != null)
+                _actionButton.onClick.AddListener(ExecuteDetailAction);
             _eventsBound = true;
         }
 
@@ -446,7 +503,8 @@ namespace CreativeAI.UI.CharacterUI
                 return;
 
             for (int i = 0; i < _filterButtons.Count && i < _filterActions.Count; i++)
-                _filterButtons[i]?.onClick.RemoveListener(_filterActions[i]);
+                if (_filterButtons[i] != null)
+                    _filterButtons[i].onClick.RemoveListener(_filterActions[i]);
             _filterActions.Clear();
             foreach (LoadoutAssignmentSlotView slot in _quickSlots)
             {
@@ -477,19 +535,22 @@ namespace CreativeAI.UI.CharacterUI
             {
                 _inventory.OnSlotClicked -= OnInventorySlotClicked;
                 _inventory.OnSlotDoubleClicked -= OnInventorySlotDoubleClicked;
+                _inventory.OnSlotSubmitted -= OnInventorySlotSubmitted;
                 _inventory.DisplayRefreshRequested -= OnInventoryRefreshRequested;
             }
 
             ItemSlotDragContext.Started -= OnItemDragStarted;
             ItemSlotDragContext.Ended -= OnItemDragEnded;
 
-            _actionButton?.onClick.RemoveListener(ExecuteDetailAction);
+            if (_actionButton != null)
+                _actionButton.onClick.RemoveListener(ExecuteDetailAction);
             _eventsBound = false;
         }
 
         private void OnItemDragStarted(ItemSlotDragPayload payload)
         {
-            _inventory?.ClearSelection();
+            if (_inventory != null)
+                _inventory.ClearSelection();
             ClearAssignmentPreviews();
             SetSelectedSlot(_quickSlots, -1);
             SetSelectedSlot(_equipmentSlots, -1);
@@ -542,7 +603,8 @@ namespace CreativeAI.UI.CharacterUI
 #if UNITY_EDITOR || DEVELOPMENT_BUILD
             if (_seedPreviewInventoryWhenEmpty)
             {
-                manager ??= InventoryManager.EnsureResident();
+                if (manager == null)
+                    manager = InventoryManager.EnsureResident();
                 if (manager.GetAllItems().Count == 0)
                     manager.SeedTestItems();
             }
@@ -581,6 +643,7 @@ namespace CreativeAI.UI.CharacterUI
             SyncEquipmentAssignments();
             RefreshEquipmentSlots();
             RefreshTargetSelection();
+            FocusInventoryOrSlots();
         }
 
         private void SelectFilter(int index)
@@ -594,6 +657,77 @@ namespace CreativeAI.UI.CharacterUI
             RefreshInventory(InventoryView.ScrollRefreshMode.ScrollToTop);
             RefreshTargetSelection();
             ShowEmptyDetail();
+            FocusInventoryOrSlots();
+        }
+
+        private void FocusInventoryOrSlots()
+        {
+            if (_inventory != null && _inventory.SelectFirstVisibleSlotAndClaimFocus())
+                return;
+
+            SlotKeyboardFocus.Claim(this);
+            SelectFocusedAssignmentSlot(0);
+        }
+
+        private void Update()
+        {
+            if (!_initialized)
+                return;
+
+            if (
+                UiInputActionMap.WasPressedThisFrame(UiInputActionMap.SubTabPrev)
+                || UiInputActionMap.WasPressedThisFrame(UiInputActionMap.SubTabNext)
+            )
+            {
+                SelectFilter(_filter == Filter.Quick ? (int)Filter.Equipment : (int)Filter.Quick);
+                return;
+            }
+
+            if (UiInputActionMap.WasPressedThisFrame(UiInputActionMap.AuxAction))
+            {
+                if (SlotKeyboardFocus.IsFocused(this))
+                {
+                    if (_inventory == null || !_inventory.SelectFirstVisibleSlotAndClaimFocus())
+                        SelectFocusedAssignmentSlot(1);
+                }
+                else
+                {
+                    SlotKeyboardFocus.Claim(this);
+                    SelectFocusedAssignmentSlot(0);
+                }
+                return;
+            }
+
+            if (!SlotKeyboardFocus.IsFocused(this))
+                return;
+
+            if (UiInputActionMap.TryReadDiscreteMove(out Vector2Int step))
+            {
+                int delta = step.x != 0 ? step.x : -step.y;
+                if (delta != 0)
+                    SelectFocusedAssignmentSlot(delta > 0 ? 1 : -1);
+            }
+            else if (UiInputActionMap.WasSubmitPressedThisFrame())
+            {
+                ExecuteDetailAction();
+            }
+        }
+
+        private void SelectFocusedAssignmentSlot(int offset)
+        {
+            if (_filter == Filter.Quick && _quickSlots.Count > 0)
+            {
+                _selectedQuickSlot =
+                    (_selectedQuickSlot + offset + _quickSlots.Count) % _quickSlots.Count;
+                OnQuickSlotClicked(_quickSlots[_selectedQuickSlot]);
+            }
+            else if (_filter == Filter.Equipment && _equipmentSlots.Count > 0)
+            {
+                _selectedEquipmentSlot =
+                    (_selectedEquipmentSlot + offset + _equipmentSlots.Count)
+                    % _equipmentSlots.Count;
+                OnEquipmentSlotClicked(_equipmentSlots[_selectedEquipmentSlot]);
+            }
         }
 
         private void RefreshTabVisuals()
@@ -615,7 +749,9 @@ namespace CreativeAI.UI.CharacterUI
 
         private void RefreshFilterCounts()
         {
-            IReadOnlyList<ItemStack> items = ActiveInventoryManager?.GetAllItems();
+            InventoryManager inventoryManager = ActiveInventoryManager;
+            IReadOnlyList<ItemStack> items =
+                inventoryManager != null ? inventoryManager.GetAllItems() : null;
             int quickCount = 0;
             int equipmentCount = 0;
 
@@ -623,7 +759,7 @@ namespace CreativeAI.UI.CharacterUI
             {
                 foreach (ItemStack stack in items)
                 {
-                    switch (stack?.Data?.category)
+                    switch (GetCategory(stack))
                     {
                         case ItemCategory.Food:
                             quickCount++;
@@ -654,7 +790,9 @@ namespace CreativeAI.UI.CharacterUI
             if (_inventory == null)
                 return;
 
-            List<ItemStack> items = ActiveInventoryManager?.GetAllItems();
+            InventoryManager inventoryManager = ActiveInventoryManager;
+            List<ItemStack> items =
+                inventoryManager != null ? inventoryManager.GetAllItems() : null;
             if (items == null)
             {
                 _inventory.SetItems(null, scrollMode);
@@ -698,6 +836,12 @@ namespace CreativeAI.UI.CharacterUI
             AssignSelectedStack();
         }
 
+        private void OnInventorySlotSubmitted(ItemStack stack)
+        {
+            OnInventorySlotClicked(stack);
+            ExecuteDetailAction();
+        }
+
         private void SelectTargetFor(ItemCategory category)
         {
             if (category == ItemCategory.Food)
@@ -738,10 +882,11 @@ namespace CreativeAI.UI.CharacterUI
                     return;
 
                 _selectedStack = slot.Stack;
-                _inventory?.SelectItem(slot.Stack);
+                if (_inventory != null)
+                    _inventory.SelectItem(slot.Stack);
                 ShowDetail(slot.Stack, DetailAction.RemoveQuick);
             }
-            else if (_selectedStack?.Data?.category == ItemCategory.Food)
+            else if (GetCategory(_selectedStack) == ItemCategory.Food)
             {
                 if (_detailAction == DetailAction.Assign)
                     return;
@@ -766,10 +911,11 @@ namespace CreativeAI.UI.CharacterUI
                     return;
 
                 _selectedStack = slot.Stack;
-                _inventory?.SelectItem(slot.Stack);
+                if (_inventory != null)
+                    _inventory.SelectItem(slot.Stack);
                 ShowDetail(slot.Stack, DetailAction.RemoveEquipment);
             }
-            else if (_selectedStack?.Data?.category == ItemCategory.Equipment)
+            else if (GetCategory(_selectedStack) == ItemCategory.Equipment)
             {
                 if (_detailAction == DetailAction.Assign)
                     return;
@@ -829,7 +975,8 @@ namespace CreativeAI.UI.CharacterUI
                 : _equipmentSlots.Contains(target) ? "装備スロットには装備品のみ登録できます"
                 : "このスロットには登録できません";
 
-            _dropErrorFeedback?.Show(message, target.transform as RectTransform);
+            if (_dropErrorFeedback != null)
+                _dropErrorFeedback.Show(message, target.transform as RectTransform);
         }
 
         private void OnAssignmentSlotDragEntered(
@@ -864,14 +1011,16 @@ namespace CreativeAI.UI.CharacterUI
         private void ClearAssignmentPreviews()
         {
             foreach (LoadoutAssignmentSlotView slot in _quickSlots)
-                slot?.ClearPreview();
+                if (slot != null)
+                    slot.ClearPreview();
             foreach (LoadoutAssignmentSlotView slot in _equipmentSlots)
-                slot?.ClearPreview();
+                if (slot != null)
+                    slot.ClearPreview();
         }
 
         private void DropIntoQuickSlot(int targetIndex, ItemSlotDragPayload payload)
         {
-            if (payload.Stack?.Data?.category != ItemCategory.Food)
+            if (GetCategory(payload.Stack) != ItemCategory.Food)
                 return;
 
             _selectedQuickSlot = targetIndex;
@@ -880,12 +1029,17 @@ namespace CreativeAI.UI.CharacterUI
 
             if (payload.Origin == ItemSlotDragOrigin.Quick)
             {
-                if (ActiveInventoryManager?.SwapQuickFood(payload.SlotIndex, targetIndex) != true)
+                InventoryManager inventoryManager = ActiveInventoryManager;
+                if (
+                    inventoryManager == null
+                    || !inventoryManager.SwapQuickFood(payload.SlotIndex, targetIndex)
+                )
                     return;
 
                 RefreshQuickSlots();
                 _selectedStack = payload.Stack;
-                _inventory?.SelectItem(payload.Stack);
+                if (_inventory != null)
+                    _inventory.SelectItem(payload.Stack);
                 ShowDetail(payload.Stack, DetailAction.RemoveQuick);
                 return;
             }
@@ -895,12 +1049,13 @@ namespace CreativeAI.UI.CharacterUI
 
             _selectedStack = payload.Stack;
             AssignQuickItem();
-            _inventory?.SelectItem(payload.Stack);
+            if (_inventory != null)
+                _inventory.SelectItem(payload.Stack);
         }
 
         private void DropIntoEquipmentSlot(int targetIndex, ItemSlotDragPayload payload)
         {
-            if (payload.Stack?.Data?.category != ItemCategory.Equipment)
+            if (GetCategory(payload.Stack) != ItemCategory.Equipment)
                 return;
 
             _selectedEquipmentSlot = targetIndex;
@@ -923,7 +1078,8 @@ namespace CreativeAI.UI.CharacterUI
                 );
                 RefreshEquipmentSlots();
                 _selectedStack = payload.Stack;
-                _inventory?.SelectItem(payload.Stack);
+                if (_inventory != null)
+                    _inventory.SelectItem(payload.Stack);
                 ShowDetail(payload.Stack, DetailAction.RemoveEquipment);
                 return;
             }
@@ -933,7 +1089,8 @@ namespace CreativeAI.UI.CharacterUI
 
             _selectedStack = payload.Stack;
             AssignEquipment();
-            _inventory?.SelectItem(payload.Stack);
+            if (_inventory != null)
+                _inventory.SelectItem(payload.Stack);
         }
 
         private static void SetSelectedSlot(
@@ -947,7 +1104,7 @@ namespace CreativeAI.UI.CharacterUI
 
         private void RefreshTargetSelection()
         {
-            if (_selectedStack?.Data?.category == ItemCategory.Equipment)
+            if (GetCategory(_selectedStack) == ItemCategory.Equipment)
             {
                 SetSelectedSlot(_quickSlots, -1);
                 SetSelectedSlot(_equipmentSlots, _selectedEquipmentSlot);
@@ -991,7 +1148,11 @@ namespace CreativeAI.UI.CharacterUI
             if (_selectedQuickSlot < 0 || _selectedQuickSlot >= _quickSlots.Count)
                 return;
 
-            if (ActiveInventoryManager?.SetQuickFood(_selectedQuickSlot, _selectedStack) != true)
+            InventoryManager inventoryManager = ActiveInventoryManager;
+            if (
+                inventoryManager == null
+                || !inventoryManager.SetQuickFood(_selectedQuickSlot, _selectedStack)
+            )
                 return;
 
             RefreshQuickSlots();
@@ -1044,9 +1205,11 @@ namespace CreativeAI.UI.CharacterUI
             if (_selectedQuickSlot < 0 || _selectedQuickSlot >= _quickSlots.Count)
                 return;
 
-            ActiveInventoryManager?.ClearQuickFood(_selectedQuickSlot);
+            if (ActiveInventoryManager != null)
+                ActiveInventoryManager.ClearQuickFood(_selectedQuickSlot);
             _selectedStack = null;
-            _inventory?.ClearSelection();
+            if (_inventory != null)
+                _inventory.ClearSelection();
             RefreshQuickSlots();
             ShowEmptyDetail();
         }
@@ -1063,7 +1226,8 @@ namespace CreativeAI.UI.CharacterUI
             _suppressEquipmentRefresh = true;
             try
             {
-                ActiveInventoryManager?.SetEquipped(stack, false);
+                if (ActiveInventoryManager != null)
+                    ActiveInventoryManager.SetEquipped(stack, false);
                 _equipmentAssignments[_selectedEquipmentSlot] = null;
             }
             finally
@@ -1072,7 +1236,8 @@ namespace CreativeAI.UI.CharacterUI
             }
 
             _selectedStack = null;
-            _inventory?.ClearSelection();
+            if (_inventory != null)
+                _inventory.ClearSelection();
             RefreshEquipmentSlots();
             RefreshInventory(InventoryView.ScrollRefreshMode.KeepPosition);
             ShowEmptyDetail();
@@ -1080,7 +1245,9 @@ namespace CreativeAI.UI.CharacterUI
 
         private void RefreshQuickSlots()
         {
-            IReadOnlyList<ItemStack> assigned = ActiveInventoryManager?.GetQuickFoodSlots();
+            InventoryManager inventoryManager = ActiveInventoryManager;
+            IReadOnlyList<ItemStack> assigned =
+                inventoryManager != null ? inventoryManager.GetQuickFoodSlots() : null;
             for (int i = 0; i < _quickSlots.Count; i++)
             {
                 ItemStack stack = assigned != null && i < assigned.Count ? assigned[i] : null;
@@ -1090,7 +1257,9 @@ namespace CreativeAI.UI.CharacterUI
 
         private void SyncEquipmentAssignments()
         {
-            List<ItemStack> allItems = ActiveInventoryManager?.GetAllItems();
+            InventoryManager inventoryManager = ActiveInventoryManager;
+            List<ItemStack> allItems =
+                inventoryManager != null ? inventoryManager.GetAllItems() : null;
             if (allItems == null)
                 return;
 
@@ -1103,7 +1272,7 @@ namespace CreativeAI.UI.CharacterUI
 
             foreach (
                 ItemStack stack in allItems.Where(item =>
-                    item?.Data?.category == ItemCategory.Equipment && item.IsEquipped
+                    GetCategory(item) == ItemCategory.Equipment && item.IsEquipped
                 )
             )
             {
@@ -1136,8 +1305,10 @@ namespace CreativeAI.UI.CharacterUI
                 return;
             }
 
-            _detailIconArea?.SetActive(true);
-            _detailButtonArea?.SetActive(true);
+            if (_detailIconArea != null)
+                _detailIconArea.SetActive(true);
+            if (_detailButtonArea != null)
+                _detailButtonArea.SetActive(true);
 
             if (_detailIcon != null)
             {
@@ -1149,7 +1320,7 @@ namespace CreativeAI.UI.CharacterUI
             PlayDetailText(_detailName, item.itemName, 0);
             PlayDetailText(_detailDescription, item.description, 1);
             if (_detailCount != null)
-                _detailCount.text = $"x{stack.Count}";
+                _detailCount.SetText("x{0}", stack.Count);
 
             RefreshDetailParameters(stack);
             RefreshSlotAvailability(item);
@@ -1158,8 +1329,10 @@ namespace CreativeAI.UI.CharacterUI
 
         private void ShowEmptyDetail(bool replayText = false)
         {
-            _detailIconArea?.SetActive(false);
-            _detailButtonArea?.SetActive(false);
+            if (_detailIconArea != null)
+                _detailIconArea.SetActive(false);
+            if (_detailButtonArea != null)
+                _detailButtonArea.SetActive(false);
             if (_detailIcon != null)
             {
                 _detailIcon.sprite = null;
@@ -1193,24 +1366,29 @@ namespace CreativeAI.UI.CharacterUI
             }
 
             foreach (LoadoutAssignmentSlotView slot in _quickSlots)
-                slot?.SetAvailable(quickAvailable);
+                if (slot != null)
+                    slot.SetAvailable(quickAvailable);
             foreach (LoadoutAssignmentSlotView slot in _equipmentSlots)
-                slot?.SetAvailable(equipmentAvailable);
+                if (slot != null)
+                    slot.SetAvailable(equipmentAvailable);
         }
 
         private void RefreshDetailParameters(ItemStack stack)
         {
             ItemData item = stack?.Data;
             bool showsQuick = item is FoodData;
-            bool showsEquipment = item?.category == ItemCategory.Equipment;
+            bool showsEquipment = item != null && item.category == ItemCategory.Equipment;
             bool showsParameters = showsQuick || showsEquipment;
-            _detailParameterRow?.SetActive(showsParameters);
+            if (_detailParameterRow != null)
+                _detailParameterRow.SetActive(showsParameters);
             if (_detailAreaLayout != null)
                 _detailAreaLayout.preferredHeight = showsParameters
                     ? _detailExpandedHeight
                     : Mathf.Max(0, _detailExpandedHeight - _detailParameterHeight);
-            _quickParameterPattern?.SetActive(showsQuick);
-            _equipmentParameterPattern?.SetActive(showsEquipment);
+            if (_quickParameterPattern != null)
+                _quickParameterPattern.SetActive(showsQuick);
+            if (_equipmentParameterPattern != null)
+                _equipmentParameterPattern.SetActive(showsEquipment);
 
             if (item is FoodData food)
             {
@@ -1277,7 +1455,8 @@ namespace CreativeAI.UI.CharacterUI
                 _actionLabel.text = action switch
                 {
                     DetailAction.Assign when item is FoodData => "登録",
-                    DetailAction.Assign when item?.category == ItemCategory.Equipment => "装備",
+                    DetailAction.Assign
+                        when item != null && item.category == ItemCategory.Equipment => "装備",
                     DetailAction.RemoveQuick => "解除",
                     DetailAction.RemoveEquipment => "解除",
                     _ => string.Empty,

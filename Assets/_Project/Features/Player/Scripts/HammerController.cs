@@ -180,7 +180,8 @@ namespace CreativeAI.Gameplay
         {
             StopThrustEffect();
 
-            CameraShakeManager.Instance?.Shake(1f);
+            if (CameraShakeManager.Instance != null)
+                CameraShakeManager.Instance.Shake(1f);
 
             // 判定はハンマーヘッドに置くが、衝撃エフェクトは地面に出したいので高さだけ足元に合わせる
             Vector3 impactPoint = _slamHitbox.transform.position;

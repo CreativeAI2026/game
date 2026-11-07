@@ -201,5 +201,22 @@ namespace CreativeAI.Tests.EditMode
             Assert.AreEqual(0.20f, FoodData.PreCraftHealFraction, 1e-6f);
             Assert.AreEqual(0.50f, FoodData.PostCraftHealFraction, 1e-6f);
         }
+
+        // --- 基礎素材の判定(ID の上から2桁目が 0) ---
+
+        [TestCase(3001, true)]
+        [TestCase(10, true)]
+        [TestCase(-3001, true)]
+        [TestCase(3101, false)]
+        [TestCase(31, false)]
+        [TestCase(5, false)]
+        public void IsBaseMaterial_ChecksSecondDigitFromTop(int id, bool expected)
+        {
+            var item = MakeEquipment(id);
+
+            Assert.AreEqual(expected, item.IsBaseMaterial);
+
+            Object.DestroyImmediate(item);
+        }
     }
 }

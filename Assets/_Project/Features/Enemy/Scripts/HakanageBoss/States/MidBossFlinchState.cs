@@ -3,7 +3,7 @@ using UnityEngine;
 namespace CreativeAI.Gameplay
 {
     /// <summary>
-    /// 怯みステート。TestEnemyFlinchState と同等の実装。
+    /// 怯みステート。
     /// Animator の "Flinch" Trigger でアニメーション再生し、完了後に StartState へ戻る。
     /// アニメーション未導入の場合は一定時間後に自動で次のステートへ遷移する。
     /// </summary>

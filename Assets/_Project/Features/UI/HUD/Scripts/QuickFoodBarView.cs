@@ -112,21 +112,24 @@ namespace CreativeAI.UI
             int index = _slots.IndexOf(slot);
             var stack = QuickFoodStackAt(index);
             if (stack != null)
-                InventoryManager.Instance?.TryUse(stack);
+                if (InventoryManager.Instance != null)
+                    InventoryManager.Instance.TryUse(stack);
         }
 
         private static ItemStack QuickFoodStackAt(int index)
         {
             if (index < 0)
                 return null;
-            var data = InventoryManager.Instance?.GetQuickFoodSlots();
+            var inventory = InventoryManager.Instance;
+            var data = inventory != null ? inventory.GetQuickFoodSlots() : null;
             return data != null && index < data.Count ? data[index] : null;
         }
 
         /// <summary>データ側(最大3)の内容を各枠へ反映。単一ソースはデータ側。</summary>
         private void RefreshSlots()
         {
-            var data = InventoryManager.Instance?.GetQuickFoodSlots();
+            var inventory = InventoryManager.Instance;
+            var data = inventory != null ? inventory.GetQuickFoodSlots() : null;
             for (int i = 0; i < _slots.Count; i++)
             {
                 if (_slots[i] == null)
@@ -168,7 +171,7 @@ namespace CreativeAI.UI
         {
             // 使用で在庫数が変わった枠の数量表示を更新(空になった枠は QuickFoodChanged 側で Clear)。
             foreach (var slot in _slots)
-                if (slot?.Stack != null)
+                if (slot != null && slot.Stack != null)
                     slot.UpdateCount();
         }
     }

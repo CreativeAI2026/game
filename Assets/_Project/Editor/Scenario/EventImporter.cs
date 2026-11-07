@@ -76,6 +76,20 @@ namespace CreativeAI.EditorTools
             "portrait.right.shake",
             "portrait.left.jump",
             "portrait.right.jump",
+            "portrait.show",
+            "background.black",
+            "background.black.fill",
+            "background.black.clear",
+            "background.color",
+            "background.fill",
+            "background.clear",
+            "background.flash",
+            "background.image",
+            "background.image.clear",
+            "camera.shake",
+            "sound.se",
+            "sound.bgm",
+            "sound.bgm.stop",
             "wait",
             "conversation.close",
         };
@@ -95,6 +109,17 @@ namespace CreativeAI.EditorTools
 
         /// <summary>wait の秒数の上限。会話UIは範囲外を黙って 0〜10 秒に丸めるので、書き間違いに気づけるよう取り込み時に弾く。</summary>
         public const float MaxWaitSeconds = 10f;
+
+        /// <summary>arg が無いと何も起きないコマンド(キーを引く系)。書き忘れを取り込み時に弾く。</summary>
+        private static readonly HashSet<string> ArgRequiredCommands = new(StringComparer.Ordinal)
+        {
+            "portrait.show",
+            "background.color",
+            "background.fill",
+            "background.image",
+            "sound.se",
+            "sound.bgm",
+        };
 
         private static bool IsKnownCommand(string command) =>
             CommandNames.Contains(command)
@@ -791,6 +816,11 @@ namespace CreativeAI.EditorTools
                         return null;
                     }
                     var arg = (step["arg"] as JValue)?.Value?.ToString();
+                    if (ArgRequiredCommands.Contains(command) && string.IsNullOrWhiteSpace(arg))
+                    {
+                        report.Error(id, $"{location} command '{command}' は arg が必須。");
+                        return null;
+                    }
                     // wait だけは秒数が要る(欠けると何も待たずに素通りする)。
                     if (command == "wait")
                     {

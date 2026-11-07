@@ -5,8 +5,8 @@ using UnityEngine;
 namespace CreativeAI.Tests.EditMode
 {
     /// <summary>
-    /// 坂を下る時に地面へ押し付ける速さ(<see cref="PlayerController.GroundStickSpeed"/>)の検証。
-    /// 押し付けが足元の地面の下がる速さに追いつかないと、プレイヤーが浮いて落下モーションになる(Issue #120)。
+    /// 坂を下るときに地面へ押し付ける速さの検証。<see cref="PlayerController.GroundStickSpeed"/> を見る。
+    /// 押し付けが足元の地面の下がる速さに追いつかないと、プレイヤーが浮いて落下モーションになる。
     /// </summary>
     public class PlayerGroundStickTests
     {
@@ -15,7 +15,7 @@ namespace CreativeAI.Tests.EditMode
         private const float MoveSpeed = 5f;
         private const float SlopeLimit = 45f;
 
-        // Issue #120 で報告された Field_Area01 の階段の傾き
+        // Field_Area01 の階段の傾き
         private const float StairSlope = 26.6f;
 
         private static float SlopeDescentSpeed(float horizontalSpeed, float slopeDegrees)
@@ -25,32 +25,38 @@ namespace CreativeAI.Tests.EditMode
 
         [TestCase(SprintSpeed)]
         [TestCase(MoveSpeed)]
-        public void 階段を下る速さ以上で押し付ける(float horizontalSpeed)
+        public void GroundStickSpeed_OnStairs_IsAtLeastDescentSpeed(float horizontalSpeed)
         {
             float stick = PlayerController.GroundStickSpeed(horizontalSpeed, SlopeLimit);
 
             Assert.That(
                 stick,
-                Is.GreaterThanOrEqualTo(SlopeDescentSpeed(horizontalSpeed, StairSlope))
+                Is.GreaterThanOrEqualTo(SlopeDescentSpeed(horizontalSpeed, StairSlope)),
+                "階段を下る速さ以上で押し付ける"
             );
         }
 
         [Test]
-        public void 登れる上限の坂をダッシュで下っても押し付けが追いつく()
+        public void GroundStickSpeed_SprintingDownSteepestSlope_KeepsUp()
         {
             float stick = PlayerController.GroundStickSpeed(SprintSpeed, SlopeLimit);
 
             // tan(45°) の浮動小数誤差を許容する
             Assert.That(
                 stick,
-                Is.GreaterThanOrEqualTo(SlopeDescentSpeed(SprintSpeed, SlopeLimit) - 1e-4f)
+                Is.GreaterThanOrEqualTo(SlopeDescentSpeed(SprintSpeed, SlopeLimit) - 1e-4f),
+                "登れる上限の坂をダッシュで下っても押し付けが追いつく"
             );
         }
 
         [Test]
-        public void 止まっている時は最低限の速さで押し付ける()
+        public void GroundStickSpeed_WhenStill_UsesMinimum()
         {
-            Assert.That(PlayerController.GroundStickSpeed(0f, SlopeLimit), Is.EqualTo(2f));
+            Assert.That(
+                PlayerController.GroundStickSpeed(0f, SlopeLimit),
+                Is.EqualTo(2f),
+                "止まっているときも最低限の速さで押し付ける"
+            );
         }
     }
 }

@@ -21,10 +21,13 @@ namespace CreativeAI.Gameplay
         /// <summary>キャラ画面の開閉キー(C)が押された。</summary>
         public event Action CharacterPressed;
 
-        /// <summary>インベ画面の開閉キー(I)が押された。</summary>
+        /// <summary>インベ画面の開閉キー(I / ＋)が押された。</summary>
         public event Action InventoryPressed;
 
-        /// <summary>UI マップの Cancel(Esc 等)が押された。開いている画面を閉じるのに使う。</summary>
+        /// <summary>セーブ画面の開閉キー(十字下)が押された。</summary>
+        public event Action SavePressed;
+
+        /// <summary>UI マップの Cancel(Esc / B 等)が押された。開いている画面を閉じるのに使う。</summary>
         public event Action CancelPressed;
 
         private PlayerInput _playerInput;
@@ -76,6 +79,12 @@ namespace CreativeAI.Gameplay
         {
             if (value.isPressed)
                 InventoryPressed?.Invoke();
+        }
+
+        public void OnSave(InputValue value)
+        {
+            if (value.isPressed)
+                SavePressed?.Invoke();
         }
 
         public void OnCancel(InputValue value)
