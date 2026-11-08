@@ -18,8 +18,6 @@ namespace CreativeAI.Gameplay
     /// 本番アニメーションで武器の向きが付いたら、このコンポーネントを外すだけでよい
     /// (武器側は「付いていれば呼ぶ」だけで、仮モデル用の値をコードに持たない)。
     /// 角度はソケットに対するローカル角度、位置は最初の置き位置からのずれ(ローカル)。
-    ///
-    /// 弓の値は、プレイせずに Scene ビューのギズモで合わせられる(<see cref="BowGripTuner"/>)。
     /// </summary>
     public class MockWeaponPose : MonoBehaviour
     {
@@ -85,7 +83,7 @@ namespace CreativeAI.Gameplay
         }
 
 #if UNITY_EDITOR
-        /// <summary>調整用(BowGripTuner): 姿勢の値を書き換える。登録していなければ追加する。</summary>
+        /// <summary>調整用: 姿勢の値を書き換える。登録していなければ追加する。</summary>
         public void EditorSetPoseValues(
             MockWeaponPoseKey key,
             Vector3 localEulerAngles,

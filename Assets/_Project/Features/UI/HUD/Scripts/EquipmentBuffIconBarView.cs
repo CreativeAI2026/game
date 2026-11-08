@@ -11,6 +11,7 @@ namespace CreativeAI.UI
     /// 装備によるバフのアイコンを、HP バーの左端を始点に右へ並べる。幅に収まらない分は次の段へ折り返す。
     /// HP バーの上に並べるか下に並べるかを Inspector で切り替えられる(段は HP バーから離れる向きに増える)。
     /// 装備中は永続なので、PlayerStatus の OnStatsChanged(装備変更)でだけ並べ直す。
+    /// 毒(デバフ)にかかっている間は、バフの後ろに毒のアイコンも並べる(PlayerStatusEffectHandler の OnPoisonChanged で並べ直す)。
     /// </summary>
     [RequireComponent(typeof(RectTransform))]
     public sealed class EquipmentBuffIconBarView : MonoBehaviour
@@ -55,6 +56,7 @@ namespace CreativeAI.UI
 
         private RectTransform _rectTransform;
         private PlayerStatus _playerStatus;
+        private PlayerStatusEffectHandler _statusEffects;
 
         /// <summary>確認用に、付いているかに関係なく全アイコンを並べているか。</summary>
         public bool IsPreviewing { get; private set; }
@@ -71,6 +73,8 @@ namespace CreativeAI.UI
                 if (entry.icon == null)
                     Debug.LogError($"{name}: バフ {entry.effect} のアイコンが未設定です", _iconSet);
             }
+            if (_iconSet.PoisonIcon == null)
+                Debug.LogError($"{name}: 毒のアイコンが未設定です", _iconSet);
         }
 
         private void OnEnable()
@@ -100,14 +104,22 @@ namespace CreativeAI.UI
         {
             if (_playerStatus != null)
                 _playerStatus.OnStatsChanged -= Refresh;
+            if (_statusEffects != null)
+                _statusEffects.OnPoisonChanged -= OnPoisonChanged;
 
             _playerStatus = player != null ? player.GetComponent<PlayerStatus>() : null;
+            _statusEffects =
+                player != null ? player.GetComponent<PlayerStatusEffectHandler>() : null;
 
             if (_playerStatus != null)
                 _playerStatus.OnStatsChanged += Refresh;
+            if (_statusEffects != null)
+                _statusEffects.OnPoisonChanged += OnPoisonChanged;
 
             Refresh();
         }
+
+        private void OnPoisonChanged(bool _) => Refresh();
 
         private void Refresh()
         {
@@ -125,19 +137,24 @@ namespace CreativeAI.UI
             {
                 foreach (var entry in _iconSet.Entries)
                     _visibleIcons.Add(entry.icon);
+                _visibleIcons.Add(_iconSet.PoisonIcon);
                 return;
             }
 
-            if (_playerStatus == null)
-                return;
-
-            EquipmentBonus bonus = _playerStatus.EquipmentBonus;
-            foreach (var entry in _iconSet.Entries)
+            if (_playerStatus != null)
             {
-                if (bonus.Get(entry.effect) > 0f)
-                    _visibleIcons.Add(entry.icon);
+                EquipmentBonus bonus = _playerStatus.EquipmentBonus;
+                foreach (var entry in _iconSet.Entries)
+                {
+                    if (bonus.Get(entry.effect) > 0f)
+                        _visibleIcons.Add(entry.icon);
+                }
+                WarnEffectsWithoutIcon(bonus);
             }
-            WarnEffectsWithoutIcon(bonus);
+
+            // デバフはバフの後ろに並べる
+            if (_statusEffects != null && _statusEffects.IsPoisoned)
+                _visibleIcons.Add(_iconSet.PoisonIcon);
         }
 
         /// <summary>付いているのに組にアイコンが無い効果を、種類ごとに1回だけ知らせる(表示漏れに気付けるように)。</summary>

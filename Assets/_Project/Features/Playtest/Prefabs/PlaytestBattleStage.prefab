@@ -1,0 +1,105 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!1 &2519967281465843736
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 5570300460679226473}
+  - component: {fileID: 9016857684240244694}
+  - component: {fileID: 8935011771067655015}
+  - component: {fileID: 1274530155613917566}
+  - component: {fileID: 5378275496938205285}
+  m_Layer: 0
+  m_Name: PlaytestBattleStage
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &5570300460679226473
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2519967281465843736}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!65 &9016857684240244694
+BoxCollider:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2519967281465843736}
+  m_Material: {fileID: 0}
+  m_IncludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_ExcludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_LayerOverridePriority: 0
+  m_IsTrigger: 1
+  m_ProvidesContacts: 0
+  m_Enabled: 1
+  serializedVersion: 3
+  m_Size: {x: 10, y: 4, z: 10}
+  m_Center: {x: 0, y: 2, z: 0}
+--- !u!114 &8935011771067655015
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2519967281465843736}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 7311db1b3b10b9c43bc9f1aac87ade35, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: CreativeAI.Playtest::CreativeAI.Playtest.PlaytestBattleStage
+  _enemies: []
+  _playerTag: Player
+  _entryDepth: 5
+--- !u!114 &1274530155613917566
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2519967281465843736}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: dacd3129d621771478e4b198e0936dbe, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: CreativeAI.Playtest::CreativeAI.Playtest.PlaytestArenaLock
+  _doorsToClose: []
+  _showDuringBattle: []
+  _hideDuringBattle: []
+--- !u!114 &5378275496938205285
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2519967281465843736}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: f29fb292c426fe64ab74917f3f3d7a03, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: CreativeAI.Playtest::CreativeAI.Playtest.PlaytestPrepGuide
+  _title: "\u6E96\u5099\u30A8\u30EA\u30A2\uFF1A\u3053\u3053\u3067\u88C5\u5099\u3092\u6574\u3048\u3066\u304B\u3089\u3001\u6226\u95D8\u30B9\u30C6\u30FC\u30B8\u3078\u9032\u3093\u3067\u304F\u3060\u3055\u3044"
+  _controls: "C: \u30AD\u30E3\u30E9\u753B\u9762\uFF08\u88C5\u5099\u306E\u4ED8\u3051\u66FF\u3048\uFF09  
+    I: \u6240\u6301\u54C1   Q / E: \u6B66\u5668\u306E\u5207\u308A\u66FF\u3048   1
+    / 2 / 3: \u56DE\u5FA9"
+  _entry: "\u5148\u3078\u9032\u3080\u3068\u6226\u95D8\u304C\u59CB\u307E\u308A\u307E\u3059\u3002\u6226\u95D8\u4E2D\u306F\u6E96\u5099\u30A8\u30EA\u30A2\u3078\u623B\u308C\u307E\u305B\u3093"
