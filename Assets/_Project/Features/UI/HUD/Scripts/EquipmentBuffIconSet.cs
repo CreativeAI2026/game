@@ -7,7 +7,7 @@ namespace CreativeAI.UI
 {
     /// <summary>
     /// 装備によるバフ(効果)と、HUD に出すアイコンの組。
-    /// 並び順がそのまま HUD の左からの並び順になる。
+    /// 並び順がそのまま HUD の左からの並び順になる。状態異常(デバフ)のアイコンはバフの後ろに並ぶ。
     /// </summary>
     [CreateAssetMenu(
         fileName = "EquipmentBuffIconSet",
@@ -28,6 +28,13 @@ namespace CreativeAI.UI
         [SerializeField]
         private List<Entry> _entries = new();
 
+        [Header("状態異常(デバフ)")]
+        [Tooltip("毒(継続ダメージ)にかかっている間に出すアイコン")]
+        [SerializeField]
+        private Sprite _poisonIcon;
+
         public IReadOnlyList<Entry> Entries => _entries;
+
+        public Sprite PoisonIcon => _poisonIcon;
     }
 }
