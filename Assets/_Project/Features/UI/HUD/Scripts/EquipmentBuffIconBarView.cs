@@ -108,7 +108,8 @@ namespace CreativeAI.UI
                 _statusEffects.OnPoisonChanged -= OnPoisonChanged;
 
             _playerStatus = player != null ? player.GetComponent<PlayerStatus>() : null;
-            _statusEffects = player != null ? player.GetComponent<PlayerStatusEffectHandler>() : null;
+            _statusEffects =
+                player != null ? player.GetComponent<PlayerStatusEffectHandler>() : null;
 
             if (_playerStatus != null)
                 _playerStatus.OnStatsChanged += Refresh;
