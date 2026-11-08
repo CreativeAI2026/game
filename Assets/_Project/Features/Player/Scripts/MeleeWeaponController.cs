@@ -36,6 +36,14 @@ namespace CreativeAI.Gameplay
         [Tooltip("ダッシュ接近の速度（m/秒）")]
         public float dashSpeed = 20f;
 
+        [Tooltip(
+            "ダッシュ接近の道を塞ぐとみなすレイヤー。攻撃開始時にプレイヤーの体の形で敵の方向を調べ、"
+                + "これに当たればダッシュせずその場で攻撃する"
+        )]
+        [SerializeField]
+        // 初期値は Default(0) と Obstacle(8)。フィールド初期化子では LayerMask.GetMask を呼べないためビットで指定する
+        private LayerMask _dashBlockLayers = (1 << 0) | (1 << 8);
+
         [Header("攻撃判定")]
         [Tooltip(
             "この武器の子にある PlayerMeleeHitbox。AnimationEvent の TriggerEnableHitbox / TriggerDisableHitbox で ON/OFF する"
@@ -187,10 +195,65 @@ namespace CreativeAI.Gameplay
             if (
                 TargetEnemy != null
                 && Vector3.Distance(PlayerTransform.position, TargetEnemy.position) > attackRange
+                && !TryFaceIfDashBlocked(TargetEnemy)
             )
                 ChangeState(new MeleeStateDash(this));
             else
                 ChangeState(new MeleeStateAttack(this));
+        }
+
+        /// <summary>
+        /// 敵までの道が障害物で塞がれていれば、敵の方を向いて true を返す(呼び出し側はその場で攻撃する)。
+        /// 塞がれたままダッシュすると壁沿いに滑り続けて止まらなくなるため、ダッシュ前に調べる。
+        /// </summary>
+        public bool TryFaceIfDashBlocked(Transform target)
+        {
+            if (!IsDashPathBlocked(target))
+                return false;
+            FaceTowards(target.position);
+            return true;
+        }
+
+        /// <summary>
+        /// プレイヤーと同じ形のカプセルを敵の方向へ飛ばし、射程に入る地点までに障害物があるかを調べる。
+        /// 線(Raycast)だと体が通れない隙間を通り抜けてしまうため、体の形で調べる。
+        /// </summary>
+        private bool IsDashPathBlocked(Transform target)
+        {
+            Vector3 toTarget = target.position - PlayerTransform.position;
+            toTarget.y = 0f;
+            // ダッシュは敵の原点から attackRange の地点で止まるので、そこまでだけ調べる(敵の体には当てない)
+            float castDistance = toTarget.magnitude - attackRange;
+            if (castDistance <= 0f)
+                return false;
+
+            float radius = CharacterController.radius;
+            float halfHeight = CharacterController.height * 0.5f;
+            Vector3 center = PlayerTransform.position + CharacterController.center;
+            Vector3 top = center + Vector3.up * (halfHeight - radius);
+            // 下端を段差の高さ分持ち上げ、床や登れる段差を障害物と誤判定しないようにする
+            Vector3 bottom = center + Vector3.up * (-halfHeight + radius + CharacterController.stepOffset);
+            if (bottom.y > top.y)
+                bottom = top;
+
+            return Physics.CapsuleCast(
+                bottom,
+                top,
+                radius,
+                toTarget.normalized,
+                castDistance,
+                _dashBlockLayers,
+                QueryTriggerInteraction.Ignore
+            );
+        }
+
+        /// <summary>水平方向のみで、指定位置の方を即座に向く。</summary>
+        public void FaceTowards(Vector3 worldPosition)
+        {
+            Vector3 dir = worldPosition - PlayerTransform.position;
+            dir.y = 0f;
+            if (dir.sqrMagnitude > 0.0001f)
+                PlayerTransform.rotation = Quaternion.LookRotation(dir);
         }
 
         /// <summary>
