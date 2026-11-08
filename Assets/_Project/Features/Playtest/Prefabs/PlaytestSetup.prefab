@@ -1,0 +1,72 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!1 &5701908493755479592
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 6317852722790828310}
+  - component: {fileID: 3690125520141346660}
+  - component: {fileID: 4547082558084293554}
+  m_Layer: 0
+  m_Name: PlaytestSetup
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &6317852722790828310
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 5701908493755479592}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &3690125520141346660
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 5701908493755479592}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: f6d2f748322e6eb4f8c9de23d87fe8b5, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: CreativeAI.Playtest::CreativeAI.Playtest.PlaytestLoadout
+  _quickFoodKeys:
+  - apple_banana
+  - banana_white_rice
+  - miso_soup_white_rice
+  _quickFoodCount: 3
+--- !u!114 &4547082558084293554
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 5701908493755479592}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 293531e41d517094286070adb57192f5, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: CreativeAI.Playtest::CreativeAI.Playtest.PlaytestSceneSwitcher
+  _destinations:
+  - key: 94
+    sceneName: TBossDemo
+    label: "TBoss\u3078"
+  - key: 95
+    sceneName: MidBossDemo
+    label: "\u30AF\u30E9\u30B2\u3078"
+  _retryKey: 98
