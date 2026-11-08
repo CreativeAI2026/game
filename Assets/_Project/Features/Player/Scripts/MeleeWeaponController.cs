@@ -232,7 +232,8 @@ namespace CreativeAI.Gameplay
             Vector3 center = PlayerTransform.position + CharacterController.center;
             Vector3 top = center + Vector3.up * (halfHeight - radius);
             // 下端を段差の高さ分持ち上げ、床や登れる段差を障害物と誤判定しないようにする
-            Vector3 bottom = center + Vector3.up * (-halfHeight + radius + CharacterController.stepOffset);
+            Vector3 bottom =
+                center + Vector3.up * (-halfHeight + radius + CharacterController.stepOffset);
             if (bottom.y > top.y)
                 bottom = top;
 
