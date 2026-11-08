@@ -73,19 +73,17 @@ namespace CreativeAI.Gameplay
                 _overlapHits,
                 enemyLayer
             );
+            Vector3 origin = transform.position;
             Collider nearest = null;
-            float minDistance = float.MaxValue;
+            float minSqrDistance = float.MaxValue;
 
             for (int i = 0; i < hitCount; i++)
             {
                 Collider hitCollider = _overlapHits[i];
-                float distance = Vector3.Distance(
-                    transform.position,
-                    hitCollider.transform.position
-                );
-                if (distance < minDistance)
+                float sqrDistance = (hitCollider.transform.position - origin).sqrMagnitude;
+                if (sqrDistance < minSqrDistance)
                 {
-                    minDistance = distance;
+                    minSqrDistance = sqrDistance;
                     nearest = hitCollider;
                 }
             }

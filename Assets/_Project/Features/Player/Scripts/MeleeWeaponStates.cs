@@ -39,11 +39,22 @@ namespace CreativeAI.Gameplay
     /// </summary>
     public class MeleeStateDash : MeleeWeaponState
     {
+        // ダッシュの最大時間。索敵半径8m・速度20m/秒なら0.4秒で届くので、その倍以上の余裕を取る。
+        // 開始時の障害物判定をすり抜けた想定外のケースでも、この時間で必ず攻撃へ移る
+        private const float MaxDashDuration = 1.0f;
+
+        // 1フレームで敵との距離が「本来縮むはずの量」のこの割合しか縮まなければ前進不能とみなす。
+        // 移動量ではなく距離で見るのは、壁沿いに横滑りしている間も止められるようにするため
+        private const float MinApproachRatio = 0.1f;
+
+        private float _startTime;
+
         public MeleeStateDash(MeleeWeaponController context)
             : base(context) { }
 
         public override void Enter()
         {
+            _startTime = Time.time;
             ctx.LockControls();
             ctx.StartAnimatorAction(PlayerAnimatorParams.Approach);
         }
@@ -74,17 +85,25 @@ namespace CreativeAI.Gameplay
                     Time.deltaTime * 15f
                 );
 
-            Vector3 beforePos = ctx.PlayerTransform.position;
-            ctx.CharacterController.Move(dir.normalized * (ctx.dashSpeed * Time.deltaTime));
-            Vector3 afterPos = ctx.PlayerTransform.position;
-
-            // 射程内に入った、または壁等に引っかかって物理的に前進不能になった場合に攻撃へ移行。
-            // 移動距離が期待値の10%以下なら「前進不能」と判定する
-            if (
-                dir.magnitude <= ctx.attackRange
-                || Vector3.Distance(beforePos, afterPos) < (ctx.dashSpeed * Time.deltaTime * 0.1f)
-            )
+            float distanceBefore = dir.magnitude;
+            if (distanceBefore <= ctx.attackRange)
             {
+                ctx.ChangeState(new MeleeStateAttack(ctx));
+                return;
+            }
+
+            float step = ctx.dashSpeed * Time.deltaTime;
+            ctx.CharacterController.Move(dir.normalized * step);
+
+            Vector3 dirAfter = ctx.TargetEnemy.position - ctx.PlayerTransform.position;
+            dirAfter.y = 0f;
+            bool isStuck = distanceBefore - dirAfter.magnitude < step * MinApproachRatio;
+            bool isTimedOut = Time.time - _startTime > MaxDashDuration;
+
+            // 射程内に入った、前進できなくなった、時間切れのいずれかで攻撃へ移行
+            if (dirAfter.magnitude <= ctx.attackRange || isStuck || isTimedOut)
+            {
+                ctx.FaceTowards(ctx.TargetEnemy.position);
                 ctx.ChangeState(new MeleeStateAttack(ctx));
             }
         }
@@ -261,6 +280,7 @@ namespace CreativeAI.Gameplay
                 ctx.TargetEnemy != null
                 && Vector3.Distance(ctx.PlayerTransform.position, ctx.TargetEnemy.position)
                     > ctx.attackRange + 0.5f
+                && !ctx.TryFaceIfDashBlocked(ctx.TargetEnemy)
             )
             {
                 ctx.ChangeState(new MeleeStateDash(ctx));
