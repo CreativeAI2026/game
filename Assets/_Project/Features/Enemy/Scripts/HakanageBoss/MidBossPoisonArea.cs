@@ -103,6 +103,8 @@ namespace CreativeAI.Gameplay
             Vector3 halfExtents = new Vector3(_radius, _thickness * 0.5f, _radius);
             Vector3 center = transform.position + transform.up * _yOffset;
 
+            // TODO(Issue137): 毎フレーム配列を生成してGCが発生するため、OverlapBoxNonAlloc + 再利用バッファに置き換える。
+            //                あわせて下の localPos.magnitude <= _radius も sqrMagnitude 比較にする。
             // LayerMaskを明示的に指定してOverlapBoxを実行
             Collider[] hits = Physics.OverlapBox(
                 center,
