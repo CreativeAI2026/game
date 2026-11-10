@@ -6,47 +6,9 @@
 
 ---
 
-## 前提ツール
-
-| ツール | 用途 | 入手先 |
-|--------|------|--------|
-| Git | バージョン管理 | https://git-scm.com/ |
-| Unity Hub | Unity Editor の管理・起動 | https://unity.com/download |
-| mise | .NET SDK のバージョン固定（CSharpier 実行用） | https://mise.jdx.dev/ |
-
-### mise のインストール
-
-入っていない場合は OS に合わせて入れる。
-
-**macOS（Homebrew）**
-
-```bash
-brew install mise
-```
-
-**Windows**
-
-```powershell
-winget install jdx.mise
-```
-
-インストール後、シェルに mise を有効化する（[公式手順](https://mise.jdx.dev/getting-started.html)）。
-
-```bash
-# zsh（macOS デフォルト）
-echo 'eval "$(mise activate zsh)"' >> ~/.zshrc
-```
-
-```powershell
-# Windows PowerShell
-echo 'mise activate pwsh | Out-String | Invoke-Expression' >> $PROFILE
-```
-
-新しいシェルを開き直し、`mise --version` で確認する。
-
----
-
 ## リポジトリをクローン
+
+Git と SSH 鍵の設定がまだなら先に [GitSetup.md](GitSetup.md) の手順で行う。
 
 ```bash
 git clone git@github.com:CreativeAI2026/game.git
@@ -69,6 +31,8 @@ cd game
 ## .NET SDK（mise）をセットアップ
 
 CSharpier をローカルで動かすために .NET SDK を入れる。`mise.toml` でバージョンが固定されている。
+
+mise が入っていない場合は先に [MiseSetup.md](MiseSetup.md) の手順で入れる。
 
 ```bash
 # 初回のみ：mise.toml に書かれた dotnet 10.0.300 を取得
