@@ -34,8 +34,7 @@ namespace CreativeAI.Tests.EditMode
             Object.DestroyImmediate(_go);
         }
 
-        private void PlayerEnters() =>
-            TestReflection.SetField(_interactor, "_playerInside", true);
+        private void PlayerEnters() => TestReflection.SetField(_interactor, "_playerInside", true);
 
         [Test]
         public void TryInteract_PlayerOutside_DoesNothing()
