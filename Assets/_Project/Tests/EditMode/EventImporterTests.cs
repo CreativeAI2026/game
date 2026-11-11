@@ -232,6 +232,240 @@ namespace CreativeAI.Tests.EditMode
             Assert.IsTrue(report.Diagnostics.Any(d => d.Message.Contains("nextProgress")));
         }
 
+        private const string RepeatSteps =
+            @"""steps"": [ { ""kind"": ""line"", ""portrait"": ""hero_normal"", ""text"": ""a"" } ]";
+
+        [Test]
+        public void Parse_RepeatAlways_NoProgressNoNextProgress_IsOk()
+        {
+            // 章を問わず何度でも調べられる。progress も nextProgress も書かない。
+            const string json =
+                @"{ ""events"": [ { ""id"": ""shelf_check"", ""repeat"": ""always"",
+                    ""conditions"": [], "
+                + RepeatSteps
+                + @" } ] }";
+
+            var report = EventImporter.Parse(json);
+
+            Assert.IsFalse(report.HasErrors, string.Join("\n", report.Diagnostics));
+            var def = report.Events.Single();
+            Assert.AreEqual(EventRepeat.Always, def.Repeat);
+            Assert.IsFalse(def.AdvancesProgress);
+        }
+
+        [Test]
+        public void Parse_RepeatAlways_WithNextProgress_IsError()
+        {
+            const string json =
+                @"{ ""events"": [ { ""id"": ""shelf_check"", ""repeat"": ""always"",
+                    ""conditions"": [ { ""type"": ""progress"", ""value"": 6 } ], "
+                + RepeatSteps
+                + @",
+                    ""nextProgress"": 7 } ] }";
+
+            var report = EventImporter.Parse(json);
+
+            Assert.IsTrue(report.HasErrors);
+            Assert.IsTrue(report.Diagnostics.Any(d => d.Message.Contains("nextProgress")));
+        }
+
+        [Test]
+        public void Parse_RepeatOnce_ChapterLimited_NextProgressOptional()
+        {
+            // 進行度 6 の間だけ、1回だけ調べられる。nextProgress は書かないので進行度は進まない。
+            const string json =
+                @"{ ""events"": [ { ""id"": ""drawer_once"", ""repeat"": ""once"",
+                    ""conditions"": [ { ""type"": ""progress"", ""value"": 6 } ], "
+                + RepeatSteps
+                + @" } ] }";
+
+            var report = EventImporter.Parse(json);
+
+            Assert.IsFalse(report.HasErrors, string.Join("\n", report.Diagnostics));
+            var def = report.Events.Single();
+            Assert.AreEqual(EventRepeat.Once, def.Repeat);
+            Assert.IsFalse(def.AdvancesProgress);
+        }
+
+        [Test]
+        public void Parse_RepeatOnce_WithNextProgress_AdvancesProgress()
+        {
+            const string json =
+                @"{ ""events"": [ { ""id"": ""drawer_once"", ""repeat"": ""once"",
+                    ""conditions"": [ { ""type"": ""progress"", ""value"": 6 } ], "
+                + RepeatSteps
+                + @",
+                    ""nextProgress"": 7 } ] }";
+
+            var report = EventImporter.Parse(json);
+
+            Assert.IsFalse(report.HasErrors, string.Join("\n", report.Diagnostics));
+            Assert.IsTrue(report.Events.Single().AdvancesProgress);
+            Assert.AreEqual(7, report.Events.Single().NextProgress);
+        }
+
+        [Test]
+        public void Parse_ActivationInteract_BuildsInteractEvent()
+        {
+            const string json =
+                @"{ ""events"": [ { ""id"": ""drawer_once"", ""repeat"": ""once"", ""activation"": ""interact"",
+                    ""conditions"": [ { ""type"": ""progress"", ""value"": 6 } ], "
+                + RepeatSteps
+                + @" } ] }";
+
+            var report = EventImporter.Parse(json);
+
+            Assert.IsFalse(report.HasErrors, string.Join("\n", report.Diagnostics));
+            Assert.AreEqual(EventActivation.Interact, report.Events.Single().Activation);
+        }
+
+        [Test]
+        public void Parse_ActivationOmitted_IsAuto()
+        {
+            const string json =
+                @"{ ""events"": [ { ""id"": ""x"",
+                    ""conditions"": [ { ""type"": ""progress"", ""value"": 0 } ], "
+                + RepeatSteps
+                + @",
+                    ""nextProgress"": 1 } ] }";
+
+            var report = EventImporter.Parse(json);
+
+            Assert.AreEqual(EventActivation.Auto, report.Events.Single().Activation);
+        }
+
+        [Test]
+        public void Parse_UnknownActivation_IsError()
+        {
+            const string json =
+                @"{ ""events"": [ { ""id"": ""x"", ""activation"": ""press"",
+                    ""conditions"": [ { ""type"": ""progress"", ""value"": 0 } ], "
+                + RepeatSteps
+                + @",
+                    ""nextProgress"": 1 } ] }";
+
+            var report = EventImporter.Parse(json);
+
+            Assert.IsTrue(report.HasErrors);
+            Assert.IsTrue(report.Diagnostics.Any(d => d.Message.Contains("activation")));
+        }
+
+        [Test]
+        public void Parse_ActivationInteract_WithBattle_IsError()
+        {
+            const string json =
+                @"{ ""events"": [ { ""id"": ""x"", ""activation"": ""interact"", ""repeat"": ""once"",
+                    ""conditions"": [ { ""type"": ""progress"", ""value"": 0 } ],
+                    ""steps"": [
+                        { ""kind"": ""line"", ""portrait"": ""hero_normal"", ""text"": ""a"" },
+                        { ""kind"": ""battle"" },
+                        { ""kind"": ""line"", ""portrait"": ""hero_normal"", ""text"": ""b"" } ] } ] }";
+
+            var report = EventImporter.Parse(json);
+
+            Assert.IsTrue(report.HasErrors);
+            Assert.IsTrue(report.Diagnostics.Any(d => d.Message.Contains("battle")));
+        }
+
+        [Test]
+        public void Parse_PlayerMoveTo_WithSpawnPointId_IsOk()
+        {
+            const string json =
+                @"{ ""events"": [ { ""id"": ""craft_room_exit"", ""repeat"": ""always"",
+                    ""conditions"": [ { ""type"": ""progress"", ""value"": 5 } ],
+                    ""steps"": [
+                        { ""kind"": ""line"", ""portrait"": ""hero_normal"", ""text"": ""戻ろう。"" },
+                        { ""kind"": ""command"", ""command"": ""player.moveTo"", ""arg"": ""craft_room_center"" } ] } ] }";
+
+            var report = EventImporter.Parse(json);
+
+            Assert.IsFalse(report.HasErrors, string.Join("\n", report.Diagnostics));
+            Assert.AreEqual("craft_room_center", report.Events.Single().Steps[1].Arg);
+        }
+
+        [Test]
+        public void Parse_PlayerMoveTo_WithoutArg_IsError()
+        {
+            const string json =
+                @"{ ""events"": [ { ""id"": ""x"", ""repeat"": ""always"",
+                    ""conditions"": [ { ""type"": ""progress"", ""value"": 5 } ],
+                    ""steps"": [
+                        { ""kind"": ""line"", ""portrait"": ""hero_normal"", ""text"": ""a"" },
+                        { ""kind"": ""command"", ""command"": ""player.moveTo"" } ] } ] }";
+
+            var report = EventImporter.Parse(json);
+
+            Assert.IsTrue(report.HasErrors);
+        }
+
+        [Test]
+        public void Parse_UnknownRepeat_IsError()
+        {
+            const string json =
+                @"{ ""events"": [ { ""id"": ""x"", ""repeat"": ""twice"",
+                    ""conditions"": [ { ""type"": ""progress"", ""value"": 0 } ], "
+                + RepeatSteps
+                + @",
+                    ""nextProgress"": 1 } ] }";
+
+            var report = EventImporter.Parse(json);
+
+            Assert.IsTrue(report.HasErrors);
+            Assert.IsTrue(report.Diagnostics.Any(d => d.Message.Contains("repeat")));
+        }
+
+        [Test]
+        public void Parse_NegatedProgressAlone_DoesNotSatisfyProgressRequirement()
+        {
+            // repeat 無しのイベントに必要なのは「ちょうど一致」の progress。not 付きは1回きりの根拠にならない。
+            const string json =
+                @"{ ""events"": [ { ""id"": ""x"",
+                    ""conditions"": [ { ""type"": ""progress"", ""value"": 3, ""not"": true } ], "
+                + RepeatSteps
+                + @",
+                    ""nextProgress"": 4 } ] }";
+
+            var report = EventImporter.Parse(json);
+
+            Assert.IsTrue(report.HasErrors);
+        }
+
+        [Test]
+        public void Parse_NotCondition_BuildsNegatedCondition()
+        {
+            const string json =
+                @"{ ""events"": [ { ""id"": ""craft_room_exit"", ""repeat"": ""always"",
+                    ""conditions"": [
+                        { ""type"": ""progress"", ""value"": 5 },
+                        { ""type"": ""flag"", ""key"": ""crafted"", ""value"": ""1"", ""not"": true } ], "
+                + RepeatSteps
+                + @" } ] }";
+
+            var report = EventImporter.Parse(json);
+
+            Assert.IsFalse(report.HasErrors, string.Join("\n", report.Diagnostics));
+            var conditions = report.Events.Single().Conditions;
+            Assert.IsFalse(conditions[0].Negated);
+            Assert.IsTrue(conditions[1].Negated);
+        }
+
+        [Test]
+        public void Parse_NotNotBoolean_IsError()
+        {
+            const string json =
+                @"{ ""events"": [ { ""id"": ""x"",
+                    ""conditions"": [ { ""type"": ""progress"", ""value"": 0 },
+                                      { ""type"": ""flag"", ""key"": ""a"", ""value"": ""1"", ""not"": ""yes"" } ], "
+                + RepeatSteps
+                + @",
+                    ""nextProgress"": 1 } ] }";
+
+            var report = EventImporter.Parse(json);
+
+            Assert.IsTrue(report.HasErrors);
+            Assert.IsTrue(report.Diagnostics.Any(d => d.Message.Contains("not")));
+        }
+
         [Test]
         public void Parse_MissingProgressCondition_IsError()
         {

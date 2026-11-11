@@ -132,11 +132,15 @@ namespace CreativeAI.EditorTools
                 $"[PropScene] {part} の小物シーンを開きました。\n"
                     + $"・新しく置いたものは「{props.name}」に入ります(アクティブ)。\n"
                     + "・マップは掴めないようにしてあります(Hierarchy の手のアイコンで解除可)。\n"
+                    + "・天井は Scene ビューで隠してあります(Hierarchy の目のアイコンで表示可)。\n"
                     + "・保存(Ctrl+S)すると、変更したシーンだけが保存されます。"
             );
         }
 
-        /// <summary>マップを Scene ビューで選択できなくする(誤ドラッグ防止)。</summary>
+        /// <summary>
+        /// マップを Scene ビューで選択できなくし(誤ドラッグ防止)、天井を隠す(上から見下ろして置けるように)。
+        /// どちらも各自の Library に残る表示設定で、シーンには保存されない。
+        /// </summary>
         static void LockMap(Scene map)
         {
             var root = map.GetRootGameObjects()
@@ -144,6 +148,9 @@ namespace CreativeAI.EditorTools
             if (root == null)
                 return;
             SceneVisibilityManager.instance.DisablePicking(root, true);
+            foreach (var t in root.GetComponentsInChildren<Transform>(true))
+                if (t.name == MapLayoutBuilder.CeilingGroup)
+                    SceneVisibilityManager.instance.Hide(t.gameObject, true);
         }
     }
 }

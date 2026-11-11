@@ -21,6 +21,15 @@ namespace CreativeAI.Core
     {
         /// <summary>調合を1回でも終えたら "1"(合成チュートリアルの判定用)。</summary>
         public const string Crafted = "crafted";
+
+        /// <summary><see cref="Seen"/> のフラグが立っているときの値。</summary>
+        public const string SeenValue = "1";
+
+        /// <summary>
+        /// repeat が once のイベントを見終えたら <see cref="SeenValue"/> になるフラグのキー(イベントごとに1つ)。
+        /// EventPlayer が書くだけで、events.json の作者は書かない。
+        /// </summary>
+        public static string Seen(string eventId) => "seen." + eventId;
     }
 
     /// <summary>

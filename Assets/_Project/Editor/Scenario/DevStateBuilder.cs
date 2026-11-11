@@ -23,7 +23,11 @@ namespace CreativeAI.EditorTools
             if (ev == null)
                 return -1;
             foreach (var condition in ev.Conditions)
-                if (condition != null && condition.Type == ConditionType.Progress)
+                if (
+                    condition != null
+                    && condition.Type == ConditionType.Progress
+                    && !condition.Negated
+                )
                     return condition.ProgressValue;
             return -1;
         }
@@ -68,7 +72,8 @@ namespace CreativeAI.EditorTools
 
             foreach (var condition in target.Conditions)
             {
-                if (condition == null)
+                // 「〜でないとき」の条件は、既定の状態(未設定・未所持)でそのまま満たすので入れない。
+                if (condition == null || condition.Negated)
                     continue;
                 if (condition.Type == ConditionType.Flag)
                     flags.Add(

@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.Text.RegularExpressions;
 using CreativeAI.Core;
 using NUnit.Framework;
+using UnityEditor;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 using UnityEngine.TestTools;
@@ -208,6 +209,130 @@ namespace CreativeAI.Tests.EditMode
             Drive(_player.PlayRoutine(ev));
 
             Assert.AreEqual(string.Empty, _pm.GetFlag("crafted"));
+        }
+
+        private static EventDefinition RepeatEvent(string id, EventRepeat repeat) =>
+            EventDefinition.Create(
+                id,
+                new[] { EventCondition.Progress(3) },
+                new[] { EventStep.Line(null, null, "調べた") },
+                0,
+                repeat,
+                advancesProgress: false
+            );
+
+        private static GameObject CreateSpawnPoint(string id, Vector3 position)
+        {
+            var go = new GameObject("TestSpawnPoint");
+            go.transform.position = position;
+            var so = new SerializedObject(go.AddComponent<SpawnPoint>());
+            so.FindProperty("_id").stringValue = id;
+            so.ApplyModifiedPropertiesWithoutUndo();
+            return go;
+        }
+
+        private static EventDefinition MoveEvent(string spawnPointId) =>
+            EventDefinition.Create(
+                "pull_back",
+                new[] { EventCondition.Progress(0) },
+                new[]
+                {
+                    EventStep.Line(null, null, "戻ろう"),
+                    EventStep.Command(EventPlayer.PlayerMoveCommand, spawnPointId),
+                },
+                1
+            );
+
+        [Test]
+        public void PlayRoutine_PlayerMoveTo_PlacesPlayerAtSpawnPoint()
+        {
+            var player = new GameObject("TestPlayer") { tag = "Player" };
+            var point = CreateSpawnPoint("test_pull_back", new Vector3(3f, 0f, 4f));
+            try
+            {
+                Drive(_player.PlayRoutine(MoveEvent("test_pull_back")));
+
+                Assert.AreEqual(point.transform.position, player.transform.position);
+            }
+            finally
+            {
+                UnityEngine.Object.DestroyImmediate(player);
+                UnityEngine.Object.DestroyImmediate(point);
+            }
+        }
+
+        [Test]
+        public void PlayRoutine_PlayerMoveTo_MissingSpawnPoint_WarnsAndDoesNotMove()
+        {
+            var player = new GameObject("TestPlayer") { tag = "Player" };
+            player.transform.position = new Vector3(1f, 2f, 3f);
+            try
+            {
+                LogAssert.Expect(LogType.Warning, new Regex("player.moveTo"));
+
+                Drive(_player.PlayRoutine(MoveEvent("no_such_point")));
+
+                Assert.AreEqual(
+                    new Vector3(1f, 2f, 3f),
+                    player.transform.position,
+                    "原点へ飛ばさない"
+                );
+                Assert.AreEqual(1, _pm.Progress, "イベント自体は最後まで進む");
+            }
+            finally
+            {
+                UnityEngine.Object.DestroyImmediate(player);
+            }
+        }
+
+        [Test]
+        public void PlayRoutine_Once_LeavesSeenFlagAndKeepsProgress()
+        {
+            _pm.AdvanceTo(3);
+            var ev = RepeatEvent("drawer_once", EventRepeat.Once);
+
+            Drive(_player.PlayRoutine(ev));
+
+            Assert.AreEqual(
+                ProgressFlags.SeenValue,
+                _pm.GetFlag(ProgressFlags.Seen("drawer_once"))
+            );
+            Assert.AreEqual(3, _pm.Progress, "進行度は進めない");
+            Assert.IsFalse(
+                ev.ConditionsMet(_pm.Progress, _pm.GetFlag),
+                "見終えたら二度と発火しない"
+            );
+        }
+
+        [Test]
+        public void PlayRoutine_Always_LeavesNoFlagAndStaysAvailable()
+        {
+            _pm.AdvanceTo(3);
+            var ev = RepeatEvent("shelf_check", EventRepeat.Always);
+
+            Drive(_player.PlayRoutine(ev));
+
+            Assert.AreEqual(string.Empty, _pm.GetFlag(ProgressFlags.Seen("shelf_check")));
+            Assert.AreEqual(3, _pm.Progress);
+            Assert.IsTrue(ev.ConditionsMet(_pm.Progress, _pm.GetFlag), "何度でも発火できる");
+        }
+
+        [Test]
+        public void SeenFlag_SurvivesSaveAndLoad()
+        {
+            _pm.AdvanceTo(3);
+            Drive(_player.PlayRoutine(RepeatEvent("drawer_once", EventRepeat.Once)));
+
+            // セーブされるのは Flags 全体。ロードで復元しても見終えた印が残る。
+            var saved = new System.Collections.Generic.Dictionary<string, string>(_pm.Flags);
+            _pm.LoadState(0, null);
+            Assert.AreEqual(string.Empty, _pm.GetFlag(ProgressFlags.Seen("drawer_once")));
+            _pm.LoadState(3, saved);
+
+            Assert.AreEqual(
+                ProgressFlags.SeenValue,
+                _pm.GetFlag(ProgressFlags.Seen("drawer_once"))
+            );
         }
 
         [Test]
