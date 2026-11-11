@@ -12,7 +12,7 @@ using UnityEngine.SceneManagement;
 namespace CreativeAI.EditorTools
 {
     /// <summary>
-    /// documents/ の文字マップ(MapLayout.md ほか、建物ごとに1枚)から床・壁・柵・階段を生成する(1マス = 4u)。
+    /// documents/ の文字マップ(MapLayout.md ほか、建物ごとに1枚)から床・壁・柵・階段・天井を生成する(1マス = 4u)。
     /// 生成物は Map ルート配下だけで毎回作り直す(手置き小物は Map の外なら残る)。Tools &gt; CreativeAI &gt; Map から実行。
     /// </summary>
     public static class MapLayoutBuilder
@@ -27,6 +27,7 @@ namespace CreativeAI.EditorTools
         const string EnvDir = "Assets/_Project/Art/Models/Environment";
         const string MaterialDir = "Assets/_Project/Art/Materials";
         const string MapRootName = "Map";
+        const string CeilingName = "Ceiling";
 
         // 建物ごとに「どの図を・ワールドのどこに・どのパーツで」建てるか。
         // 図そのものは .md 側が正。ここは各階の原点(マス[row 0, col 0] の中心)と床の高さ、見た目の部品だけを持つ。
@@ -55,6 +56,7 @@ namespace CreativeAI.EditorTools
             // 各階の原点の X/Z は図の範囲から読み込み時に決まるので、ここでは Y だけを使う。
             // 外周は図に壁を描いてあるので外周壁は作らない。
             // 階高は 16u(8u〜12u だと広い部屋に対して壁が低く見える)。3F を Area01 の 3F に揃え、下の階を下げている。
+            // 天井は 2F・3F に張る(1F は 2F の吹き抜けから見下ろせるよう張らない)。
             new Building(
                 "Lab",
                 "MapLayout_Lab.md",
@@ -67,11 +69,12 @@ namespace CreativeAI.EditorTools
                 16f,
                 Kit.Lab,
                 perimeter: false,
-                rulerAnchor: new Vector2(-222f, 182f)
+                rulerAnchor: new Vector2(-222f, 182f),
+                ceilingFloors: new[] { "2F", "3F" }
             ),
         };
 
-        // 外周壁を最上階の壁の上端からさらに伸ばす高さ。最上階は屋根が無いので、縁が低いと外が見えすぎる。
+        // 外周壁を最上階の壁の上端からさらに伸ばす高さ。屋根(天井)はこの上端に張る。
         // 外周壁のある建物では、最上階の `#` も同じ高さまで伸ばす(内側の壁だけ低いと不揃いに見える)
         const float PerimeterExtraHeight = 16f;
 
@@ -196,6 +199,9 @@ namespace CreativeAI.EditorTools
             // null なら ```text の書き方(行・列とも 0 始まり、原点は Floors の X/Z)
             public readonly Vector2? RulerAnchor;
 
+            // 階ごとに天井を張る階(名前)。外周壁のある建物は屋根で覆うので使わない
+            public readonly string[] CeilingFloors;
+
             public Building(
                 string name,
                 string doc,
@@ -203,7 +209,8 @@ namespace CreativeAI.EditorTools
                 float storeyHeight,
                 Kit kit,
                 bool perimeter,
-                Vector2? rulerAnchor = null
+                Vector2? rulerAnchor = null,
+                string[] ceilingFloors = null
             )
             {
                 Name = name;
@@ -213,6 +220,7 @@ namespace CreativeAI.EditorTools
                 Kit = kit;
                 Perimeter = perimeter;
                 RulerAnchor = rulerAnchor;
+                CeilingFloors = ceilingFloors ?? new string[0];
             }
 
             // 壁は上の階の床板の下面で止める。階高いっぱいだと壁の上面が上の階の床面と重なってちらつく
@@ -456,12 +464,15 @@ namespace CreativeAI.EditorTools
         /// <summary>マップのルート名(ピッキング無効化などに使う)。</summary>
         public static string MapRoot => MapRootName;
 
+        /// <summary>天井のグループ名(小物を置くとき Scene ビューで隠す・NavMesh から外すのに使う)。</summary>
+        public static string CeilingGroup => CeilingName;
+
         static void CreateSun()
         {
             var go = new GameObject("Directional Light");
             var light = go.AddComponent<Light>();
             light.type = LightType.Directional;
-            // 屋根の無い建物に太陽の影を落とすと、下の階の床にカメラ追従の円弧状の光漏れが出る
+            // 太陽の影を落とすと、下の階の床にカメラ追従の円弧状の光漏れが出る
             light.shadows = LightShadows.None;
             go.transform.rotation = Quaternion.Euler(50f, -30f, 0f);
         }
@@ -860,12 +871,14 @@ namespace CreativeAI.EditorTools
 
             var worldRows = main.Max(f => rowOffsets[f] + grids[f].GetLength(0));
             var worldCols = mainGrids.Max(g => g.GetLength(1));
+            var covered = BuildCoveredMask(mainGrids, mainOffsets, worldRows, worldCols);
             var perimeterMask = b.Perimeter
-                ? BuildPerimeterMask(mainGrids, mainOffsets, worldRows, worldCols)
+                ? BuildPerimeterMask(covered, worldRows, worldCols)
                 : new bool[worldRows, worldCols];
             bool OnPerimeter(int f, int r, int c) =>
                 !floors[f].Detached && perimeterMask[r + rowOffsets[f], c];
             if (b.Perimeter)
+            {
                 CreatePerimeterWall(
                     buildingRoot.transform,
                     b,
@@ -877,6 +890,19 @@ namespace CreativeAI.EditorTools
                     worldCols,
                     wallMat
                 );
+                CreateRoof(
+                    buildingRoot.transform,
+                    b,
+                    mainFloors,
+                    covered,
+                    worldRows,
+                    worldCols,
+                    wallMat
+                );
+            }
+            for (var f = 0; f < floors.Length; f++)
+                if (b.CeilingFloors.Contains(floors[f].Name))
+                    CreateFloorCeiling(floorRoots[f], b, floors, grids, stairCells, f, wallMat);
 
             // 床のマスクと、ガラス・柵の列は**先に全階ぶん**作る。寄せ量(EdgeOffset)を
             // 階をまたいで揃えるため ── 同じ列のガラスが階によって 2u ずれると、
@@ -1400,6 +1426,132 @@ namespace CreativeAI.EditorTools
             return go.transform;
         }
 
+        // ---------------------------------------------------------------- 天井
+
+        /// <summary>
+        /// 外周壁のある建物の屋根。全階の図の範囲を、外周壁の上端に1枚で蓋をする
+        /// (最上階の壁と吹き抜けのガラスもこの高さまで伸びているので、隙間なく閉じる)。
+        /// </summary>
+        static void CreateRoof(
+            Transform root,
+            Building b,
+            FloorDef[] floors, // 本棟の階だけ
+            bool[,] covered,
+            int worldRows,
+            int worldCols,
+            Material mat
+        )
+        {
+            var go = new GameObject(CeilingName);
+            go.transform.SetParent(root, false);
+            go.transform.localPosition = new Vector3(
+                floors[0].Origin.x,
+                floors.Max(f => f.Origin.y) + b.StoreyHeight + PerimeterExtraHeight,
+                floors.Min(f => f.Origin.z)
+            );
+            foreach (var rect in MergeRects(covered, worldRows, worldCols))
+                CreateBox(
+                    go.transform,
+                    CeilingName,
+                    rect,
+                    FloorSlabThickness,
+                    FloorSlabThickness * 0.5f,
+                    mat
+                );
+        }
+
+        /// <summary>
+        /// 1つの階の天井。床のあるマスと、壁に囲まれた吹き抜けの上へ全面に張る(上の階へ上る階段の上だけ開ける)。
+        /// 上の階の床板と重ならないよう床板1枚ぶん下げる(重ねると下から上の階の床の裏が見える・ちらつく)。
+        /// </summary>
+        static void CreateFloorCeiling(
+            Transform parent,
+            Building b,
+            FloorDef[] floors,
+            List<char[,]> grids,
+            List<StairCells> stairCells,
+            int f,
+            Material mat
+        )
+        {
+            var grid = grids[f];
+            var rows = grid.GetLength(0);
+            var cols = grid.GetLength(1);
+
+            var mask = new bool[rows, cols];
+            var outside = OutsideVoid(grid, rows, cols);
+            for (var r = 0; r < rows; r++)
+            for (var c = 0; c < cols; c++)
+                mask[r, c] = !outside[r, c];
+
+            // この階から上る階段は、階段のマスと上の階の吹き抜け(上の階の図のマス)を開ける
+            foreach (var s in stairCells.Where(s => s.LowerFloor == f))
+            {
+                for (var r = s.Row0; r <= s.Row1; r++)
+                for (var c = s.Col0; c <= s.Col1; c++)
+                    mask[r, c] = false;
+                var dr = Mathf.RoundToInt(
+                    (floors[s.UpperFloor].Origin.z - floors[f].Origin.z) / Cell
+                );
+                var dc = Mathf.RoundToInt(
+                    (floors[s.UpperFloor].Origin.x - floors[f].Origin.x) / Cell
+                );
+                foreach (var h in s.Hole)
+                {
+                    var r = h.y + dr;
+                    var c = h.x + dc;
+                    if (r >= 0 && c >= 0 && r < rows && c < cols)
+                        mask[r, c] = false;
+                }
+            }
+
+            var group = NewGroup(CeilingName, parent);
+            foreach (var rect in MergeRects(mask, rows, cols))
+                CreateBox(
+                    group,
+                    CeilingName,
+                    rect,
+                    FloorSlabThickness,
+                    b.StoreyHeight - FloorSlabThickness * 1.5f,
+                    mat
+                );
+        }
+
+        /// <summary>図の端から床なしのマスだけを伝って行けるマス(建物の外)。壁に囲まれた床なしは吹き抜けとして含めない。</summary>
+        static bool[,] OutsideVoid(char[,] grid, int rows, int cols)
+        {
+            var outside = new bool[rows, cols];
+            var queue = new Queue<Vector2Int>();
+            for (var r = 0; r < rows; r++)
+            for (var c = 0; c < cols; c++)
+                if ((r == 0 || c == 0 || r == rows - 1 || c == cols - 1) && grid[r, c] == Void)
+                {
+                    outside[r, c] = true;
+                    queue.Enqueue(new Vector2Int(c, r));
+                }
+            while (queue.Count > 0)
+            {
+                var p = queue.Dequeue();
+                foreach (var (dr, dc) in new[] { (1, 0), (-1, 0), (0, 1), (0, -1) })
+                {
+                    var r = p.y + dr;
+                    var c = p.x + dc;
+                    if (
+                        r < 0
+                        || c < 0
+                        || r >= rows
+                        || c >= cols
+                        || outside[r, c]
+                        || grid[r, c] != Void
+                    )
+                        continue;
+                    outside[r, c] = true;
+                    queue.Enqueue(new Vector2Int(c, r));
+                }
+            }
+            return outside;
+        }
+
         // ---------------------------------------------------------------- 外周壁
 
         /// <summary>各階の図の row 0 が、全階を重ねた共通マス目の何行目に来るか。</summary>
@@ -1418,12 +1570,8 @@ namespace CreativeAI.EditorTools
             return offsets;
         }
 
-        /// <summary>
-        /// 全階の図をワールドの共通マス目に重ね、建物の外気に触れる縁のマスを求める。
-        /// 階ごとにZ原点がずれているので、ある階の図の縁が別の階の室内に来ることがある。
-        /// そこは外周ではなく普通の壁(階高ぶん)のままにしないと、上階の床を貫いてしまう。
-        /// </summary>
-        static bool[,] BuildPerimeterMask(
+        /// <summary>全階の図をワールドの共通マス目に重ね、どれかの階の図の範囲に入るマスを求める。</summary>
+        static bool[,] BuildCoveredMask(
             List<char[,]> grids,
             int[] rowOffsets,
             int worldRows,
@@ -1438,7 +1586,16 @@ namespace CreativeAI.EditorTools
                 for (var c = 0; c < grid.GetLength(1); c++)
                     covered[r + rowOffsets[f], c] = true;
             }
+            return covered;
+        }
 
+        /// <summary>
+        /// 建物の外気に触れる縁のマスを求める。
+        /// 階ごとにZ原点がずれているので、ある階の図の縁が別の階の室内に来ることがある。
+        /// そこは外周ではなく普通の壁(階高ぶん)のままにしないと、上階の床を貫いてしまう。
+        /// </summary>
+        static bool[,] BuildPerimeterMask(bool[,] covered, int worldRows, int worldCols)
+        {
             var ring = new bool[worldRows, worldCols];
             for (var r = 0; r < worldRows; r++)
             for (var c = 0; c < worldCols; c++)
