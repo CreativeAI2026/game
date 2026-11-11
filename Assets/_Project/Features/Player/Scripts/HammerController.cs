@@ -186,8 +186,7 @@ namespace CreativeAI.Gameplay
             // 判定はハンマーヘッドに置くが、衝撃エフェクトは地面に出したいので高さだけ足元に合わせる
             Vector3 impactPoint = _slamHitbox.transform.position;
             impactPoint.y = PlayerTransform.position.y;
-            // TODO : ObjectPool導入後、Instantiateをやめる
-            Instantiate(_impactEffectPrefab, impactPoint, PlayerTransform.rotation);
+            EffectPool.Play(_impactEffectPrefab, impactPoint, PlayerTransform.rotation);
 
             WorldSoundPlayer.Play(_slamSound, impactPoint, this);
             SoundEventBus.Emit(

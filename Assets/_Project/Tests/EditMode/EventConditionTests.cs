@@ -142,6 +142,38 @@ namespace CreativeAI.Tests.EditMode
         }
 
         [Test]
+        public void Availability_FollowsProgressManager_AndStopsAfterOnceIsSeen()
+        {
+            var go = new UnityEngine.GameObject("PM");
+            try
+            {
+                var pm = go.AddComponent<ProgressManager>();
+                var def = EventDefinition.Create(
+                    "drawer_once",
+                    new[] { EventCondition.Progress(6) },
+                    System.Array.Empty<EventStep>(),
+                    0,
+                    EventRepeat.Once,
+                    advancesProgress: false,
+                    activation: EventActivation.Interact
+                );
+
+                // EditMode では AddComponent しても Awake が走らず Instance が入らないので、pm を直接渡す。
+                Assert.IsFalse(EventAvailability.IsMet(def, pm), "進行度が違う");
+                pm.AdvanceTo(6);
+                Assert.IsTrue(EventAvailability.IsMet(def, pm));
+                pm.SetFlag(ProgressFlags.Seen("drawer_once"), ProgressFlags.SeenValue);
+                Assert.IsFalse(EventAvailability.IsMet(def, pm), "見終えたら出ない");
+                Assert.IsFalse(EventAvailability.IsMet(null, pm));
+                Assert.IsFalse(EventAvailability.IsMet(def, null), "進行度の管理が無ければ出ない");
+            }
+            finally
+            {
+                UnityEngine.Object.DestroyImmediate(go);
+            }
+        }
+
+        [Test]
         public void ConditionsMet_EmptyConditions_IsInvalidData_FallsBackToTrue()
         {
             // conditions は必須で progress を必ず1つ含むため、

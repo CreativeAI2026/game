@@ -24054,7 +24054,7 @@ MonoBehaviour:
   weaponNext: 0
   weaponPrev: 0
   analogMovement: 0
-  cursorLocked: 0
+  cursorLocked: 1
   cursorInputForLook: 1
   _attackBufferSeconds: 0.3
 --- !u!114 &9019347759860532179

@@ -172,7 +172,7 @@ namespace CreativeAI.Gameplay
                 return;
             Quaternion rotation =
                 normal != Vector3.zero ? Quaternion.LookRotation(normal) : Quaternion.identity;
-            Instantiate(_hitEffect, position, rotation);
+            EffectPool.Play(_hitEffect, position, rotation);
         }
 
         private void OnDrawGizmosSelected()

@@ -52,6 +52,7 @@ namespace CreativeAI.Gameplay
                     {
                         _target = boss.Player.transform.position;
                         boss.StabReach.AimAt(_target);
+                        boss.StabEffects.BeginGather();
                         EnterPhase(Phase.Windup);
                     }
                     break;
@@ -81,10 +82,14 @@ namespace CreativeAI.Gameplay
 
             switch (animationEvent)
             {
+                case KurageAnimationEvent.StabGlint:
+                    boss.StabEffects.PlayGlint();
+                    break;
                 case KurageAnimationEvent.StabHitStart:
                     _hitStarted = true;
                     boss.StabHitbox.EnableHitbox();
                     boss.Sounds.PlayStab();
+                    boss.StabEffects.PlayThrust(boss.StabExtendDuration);
                     break;
                 case KurageAnimationEvent.StabHitEnd:
                     _hitEnded = true;
@@ -97,6 +102,8 @@ namespace CreativeAI.Gameplay
         {
             boss.StabHitbox.DisableHitbox();
             boss.StabReach.Weight = 0f;
+            // 溜めの途中で怯んだ時に、集まる光が出たままにならないようにする
+            boss.StabEffects.EndGather();
         }
 
         private void UpdateReachWeight()

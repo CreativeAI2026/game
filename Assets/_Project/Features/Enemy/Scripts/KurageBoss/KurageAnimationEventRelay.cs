@@ -20,6 +20,9 @@ namespace CreativeAI.Gameplay
 
         /// <summary>輪っかを投げ上げた。</summary>
         RingThrow,
+
+        /// <summary>突きの触手を伸ばす直前。先端に閃きを出す。</summary>
+        StabGlint,
     }
 
     /// <summary>
