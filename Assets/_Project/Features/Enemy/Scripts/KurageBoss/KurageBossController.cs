@@ -18,6 +18,7 @@ namespace CreativeAI.Gameplay
     [RequireComponent(typeof(KurageHaloRing))]
     [RequireComponent(typeof(KurageRingRestraint))]
     [RequireComponent(typeof(KurageStabReach))]
+    [RequireComponent(typeof(KurageStabEffects))]
     public class KurageBossController : EnemyBaseController
     {
         [Header("周回")]
@@ -147,6 +148,7 @@ namespace CreativeAI.Gameplay
         public float StabExtendDuration => _stabExtendDuration;
         public float StabRetractDuration => _stabRetractDuration;
         public KurageStabReach StabReach { get; private set; }
+        public KurageStabEffects StabEffects { get; private set; }
         public KurageGroundTentacle GroundTentaclePrefab => _groundTentaclePrefab;
 
         public override bool IsAttacking =>
@@ -171,6 +173,7 @@ namespace CreativeAI.Gameplay
             Halo = GetComponent<KurageHaloRing>();
             Restraint = GetComponent<KurageRingRestraint>();
             StabReach = GetComponent<KurageStabReach>();
+            StabEffects = GetComponent<KurageStabEffects>();
             _phase = GetComponent<KuragePhaseTracker>();
         }
 
