@@ -143,8 +143,7 @@ namespace CreativeAI.Gameplay
         {
             if (guardEffectPrefab != null)
             {
-                // TODO : ObjectPool導入後、Instantiateをやめる
-                Instantiate(guardEffectPrefab, hitPosition, PlayerTransform.rotation);
+                EffectPool.Play(guardEffectPrefab, hitPosition, PlayerTransform.rotation);
             }
         }
 
@@ -152,8 +151,7 @@ namespace CreativeAI.Gameplay
         {
             if (parryEffectPrefab != null)
             {
-                // TODO : ObjectPool導入後、Instantiateをやめる
-                Instantiate(parryEffectPrefab, hitPosition, PlayerTransform.rotation);
+                EffectPool.Play(parryEffectPrefab, hitPosition, PlayerTransform.rotation);
             }
         }
 
