@@ -24,9 +24,6 @@ namespace CreativeAI.Gameplay
         private PlayerInput _playerInput;
         private bool _playerInside;
 
-        /// <summary>プレイヤーが範囲内にいる。</summary>
-        public bool IsPlayerInside => _playerInside;
-
         /// <summary>操作の対象が揃っているか(扉なら動かす扉がある、など)。揃っていなければ何も出さない。</summary>
         protected abstract bool HasTarget { get; }
 

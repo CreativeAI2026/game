@@ -204,6 +204,26 @@ namespace CreativeAI.Tests.EditMode
         }
 
         [Test]
+        public void PlayerInside_FlagChangedOutsidePlayback_Fires()
+        {
+            AssignEvent(
+                EventDefinition.Create(
+                    "craft_done",
+                    EventCondition.Progress(0),
+                    EventCondition.Flag("crafted", "1")
+                )
+            );
+            Subscribe();
+            EnterTrigger();
+            CollectionAssert.IsEmpty(_player.Played, "フラグが立つまでは発火しない");
+
+            _pm.SetFlag("crafted", "1");
+            NextFrame();
+
+            CollectionAssert.AreEqual(new[] { "craft_done" }, _player.Played);
+        }
+
+        [Test]
         public void PlayerLeft_ProgressChanged_DoesNotFire()
         {
             AssignEvent(NextEvent());

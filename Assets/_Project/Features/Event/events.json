@@ -152,6 +152,8 @@
       ],
       "steps":[
 
+        //先に合成していても、このイベントの後で改めて合成させるためフラグを戻す
+        { "kind": "setFlag", "flag": "crafted", "value": "" },
         { "kind": "line", "portrait": "hero_question", "text": "「……ん？<wait=0.3>なんだ、この機械……？」" },
         { "kind": "line", "text": "見慣れない装置が、<wait=0.3>低い駆動音を響かせている。" },
         { "kind": "line", "text": "側面には「SYNTHESIS UNIT」の文字。" },

@@ -744,6 +744,20 @@ namespace CreativeAI.EditorTools
                     return EventStep.Choice(flagKey, parsed.ToArray());
                 }
 
+                case "setFlag":
+                {
+                    kind = StepKind.SetFlag;
+                    var setKey = (step["flag"] as JValue)?.Value as string;
+                    var setValue = (step["value"] as JValue)?.Value as string;
+                    // value は空文字を許す(フラグを空に戻す)。省略は書き間違いなので弾く。
+                    if (string.IsNullOrEmpty(setKey) || setValue == null)
+                    {
+                        report.Error(id, $"{location} setFlag は flag と value(空文字可)が必須。");
+                        return null;
+                    }
+                    return EventStep.SetFlag(setKey, setValue);
+                }
+
                 case "giveItem":
                 {
                     kind = StepKind.GiveItem;
@@ -869,7 +883,7 @@ namespace CreativeAI.EditorTools
                 default:
                     report.Error(
                         id,
-                        $"{location} の kind '{kindStr}' は不正(line / choice / giveItem / giveWeapon / battle / command のみ)。"
+                        $"{location} の kind '{kindStr}' は不正(line / choice / setFlag / giveItem / giveWeapon / battle / command のみ)。"
                     );
                     return null;
             }

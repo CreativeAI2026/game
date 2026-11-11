@@ -205,6 +205,10 @@ namespace CreativeAI.Core
                             }
                             break;
 
+                        case StepKind.SetFlag:
+                            Progress?.SetFlag(step.FlagKey, step.FlagValue ?? string.Empty);
+                            break;
+
                         case StepKind.GiveItem:
                             if (Items == null)
                                 Debug.LogWarning(
