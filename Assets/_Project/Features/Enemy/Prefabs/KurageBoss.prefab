@@ -179,7 +179,7 @@ MonoBehaviour:
   _dropDuration: 0.3
   _gripFollowSharpness: 12
   _restraintRadius: 0.55
-  _restraintHeight: 2.5
+  _restraintHeight: 3.2
   _chestHoverDuration: 0.6
   _squeezeDuration: 0.2
   _missHoldDuration: 0.5
