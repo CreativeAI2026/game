@@ -28,7 +28,13 @@ namespace CreativeAI.Core
         [SerializeField]
         private bool _keepsProgress;
 
+        [SerializeField]
+        private EventActivation _activation;
+
         public string Id => _id;
+
+        /// <summary>何をきっかけに発火するか。</summary>
+        public EventActivation Activation => _activation;
         public IReadOnlyList<EventCondition> Conditions => _conditions;
         public IReadOnlyList<EventStep> Steps => _steps;
 
@@ -87,7 +93,8 @@ namespace CreativeAI.Core
             EventStep[] steps,
             int nextProgress,
             EventRepeat repeat = EventRepeat.Progress,
-            bool advancesProgress = true
+            bool advancesProgress = true,
+            EventActivation activation = EventActivation.Auto
         )
         {
             var def = CreateInstance<EventDefinition>();
@@ -97,8 +104,19 @@ namespace CreativeAI.Core
             def._nextProgress = nextProgress;
             def._repeat = repeat;
             def._keepsProgress = !advancesProgress;
+            def._activation = activation;
             return def;
         }
+    }
+
+    /// <summary>イベントを何がきっかけに発火するか。</summary>
+    public enum EventActivation
+    {
+        /// <summary>トリガーに入ったら自動で(従来どおり)。</summary>
+        Auto,
+
+        /// <summary>近づいてキー([E])を押したら。</summary>
+        Interact,
     }
 
     /// <summary>イベントが何回発火するか。</summary>

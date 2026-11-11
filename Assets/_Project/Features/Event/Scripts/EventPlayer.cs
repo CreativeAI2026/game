@@ -122,6 +122,29 @@ namespace CreativeAI.Core
             }
         }
 
+        /// <summary>
+        /// プレイヤーを <see cref="SpawnPoint"/>(arg が ID)へ移す command 名。会話UIではなくここで実行する。
+        /// 引き戻しに使う。画面を隠したいときは前後に background.black.fill / clear を並べる。
+        /// </summary>
+        public const string PlayerMoveCommand = "player.moveTo";
+
+        private const string PlayerTag = "Player";
+
+        // 目印が無いとき SpawnPoint.Place は原点へ置いてしまうので、先に確かめて動かさずに警告する。
+        private static void MovePlayer(string spawnPointId)
+        {
+            var player = GameObject.FindWithTag(PlayerTag);
+            if (player == null || SpawnPoint.Find(spawnPointId) == null)
+            {
+                Debug.LogWarning(
+                    $"[EventPlayer] {PlayerMoveCommand} を実行できません"
+                        + $"(player={(player != null ? player.name : "なし")}, SpawnPoint ID='{spawnPointId}')。"
+                );
+                return;
+            }
+            SpawnPoint.Place(player, spawnPointId);
+        }
+
         public void Play(EventDefinition ev, BattleSetup battle = default)
         {
             if (ev == null)
@@ -252,7 +275,9 @@ namespace CreativeAI.Core
                             break;
 
                         case StepKind.Command:
-                            if (View != null)
+                            if (step.CommandName == PlayerMoveCommand)
+                                MovePlayer(step.Arg);
+                            else if (View != null)
                                 yield return View.RunCommand(step.CommandName, step.Arg);
                             break;
                     }
