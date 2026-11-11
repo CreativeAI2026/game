@@ -1090,6 +1090,9 @@ MonoBehaviour:
   dashSearchRadius: 10
   attackRange: 5
   dashSpeed: 30
+  _dashBlockLayers:
+    serializedVersion: 2
+    m_Bits: 257
   _hitbox: {fileID: 699812971520842315}
   _swingSound: {fileID: 11400000, guid: bac674912a670764a8e2ae8f6b80bc57, type: 2}
   _throwSearchRadius: 20
@@ -5704,6 +5707,9 @@ MonoBehaviour:
   dashSearchRadius: 15
   attackRange: 5
   dashSpeed: 40
+  _dashBlockLayers:
+    serializedVersion: 2
+    m_Bits: 257
   _hitbox: {fileID: 7111180468013580485}
   _swingSound: {fileID: 11400000, guid: 2c786d35de08d41468aecafc457db117, type: 2}
   parryWindowDuration: 0.2
@@ -22696,6 +22702,9 @@ MonoBehaviour:
   dashSearchRadius: 10
   attackRange: 5
   dashSpeed: 25
+  _dashBlockLayers:
+    serializedVersion: 2
+    m_Bits: 257
   _hitbox: {fileID: 2579256402661906229}
   _swingSound: {fileID: 11400000, guid: 1ff139564771f054e8cc997cab32c640, type: 2}
   _slamSearchRadius: 20
@@ -24040,13 +24049,12 @@ MonoBehaviour:
   m_EditorClassIdentifier: CreativeAI.Gameplay::CreativeAI.Gameplay.PlayerInputHandler
   move: {x: 0, y: 0}
   look: {x: 0, y: 0}
-  jump: 0
   sprint: 0
   subAction: 0
   weaponNext: 0
   weaponPrev: 0
   analogMovement: 0
-  cursorLocked: 0
+  cursorLocked: 1
   cursorInputForLook: 1
   _attackBufferSeconds: 0.3
 --- !u!114 &9019347759860532179
@@ -24067,9 +24075,7 @@ MonoBehaviour:
   RotationSmoothTime: 0.12
   AimRotationSmoothTime: 0.04
   SpeedChangeRate: 10
-  JumpHeight: 1.2
   Gravity: -15
-  JumpTimeout: 0.5
   FallTimeout: 0.15
   GroundedOffset: -0.14
   GroundedRadius: 0.28
@@ -24180,8 +24186,8 @@ MonoBehaviour:
   _trap:
     _weight: 0.5
     _maxDuration: 3
-    _stuckSpeedRatio: 0.3
-    _nearEnemyDistance: 8
+    _stuckProgressRatio: 0.4
+    _threatDistance: 15
   _aimCancel:
     _weight: 0.5
     _maxCount: 3

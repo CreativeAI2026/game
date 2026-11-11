@@ -94,7 +94,7 @@ namespace CreativeAI.Gameplay
 
             if (keyboard[_toggleKey].wasPressedThisFrame)
                 _visible = !_visible;
-            if (!_visible || _boss == null)
+            if (!_visible || !IsBossReady)
                 return;
 
             if (keyboard.digit4Key.wasPressedThisFrame)
@@ -178,9 +178,15 @@ namespace CreativeAI.Gameplay
                 : $"{label}: 今は出せません(倒れている・締めている・わっかが頭上に無い)";
         }
 
+        /// <summary>
+        /// ボスが有効になっていて、表示に使う参照(わっか・拘束)がそろっているか。
+        /// シーンではボスを非アクティブにしてあることがあり、その間は Awake が走っていないので中身が空になる。
+        /// </summary>
+        private bool IsBossReady => _boss != null && _boss.isActiveAndEnabled;
+
         private void OnGUI()
         {
-            if (!_visible || _boss == null)
+            if (!_visible || !IsBossReady)
                 return;
 
             _style ??= new GUIStyle(GUI.skin.label)

@@ -39,6 +39,9 @@ EditorBuildSettings:
     path: Assets/_Project/Scenes/Battle/TBossDemo.unity
     guid: 565b99c973cf47642be3d27cf3076cee
   - enabled: 1
+    path: Assets/_Project/Scenes/Battle/MidBossDemo.unity
+    guid: 72aff87d3cd4ffe439311085803e8e2a
+  - enabled: 1
     path: Assets/_Project/Scenes/Field/Field_Area01_Props_4F.unity
     guid: a357efc98af6a4208b285bc39d118c09
   m_configObjects:

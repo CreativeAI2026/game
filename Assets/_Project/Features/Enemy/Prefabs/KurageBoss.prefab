@@ -20,6 +20,7 @@ GameObject:
   - component: {fileID: 5706340402820222297}
   - component: {fileID: 249553817374106429}
   - component: {fileID: 3487277980888971487}
+  - component: {fileID: 8414664108098955601}
   m_Layer: 9
   m_Name: KurageBoss
   m_TagString: Enemy
@@ -289,6 +290,23 @@ MonoBehaviour:
     _speedUpProbability: 0.5
     _turnProbability: 0.5
     _doubleAttackProbability: 0.5
+--- !u!114 &8414664108098955601
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1254817577893401342}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: f8470d95f3a9c6949a04b2b41e2a2e09, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: CreativeAI.Gameplay::CreativeAI.Gameplay.KurageStabEffects
+  _gatherPrefab: {fileID: 6437485959971118039, guid: ef6c9b7488bf26a48b09cf144942b80d, type: 3}
+  _glintPrefab: {fileID: 7685714708196563711, guid: b8fe888247ecbee4fa0d59cb6cd4ba8c, type: 3}
+  _thrustPrefab: {fileID: 510845882235045583, guid: ea20c6c9ab5098d4fbc3417741426a7f, type: 3}
+  _thrustStartRatio: 0.12
+  _gatherCleanupDelay: 1
 --- !u!1 &3134970511177144099
 GameObject:
   m_ObjectHideFlags: 0
