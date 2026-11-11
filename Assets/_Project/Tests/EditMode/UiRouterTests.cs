@@ -134,6 +134,59 @@ namespace CreativeAI.Tests.EditMode
         }
 
         [Test]
+        public void CraftUiRequest_OpensCraftPanel()
+        {
+            TestReflection.Invoke(_router, "OnEnable");
+            try
+            {
+                _router.Open(UiRouter.UiId.Inventory);
+
+                CraftUiRequestService.Request();
+
+                Assert.IsTrue(_craft.activeSelf);
+                Assert.IsFalse(_inventory.activeSelf, "排他: 前のパネルは閉じる");
+            }
+            finally
+            {
+                TestReflection.Invoke(_router, "OnDisable");
+            }
+        }
+
+        [Test]
+        public void CraftUiRequest_AfterDisable_DoesNothing()
+        {
+            TestReflection.Invoke(_router, "OnEnable");
+            TestReflection.Invoke(_router, "OnDisable");
+
+            CraftUiRequestService.Request();
+
+            Assert.IsFalse(_craft.activeSelf);
+        }
+
+        [Test]
+        public void CraftUiRequest_WithoutCraftPanel_KeepsOtherPanelsOpen()
+        {
+            var noCraftGo = new GameObject("UIRootWithoutCraft");
+            try
+            {
+                var router = noCraftGo.AddComponent<UiRouter>(); // 調合パネル未割当のルーター
+                TestReflection.SetField(router, "_inventoryUI", _inventory);
+                TestReflection.Invoke(router, "Awake");
+                TestReflection.Invoke(router, "OnEnable");
+                router.Open(UiRouter.UiId.Inventory);
+
+                CraftUiRequestService.Request();
+
+                Assert.IsTrue(_inventory.activeSelf);
+                TestReflection.Invoke(router, "OnDisable");
+            }
+            finally
+            {
+                Object.DestroyImmediate(noCraftGo);
+            }
+        }
+
+        [Test]
         public void Open_TellsUiPanelServiceItIsOpen()
         {
             _router.Open(UiRouter.UiId.Character);
