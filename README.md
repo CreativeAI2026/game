@@ -6,6 +6,7 @@ Unity Editor **6000.4.5f1**（Unity 6）で開いてください。
 
 - 環境構築の手順 → [`docs/EnvironmentSetup.md`](docs/EnvironmentSetup.md)
 - 開発フロー（ブランチ名・コミットメッセージ・整形・PR） → [`docs/DevelopmentWorkflow.md`](docs/DevelopmentWorkflow.md)
+- イベントのフラグと合成（`events.json`） → [`docs/EventFlags.md`](docs/EventFlags.md)
 
 ## ディレクトリ構成
 
