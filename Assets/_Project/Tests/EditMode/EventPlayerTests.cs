@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.Text.RegularExpressions;
 using CreativeAI.Core;
 using NUnit.Framework;
+using UnityEditor;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 using UnityEngine.TestTools;
@@ -219,6 +220,70 @@ namespace CreativeAI.Tests.EditMode
                 repeat,
                 advancesProgress: false
             );
+
+        private static GameObject CreateSpawnPoint(string id, Vector3 position)
+        {
+            var go = new GameObject("TestSpawnPoint");
+            go.transform.position = position;
+            var so = new SerializedObject(go.AddComponent<SpawnPoint>());
+            so.FindProperty("_id").stringValue = id;
+            so.ApplyModifiedPropertiesWithoutUndo();
+            return go;
+        }
+
+        private static EventDefinition MoveEvent(string spawnPointId) =>
+            EventDefinition.Create(
+                "pull_back",
+                new[] { EventCondition.Progress(0) },
+                new[]
+                {
+                    EventStep.Line(null, null, "戻ろう"),
+                    EventStep.Command(EventPlayer.PlayerMoveCommand, spawnPointId),
+                },
+                1
+            );
+
+        [Test]
+        public void PlayRoutine_PlayerMoveTo_PlacesPlayerAtSpawnPoint()
+        {
+            var player = new GameObject("TestPlayer") { tag = "Player" };
+            var point = CreateSpawnPoint("test_pull_back", new Vector3(3f, 0f, 4f));
+            try
+            {
+                Drive(_player.PlayRoutine(MoveEvent("test_pull_back")));
+
+                Assert.AreEqual(point.transform.position, player.transform.position);
+            }
+            finally
+            {
+                UnityEngine.Object.DestroyImmediate(player);
+                UnityEngine.Object.DestroyImmediate(point);
+            }
+        }
+
+        [Test]
+        public void PlayRoutine_PlayerMoveTo_MissingSpawnPoint_WarnsAndDoesNotMove()
+        {
+            var player = new GameObject("TestPlayer") { tag = "Player" };
+            player.transform.position = new Vector3(1f, 2f, 3f);
+            try
+            {
+                LogAssert.Expect(LogType.Warning, new Regex("player.moveTo"));
+
+                Drive(_player.PlayRoutine(MoveEvent("no_such_point")));
+
+                Assert.AreEqual(
+                    new Vector3(1f, 2f, 3f),
+                    player.transform.position,
+                    "原点へ飛ばさない"
+                );
+                Assert.AreEqual(1, _pm.Progress, "イベント自体は最後まで進む");
+            }
+            finally
+            {
+                UnityEngine.Object.DestroyImmediate(player);
+            }
+        }
 
         [Test]
         public void PlayRoutine_Once_LeavesSeenFlagAndKeepsProgress()
