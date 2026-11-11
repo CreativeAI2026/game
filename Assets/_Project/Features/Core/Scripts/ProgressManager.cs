@@ -12,7 +12,11 @@ namespace CreativeAI.Core
         void AdvanceTo(int progress);
     }
 
-    /// <summary>コードから読み書きするフラグのキー(events.json の flag 条件と同じ文字列)。</summary>
+    /// <summary>
+    /// コードから読み書きするフラグのキー(events.json の flag 条件と同じ文字列)。
+    /// ここに足したら、documents リポジトリの ScenarioReference.md の「コードが立てるフラグ」の表にも足す
+    /// (シナリオを書く人は、その表でしかこのキーを知れない)。
+    /// </summary>
     public static class ProgressFlags
     {
         /// <summary>調合を1回でも終えたら "1"(合成チュートリアルの判定用)。</summary>
