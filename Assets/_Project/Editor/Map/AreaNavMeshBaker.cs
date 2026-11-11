@@ -58,6 +58,7 @@ namespace CreativeAI.EditorTools
             }
 
             IgnoreDoorLeaves(map);
+            IgnoreCeilings(map);
 
             var surface = EnsureSurface(scene);
             surface.agentTypeID = 0; // Humanoid(敵 Prefab の NavMeshAgent と同じ)
@@ -132,6 +133,19 @@ namespace CreativeAI.EditorTools
                 modifier.ignoreFromBuild = true;
                 // Prefab インスタンスは記録しないとシーン保存時に上書きが残らない
                 PrefabUtility.RecordPrefabInstancePropertyModifications(modifier);
+            }
+        }
+
+        /// <summary>天井は焼く対象から外す(上面に誰も行けない NavMesh ができるだけなので)。</summary>
+        static void IgnoreCeilings(GameObject map)
+        {
+            foreach (var t in map.GetComponentsInChildren<Transform>(true))
+            {
+                if (t.name != MapLayoutBuilder.CeilingGroup)
+                    continue;
+                if (!t.TryGetComponent<NavMeshModifier>(out var modifier))
+                    modifier = t.gameObject.AddComponent<NavMeshModifier>();
+                modifier.ignoreFromBuild = true;
             }
         }
 
