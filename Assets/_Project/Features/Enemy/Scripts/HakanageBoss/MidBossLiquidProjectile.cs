@@ -143,7 +143,7 @@ namespace CreativeAI.Gameplay
                 if (_playerHitEffect != null)
                 {
                     // OnTriggerEnter では接触点が取れないため transform.position で代替
-                    Instantiate(_playerHitEffect, transform.position, Quaternion.identity);
+                    EffectPool.Play(_playerHitEffect, transform.position, Quaternion.identity);
                 }
 
                 var effectHandler = other.GetComponentInParent<PlayerStatusEffectHandler>();
@@ -165,7 +165,7 @@ namespace CreativeAI.Gameplay
 
                 if (_landEffect != null)
                 {
-                    Instantiate(_landEffect, transform.position, Quaternion.identity);
+                    EffectPool.Play(_landEffect, transform.position, Quaternion.identity);
                 }
 
                 // Triggerでは法線が取れないため、移動方向にRaycastを飛ばして着弾面の法線を取得する
