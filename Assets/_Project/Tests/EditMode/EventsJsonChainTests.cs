@@ -28,9 +28,11 @@ namespace CreativeAI.Tests.EditMode
         [Test]
         public void EventsJson_ProgressStartsFromZeroAndAdvancesByOneEachEvent()
         {
+            // repeat を書いたイベント(調べる・ガード等)は進行度の連番に加わらないので除く。
             var events = EventImporter
                 .Parse(File.ReadAllText(Source))
-                .Events.OrderBy(StartProgress)
+                .Events.Where(ev => ev.Repeat == EventRepeat.Progress)
+                .OrderBy(StartProgress)
                 .ToList();
 
             var starts = events.Select(StartProgress).ToList();

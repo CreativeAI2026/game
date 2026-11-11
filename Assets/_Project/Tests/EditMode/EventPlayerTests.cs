@@ -210,6 +210,66 @@ namespace CreativeAI.Tests.EditMode
             Assert.AreEqual(string.Empty, _pm.GetFlag("crafted"));
         }
 
+        private static EventDefinition RepeatEvent(string id, EventRepeat repeat) =>
+            EventDefinition.Create(
+                id,
+                new[] { EventCondition.Progress(3) },
+                new[] { EventStep.Line(null, null, "調べた") },
+                0,
+                repeat,
+                advancesProgress: false
+            );
+
+        [Test]
+        public void PlayRoutine_Once_LeavesSeenFlagAndKeepsProgress()
+        {
+            _pm.AdvanceTo(3);
+            var ev = RepeatEvent("drawer_once", EventRepeat.Once);
+
+            Drive(_player.PlayRoutine(ev));
+
+            Assert.AreEqual(
+                ProgressFlags.SeenValue,
+                _pm.GetFlag(ProgressFlags.Seen("drawer_once"))
+            );
+            Assert.AreEqual(3, _pm.Progress, "進行度は進めない");
+            Assert.IsFalse(
+                ev.ConditionsMet(_pm.Progress, _pm.GetFlag),
+                "見終えたら二度と発火しない"
+            );
+        }
+
+        [Test]
+        public void PlayRoutine_Always_LeavesNoFlagAndStaysAvailable()
+        {
+            _pm.AdvanceTo(3);
+            var ev = RepeatEvent("shelf_check", EventRepeat.Always);
+
+            Drive(_player.PlayRoutine(ev));
+
+            Assert.AreEqual(string.Empty, _pm.GetFlag(ProgressFlags.Seen("shelf_check")));
+            Assert.AreEqual(3, _pm.Progress);
+            Assert.IsTrue(ev.ConditionsMet(_pm.Progress, _pm.GetFlag), "何度でも発火できる");
+        }
+
+        [Test]
+        public void SeenFlag_SurvivesSaveAndLoad()
+        {
+            _pm.AdvanceTo(3);
+            Drive(_player.PlayRoutine(RepeatEvent("drawer_once", EventRepeat.Once)));
+
+            // セーブされるのは Flags 全体。ロードで復元しても見終えた印が残る。
+            var saved = new System.Collections.Generic.Dictionary<string, string>(_pm.Flags);
+            _pm.LoadState(0, null);
+            Assert.AreEqual(string.Empty, _pm.GetFlag(ProgressFlags.Seen("drawer_once")));
+            _pm.LoadState(3, saved);
+
+            Assert.AreEqual(
+                ProgressFlags.SeenValue,
+                _pm.GetFlag(ProgressFlags.Seen("drawer_once"))
+            );
+        }
+
         [Test]
         public void PlayRoutine_ClosesWindowAtEnd()
         {
