@@ -75,6 +75,73 @@ namespace CreativeAI.Tests.EditMode
         }
 
         [Test]
+        public void Not_InvertsEachConditionType()
+        {
+            Func<string, string> crafted = key => key == "crafted" ? "1" : string.Empty;
+            Func<string, bool> owns = key => key == "card_key";
+
+            var notFlag = EventCondition.Flag("crafted", "1", not: true);
+            Assert.IsFalse(notFlag.IsMet(0, crafted)); // 立っている → 満たさない
+            Assert.IsTrue(notFlag.IsMet(0, NoFlags)); // 未設定 → 満たす
+
+            var notProgress = EventCondition.Progress(5, not: true);
+            Assert.IsFalse(notProgress.IsMet(5, NoFlags));
+            Assert.IsTrue(notProgress.IsMet(6, NoFlags));
+
+            var notItem = EventCondition.HasItem("card_key", not: true);
+            Assert.IsFalse(notItem.IsMet(0, NoFlags, owns));
+            Assert.IsTrue(notItem.IsMet(0, NoFlags, _ => false));
+        }
+
+        [Test]
+        public void ConditionsMet_GuardPattern_ProgressAndNotCrafted()
+        {
+            // 出口のガード: 進行度 5 の間、合成するまで成立する。
+            var def = EventDefinition.Create(
+                "craft_room_exit",
+                EventCondition.Progress(5),
+                EventCondition.Flag(ProgressFlags.Crafted, "1", not: true)
+            );
+
+            Assert.IsTrue(def.ConditionsMet(5, NoFlags));
+            Assert.IsFalse(def.ConditionsMet(5, _ => "1")); // 合成済み
+            Assert.IsFalse(def.ConditionsMet(6, NoFlags)); // 章が違う
+        }
+
+        [Test]
+        public void ConditionsMet_Once_StopsAfterSeenFlag()
+        {
+            var def = EventDefinition.Create(
+                "drawer_once",
+                new[] { EventCondition.Progress(6) },
+                System.Array.Empty<EventStep>(),
+                0,
+                EventRepeat.Once,
+                advancesProgress: false
+            );
+            Func<string, string> seen = key =>
+                key == ProgressFlags.Seen("drawer_once") ? ProgressFlags.SeenValue : string.Empty;
+
+            Assert.IsTrue(def.ConditionsMet(6, NoFlags));
+            Assert.IsFalse(def.ConditionsMet(6, seen)); // 見終えたら二度と発火しない
+        }
+
+        [Test]
+        public void ConditionsMet_Always_IgnoresSeenFlag()
+        {
+            var def = EventDefinition.Create(
+                "shelf_check",
+                new[] { EventCondition.Progress(6) },
+                System.Array.Empty<EventStep>(),
+                0,
+                EventRepeat.Always,
+                advancesProgress: false
+            );
+
+            Assert.IsTrue(def.ConditionsMet(6, _ => ProgressFlags.SeenValue));
+        }
+
+        [Test]
         public void ConditionsMet_EmptyConditions_IsInvalidData_FallsBackToTrue()
         {
             // conditions は必須で progress を必ず1つ含むため、

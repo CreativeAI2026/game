@@ -21,15 +21,29 @@ namespace CreativeAI.Core
         [SerializeField]
         private int _nextProgress;
 
+        // 既定値(Progress / false)が従来のイベントの挙動と同じになるよう、足したフィールドは 0 / false を従来側にしている。
+        [SerializeField]
+        private EventRepeat _repeat;
+
+        [SerializeField]
+        private bool _keepsProgress;
+
         public string Id => _id;
         public IReadOnlyList<EventCondition> Conditions => _conditions;
         public IReadOnlyList<EventStep> Steps => _steps;
 
-        /// <summary>終了時に進める進行度(Importer が必須として検証済み)。</summary>
+        /// <summary>何回発火するか。</summary>
+        public EventRepeat Repeat => _repeat;
+
+        /// <summary>終了時に進行度を進めるか。進めないイベントは <see cref="NextProgress"/> を使わない。</summary>
+        public bool AdvancesProgress => !_keepsProgress;
+
+        /// <summary>終了時に進める進行度(<see cref="AdvancesProgress"/> のとき Importer が検証済み)。</summary>
         public int NextProgress => _nextProgress;
 
         /// <summary>
         /// 全条件を満たす(AND)と発火可。条件が空なら常に満たす。
+        /// <see cref="EventRepeat.Once"/> のイベントは、見終えた印(<see cref="ProgressFlags.Seen"/>)があると満たさない。
         /// <paramref name="hasItem"/> は hasItem 条件用(itemKey→大事なもの所持か)。未指定なら
         /// hasItem 条件は不成立扱い(progress/flag のみのイベントは従来どおり)。
         /// </summary>
@@ -39,6 +53,11 @@ namespace CreativeAI.Core
             Func<string, bool> hasItem = null
         )
         {
+            if (
+                _repeat == EventRepeat.Once
+                && !string.IsNullOrEmpty(getFlag?.Invoke(ProgressFlags.Seen(_id)))
+            )
+                return false;
             if (_conditions == null)
                 return true;
             foreach (var condition in _conditions)
@@ -58,12 +77,17 @@ namespace CreativeAI.Core
             return def;
         }
 
-        /// <summary>ステップ・進行度まで含めた構築用(テスト・Importer)。</summary>
+        /// <summary>
+        /// ステップ・進行度まで含めた構築用(テスト・Importer)。
+        /// <paramref name="advancesProgress"/> が false なら終了時に進行度を進めず、<paramref name="nextProgress"/> は使わない。
+        /// </summary>
         public static EventDefinition Create(
             string id,
             EventCondition[] conditions,
             EventStep[] steps,
-            int nextProgress
+            int nextProgress,
+            EventRepeat repeat = EventRepeat.Progress,
+            bool advancesProgress = true
         )
         {
             var def = CreateInstance<EventDefinition>();
@@ -71,8 +95,23 @@ namespace CreativeAI.Core
             def._conditions = conditions ?? Array.Empty<EventCondition>();
             def._steps = steps ?? Array.Empty<EventStep>();
             def._nextProgress = nextProgress;
+            def._repeat = repeat;
+            def._keepsProgress = !advancesProgress;
             return def;
         }
+    }
+
+    /// <summary>イベントが何回発火するか。</summary>
+    public enum EventRepeat
+    {
+        /// <summary>進行度で1回きり(従来どおり。終了で進行度が進み、条件を外れる)。</summary>
+        Progress,
+
+        /// <summary>1回だけ。見終えた印をセーブされるフラグに残し、二度と発火しない。進行度は任意。</summary>
+        Once,
+
+        /// <summary>条件を満たす限り何度でも。進行度は進めない。</summary>
+        Always,
     }
 
     public enum StepKind
@@ -339,21 +378,35 @@ namespace CreativeAI.Core
         [SerializeField]
         private string _itemKey; // type == HasItem: 所持を問う「大事なもの」の itemKey
 
+        [SerializeField]
+        private bool _negate; // true なら「満たさないとき」成立(not)
+
         public EventCondition() { } // Unity シリアライズ用
 
-        public static EventCondition Progress(int value) =>
-            new() { _type = ConditionType.Progress, _progressValue = value };
+        public static EventCondition Progress(int value, bool not = false) =>
+            new()
+            {
+                _type = ConditionType.Progress,
+                _progressValue = value,
+                _negate = not,
+            };
 
-        public static EventCondition Flag(string key, string value) =>
+        public static EventCondition Flag(string key, string value, bool not = false) =>
             new()
             {
                 _type = ConditionType.Flag,
                 _flagKey = key,
                 _flagValue = value,
+                _negate = not,
             };
 
-        public static EventCondition HasItem(string itemKey) =>
-            new() { _type = ConditionType.HasItem, _itemKey = itemKey };
+        public static EventCondition HasItem(string itemKey, bool not = false) =>
+            new()
+            {
+                _type = ConditionType.HasItem,
+                _itemKey = itemKey,
+                _negate = not,
+            };
 
         public ConditionType Type => _type;
         public int ProgressValue => _progressValue;
@@ -361,14 +414,24 @@ namespace CreativeAI.Core
         public string FlagValue => _flagValue;
         public string ItemKey => _itemKey;
 
+        /// <summary>「満たさないとき」成立する条件か(events.json の <c>"not": true</c>)。</summary>
+        public bool Negated => _negate;
+
         /// <summary>
         /// この条件を満たすか。進行度は == 比較なので AdvanceTo 後は一致せず、各イベントは1回だけ発火する。
         /// hasItem は <paramref name="hasItem"/> に委譲し、null なら不成立扱い。
+        /// <see cref="Negated"/> なら、その判定結果を反転する(hasItem 未供給の「不成立」も反転して成立になる)。
         /// </summary>
         public bool IsMet(
             int progress,
             Func<string, string> getFlag,
             Func<string, bool> hasItem = null
+        ) => Matches(progress, getFlag, hasItem) != _negate;
+
+        private bool Matches(
+            int progress,
+            Func<string, string> getFlag,
+            Func<string, bool> hasItem
         ) =>
             _type switch
             {

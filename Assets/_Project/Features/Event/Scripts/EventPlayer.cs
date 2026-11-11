@@ -271,7 +271,11 @@ namespace CreativeAI.Core
                 // 最後の台詞を出したまま終わらないよう、会話ウィンドウを閉じてから進行度を進める。
                 if (View != null)
                     yield return View.Close();
-                Progress?.AdvanceTo(ev.NextProgress);
+                // 1回きりのイベントは、見終えた印をセーブされるフラグに残す(二度と発火しなくなる)。
+                if (ev.Repeat == EventRepeat.Once)
+                    Progress?.SetFlag(ProgressFlags.Seen(ev.Id), ProgressFlags.SeenValue);
+                if (ev.AdvancesProgress)
+                    Progress?.AdvanceTo(ev.NextProgress);
             }
             finally
             {

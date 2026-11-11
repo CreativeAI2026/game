@@ -306,12 +306,30 @@ namespace CreativeAI.EditorTools
                 }
             }
 
-            // progress 条件を必ず1つ含む(進行度==でちょうど1回だけ発火する前提)。
+            // --- repeat(省略 = 進行度で1回きり) ---
+            var repeat = EventRepeat.Progress;
+            if (ev.TryGetValue("repeat", out var repeatToken))
+            {
+                var repeatText = (repeatToken as JValue)?.Value as string;
+                if (repeatText == "once")
+                    repeat = EventRepeat.Once;
+                else if (repeatText == "always")
+                    repeat = EventRepeat.Always;
+                else
+                {
+                    report.Error(id, "repeat は \"once\" か \"always\" で指定してください。");
+                    ok = false;
+                }
+            }
+
+            // 進行度で1回きりのイベントは、progress 条件を必ず1つ含む(進行度==でちょうど1回だけ発火する前提)。
+            // repeat を書いたイベントは進行度に頼らず1回きり/何度でもを決めるので、章を問わず置ける(progress は任意)。
+            // not を付けた progress は「その進行度でないとき」なので、1回きりの根拠には数えない。
             var progressValues = conditions
-                .Where(c => c.Type == ConditionType.Progress)
+                .Where(c => c.Type == ConditionType.Progress && !c.Negated)
                 .Select(c => c.ProgressValue)
                 .ToList();
-            if (progressValues.Count == 0)
+            if (repeat == EventRepeat.Progress && progressValues.Count == 0)
             {
                 report.Error(id, "conditions に progress 条件が必須です(1つ以上)。");
                 ok = false;
@@ -344,14 +362,27 @@ namespace CreativeAI.EditorTools
                 WarnBranchKeys(stepArray, id, report);
             }
 
-            // --- nextProgress(必須・progress の value より大きい) ---
+            // --- nextProgress(progress の value より大きい) ---
             // 進行度==で発火 → 終了時に nextProgress へ進めて value と一致しなくなる。
             // これで「どのイベントもちょうど1回だけ発火する」を保証する。
-            int? nextProgress = null;
-            if (!ev.TryGetValue("nextProgress", out var np))
+            // 進行度で1回きりのイベントは必須。once は任意。always は進行度を進めないので書けない。
+            int nextProgress = 0;
+            bool hasNextProgress = ev.TryGetValue("nextProgress", out var np);
+            if (repeat == EventRepeat.Always && hasNextProgress)
             {
-                report.Error(id, "nextProgress が必須です。");
+                report.Error(
+                    id,
+                    "repeat が always のイベントに nextProgress は書けません(何度でも発火するため進行度を進めません)。"
+                );
                 ok = false;
+            }
+            else if (!hasNextProgress)
+            {
+                if (repeat == EventRepeat.Progress)
+                {
+                    report.Error(id, "nextProgress が必須です。");
+                    ok = false;
+                }
             }
             else if (np.Type != JTokenType.Integer)
             {
@@ -363,7 +394,7 @@ namespace CreativeAI.EditorTools
                 nextProgress = np.Value<int>();
                 foreach (var pv in progressValues)
                 {
-                    if (nextProgress.Value <= pv)
+                    if (nextProgress <= pv)
                     {
                         report.Error(
                             id,
@@ -380,7 +411,9 @@ namespace CreativeAI.EditorTools
                         id,
                         conditions.ToArray(),
                         steps.ToArray(),
-                        nextProgress.Value
+                        nextProgress,
+                        repeat,
+                        repeat != EventRepeat.Always && hasNextProgress
                     )
                 );
         }
@@ -570,6 +603,18 @@ namespace CreativeAI.EditorTools
                 return null;
             }
 
+            // not: true なら「満たさないとき」成立。省略は false。
+            bool not = false;
+            if (cond.TryGetValue("not", out var notToken))
+            {
+                if (notToken.Type != JTokenType.Boolean)
+                {
+                    report.Error(id, $"{location} の not は true / false で指定してください。");
+                    return null;
+                }
+                not = notToken.Value<bool>();
+            }
+
             var type = (cond["type"] as JValue)?.Value as string;
             switch (type)
             {
@@ -579,7 +624,7 @@ namespace CreativeAI.EditorTools
                         report.Error(id, $"{location} progress の value は整数(必須)。");
                         return null;
                     }
-                    return EventCondition.Progress(cond["value"].Value<int>());
+                    return EventCondition.Progress(cond["value"].Value<int>(), not);
 
                 case "flag":
                     var key = (cond["key"] as JValue)?.Value as string;
@@ -589,7 +634,7 @@ namespace CreativeAI.EditorTools
                         report.Error(id, $"{location} flag は key と value が必須。");
                         return null;
                     }
-                    return EventCondition.Flag(key, val);
+                    return EventCondition.Flag(key, val, not);
 
                 case "hasItem":
                     var itemKey = (cond["itemKey"] as JValue)?.Value as string;
@@ -623,7 +668,7 @@ namespace CreativeAI.EditorTools
                             $"{location} hasItem の itemKey '{itemKey}' は未検証(大事なものカタログ未提供)。"
                         );
                     }
-                    return EventCondition.HasItem(itemKey);
+                    return EventCondition.HasItem(itemKey, not);
 
                 default:
                     report.Error(
