@@ -6,14 +6,7 @@
 
 ## ブランチ名
 
-`<種別>/<内容>` の形式。`<内容>` は英小文字 + ハイフン。
-
-| 種別 | 用途 | 例 |
-|------|------|-----|
-| `feature/` | 機能追加 | `feature/player-move-system` |
-| `fix/` | バグ修正 | `fix/enemy-spawn-null` |
-| `docs/` | ドキュメント | `docs/dev-onboarding` |
-| `chore/` | 設定・雑務 | `chore/update-gitignore` |
+`<種別>/<内容>` の形式（例: `feature/player-move-system`）。種別は `feature`（機能追加）・`fix`（バグ修正）・`docs`（ドキュメント）・`chore`（設定・雑務）のどれか、`<内容>` は英小文字 + ハイフン。
 
 ---
 

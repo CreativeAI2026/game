@@ -59,7 +59,20 @@ namespace CreativeAI.UI
         // パネルは自分の戻るボタンで SetActive(false) して閉じることがあり、ここを通らないので毎フレーム実際の表示を見る。
         private void Update() => SyncOpenState();
 
-        private void OnDisable() => UiPanelService.SetOpen(false);
+        private void OnEnable() => CraftUiRequestService.Requested += OpenCraft;
+
+        private void OnDisable()
+        {
+            CraftUiRequestService.Requested -= OpenCraft;
+            UiPanelService.SetOpen(false);
+        }
+
+        // 合成装置からの依頼。調合パネルが未割当のシーンでは、他のパネルまで閉じないよう何もしない。
+        private void OpenCraft()
+        {
+            if (_panels.ContainsKey(UiId.Craft))
+                Open(UiId.Craft);
+        }
 
         private void SyncOpenState() => UiPanelService.SetOpen(IsAnyPanelOpen);
 

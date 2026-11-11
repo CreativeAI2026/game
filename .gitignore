@@ -105,3 +105,6 @@ crashlytics-build.properties
 # 開発用の個人設定(人ごとの開始位置など)。共有の dev_state.json とは別に、自分だけで使う。
 Assets/_Project/Features/Event/dev_state.local.json
 Assets/_Project/Features/Event/dev_state.local.json.meta
+
+# Claude Code の個人設定
+.claude/settings.local.json

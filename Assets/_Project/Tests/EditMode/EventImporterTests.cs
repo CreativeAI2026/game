@@ -154,6 +154,48 @@ namespace CreativeAI.Tests.EditMode
         }
 
         [Test]
+        public void Parse_SetFlag_BuildsStep()
+        {
+            const string json =
+                @"{ ""events"": [ {
+                    ""id"": ""reset_flag"", ""conditions"": [ { ""type"": ""progress"", ""value"": 0 } ],
+                    ""steps"": [
+                        { ""kind"": ""setFlag"", ""flag"": ""crafted"", ""value"": """" },
+                        { ""kind"": ""line"", ""text"": ""a"" }
+                    ],
+                    ""nextProgress"": 1
+                } ] }";
+
+            var report = EventImporter.Parse(json);
+
+            Assert.IsFalse(report.HasErrors, string.Join("\n", report.Diagnostics));
+            var step = report.Events[0].Steps[0];
+            Assert.AreEqual(StepKind.SetFlag, step.Kind);
+            Assert.AreEqual("crafted", step.FlagKey);
+            Assert.AreEqual(string.Empty, step.FlagValue);
+        }
+
+        [Test]
+        public void Parse_SetFlag_MissingFlagOrValue_IsError()
+        {
+            const string json =
+                @"{ ""events"": [ {
+                    ""id"": ""bad_set_flag"", ""conditions"": [ { ""type"": ""progress"", ""value"": 0 } ],
+                    ""steps"": [
+                        { ""kind"": ""setFlag"", ""value"": ""1"" },
+                        { ""kind"": ""setFlag"", ""flag"": ""crafted"" },
+                        { ""kind"": ""line"", ""text"": ""a"" }
+                    ],
+                    ""nextProgress"": 1
+                } ] }";
+
+            var report = EventImporter.Parse(json);
+
+            Assert.IsTrue(report.HasErrors);
+            Assert.AreEqual(2, report.Diagnostics.Count(d => d.Message.Contains("setFlag")));
+        }
+
+        [Test]
         public void Parse_OmittedNextProgress_IsError()
         {
             // nextProgress は必須(省略はエラー)。

@@ -60,5 +60,28 @@ namespace CreativeAI.Tests.EditMode
 
             Assert.AreEqual("together", _pm.GetFlag("girl_choice"));
         }
+
+        [Test]
+        public void SetFlag_ChangedValue_RaisesOnProgressChanged()
+        {
+            int calls = 0;
+            _pm.OnProgressChanged += () => calls++;
+
+            _pm.SetFlag(ProgressFlags.Crafted, "1");
+
+            Assert.AreEqual(1, calls);
+        }
+
+        [Test]
+        public void SetFlag_SameValue_DoesNotRaise()
+        {
+            _pm.SetFlag(ProgressFlags.Crafted, "1");
+
+            int calls = 0;
+            _pm.OnProgressChanged += () => calls++;
+            _pm.SetFlag(ProgressFlags.Crafted, "1");
+
+            Assert.AreEqual(0, calls);
+        }
     }
 }

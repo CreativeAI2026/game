@@ -85,6 +85,7 @@ namespace CreativeAI.Core
         Command,
         Branch,
         Jump,
+        SetFlag,
     }
 
     [Serializable]
@@ -147,7 +148,10 @@ namespace CreativeAI.Core
         private string _text; // line
 
         [SerializeField]
-        private string _flagKey; // choice: 書き込むフラグ
+        private string _flagKey; // choice / setFlag: 書き込むフラグ
+
+        [SerializeField]
+        private string _flagValue; // setFlag: 書き込む値(空文字ならフラグを空に戻す)
 
         [SerializeField]
         private ChoiceOption[] _options = Array.Empty<ChoiceOption>(); // choice
@@ -235,6 +239,17 @@ namespace CreativeAI.Core
                 _options = options ?? Array.Empty<ChoiceOption>(),
             };
 
+        /// <summary>
+        /// フラグを書くステップ。value が空文字ならフラグを空に戻す(「合成した」を書き直す、など)。
+        /// </summary>
+        public static EventStep SetFlag(string flagKey, string value) =>
+            new()
+            {
+                _kind = StepKind.SetFlag,
+                _flagKey = flagKey,
+                _flagValue = value,
+            };
+
         public static EventStep GiveItem(string itemKey, string message = null) =>
             new()
             {
@@ -277,6 +292,9 @@ namespace CreativeAI.Core
         public string Portrait => _portrait;
         public string Text => _text;
         public string FlagKey => _flagKey;
+
+        /// <summary>setFlag ステップが書く値。</summary>
+        public string FlagValue => _flagValue;
         public IReadOnlyList<ChoiceOption> Options => _options;
         public string ItemKey => _itemKey;
         public string WeaponKey => _weaponKey;
