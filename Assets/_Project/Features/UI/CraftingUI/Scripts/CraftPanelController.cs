@@ -2,6 +2,7 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
+using CreativeAI.Core;
 using CreativeAI.Gameplay;
 using DG.Tweening;
 using TMPro;
@@ -93,6 +94,7 @@ namespace CreativeAI.UI
         private bool _isSubscribed;
         private bool _isCrafting;
         private bool _isCraftFlowRunning;
+        private bool _craftedPending; // 合成したが、まだ合成画面を閉じていない
         private Coroutine _craftRoutine;
         private Coroutine _initialSelectionRoutine;
         private ItemData _previewedCraftedItem;
@@ -177,6 +179,18 @@ namespace CreativeAI.UI
             ResetMaterialAssignments(resetSelection: true);
             CancelCraftFlow();
             HideWarning();
+            MarkCraftedIfPending();
+        }
+
+        // 合成画面を閉じてから合成済みにする。開いたまま会話が始まると、会話側がパネルを強制的に閉じてしまうため。
+        private void MarkCraftedIfPending()
+        {
+            if (!_craftedPending)
+                return;
+            _craftedPending = false;
+            var progress = ProgressManager.Instance;
+            if (progress != null)
+                progress.SetFlag(ProgressFlags.Crafted, "1");
         }
 
         private void OnDestroy()
@@ -714,6 +728,7 @@ namespace CreativeAI.UI
 
         private void OnResultClosed()
         {
+            _craftedPending = true; // 合成済みの記録は、合成画面を閉じるとき(OnDisable)に付ける
             ResetSlots(resetInventoryView: false);
             SelectFirstSlotIfNeeded();
         }

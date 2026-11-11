@@ -10,12 +10,12 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 858f11bf7ac04ef1a88f80026e740e0f, type: 3}
-  m_Name: 8_encountering_strangehead
+  m_Name: 9_encountering_strangehead
   m_EditorClassIdentifier: CreativeAI.Core::CreativeAI.Core.EventDefinition
-  _id: 8_encountering_strangehead
+  _id: 9_encountering_strangehead
   _conditions:
   - _type: 0
-    _progressValue: 7
+    _progressValue: 8
     _flagKey: 
     _flagValue: 
     _itemKey: 
@@ -308,4 +308,4 @@ MonoBehaviour:
     _thenTarget: 0
     _elseTarget: 0
     _joinTarget: 0
-  _nextProgress: 8
+  _nextProgress: 9

@@ -10,12 +10,12 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 858f11bf7ac04ef1a88f80026e740e0f, type: 3}
-  m_Name: 6_first_appearance_robot
+  m_Name: 7_first_appearance_robot
   m_EditorClassIdentifier: CreativeAI.Core::CreativeAI.Core.EventDefinition
-  _id: 6_first_appearance_robot
+  _id: 7_first_appearance_robot
   _conditions:
   - _type: 0
-    _progressValue: 5
+    _progressValue: 6
     _flagKey: 
     _flagValue: 
     _itemKey: 
@@ -1054,4 +1054,4 @@ MonoBehaviour:
     _thenTarget: 0
     _elseTarget: 0
     _joinTarget: 0
-  _nextProgress: 6
+  _nextProgress: 7

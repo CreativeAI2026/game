@@ -10,12 +10,12 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 858f11bf7ac04ef1a88f80026e740e0f, type: 3}
-  m_Name: 7_escape_researchbuilding
+  m_Name: 8_escape_researchbuilding
   m_EditorClassIdentifier: CreativeAI.Core::CreativeAI.Core.EventDefinition
-  _id: 7_escape_researchbuilding
+  _id: 8_escape_researchbuilding
   _conditions:
   - _type: 0
-    _progressValue: 6
+    _progressValue: 7
     _flagKey: 
     _flagValue: 
     _itemKey: 
@@ -217,4 +217,4 @@ MonoBehaviour:
     _thenTarget: 0
     _elseTarget: 0
     _joinTarget: 0
-  _nextProgress: 7
+  _nextProgress: 8
