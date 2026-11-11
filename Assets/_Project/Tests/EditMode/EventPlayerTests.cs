@@ -191,6 +191,26 @@ namespace CreativeAI.Tests.EditMode
         }
 
         [Test]
+        public void PlayRoutine_SetFlagStep_WritesTheFlag()
+        {
+            _pm.SetFlag("crafted", "1");
+            var ev = EventDefinition.Create(
+                "reset",
+                new[] { EventCondition.Progress(0) },
+                new[]
+                {
+                    EventStep.SetFlag("crafted", string.Empty),
+                    EventStep.Line(null, null, "a"),
+                },
+                1
+            );
+
+            Drive(_player.PlayRoutine(ev));
+
+            Assert.AreEqual(string.Empty, _pm.GetFlag("crafted"));
+        }
+
+        [Test]
         public void PlayRoutine_ClosesWindowAtEnd()
         {
             Drive(_player.PlayRoutine(OneLineEvent("a", 0, "ありがとう", 1)));

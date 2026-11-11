@@ -152,23 +152,47 @@
       ],
       "steps":[
 
+        //先に合成していても、このイベントの後で改めて合成させるためフラグを戻す
+        { "kind": "setFlag", "flag": "crafted", "value": "" },
         { "kind": "line", "portrait": "hero_question", "text": "「……ん？<wait=0.3>なんだ、この機械……？」" },
         { "kind": "line", "text": "見慣れない装置が、<wait=0.3>低い駆動音を響かせている。" },
         { "kind": "line", "text": "側面には「SYNTHESIS UNIT」の文字。" },
         { "kind": "line", "text": "どうやら素材を組み合わせ、<wait=0.3>別の物を生成する装置らしい。" },
         { "kind": "line", "portrait": "hero_normal", "text": "「……へぇ、合成装置か。」" },
-        { "kind": "line", "portrait": "hero_smile", "text": "「ちょうどいい。<wait=0.3> さっき拾ったもん、試してみるか。」" }
+        { "kind": "line", "portrait": "hero_smile", "text": "「ちょうどいい。<wait=0.3> さっき拾ったもん、試してみるか。」" },
+        { "kind": "line", "text": "ポケットを探ると、<wait=0.3>いつの間にか素材が入っていた。" },
+        { "kind": "giveItem", "itemKey": "apple", "message": "「りんご」を手に入れた。" },
+        { "kind": "giveItem", "itemKey": "banana", "message": "「バナナ」を手に入れた。" },
+        { "kind": "line", "portrait": "hero_question", "text": "「……よし。<wait=0.3> この二つを装置で合成してみるか。」" }
 
       ],
       "nextProgress":5
     },
 
+    //合成を終えたら(プレイヤーが実際に合成すると crafted フラグが立つ)
+    {
+     "id":"6_item_combination_done",
+      //合成後の反応
+      "conditions":[
+        {"type":"progress","value": 5 },
+        {"type":"flag","key":"crafted","value":"1"}
+      ],
+      "steps":[
+
+        { "kind": "line", "portrait": "hero_surprised", "text": "「おお……！<wait=0.3> ホントに別のもんができた。」" },
+        { "kind": "line", "portrait": "hero_smile", "text": "「これなら傷の手当てにも使えそうだな。」" },
+        { "kind": "line", "portrait": "hero_normal", "text": "「よし、<wait=0.3>探索に戻るか。」" }
+
+      ],
+      "nextProgress":6
+    },
+
     //探索に戻る
     {
-     "id":"6_first_appearance_robot",
+     "id":"7_first_appearance_robot",
       //NPC(ロボット)登場
       "conditions":[
-        {"type":"progress","value": 5 }
+        {"type":"progress","value": 6 }
         //ある場所に近づいたとき
       ],
       "steps":[
@@ -243,13 +267,13 @@
         {"kind":"line","portrait":"hero_anger","text":"「よし……<wait=0.3> 行くぞ、ハリボテ！」"},
         {"kind":"line","portrait":"robot_normal","text":"「了解しました。<wait=0.3> サポート対象への同行を開始します。」"}
       ],
-      "nextProgress":6
+      "nextProgress":7
     },
     //探索に戻る
     {
-     "id": "7_escape_researchbuilding",
+     "id": "8_escape_researchbuilding",
       "conditions": [
-        { "type": "progress", "value": 6 }   //valueが6の時
+        { "type": "progress", "value": 7 }   //valueが7の時
         //{ "type": "hasItem", "itemkey": "map" }   //マップを持っている時
       ],
       "steps": [
@@ -270,15 +294,15 @@
         //ドアの音を流す
 
       ],
-      "nextProgress": 7
+      "nextProgress": 8
     },
 
 
     //探索に戻る
     {
-     "id": "8_encountering_strangehead",
+     "id": "9_encountering_strangehead",
       "conditions": [
-        { "type": "progress", "value": 7 }  //valueが7の時
+        { "type": "progress", "value": 8 }  //valueが8の時
         //モールに入ったら
       ],
       "steps": [
@@ -304,8 +328,8 @@
         {"kind":"line","portrait":"hero_anger","text":"「とりあえず、<wait=0.3>様子を見に行ってみるか。」"}
 
       ],
-      "nextProgress": 8
+      "nextProgress": 9
     }
-    
+
   ]
 }

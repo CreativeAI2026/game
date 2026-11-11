@@ -12,6 +12,13 @@ namespace CreativeAI.Core
         void AdvanceTo(int progress);
     }
 
+    /// <summary>コードから読み書きするフラグのキー(events.json の flag 条件と同じ文字列)。</summary>
+    public static class ProgressFlags
+    {
+        /// <summary>調合を1回でも終えたら "1"(合成チュートリアルの判定用)。</summary>
+        public const string Crafted = "crafted";
+    }
+
     /// <summary>
     /// メインストーリーの進行度(整数1つ)とフラグ(key→値)を保持する常駐 SSOT。
     /// 状態を持つだけで、イベントの中身は知らない。進行度・フラグを読ませ／書かせ、
@@ -25,7 +32,7 @@ namespace CreativeAI.Core
         /// <summary>メイン進行度。EventTrigger / NpcVisibility が条件評価のため読む。</summary>
         public int Progress { get; private set; }
 
-        /// <summary>進行度が変わったときに通知(引数なし。購読側は Progress を読み直す)。</summary>
+        /// <summary>進行度かフラグが変わったときに通知(引数なし。購読側は読み直す)。</summary>
         public event Action OnProgressChanged;
 
         private readonly Dictionary<string, string> _flags = new();
@@ -79,7 +86,11 @@ namespace CreativeAI.Core
                 Debug.LogWarning("[ProgressManager] SetFlag ignored: key is null or empty.");
                 return;
             }
+            if (_flags.TryGetValue(key, out var current) && current == value)
+                return;
             _flags[key] = value;
+            // フラグ条件のイベントも EventTrigger に見直させるため、進行度と同じ通知に乗せる。
+            OnProgressChanged?.Invoke();
         }
 
         /// <summary>
