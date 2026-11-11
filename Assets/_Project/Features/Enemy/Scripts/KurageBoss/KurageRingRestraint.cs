@@ -8,7 +8,8 @@ namespace CreativeAI.Gameplay
     /// クラゲボスのわっかに締め付けられている間のプレイヤーの拘束。
     /// 操作を止め、締め付けで継続ダメージを与え、レバガチャ(<see cref="MashEscapeGauge"/>)で抜け出させる。
     ///
-    /// TutorialBoss の掴みと違い、カメラの演出は使わず、抜け出しても後ろへ下がらない(高台の端から落ちてしまうため)。
+    /// TutorialBoss の掴みと違い、抜け出しても後ろへ下がらない(高台の端から落ちてしまうため)。
+    /// カメラの演出は <see cref="KurageRestraintCameraEvents"/> で知らせるだけで、作りは KurageRestraintCamera の担当。
     /// わっかの見た目の動きは <see cref="KurageHaloRing"/> の担当。
     /// </summary>
     [RequireComponent(typeof(EnemyStatus))]
@@ -75,12 +76,13 @@ namespace CreativeAI.Gameplay
 
             PlayerModel playerModel = player.GetComponentInChildren<PlayerModel>();
             if (playerModel != null)
-                playerModel.Animator.SetTrigger(PlayerAnimatorParams.Grabbed);
+                playerModel.Animator.SetTrigger(PlayerAnimatorParams.RingStruggle);
 
             _gauge.Reset(_escapeThreshold, _escapePerInput);
             _damageTimer = 0f;
             IsRestraining = true;
             GrabEscapeEvents.OnShowGauge?.Invoke(0f, _gauge.Threshold);
+            KurageRestraintCameraEvents.OnBegin?.Invoke(transform);
         }
 
         /// <summary>プレイヤーを放す(ボスが倒れた時など)。</summary>
@@ -88,7 +90,7 @@ namespace CreativeAI.Gameplay
         {
             if (!IsRestraining)
                 return;
-            End();
+            End(false);
             Released?.Invoke();
         }
 
@@ -107,6 +109,7 @@ namespace CreativeAI.Gameplay
             if (_damageTimer >= _damageInterval)
             {
                 _damageTimer -= _damageInterval;
+                KurageRestraintCameraEvents.OnSqueeze?.Invoke();
                 // 拘束中に怯みモーションへ移ると掴まれモーションが崩れるため、怯ませない
                 _playerStatus.TakeDamage(
                     _status.CurrentAttackPower * _damageMultiplier,
@@ -123,19 +126,22 @@ namespace CreativeAI.Gameplay
             if (_gauge.Feed(_playerInput.move))
             {
                 GrabEscapeEvents.OnUpdateGauge?.Invoke(_gauge.Value, _gauge.Threshold);
+                KurageRestraintCameraEvents.OnStruggle?.Invoke(_playerInput.move);
                 if (_gauge.IsFull)
                 {
-                    End();
+                    End(true);
                     _playerEscape.TriggerEscapeInPlace();
                     Escaped?.Invoke();
                 }
             }
         }
 
-        private void End()
+        /// <param name="escaped">レバガチャで抜け出した場合は true。カメラの締めくくりが変わる</param>
+        private void End(bool escaped)
         {
             IsRestraining = false;
             GrabEscapeEvents.OnHideGauge?.Invoke();
+            KurageRestraintCameraEvents.OnEnd?.Invoke(escaped);
             _playerController.IsGrabbed = false;
             _playerController.Locks.Release(this);
         }

@@ -48,6 +48,10 @@ namespace CreativeAI.Gameplay
         // --- 被弾・拘束 ---
         public static readonly int Flinch = Animator.StringToHash("PlayerFlinch");
         public static readonly int Grabbed = Animator.StringToHash("Grabbed");
+
+        /// <summary>クラゲボスのわっかに締め付けられてもがく(Grabbed とは掴まれ方が違うので別のモーション)。</summary>
+        public static readonly int RingStruggle = Animator.StringToHash("RingStruggle");
+
         public static readonly int Escaped = Animator.StringToHash("Escaped");
 
         // --- 死亡(PlayerDeathHandler) ---
@@ -77,6 +81,7 @@ namespace CreativeAI.Gameplay
             ("ReturnToLocomotion", AnimatorControllerParameterType.Trigger),
             ("PlayerFlinch", AnimatorControllerParameterType.Trigger),
             ("Grabbed", AnimatorControllerParameterType.Trigger),
+            ("RingStruggle", AnimatorControllerParameterType.Trigger),
             ("Escaped", AnimatorControllerParameterType.Trigger),
             ("Die", AnimatorControllerParameterType.Trigger),
         };
