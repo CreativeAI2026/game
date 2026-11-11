@@ -1090,6 +1090,9 @@ MonoBehaviour:
   dashSearchRadius: 10
   attackRange: 5
   dashSpeed: 30
+  _dashBlockLayers:
+    serializedVersion: 2
+    m_Bits: 257
   _hitbox: {fileID: 699812971520842315}
   _swingSound: {fileID: 11400000, guid: bac674912a670764a8e2ae8f6b80bc57, type: 2}
   _throwSearchRadius: 20
@@ -2534,7 +2537,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: CreativeAI.Gameplay::CreativeAI.Gameplay.BowController
   _stringNockBone: {fileID: 600216791552752528}
   _arrowRestPoint: {fileID: 881107482570484385}
-  _arrowSpeed: 100
+  _arrowSpeed: 200
   _maxRange: 200
   _drawSound: {fileID: 11400000, guid: 47029ce3e178e8d4bad9caa92a04e0dd, type: 2}
   _shootSound: {fileID: 11400000, guid: f11cc511584ec514ab3ce7ddf0503bdd, type: 2}
@@ -5704,6 +5707,9 @@ MonoBehaviour:
   dashSearchRadius: 15
   attackRange: 5
   dashSpeed: 40
+  _dashBlockLayers:
+    serializedVersion: 2
+    m_Bits: 257
   _hitbox: {fileID: 7111180468013580485}
   _swingSound: {fileID: 11400000, guid: 2c786d35de08d41468aecafc457db117, type: 2}
   parryWindowDuration: 0.2
@@ -7008,8 +7014,8 @@ ParticleSystem:
     startLifetime:
       serializedVersion: 2
       minMaxState: 3
-      scalar: 1.1
-      minScalar: 0.7
+      scalar: 0.1
+      minScalar: 0.05
       maxCurve:
         serializedVersion: 2
         m_Curve:
@@ -7179,8 +7185,8 @@ ParticleSystem:
     startSize:
       serializedVersion: 2
       minMaxState: 3
-      scalar: 1.6
-      minScalar: 1
+      scalar: 1.5
+      minScalar: 0.5
       maxCurve:
         serializedVersion: 2
         m_Curve:
@@ -7337,7 +7343,7 @@ ParticleSystem:
         m_RotationOrder: 4
     startRotationX:
       serializedVersion: 2
-      minMaxState: 0
+      minMaxState: 3
       scalar: 0
       minScalar: 0
       maxCurve:
@@ -7390,7 +7396,7 @@ ParticleSystem:
         m_RotationOrder: 4
     startRotationY:
       serializedVersion: 2
-      minMaxState: 0
+      minMaxState: 3
       scalar: 0
       minScalar: 0
       maxCurve:
@@ -12366,7 +12372,7 @@ ParticleSystem:
   startDelay:
     serializedVersion: 2
     minMaxState: 0
-    scalar: 0.3
+    scalar: 0.15
     minScalar: 0
     maxCurve:
       serializedVersion: 2
@@ -12426,8 +12432,8 @@ ParticleSystem:
     startLifetime:
       serializedVersion: 2
       minMaxState: 3
-      scalar: 0.9
-      minScalar: 0.5
+      scalar: 0.5
+      minScalar: 0.25
       maxCurve:
         serializedVersion: 2
         m_Curve:
@@ -12597,8 +12603,8 @@ ParticleSystem:
     startSize:
       serializedVersion: 2
       minMaxState: 3
-      scalar: 1
-      minScalar: 0.5
+      scalar: 1.5
+      minScalar: 0.75
       maxCurve:
         serializedVersion: 2
         m_Curve:
@@ -12755,7 +12761,7 @@ ParticleSystem:
         m_RotationOrder: 4
     startRotationX:
       serializedVersion: 2
-      minMaxState: 0
+      minMaxState: 3
       scalar: 0
       minScalar: 0
       maxCurve:
@@ -12808,7 +12814,7 @@ ParticleSystem:
         m_RotationOrder: 4
     startRotationY:
       serializedVersion: 2
-      minMaxState: 0
+      minMaxState: 3
       scalar: 0
       minScalar: 0
       maxCurve:
@@ -17762,7 +17768,7 @@ ParticleSystem:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 7409868728926523669}
   serializedVersion: 8
-  lengthInSec: 1
+  lengthInSec: 0.5
   simulationSpeed: 1
   stopAction: 0
   cullingMode: 0
@@ -17777,7 +17783,7 @@ ParticleSystem:
   startDelay:
     serializedVersion: 2
     minMaxState: 0
-    scalar: 0.1
+    scalar: 0.05
     minScalar: 0
     maxCurve:
       serializedVersion: 2
@@ -17837,8 +17843,8 @@ ParticleSystem:
     startLifetime:
       serializedVersion: 2
       minMaxState: 3
-      scalar: 1.6
-      minScalar: 1
+      scalar: 0.5
+      minScalar: 0.25
       maxCurve:
         serializedVersion: 2
         m_Curve:
@@ -18008,8 +18014,8 @@ ParticleSystem:
     startSize:
       serializedVersion: 2
       minMaxState: 3
-      scalar: 3.2
-      minScalar: 2
+      scalar: 1.5
+      minScalar: 0.5
       maxCurve:
         serializedVersion: 2
         m_Curve:
@@ -18166,7 +18172,7 @@ ParticleSystem:
         m_RotationOrder: 4
     startRotationX:
       serializedVersion: 2
-      minMaxState: 0
+      minMaxState: 3
       scalar: 0
       minScalar: 0
       maxCurve:
@@ -18219,7 +18225,7 @@ ParticleSystem:
         m_RotationOrder: 4
     startRotationY:
       serializedVersion: 2
-      minMaxState: 0
+      minMaxState: 3
       scalar: 0
       minScalar: 0
       maxCurve:
@@ -22696,6 +22702,9 @@ MonoBehaviour:
   dashSearchRadius: 10
   attackRange: 5
   dashSpeed: 25
+  _dashBlockLayers:
+    serializedVersion: 2
+    m_Bits: 257
   _hitbox: {fileID: 2579256402661906229}
   _swingSound: {fileID: 11400000, guid: 1ff139564771f054e8cc997cab32c640, type: 2}
   _slamSearchRadius: 20
@@ -24040,7 +24049,6 @@ MonoBehaviour:
   m_EditorClassIdentifier: CreativeAI.Gameplay::CreativeAI.Gameplay.PlayerInputHandler
   move: {x: 0, y: 0}
   look: {x: 0, y: 0}
-  jump: 0
   sprint: 0
   subAction: 0
   weaponNext: 0
@@ -24067,9 +24075,7 @@ MonoBehaviour:
   RotationSmoothTime: 0.12
   AimRotationSmoothTime: 0.04
   SpeedChangeRate: 10
-  JumpHeight: 1.2
   Gravity: -15
-  JumpTimeout: 0.5
   FallTimeout: 0.15
   GroundedOffset: -0.14
   GroundedRadius: 0.28
@@ -24180,8 +24186,8 @@ MonoBehaviour:
   _trap:
     _weight: 0.5
     _maxDuration: 3
-    _stuckSpeedRatio: 0.3
-    _nearEnemyDistance: 8
+    _stuckProgressRatio: 0.4
+    _threatDistance: 15
   _aimCancel:
     _weight: 0.5
     _maxCount: 3
