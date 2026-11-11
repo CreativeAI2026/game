@@ -305,6 +305,100 @@ namespace CreativeAI.Tests.EditMode
         }
 
         [Test]
+        public void Parse_ActivationInteract_BuildsInteractEvent()
+        {
+            const string json =
+                @"{ ""events"": [ { ""id"": ""drawer_once"", ""repeat"": ""once"", ""activation"": ""interact"",
+                    ""conditions"": [ { ""type"": ""progress"", ""value"": 6 } ], "
+                + RepeatSteps
+                + @" } ] }";
+
+            var report = EventImporter.Parse(json);
+
+            Assert.IsFalse(report.HasErrors, string.Join("\n", report.Diagnostics));
+            Assert.AreEqual(EventActivation.Interact, report.Events.Single().Activation);
+        }
+
+        [Test]
+        public void Parse_ActivationOmitted_IsAuto()
+        {
+            const string json =
+                @"{ ""events"": [ { ""id"": ""x"",
+                    ""conditions"": [ { ""type"": ""progress"", ""value"": 0 } ], "
+                + RepeatSteps
+                + @",
+                    ""nextProgress"": 1 } ] }";
+
+            var report = EventImporter.Parse(json);
+
+            Assert.AreEqual(EventActivation.Auto, report.Events.Single().Activation);
+        }
+
+        [Test]
+        public void Parse_UnknownActivation_IsError()
+        {
+            const string json =
+                @"{ ""events"": [ { ""id"": ""x"", ""activation"": ""press"",
+                    ""conditions"": [ { ""type"": ""progress"", ""value"": 0 } ], "
+                + RepeatSteps
+                + @",
+                    ""nextProgress"": 1 } ] }";
+
+            var report = EventImporter.Parse(json);
+
+            Assert.IsTrue(report.HasErrors);
+            Assert.IsTrue(report.Diagnostics.Any(d => d.Message.Contains("activation")));
+        }
+
+        [Test]
+        public void Parse_ActivationInteract_WithBattle_IsError()
+        {
+            const string json =
+                @"{ ""events"": [ { ""id"": ""x"", ""activation"": ""interact"", ""repeat"": ""once"",
+                    ""conditions"": [ { ""type"": ""progress"", ""value"": 0 } ],
+                    ""steps"": [
+                        { ""kind"": ""line"", ""portrait"": ""hero_normal"", ""text"": ""a"" },
+                        { ""kind"": ""battle"" },
+                        { ""kind"": ""line"", ""portrait"": ""hero_normal"", ""text"": ""b"" } ] } ] }";
+
+            var report = EventImporter.Parse(json);
+
+            Assert.IsTrue(report.HasErrors);
+            Assert.IsTrue(report.Diagnostics.Any(d => d.Message.Contains("battle")));
+        }
+
+        [Test]
+        public void Parse_PlayerMoveTo_WithSpawnPointId_IsOk()
+        {
+            const string json =
+                @"{ ""events"": [ { ""id"": ""craft_room_exit"", ""repeat"": ""always"",
+                    ""conditions"": [ { ""type"": ""progress"", ""value"": 5 } ],
+                    ""steps"": [
+                        { ""kind"": ""line"", ""portrait"": ""hero_normal"", ""text"": ""戻ろう。"" },
+                        { ""kind"": ""command"", ""command"": ""player.moveTo"", ""arg"": ""craft_room_center"" } ] } ] }";
+
+            var report = EventImporter.Parse(json);
+
+            Assert.IsFalse(report.HasErrors, string.Join("\n", report.Diagnostics));
+            Assert.AreEqual("craft_room_center", report.Events.Single().Steps[1].Arg);
+        }
+
+        [Test]
+        public void Parse_PlayerMoveTo_WithoutArg_IsError()
+        {
+            const string json =
+                @"{ ""events"": [ { ""id"": ""x"", ""repeat"": ""always"",
+                    ""conditions"": [ { ""type"": ""progress"", ""value"": 5 } ],
+                    ""steps"": [
+                        { ""kind"": ""line"", ""portrait"": ""hero_normal"", ""text"": ""a"" },
+                        { ""kind"": ""command"", ""command"": ""player.moveTo"" } ] } ] }";
+
+            var report = EventImporter.Parse(json);
+
+            Assert.IsTrue(report.HasErrors);
+        }
+
+        [Test]
         public void Parse_UnknownRepeat_IsError()
         {
             const string json =

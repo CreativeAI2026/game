@@ -60,6 +60,12 @@ namespace CreativeAI.Core
                     $"[EventTrigger] '{name}': Collider の Is Trigger がオフです。オンにしないと発火しません。",
                     this
                 );
+            if (_event != null && _event.Activation != EventActivation.Auto)
+                Debug.LogWarning(
+                    $"[EventTrigger] '{name}': イベント '{_event.Id}' は activation が interact です。"
+                        + " 入っても発火しません。EventInteractor に付け替えてください。",
+                    this
+                );
         }
 
         private void OnEnable()
@@ -148,22 +154,12 @@ namespace CreativeAI.Core
             _pin = null;
         }
 
-        private bool ConditionsMet()
-        {
-            var progress = ProgressManager.Instance;
-            if (progress == null)
-                return false;
-
-            // hasItem 条件用の所持判定。Inventory は Gameplay 側にあり Core から直接触れないため
-            // ItemGiverService seam 経由(未登録なら所持なし扱い)。giveItem と同じ経路。
-            var giver = ItemGiverService.Current;
-            System.Func<string, bool> hasItem = giver != null ? giver.HasImportantItem : null;
-            return _event.ConditionsMet(progress.Progress, progress.GetFlag, hasItem);
-        }
+        private bool ConditionsMet() => EventAvailability.IsMet(_event);
 
         private void TryFire()
         {
-            if (_event == null)
+            // キーで発火するイベントは EventInteractor の担当。入っただけでは発火しない。
+            if (_event == null || _event.Activation != EventActivation.Auto)
                 return;
 
             // 別イベントの再生中は発火しない(会話中にトリガーへ入り直したときの二重発火防止)。

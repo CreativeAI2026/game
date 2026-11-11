@@ -92,6 +92,7 @@ namespace CreativeAI.EditorTools
             "sound.bgm.stop",
             "wait",
             "conversation.close",
+            EventPlayer.PlayerMoveCommand,
         };
 
         /// <summary>
@@ -119,6 +120,7 @@ namespace CreativeAI.EditorTools
             "background.image",
             "sound.se",
             "sound.bgm",
+            EventPlayer.PlayerMoveCommand,
         };
 
         private static bool IsKnownCommand(string command) =>
@@ -322,6 +324,22 @@ namespace CreativeAI.EditorTools
                 }
             }
 
+            // --- activation(省略 = 入ったら自動) ---
+            var activation = EventActivation.Auto;
+            if (ev.TryGetValue("activation", out var activationToken))
+            {
+                var activationText = (activationToken as JValue)?.Value as string;
+                if (activationText == "auto")
+                    activation = EventActivation.Auto;
+                else if (activationText == "interact")
+                    activation = EventActivation.Interact;
+                else
+                {
+                    report.Error(id, "activation は \"auto\" か \"interact\" で指定してください。");
+                    ok = false;
+                }
+            }
+
             // 進行度で1回きりのイベントは、progress 条件を必ず1つ含む(進行度==でちょうど1回だけ発火する前提)。
             // repeat を書いたイベントは進行度に頼らず1回きり/何度でもを決めるので、章を問わず置ける(progress は任意)。
             // not を付けた progress は「その進行度でないとき」なので、1回きりの根拠には数えない。
@@ -360,6 +378,16 @@ namespace CreativeAI.EditorTools
                     report
                 );
                 WarnBranchKeys(stepArray, id, report);
+            }
+
+            // 調べる([E])イベントは敵を出す場所(EventTrigger の配線)を持たないので、戦闘は含められない。
+            if (
+                activation == EventActivation.Interact
+                && steps.Any(s => s != null && s.Kind == StepKind.Battle)
+            )
+            {
+                report.Error(id, "activation が interact のイベントに battle は書けません。");
+                ok = false;
             }
 
             // --- nextProgress(progress の value より大きい) ---
@@ -413,7 +441,8 @@ namespace CreativeAI.EditorTools
                         steps.ToArray(),
                         nextProgress,
                         repeat,
-                        repeat != EventRepeat.Always && hasNextProgress
+                        repeat != EventRepeat.Always && hasNextProgress,
+                        activation
                     )
                 );
         }
