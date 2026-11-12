@@ -150,23 +150,6 @@ namespace CreativeAI.UI
         }
     }
 
-    internal sealed class ItemDragGhostFollower : MonoBehaviour
-    {
-        private void LateUpdate()
-        {
-            if (
-                !UiInputActionMap.IsClickPressed()
-                || !UiInputActionMap.TryReadPointerPosition(out Vector2 position)
-            )
-            {
-                ItemSlotDragContext.Clear();
-                return;
-            }
-
-            ItemSlotDragContext.MoveToScreenPosition(position);
-        }
-    }
-
     public class ItemSlot
         : BaseItemSlot,
             IPointerClickHandler,
