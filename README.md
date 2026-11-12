@@ -23,7 +23,7 @@ game/                          ← リポジトリルート
 │   │   │   ├── Enemy/         敵・ボス
 │   │   │   ├── Combat/        戦闘（当たり判定・パラメータ）
 │   │   │   ├── Crafting/      調合（レシピ・調合処理・合成装置）
-│   │   │   ├── Items/         アイテムの定義・一覧（ItemCatalog）・装備品の能力値・元データ（items.json）
+│   │   │   ├── Items/         アイテムの定義・一覧（ItemCatalog）・装備品の能力値・元データ（Data/items.json）
 │   │   │   ├── Inventory/     所持品（持ち物の出し入れ・即時食材の枠）
 │   │   │   ├── SaveSystem/    セーブ・ロード
 │   │   │   ├── Field/         フィールド（扉・調べる・拾えるアイテムと拾い済みの記録）

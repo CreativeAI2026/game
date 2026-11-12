@@ -12,7 +12,7 @@ namespace CreativeAI.Tests.EditMode
     /// </summary>
     public class EventsJsonChainTests
     {
-        private const string Source = "Assets/_Project/Features/Event/events.json";
+        private const string Source = "Assets/_Project/Features/Event/Data/events.json";
 
         private static int StartProgress(EventDefinition ev) =>
             ev.Conditions.First(c => c.Type == ConditionType.Progress).ProgressValue;

@@ -18,7 +18,7 @@ namespace CreativeAI.EditorTools
     /// </summary>
     public static class EventImporterMenu
     {
-        private const string DefaultSource = "Assets/_Project/Features/Event/events.json";
+        private const string DefaultSource = "Assets/_Project/Features/Event/Data/events.json";
         private const string OutputDir = "Assets/_Project/Features/Event/Data";
         private const string ItemCatalogPath = "Assets/_Project/Resources/ItemCatalog.asset";
         private const string CharacterDataDir =
