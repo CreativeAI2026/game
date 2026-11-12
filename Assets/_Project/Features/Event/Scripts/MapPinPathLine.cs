@@ -12,7 +12,6 @@ namespace CreativeAI.Core
     /// </summary>
     public sealed class MapPinPathLine
     {
-        private const string MaterialResource = "MapPinGroundLine";
         private const float RefreshSeconds = 0.3f;
         private const float HideWithin = 2.5f; // この近さまで来たら消す
         private const float SnapDistance = 3f; // ピンの真下の NavMesh を探す範囲
@@ -88,14 +87,13 @@ namespace CreativeAI.Core
             _line.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
             _line.receiveShadows = false;
             _line.allowOcclusionWhenDynamic = false;
-            var material = Resources.Load<Material>(MaterialResource);
+            var visuals = MapPinVisuals.Instance;
+            var material = visuals != null ? visuals.PathLineMaterial : null;
             if (material != null)
             {
                 _line.sharedMaterial = material;
                 _baseColor = material.GetColor(ColorId);
             }
-            else
-                Debug.LogWarning($"[MapPin] Resources/{MaterialResource} が見つかりません。");
             _line.enabled = false;
         }
 

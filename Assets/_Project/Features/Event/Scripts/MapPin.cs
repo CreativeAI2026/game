@@ -10,8 +10,6 @@ namespace CreativeAI.Core
     /// </summary>
     public sealed class MapPin : MonoBehaviour
     {
-        private const string SpriteResource = "EventMapPin";
-        private const string MaterialResource = "MapPinAlwaysOnTop"; // 壁に隠されず常に手前に描く
         private const float HoverHeight = 0.5f; // 先端が指定位置より浮く高さ
         private const float SpriteHeight = 1.5f; // 画像の高さ(ワールド長、拡大前)
         private const float Scale = 2f; // 画像の拡大率。大きいほど目立つ
@@ -168,12 +166,9 @@ namespace CreativeAI.Core
         /// <summary>指定位置にピンを作る。画像が無ければ null。</summary>
         public static MapPin Create(Vector3 position, Transform parent = null)
         {
-            var sprite = Resources.Load<Sprite>(SpriteResource);
-            if (sprite == null)
-            {
-                Debug.LogWarning($"[MapPin] Resources/{SpriteResource} が見つかりません。");
+            var visuals = MapPinVisuals.Instance;
+            if (visuals == null || visuals.PinSprite == null)
                 return null;
-            }
 
             var root = new GameObject("MapPin");
             root.transform.SetParent(parent, false);
@@ -185,14 +180,11 @@ namespace CreativeAI.Core
             face.transform.localPosition = Vector3.up * HoverHeight;
             face.transform.localScale = Vector3.one * Scale;
             var renderer = face.AddComponent<SpriteRenderer>();
-            renderer.sprite = sprite;
+            renderer.sprite = visuals.PinSprite;
             renderer.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
             // 壁の後ろでも見えるよう、深度テストを無視する材質にし、隠れ判定でも描画から外されないようにする。
-            var material = Resources.Load<Material>(MaterialResource);
-            if (material != null)
-                renderer.sharedMaterial = material;
-            else
-                Debug.LogWarning($"[MapPin] Resources/{MaterialResource} が見つかりません。");
+            if (visuals.PinMaterial != null)
+                renderer.sharedMaterial = visuals.PinMaterial;
             renderer.allowOcclusionWhenDynamic = false;
 
             var pin = root.AddComponent<MapPin>();

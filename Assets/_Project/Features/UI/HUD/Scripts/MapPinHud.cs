@@ -9,11 +9,11 @@ namespace CreativeAI.UI
     /// <summary>
     /// マップピンの距離表示と、画面の外にあるピンの方向を示す矢印。
     /// 画面内のピンには頭の上に「23m」と出し、画面外のピンには画面の端に矢印と距離を出す。
-    /// シーンに置かずに起動時に自動生成し、ピンが無いときは何も出さない。
+    /// UIRoot の子として常駐し、ピンが無いときは何も出さない。
     /// </summary>
+    [RequireComponent(typeof(Canvas))]
     public sealed class MapPinHud : MonoBehaviour
     {
-        private const string ArrowResource = "MapPinArrow"; // 右向き(+x)の矢じり
         private const float EdgeMargin = 0.08f; // 画面の端から矢印までの余白(短辺に対する割合)
         private const float ArrowSizeRatio = 0.05f; // 矢印の大きさ(画面の高さに対する割合)
         private const float FontSizeRatio = 0.03f;
@@ -26,38 +26,18 @@ namespace CreativeAI.UI
             public TextMeshProUGUI Label;
         }
 
-        private readonly List<Marker> _markers = new();
-        private RectTransform _canvasRoot;
+        [Tooltip("右向き(+x)の矢じり")]
+        [SerializeField]
         private Sprite _arrowSprite;
 
-        [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.AfterSceneLoad)]
-        private static void CreateInstance()
-        {
-            var go = new GameObject(nameof(MapPinHud));
-            go.AddComponent<MapPinHud>();
-            DontDestroyOnLoad(go);
-        }
+        private readonly List<Marker> _markers = new();
+        private RectTransform _canvasRoot;
+        private Canvas _canvas;
 
         private void Awake()
         {
-            var canvas = gameObject.AddComponent<Canvas>();
-            canvas.renderMode = RenderMode.ScreenSpaceOverlay;
-            canvas.sortingOrder = 40;
-            _canvasRoot = canvas.GetComponent<RectTransform>();
-
-            var texture = Resources.Load<Texture2D>(ArrowResource);
-            if (texture != null)
-                _arrowSprite = Sprite.Create(
-                    texture,
-                    new Rect(0f, 0f, texture.width, texture.height),
-                    new Vector2(0.5f, 0.5f)
-                );
-        }
-
-        private void OnDestroy()
-        {
-            if (_arrowSprite != null)
-                Destroy(_arrowSprite);
+            _canvasRoot = (RectTransform)transform;
+            _canvas = GetComponent<Canvas>();
         }
 
         private void LateUpdate()
@@ -70,7 +50,7 @@ namespace CreativeAI.UI
                 {
                     if (pin == null || !pin.Shown)
                         continue;
-                    Place(Get(shownCount), pin, cam);
+                    Place(Get(shownCount), pin, cam, _canvas.scaleFactor);
                     shownCount++;
                 }
             }
@@ -122,10 +102,11 @@ namespace CreativeAI.UI
             };
         }
 
-        private static void Place(Marker marker, MapPin pin, Camera cam)
+        /// <param name="scale">画面のピクセルからキャンバスの単位へ直す倍率(CanvasScaler の拡大率)</param>
+        private static void Place(Marker marker, MapPin pin, Camera cam, float scale)
         {
-            var width = Screen.width;
-            var height = Screen.height;
+            var width = Screen.width / scale;
+            var height = Screen.height / scale;
             var margin = Mathf.Min(width, height) * EdgeMargin;
             var arrowSize = height * ArrowSizeRatio;
 
@@ -133,7 +114,8 @@ namespace CreativeAI.UI
             var origin = player != null ? player.position : cam.transform.position;
             var meters = Vector3.Distance(origin, pin.Anchor);
 
-            var top = cam.WorldToScreenPoint(pin.Top);
+            var screenTop = cam.WorldToScreenPoint(pin.Top);
+            var top = new Vector3(screenTop.x / scale, screenTop.y / scale, screenTop.z);
             var onScreen =
                 top.z > 0f
                 && top.x >= margin
