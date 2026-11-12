@@ -3,7 +3,7 @@ using UnityEngine;
 namespace CreativeAI.Core
 {
     /// <summary>
-    /// 操作で開くUI(キャラ / インベ / セーブ / 調合)のどれかが開いているかを伝える静的サービス。
+    /// 操作で開くUI(キャラ / インベ / セーブ / 調合 / マップ)のどれかが開いているかを伝える静的サービス。
     /// プレイヤー(Gameplay)は UI を参照できないので、UI 側が書き込み、プレイヤー側は購読して操作を止める・カーソルを出す。
     /// </summary>
     public static class UiPanelService

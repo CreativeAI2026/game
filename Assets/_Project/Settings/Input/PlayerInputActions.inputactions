@@ -124,6 +124,15 @@
                     "initialStateCheck": false
                 },
                 {
+                    "name": "Map",
+                    "type": "Button",
+                    "id": "633c2a3c-0327-4aec-b46d-61ce03346bb9",
+                    "expectedControlType": "",
+                    "processors": "",
+                    "interactions": "",
+                    "initialStateCheck": false
+                },
+                {
                     "name": "Interact",
                     "type": "Button",
                     "id": "a8f31c18-50e4-4c72-9d6a-3b9496139064",
@@ -521,6 +530,17 @@
                 },
                 {
                     "name": "",
+                    "id": "a25cba11-2b37-43f8-9d4d-a4c96c822a5b",
+                    "path": "<Keyboard>/m",
+                    "interactions": "",
+                    "processors": "",
+                    "groups": "KeyboardMouse",
+                    "action": "Map",
+                    "isComposite": false,
+                    "isPartOfComposite": false
+                },
+                {
+                    "name": "",
                     "id": "65b87e88-1cd1-4b79-82d4-b5e9c8664030",
                     "path": "<Keyboard>/e",
                     "interactions": "",
@@ -652,6 +672,15 @@
                     "name": "Save",
                     "type": "Button",
                     "id": "b7f31c18-50e4-4c72-9d6a-3b9496139063",
+                    "expectedControlType": "",
+                    "processors": "",
+                    "interactions": "",
+                    "initialStateCheck": false
+                },
+                {
+                    "name": "Map",
+                    "type": "Button",
+                    "id": "1a2872bf-9004-4fdc-a03f-729aebdd2c2b",
                     "expectedControlType": "",
                     "processors": "",
                     "interactions": "",
@@ -1202,6 +1231,17 @@
                     "processors": "",
                     "groups": "Gamepad",
                     "action": "Save",
+                    "isComposite": false,
+                    "isPartOfComposite": false
+                },
+                {
+                    "name": "",
+                    "id": "4f10111a-c785-4a78-96f2-25c402ebdfa1",
+                    "path": "<Keyboard>/m",
+                    "interactions": "",
+                    "processors": "",
+                    "groups": "KeyboardMouse",
+                    "action": "Map",
                     "isComposite": false,
                     "isPartOfComposite": false
                 },

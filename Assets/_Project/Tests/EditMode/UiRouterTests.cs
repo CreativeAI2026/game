@@ -214,13 +214,14 @@ namespace CreativeAI.Tests.EditMode
         }
 
         [Test]
-        public void PanelClosedItself_IsPickedUpOnUpdate()
+        public void PanelClosedItself_IsPickedUpByActivityRelay()
         {
             // 戻るボタンはルータを通らずに SetActive(false) で閉じる。
             _router.Open(UiRouter.UiId.Save);
             _save.SetActive(false);
 
-            TestReflection.Invoke(_router, "Update");
+            // EditMode では OnDisable が自動で走らないので、パネルに付いた通知役を明示的に呼ぶ。
+            TestReflection.Invoke(_save.GetComponent<UiPanelActivityRelay>(), "OnDisable");
 
             Assert.IsFalse(UiPanelService.IsOpen);
         }
