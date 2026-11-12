@@ -15,7 +15,8 @@ game/                          ← リポジトリルート
 │   ├── _Project/              本プロジェクトのアセット（基本ここに置く）
 │   │   ├── Features/          ゲーム機能。機能ごとのフォルダにロジック・データを置く
 │   │   │   ├── Core/          進行度・ゲームモード・シーン遷移など土台
-│   │   │   ├── Event/         会話イベントの定義・再生・マップピン
+│   │   │   ├── Event/         会話イベントの定義・再生
+│   │   │   ├── MapPin/        マップピンとピンまでの道筋の線
 │   │   │   ├── Player/        プレイヤー・武器
 │   │   │   ├── Enemy/         敵・ボス
 │   │   │   ├── Combat/        戦闘（当たり判定・パラメータ）
@@ -41,7 +42,7 @@ game/                          ← リポジトリルート
 │   │   ├── Audio/             SE・SoundCue・AudioMixer
 │   │   ├── Scenes/            シーン（Title / Field / Battle / UI プレビュー）
 │   │   ├── Settings/          URP / Input System 等の設定
-│   │   ├── Resources/         実行時ロードするアセット（ItemCatalog・常駐生成の設定・UI 音・マップピン）
+│   │   ├── Resources/         実行時ロードするアセット（ItemCatalog・常駐生成の設定・UI 音・マップピンの見た目）
 │   │   ├── Editor/            Editor 拡張（Tools メニュー・UI バリデータ・アイテム同期・イベント取り込み・マップ配置・アート生成・Dev State ウィンドウ・会話スキップ）
 │   │   └── Tests/             EditMode / PlayMode テストと共通ヘルパー（Shared）
 │   ├── Plugins/               外部アセット（DOTween・Unity 用アナライザ）
