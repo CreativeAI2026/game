@@ -13,8 +13,7 @@ namespace CreativeAI.EditorTools
     public static class MinimapBaker
     {
         /// <summary>書き出し先。</summary>
-        public const string AssetPath =
-            "Assets/_Project/Features/UI/MapUI/Data/MinimapLayout.asset";
+        public const string AssetPath = "Assets/_Project/Features/UI/Map/Data/MinimapLayout.asset";
 
         private const float Cell = MapLayoutBuilder.Cell;
 

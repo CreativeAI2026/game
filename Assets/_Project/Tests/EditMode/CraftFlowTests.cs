@@ -89,7 +89,7 @@ namespace CreativeAI.Tests.EditMode
         [Test]
         public void CraftWarning_StaysCenteredWithoutMovingCraftSlots()
         {
-            const string path = "Assets/_Project/Features/UI/CraftingUI/Prefabs/CraftPanel.prefab";
+            const string path = "Assets/_Project/Features/UI/Crafting/Prefabs/CraftPanel.prefab";
             var root = PrefabUtility.LoadPrefabContents(path);
             try
             {

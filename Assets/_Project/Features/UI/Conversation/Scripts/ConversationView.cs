@@ -1,0 +1,912 @@
+using System;
+using System.Collections;
+using System.Collections.Generic;
+using CreativeAI.Core;
+using CreativeAI.Gameplay;
+using SoundKit;
+using TMPro;
+using UnityEngine;
+using UnityEngine.UI;
+
+namespace CreativeAI.UI
+{
+    /// <summary>
+    /// 会話UIの実体。<see cref="IDialogueView"/> を実装し、生成時に <see cref="DialogueViewService.Current"/> へ自身を登録する。
+    /// UIRoot Prefab の子として同梱され、常駐・DDOL は <see cref="UIRoot"/> が担う。状態は保存しない。
+    /// 再生時は Awake でウィンドウを隠し、編集時は Prefab の見た目がそのままプレビューになる。
+    /// </summary>
+    public sealed class ConversationView : MonoBehaviour, IDialogueView
+    {
+        public static ConversationView Instance { get; private set; }
+        public event Action<string, string> ExternalPresentationCommandRequested;
+
+        public enum ConversationState
+        {
+            Hidden,
+            Entering,
+            Typing,
+            WaitingForAdvance,
+            ShowingChoices,
+            Exiting,
+        }
+
+        public enum TextSpeed
+        {
+            Slow,
+            Normal,
+            Fast,
+            Instant,
+        }
+
+        public enum PortraitEffect
+        {
+            Shake,
+            Jump,
+            Fade,
+        }
+
+        public ConversationState State { get; private set; } = ConversationState.Hidden;
+        public bool IsAutoMode { get; private set; }
+
+        [Header("ルート表示")]
+        [SerializeField]
+        private CanvasGroup _root; // ウィンドウ全体の表示/非表示。非会話時は alpha=0
+
+        [SerializeField]
+        private RectTransform _windowRoot;
+
+        [Header("表示要素")]
+        [SerializeField]
+        private Image _portrait; // 立ち絵
+
+        [SerializeField]
+        private Image _rightPortrait; // 実行時に _portrait から生成する右側スロット
+
+        [SerializeField]
+        private float _portraitLeftAnchorX = 0.12f; // 主人公など画面左側に立つキャラクター
+
+        [SerializeField]
+        private float _portraitRightAnchorX = 0.88f; // 会話相手など画面右側に立つキャラクター
+
+        [SerializeField]
+        private float _portraitActiveScale = 1.03f;
+
+        [SerializeField]
+        private float _portraitInactiveScale = 0.92f;
+
+        [SerializeField]
+        [Range(0f, 1f)]
+        private float _portraitInactiveBrightness = 0.45f;
+
+        [SerializeField]
+        private float _portraitFadeDuration = 0.3f;
+
+        [SerializeField]
+        private float _portraitFocusDuration = 0.2f;
+
+        [SerializeField]
+        private TMP_Text _nameText; // 名前プレート
+
+        [SerializeField]
+        private TMP_Text _bodyText; // 本文
+
+        [SerializeField]
+        private GameObject _nextIndicator; // 送り待ちに小さくバウンドするインジケーター
+
+        [Header("選択肢")]
+        [SerializeField]
+        private RectTransform _choiceContainer; // 選択肢ボタンの親(通常は非表示)
+
+        [SerializeField]
+        private Button _choiceButtonTemplate; // 選択肢ボタンの雛形(非active。実行時に複製)
+
+        [SerializeField]
+        private float _choiceContainerWidth = 565f; // 正式な選択肢画像の横幅
+
+        [SerializeField]
+        private float _choiceButtonHeight = 70f; // 正式な選択肢画像の高さ
+
+        [SerializeField]
+        private float _choiceSpacing = 38f; // 選択肢同士の間隔
+
+        [SerializeField]
+        private float _choiceBottomMargin = 70f; // 3択時の会話ウィンドウ上端から選択肢までの余白
+
+        [SerializeField]
+        private float _choiceStaggerDelay = 0.06f;
+
+        [SerializeField]
+        private float _choiceEnterDuration = 0.16f;
+
+        [SerializeField]
+        private float _choiceConfirmDuration = 0.2f;
+
+        [Header("演出")]
+        [SerializeField]
+        private float _charInterval = 0.03f; // タイプライターの1文字あたり待ち時間(秒)
+
+        [SerializeField]
+        private float _punctuationDelay = 0.12f;
+
+        [SerializeField]
+        private TextSpeed _textSpeed = TextSpeed.Normal;
+
+        [SerializeField]
+        [Range(0.05f, 1f)]
+        private float _fastForwardMultiplier = 0.2f;
+
+        [SerializeField]
+        private AudioSource _typingAudioSource;
+
+        [SerializeField]
+        private AudioClip _typingSound;
+
+        [SerializeField]
+        private float _windowEnterDuration = 0.2f;
+
+        [SerializeField]
+        private float _windowEnterOffsetY = -24f;
+
+        [Header("オートモード")]
+        [SerializeField]
+        private TMP_Text _autoModeIndicator;
+
+        [SerializeField]
+        private TMP_Text _controlGuide;
+
+        [SerializeField]
+        private Image _autoProgressFill;
+
+        [SerializeField]
+        private float _autoAdvanceDelay = 1.2f;
+
+        [SerializeField]
+        private string _autoModeLabel = "AUTO";
+
+        [SerializeField]
+        private DialogueHistoryPanel _historyPanel;
+
+        [SerializeField]
+        private float _indicatorBounceHeight = 8f; // 基準位置から上へ動く距離(px)
+
+        [SerializeField]
+        private float _indicatorBounceDuration = 0.6f; // 上昇して基準位置へ戻るまでの時間(秒)
+
+        [SerializeField]
+        private Sprite _defaultPortrait; // portrait キー未指定/未登録時の立ち絵
+
+        [SerializeField]
+        private DialoguePortraitSide _defaultPortraitSide = DialoguePortraitSide.Left;
+
+        [SerializeField]
+        private DialogueCharacterDefinition[] _characters =
+            Array.Empty<DialogueCharacterDefinition>();
+
+        [Header("演出コマンドの素材(events.json にはキーだけ書く)")]
+        [SerializeField]
+        [Tooltip("sound.se / sound.bgm のキーと SoundCue(Audio/SoundCue に置いたものを割り当てる)")]
+        private DialogueSoundEntry[] _sounds = Array.Empty<DialogueSoundEntry>();
+
+        [SerializeField]
+        [Tooltip("background.image のキーと背景画像")]
+        private DialogueBackgroundEntry[] _backgrounds = Array.Empty<DialogueBackgroundEntry>();
+
+        [Header("アイテム受け取り表示")]
+        [SerializeField]
+        private Sprite _itemGetSprite; // 受け取ったアイテムのダミー画像(将来は giveItem の itemKey から解決)
+
+        [SerializeField]
+        private Vector2 _itemGetSize = new(256f, 256f); // 表示サイズ
+
+        [SerializeField]
+        private Vector2 _itemGetPosition = new(0f, 220f); // Canvas 中央からのオフセット(ウィンドウの上あたり)
+
+        [Header("武器モデル受け取り表示")]
+        [SerializeField]
+        private GameObject _weaponModelPrefab; // 武器のダミー3Dモデル(Katana)。将来は giveWeapon の weaponKey から解決
+
+        [SerializeField]
+        private Vector3 _weaponModelEuler = new(10f, -20f, 0f); // 静止表示するモデルの傾き(見栄えの3/4アングル)
+
+        [SerializeField]
+        private int _weaponTextureSize = 512; // RenderTexture の解像度
+
+        [SerializeField]
+        private Vector2 _weaponImageSize = new(640f, 360f); // 武器表示枠(横長。刀に合わせた比率。0なら _itemGetSize)
+
+        [SerializeField]
+        private float _weaponFrameFill = 1.3f; // 投影サイズへの余白率(1.0でぴったり。小さいほど大きく写る)
+
+        [SerializeField]
+        private Color _weaponBackdropColor = new(0f, 0f, 0f, 0.4f); // 武器背後の枠(横長。枠サイズに連動。a=0で消せる)
+
+        [SerializeField]
+        private Image _itemRewardImage;
+
+        [SerializeField]
+        private Image _itemRewardBackdrop;
+
+        [SerializeField]
+        private RawImage _weaponRewardImage;
+
+        [SerializeField]
+        private Image _weaponRewardBackdrop;
+
+        [SerializeField]
+        private Button _autoControlButton;
+
+        [SerializeField]
+        private Button _skipControlButton;
+
+        [SerializeField]
+        private Button _speedControlButton;
+
+        [SerializeField]
+        private TMP_Text _speedControlLabel;
+
+        [SerializeField]
+        private TMP_Text _speedToast;
+
+        [SerializeField]
+        private Button _hideControlButton;
+
+        private DialogueChoicePresenter _choicePresenter;
+        private readonly DialogueTextPlayer _textPlayer = new();
+        private readonly DialoguePortraitPresenter _portraitPresenter = new();
+        private ConversationChromePresenter _chromePresenter;
+        private readonly ConversationControlsPresenter _controlsPresenter = new();
+        private ConversationSpeedPresenter _speedPresenter;
+        private DialoguePresentationCommandRouter _presentationCommandRouter;
+        private DialogueBackdropPresenter _backdropPresenter;
+        private readonly DialogueAdvanceController _advanceController = new();
+        private DialogueRewardPresenter _rewardPresenter;
+        private DialogueRewardFlow _rewardFlow;
+        private DialogueLineFlow _lineFlow;
+        private DialogueChoiceFlow _choiceFlow;
+        private ConversationInputController _inputController;
+        private bool _windowManuallyHidden;
+        private readonly DialogueSessionState _sessionState = new();
+        private AudioClip _currentTypingSound;
+        private bool _skipMode;
+        private bool _rewardPresentationActive;
+        private bool _historyEventsBound;
+        private float _advanceBlockedUntil;
+
+        private void Awake()
+        {
+            if (Instance != null && Instance != this)
+            {
+                Destroy(gameObject); // 二重生成ガード(冪等)。単一化は UIRoot が担うため通常起きない
+                return;
+            }
+            Instance = this;
+
+            DialogueViewService.Current = this; // EventPlayer が参照する seam へ自身を登録
+            InitializePresenters();
+            _portraitPresenter.EnsureSlots();
+            _rightPortrait = _portraitPresenter.RightPortrait;
+            _portraitPresenter.HideImmediate();
+            _chromePresenter.SetAutoMode(IsAutoMode);
+            _speedPresenter.SetSpeed(_textSpeed, false);
+            BindControlButtons();
+            EnsureHistoryPanel();
+            HideImmediate(); // 会話開始まで隠す(編集時は Awake が走らずプレビューが見える)
+        }
+
+        private void InitializePresenters()
+        {
+            _chromePresenter ??= new ConversationChromePresenter(this);
+            _speedPresenter ??= new ConversationSpeedPresenter(this);
+            _speedPresenter.Configure(_speedControlLabel, _speedToast);
+            _controlsPresenter.Configure(
+                _autoControlButton,
+                _skipControlButton,
+                _speedControlButton,
+                _hideControlButton
+            );
+            _chromePresenter.Configure(
+                _root,
+                _windowRoot,
+                _nameText,
+                _nextIndicator,
+                _autoModeIndicator,
+                _controlGuide,
+                _autoProgressFill,
+                _indicatorBounceHeight,
+                _indicatorBounceDuration,
+                _windowEnterDuration,
+                _windowEnterOffsetY,
+                _autoModeLabel
+            );
+            if (
+                _choicePresenter == null
+                || !_choicePresenter.Uses(_choiceContainer, _choiceButtonTemplate)
+            )
+            {
+                _choicePresenter?.Clear();
+                _choicePresenter = new DialogueChoicePresenter(
+                    _choiceContainer,
+                    _choiceButtonTemplate,
+                    _choiceContainerWidth,
+                    _choiceButtonHeight,
+                    _choiceSpacing,
+                    _choiceBottomMargin,
+                    _choiceStaggerDelay,
+                    _choiceEnterDuration,
+                    _choiceConfirmDuration
+                );
+            }
+            _rewardPresenter ??= new DialogueRewardPresenter(
+                transform,
+                _itemRewardImage,
+                _itemRewardBackdrop,
+                _weaponRewardImage,
+                _weaponRewardBackdrop
+            );
+            _rewardFlow ??= new DialogueRewardFlow(
+                this,
+                _chromePresenter,
+                _nameText,
+                _bodyText,
+                _typingSound,
+                _sessionState,
+                () =>
+                {
+                    EnsureHistoryPanel();
+                    return _historyPanel;
+                },
+                TypeBody,
+                clip => _currentTypingSound = clip
+            );
+            _lineFlow ??= new DialogueLineFlow(
+                _portraitPresenter,
+                _chromePresenter,
+                _nameText,
+                _bodyText,
+                _characters,
+                _defaultPortrait,
+                _defaultPortraitSide,
+                _typingSound,
+                _sessionState,
+                () =>
+                {
+                    EnsureHistoryPanel();
+                    return _historyPanel;
+                }
+            );
+            _choiceFlow ??= new DialogueChoiceFlow(
+                _choicePresenter,
+                _chromePresenter,
+                _sessionState,
+                () =>
+                {
+                    EnsureHistoryPanel();
+                    return _historyPanel;
+                },
+                SetChoicesActive,
+                BlockAdvanceInput
+            );
+            _inputController ??= new ConversationInputController(
+                _controlsPresenter,
+                _chromePresenter,
+                _advanceController,
+                () => State,
+                () => _historyPanel != null && _historyPanel.IsOpen,
+                () => _windowManuallyHidden,
+                () => _rewardPresentationActive,
+                () => IsAutoMode,
+                () => _textSpeed,
+                SetAutoMode,
+                SetWindowHidden,
+                SetTextSpeed,
+                () => _choicePresenter?.HandleKeyboardInput()
+            );
+            _backdropPresenter ??= new DialogueBackdropPresenter(
+                _root != null ? _root.transform : transform
+            );
+            _presentationCommandRouter ??= new DialoguePresentationCommandRouter(
+                SetWindowHidden,
+                SetPortraitVisible,
+                SetPortraitObscured,
+                PlayPortraitEffect,
+                () => HideAnimated(),
+                ShowPortraitByKey,
+                new DialogueStageCommands(_backdropPresenter, FindSound, FindBackground),
+                (command, argument) =>
+                    ExternalPresentationCommandRequested?.Invoke(command, argument)
+            );
+            _portraitPresenter.Configure(
+                _portrait,
+                _rightPortrait,
+                _portraitLeftAnchorX,
+                _portraitRightAnchorX,
+                _portraitActiveScale,
+                _portraitInactiveScale,
+                _portraitInactiveBrightness,
+                _portraitFadeDuration,
+                _portraitFocusDuration
+            );
+            _chromePresenter.EnsureView();
+            ConfigureTextOverflow();
+            _autoModeIndicator = _chromePresenter.AutoIndicator;
+            _controlGuide = _chromePresenter.ControlGuide;
+            _autoProgressFill = _chromePresenter.AutoProgress;
+        }
+
+        private void ConfigureTextOverflow()
+        {
+            if (_nameText != null)
+            {
+                _nameText.enableAutoSizing = true;
+                _nameText.fontSizeMin = 24f;
+                _nameText.fontSizeMax = 36f;
+                _nameText.textWrappingMode = TextWrappingModes.NoWrap;
+            }
+            if (_bodyText != null)
+            {
+                _bodyText.enableAutoSizing = true;
+                _bodyText.fontSizeMin = 24f;
+                _bodyText.fontSizeMax = 34f;
+                _bodyText.textWrappingMode = TextWrappingModes.Normal;
+            }
+        }
+
+        private void Update()
+        {
+            _inputController?.Tick();
+        }
+
+        private void OnDestroy()
+        {
+            _rewardPresenter?.HideAll();
+            if (Instance == this)
+                Instance = null;
+            if (ReferenceEquals(DialogueViewService.Current, this))
+                DialogueViewService.Current = null;
+        }
+
+        private void OnDisable()
+        {
+            _speedPresenter?.Cancel();
+            _rewardPresenter?.HideAll();
+            _choicePresenter?.Clear();
+            _rewardPresentationActive = false;
+        }
+
+        /// <summary>1行を立ち絵付きで表示し、タイプライター送出後にプレイヤーの送り入力を待つ。</summary>
+        public IEnumerator ShowLine(string speaker, string portrait, string text)
+        {
+            InitializePresenters();
+            CancelRewardPresentation();
+            State = ConversationState.Entering;
+            _chromePresenter.PrepareLineText(_nameText, _bodyText);
+            yield return ShowAnimated();
+            SetChoicesActive(false);
+            yield return _lineFlow.Prepare(speaker, portrait, text);
+            _rightPortrait = _lineFlow.RightPortrait;
+            _currentTypingSound = _lineFlow.TypingSound;
+
+            yield return TypeBody(text ?? string.Empty);
+            var parsed = DialogueMarkupParser.Parse(text);
+            if (parsed.HasAutoAdvance)
+                yield return WaitAutoAdvance(parsed.AutoAdvanceSeconds);
+            else
+                yield return WaitForAdvance();
+            _sessionState.MarkCurrentLineRead();
+        }
+
+        /// <summary>
+        /// &lt;auto=秒&gt; の行: 表示しきってから秒数だけ待って、送り入力なしで次へ進む。
+        /// 送り入力を押せばその場で進める。通常の送り待ち(<see cref="WaitForAdvance"/>)と同じく、
+        /// ウィンドウを隠している間・ログを開いている間・入力ブロック中は、待ち時間を数えず、送り入力も受け付けない。
+        /// 既読スキップと開発用の全スキップのときは、待たずに進む。
+        /// </summary>
+        private IEnumerator WaitAutoAdvance(float seconds)
+        {
+            State = ConversationState.WaitingForAdvance;
+            yield return null;
+            float elapsed = 0f;
+            while (elapsed < seconds)
+            {
+                bool blocked =
+                    _windowManuallyHidden
+                    || (_historyPanel != null && _historyPanel.IsOpen)
+                    || Time.unscaledTime < _advanceBlockedUntil;
+                if (!blocked)
+                {
+                    if (
+                        DialogueAdvanceController.AdvancePressed()
+                        || DialogueDebugSkip.Active
+                        || (_sessionState.CurrentLineWasRead && _skipMode)
+                    )
+                        break;
+                    elapsed += Time.unscaledDeltaTime;
+                }
+                yield return null;
+            }
+            State = ConversationState.Entering;
+        }
+
+        /// <summary>選択肢を提示し、選ばれた値を <paramref name="onSelected"/> で返す。</summary>
+        public IEnumerator ShowChoice(
+            IReadOnlyList<ChoiceOption> options,
+            Action<string> onSelected
+        )
+        {
+            InitializePresenters();
+            CancelRewardPresentation();
+            State = ConversationState.ShowingChoices;
+            SetWindowHidden(false);
+            _chromePresenter.StopBounce();
+            yield return ShowAnimated();
+
+            yield return _choiceFlow.Execute(options, onSelected);
+            State = ConversationState.Entering;
+        }
+
+        /// <summary>
+        /// 受け取ったアイテムの画像を表示し、送り入力まで待って片付ける。<paramref name="sprite"/> 未指定なら <see cref="_itemGetSprite"/>(ダミー)。
+        /// 画像は実行時に Canvas 直下へ生成する(将来は giveItem ステップから解決した Sprite を渡す想定)。
+        /// </summary>
+        public IEnumerator ShowItemGet(Sprite sprite = null, string acquiredMessage = null)
+        {
+            InitializePresenters();
+            CancelRewardPresentation();
+            _rewardPresentationActive = true;
+            State = ConversationState.Entering;
+            yield return ShowAnimated();
+            SetChoicesActive(false);
+            _rewardPresenter.ShowItem(
+                sprite != null ? sprite : _itemGetSprite,
+                _itemGetPosition,
+                _itemGetSize
+            );
+            yield return _rewardFlow.Enter(
+                _rewardPresenter.AnimateItemIn(),
+                acquiredMessage,
+                false
+            );
+            yield return WaitForAdvance();
+            yield return _rewardFlow.Exit(_rewardPresenter.AnimateItemOut(), acquiredMessage);
+            _rewardPresenter.HideItem();
+            if (!string.IsNullOrWhiteSpace(acquiredMessage))
+                _sessionState.MarkCurrentLineRead();
+            _rewardPresentationActive = false;
+        }
+
+        /// <summary>
+        /// 受け取った武器の3Dモデルを RenderTexture 経由で <see cref="ShowItemGet"/> と同じ位置に表示し、送り入力まで回転させて待つ。
+        /// リグはシーンから離れた場所に実行時に組み、終了時に破棄する。<paramref name="modelPrefab"/> 未指定なら <see cref="_weaponModelPrefab"/>(ダミー)。
+        /// </summary>
+        public IEnumerator ShowWeaponGet(
+            GameObject modelPrefab = null,
+            string acquiredMessage = null
+        )
+        {
+            InitializePresenters();
+            CancelRewardPresentation();
+            _rewardPresentationActive = true;
+            State = ConversationState.Entering;
+            yield return ShowAnimated();
+            SetChoicesActive(false);
+
+            var model = _rewardPresenter.ShowWeapon(
+                modelPrefab != null ? modelPrefab : _weaponModelPrefab,
+                _weaponModelEuler,
+                _weaponTextureSize,
+                _weaponImageSize,
+                _itemGetPosition,
+                _weaponFrameFill,
+                _weaponBackdropColor
+            );
+            if (model == null)
+            {
+                _rewardPresentationActive = false;
+                yield break;
+            }
+
+            yield return _rewardFlow.Enter(
+                _rewardPresenter.AnimateWeaponIn(),
+                acquiredMessage,
+                true
+            );
+            yield return WaitForAdvance(); // AUTO中も表示時間を確保してから次へ進む
+            yield return _rewardFlow.Exit(_rewardPresenter.AnimateWeaponOut(), acquiredMessage);
+            _rewardPresenter.HideWeapon();
+            if (!string.IsNullOrWhiteSpace(acquiredMessage))
+                _sessionState.MarkCurrentLineRead();
+            _rewardPresentationActive = false;
+        }
+
+        // ---- 内部 ----
+
+        private IEnumerator TypeBody(string text)
+        {
+            State = ConversationState.Typing;
+            _chromePresenter?.StopBounce();
+
+            yield return _textPlayer.Play(
+                _bodyText,
+                text,
+                _textSpeed,
+                _charInterval,
+                _punctuationDelay,
+                _fastForwardMultiplier,
+                _sessionState.CurrentLineWasRead || DialogueDebugSkip.Active,
+                _typingAudioSource,
+                _currentTypingSound,
+                () => _skipMode || DialogueDebugSkip.Active,
+                () => _windowManuallyHidden
+            );
+        }
+
+        private IEnumerator WaitForAdvance(bool allowAuto = true)
+        {
+            State = ConversationState.WaitingForAdvance;
+            _chromePresenter.StartBounce();
+            yield return _advanceController.Wait(
+                _bodyText,
+                _sessionState.CurrentLineWasRead || DialogueDebugSkip.Active,
+                () => allowAuto && IsAutoMode && !_windowManuallyHidden,
+                () => _skipMode || DialogueDebugSkip.Active,
+                () => _windowManuallyHidden || Time.unscaledTime < _advanceBlockedUntil,
+                () => _historyPanel != null && _historyPanel.IsOpen,
+                _autoAdvanceDelay
+            );
+            _chromePresenter.StopBounce();
+            State = ConversationState.Entering;
+        }
+
+        public void SetAutoMode(bool enabled)
+        {
+            if (IsAutoMode == enabled)
+                return;
+
+            IsAutoMode = enabled;
+            InitializePresenters();
+            _chromePresenter.SetAutoMode(enabled);
+            _controlsPresenter.SetAutoActive(enabled);
+        }
+
+        private void BindControlButtons()
+        {
+            _controlsPresenter.Bind(
+                () => SetAutoMode(!IsAutoMode),
+                () =>
+                {
+                    _skipMode = !_skipMode;
+                    _controlsPresenter.SetSkipActive(_skipMode);
+                },
+                () => SetTextSpeed((TextSpeed)(((int)_textSpeed + 1) % 4)),
+                () => SetWindowHidden(!_windowManuallyHidden)
+            );
+        }
+
+        public void SetWindowHidden(bool hidden)
+        {
+            _windowManuallyHidden = hidden;
+            InitializePresenters();
+            _chromePresenter.SetWindowHidden(hidden);
+            _controlsPresenter.SetHideActive(hidden);
+        }
+
+        public void SetTextSpeed(TextSpeed speed)
+        {
+            _textSpeed = speed;
+            InitializePresenters();
+            _chromePresenter.SetTextSpeed(speed);
+            _speedPresenter.SetSpeed(speed, true);
+        }
+
+        public bool IsLineRead(string speaker, string portrait, string text) =>
+            _sessionState.IsLineRead(speaker, portrait, text);
+
+        public void MarkLineRead(string speaker, string portrait, string text) =>
+            _sessionState.MarkLineRead(speaker, portrait, text);
+
+        public void ClearReadHistory() => _sessionState.ClearReadHistory();
+
+        public void SetPortraitVisible(DialoguePortraitSide side, bool visible)
+        {
+            InitializePresenters();
+            _portraitPresenter.SetVisible(side, visible);
+        }
+
+        public IEnumerator PlayPortraitEffect(
+            DialoguePortraitSide side,
+            PortraitEffect effect,
+            float duration = 0.28f
+        )
+        {
+            InitializePresenters();
+            yield return _portraitPresenter.PlayEffect(side, effect, duration);
+        }
+
+        public IEnumerator SetPortraitObscured(
+            DialoguePortraitSide side,
+            bool obscured,
+            float duration = 0.5f
+        )
+        {
+            InitializePresenters();
+            yield return _portraitPresenter.SetObscured(side, obscured, duration);
+        }
+
+        // 登録した素材からキーで引く。同じキーが複数あれば先に登録したほうを使う。
+        private SoundKit.SoundCue FindSound(string key)
+        {
+            foreach (var entry in _sounds ?? Array.Empty<DialogueSoundEntry>())
+                if (entry.Key == key)
+                    return entry.Cue;
+            return null;
+        }
+
+        private Sprite FindBackground(string key)
+        {
+            foreach (var entry in _backgrounds ?? Array.Empty<DialogueBackgroundEntry>())
+                if (entry.Key == key)
+                    return entry.Sprite;
+            return null;
+        }
+
+        /// <summary>portrait.show: セリフなしで、キーの立ち絵をその人の立ち位置に出す。</summary>
+        private IEnumerator ShowPortraitByKey(string portraitKey)
+        {
+            if (string.IsNullOrEmpty(portraitKey))
+                yield break;
+            var resolved = DialoguePortraitResolver.Resolve(
+                portraitKey,
+                _characters,
+                _defaultPortrait,
+                _defaultPortraitSide
+            );
+            yield return _portraitPresenter.Set(resolved);
+        }
+
+        public IEnumerator RunPresentationCommand(string command, string argument = null)
+        {
+            InitializePresenters();
+            yield return _presentationCommandRouter.Execute(command, argument);
+        }
+
+        /// <summary>
+        /// IDialogueView 実装: giveItem ステップの入手演出。itemKey→アイコン/名前の解決はここで行う
+        /// (Core は Gameplay を参照しないため、EventPlayer はキーだけ渡す)。
+        /// message 省略時は「〜を手に入れた。」を名前から組み立てる。
+        /// </summary>
+        public IEnumerator ShowItemGet(string itemKey, string message)
+        {
+            var data =
+                ItemCatalog.Instance != null ? ItemCatalog.Instance.GetItemByKey(itemKey) : null;
+            string body =
+                !string.IsNullOrWhiteSpace(message) ? message
+                : data != null && !string.IsNullOrEmpty(data.itemName)
+                    ? $"{data.itemName}を手に入れた。"
+                : null;
+            yield return ShowItemGet(data != null ? data.icon : null, body);
+        }
+
+        /// <summary>
+        /// IDialogueView 実装: giveWeapon ステップの入手演出。3Dモデルは WeaponData がまだ参照を
+        /// 持たないため解決できず、Inspector のダミー(_weaponModelPrefab)にフォールバックする
+        /// (モデル参照は武器を持つ側=WeaponManager 班の担当)。
+        /// </summary>
+        public IEnumerator ShowWeaponGet(string weaponKey, string message)
+        {
+            yield return ShowWeaponGet((GameObject)null, message);
+        }
+
+        /// <summary>IDialogueView 実装: command ステップの演出コマンド。</summary>
+        public IEnumerator RunCommand(string command, string argument) =>
+            RunPresentationCommand(command, argument);
+
+        public IEnumerator Close()
+        {
+            if (State == ConversationState.Hidden)
+                yield break;
+            yield return HideAnimated();
+        }
+
+        private void SetChoicesActive(bool active)
+        {
+            _choicePresenter?.SetActive(active);
+            _chromePresenter?.SetChoiceGuide(active);
+        }
+
+        private void EnsureHistoryPanel()
+        {
+            if (_historyPanel == null)
+                TryGetComponent(out _historyPanel);
+            if (_historyPanel == null)
+                _historyPanel = gameObject.AddComponent<DialogueHistoryPanel>();
+
+            _historyPanel.Initialize(_nameText != null ? _nameText.font : null);
+            if (!_historyEventsBound)
+            {
+                _historyPanel.Closed += HandleHistoryClosed;
+                _historyEventsBound = true;
+            }
+        }
+
+        private void HandleHistoryClosed() => BlockAdvanceInput(0.12f);
+
+        private void BlockAdvanceInput(float duration)
+        {
+            _advanceBlockedUntil = Mathf.Max(
+                _advanceBlockedUntil,
+                Time.unscaledTime + Mathf.Max(0f, duration)
+            );
+        }
+
+        private IEnumerator ShowAnimated()
+        {
+            InitializePresenters();
+            yield return _chromePresenter.Show();
+        }
+
+        public IEnumerator HideAnimated(float duration = 0.2f)
+        {
+            State = ConversationState.Exiting;
+            InitializePresenters();
+            float textDuration = Mathf.Max(0.05f, duration * 0.35f);
+            float portraitDuration = Mathf.Max(0.06f, duration * 0.4f);
+            float windowDuration = Mathf.Max(0.07f, duration * 0.45f);
+            yield return _chromePresenter.HideLineText(textDuration);
+            yield return _portraitPresenter.FadeOutAll(portraitDuration);
+            yield return _chromePresenter.Hide(windowDuration);
+            _rewardPresenter.HideAll();
+            _choicePresenter.Clear();
+            _choicePresenter.SetActive(false);
+            ResetTransientModes();
+            State = ConversationState.Hidden;
+        }
+
+        private void HideImmediate()
+        {
+            State = ConversationState.Exiting;
+            _rewardPresenter?.HideAll();
+            SetChoicesActive(false);
+            ResetTransientModes();
+            _chromePresenter?.HideImmediate();
+            State = ConversationState.Hidden;
+        }
+
+        private void ResetTransientModes()
+        {
+            _backdropPresenter?.Reset();
+            _rewardPresentationActive = false;
+            _skipMode = false;
+            _windowManuallyHidden = false;
+            _advanceBlockedUntil = 0f;
+            _controlsPresenter.SetSkipActive(false);
+            _controlsPresenter.SetHideActive(false);
+            if (_historyPanel != null && _historyPanel.IsOpen)
+                _historyPanel.SetOpen(false);
+        }
+
+        private void CancelRewardPresentation()
+        {
+            _rewardPresenter?.HideAll();
+            _rewardPresentationActive = false;
+        }
+    }
+
+    /// <summary>
+    /// 演出コマンド(sound.se / sound.bgm)のキーと SoundCue の対応。ConversationView に登録する。
+    /// SoundCue 自体は Audio/SoundCue に置いたまま Inspector で割り当てる(SoundKit の使い方と同じ)。
+    /// </summary>
+    [Serializable]
+    public struct DialogueSoundEntry
+    {
+        public string Key;
+        public SoundCue Cue;
+    }
+
+    /// <summary>演出コマンド(background.image)のキーと背景画像の対応。ConversationView に登録する。</summary>
+    [Serializable]
+    public struct DialogueBackgroundEntry
+    {
+        public string Key;
+        public Sprite Sprite;
+    }
+}
