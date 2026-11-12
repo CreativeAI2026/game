@@ -20,7 +20,7 @@ namespace CreativeAI.EditorTools
     public static class ItemCatalogSync
     {
         public const string CatalogPath = "Assets/_Project/Resources/ItemCatalog.asset";
-        public const string TextsPath = "Assets/_Project/Features/Inventory/items.json";
+        public const string TextsPath = "Assets/_Project/Features/Items/items.json";
         private const string ImageRoot = "Assets/_Project/Art/UI/Items";
         private const string LogTag = "[ItemCatalogSync]";
         private const int IconMaxSize = 512;
