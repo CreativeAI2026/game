@@ -32,6 +32,14 @@ namespace CreativeAI.Gameplay
         [Tooltip("カメラを下方向に動かせる最小角度（度）")]
         public float BottomClamp = -30.0f;
 
+        [Tooltip("Aim中の視点感度のマウスの倍率（通常感度に掛ける）。")]
+        [SerializeField]
+        private float _aimMouseLookSensitivityMulti = 0.5f;
+
+        [Tooltip("Aim中の視点感度のコントローラーの倍率（通常感度に掛ける）。")]
+        [SerializeField]
+        private float _aimControllerLookSensitivityMulti = 0.1f;
+
         [Tooltip(
             "カメラをオーバーライドする追加の角度。カメラ固定時にカメラ位置を微調整するための変数"
         )]
@@ -77,13 +85,20 @@ namespace CreativeAI.Gameplay
 
             if (_input.look.sqrMagnitude >= LookInputThreshold && !LockCameraPosition)
             {
+                float sensitivity = 1f;
+                if (_playerController.IsAiming)
+                {
+                    sensitivity = IsCurrentDeviceMouse
+                        ? _aimMouseLookSensitivityMulti
+                        : _aimControllerLookSensitivityMulti;
+                }
                 // マウスの移動量は「前フレームからのピクセル移動量（Delta）」であり既にフレーム間の差分を含んでいるため、
                 // 重複してTime.deltaTimeを乗算するとフレームレート依存のバグが生じる。
                 // 一方、ゲームパッドのスティックは「傾き（速度）」のため乗算が必要。
                 float deltaTimeMultiplier = IsCurrentDeviceMouse ? 1.0f : Time.deltaTime;
 
-                _yaw += _input.look.x * deltaTimeMultiplier;
-                _pitch += _input.look.y * deltaTimeMultiplier;
+                _yaw += _input.look.x * deltaTimeMultiplier * sensitivity;
+                _pitch += _input.look.y * deltaTimeMultiplier * sensitivity;
             }
 
             // 累積角度が±360を超えるとfloat精度が劣化するため、範囲内に収める

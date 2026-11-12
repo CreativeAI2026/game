@@ -13404,13 +13404,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 5496514868187160189, guid: 4d30f9d77d1f9c64bb9fe22315f2c5c2, type: 3}
       propertyPath: m_WarningMessage
-      value: "\nBinding warning: Some generic clip(s) animate transforms that are
-        already bound by a Humanoid avatar. These transforms can only be changed
-        by Humanoid clips.\n\tTransform 'mixamorig:LeftHand'\n\tTransform 'mixamorig:LeftHandThumb1'\n\tTransform
-        'mixamorig:RightUpLeg'\n\tTransform 'mixamorig:LeftUpLeg'\n\tTransform 'mixamorig:LeftHandMiddle1'\n\tTransform
-        'mixamorig:Hips'\n\tTransform 'mixamorig:LeftHandIndex1'\n\tTransform 'mixamorig:LeftHandPinky1'\n\tTransform
-        'mixamorig:LeftHandRing1'\n\tTransform 'mixamorig:RightFoot'\n\tand more
-        ...\n\tFrom animation clip 'Player_Die'"
+      value: 
       objectReference: {fileID: 0}
     - target: {fileID: 6027125060283945667, guid: 4d30f9d77d1f9c64bb9fe22315f2c5c2, type: 3}
       propertyPath: m_LocalPosition.x
@@ -14179,10 +14173,6 @@ PrefabInstance:
     - target: {fileID: 1254817577893401342, guid: c7f978d0c9f6e3945bedfc3add346733, type: 3}
       propertyPath: m_Name
       value: KurageBoss
-      objectReference: {fileID: 0}
-    - target: {fileID: 1627639548763541260, guid: c7f978d0c9f6e3945bedfc3add346733, type: 3}
-      propertyPath: _restraintRadius
-      value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 4855762672849716225, guid: c7f978d0c9f6e3945bedfc3add346733, type: 3}
       propertyPath: _stage

@@ -179,7 +179,7 @@ MonoBehaviour:
   _hoverDuration: 0.5
   _dropDuration: 0.3
   _gripFollowSharpness: 12
-  _restraintRadius: 0.55
+  _restraintRadius: 1
   _restraintHeight: 3.2
   _chestHoverDuration: 0.6
   _squeezeDuration: 0.2
@@ -215,7 +215,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: CreativeAI.Gameplay::CreativeAI.Gameplay.KurageBossController
   _orbitSpeed: 6
-  _highOrbitSpeed: 10
+  _highOrbitSpeed: 20
   _speedUpDurationRatio: 0.4
   _orbitAcceleration: 20
   _orbitTowardPlayerChance: 0.7
