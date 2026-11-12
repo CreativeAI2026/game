@@ -11,7 +11,7 @@ namespace CreativeAI.Tests.EditMode
     /// 直下は Canvas の入れ物で、中身は機能ごとの Prefab(Canvas を持たない)を入れる。
     /// 常駐UI(アイコンバー・即時食材バー・扉プロンプト・会話UI等)は表示/非表示を各自の CanvasGroup で切り替えるので、
     /// GameObject がオフで保存されると実行時に二度と出ない。
-    /// 開閉を UiRouter が SetActive で行うパネル(キャラ/インベ/セーブ/調合)だけはオフで保存されていてよい。
+    /// 開閉を UiRouter が SetActive で行うパネル(キャラ/インベ/セーブ/調合/マップ)だけはオフで保存されていてよい。
     /// </summary>
     public class UIRootPrefabTests
     {
@@ -23,6 +23,7 @@ namespace CreativeAI.Tests.EditMode
             "_inventoryUI",
             "_saveUI",
             "_craftUI",
+            "_mapUI",
         };
 
         [Test]
@@ -82,6 +83,39 @@ namespace CreativeAI.Tests.EditMode
             finally
             {
                 PrefabUtility.UnloadPrefabContents(root);
+            }
+        }
+
+        [Test]
+        public void DirectChildren_HaveSameCanvasScalerSettings()
+        {
+            var prefab = AssetDatabase.LoadAssetAtPath<GameObject>(PrefabPath);
+            Assert.IsNotNull(prefab, PrefabPath);
+
+            // 入れ物ごとに CanvasScaler があるので、基準の解像度などを1か所だけ変えるとその入れ物だけ大きさがずれる
+            UnityEngine.UI.CanvasScaler first = null;
+            foreach (Transform wrapper in prefab.transform)
+            {
+                var scaler = wrapper.GetComponent<UnityEngine.UI.CanvasScaler>();
+                Assert.IsNotNull(scaler, $"UIRoot/{wrapper.name} に CanvasScaler がありません。");
+                if (first == null)
+                {
+                    first = scaler;
+                    continue;
+                }
+
+                string message =
+                    $"UIRoot/{wrapper.name} の CanvasScaler の設定が UIRoot/{first.name} と違います。"
+                    + "入れ物の CanvasScaler は全部同じ設定にしてください。";
+                Assert.AreEqual(first.uiScaleMode, scaler.uiScaleMode, message);
+                Assert.AreEqual(first.referenceResolution, scaler.referenceResolution, message);
+                Assert.AreEqual(first.screenMatchMode, scaler.screenMatchMode, message);
+                Assert.AreEqual(first.matchWidthOrHeight, scaler.matchWidthOrHeight, message);
+                Assert.AreEqual(
+                    first.referencePixelsPerUnit,
+                    scaler.referencePixelsPerUnit,
+                    message
+                );
             }
         }
     }

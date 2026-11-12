@@ -5,7 +5,7 @@ using UnityEngine;
 namespace CreativeAI.UI
 {
     /// <summary>
-    /// 操作で開く UI(キャラ / インベ / セーブ / 調合)の排他表示を管理する薄いルート。常駐 <see cref="UIRoot"/> にアタッチする。
+    /// 操作で開く UI(キャラ / インベ / セーブ / 調合 / マップ)の排他表示を管理する薄いルート。常駐 <see cref="UIRoot"/> にアタッチする。
     /// 入口は Open / Toggle で、別のを開くと前のが閉じる。「今どれが開いているか」だけを持つ。
     /// 開いているかどうかは <see cref="UiPanelService"/> に伝え、プレイヤー側が操作を止める・カーソルを出すのに使う。
     /// </summary>
@@ -18,6 +18,7 @@ namespace CreativeAI.UI
             Inventory,
             Save,
             Craft,
+            Map,
         }
 
         [SerializeField]
@@ -32,9 +33,12 @@ namespace CreativeAI.UI
         [SerializeField]
         private GameObject _craftUI; // 調合場所でのみ開く。未割当可
 
+        [SerializeField]
+        private GameObject _mapUI; // 全画面マップ。未割当可
+
         private readonly Dictionary<UiId, GameObject> _panels = new();
 
-        /// <summary>いずれかのパネル(キャラ/インベ/セーブ/調合)が表示中か。常駐の即時食材使用UI等の出し分けに使う。</summary>
+        /// <summary>いずれかのパネル(キャラ/インベ/セーブ/調合/マップ)が表示中か。常駐の即時食材使用UI等の出し分けに使う。</summary>
         public bool IsAnyPanelOpen
         {
             get
@@ -52,12 +56,17 @@ namespace CreativeAI.UI
             Register(UiId.Inventory, _inventoryUI);
             Register(UiId.Save, _saveUI);
             Register(UiId.Craft, _craftUI);
+            Register(UiId.Map, _mapUI);
 
             CloseAll(); // 起動時は全て隠しておき、操作で開く
         }
 
-        // パネルは自分の戻るボタンで SetActive(false) して閉じることがあり、ここを通らないので毎フレーム実際の表示を見る。
-        private void Update() => SyncOpenState();
+        private void OnDestroy()
+        {
+            foreach (var kv in _panels)
+                if (kv.Value != null && kv.Value.TryGetComponent(out UiPanelActivityRelay relay))
+                    relay.Changed -= SyncOpenState;
+        }
 
         private void OnEnable() => CraftUiRequestService.Requested += OpenCraft;
 
@@ -78,8 +87,15 @@ namespace CreativeAI.UI
 
         private void Register(UiId id, GameObject panel)
         {
-            if (panel != null)
-                _panels[id] = panel;
+            if (panel == null)
+                return;
+            _panels[id] = panel;
+
+            // パネルは自分の戻るボタンなどで SetActive(false) して閉じることがあり、ここを通らない。
+            // オン・オフの通知を受けて、開いているかどうかを伝え直す。
+            if (!panel.TryGetComponent(out UiPanelActivityRelay relay))
+                relay = panel.AddComponent<UiPanelActivityRelay>();
+            relay.Changed += SyncOpenState;
         }
 
         /// <summary>対象を開き、他を全て閉じる(排他)。</summary>

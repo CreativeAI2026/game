@@ -100,7 +100,7 @@ namespace CreativeAI.EditorTools
         // `&` は格子の壁(研究棟)。`$` と同じ線状の壁として列にまとめ、モデルだけ記号ごとに替える
         const char Glass = '$';
         const char Lattice = '&';
-        const char Fence = '-'; // 柵。ガラスと同じく列にまとめ、縁へ寄せ、角で継ぐ
+        internal const char Fence = '-'; // 柵。ガラスと同じく列にまとめ、縁へ寄せ、角で継ぐ
         const float GlassColliderThickness = 0.4f;
         const float GlassPanelDepth = 0.14f; // モデルの厚み(袖壁を作る幅の計算に使う)
 
@@ -148,7 +148,7 @@ namespace CreativeAI.EditorTools
             }
         }
 
-        static bool IsDoor(char c) => Doors.Any(d => d.Symbol == c);
+        internal static bool IsDoor(char c) => Doors.Any(d => d.Symbol == c);
 
         /// <summary>
         /// 扉が乗っている板の壁の記号。壁の向きに沿った隣のマスから取り、無ければ `$`
@@ -167,7 +167,7 @@ namespace CreativeAI.EditorTools
         }
 
         /// <summary>線状の板の壁(`$` ガラス / `&` 格子)か。</summary>
-        static bool IsPanel(char c) => c == Glass || c == Lattice;
+        internal static bool IsPanel(char c) => c == Glass || c == Lattice;
 
         readonly struct FloorDef
         {
@@ -353,6 +353,116 @@ namespace CreativeAI.EditorTools
                     return (null, 1f);
                 return (k.Prefabs[Mathf.Abs(row * 7 + col * 3) % k.Prefabs.Length], k.ModelHeight);
             }
+        }
+
+        /// <summary>
+        /// 床のあるマス。空白は床なし。上の階に着く階段のマスも床を抜く(階段の吹き抜け)。
+        /// 抜くのは「上の階の図での」マスなので Hole を使う(下の階の row とずれることがある)
+        /// </summary>
+        static bool[,] FloorMask(char[,] grid, List<StairCells> stairCells, int floor)
+        {
+            var rows = grid.GetLength(0);
+            var cols = grid.GetLength(1);
+            var mask = new bool[rows, cols];
+            for (var r = 0; r < rows; r++)
+            for (var c = 0; c < cols; c++)
+                mask[r, c] = grid[r, c] != Void;
+            foreach (var s in stairCells.Where(s => s.UpperFloor == floor))
+            foreach (var cell in s.Hole.Where(v => v.y >= 0 && v.y < rows && v.x < cols))
+                mask[cell.y, cell.x] = false;
+            return mask;
+        }
+
+        /// <summary>図を別の形(ミニマップなど)で使う側に渡す、1つの階の図。</summary>
+        public sealed class FloorPlan
+        {
+            /// <summary>建物の名前。</summary>
+            public string Building { get; }
+
+            /// <summary>階の名前(1F など)。</summary>
+            public string Floor { get; }
+
+            /// <summary>マス[row 0, col 0] の中心のワールド座標(Y は床面の高さ)。col は +X、row は +Z へ進む。</summary>
+            public Vector3 Origin { get; }
+
+            /// <summary>図の文字([row, col])。</summary>
+            public char[,] Grid { get; }
+
+            /// <summary>床のあるマス。階段の吹き抜けは false。</summary>
+            public bool[,] HasFloor { get; }
+
+            /// <summary>この階から上る階段(この階の図でのマス範囲と、上る向き)。</summary>
+            public IReadOnlyList<(RectInt Cells, Vector2Int Up)> Stairs { get; }
+
+            internal FloorPlan(
+                string building,
+                string floor,
+                Vector3 origin,
+                char[,] grid,
+                bool[,] hasFloor,
+                IReadOnlyList<(RectInt, Vector2Int)> stairs
+            )
+            {
+                Building = building;
+                Floor = floor;
+                Origin = origin;
+                Grid = grid;
+                HasFloor = hasFloor;
+                Stairs = stairs;
+            }
+        }
+
+        /// <summary>全建物・全階の図を読む。どれか1つでも読めなければ null。</summary>
+        public static List<FloorPlan> LoadFloorPlans()
+        {
+            var maps = LoadAll();
+            if (maps == null)
+                return null;
+
+            var plans = new List<FloorPlan>();
+            foreach (var map in maps)
+            {
+                var stairCells = CollectStairs(
+                    map.Grids,
+                    map.Floors,
+                    map.StairDirs,
+                    map.Building.Name
+                );
+                for (var f = 0; f < map.Floors.Length; f++)
+                {
+                    var stairs = stairCells
+                        .Where(s => s.LowerFloor == f)
+                        .Select(s =>
+                            (
+                                new RectInt(
+                                    s.Col0,
+                                    s.Row0,
+                                    s.Col1 - s.Col0 + 1,
+                                    s.Row1 - s.Row0 + 1
+                                ),
+                                s.Dir switch
+                                {
+                                    StairDir.North => Vector2Int.up,
+                                    StairDir.East => Vector2Int.right,
+                                    StairDir.South => Vector2Int.down,
+                                    _ => Vector2Int.left,
+                                }
+                            )
+                        )
+                        .ToList();
+                    plans.Add(
+                        new FloorPlan(
+                            map.Building.Name,
+                            map.Floors[f].Name,
+                            map.Floors[f].Origin,
+                            map.Grids[f],
+                            FloorMask(map.Grids[f], stairCells, f),
+                            stairs
+                        )
+                    );
+                }
+            }
+            return plans;
         }
 
         /// <summary>1つの建物について .md から読んだ図。</summary>
@@ -916,16 +1026,7 @@ namespace CreativeAI.EditorTools
                 var nr = g.GetLength(0);
                 var nc = g.GetLength(1);
 
-                // 空白は床なし。上の階に着く階段のマスも床を抜く(階段の吹き抜け)。
-                // 抜くのは「上の階の図での」マスなので Hole を使う(下の階の row とずれることがある)
-                var mask = new bool[nr, nc];
-                for (var r = 0; r < nr; r++)
-                for (var c = 0; c < nc; c++)
-                    mask[r, c] = g[r, c] != Void;
-                foreach (var s in stairCells.Where(s => s.UpperFloor == f))
-                foreach (var cell in s.Hole.Where(v => v.y >= 0 && v.y < nr && v.x < nc))
-                    mask[cell.y, cell.x] = false;
-
+                var mask = FloorMask(g, stairCells, f);
                 floorMasks[f] = mask;
                 fenceLayouts[f] = LineLayout.Build(g, mask, nr, nc, ch => ch == Fence);
                 glassLayouts[f] = LineLayout.Build(g, mask, nr, nc, IsPanel);
@@ -1930,7 +2031,7 @@ namespace CreativeAI.EditorTools
         /// 図の上でそのマスを通る壁の線が東西向きか。左右が壁なら東西、そうでなく上下が壁なら南北。
         /// 図の外は壁扱い(外周に接する扉・ガラスも向きが決まる)。
         /// </summary>
-        static bool IsEastWest(char[,] grid, int rows, int cols, int r, int c)
+        internal static bool IsEastWest(char[,] grid, int rows, int cols, int r, int c)
         {
             bool WallLike(int y, int x)
             {
@@ -2824,7 +2925,7 @@ namespace CreativeAI.EditorTools
         // ---------------------------------------------------------------- マス→矩形
 
         /// <summary>true のマスを、なるべく大きい矩形にまとめる(オブジェクト数を減らすため)。</summary>
-        static List<RectInt> MergeRects(bool[,] mask, int rows, int cols)
+        internal static List<RectInt> MergeRects(bool[,] mask, int rows, int cols)
         {
             var used = new bool[rows, cols];
             var result = new List<RectInt>();
