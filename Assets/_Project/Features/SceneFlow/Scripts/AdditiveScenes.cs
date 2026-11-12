@@ -1,9 +1,8 @@
 using System.Collections.Generic;
-using CreativeAI.Core;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 
-namespace CreativeAI.Gameplay
+namespace CreativeAI.Core
 {
     /// <summary>
     /// このシーンに重ねて読み込む別シーンを宣言する。階ごとの小物シーンを畳まずに実行時に重ね、

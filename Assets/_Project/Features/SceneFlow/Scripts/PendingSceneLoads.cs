@@ -7,7 +7,7 @@ namespace CreativeAI.Core
     /// <summary>
     /// 本体シーンの読み込みにつられて始まった、追加の非同期読み込み(重ねる小物シーンなど)を集める窓口。
     /// <see cref="SceneController"/> は本体を有効化したあと、ここに登録された読み込みが全部終わるまで暗転を明けない。
-    /// Core は Gameplay を参照できないので、読み込みを始める側(AdditiveScenes)がここへ登録する。
+    /// 読み込みを始める側(AdditiveScenes)がここへ登録する。
     /// </summary>
     public static class PendingSceneLoads
     {
