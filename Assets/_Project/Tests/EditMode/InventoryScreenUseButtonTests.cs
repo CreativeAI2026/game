@@ -18,7 +18,7 @@ namespace CreativeAI.Tests.EditMode
         public void InventoryUseButton_HealsAndConsumesImmediately_WithoutOpeningDialog()
         {
             var root = PrefabUtility.LoadPrefabContents(
-                "Assets/_Project/Features/UI/InventoryUI/Prefabs/InventoryPanel.prefab"
+                "Assets/_Project/Features/UI/Inventory/Prefabs/InventoryPanel.prefab"
             );
             var playerGo = new GameObject("TestPlayer");
             var food = ScriptableObject.CreateInstance<FoodData>();

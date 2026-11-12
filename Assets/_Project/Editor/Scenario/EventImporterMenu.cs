@@ -22,7 +22,7 @@ namespace CreativeAI.EditorTools
         private const string OutputDir = "Assets/_Project/Features/Event/Data";
         private const string ItemCatalogPath = "Assets/_Project/Resources/ItemCatalog.asset";
         private const string CharacterDataDir =
-            "Assets/_Project/Features/UI/ConversationUI/Data/Characters";
+            "Assets/_Project/Features/UI/Conversation/Data/Characters";
 
         [MenuItem("Tools/CreativeAI/Import Events")]
         public static void Import()

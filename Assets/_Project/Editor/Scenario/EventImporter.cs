@@ -19,7 +19,7 @@ namespace CreativeAI.EditorTools
     {
         /// <summary>
         /// line ステップの portrait に書ける立ち絵キーのカタログ(打ち間違い検出)。DialogueCharacterDefinition の PortraitKey と同じ
-        /// ({キャラ _id}_{表情} の snake_case)なので、表情を足すときは定義アセット(Features/UI/ConversationUI/Data/Characters)にも足す。
+        /// ({キャラ _id}_{表情} の snake_case)なので、表情を足すときは定義アセット(Features/UI/Conversation/Data/Characters)にも足す。
         /// </summary>
         public static readonly IReadOnlyCollection<string> PortraitKeys = new HashSet<string>(
             StringComparer.Ordinal

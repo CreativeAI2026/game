@@ -28,16 +28,23 @@ game/                          ← リポジトリルート
 │   │   │   ├── Field/         フィールド（扉・拾えるアイテム・シーンの重ね読み）
 │   │   │   ├── Camera/        カメラ
 │   │   │   ├── Audio/         ゲーム側の効果音イベント
-│   │   │   ├── Display/       ウィンドウ表示の切り替え
+│   │   │   ├── Effects/       エフェクトの使い回し（ObjectPool）
+│   │   │   ├── Playtest/      試遊会用の舞台
+│   │   │   ├── Session/       常駐一式の生成（GameSession）・フィールドを直接 Play したときの起動（UI のアセンブリ）
 │   │   │   └── UI/            各機能の画面
-│   │   │       ├── Root/          UIRoot・画面切り替え・起動時の常駐生成（GameSession）
-│   │   │       ├── Common/        画面共通の部品（スロット・タブ・アニメーション）
-│   │   │       ├── HUD/           フィールド中の表示（HP・武器・操作表示・即時食材・暗転）
-│   │   │       ├── TitleUI/       タイトル
-│   │   │       ├── InventoryUI/   インベントリ
-│   │   │       ├── CraftingUI/    調合
-│   │   │       ├── CharacterUI/   キャラクター（装備・武器・即時食材）
-│   │   │       ├── ConversationUI/ 会話
+│   │   │       ├── Root/          UIRoot・画面切り替え・EventSystem
+│   │   │       ├── Slots/         アイテムを入れるスロットの部品
+│   │   │       ├── Tabs/          タブの部品
+│   │   │       ├── ItemDisplay/   アイテムの能力値・調べるアイコンの表示
+│   │   │       ├── Motion/        スライド・拡大・文字送りなどの演出
+│   │   │       ├── Common/        上に入らない共通の部品（パネル・テーマ・補助）
+│   │   │       ├── HUD/           フィールド中の表示（HP・武器・操作表示・即時食材・暗転・ピンの矢印）
+│   │   │       ├── Title/         タイトル
+│   │   │       ├── Inventory/     インベントリ
+│   │   │       ├── Crafting/      調合
+│   │   │       ├── Character/     キャラクター（装備・武器・即時食材）
+│   │   │       ├── Conversation/  会話
+│   │   │       ├── Map/           ミニマップ・全画面マップ
 │   │   │       └── SaveDialog/    セーブ確認
 │   │   ├── Modules/           プロジェクトに依存しない仕組み（SoundKit：音の再生・音量設定）
 │   │   ├── Art/               Models / Textures / Materials / Animations / Shaders / VFX / UI

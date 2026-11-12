@@ -9,7 +9,7 @@ namespace CreativeAI.EditorTools
     public static class ModelPreviewSetup
     {
         private const string PrefabPath =
-            "Assets/_Project/Features/UI/CharacterUI/Prefabs/CharacterPanel.prefab";
+            "Assets/_Project/Features/UI/Character/Prefabs/CharacterPanel.prefab";
 
         [MenuItem("Tools/CreativeAI/UI/Setup 3D Model Previews")]
         public static void Setup()

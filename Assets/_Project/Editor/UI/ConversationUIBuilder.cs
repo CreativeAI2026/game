@@ -42,13 +42,13 @@ namespace CreativeAI.EditorTools
         private const string FontPath =
             "Assets/_Project/Art/UI/Fonts/NotoSansJP-VariableFont_wght SDF.asset";
         private const string PrefabPath =
-            "Assets/_Project/Features/UI/ConversationUI/Prefabs/ConversationView.prefab";
+            "Assets/_Project/Features/UI/Conversation/Prefabs/ConversationView.prefab";
         private static readonly string[] CharacterDefinitionPaths =
         {
-            "Assets/_Project/Features/UI/ConversationUI/Data/Characters/Protagonist.asset",
-            "Assets/_Project/Features/UI/ConversationUI/Data/Characters/Robot.asset",
-            "Assets/_Project/Features/UI/ConversationUI/Data/Characters/FragileGirl.asset",
-            "Assets/_Project/Features/UI/ConversationUI/Data/Characters/Gramophone.asset",
+            "Assets/_Project/Features/UI/Conversation/Data/Characters/Protagonist.asset",
+            "Assets/_Project/Features/UI/Conversation/Data/Characters/Robot.asset",
+            "Assets/_Project/Features/UI/Conversation/Data/Characters/FragileGirl.asset",
+            "Assets/_Project/Features/UI/Conversation/Data/Characters/Gramophone.asset",
         };
         private const string ScenePath = "Assets/_Project/Scenes/UI/UI_ConversationPreview.unity";
 

@@ -15,7 +15,7 @@ namespace CreativeAI.EditorTools
         private const string FieldArea01Path =
             "Assets/_Project/Features/UI/Root/Prefabs/UIRoot.prefab";
         private const string ItemSlotPath =
-            "Assets/_Project/Features/UI/InventoryUI/Prefabs/ItemSlot.prefab";
+            "Assets/_Project/Features/UI/Inventory/Prefabs/ItemSlot.prefab";
 
         [MenuItem("Tools/CreativeAI/UI/Validate Inventory UI")]
         public static void ValidateFromMenu()

@@ -12,15 +12,15 @@ namespace CreativeAI.EditorTools
     public static class SlotPrefabValidator
     {
         private const string ItemLikeSlotBasePath =
-            "Assets/_Project/Features/UI/Common/Prefabs/ItemLikeSlotBase.prefab";
+            "Assets/_Project/Features/UI/Slots/Prefabs/ItemLikeSlotBase.prefab";
         private const string HolderSlotBasePath =
-            "Assets/_Project/Features/UI/Common/Prefabs/HolderSlotBase.prefab";
+            "Assets/_Project/Features/UI/Slots/Prefabs/HolderSlotBase.prefab";
         private const string ItemSlotPath =
-            "Assets/_Project/Features/UI/InventoryUI/Prefabs/ItemSlot.prefab";
+            "Assets/_Project/Features/UI/Inventory/Prefabs/ItemSlot.prefab";
         private const string MaterialSlotPath =
-            "Assets/_Project/Features/UI/CraftingUI/Prefabs/MaterialSlot.prefab";
+            "Assets/_Project/Features/UI/Crafting/Prefabs/MaterialSlot.prefab";
         private const string EquipmentSlotPath =
-            "Assets/_Project/Features/UI/CharacterUI/Prefabs/EquipmentSlot.prefab";
+            "Assets/_Project/Features/UI/Character/Prefabs/EquipmentSlot.prefab";
 
         private static readonly Type[] DerivedSlotTypes =
         {

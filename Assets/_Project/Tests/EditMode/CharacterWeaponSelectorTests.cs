@@ -14,7 +14,7 @@ namespace CreativeAI.Tests.EditMode
     /// </summary>
     public class CharacterWeaponSelectorTests
     {
-        [TestCase("CharacterUI/Prefabs/CharacterPanel.prefab")]
+        [TestCase("Character/Prefabs/CharacterPanel.prefab")]
         [TestCase("Root/Prefabs/UIRoot.prefab")]
         public void HammerSelection_UpdatesDetailAndPreview_AndDimsOtherWeapons(string path)
         {

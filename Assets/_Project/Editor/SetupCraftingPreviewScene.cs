@@ -21,7 +21,7 @@ namespace CreativeAI.EditorTools
         private const string UIRootPrefabPath =
             "Assets/_Project/Features/UI/Root/Prefabs/UIRoot.prefab";
         private const string CraftPanelPrefabPath =
-            "Assets/_Project/Features/UI/CraftingUI/Prefabs/CraftPanel.prefab";
+            "Assets/_Project/Features/UI/Crafting/Prefabs/CraftPanel.prefab";
         private const string CraftingPreviewScenePath =
             "Assets/_Project/Scenes/UI/UI_CraftingPreview.unity";
         private const string CraftUiName = "CraftUI";
