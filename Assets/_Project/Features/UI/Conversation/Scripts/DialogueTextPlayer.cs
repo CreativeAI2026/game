@@ -66,7 +66,13 @@ namespace CreativeAI.UI
                 if (FastForwardHeld())
                     delay *= Mathf.Clamp(fastForwardMultiplier, 0.05f, 1f);
                 if (delay > 0f)
-                    yield return new WaitForSecondsRealtime(delay);
+                {
+                    float waitUntil = Time.unscaledTime + delay;
+                    do
+                    {
+                        yield return null;
+                    } while (Time.unscaledTime < waitUntil);
+                }
                 else
                     yield return null;
             }
