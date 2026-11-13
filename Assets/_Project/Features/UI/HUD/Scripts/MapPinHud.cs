@@ -46,8 +46,10 @@ namespace CreativeAI.UI
             var shownCount = 0;
             if (cam != null)
             {
-                foreach (var pin in MapPin.Active)
+                var pins = MapPin.Active;
+                for (var i = 0; i < pins.Count; i++)
                 {
+                    var pin = pins[i];
                     if (pin == null || !pin.Shown)
                         continue;
                     Place(Get(shownCount), pin, cam, _canvas.scaleFactor);
