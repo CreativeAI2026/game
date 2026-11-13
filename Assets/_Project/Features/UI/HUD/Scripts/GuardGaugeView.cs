@@ -14,7 +14,9 @@ namespace CreativeAI.UI
         // 割合 × 個数 の浮動小数の誤差(0.9 × 10 = 9.0000004 など)で 1 個多く点かないようにするための許容幅
         private const float SegmentEpsilon = 1e-4f;
 
-        [Tooltip("残量を表す Point を左から順に並べる。個数でメーターを等分する(10 個なら 10% ずつ)")]
+        [Tooltip(
+            "残量を表す Point を左から順に並べる。個数でメーターを等分する(10 個なら 10% ずつ)"
+        )]
         [SerializeField]
         private Image[] _points;
 

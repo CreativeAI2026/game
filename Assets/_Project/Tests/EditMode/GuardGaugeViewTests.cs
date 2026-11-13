@@ -31,7 +31,11 @@ namespace CreativeAI.Tests.EditMode
             for (int step = 0; step <= PointCount; step++)
             {
                 float ratio = step * 0.1f;
-                Assert.AreEqual(step, GuardGaugeView.CountLitPoints(ratio, PointCount), $"ratio={ratio}");
+                Assert.AreEqual(
+                    step,
+                    GuardGaugeView.CountLitPoints(ratio, PointCount),
+                    $"ratio={ratio}"
+                );
             }
         }
 
