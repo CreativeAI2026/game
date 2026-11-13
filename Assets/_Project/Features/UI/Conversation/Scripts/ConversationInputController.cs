@@ -100,6 +100,10 @@ namespace CreativeAI.UI
             if (choices && !historyOpen)
                 _handleChoiceInput();
 
+            // 会話していない間は表示が見えないので、AUTO 表示やボタンの状態を更新しない
+            if (_state() == ConversationView.ConversationState.Hidden)
+                return;
+
             bool autoProgressVisible =
                 _state() == ConversationView.ConversationState.WaitingForAdvance
                 && !_windowHidden()

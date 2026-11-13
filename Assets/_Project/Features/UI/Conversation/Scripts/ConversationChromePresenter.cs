@@ -28,6 +28,14 @@ namespace CreativeAI.UI
         private float _enterOffsetY;
         private string _autoLabel;
         private float _autoWaveStartTime;
+
+        // AUTO の文字の元の頂点。毎フレームここからずらして書き込み、文字のメッシュを作り直さない
+        private TMP_MeshInfo[] _autoBaseMeshInfo;
+
+        // 前のフレームに書き込んだ頂点の1つ。TMP が作り直すと値が変わるので、元の頂点を取り直す合図にする
+        private int _autoProbeMaterial = -1;
+        private int _autoProbeVertex;
+        private Vector3 _autoProbeValue;
         private Coroutine _lineTextAnimation;
         private CanvasGroup _nameGroup;
         private CanvasGroup _bodyGroup;
@@ -87,9 +95,10 @@ namespace CreativeAI.UI
             }
             if (_autoIndicator == null || !autoMode)
                 return;
-            Color color = _autoIndicator.color;
-            color.a = 0.72f + Mathf.Sin(Time.unscaledTime * 3.5f) * 0.18f;
-            _autoIndicator.color = color;
+            // color を変えると TMP が文字を作り直すので、明滅は CanvasRenderer の透明度で付ける
+            _autoIndicator.canvasRenderer.SetAlpha(
+                0.72f + Mathf.Sin(Time.unscaledTime * 3.5f) * 0.18f
+            );
             AnimateAutoText();
         }
 
@@ -101,6 +110,12 @@ namespace CreativeAI.UI
             if (enabled && !_autoIndicator.gameObject.activeSelf)
                 _autoWaveStartTime = Time.unscaledTime;
             _autoIndicator.text = _autoLabel;
+            if (enabled)
+            {
+                Color color = _autoIndicator.color;
+                color.a = 1f;
+                _autoIndicator.color = color;
+            }
             _autoIndicator.gameObject.SetActive(enabled);
         }
 
@@ -277,8 +292,15 @@ namespace CreativeAI.UI
 
         private void AnimateAutoText()
         {
-            _autoIndicator.ForceMeshUpdate();
             var textInfo = _autoIndicator.textInfo;
+            if (AutoBaseIsStale(textInfo))
+            {
+                _autoIndicator.ForceMeshUpdate();
+                textInfo = _autoIndicator.textInfo;
+                _autoBaseMeshInfo = textInfo.CopyMeshInfoVertexData();
+            }
+
+            _autoProbeMaterial = -1;
             for (int i = 0; i < textInfo.characterCount; i++)
             {
                 var character = textInfo.characterInfo[i];
@@ -300,20 +322,35 @@ namespace CreativeAI.UI
                         ? Mathf.Sin(characterTime / characterDuration * Mathf.PI) * 5f
                         : 0f;
                 int vertexIndex = character.vertexIndex;
-                var vertices = textInfo.meshInfo[character.materialReferenceIndex].vertices;
+                int material = character.materialReferenceIndex;
+                var vertices = textInfo.meshInfo[material].vertices;
+                var source = _autoBaseMeshInfo[material].vertices;
                 var offset = Vector3.up * offsetY;
-                vertices[vertexIndex] += offset;
-                vertices[vertexIndex + 1] += offset;
-                vertices[vertexIndex + 2] += offset;
-                vertices[vertexIndex + 3] += offset;
+                for (int v = 0; v < 4; v++)
+                    vertices[vertexIndex + v] = source[vertexIndex + v] + offset;
+
+                if (_autoProbeMaterial < 0)
+                {
+                    _autoProbeMaterial = material;
+                    _autoProbeVertex = vertexIndex;
+                    _autoProbeValue = vertices[vertexIndex];
+                }
             }
 
-            for (int i = 0; i < textInfo.meshInfo.Length; i++)
-            {
-                var meshInfo = textInfo.meshInfo[i];
-                meshInfo.mesh.SetVertices(meshInfo.vertices);
-                _autoIndicator.UpdateGeometry(meshInfo.mesh, i);
-            }
+            _autoIndicator.UpdateVertexData(TMP_VertexDataUpdateFlags.Vertices);
+        }
+
+        /// <summary>元の頂点を取り直す必要があるか(まだ取っていない、または TMP が文字を作り直した)。</summary>
+        private bool AutoBaseIsStale(TMP_TextInfo textInfo)
+        {
+            if (_autoBaseMeshInfo == null || _autoProbeMaterial < 0)
+                return true;
+            if (_autoProbeMaterial >= textInfo.meshInfo.Length)
+                return true;
+            var vertices = textInfo.meshInfo[_autoProbeMaterial].vertices;
+            return vertices == null
+                || _autoProbeVertex + 3 >= vertices.Length
+                || vertices[_autoProbeVertex] != _autoProbeValue;
         }
 
         private void CaptureWindowPosition()

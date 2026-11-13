@@ -11,6 +11,10 @@ namespace CreativeAI.UI
         private Button _skip;
         private Button _speed;
         private Button _hide;
+        private ConversationControlButton _autoControl;
+        private ConversationControlButton _skipControl;
+        private ConversationControlButton _speedControl;
+        private ConversationControlButton _hideControl;
         private bool _bound;
 
         public void Configure(Button auto, Button skip, Button speed, Button hide)
@@ -19,6 +23,10 @@ namespace CreativeAI.UI
             _skip = skip;
             _speed = speed;
             _hide = hide;
+            _autoControl = FindControl(auto);
+            _skipControl = FindControl(skip);
+            _speedControl = FindControl(speed);
+            _hideControl = FindControl(hide);
         }
 
         public void Bind(Action toggleAuto, Action toggleSkip, Action cycleSpeed, Action toggleHide)
@@ -38,40 +46,49 @@ namespace CreativeAI.UI
 
         public void SetAvailability(bool historyOpen, bool hidden, bool rewardActive, bool choices)
         {
-            SetAvailable(_auto, !historyOpen && !hidden);
-            SetAvailable(_skip, !historyOpen && !hidden && !rewardActive && !choices);
-            SetAvailable(_speed, !historyOpen && !hidden);
-            SetAvailable(_hide, !historyOpen && !rewardActive && !choices);
+            SetAvailable(_auto, _autoControl, !historyOpen && !hidden);
+            SetAvailable(_skip, _skipControl, !historyOpen && !hidden && !rewardActive && !choices);
+            SetAvailable(_speed, _speedControl, !historyOpen && !hidden);
+            SetAvailable(_hide, _hideControl, !historyOpen && !rewardActive && !choices);
         }
 
-        public void SetAutoActive(bool active) => SetActive(_auto, active);
+        public void SetAutoActive(bool active) => SetActive(_auto, _autoControl, active);
 
-        public void SetSkipActive(bool active) => SetActive(_skip, active);
+        public void SetSkipActive(bool active) => SetActive(_skip, _skipControl, active);
 
-        public void SetHideActive(bool active) => SetActive(_hide, active);
+        public void SetHideActive(bool active) => SetActive(_hide, _hideControl, active);
 
-        public void PlayAutoShortcut() => PlayShortcut(_auto);
+        public void PlayAutoShortcut() => PlayShortcut(_autoControl);
 
-        public void PlaySkipShortcut() => PlayShortcut(_skip);
+        public void PlaySkipShortcut() => PlayShortcut(_skipControl);
 
-        public void PlaySpeedShortcut() => PlayShortcut(_speed);
+        public void PlaySpeedShortcut() => PlayShortcut(_speedControl);
 
-        public void PlayHideShortcut() => PlayShortcut(_hide);
+        public void PlayHideShortcut() => PlayShortcut(_hideControl);
 
-        private static void SetAvailable(Button button, bool available)
+        private static ConversationControlButton FindControl(Button button) =>
+            button != null && button.TryGetComponent(out ConversationControlButton control)
+                ? control
+                : null;
+
+        private static void SetAvailable(
+            Button button,
+            ConversationControlButton control,
+            bool available
+        )
         {
             if (button == null)
                 return;
             button.interactable = available;
-            if (button.TryGetComponent(out ConversationControlButton control))
+            if (control != null)
                 control.SetAvailable(available);
         }
 
-        private static void SetActive(Button button, bool active)
+        private static void SetActive(Button button, ConversationControlButton control, bool active)
         {
             if (button == null)
                 return;
-            if (button.TryGetComponent(out ConversationControlButton control))
+            if (control != null)
                 control.SetActiveState(active);
             else if (button.targetGraphic != null)
                 button.targetGraphic.color = active
@@ -79,9 +96,9 @@ namespace CreativeAI.UI
                     : new Color(0.035f, 0.045f, 0.07f, 0.86f);
         }
 
-        private static void PlayShortcut(Button button)
+        private static void PlayShortcut(ConversationControlButton control)
         {
-            if (button != null && button.TryGetComponent(out ConversationControlButton control))
+            if (control != null)
                 control.PlayShortcutFeedback();
         }
     }
