@@ -399,6 +399,37 @@ namespace CreativeAI.Tests.EditMode
         }
 
         [Test]
+        public void Parse_PlayerWalkTo_WithSpawnPointId_IsOk()
+        {
+            const string json =
+                @"{ ""events"": [ { ""id"": ""craft_room_exit"", ""repeat"": ""always"",
+                    ""conditions"": [ { ""type"": ""progress"", ""value"": 5 } ],
+                    ""steps"": [
+                        { ""kind"": ""line"", ""portrait"": ""hero_normal"", ""text"": ""戻ろう。"" },
+                        { ""kind"": ""command"", ""command"": ""player.walkTo"", ""arg"": ""craft_room_center"" } ] } ] }";
+
+            var report = EventImporter.Parse(json);
+
+            Assert.IsFalse(report.HasErrors, string.Join("\n", report.Diagnostics));
+            Assert.AreEqual("craft_room_center", report.Events.Single().Steps[1].Arg);
+        }
+
+        [Test]
+        public void Parse_PlayerWalkTo_WithoutArg_IsError()
+        {
+            const string json =
+                @"{ ""events"": [ { ""id"": ""x"", ""repeat"": ""always"",
+                    ""conditions"": [ { ""type"": ""progress"", ""value"": 5 } ],
+                    ""steps"": [
+                        { ""kind"": ""line"", ""portrait"": ""hero_normal"", ""text"": ""a"" },
+                        { ""kind"": ""command"", ""command"": ""player.walkTo"" } ] } ] }";
+
+            var report = EventImporter.Parse(json);
+
+            Assert.IsTrue(report.HasErrors);
+        }
+
+        [Test]
         public void Parse_UnknownRepeat_IsError()
         {
             const string json =
