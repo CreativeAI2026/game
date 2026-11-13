@@ -1,4 +1,5 @@
 using System;
+using CreativeAI.Core;
 using UnityEngine;
 
 namespace CreativeAI.Gameplay
@@ -71,12 +72,12 @@ namespace CreativeAI.Gameplay
                     OnFlinchTriggered?.Invoke();
 
                     _nextFlinchTime = Time.time + _enemyData.flinchCooldownTime;
-                    Debug.Log(
+                    DevLog.Log(
                         $"{_enemyData.characterName}が怯んだ！ {_enemyData.flinchCooldownTime}秒間スーパーアーマーになります。"
                     );
                 }
             }
-            Debug.Log(
+            DevLog.Log(
                 $"{_enemyData.characterName}は {finalDamage} ダメージを受けた！ 残りHP: {_currentHp}/{MaxHp}"
             );
 
@@ -90,7 +91,7 @@ namespace CreativeAI.Gameplay
         {
             IsDead = true;
             OnDeathTriggered?.Invoke();
-            Debug.Log($"{_enemyData.characterName}は死んだ");
+            DevLog.Log($"{_enemyData.characterName}は死んだ");
             Destroy(gameObject, 5.0f);
         }
     }

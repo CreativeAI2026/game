@@ -1,3 +1,4 @@
+using CreativeAI.Core;
 using UnityEngine;
 
 namespace CreativeAI.Gameplay
@@ -23,7 +24,7 @@ namespace CreativeAI.Gameplay
 
         public override void Enter()
         {
-            Debug.Log("[MidBoss] 遠距離攻撃2（液体）ステート開始");
+            DevLog.Log("[MidBoss] 遠距離攻撃2（液体）ステート開始");
             _phase = Phase.Windup;
             _phaseTimer = 0f;
 

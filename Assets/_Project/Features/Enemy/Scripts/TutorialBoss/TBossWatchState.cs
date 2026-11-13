@@ -1,3 +1,4 @@
+using CreativeAI.Core;
 using UnityEngine;
 using UnityEngine.AI;
 
@@ -38,7 +39,7 @@ namespace CreativeAI.Gameplay
 
         public override void Enter()
         {
-            Debug.Log("[TutorialBoss] 様子見ステート開始");
+            DevLog.Log("[TutorialBoss] 様子見ステート開始");
 
             // 攻撃中など見失い判定をしていない間の古い値で、入った直後に追跡へ戻らないようにする
             boss.LostSightTimer = 0f;
@@ -106,7 +107,7 @@ namespace CreativeAI.Gameplay
 
         public override void Exit()
         {
-            Debug.Log("[TutorialBoss] 様子見ステート終了");
+            DevLog.Log("[TutorialBoss] 様子見ステート終了");
 
             if (boss.Agent != null)
             {

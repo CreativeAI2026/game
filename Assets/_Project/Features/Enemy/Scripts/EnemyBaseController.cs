@@ -1,3 +1,4 @@
+using CreativeAI.Core;
 using UnityEngine;
 using UnityEngine.AI;
 
@@ -121,7 +122,7 @@ namespace CreativeAI.Gameplay
         /// </summary>
         public void ChangeState(IEnemyState newState)
         {
-            Debug.Log(currentState + " → " + newState);
+            DevLog.Log(currentState + " → " + newState);
             if (currentState != null)
             {
                 currentState.Exit();

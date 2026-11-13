@@ -1,3 +1,4 @@
+using CreativeAI.Core;
 using UnityEngine;
 using UnityEngine.AI;
 
@@ -31,7 +32,7 @@ namespace CreativeAI.Gameplay
 
         public override void Enter()
         {
-            Debug.Log("[TutorialBoss] 追跡ステート開始");
+            DevLog.Log("[TutorialBoss] 追跡ステート開始");
 
             if (boss.Agent != null)
             {
@@ -70,7 +71,7 @@ namespace CreativeAI.Gameplay
 
         public override void Exit()
         {
-            Debug.Log("[TutorialBoss] 追跡ステート終了");
+            DevLog.Log("[TutorialBoss] 追跡ステート終了");
 
             SoundEventBus.OnSoundEmitted -= OnSoundHeard;
 
@@ -122,7 +123,7 @@ namespace CreativeAI.Gameplay
             // 走り続けて立ち往生せず、様子見で向き合い、射程内なら特殊攻撃（ワイヤー）で引きずり出させる。
             if (_stuckDetector != null && _stuckDetector.Tick(Time.deltaTime))
             {
-                Debug.Log("[TutorialBoss] プレイヤーへ到達できないため様子見へ切り替え");
+                DevLog.Log("[TutorialBoss] プレイヤーへ到達できないため様子見へ切り替え");
                 boss.ChangeState(new TBossWatchState(boss));
             }
         }

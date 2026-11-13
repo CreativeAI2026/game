@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using CreativeAI.Core;
 using SoundKit;
 using UnityEngine;
 
@@ -44,7 +45,7 @@ namespace CreativeAI.Gameplay
 
         public override void Enter()
         {
-            Debug.Log("[TutorialBoss] 捕獲ステート開始: WaitBeforePull フェーズ");
+            DevLog.Log("[TutorialBoss] 捕獲ステート開始: WaitBeforePull フェーズ");
 
             if (boss.Player == null)
             {
@@ -141,7 +142,7 @@ namespace CreativeAI.Gameplay
                     {
                         _phase = Phase.Pull;
                         _timer = 0f;
-                        Debug.Log("[TutorialBoss] Pull フェーズへ");
+                        DevLog.Log("[TutorialBoss] Pull フェーズへ");
                     }
                     break;
                 case Phase.Pull:
@@ -162,7 +163,7 @@ namespace CreativeAI.Gameplay
                         // フェーズ遷移のこの一度だけ発火させる。
                         GrabEscapeEvents.OnCameraDamage?.Invoke();
 
-                        Debug.Log("[TutorialBoss] Captured フェーズへ (電撃開始)");
+                        DevLog.Log("[TutorialBoss] Captured フェーズへ (電撃開始)");
                     }
                     break;
                 case Phase.Captured:
@@ -255,7 +256,7 @@ namespace CreativeAI.Gameplay
                 {
                     _phase = Phase.WaitBeforeDamage;
                     _timer = 0f;
-                    Debug.Log("[TutorialBoss] WaitBeforeDamage フェーズへ");
+                    DevLog.Log("[TutorialBoss] WaitBeforeDamage フェーズへ");
                     return;
                 }
 
@@ -284,7 +285,7 @@ namespace CreativeAI.Gameplay
             // プレイヤーが電撃で力尽きた場合、掴んだまま停止し続けないよう拘束を解除する
             if (_playerStatus != null && _playerStatus.CurrentHp <= 0f)
             {
-                Debug.Log("[TutorialBoss] プレイヤーが力尽きたため拘束を解除します");
+                DevLog.Log("[TutorialBoss] プレイヤーが力尽きたため拘束を解除します");
                 boss.ChangeState(new TBossWatchState(boss));
                 return;
             }
@@ -309,7 +310,7 @@ namespace CreativeAI.Gameplay
 
         private void StartEscapeSequence()
         {
-            Debug.Log("[TutorialBoss] 脱出シーケンス開始");
+            DevLog.Log("[TutorialBoss] 脱出シーケンス開始");
             _phase = Phase.Escape;
             _timer = 0f;
 
@@ -384,7 +385,7 @@ namespace CreativeAI.Gameplay
             if (_playerStatus == null)
                 return;
             _playerStatus.TakeDamage(boss.GrabDamagePerTick, false);
-            Debug.Log($"[TutorialBoss] 電撃ダメージ {boss.GrabDamagePerTick} を付与");
+            DevLog.Log($"[TutorialBoss] 電撃ダメージ {boss.GrabDamagePerTick} を付与");
         }
 
         private void SpawnElectricEffect()

@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using CreativeAI.Core;
 using UnityEngine;
 using UnityEngine.AI;
 
@@ -502,7 +503,7 @@ namespace CreativeAI.Gameplay
             if (col.CompareTag("Player"))
             {
                 _hasHit = true;
-                Debug.Log("[TutorialBoss] 特殊攻撃 ヒット！ 捕獲ステートへ遷移");
+                DevLog.Log("[TutorialBoss] 特殊攻撃 ヒット！ 捕獲ステートへ遷移");
                 boss.ChangeState(new TBossCapturedState(boss));
                 return true;
             }
@@ -510,7 +511,7 @@ namespace CreativeAI.Gameplay
             // 壁越しに掴めてしまうのを防ぐ。障害物に当たった時点で空振り確定とする
             if ((boss.ObstacleLayer.value & (1 << col.gameObject.layer)) != 0)
             {
-                Debug.Log("[TutorialBoss] 特殊攻撃 障害物に阻まれました");
+                DevLog.Log("[TutorialBoss] 特殊攻撃 障害物に阻まれました");
                 StartRetractPhase();
                 return true;
             }

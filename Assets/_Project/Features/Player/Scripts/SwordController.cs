@@ -1,3 +1,4 @@
+using CreativeAI.Core;
 using SoundKit;
 using UnityEngine;
 
@@ -127,7 +128,7 @@ namespace CreativeAI.Gameplay
                     // ガード耐久上限を超えたら強制的にガードを崩し、次の攻撃をダメージとして受ける
                     if (GuardHitCount >= guardMaxCount)
                     {
-                        Debug.Log("ガード上限に達した");
+                        DevLog.Log("ガード上限に達した");
                         // TODO : 専用アニメーションを追加する。
                         ChangeState(new SwordStateFree(this));
                     }

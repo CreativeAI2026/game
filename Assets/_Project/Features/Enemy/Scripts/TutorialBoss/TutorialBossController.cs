@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using CreativeAI.Core;
 using UnityEngine;
 using UnityEngine.AI;
 using UnityEngine.Animations.Rigging;
@@ -758,7 +759,7 @@ namespace CreativeAI.Gameplay
         /// </summary>
         private void OnPressureStarted(PanicCategory category)
         {
-            Debug.Log($"[TutorialBoss] 追い込み開始（{category.ToDisplayName()}）");
+            DevLog.Log($"[TutorialBoss] 追い込み開始（{category.ToDisplayName()}）");
 
             Vector3 cuePosition = transform.position;
             if (_eyeGlint != null)
@@ -776,7 +777,7 @@ namespace CreativeAI.Gameplay
         /// <summary>追い込みが終わった（息継ぎに入った・相手が落ち着いた）ら、目の残光を消す。</summary>
         private void OnPressureEnded()
         {
-            Debug.Log($"[TutorialBoss] 追い込み終了（{PanicPressure.Mode}）");
+            DevLog.Log($"[TutorialBoss] 追い込み終了（{PanicPressure.Mode}）");
 
             if (_eyeGlint != null)
             {
@@ -802,7 +803,7 @@ namespace CreativeAI.Gameplay
             }
 
             _hasDisengagedFromDeadPlayer = true;
-            Debug.Log("[TutorialBoss] プレイヤーが倒れたため交戦を終了");
+            DevLog.Log("[TutorialBoss] プレイヤーが倒れたため交戦を終了");
             IsAlerted = false;
             _perception.ForgetPlayer();
             ChangeState(new TBossPatrolState(this));
