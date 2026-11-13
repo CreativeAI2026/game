@@ -120,8 +120,29 @@ namespace CreativeAI.Core
                 return;
             _recheckPending = false;
             RefreshPin();
+            ForgetPlayerIfGone();
             if (_playerInside != null)
                 TryFire();
+        }
+
+        /// <summary>
+        /// 中に居るはずのプレイヤーが、実際には居なければ忘れる。
+        /// player.moveTo(SpawnPoint.Place)は CharacterController を切って動かすので OnTriggerExit が届かず、
+        /// 引き戻された後も「中に居る」と覚えたままになる。そのまま見直すと、終わるたびに同じイベントを撃ち直して引き戻しが止まらない。
+        /// 判定は外接する箱(bounds)の重なりなので、箱以外(球・回転した形)では縁で「居る」側に寄る。トリガーは箱で置く前提。
+        /// </summary>
+        private void ForgetPlayerIfGone()
+        {
+            if (_playerInside == null)
+                return;
+
+            Physics.SyncTransforms(); // 直前に動かされた位置を Collider に反映してから判定する
+            var gone =
+                !_playerInside.enabled
+                || !_playerInside.gameObject.activeInHierarchy
+                || !GetComponent<Collider>().bounds.Intersects(_playerInside.bounds);
+            if (gone)
+                _playerInside = null;
         }
 
         /// <summary>ピンが出ているか。</summary>
