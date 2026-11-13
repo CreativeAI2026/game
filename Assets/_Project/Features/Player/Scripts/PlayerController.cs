@@ -1,3 +1,4 @@
+using CreativeAI.Core;
 using UnityEngine;
 using UnityEngine.Assertions;
 
@@ -10,7 +11,7 @@ namespace CreativeAI.Gameplay
     /// </summary>
     [RequireComponent(typeof(CharacterController))]
     [RequireComponent(typeof(PlayerInputHandler))]
-    public class PlayerController : MonoBehaviour
+    public class PlayerController : MonoBehaviour, IPlayerWalker
     {
         [Header("プレイヤー")]
         [Tooltip("キャラクターの移動速度 (m/s)")]
@@ -64,6 +65,7 @@ namespace CreativeAI.Gameplay
         private float _verticalVelocity;
         private float _terminalVelocity = 53.0f;
         private float _fallTimeoutDelta;
+        private Vector3? _walkTarget; // 歩いて向かっている目標(無ければ null)
 
         private Animator _animator;
         private CharacterController _controller;
@@ -229,7 +231,16 @@ namespace CreativeAI.Gameplay
                 return;
             }
 
-            bool canSprint = _input.sprint && !IsAiming;
+            // 入力の代わりに、歩いて向かう指示があればそれで動く(以降は入力と同じ経路なので、向き・足音・アニメが揃う)。
+            Vector2 move = _input.move;
+            bool sprint = _input.sprint;
+            if (_walkTarget.HasValue)
+            {
+                move = WalkInput();
+                sprint = false;
+            }
+
+            bool canSprint = sprint && !IsAiming;
 
             float targetSpeed =
                 IsAiming ? AimMoveSpeed
@@ -237,7 +248,7 @@ namespace CreativeAI.Gameplay
                 : MoveSpeed;
 
             // Vector2の == 演算子は内部で近似値比較を行うため、微小な入力による意図しない移動を防げる
-            if (_input.move == Vector2.zero)
+            if (move == Vector2.zero)
             {
                 targetSpeed = 0.0f;
             }
@@ -249,7 +260,7 @@ namespace CreativeAI.Gameplay
             ).magnitude;
 
             float speedOffset = 0.1f;
-            float inputMagnitude = _input.analogMovement ? _input.move.magnitude : 1f;
+            float inputMagnitude = _input.analogMovement ? move.magnitude : 1f;
             DesiredSpeed = targetSpeed * inputMagnitude;
 
             if (
@@ -280,7 +291,7 @@ namespace CreativeAI.Gameplay
             if (_animationBlend < 0.01f)
                 _animationBlend = 0f;
 
-            Vector3 inputDirection = new Vector3(_input.move.x, 0.0f, _input.move.y).normalized;
+            Vector3 inputDirection = new Vector3(move.x, 0.0f, move.y).normalized;
 
             float targetDirectionAngle = _targetRotation;
 
@@ -298,7 +309,7 @@ namespace CreativeAI.Gameplay
                 );
                 transform.rotation = Quaternion.Euler(0.0f, aimRotation, 0.0f);
 
-                if (_input.move != Vector2.zero)
+                if (move != Vector2.zero)
                 {
                     targetDirectionAngle =
                         Mathf.Atan2(inputDirection.x, inputDirection.z) * Mathf.Rad2Deg
@@ -311,7 +322,7 @@ namespace CreativeAI.Gameplay
             }
             else
             {
-                if (_input.move != Vector2.zero)
+                if (move != Vector2.zero)
                 {
                     _targetRotation =
                         Mathf.Atan2(inputDirection.x, inputDirection.z) * Mathf.Rad2Deg
@@ -329,8 +340,7 @@ namespace CreativeAI.Gameplay
 
             Vector3 targetDirection =
                 Quaternion.Euler(0.0f, targetDirectionAngle, 0.0f) * Vector3.forward;
-            DesiredMoveDirection =
-                _input.move != Vector2.zero ? targetDirection.normalized : Vector3.zero;
+            DesiredMoveDirection = move != Vector2.zero ? targetDirection.normalized : Vector3.zero;
 
             // 速度を CharacterController.velocity から読み直すため、Move は1フレーム1回にまとめる
             float verticalSpeed = Mathf.Min(
@@ -345,8 +355,72 @@ namespace CreativeAI.Gameplay
 
             _animator.SetFloat(PlayerAnimatorParams.Speed, _animationBlend);
             _animator.SetFloat(PlayerAnimatorParams.MotionSpeed, inputMagnitude);
-            _animator.SetFloat(PlayerAnimatorParams.StrafeX, _input.move.x);
-            _animator.SetFloat(PlayerAnimatorParams.StrafeZ, _input.move.y);
+            _animator.SetFloat(PlayerAnimatorParams.StrafeX, move.x);
+            _animator.SetFloat(PlayerAnimatorParams.StrafeZ, move.y);
+        }
+
+        /// <summary>
+        /// 目標の位置まで歩いて向かう(入力は使わない。歩く速さ・向き・アニメは通常の歩きと同じ)。
+        /// 着くか <see cref="StopWalking"/> で止まる。移動できない間(<see cref="CanMove"/> が false)は進まない。
+        /// 引き戻し(player.walkTo)のように、イベントが操作を止めている間にプレイヤーを動かすために使う。
+        /// </summary>
+        public void WalkTo(Vector3 worldPosition) => _walkTarget = worldPosition;
+
+        /// <summary>歩いて向かう指示をやめる(その場で止まる)。</summary>
+        public void StopWalking() => _walkTarget = null;
+
+        /// <summary><see cref="WalkTo"/> で歩いている最中か。着いたら false に戻る。</summary>
+        public bool IsWalking => _walkTarget.HasValue;
+
+        /// <summary>歩く速さ(m/s)。通常の移動速度と同じ。</summary>
+        public float WalkSpeed => MoveSpeed;
+
+        /// <summary>この距離(m)まで近づいたら着いたとみなす。</summary>
+        public const float WalkArriveDistance = 0.2f;
+
+        // 目標へ向かう入力を作る。着いていたら歩く指示を終えて、入力なし(止まる)を返す。
+        private Vector2 WalkInput()
+        {
+            if (
+                !TryGetWalkInput(
+                    transform.position,
+                    _walkTarget.Value,
+                    _mainCamera.transform.eulerAngles.y,
+                    WalkArriveDistance,
+                    out Vector2 input
+                )
+            )
+            {
+                _walkTarget = null;
+            }
+            return input;
+        }
+
+        /// <summary>
+        /// 現在位置から目標へ向かう「カメラ基準の入力」を作る(水平方向のみ。高さは無視)。
+        /// 通常の入力は「カメラの向きを前とした方向」なので、目標の方角からカメラの向きを引いて、その方向のベクトルにする。
+        /// 着いていれば false(input は zero)。
+        /// </summary>
+        public static bool TryGetWalkInput(
+            Vector3 from,
+            Vector3 target,
+            float cameraYawDegrees,
+            float arriveDistance,
+            out Vector2 input
+        )
+        {
+            Vector3 flat = target - from;
+            flat.y = 0f;
+            if (flat.magnitude <= arriveDistance)
+            {
+                input = Vector2.zero;
+                return false;
+            }
+
+            float worldAngle = Mathf.Atan2(flat.x, flat.z) * Mathf.Rad2Deg;
+            float inputAngle = (worldAngle - cameraYawDegrees) * Mathf.Deg2Rad;
+            input = new Vector2(Mathf.Sin(inputAngle), Mathf.Cos(inputAngle));
+            return true;
         }
 
         private void FallGravity()

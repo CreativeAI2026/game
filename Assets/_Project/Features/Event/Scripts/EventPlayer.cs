@@ -129,19 +129,101 @@ namespace CreativeAI.Core
 
         private const string PlayerTag = "Player";
 
-        // 目印が無いとき SpawnPoint.Place は原点へ置いてしまうので、先に確かめて動かさずに警告する。
+        // 動かす相手(プレイヤー)と、目的地の目印を探す。見つからなければ、動かさずに警告して false。
+        // 目印が無いとき SpawnPoint.Place は原点へ置いてしまうので、先に確かめる。
+        private static bool TryFindPlayerAndPoint(
+            string command,
+            string spawnPointId,
+            out GameObject player,
+            out SpawnPoint point
+        )
+        {
+            player = GameObject.FindWithTag(PlayerTag);
+            point = SpawnPoint.Find(spawnPointId);
+            if (player != null && point != null)
+                return true;
+
+            Debug.LogWarning(
+                $"[EventPlayer] {command} を実行できません"
+                    + $"(player={(player != null ? player.name : "なし")}, SpawnPoint ID='{spawnPointId}')。"
+            );
+            return false;
+        }
+
         private static void MovePlayer(string spawnPointId)
         {
-            var player = GameObject.FindWithTag(PlayerTag);
-            if (player == null || SpawnPoint.Find(spawnPointId) == null)
+            if (TryFindPlayerAndPoint(PlayerMoveCommand, spawnPointId, out var player, out _))
+                SpawnPoint.Place(player, spawnPointId);
+        }
+
+        /// <summary>
+        /// プレイヤーを <see cref="SpawnPoint"/>(arg が ID)まで歩かせる command 名。着くまで次のステップへ進まない。
+        /// <see cref="PlayerMoveCommand"/> と違い、瞬間移動せず歩きのモーションで向かう。引き戻しに使う。
+        /// </summary>
+        public const string PlayerWalkCommand = "player.walkTo";
+
+        /// <summary>歩きが終わらないとき(壁に引っかかる等)に、想定の歩行時間へ掛ける余裕の倍率。</summary>
+        private const float WalkTimeoutScale = 2f;
+
+        /// <summary>歩行時間の下限に足す秒数。ごく近い目標でも、動き出しの時間は待つ。</summary>
+        private const float WalkTimeoutPadding = 2f;
+
+        // 歩かせている最中のプレイヤー。イベントを途中で打ち切ったとき、歩く指示を残さないための後始末に使う。
+        private IPlayerWalker _walking;
+
+        // 歩いて着くまで待つ。プレイヤーに歩かせる口(IPlayerWalker)が無いときは、動かさずに警告する。
+        // 時間内に着かない(壁に引っかかる等)ときは、止まって瞬間移動で置き、操作が戻れなくなるのを防ぐ。
+        private IEnumerator WalkPlayer(string spawnPointId)
+        {
+            if (
+                !TryFindPlayerAndPoint(
+                    PlayerWalkCommand,
+                    spawnPointId,
+                    out var player,
+                    out var point
+                )
+            )
+                yield break;
+            if (!player.TryGetComponent(out IPlayerWalker walker))
             {
                 Debug.LogWarning(
-                    $"[EventPlayer] {PlayerMoveCommand} を実行できません"
-                        + $"(player={(player != null ? player.name : "なし")}, SpawnPoint ID='{spawnPointId}')。"
+                    $"[EventPlayer] {PlayerWalkCommand} を実行できません(player='{player.name}' に IPlayerWalker がありません)。"
                 );
-                return;
+                yield break;
             }
-            SpawnPoint.Place(player, spawnPointId);
+
+            var target = point.transform.position;
+            var flat = target - player.transform.position;
+            flat.y = 0f;
+            var timeout =
+                flat.magnitude / Mathf.Max(walker.WalkSpeed, 0.01f) * WalkTimeoutScale
+                + WalkTimeoutPadding;
+
+            _walking = walker;
+            walker.WalkTo(target);
+            var elapsed = 0f;
+            while (walker.IsWalking && elapsed < timeout)
+            {
+                elapsed += Time.deltaTime;
+                yield return null;
+            }
+
+            if (walker.IsWalking)
+            {
+                Debug.LogWarning(
+                    $"[EventPlayer] {PlayerWalkCommand} が {timeout:F1} 秒で着かなかったため、'{spawnPointId}' へ直接置きました。"
+                );
+                StopWalking();
+                SpawnPoint.Place(player, spawnPointId);
+            }
+            _walking = null;
+        }
+
+        // 歩かせている最中なら止める。イベントを打ち切っても、あとで勝手に歩き出さないようにする。
+        private void StopWalking()
+        {
+            _walking?.StopWalking();
+            _walking = null;
         }
 
         public void Play(EventDefinition ev, BattleSetup battle = default)
@@ -276,6 +358,8 @@ namespace CreativeAI.Core
                         case StepKind.Command:
                             if (step.CommandName == PlayerMoveCommand)
                                 MovePlayer(step.Arg);
+                            else if (step.CommandName == PlayerWalkCommand)
+                                yield return WalkPlayer(step.Arg);
                             else if (View != null)
                                 yield return View.RunCommand(step.CommandName, step.Arg);
                             break;
@@ -303,6 +387,7 @@ namespace CreativeAI.Core
             }
             finally
             {
+                StopWalking();
                 EventPlaybackService.SetPlaying(false);
             }
         }

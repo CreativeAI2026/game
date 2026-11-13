@@ -93,6 +93,7 @@ namespace CreativeAI.EditorTools
             "wait",
             "conversation.close",
             EventPlayer.PlayerMoveCommand,
+            EventPlayer.PlayerWalkCommand,
         };
 
         /// <summary>
@@ -121,6 +122,7 @@ namespace CreativeAI.EditorTools
             "sound.se",
             "sound.bgm",
             EventPlayer.PlayerMoveCommand,
+            EventPlayer.PlayerWalkCommand,
         };
 
         private static bool IsKnownCommand(string command) =>
