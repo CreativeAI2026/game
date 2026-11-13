@@ -33,6 +33,13 @@ namespace CreativeAI.Gameplay
             GetOrCreateInstance().PlayFromPool(prefab, position, rotation);
         }
 
+        /// <summary>
+        /// <see cref="Play"/> と同じく再生し、出したエフェクトを返す。出した後に動かしたり止めたりする時に使う。
+        /// 粒がすべて消えるとプールへ戻って使い回されるので、それ以降は返したものに触らない。
+        /// </summary>
+        public static GameObject Spawn(GameObject prefab, Vector3 position, Quaternion rotation) =>
+            GetOrCreateInstance().PlayFromPool(prefab, position, rotation);
+
         private static EffectPool GetOrCreateInstance()
         {
             if (Instance == null)
@@ -62,14 +69,16 @@ namespace CreativeAI.Gameplay
                 Instance = null;
         }
 
-        private void PlayFromPool(GameObject prefab, Vector3 position, Quaternion rotation)
+        private GameObject PlayFromPool(GameObject prefab, Vector3 position, Quaternion rotation)
         {
             if (!_poolsByPrefab.TryGetValue(prefab, out ObjectPool<PooledEffect> pool))
             {
                 pool = CreatePool(prefab);
                 _poolsByPrefab.Add(prefab, pool);
             }
-            pool.Get().PlayAt(position, rotation);
+            PooledEffect effect = pool.Get();
+            effect.PlayAt(position, rotation);
+            return effect.gameObject;
         }
 
         private ObjectPool<PooledEffect> CreatePool(GameObject prefab)
