@@ -1,3 +1,4 @@
+using CreativeAI.Core;
 using UnityEngine;
 
 namespace CreativeAI.Gameplay
@@ -13,7 +14,7 @@ namespace CreativeAI.Gameplay
 
         public override void Enter()
         {
-            Debug.Log("[MidBoss] 死亡ステート開始");
+            DevLog.Log("[MidBoss] 死亡ステート開始");
 
             if (con.Agent != null)
             {

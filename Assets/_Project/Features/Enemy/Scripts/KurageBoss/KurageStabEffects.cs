@@ -1,5 +1,6 @@
 using UnityEngine;
 using UnityEngine.Assertions;
+using UnityEngine.Pool;
 
 namespace CreativeAI.Gameplay
 {
@@ -14,6 +15,7 @@ namespace CreativeAI.Gameplay
     ///
     /// エフェクトは触手のボーンの子にしない(ボーンの拡大率で大きさが変わるため)。
     /// 代わりに、先端に付いて動くものは毎フレーム位置と向きを先端へ合わせる。
+    /// 突きのたびに作って消さないよう、集まる光と閃きは <see cref="EffectPool"/>、軌道はここのプールで使い回す。
     /// </summary>
     [RequireComponent(typeof(KurageStabReach))]
     public class KurageStabEffects : MonoBehaviour
@@ -36,11 +38,9 @@ namespace CreativeAI.Gameplay
         [SerializeField, Range(0f, 0.5f)]
         private float _thrustStartRatio = 0.12f;
 
-        [Tooltip("集まる光を止めてから、残った粒が消えて片付けるまで（秒）")]
-        [SerializeField]
-        private float _gatherCleanupDelay = 1f;
-
         private KurageStabReach _reach;
+        private ObjectPool<KurageStabThrustEffect> _thrustPool;
+        private System.Action<KurageStabThrustEffect> _releaseThrust;
 
         // 今、触手の先端に付いて動いているエフェクト(集まる光か閃き)
         private ParticleSystem _attached;
@@ -52,13 +52,39 @@ namespace CreativeAI.Gameplay
             Assert.IsNotNull(_glintPrefab, $"{name}: 突きの閃きのエフェクトが設定されていません");
             Assert.IsNotNull(_thrustPrefab, $"{name}: 突きの軌道のエフェクトが設定されていません");
             _reach = GetComponent<KurageStabReach>();
+            _releaseThrust = ReleaseThrust;
+            _thrustPool = new ObjectPool<KurageStabThrustEffect>(
+                createFunc: () => Instantiate(_thrustPrefab),
+                actionOnGet: effect => effect.gameObject.SetActive(true),
+                actionOnRelease: effect => effect.gameObject.SetActive(false),
+                actionOnDestroy: effect =>
+                {
+                    if (effect != null)
+                        Destroy(effect.gameObject);
+                },
+                defaultCapacity: 2,
+                maxSize: 4
+            );
+        }
+
+        private void OnDestroy() => _thrustPool?.Dispose();
+
+        /// <summary>軌道のエフェクトが光を出し終えたら呼ばれる。ボスが先に消えていれば、プールへは戻さず消す。</summary>
+        private void ReleaseThrust(KurageStabThrustEffect effect)
+        {
+            if (this == null)
+                Destroy(effect.gameObject);
+            else
+                _thrustPool.Release(effect);
         }
 
         /// <summary>触手の先端へ光を集め始める。狙いを決めて立ち止まった時に呼ぶ。</summary>
         public void BeginGather()
         {
             EndGather();
-            _gather = Instantiate(_gatherPrefab, _reach.Tip.position, AimRotation());
+            _gather = EffectPool
+                .Spawn(_gatherPrefab.gameObject, _reach.Tip.position, AimRotation())
+                .GetComponent<ParticleSystem>();
             _attached = _gather;
         }
 
@@ -68,8 +94,8 @@ namespace CreativeAI.Gameplay
             if (_gather == null)
                 return;
 
+            // 粒が消え切ると EffectPool へ戻る
             _gather.Stop(true, ParticleSystemStopBehavior.StopEmitting);
-            Destroy(_gather.gameObject, _gatherCleanupDelay);
             if (_attached == _gather)
                 _attached = null;
             _gather = null;
@@ -79,8 +105,9 @@ namespace CreativeAI.Gameplay
         public void PlayGlint()
         {
             EndGather();
-            _attached = Instantiate(_glintPrefab, _reach.Tip.position, AimRotation());
-            Destroy(_attached.gameObject, _attached.main.duration);
+            _attached = EffectPool
+                .Spawn(_glintPrefab.gameObject, _reach.Tip.position, AimRotation())
+                .GetComponent<ParticleSystem>();
         }
 
         /// <summary>突きの軌道と届いた先のエフェクトを出す。触手が伸び始めた時に呼ぶ。</summary>
@@ -92,12 +119,13 @@ namespace CreativeAI.Gameplay
             _attached = null;
             // 伸びた触手は根元から狙いの点へまっすぐ通る。伸びる前の先端の位置から線を引くと、触手が輪の中を通らない
             Vector3 from = Vector3.Lerp(_reach.Root.position, _reach.Target, _thrustStartRatio);
-            Instantiate(_thrustPrefab).Play(from, _reach.Target, extendDuration);
+            _thrustPool.Get().Play(from, _reach.Target, extendDuration, _releaseThrust);
         }
 
         private void LateUpdate()
         {
-            if (_attached != null)
+            // プールへ戻った(非アクティブになった)エフェクトは追わない
+            if (_attached != null && _attached.gameObject.activeSelf)
                 _attached.transform.SetPositionAndRotation(_reach.Tip.position, AimRotation());
         }
 

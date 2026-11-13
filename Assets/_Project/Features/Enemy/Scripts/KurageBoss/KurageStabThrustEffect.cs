@@ -91,12 +91,17 @@ namespace CreativeAI.Gameplay
         [SerializeField]
         private ParticleSystem _impact;
 
-        [Tooltip("置いた光がすべて消えるまでの時間（秒）。過ぎたらエフェクトごと片付ける")]
+        [Tooltip("置いた光がすべて消えるまでの時間（秒）。過ぎたら片付ける(プールへ戻す)")]
         [SerializeField]
         private float _cleanupDelay = 3f;
 
         private Color _coreLineColor;
         private Vector3 _pathEnd;
+        private System.Action<KurageStabThrustEffect> _onFinished;
+
+        // 光の筋・粒を置く処理。毎フレーム新しく作らないよう、最初に1回だけ作っておく
+        private PlaceAt _placeStreak;
+        private PlaceAt _placeOrb;
 
         private void Awake()
         {
@@ -108,14 +113,23 @@ namespace CreativeAI.Gameplay
             Assert.IsNotNull(_impact, $"{name}: 届いた先のエフェクトが設定されていません");
             _coreLineColor = _coreLine.startColor;
             _coreLine.enabled = false;
+            _placeStreak = PlaceStreak;
+            _placeOrb = PlaceOrb;
         }
 
         /// <summary>突きの軌道に光を出す。触手が伸び始めた時に呼ぶ。</summary>
         /// <param name="from">光を出し始める位置</param>
         /// <param name="to">狙いの点</param>
         /// <param name="extendDuration">伸び切るまでの時間（秒）。この時間をかけて根元側から順に光を置く</param>
-        public void Play(Vector3 from, Vector3 to, float extendDuration)
+        /// <param name="onFinished">置いた光がすべて消えた時に呼ばれる(片付けは呼び出し側が行う)</param>
+        public void Play(
+            Vector3 from,
+            Vector3 to,
+            float extendDuration,
+            System.Action<KurageStabThrustEffect> onFinished
+        )
         {
+            _onFinished = onFinished;
             Vector3 path = to - from;
             // 輪の向き(軌道に垂直)は、輪のパーティクルがこの Transform の向きに合わせて描くことで決まる
             if (path.sqrMagnitude > 1e-6f)
@@ -170,14 +184,14 @@ namespace CreativeAI.Gameplay
                         segmentEnd,
                         covered * _streaksPerMeter,
                         ref streakCarry,
-                        PlaceStreak
+                        _placeStreak
                     );
                 PlaceAlong(
                     segmentStart,
                     segmentEnd,
                     covered * _orbsPerMeter,
                     ref orbCarry,
-                    PlaceOrb
+                    _placeOrb
                 );
 
                 SetCoreLine(segmentEnd, 1f);
@@ -197,7 +211,9 @@ namespace CreativeAI.Gameplay
             }
             _coreLine.enabled = false;
 
-            Destroy(gameObject, _cleanupDelay);
+            for (float t = 0f; t < _cleanupDelay; t += Time.deltaTime)
+                yield return null;
+            _onFinished(this);
         }
 
         private delegate void PlaceAt(Vector3 position);

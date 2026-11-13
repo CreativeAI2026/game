@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using CreativeAI.Core;
 using UnityEngine;
 using UnityEngine.Assertions;
 #if UNITY_EDITOR
@@ -203,7 +204,7 @@ namespace CreativeAI.Gameplay
                 Transform socket = bone.Find(socketName);
                 if (socket != null)
                 {
-                    Debug.Log($"{name}: 既存の {socketName} を {id} として登録しました", socket);
+                    DevLog.Log($"{name}: 既存の {socketName} を {id} として登録しました", socket);
                 }
                 else
                 {
@@ -211,7 +212,7 @@ namespace CreativeAI.Gameplay
                     Undo.RegisterCreatedObjectUndo(go, "Create Player Sockets");
                     go.transform.SetParent(bone, false);
                     socket = go.transform;
-                    Debug.Log(
+                    DevLog.Log(
                         $"{name}: ソケット {socketName} を {bone.name} の下に作成しました",
                         socket
                     );

@@ -347,7 +347,8 @@ namespace CreativeAI.UI
 
             foreach (var slot in _pooledSlots)
             {
-                if (slot != null && !_visibleSlots.Contains(slot) && !slot.gameObject.activeSelf)
+                // 表示中のスロットは必ずアクティブなので、非アクティブなら空き
+                if (slot != null && !slot.gameObject.activeSelf)
                     return slot;
             }
 
@@ -437,7 +438,6 @@ namespace CreativeAI.UI
 
             Canvas.ForceUpdateCanvases();
             LayoutRebuilder.ForceRebuildLayoutImmediate(contentRect);
-            Canvas.ForceUpdateCanvases();
             foreach (var slot in _visibleSlots)
                 if (slot != null)
                     slot.RefreshCountLayout();

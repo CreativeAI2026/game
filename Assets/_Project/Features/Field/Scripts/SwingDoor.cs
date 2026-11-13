@@ -59,6 +59,7 @@ namespace CreativeAI.Gameplay
                         + "扉板が結合された glb になっていないか確認してください。",
                     this
                 );
+                enabled = false;
                 return;
             }
 
@@ -72,6 +73,8 @@ namespace CreativeAI.Gameplay
             float sign = (_hingeAtPositiveX ? -1f : 1f) * (_openTowardPositiveZ ? -1f : 1f);
             _signedAngle = sign * angle;
             _ready = true;
+            // 閉じて止まっている間は Update を回さない(開け閉めの指示で動かし始める)
+            enabled = false;
         }
 
         /// <summary>子孫から扉板を名前で探す(glb のノード名がそのまま子になる)。</summary>
@@ -129,6 +132,7 @@ namespace CreativeAI.Gameplay
             if (!_ready)
                 return;
             IsOpen = open;
+            enabled = true;
         }
 
         /// <summary>開閉の途中経過を進める。テストから任意の dt で回せるよう分けてある。</summary>
@@ -138,7 +142,11 @@ namespace CreativeAI.Gameplay
                 return;
             float target = IsOpen ? 1f : 0f;
             if (Mathf.Approximately(_progress, target))
+            {
+                // 止まったら Update を止める
+                enabled = false;
                 return;
+            }
 
             _progress = Mathf.MoveTowards(_progress, target, deltaTime / _duration);
             // 端で滑らかに止まるよう smoothstep(Animator を足さずに済ませる)。

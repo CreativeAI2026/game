@@ -21,9 +21,25 @@ namespace CreativeAI.UI
 
         private TMP_Text _text;
 
+        // 揺らす前の頂点。文字が変わったときだけ取り直し、毎フレームのメッシュ作り直しを避ける
+        private TMP_MeshInfo[] _baseMeshInfo;
+        private bool _baseDirty = true;
+
         private void Awake()
         {
             _text = GetComponent<TMP_Text>();
+        }
+
+        private void OnEnable()
+        {
+            _baseDirty = true;
+            TMPro_EventManager.TEXT_CHANGED_EVENT.Add(OnTextChanged);
+        }
+
+        private void OnTextChanged(Object changed)
+        {
+            if (changed == _text)
+                _baseDirty = true;
         }
 
         private void LateUpdate()
@@ -31,10 +47,15 @@ namespace CreativeAI.UI
             if (_text == null || _waveHeight <= 0f)
                 return;
 
-            // Reset to TMP's original vertices before applying this frame's offsets.
-            _text.ForceMeshUpdate();
-
             TMP_TextInfo textInfo = _text.textInfo;
+            if (_baseDirty || _baseMeshInfo == null)
+            {
+                _text.ForceMeshUpdate();
+                _baseMeshInfo = textInfo.CopyMeshInfoVertexData();
+                // ForceMeshUpdate 自身の変更通知で立った印も下ろす
+                _baseDirty = false;
+            }
+
             float time = _useUnscaledTime ? Time.unscaledTime : Time.time;
             float angularSpeed = Mathf.PI * 2f / Mathf.Max(0.01f, _cycleDuration);
 
@@ -48,25 +69,23 @@ namespace CreativeAI.UI
                 float phase = (time - i * _characterDelay) * angularSpeed;
                 float offsetY = Mathf.Max(0f, Mathf.Sin(phase)) * _waveHeight;
                 int vertexIndex = character.vertexIndex;
-                Vector3[] vertices = textInfo.meshInfo[character.materialReferenceIndex].vertices;
+                int materialIndex = character.materialReferenceIndex;
+                Vector3[] source = _baseMeshInfo[materialIndex].vertices;
+                Vector3[] vertices = textInfo.meshInfo[materialIndex].vertices;
                 Vector3 offset = Vector3.up * offsetY;
 
-                vertices[vertexIndex] += offset;
-                vertices[vertexIndex + 1] += offset;
-                vertices[vertexIndex + 2] += offset;
-                vertices[vertexIndex + 3] += offset;
+                vertices[vertexIndex] = source[vertexIndex] + offset;
+                vertices[vertexIndex + 1] = source[vertexIndex + 1] + offset;
+                vertices[vertexIndex + 2] = source[vertexIndex + 2] + offset;
+                vertices[vertexIndex + 3] = source[vertexIndex + 3] + offset;
             }
 
-            for (int i = 0; i < textInfo.meshInfo.Length; i++)
-            {
-                TMP_MeshInfo meshInfo = textInfo.meshInfo[i];
-                meshInfo.mesh.SetVertices(meshInfo.vertices);
-                _text.UpdateGeometry(meshInfo.mesh, i);
-            }
+            _text.UpdateVertexData(TMP_VertexDataUpdateFlags.Vertices);
         }
 
         private void OnDisable()
         {
+            TMPro_EventManager.TEXT_CHANGED_EVENT.Remove(OnTextChanged);
             if (_text == null)
                 return;
 

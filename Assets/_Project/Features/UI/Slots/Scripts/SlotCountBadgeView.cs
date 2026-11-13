@@ -64,6 +64,9 @@ namespace CreativeAI.UI
         [SerializeField]
         private Vector2 _normalizedPosition = new(0.78f, 0.15f);
 
+        // 全 Canvas の強制更新は重いので、バッジがいくつあっても 1 フレーム 1 回にする
+        private static int _lastForcedCanvasUpdateFrame = -1;
+
         private bool _hasWarnedMissingReferences;
         private bool _layoutRefreshPending;
 
@@ -154,7 +157,11 @@ namespace CreativeAI.UI
         {
             if (_layoutRefreshPending && IsVisible)
             {
-                Canvas.ForceUpdateCanvases();
+                if (_lastForcedCanvasUpdateFrame != Time.frameCount)
+                {
+                    _lastForcedCanvasUpdateFrame = Time.frameCount;
+                    Canvas.ForceUpdateCanvases();
+                }
                 RefreshLayout();
             }
         }

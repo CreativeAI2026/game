@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using CreativeAI.Gameplay;
 using UnityEngine;
 using UnityEngine.EventSystems;
@@ -38,6 +39,11 @@ namespace CreativeAI.UI
         private const float DefaultRepeatRate = 0.1f;
 
         private static InputActionMap _fallbackMap;
+
+        // 名前で毎回探さないよう、EventSystem のアクション資産から見つけたアクションを覚えておく
+        private static InputActionAsset _cachedAsset;
+        private static InputActionMap _cachedUiMap;
+        private static readonly Dictionary<string, InputAction> _cachedActions = new();
         private static int _lastMoveFrame = -1;
         private static Vector2Int _lastMoveDirection;
         private static Vector2Int _frameDiscreteStep;
@@ -195,12 +201,22 @@ namespace CreativeAI.UI
             var module = GetUiInputModule();
             if (module != null && module.actionsAsset != null)
             {
-                var uiMap = module.actionsAsset.FindActionMap(UiMapName, false);
-                if (uiMap != null)
+                var asset = module.actionsAsset;
+                if (asset != _cachedAsset)
                 {
-                    if (!uiMap.enabled)
-                        uiMap.Enable();
-                    var action = uiMap.FindAction(actionName, false);
+                    _cachedAsset = asset;
+                    _cachedUiMap = asset.FindActionMap(UiMapName, false);
+                    _cachedActions.Clear();
+                }
+                if (_cachedUiMap != null)
+                {
+                    if (!_cachedUiMap.enabled)
+                        _cachedUiMap.Enable();
+                    if (!_cachedActions.TryGetValue(actionName, out var action))
+                    {
+                        action = _cachedUiMap.FindAction(actionName, false);
+                        _cachedActions.Add(actionName, action);
+                    }
                     if (action != null)
                         return action;
                 }

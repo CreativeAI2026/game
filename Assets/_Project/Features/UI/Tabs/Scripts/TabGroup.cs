@@ -60,6 +60,7 @@ namespace CreativeAI.UI
 
         private void Start()
         {
+            EnsureOwnCanvas();
             string selectionGroup = $"tab-group-{_nextSelectionGroupId++}";
 
             _buttons.Clear();
@@ -98,6 +99,22 @@ namespace CreativeAI.UI
                 SelectTab(0);
             else
                 ApplyNoSelection();
+        }
+
+        /// <summary>
+        /// 選択中タブの揺れで、親のパネル全体の Canvas が毎フレーム組み直されないよう、タブ列を別の Canvas に分ける。
+        /// </summary>
+        private void EnsureOwnCanvas()
+        {
+            if (TryGetComponent(out Canvas _))
+                return;
+            var parentCanvas = GetComponentInParent<Canvas>(true);
+            if (parentCanvas == null)
+                return;
+            gameObject.AddComponent<Canvas>();
+            // 親がクリックを受けるときだけ、タブ列もクリックを受けられるようにする
+            if (parentCanvas.TryGetComponent(out GraphicRaycaster _))
+                gameObject.AddComponent<GraphicRaycaster>();
         }
 
         private void OnEnable()

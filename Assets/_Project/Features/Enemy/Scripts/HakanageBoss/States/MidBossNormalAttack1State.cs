@@ -1,3 +1,4 @@
+using CreativeAI.Core;
 using UnityEngine;
 
 namespace CreativeAI.Gameplay
@@ -28,7 +29,7 @@ namespace CreativeAI.Gameplay
 
         public override void Enter()
         {
-            Debug.Log("[MidBoss] 通常攻撃1ステート開始");
+            DevLog.Log("[MidBoss] 通常攻撃1ステート開始");
             _phase = Phase.Windup;
             _phaseTimer = 0f;
             _hitChecked = false;
@@ -158,7 +159,7 @@ namespace CreativeAI.Gameplay
                     if (damageable != null)
                     {
                         damageable.TakeDamage(con.ArmAttackDamage, false);
-                        Debug.Log("[MidBoss] 通常攻撃1 ヒット！");
+                        DevLog.Log("[MidBoss] 通常攻撃1 ヒット！");
                     }
                     break;
                 }

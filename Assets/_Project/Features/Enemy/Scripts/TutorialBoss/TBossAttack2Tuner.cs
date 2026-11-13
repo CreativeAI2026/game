@@ -1,3 +1,4 @@
+using CreativeAI.Core;
 using UnityEngine;
 #if UNITY_EDITOR
 using UnityEditor;
@@ -485,7 +486,7 @@ namespace CreativeAI.Gameplay
 
             if (best == null)
             {
-                Debug.Log(
+                DevLog.Log(
                     forward
                         ? "[TBossAttack2Tuner] これより後にAnimationEventはありません。"
                         : "[TBossAttack2Tuner] これより前にAnimationEventはありません。"
@@ -494,7 +495,7 @@ namespace CreativeAI.Gameplay
             }
 
             previewNormalizedTime = Mathf.Clamp01(best.time / length);
-            Debug.Log(
+            DevLog.Log(
                 $"[TBossAttack2Tuner] {best.time:F3}秒 の {best.functionName} へ移動しました。"
             );
         }

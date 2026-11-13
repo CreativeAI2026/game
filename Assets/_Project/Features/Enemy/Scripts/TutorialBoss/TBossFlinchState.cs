@@ -1,3 +1,4 @@
+using CreativeAI.Core;
 using UnityEngine;
 using UnityEngine.AI;
 
@@ -20,7 +21,7 @@ namespace CreativeAI.Gameplay
 
         public override void Enter()
         {
-            Debug.Log("[TutorialBoss] 怯みステート開始");
+            DevLog.Log("[TutorialBoss] 怯みステート開始");
 
             _timer = 0f;
 
@@ -81,7 +82,7 @@ namespace CreativeAI.Gameplay
 
         public override void Exit()
         {
-            Debug.Log("[TutorialBoss] 怯みステート終了");
+            DevLog.Log("[TutorialBoss] 怯みステート終了");
             boss.SetAgentStopped(false);
         }
     }

@@ -24,6 +24,10 @@ namespace CreativeAI.UI
             public RectTransform Root;
             public RectTransform Arrow;
             public TextMeshProUGUI Label;
+
+            // 前回表示した距離と画面の高さ。変わらない間は文字を作り直さない
+            public int Meters = -1;
+            public float Height = -1f;
         }
 
         [Tooltip("右向き(+x)の矢じり")]
@@ -127,9 +131,18 @@ namespace CreativeAI.UI
 
             marker.Root.gameObject.SetActive(true);
             marker.Arrow.gameObject.SetActive(!onScreen);
-            marker.Label.fontSize = height * FontSizeRatio;
-            marker.Label.SetText("{0}m", Mathf.RoundToInt(meters));
-            marker.Label.rectTransform.sizeDelta = new Vector2(arrowSize * 4f, arrowSize);
+            if (height != marker.Height)
+            {
+                marker.Height = height;
+                marker.Label.fontSize = height * FontSizeRatio;
+                marker.Label.rectTransform.sizeDelta = new Vector2(arrowSize * 4f, arrowSize);
+            }
+            var roundedMeters = Mathf.RoundToInt(meters);
+            if (roundedMeters != marker.Meters)
+            {
+                marker.Meters = roundedMeters;
+                marker.Label.SetText("{0}m", roundedMeters);
+            }
 
             if (onScreen)
             {

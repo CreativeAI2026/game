@@ -4,12 +4,13 @@ namespace CreativeAI.Gameplay
 {
     /// <summary>
     /// 液体攻撃の球形弾（コライダーは isTrigger）。水平投射＋重力落下で飛び、プレイヤー直撃で直接ダメージ＋毒、地面・障害物への着弾で毒エリアを生成する。
+    /// 中ボスのプールで使い回すので、消える時は破棄せず中ボスへ返す。
     /// </summary>
     [RequireComponent(typeof(Rigidbody))]
     public class MidBossLiquidProjectile : MonoBehaviour
     {
         private Rigidbody _rb;
-        private GameObject _damageAreaPrefab;
+        private MidBossController _owner;
         private float _damageAreaDuration;
         private float _damageAreaInterval;
         private float _directDamage;
@@ -44,11 +45,12 @@ namespace CreativeAI.Gameplay
         /// 液体弾を初期化して発射する。水平初速は spawnPos → targetPos（地面上の点）の落下時間から逆算する。
         /// damageArea* は着弾後の毒エリア、poison* は毒の設定（時間系はいずれも秒）。
         /// </summary>
+        /// <param name="owner">撃った中ボス。消える時の戻し先と、毒エリアの出し元</param>
         public void Initialize(
+            MidBossController owner,
             Vector3 spawnPos,
             Vector3 targetPos,
             float directDamage,
-            GameObject damageAreaPrefab,
             float damageAreaDuration,
             float damageAreaInterval,
             float poisonDuration,
@@ -56,7 +58,7 @@ namespace CreativeAI.Gameplay
             float poisonTickInterval
         )
         {
-            _damageAreaPrefab = damageAreaPrefab;
+            _owner = owner;
             _damageAreaDuration = damageAreaDuration;
             _damageAreaInterval = damageAreaInterval;
             _directDamage = directDamage;
@@ -68,9 +70,11 @@ namespace CreativeAI.Gameplay
 
             transform.position = spawnPos;
 
-            _rb = GetComponent<Rigidbody>();
+            if (_rb == null)
+                _rb = GetComponent<Rigidbody>();
             _rb.useGravity = true;
             _rb.isKinematic = false;
+            _rb.angularVelocity = Vector3.zero;
 
             // 水平投射の初速計算
             // 高低差 h = 発射位置.y - 着弾位置.y（ボスのほうが高い前提）
@@ -108,7 +112,7 @@ namespace CreativeAI.Gameplay
             _lifetime += Time.deltaTime;
             if (_lifetime >= MaxLifetime)
             {
-                Destroy(gameObject);
+                Finish();
             }
         }
 
@@ -156,7 +160,7 @@ namespace CreativeAI.Gameplay
                     );
                 }
 
-                Destroy(gameObject);
+                Finish();
             }
             else if ((hitLayer & _obstacleLayer.value) != 0)
             {
@@ -189,13 +193,23 @@ namespace CreativeAI.Gameplay
                 }
 
                 SpawnPoisonArea(spawnPos, normal);
-                Destroy(gameObject);
+                Finish();
             }
+        }
+
+        private void Finish()
+        {
+            _hasLanded = true;
+            // 撃った中ボスが消えた後は返す先が無いので破棄する
+            if (_owner != null)
+                _owner.ReleaseLiquid(this);
+            else
+                Destroy(gameObject);
         }
 
         private void SpawnPoisonArea(Vector3 position, Vector3 normal)
         {
-            if (_damageAreaPrefab == null)
+            if (_owner == null)
                 return;
 
             // 地面（上向き）を基準に作られたプレハブを、着弾した壁や床の角度（法線）に合わせる
@@ -203,14 +217,12 @@ namespace CreativeAI.Gameplay
 
             // 壁の中や床下に埋まらないよう、法線方向にわずかに浮かせて生成
             Vector3 spawnPos = position + normal * 0.05f;
-            GameObject areaObj = Instantiate(_damageAreaPrefab, spawnPos, rotation);
-
-            if (!areaObj.TryGetComponent(out MidBossPoisonArea area))
-            {
-                area = areaObj.AddComponent<MidBossPoisonArea>();
-            }
+            MidBossPoisonArea area = _owner.SpawnPoisonArea(spawnPos, rotation);
+            if (area == null)
+                return;
 
             area.Initialize(
+                _owner,
                 _damageAreaDuration,
                 _damageAreaInterval,
                 _poisonDuration,

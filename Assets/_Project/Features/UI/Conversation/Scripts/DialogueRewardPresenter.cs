@@ -1,5 +1,6 @@
 using System.Collections;
 using UnityEngine;
+using UnityEngine.Rendering;
 using UnityEngine.Rendering.Universal;
 using UnityEngine.UI;
 
@@ -8,6 +9,9 @@ namespace CreativeAI.UI
     /// <summary>アイテム画像と3D武器モデルの獲得表示、および一時リソースの解放を担当する。</summary>
     internal sealed class DialogueRewardPresenter
     {
+        // 武器モデルだけを撮るためのレイヤー(キャラタブのプレビューと同じ)
+        private const int RewardLayer = 31;
+
         private readonly Transform _viewRoot;
         private GameObject _itemObject;
         private GameObject _itemBackdrop;
@@ -84,6 +88,8 @@ namespace CreativeAI.UI
             _weaponRig.transform.position = new Vector3(0f, -10000f, 0f);
             var model = Object.Instantiate(prefab, _weaponRig.transform);
             model.transform.SetLocalPositionAndRotation(Vector3.zero, Quaternion.Euler(modelEuler));
+            foreach (var child in model.GetComponentsInChildren<Transform>(true))
+                child.gameObject.layer = RewardLayer;
             if (!TryComputeBounds(model, out var bounds))
             {
                 Debug.LogWarning("[ConversationView] 武器モデルに Renderer がなく表示できません。");
@@ -103,6 +109,9 @@ namespace CreativeAI.UI
                 Quaternion.identity
             );
             var camera = cameraObject.AddComponent<Camera>();
+            // モデルは動かないので、毎フレームは描かず最後に1回だけ RenderTexture に撮る
+            camera.enabled = false;
+            camera.cullingMask = 1 << RewardLayer;
             camera.orthographic = true;
             float neededSize = Mathf.Max(
                 bounds.extents.y,
@@ -138,6 +147,7 @@ namespace CreativeAI.UI
             _renderTexture = new RenderTexture(width, height, 16, RenderTextureFormat.ARGB32);
             _renderTexture.Create();
             camera.targetTexture = _renderTexture;
+            RenderOnce(camera, _renderTexture);
 
             var background = _weaponBackdrop.GetComponent<Image>();
             background.color =
@@ -245,6 +255,17 @@ namespace CreativeAI.UI
             }
         }
 
+        private static void RenderOnce(Camera camera, RenderTexture destination)
+        {
+            if (GraphicsSettings.currentRenderPipeline != null)
+                RenderPipeline.SubmitRenderRequest(
+                    camera,
+                    new UniversalRenderPipeline.SingleCameraRequest { destination = destination }
+                );
+            else
+                camera.Render();
+        }
+
         private static float FrameDelta() => Mathf.Max(Time.unscaledDeltaTime, 1f / 60f);
 
         private void AddLight(Vector3 position, float range, float intensity)
@@ -254,6 +275,7 @@ namespace CreativeAI.UI
             lightObject.transform.position = position;
             var light = lightObject.AddComponent<Light>();
             light.type = LightType.Point;
+            light.cullingMask = 1 << RewardLayer;
             light.range = range;
             light.intensity = intensity;
         }

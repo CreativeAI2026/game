@@ -1,3 +1,4 @@
+using CreativeAI.Core;
 using UnityEngine;
 using UnityEngine.AI;
 
@@ -45,7 +46,7 @@ namespace CreativeAI.Gameplay
 
         public override void Enter()
         {
-            Debug.Log("[TutorialBoss] 通常攻撃2ステート開始");
+            DevLog.Log("[TutorialBoss] 通常攻撃2ステート開始");
 
             _attackStateTimer = 0f;
             _isReachHolding = false;

@@ -57,6 +57,10 @@ namespace CreativeAI.UI
         private bool _isLocked;
         private bool _bounceAllowed = true;
 
+        // 揺れる向きを決める時の四隅。毎回作らずに使い回す
+        private static readonly Vector3[] s_targetCorners = new Vector3[4];
+        private static readonly Vector3[] s_maskCorners = new Vector3[4];
+
         public bool HoverScaleEnabled => _hoverScaleEnabled;
         public bool BounceEnabled => _bounceEnabled;
         public RectTransform Target => _targetRect;
@@ -369,7 +373,7 @@ namespace CreativeAI.UI
             if (grid == null || grid.transform is not RectTransform gridRect)
                 return false;
 
-            Canvas.ForceUpdateCanvases();
+            // 全 Canvas を強制更新せず、この欄のグリッドだけ並べ直す
             LayoutRebuilder.ForceRebuildLayoutImmediate(gridRect);
             _targetRect.ForceUpdateRectTransforms();
             return _targetRect.parent == grid.transform;
@@ -385,18 +389,12 @@ namespace CreativeAI.UI
             if (IsInFirstGridRow(grid))
                 return -1f;
 
-            Canvas.ForceUpdateCanvases();
-            if (grid != null && grid.transform is RectTransform gridRect)
-                LayoutRebuilder.ForceRebuildLayoutImmediate(gridRect);
-            _targetRect.ForceUpdateRectTransforms();
-
-            var targetCorners = new Vector3[4];
-            var maskCorners = new Vector3[4];
-            _targetRect.GetWorldCorners(targetCorners);
-            mask.rectTransform.GetWorldCorners(maskCorners);
+            // グリッドの並べ直しは呼ぶ側(StartBounce)で済ませている
+            _targetRect.GetWorldCorners(s_targetCorners);
+            mask.rectTransform.GetWorldCorners(s_maskCorners);
             float scaledBounceHeight = _bounceHeight * _targetRect.lossyScale.y;
 
-            return targetCorners[1].y + scaledBounceHeight > maskCorners[1].y ? -1f : 1f;
+            return s_targetCorners[1].y + scaledBounceHeight > s_maskCorners[1].y ? -1f : 1f;
         }
 
         private bool IsInFirstGridRow(GridLayoutGroup grid)

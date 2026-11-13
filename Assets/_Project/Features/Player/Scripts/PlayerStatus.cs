@@ -1,4 +1,5 @@
 using System;
+using CreativeAI.Core;
 using UnityEngine;
 
 namespace CreativeAI.Gameplay
@@ -193,7 +194,7 @@ namespace CreativeAI.Gameplay
 
             CurrentHp = Mathf.Max(0f, CurrentHp - finalDamage);
             OnHpChanged?.Invoke(CurrentHp, CurrentMaxHp);
-            Debug.Log(
+            DevLog.Log(
                 $"プレイヤーは {finalDamage} ダメージを受けた！ 残りHP: {CurrentHp}/{CurrentMaxHp}"
             );
 
@@ -245,7 +246,7 @@ namespace CreativeAI.Gameplay
 
             CurrentHp = Mathf.Min(CurrentHp + amount, CurrentMaxHp);
             OnHpChanged?.Invoke(CurrentHp, CurrentMaxHp);
-            Debug.Log($"プレイヤーは {amount} 回復した！ 残りHP: {CurrentHp}/{CurrentMaxHp}");
+            DevLog.Log($"プレイヤーは {amount} 回復した！ 残りHP: {CurrentHp}/{CurrentMaxHp}");
         }
 
         /// <summary>

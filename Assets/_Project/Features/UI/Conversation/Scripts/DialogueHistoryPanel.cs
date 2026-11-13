@@ -149,6 +149,9 @@ namespace CreativeAI.UI
             _viewFactory.CreateEntry(_content, entry);
             TrimOldEntries();
             RefreshCurrentMarker();
+            // 閉じている間はスクロールしない(全 Canvas の強制更新が重い)。開くときに SetOpen が最新へ送る
+            if (!_isOpen)
+                return;
             if (followLatest)
                 _scrollController.ScrollToLatest();
             else
