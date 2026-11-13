@@ -127,12 +127,30 @@ namespace CreativeAI.Gameplay
         /// </summary>
         public void SetOwner(PlayerStatus owner) => _hitbox.SetOwner(owner);
 
+        /// <param name="safePoint">
+        /// 障害物の手前側にあることが確実な点(プレイヤーの軸上など)。ここから <paramref name="origin"/> までに
+        /// 障害物があれば、その手前から飛び始めてすぐ折り返す。
+        /// </param>
         /// <param name="origin">投げ始めの位置。</param>
         /// <param name="direction">行きの進行方向(正規化済み)。</param>
         /// <param name="returnTarget">戻り先。移動する手元を毎フレーム追う。</param>
-        public void Launch(Vector3 origin, Vector3 direction, Transform returnTarget)
+        public void Launch(
+            Vector3 safePoint,
+            Vector3 origin,
+            Vector3 direction,
+            Transform returnTarget
+        )
         {
-            transform.SetPositionAndRotation(origin, Quaternion.LookRotation(direction));
+            // SphereCast は始点で重なっている障害物を検出しないため、手元が壁にめり込んだ位置から
+            // 飛ばすと壁をすり抜ける。壁の手前側から手元までの間を先に調べておく
+            bool isOriginBlocked = TryFindObstacleBetween(
+                safePoint,
+                origin,
+                out Vector3 blockedPoint
+            );
+            Vector3 startPosition = isOriginBlocked ? blockedPoint : origin;
+
+            transform.SetPositionAndRotation(startPosition, Quaternion.LookRotation(direction));
             _direction = direction;
             _returnTarget = returnTarget;
             _traveled = 0f;
@@ -142,6 +160,38 @@ namespace CreativeAI.Gameplay
             _trail.Play(true);
             _hitbox.EnableHitbox();
             _flightLoop.Play(_flightLoopSound, this);
+
+            if (isOriginBlocked)
+                BounceOffObstacle();
+        }
+
+        /// <summary>
+        /// <paramref name="from"/> から <paramref name="to"/> までに障害物があれば、ぶつかる直前の位置を返す。
+        /// </summary>
+        private bool TryFindObstacleBetween(Vector3 from, Vector3 to, out Vector3 blockedPoint)
+        {
+            Vector3 offset = to - from;
+            float distance = offset.magnitude;
+            blockedPoint = to;
+            if (distance <= Mathf.Epsilon)
+                return false;
+
+            Vector3 direction = offset / distance;
+            if (
+                !Physics.SphereCast(
+                    from,
+                    _obstacleProbeRadius,
+                    direction,
+                    out RaycastHit hit,
+                    distance,
+                    _obstacleLayer,
+                    QueryTriggerInteraction.Ignore
+                )
+            )
+                return false;
+
+            blockedPoint = from + direction * hit.distance;
+            return true;
         }
 
         /// <summary>飛行中なら即座に受け取り扱いにする(武器切替・破棄時の後始末用)。</summary>
@@ -184,8 +234,7 @@ namespace CreativeAI.Gameplay
             );
             if (hitObstacle)
             {
-                WorldSoundPlayer.Play(_obstacleHitSound, transform.position, this);
-                BeginReturn();
+                BounceOffObstacle();
                 return;
             }
 
@@ -219,6 +268,12 @@ namespace CreativeAI.Gameplay
                 WorldSoundPlayer.Play(_catchSound, target, this);
                 Catch();
             }
+        }
+
+        private void BounceOffObstacle()
+        {
+            WorldSoundPlayer.Play(_obstacleHitSound, transform.position, this);
+            BeginReturn();
         }
 
         private void BeginReturn()

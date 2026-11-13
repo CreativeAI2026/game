@@ -1,5 +1,6 @@
 using SoundKit;
 using UnityEngine;
+using UnityEngine.Assertions;
 
 namespace CreativeAI.Gameplay
 {
@@ -13,9 +14,10 @@ namespace CreativeAI.Gameplay
         [Tooltip("ジャストパリィの受付時間（秒）")]
         public float parryWindowDuration = 0.2f;
 
-        [Header("ガード上限数設定")]
-        [Tooltip("ガードの回数がこの数値以上になったら攻撃を受ける。")]
-        public int guardMaxCount = 3;
+        [Header("防御メーター")]
+        [Tooltip("防御で受けるたびに減り、時間で回復する。0 になると防御が割れて怯む")]
+        [SerializeField]
+        private GuardGaugeSettings _guardGaugeSettings = new();
 
         [Header("エフェクト")]
         [Tooltip("ガード成功時に出すVFXプレハブ")]
@@ -36,8 +38,13 @@ namespace CreativeAI.Gameplay
         // ジャストパリィの残り受付時間(秒)。subAction を押した瞬間から数える
         private float _parryTimer;
 
-        /// <summary>今回のガードで受けた回数。ガード開始時・待機に戻るときに 0 に戻す。</summary>
-        public int GuardHitCount { get; set; }
+        private GuardGauge _guardGauge;
+        private PlayerFlinchHandler _flinchHandler;
+
+        /// <summary>
+        /// 防御メーター。剣が非表示のまま(Awake 前)でも HUD から読めるよう、初回アクセスで作る。
+        /// </summary>
+        public GuardGauge GuardGauge => _guardGauge ??= new GuardGauge(_guardGaugeSettings);
 
         // 仮モデル専用の見た目補正。本番アニメーションで向きが付いたら外す(無ければ何もしない)
         private MockWeaponPose _mockPose;
@@ -46,6 +53,9 @@ namespace CreativeAI.Gameplay
         {
             base.Awake();
             TryGetComponent(out _mockPose);
+
+            _flinchHandler = Player.GetComponent<PlayerFlinchHandler>();
+            Assert.IsNotNull(_flinchHandler, $"{name}: PlayerFlinchHandler が見つかりません");
         }
 
         public override MeleeWeaponState CreateNeutralState() => new SwordStateFree(this);
@@ -122,14 +132,12 @@ namespace CreativeAI.Gameplay
                     if (CameraShakeManager.Instance != null)
                         CameraShakeManager.Instance.Shake(0.2f);
 
-                    GuardHitCount++;
-
-                    // ガード耐久上限を超えたら強制的にガードを崩し、次の攻撃をダメージとして受ける
-                    if (GuardHitCount >= guardMaxCount)
+                    // この一撃までは防ぐが、メーターが尽きたら防御が割れて怯む。
+                    // 怯みの開始で武器は中立状態へ戻る(PlayerFlinchHandler → ForceReset)
+                    // TODO : 防御が割れた時の専用アニメーションを追加する。
+                    if (GuardGauge.Absorb(damage, Time.time))
                     {
-                        Debug.Log("ガード上限に達した");
-                        // TODO : 専用アニメーションを追加する。
-                        ChangeState(new SwordStateFree(this));
+                        _flinchHandler.TriggerFlinch();
                     }
 
                     return true;
@@ -158,7 +166,7 @@ namespace CreativeAI.Gameplay
         /// <inheritdoc/>
         public override void ForceReset()
         {
-            // ガード回数・見た目は中立状態(SwordStateFree)の Enter で戻る
+            // 見た目は中立状態(SwordStateFree)の Enter で戻る
             base.ForceReset();
             _parryTimer = 0f;
         }

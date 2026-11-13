@@ -5713,7 +5713,6 @@ MonoBehaviour:
   _hitbox: {fileID: 7111180468013580485}
   _swingSound: {fileID: 11400000, guid: 2c786d35de08d41468aecafc457db117, type: 2}
   parryWindowDuration: 0.2
-  guardMaxCount: 5
   guardEffectPrefab: {fileID: 6283385569647498531, guid: c307aa68ab3e4cc4a8123308c3d2813d, type: 3}
   parryEffectPrefab: {fileID: 358637981425055526, guid: 00deabee16ae5674b93d3e9f636735e0, type: 3}
   _guardSound: {fileID: 11400000, guid: 7ab6fd05aeda5534abbc9cb4c0800d4a, type: 2}

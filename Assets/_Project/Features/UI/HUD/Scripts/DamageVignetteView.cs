@@ -3,6 +3,9 @@ using CreativeAI.Gameplay;
 using UnityEngine;
 using UnityEngine.Assertions;
 using UnityEngine.UI;
+using Cysharp.Threading.Tasks;
+using System;
+using System.Threading;
 
 namespace CreativeAI.UI
 {
@@ -37,7 +40,7 @@ namespace CreativeAI.UI
         [Range(0f, 1f)]
         private float _maxAlpha = 0.7f;
 
-        private Coroutine _vignetteCoroutine;
+        CancellationTokenSource _cts; 
         private PlayerStatus _status;
 
         private void Awake()
@@ -56,6 +59,7 @@ namespace CreativeAI.UI
         {
             PlayerRegistry.Changed -= Bind;
             Bind(null);
+            CancelVignette();
         }
 
         /// <summary>購読先のプレイヤーを切り替える(未生成・破棄時は null)。</summary>
@@ -76,35 +80,41 @@ namespace CreativeAI.UI
         /// </summary>
         private void TriggerVignette()
         {
-            if (_vignetteCoroutine != null)
-                StopCoroutine(_vignetteCoroutine);
+            CancelVignette();
 
-            _vignetteCoroutine = StartCoroutine(VignetteCoroutine());
+            _cts = CancellationTokenSource.CreateLinkedTokenSource(destroyCancellationToken);
+            VignetteAsync(_cts.Token).Forget();
         }
 
-        // TODO : UniTask導入後に、これをUniTaskで実装しなおす
-        private IEnumerator VignetteCoroutine()
+        private void CancelVignette()
+        {
+            if (_cts == null) return;
+            _cts.Cancel();
+            _cts.Dispose();
+            _cts = null;
+        }
+
+        private async UniTask VignetteAsync(CancellationToken ct)
         {
             float elapsed = 0f;
             while (elapsed < _fadeInDuration)
             {
+                await UniTask.Yield(PlayerLoopTiming.Update, ct);
                 elapsed += Time.deltaTime;
                 SetAlpha(Mathf.Clamp01(elapsed / _fadeInDuration) * _maxAlpha);
-                yield return null;
             }
             SetAlpha(_maxAlpha);
 
-            yield return new WaitForSeconds(_sustainDuration);
+            await UniTask.Delay(TimeSpan.FromSeconds(_sustainDuration), cancellationToken : ct);
 
             elapsed = 0f;
             while (elapsed < _fadeOutDuration)
             {
+                await UniTask.Yield(PlayerLoopTiming.Update, ct);
                 elapsed += Time.deltaTime;
                 SetAlpha(Mathf.Clamp01(1f - elapsed / _fadeOutDuration) * _maxAlpha);
-                yield return null;
             }
             SetAlpha(0f);
-            _vignetteCoroutine = null;
         }
 
         private void SetAlpha(float alpha)

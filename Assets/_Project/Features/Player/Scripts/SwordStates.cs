@@ -32,13 +32,13 @@ namespace CreativeAI.Gameplay
         public override void Enter()
         {
             sword.ReleaseControlLocks();
-            sword.GuardHitCount = 0;
             sword.SetMockPose(MockWeaponPoseKey.Idle);
         }
 
         public override void Update()
         {
-            if (sword.Input.subAction)
+            // 防御が割れた後は、メーターが一定量戻るまで構えられない
+            if (sword.Input.subAction && !sword.GuardGauge.IsBroken(Time.time))
             {
                 sword.ChangeState(new SwordStateGuard(sword));
                 return;
@@ -66,7 +66,7 @@ namespace CreativeAI.Gameplay
             sword.LockControls();
             sword.Animator.SetBool(PlayerAnimatorParams.IsGuarding, true);
 
-            sword.GuardHitCount = 0;
+            sword.GuardGauge.BeginGuard(Time.time);
 
             sword.SetMockPose(MockWeaponPoseKey.Guard);
         }
@@ -75,7 +75,8 @@ namespace CreativeAI.Gameplay
         {
             sword.Input.ConsumeAttack();
 
-            if (!sword.Input.subAction)
+            // 割れたのに怯めなかった場合(掴まれ中など)も、構えたまま残さない
+            if (!sword.Input.subAction || sword.GuardGauge.IsBroken(Time.time))
             {
                 sword.ChangeState(new SwordStateFree(sword));
             }
@@ -84,6 +85,7 @@ namespace CreativeAI.Gameplay
         public override void Exit()
         {
             sword.Animator.SetBool(PlayerAnimatorParams.IsGuarding, false);
+            sword.GuardGauge.EndGuard(Time.time);
 
             sword.SetMockPose(MockWeaponPoseKey.Idle);
         }
