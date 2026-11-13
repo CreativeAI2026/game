@@ -7,6 +7,7 @@ namespace CreativeAI.Gameplay
     /// <summary>
     /// クラゲボスの地面攻撃で、地面のポータルから突き出す触手1本。
     /// ポータルが開く(警告) → ズバッと突き出す → うねうね → (指示があれば)鞭のように薙ぎ払う → ポータルへ戻る → 消える、を自分で進める。
+    /// 出したボスのプールで使い回すので、消える時は破棄せず <see cref="Begin"/> で渡された戻し先へ返す。
     ///
     /// プレハブの構成: このコンポーネント(地面の出現位置) / Pivot(根元。突き出し・引っ込みはこれを上下させる) / 触手モデル(ボス本体から Ctrl+D で取り出したもの)。
     /// 薙ぎ払いから戻るまでは、触手を重さとしなりのある紐(<see cref="TentacleRope"/>)として動かし、外からは根元の向きだけを動かす。
@@ -264,8 +265,8 @@ namespace CreativeAI.Gameplay
         private Phase _phase;
         private float _timer;
 
-        /// <summary>消える時(ポータルへ戻り切った時、または途中で破棄された時)に呼ばれる。</summary>
-        public event Action<KurageGroundTentacle> Finished;
+        // ポータルへ戻り切った時に、出した側のプールへ返す
+        private Action<KurageGroundTentacle> _onFinished;
 
         private void Awake()
         {
@@ -305,12 +306,14 @@ namespace CreativeAI.Gameplay
         /// </summary>
         /// <param name="restraint">わっかの拘束。締めている間は追撃しないため、当たり判定を出さない</param>
         /// <param name="sweep">突き出した後に、プレイヤーの方へ薙ぎ払うか</param>
+        /// <param name="onFinished">ポータルへ戻り切った時に呼ぶ。出した側のプールへ返す</param>
         public void Begin(
             EnemyStatus attacker,
             KurageBossSounds sounds,
             KurageRingRestraint restraint,
             Transform player,
-            bool sweep
+            bool sweep,
+            Action<KurageGroundTentacle> onFinished
         )
         {
             _attacker = attacker;
@@ -318,6 +321,8 @@ namespace CreativeAI.Gameplay
             _restraint = restraint;
             _player = player;
             _sweep = sweep;
+            _onFinished = onFinished;
+            ResetPose();
             _begun = true;
             EnterPhase(Phase.PortalOpen);
             _sounds.PlayPortalOpen(transform.position);
@@ -435,7 +440,7 @@ namespace CreativeAI.Gameplay
                 case Phase.PortalClose:
                     SetPortalOpen(1f - _timer / _portalOpenDuration);
                     if (_timer >= _portalOpenDuration)
-                        Destroy(gameObject);
+                        Finish();
                     break;
             }
         }
@@ -486,6 +491,29 @@ namespace CreativeAI.Gameplay
             for (int i = 0; i < bones.Length; i++)
                 _lastBonePositions[i] = bones[i].position;
             _lastDeltaTime = deltaTime;
+        }
+
+        /// <summary>使い回した時に前回の動きが残らないよう、ポータルを閉じて触手を地面の下へ戻す。</summary>
+        private void ResetPose()
+        {
+            Transform[] bones = _wiggle.bones;
+            for (int i = 0; i < bones.Length; i++)
+                bones[i].localRotation = _restLocalRotations[i];
+            _portal.localScale = Vector3.zero;
+            SetBuried(1f);
+            _hitbox.Deactivate();
+            _usingRope = false;
+            _tension = 1f;
+            _curl = 0f;
+            _musclePower = 0f;
+            _writhePhase = 0f;
+        }
+
+        private void Finish()
+        {
+            _begun = false;
+            _hitbox.Deactivate();
+            _onFinished(this);
         }
 
         private void EnterPhase(Phase phase)
@@ -687,12 +715,6 @@ namespace CreativeAI.Gameplay
             float phase = _writhePhase - index * _writhePhasePerBone;
             return Quaternion.AngleAxis(Mathf.Sin(phase) * angle, Vector3.right)
                 * Quaternion.AngleAxis(Mathf.Sin(phase * 0.77f + 1.3f) * angle, Vector3.forward);
-        }
-
-        private void OnDestroy()
-        {
-            // 戻り切った時だけでなく、ボスの死亡などで途中で消えた時も知らせる(出した側の数え漏れを防ぐ)
-            Finished?.Invoke(this);
         }
     }
 }
