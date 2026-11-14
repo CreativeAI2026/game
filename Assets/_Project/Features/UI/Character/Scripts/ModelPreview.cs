@@ -23,8 +23,19 @@ namespace CreativeAI.UI.CharacterUI
 
         [SerializeField]
         private TMPro.TMP_Text _emptyLabel;
+
+        /// <summary>プレビュー専用のレイヤー。プレビュー用カメラとライトだけがこの層を映す。</summary>
+        internal const int Layer = 31;
+
         private readonly List<Mesh> _meshes = new();
         private readonly List<Renderer> _renderers = new();
+
+        // 動くモデルをそのまま撮るとき(SetLiveTarget)の対象。複製はせず、持ち主が更新するリストを参照する。
+        private IReadOnlyList<Renderer> _liveRenderers;
+        private Transform _liveRoot;
+        private Vector3 _liveCenter;
+        private Vector3 _liveLocalCenter;
+        private Light _light;
         private GameObject _stage;
         private GameObject _content;
         private Transform _pivot;
@@ -60,7 +71,7 @@ namespace CreativeAI.UI.CharacterUI
 
         public RenderTexture Texture => _texture;
         public float Yaw => _yaw;
-        public int MeshCount => _renderers.Count;
+        public int MeshCount => _liveRenderers != null ? _liveRenderers.Count : _renderers.Count;
 
         private void Awake() => _yaw = _allowDrag ? 180f : 0f;
 
@@ -81,7 +92,7 @@ namespace CreativeAI.UI.CharacterUI
             cameraObject.transform.SetParent(_stage.transform, false);
             _camera = cameraObject.AddComponent<Camera>();
             _camera.enabled = false;
-            _camera.cullingMask = 1 << 31;
+            _camera.cullingMask = 1 << Layer;
             _camera.clearFlags = CameraClearFlags.SolidColor;
             _camera.backgroundColor = Color.clear;
             _camera.orthographic = true;
@@ -93,11 +104,11 @@ namespace CreativeAI.UI.CharacterUI
             var lightObject = new GameObject("Preview Light");
             lightObject.transform.SetParent(_stage.transform, false);
             lightObject.transform.localRotation = Quaternion.Euler(30, -30, 0);
-            var light = lightObject.AddComponent<Light>();
-            light.type = LightType.Directional;
-            light.cullingMask = 1 << 31;
-            light.intensity = 1.2f;
-            light.enabled = false;
+            _light = lightObject.AddComponent<Light>();
+            _light.type = LightType.Directional;
+            _light.cullingMask = 1 << Layer;
+            _light.intensity = 1.2f;
+            _light.enabled = false;
             _texture = new RenderTexture(768, 768, 24, RenderTextureFormat.ARGB32)
             {
                 name = "UI Model Preview",
@@ -115,13 +126,11 @@ namespace CreativeAI.UI.CharacterUI
                 return;
             EnsureResources();
             ClearVisuals();
-            _image.enabled = false;
-            if (_emptyLabel != null)
-                _emptyLabel.gameObject.SetActive(true);
+            ShowEmpty();
             if (origin == null)
                 return;
             _pivot.localRotation = Quaternion.identity;
-            _content = new GameObject("Model") { layer = 31 };
+            _content = new GameObject("Model") { layer = Layer };
             _content.transform.SetParent(_pivot, false);
             var transforms = new Dictionary<Transform, Transform> { [origin] = _content.transform };
             foreach (var source in sources)
@@ -181,7 +190,7 @@ namespace CreativeAI.UI.CharacterUI
         {
             if (copies.TryGetValue(source, out var existing))
                 return existing;
-            var node = new GameObject(source.name) { layer = 31 }.transform;
+            var node = new GameObject(source.name) { layer = Layer }.transform;
             if (source.IsChildOf(origin))
             {
                 node.SetParent(CopyTransform(source.parent, origin, copies), false);
@@ -207,38 +216,160 @@ namespace CreativeAI.UI.CharacterUI
             return node;
         }
 
+        /// <summary>
+        /// 動いているモデルを複製せず、そのままプレビュー用カメラで撮る。
+        /// カメラの距離は呼んだ時点の大きさで1回だけ決める。<paramref name="renderers"/> は持ち主が更新するリストを参照し続ける。
+        /// モデルは <see cref="Layer"/> に置いてあり、普段は描画を切っておくこと(撮る間だけこちらで入れる)。
+        /// </summary>
+        /// <param name="root">回転させる根元。向きの基準は単位回転であること。</param>
+        /// <param name="renderers">撮る対象。null か空なら何も映さない。</param>
+        public void SetLiveTarget(Transform root, IReadOnlyList<Renderer> renderers)
+        {
+            if (!isActiveAndEnabled)
+                return;
+            EnsureResources();
+            ClearVisuals();
+            ShowEmpty();
+            if (root == null || renderers == null || renderers.Count == 0)
+                return;
+            _liveRoot = root;
+            _liveRenderers = renderers;
+            Bounds bounds = default;
+            bool first = true;
+            foreach (var renderer in renderers)
+            {
+                if (renderer == null)
+                    continue;
+                var box = WorldBounds(renderer);
+                if (first)
+                    bounds = box;
+                else
+                    bounds.Encapsulate(box);
+                first = false;
+            }
+            _liveCenter = bounds.center;
+            _liveLocalCenter = root.InverseTransformPoint(bounds.center);
+            _radius = Mathf.Max(.01f, bounds.extents.magnitude);
+            _image.enabled = true;
+            if (_emptyLabel != null)
+                _emptyLabel.gameObject.SetActive(false);
+        }
+
+        // SkinnedMeshRenderer.bounds は描画を切っている間は更新されないので、localBounds とルートボーンから求める。
+        private static Bounds WorldBounds(Renderer renderer)
+        {
+            if (renderer is not SkinnedMeshRenderer skin)
+                return renderer.bounds;
+            var matrix = (
+                skin.rootBone != null ? skin.rootBone : skin.transform
+            ).localToWorldMatrix;
+            var local = skin.localBounds;
+            var box = new Bounds(matrix.MultiplyPoint3x4(local.center), Vector3.zero);
+            for (int i = 0; i < 8; i++)
+            {
+                var corner =
+                    local.center
+                    + Vector3.Scale(
+                        local.extents,
+                        new Vector3(
+                            (i & 1) == 0 ? -1 : 1,
+                            (i & 2) == 0 ? -1 : 1,
+                            (i & 4) == 0 ? -1 : 1
+                        )
+                    );
+                box.Encapsulate(matrix.MultiplyPoint3x4(corner));
+            }
+            return box;
+        }
+
+        private void ShowEmpty()
+        {
+            _image.enabled = false;
+            if (_emptyLabel != null)
+                _emptyLabel.gameObject.SetActive(true);
+        }
+
         private void LateUpdate()
         {
-            if (_camera == null || _renderers.Count == 0)
+            if (_camera == null)
+                return;
+            if (_liveRenderers != null)
+            {
+                RenderLive();
+                return;
+            }
+            if (_renderers.Count == 0)
                 return;
             _yaw += _rotationSpeed * Time.unscaledDeltaTime;
             _pivot.localRotation = Quaternion.Euler(0, _yaw, 0);
+            FrameCamera();
+            try
+            {
+                foreach (var renderer in _renderers)
+                    renderer.enabled = true;
+                Submit();
+            }
+            finally
+            {
+                _light.enabled = false;
+                foreach (var renderer in _renderers)
+                    renderer.enabled = false;
+            }
+        }
+
+        private void RenderLive()
+        {
+            if (_liveRoot == null)
+            {
+                ClearVisuals();
+                ShowEmpty();
+                return;
+            }
+            _yaw += _rotationSpeed * Time.unscaledDeltaTime;
+            // バウンズの中心を軸に回し、カメラとライトは中心に置く(ライトは固定で、モデルだけが回る)。
+            var rotation = Quaternion.Euler(0, _yaw, 0);
+            _liveRoot.SetPositionAndRotation(_liveCenter - rotation * _liveLocalCenter, rotation);
+            _stage.transform.position = _liveCenter;
+            FrameCamera();
+            try
+            {
+                SetLiveRendering(true);
+                Submit();
+            }
+            finally
+            {
+                _light.enabled = false;
+                SetLiveRendering(false);
+            }
+        }
+
+        private void SetLiveRendering(bool visible)
+        {
+            foreach (var renderer in _liveRenderers)
+                if (renderer != null)
+                    renderer.forceRenderingOff = !visible;
+        }
+
+        private void FrameCamera()
+        {
             var rect = _image.rectTransform.rect;
             _camera.aspect = Mathf.Max(.1f, rect.width / Mathf.Max(1, rect.height));
             _camera.orthographicSize = _radius * 1.12f / Mathf.Min(1, _camera.aspect);
             _camera.transform.localPosition = new Vector3(0, 0, -_radius * 3 - 1);
             _camera.farClipPlane = _radius * 6 + 2;
-            var light = _stage.GetComponentInChildren<Light>();
-            try
+        }
+
+        private void Submit()
+        {
+            _light.enabled = true;
+            var request = new UniversalRenderPipeline.SingleCameraRequest
             {
-                foreach (var renderer in _renderers)
-                    renderer.enabled = true;
-                light.enabled = true;
-                var request = new UniversalRenderPipeline.SingleCameraRequest
-                {
-                    destination = _texture,
-                };
-                if (GraphicsSettings.currentRenderPipeline != null)
-                    RenderPipeline.SubmitRenderRequest(_camera, request);
-                else
-                    _camera.Render();
-            }
-            finally
-            {
-                light.enabled = false;
-                foreach (var renderer in _renderers)
-                    renderer.enabled = false;
-            }
+                destination = _texture,
+            };
+            if (GraphicsSettings.currentRenderPipeline != null)
+                RenderPipeline.SubmitRenderRequest(_camera, request);
+            else
+                _camera.Render();
         }
 
         public void OnDrag(PointerEventData eventData)
@@ -252,6 +383,8 @@ namespace CreativeAI.UI.CharacterUI
 
         private void ClearVisuals()
         {
+            _liveRenderers = null;
+            _liveRoot = null;
             if (_content != null)
             {
                 _content.SetActive(false);

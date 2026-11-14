@@ -62,7 +62,7 @@ namespace CreativeAI.UI.CharacterUI
             _posedModel?.Dispose();
             _posedModel = null;
             if (_characterPreview != null)
-                _characterPreview.SetSources(null, System.Array.Empty<Renderer>());
+                _characterPreview.SetLiveTarget(null, null);
             _player = player;
             _manager = player != null ? player.GetComponent<WeaponManager>() : null;
             if (_manager != null)
@@ -94,9 +94,10 @@ namespace CreativeAI.UI.CharacterUI
         private void SelectionChanged(WeaponData data)
         {
             _dirty = true;
+            // 武器プレビューが無効でも選択は覚える。覚えないと LateUpdate が毎フレーム「変わった」と見て再準備し続ける。
+            _shownWeapon = data;
             if (_weaponPreview == null || !_weaponPreview.isActiveAndEnabled)
                 return;
-            _shownWeapon = data;
             GameObject source = null;
             if (_manager != null && data != null)
                 source = _manager.GetWeaponObject(data.id);
@@ -114,16 +115,29 @@ namespace CreativeAI.UI.CharacterUI
                 return;
             if (_selector != null && _shownWeapon != _selector.SelectedWeapon)
                 SelectionChanged(_selector.SelectedWeapon);
-            if (
-                !_dirty
-                && Time.unscaledTime < _nextRefresh
-                && (_posedModel == null || !_posedModel.IsAnimating)
-            )
+            if (_characterPreview == null)
                 return;
+            // モデルが差し替わったら準備し直す。
+            if (_posedModel != null && _posedModel.Source == null)
+                _dirty = true;
+            if (_dirty)
+                Prepare();
+            else if (_posedModel != null && Time.unscaledTime >= _nextRefresh)
+            {
+                _nextRefresh = Time.unscaledTime + .25f;
+                _posedModel.SynchronizeAppearance();
+            }
+            // 動かすだけ。モデルは作り直さず、ModelPreview がそのまま撮る。
+            _posedModel?.Tick(Time.unscaledDeltaTime);
+        }
+
+        // モデル・武器が変わったときだけ呼ぶ。コピーの用意とカメラ距離の決め直しをする。
+        private void Prepare()
+        {
             _dirty = false;
             _nextRefresh = Time.unscaledTime + .25f;
             var model = _player.GetComponentInChildren<PlayerModel>(true);
-            if (model == null || _characterPreview == null)
+            if (model == null)
                 return;
             if (_posedModel == null || _posedModel.Source != model)
             {
@@ -143,9 +157,8 @@ namespace CreativeAI.UI.CharacterUI
                     weaponId >= 0 ? _manager.GetWeaponObject(weaponId) : null,
                     weaponId
                 );
-            _posedModel.Tick(Time.unscaledDeltaTime);
             _posedModel.SynchronizeAppearance();
-            _characterPreview.SetSources(_posedModel.Root, _posedModel.Renderers);
+            _characterPreview.SetLiveTarget(_posedModel.Root, _posedModel.Renderers);
         }
 
         private static IEnumerable<Renderer> VisibleRenderers(
@@ -191,6 +204,8 @@ namespace CreativeAI.UI.CharacterUI
             if (_selector != null)
                 _selector.SelectionChanged -= SelectionChanged;
             Unsubscribe();
+            if (_characterPreview != null)
+                _characterPreview.SetLiveTarget(null, null);
             _posedModel?.Dispose();
             _posedModel = null;
             _manager = null;

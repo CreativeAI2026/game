@@ -120,9 +120,16 @@ namespace CreativeAI.UI.CharacterUI
 
         private GameObject _weapon;
         private readonly GameObject _root;
+        private readonly List<Material> _materials = new();
+        private readonly List<Renderer> _weaponRenderers = new();
+        private readonly MaterialPropertyBlock _block = new();
         public Transform Root => _root.transform;
         public PlayerModel Source => _source;
-        public IEnumerable<Renderer> Renderers => _renderers;
+
+        /// <summary>
+        /// 描画対象のコピー。同じリストを使い回し、中身だけ <see cref="SynchronizeAppearance"/> で更新する。
+        /// </summary>
+        public IReadOnlyList<Renderer> Renderers => _renderers;
         public int WeaponId { get; private set; } = -1;
 
         public CharacterPreviewPose(
@@ -193,7 +200,15 @@ namespace CreativeAI.UI.CharacterUI
             }
             foreach (var copy in _transforms.Values)
                 _standing[copy] = (copy.localPosition, copy.localRotation, copy.localScale);
+            SetLayer(_root.transform, ModelPreview.Layer);
             SynchronizeAppearance();
+        }
+
+        private static void SetLayer(Transform node, int layer)
+        {
+            node.gameObject.layer = layer;
+            foreach (Transform child in node)
+                SetLayer(child, layer);
         }
 
         private void Straighten(
@@ -274,10 +289,10 @@ namespace CreativeAI.UI.CharacterUI
             {
                 if (source == null || copy == null)
                     continue;
-                copy.sharedMaterials = source.sharedMaterials;
-                var block = new MaterialPropertyBlock();
-                source.GetPropertyBlock(block);
-                copy.SetPropertyBlock(block);
+                source.GetSharedMaterials(_materials);
+                copy.SetSharedMaterials(_materials);
+                source.GetPropertyBlock(_block);
+                copy.SetPropertyBlock(_block);
                 copy.enabled = source.enabled && source.gameObject.activeInHierarchy;
                 if (source is SkinnedMeshRenderer skin && copy is SkinnedMeshRenderer posed)
                 {
@@ -288,8 +303,7 @@ namespace CreativeAI.UI.CharacterUI
                 }
                 _renderers.Add(copy);
             }
-            if (_weapon != null)
-                _renderers.AddRange(_weapon.GetComponentsInChildren<Renderer>(true));
+            _renderers.AddRange(_weaponRenderers);
         }
 
         public void SetWeapon(GameObject source, int id)
@@ -300,6 +314,7 @@ namespace CreativeAI.UI.CharacterUI
                 UnityEngine.Object.Destroy(_weapon);
                 _weapon = null;
             }
+            _weaponRenderers.Clear();
             StopIdle();
             WeaponId = source != null ? id : -1;
             if (WeaponId == 1001 || WeaponId == 1003 || WeaponId == 1004)
@@ -333,6 +348,8 @@ namespace CreativeAI.UI.CharacterUI
                 if (visible)
                     CopyRenderer(renderer, map[renderer.transform], map);
             }
+            SetLayer(_weapon.transform, ModelPreview.Layer);
+            _weapon.GetComponentsInChildren(true, _weaponRenderers);
             SynchronizeAppearance();
         }
 
