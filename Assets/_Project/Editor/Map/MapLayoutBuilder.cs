@@ -253,10 +253,11 @@ namespace CreativeAI.EditorTools
             public float HandrailScale = 1f; // 手すりの太さの倍率(長さはマスに、高さは FenceHeight に合わせる)
             public StairsModel Stairs;
 
-            // 透明なガラス `$`。旧階高ぴったり(9.6u)で作ってある
+            // 透明なガラス `$`。旧階高ぴったり(9.6u)で作ってある。
+            // GlassWall-V から方立・無目を間引き、格子を縦2・横2に広げたもの
             static readonly (char, string[], float) GlassPanel = (
                 Glass,
-                new[] { "Structure/GlassWall-V.glb" },
+                new[] { "Structure/GlassWall-Wide.glb" },
                 9.6f
             );
 
