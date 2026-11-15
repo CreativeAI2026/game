@@ -115,6 +115,10 @@ namespace CreativeAI.EditorTools
         // 開口 2.55 × 5.40u になる(壁の高さ 7.6u の 3/4 ほど)。
         const float DoorScale = 2.5f;
 
+        // 扉の高さだけに掛ける倍率。図書室の扉は幅が1マスちょうどなので、全体の拡大率は上げられない。
+        // 2.5 × 1.1 で `R` の外形の高さは 6.24u(壁の高さ 7.6u の 8 割ほど)になる
+        const float DoorHeightScale = 1.1f;
+
         // 扉の周りは**壁ではなくガラス**で埋める(袖・垂れ壁)。厚みは `$` の当たりと同じにして
         // 隣のガラス板と面が揃うようにする。見た目は `$` のモデルを開口の外だけ切り出して重ねる。
         const float DoorGlassThickness = GlassColliderThickness;
@@ -2566,13 +2570,21 @@ namespace CreativeAI.EditorTools
                 var go = (GameObject)PrefabUtility.InstantiatePrefab(prefab, root.transform);
                 go.name = $"{def.Symbol}_Door";
                 PlaceModel(go, prefab, Vector3.zero, Quaternion.identity, DoorScale);
+                go.transform.localPosition = Vector3.Scale(
+                    go.transform.localPosition,
+                    new Vector3(1f, DoorHeightScale, 1f)
+                );
+                go.transform.localScale = Vector3.Scale(
+                    go.transform.localScale,
+                    new Vector3(1f, DoorHeightScale, 1f)
+                );
                 AddDoorInteraction(root, go, DoorScale);
             }
 
             // 外形は拡大後の寸法で埋める(埋め残し / はみ出しを防ぐ)
             var minX = def.MinX * DoorScale;
             var maxX = def.MaxX * DoorScale;
-            var height = def.Height * DoorScale;
+            var height = def.Height * DoorScale * DoorHeightScale;
 
             var half = Cell * 0.5f;
 
