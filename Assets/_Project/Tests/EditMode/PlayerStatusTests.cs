@@ -181,5 +181,25 @@ namespace CreativeAI.Tests.EditMode
             _status.SetEquipment(default); // 最大HP 1000 に戻る
             Assert.AreEqual(1000f, _status.CurrentHp, 1e-3f);
         }
+
+        [Test]
+        public void MaxHpIncrease_AddsGainedAmountToCurrentHp()
+        {
+            _status.RestoreHp(600f); // 最大HP 1000 のうち 600
+
+            _status.SetEquipment(new EquipmentBonus { maxHpPct = 50f }); // 最大HP 1500
+
+            Assert.AreEqual(1100f, _status.CurrentHp, 1e-3f, "増えた 500 だけ現在HPも増える");
+        }
+
+        [Test]
+        public void MaxHpIncrease_WhileDead_DoesNotRevive()
+        {
+            _status.RestoreHp(0f); // 死亡扱い
+
+            _status.SetEquipment(new EquipmentBonus { maxHpPct = 50f });
+
+            Assert.AreEqual(0f, _status.CurrentHp, 1e-3f);
+        }
     }
 }

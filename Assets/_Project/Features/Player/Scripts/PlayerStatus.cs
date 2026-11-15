@@ -81,6 +81,12 @@ namespace CreativeAI.Gameplay
             }
         }
 
+        /// <summary>
+        /// 最大HPのうち、装備のバフ(最大HP%増加)で増えた分。HUD がバフ分のゲージを分けて表示するための読み取り用。
+        /// 装備で最大HPが下がっている場合は負になる。
+        /// </summary>
+        public float EquipmentMaxHpBonus => _playerData.baseMaxLife * _equipment.maxHpPct / 100f;
+
         public float CurrentAttackPower
         {
             get
@@ -160,11 +166,15 @@ namespace CreativeAI.Gameplay
             );
         }
 
-        /// <summary>装備補正を差し替えて最終ステータスを更新する。最大HP減少時は現在HPをクランプする。</summary>
+        /// <summary>
+        /// 装備補正を差し替えて最終ステータスを更新する。
+        /// 最大HPが増えたら増えた分だけ現在HPも増やし、減ったら現在HPをクランプする。
+        /// </summary>
         public void SetEquipment(EquipmentBonus bonus)
         {
+            float previousMaxHp = CurrentMaxHp;
             _equipment = bonus;
-            OnStatusChanged(); // 現在HP > 最大HP のクランプ
+            ApplyMaxHpChange(previousMaxHp);
             OnStatsChanged?.Invoke();
             OnHpChanged?.Invoke(CurrentHp, CurrentMaxHp);
         }
@@ -175,11 +185,15 @@ namespace CreativeAI.Gameplay
             SetWeaponBonus(_weaponManager != null ? _weaponManager.GetSelectedBonus() : default);
         }
 
-        /// <summary>武器補正を差し替えて最終ステータスを更新する。最大HP減少時は現在HPをクランプする。</summary>
+        /// <summary>
+        /// 武器補正を差し替えて最終ステータスを更新する。
+        /// 最大HPが増えたら増えた分だけ現在HPも増やし、減ったら現在HPをクランプする。
+        /// </summary>
         public void SetWeaponBonus(EquipmentBonus bonus)
         {
+            float previousMaxHp = CurrentMaxHp;
             _weapon = bonus;
-            OnStatusChanged(); // 現在HP > 最大HP のクランプ
+            ApplyMaxHpChange(previousMaxHp);
             OnStatsChanged?.Invoke();
             OnHpChanged?.Invoke(CurrentHp, CurrentMaxHp);
         }
@@ -258,6 +272,21 @@ namespace CreativeAI.Gameplay
             {
                 CurrentHp = CurrentMaxHp;
             }
+        }
+
+        /// <summary>
+        /// 最大HPの変化を現在HPへ反映する。増えた分は現在HPにも足す
+        /// (足さないと、途中で付けたバフの増加分が空のまま始まるため)。減ったときはクランプだけ行う。
+        /// 死亡後は HP を戻さない。セーブの復元はこの後に RestoreHp で上書きされる。
+        /// </summary>
+        private void ApplyMaxHpChange(float previousMaxHp)
+        {
+            float gained = CurrentMaxHp - previousMaxHp;
+            if (gained > 0f && !IsDead)
+            {
+                CurrentHp += gained;
+            }
+            OnStatusChanged(); // 現在HP > 最大HP のクランプ
         }
 
         private void Die()

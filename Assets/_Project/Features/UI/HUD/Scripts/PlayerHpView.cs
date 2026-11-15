@@ -7,6 +7,7 @@ namespace CreativeAI.UI
 {
     /// <summary>
     /// PlayerStatusのHP変動イベントを購読し、UIスライダーとテキストに反映する。
+    /// スライダーには装備のバフで増えた分を除いた HP を出す(増えた分は MaxHpBonusGaugeView が出す)。
     /// </summary>
     public class PlayerHpView : MonoBehaviour
     {
@@ -203,31 +204,44 @@ namespace CreativeAI.UI
         /// <summary>実際の HP(プレビュー中はプレビューの割合)で表示を作り直す。</summary>
         private void Redraw()
         {
-            // プレイヤー未生成でもプレビューできるよう、最大 HP はスライダーの値で代用する
-            float maxHp = _hasActualHp ? _actualMaxHp : _hpSlider.maxValue;
             if (!_previewHpRatio.HasValue && !_hasActualHp)
                 return;
 
-            float currentHp = _previewHpRatio.HasValue ? maxHp * _previewHpRatio.Value : _actualHp;
-            Draw(currentHp, maxHp);
+            // バフで増えた分は MaxHpBonusGaugeView が HP バーの上に出すので、このバーはそれを除いた分を出す。
+            // プレイヤー未生成でもプレビューできるよう、その間はスライダーの値で代用する
+            HpGaugeSplit split = _hasActualHp
+                ? HpGaugeSplit.Calculate(_actualHp, _actualMaxHp, BonusMaxHp())
+                : HpGaugeSplit.Calculate(_hpSlider.value, _hpSlider.maxValue, 0f);
+
+            float barHp = _previewHpRatio.HasValue
+                ? split.MainMaxHp * _previewHpRatio.Value
+                : split.MainHp;
+            Draw(barHp, split.MainMaxHp);
         }
 
-        private void Draw(float currentHp, float maxHp)
-        {
-            _hpSlider.maxValue = maxHp;
-            _hpSlider.value = currentHp;
+        private float BonusMaxHp() =>
+            _playerStatus != null ? _playerStatus.EquipmentMaxHpBonus : 0f;
 
+        private void Draw(float barHp, float barMaxHp)
+        {
+            _hpSlider.maxValue = barMaxHp;
+            _hpSlider.value = barHp;
+
+            // 数値はバフ分も含めた HP を出す(プレビュー中はバーの値)
             if (_currentHpText != null)
             {
-                _currentHpText.text = currentHp.ToString("0");
+                float shownHp = _previewHpRatio.HasValue ? barHp : _actualHp;
+                _currentHpText.text = shownHp.ToString("0");
             }
 
             if (_maxHpText != null)
             {
-                _maxHpText.text = maxHp.ToString("0");
+                float shownMaxHp = _hasActualHp ? _actualMaxHp : barMaxHp;
+                _maxHpText.text = shownMaxHp.ToString("0");
             }
 
-            float ratio = maxHp > 0f ? currentHp / maxHp : 0f;
+            // 色・心電図はバーの見た目と揃える(バフ分が残っている間はバーが満タンなので満タンの帯)
+            float ratio = barMaxHp > 0f ? barHp / barMaxHp : 0f;
             EkgPhase phase = SelectPhase(ratio);
             ApplyEkgPhase(phase);
             ApplyHpBarColor(phase);
