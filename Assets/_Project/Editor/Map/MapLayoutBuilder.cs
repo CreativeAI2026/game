@@ -111,7 +111,7 @@ namespace CreativeAI.EditorTools
         const float DoorLeafColliderDepth = 0.4f; // 扉板の当たりの厚み(実寸0.17uだと薄すぎる)
 
         // 扉の拡大率。glb はプレイヤー(1.8u)基準の実寸だが、階高 8u の建物に対して小さすぎて
-        // 「人が通る所」に見えない。2.5 倍で `R` は外形 3.28 × 5.68u(1マス4uに収まる) /
+        // 「人が通る所」に見えない。2.5 倍で `R` は外形 3.10 × 5.68u(1マス4uに収まる) /
         // 開口 2.55 × 5.40u になる(壁の高さ 7.6u の 3/4 ほど)。
         const float DoorScale = 2.5f;
 
@@ -124,15 +124,14 @@ namespace CreativeAI.EditorTools
         const float DoorGlassThickness = GlassColliderThickness;
         const string GlassMaterialPath = "Assets/_Project/Art/Materials/Glass.mat";
 
-        // 扉 `R` `C` `L`。実寸は glb を Scale 1 で置いたときの外形。
-        // 原点は開口の中心・床面で、制御パネルのぶん左右非対称。値は **Unity 空間**:
-        // glTF -> Unity のインポートで X が反転するので、.glb で見た左右とは逆になる
-        // (例: ClassroomDoor-V は glb だと -0.74〜+0.765、Unity では -0.765〜+0.74)。
+        // 扉 `R` `C` `L`。実寸は glb を Scale 1 で置いたときの枠の外形(原点は開口の中心・床面)。
+        // 制御パネルは枠の外へ少しはみ出すが外形に含めない。含めると、パネルの無い高さで
+        // 枠と周りのガラスの間に隙間が空く(パネルはガラスの面の手前に付くので重なっても見えない)。
         static readonly DoorDef[] Doors =
         {
-            new DoorDef('R', "Structure/LabDoor-V.glb", -0.685f, 0.620f, 2.270f),
-            new DoorDef('C', "Structure/ClassroomDoor-V.glb", -0.765f, 0.740f, 2.320f),
-            new DoorDef('L', "Structure/LibraryDoor-V.glb", -0.815f, 0.790f, 2.360f),
+            new DoorDef('R', "Structure/LabDoor-V.glb", -0.620f, 0.620f, 2.270f),
+            new DoorDef('C', "Structure/ClassroomDoor-V.glb", -0.740f, 0.740f, 2.320f),
+            new DoorDef('L', "Structure/LibraryDoor-V.glb", -0.790f, 0.790f, 2.360f),
         };
 
         readonly struct DoorDef
