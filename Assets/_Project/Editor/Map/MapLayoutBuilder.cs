@@ -127,11 +127,12 @@ namespace CreativeAI.EditorTools
         // 扉 `R` `C` `L`。実寸は glb を Scale 1 で置いたときの枠の外形(原点は開口の中心・床面)。
         // 制御パネルは枠の外へ少しはみ出すが外形に含めない。含めると、パネルの無い高さで
         // 枠と周りのガラスの間に隙間が空く(パネルはガラスの面の手前に付くので重なっても見えない)。
+        // モデルは元の *-V.glb の枠・扉板の左上の斜めの切り欠きを埋めて四角にしたもの。
         static readonly DoorDef[] Doors =
         {
-            new DoorDef('R', "Structure/LabDoor-V.glb", -0.620f, 0.620f, 2.270f),
-            new DoorDef('C', "Structure/ClassroomDoor-V.glb", -0.740f, 0.740f, 2.320f),
-            new DoorDef('L', "Structure/LibraryDoor-V.glb", -0.790f, 0.790f, 2.360f),
+            new DoorDef('R', "Structure/LabDoor-Square-V.glb", -0.620f, 0.620f, 2.270f),
+            new DoorDef('C', "Structure/ClassroomDoor-Square-V.glb", -0.740f, 0.740f, 2.320f),
+            new DoorDef('L', "Structure/LibraryDoor-Square-V.glb", -0.790f, 0.790f, 2.360f),
         };
 
         readonly struct DoorDef
