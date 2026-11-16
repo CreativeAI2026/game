@@ -29429,7 +29429,7 @@ GameObject:
   m_Component:
   - component: {fileID: 923403240929980563}
   m_Layer: 0
-  m_Name: SwordSlashHit
+  m_Name: BladeSlashHit
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
