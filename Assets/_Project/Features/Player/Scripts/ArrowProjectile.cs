@@ -38,11 +38,16 @@ namespace CreativeAI.Gameplay
         // 初回の Launch で追加する(つがえ中に物理が干渉しないよう、Awake では持たない)。それまでは null
         private Rigidbody _rigidbody;
 
+        // 衝突解決(跳ね返り)で速度や向きが書き換わる前の飛翔方向。着弾時の刺さる向きに使う
+        private Vector3 _flightDirection;
+        private Vector3 _initialScale;
+
         // これより遅い時は向きを変えない(速度ほぼ 0 の向きは定まらず、ぶれるため)。(m/s)^2
         private const float MinTurnSpeedSqr = 0.01f;
 
         private void Awake()
         {
+            _initialScale = transform.localScale;
             _colliders = GetComponentsInChildren<Collider>(true);
             _tip = GetComponentInChildren<ArrowTip>(true);
             Assert.IsNotNull(_tip, $"{name}: 子に ArrowTip がありません");
@@ -76,7 +81,10 @@ namespace CreativeAI.Gameplay
             // 落ちながら向きが水平のままだと不自然なので、矢先を飛んでいく方向へ向ける
             Vector3 velocity = _rigidbody.linearVelocity;
             if (velocity.sqrMagnitude > MinTurnSpeedSqr)
-                _rigidbody.MoveRotation(Quaternion.LookRotation(velocity));
+            {
+                _flightDirection = velocity.normalized;
+                _rigidbody.MoveRotation(Quaternion.LookRotation(_flightDirection));
+            }
         }
 
         /// <summary>
@@ -101,7 +109,14 @@ namespace CreativeAI.Gameplay
             _lifetimeTimer = 0f;
 
             if (direction != Vector3.zero)
-                transform.rotation = Quaternion.LookRotation(direction);
+            {
+                _flightDirection = direction.normalized;
+                transform.rotation = Quaternion.LookRotation(_flightDirection);
+            }
+            else
+            {
+                _flightDirection = transform.forward;
+            }
 
             SetCollidersEnabled(true);
 
@@ -112,10 +127,29 @@ namespace CreativeAI.Gameplay
             _rigidbody.isKinematic = false;
             // 重力は FixedUpdate で _gravityScale を掛けてかける
             _rigidbody.useGravity = false;
+            // 衝突時の物理トルクで矢が弾かれて不自然な角度を向くのを防ぐ(向きはスクリプトで制御する)
+            _rigidbody.constraints = RigidbodyConstraints.FreezeRotation;
             _rigidbody.interpolation = RigidbodyInterpolation.Interpolate;
             // 高速で飛翔する矢が薄いコライダーを貫通するのを防ぐため、ContinuousDynamicを使用
             _rigidbody.collisionDetectionMode = CollisionDetectionMode.ContinuousDynamic;
-            _rigidbody.linearVelocity = direction.normalized * speed;
+            _rigidbody.linearVelocity = _flightDirection * speed;
+        }
+
+        /// <summary>
+        /// 飛翔を止め、衝突直前の入射角で先端が着弾点に来るよう固定する。
+        /// </summary>
+        public void StickAt(Vector3 impactPoint)
+        {
+            StopFlying();
+
+            Quaternion stickRotation =
+                _flightDirection.sqrMagnitude > 0.0001f
+                    ? Quaternion.LookRotation(_flightDirection)
+                    : transform.rotation;
+
+            // ルート(矢の尾)から先端(ArrowTip)までのオフセットを引いて、先端を着弾点に合わせる
+            Vector3 tipOffset = stickRotation * Vector3.Scale(_tip.transform.localPosition, transform.lossyScale);
+            transform.SetPositionAndRotation(impactPoint - tipOffset, stickRotation);
         }
 
         public void StopFlying()
@@ -127,8 +161,6 @@ namespace CreativeAI.Gameplay
                 _rigidbody.linearVelocity = Vector3.zero;
                 _rigidbody.angularVelocity = Vector3.zero;
                 _rigidbody.isKinematic = true;
-                // 刺さった物が動いても矢が付いていくよう、飛翔用の補間を切る(残すと古い位置に描かれる)
-                _rigidbody.interpolation = RigidbodyInterpolation.None;
             }
 
             SetCollidersEnabled(false);
@@ -144,6 +176,7 @@ namespace CreativeAI.Gameplay
             IsFlying = false;
             Owner = null;
             _lifetimeTimer = 0f;
+            transform.localScale = _initialScale;
 
             // Rigidbody は初回の Launch で追加されるので、まだ一度も飛んでいない矢には無い
             // (壁に刺さって回収された矢は既に kinematic。kinematic への速度設定は警告になるので避ける)

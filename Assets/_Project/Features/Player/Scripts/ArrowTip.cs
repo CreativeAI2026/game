@@ -112,11 +112,12 @@ namespace CreativeAI.Gameplay
 
         private void StickToSurface(Collision collision)
         {
-            _projectile.StopFlying();
-            _projectile.transform.SetParent(collision.transform, true);
-
             ContactPoint contact = collision.GetContact(0);
             Vector3 impactPoint = contact.point;
+
+            // 衝突相手の子にすると非一様スケールで矢のメッシュが歪むため、ワールド空間のまま着弾点・入射角で固定する
+            _projectile.StickAt(impactPoint);
+
             SpawnEffect(_stickEffect, impactPoint, contact.normal);
             WorldSoundPlayer.Play(_stickSound, impactPoint, this);
 
