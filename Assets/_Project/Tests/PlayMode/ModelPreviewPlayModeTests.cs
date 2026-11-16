@@ -267,6 +267,94 @@ namespace CreativeAI.Tests.PlayMode
         }
 
         [UnityTest]
+        public IEnumerator IdleAnimation_RendersLiveModel_WithoutRebuildingEachFrame()
+        {
+            _manager.GiveWeapon("sword");
+            yield return PlayModeWait.Until(
+                () => _controller.PreviewIsAnimating && _character.MeshCount > _bareMeshes,
+                "剣の待機モーション"
+            );
+            yield return PlayModeWait.Frames();
+
+            var beforeIds = PoseRendererIds();
+            var bakedBefore = BakedMeshIds();
+            var bones = PoseBones();
+            var start = bones.Select(b => b.localRotation).ToArray();
+            yield return PlayModeWait.Until(
+                () => AnyBoneMoved(bones, start, .05f),
+                "待機モーションでボーンが動く"
+            );
+            yield return PlayModeWait.Frames(10);
+
+            CollectionAssert.AreEquivalent(
+                beforeIds,
+                PoseRendererIds(),
+                "待機モーション中にプレビュー用の Renderer を作り直さない"
+            );
+            CollectionAssert.AreEquivalent(
+                bakedBefore,
+                BakedMeshIds(),
+                "動くモデルを BakeMesh し直さない"
+            );
+            foreach (var renderer in PoseRenderers())
+            {
+                Assert.AreEqual(31, renderer.gameObject.layer, "プレビュー専用レイヤーに置く");
+                Assert.True(renderer.forceRenderingOff, "撮る瞬間のほかは他のカメラに映さない");
+            }
+            AssertVisible(_character, "preview-live-idle");
+        }
+
+        [UnityTest]
+        public IEnumerator IdleAnimation_AllocatesNothingPerFrame()
+        {
+            _manager.GiveWeapon("sword");
+            yield return PlayModeWait.Until(
+                () => _controller.PreviewIsAnimating && _character.MeshCount > _bareMeshes,
+                "剣の待機モーション"
+            );
+            yield return PlayModeWait.Frames();
+
+            // Update 全体ではなく、プレビューの LateUpdate だけを測る(他の UI の確保を混ぜない)。
+            var controllerUpdate = LateUpdateOf<CharacterPreviewController>(_controller);
+            var previewUpdate = LateUpdateOf<ModelPreview>(_character);
+            for (int i = 0; i < 10; i++)
+            {
+                controllerUpdate();
+                previewUpdate();
+            }
+
+            long controllerBytes = AllocatedBy(controllerUpdate, 30);
+            long previewBytes = AllocatedBy(previewUpdate, 30);
+            Assert.AreEqual(
+                0,
+                controllerBytes,
+                "CharacterPreviewController.LateUpdate の確保(30回分)"
+            );
+            Assert.AreEqual(0, previewBytes, "ModelPreview.LateUpdate の確保(30回分)");
+        }
+
+        private static System.Action LateUpdateOf<T>(T target)
+            where T : Component =>
+            (System.Action)
+                System.Delegate.CreateDelegate(
+                    typeof(System.Action),
+                    target,
+                    typeof(T).GetMethod(
+                        "LateUpdate",
+                        System.Reflection.BindingFlags.Instance
+                            | System.Reflection.BindingFlags.NonPublic
+                    )
+                );
+
+        private static long AllocatedBy(System.Action action, int times)
+        {
+            long before = System.GC.GetAllocatedBytesForCurrentThread();
+            for (int i = 0; i < times; i++)
+                action();
+            return System.GC.GetAllocatedBytesForCurrentThread() - before;
+        }
+
+        [UnityTest]
         public IEnumerator WeaponChange_CancelsAttack_AndBowShowsItsModel()
         {
             GiveAll();
@@ -416,6 +504,22 @@ namespace CreativeAI.Tests.PlayMode
                 .FindObjectsOfTypeAll<Animator>()
                 .Single(a => a.name == "UI Character Pose" && a.gameObject.scene.IsValid())
                 .GetComponentsInChildren<Transform>();
+
+        private static Renderer[] PoseRenderers() =>
+            Resources
+                .FindObjectsOfTypeAll<Animator>()
+                .Single(a => a.name == "UI Character Pose" && a.gameObject.scene.IsValid())
+                .GetComponentsInChildren<Renderer>(true);
+
+        private static EntityId[] PoseRendererIds() =>
+            PoseRenderers().Select(r => r.GetEntityId()).ToArray();
+
+        private static EntityId[] BakedMeshIds() =>
+            Resources
+                .FindObjectsOfTypeAll<Mesh>()
+                .Where(m => m.name == "Preview baked mesh")
+                .Select(m => m.GetEntityId())
+                .ToArray();
 
         private static bool AnyBoneMoved(Transform[] bones, Quaternion[] from, float degrees) =>
             bones.Where((bone, i) => Quaternion.Angle(bone.localRotation, from[i]) > degrees).Any();

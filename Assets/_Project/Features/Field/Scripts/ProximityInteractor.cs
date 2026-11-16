@@ -24,6 +24,11 @@ namespace CreativeAI.Gameplay
         private PlayerInput _playerInput;
         private bool _playerInside;
 
+        private bool _cachedIsGamepad;
+        private Key _cachedKey;
+        private string _cachedActionLabel;
+        private string _cachedLabel;
+
         /// <summary>操作の対象が揃っているか(扉なら動かす扉がある、など)。揃っていなければ何も出さない。</summary>
         protected abstract bool HasTarget { get; }
 
@@ -117,7 +122,20 @@ namespace CreativeAI.Gameplay
         private string BuildLabel()
         {
             bool isGamepad = _playerInput != null && _playerInput.currentControlScheme == "Gamepad";
-            return isGamepad ? $"[A] {ActionLabel}" : $"[{_key}] {ActionLabel}";
+            string actionLabel = ActionLabel;
+            if (
+                _cachedLabel != null
+                && _cachedIsGamepad == isGamepad
+                && _cachedKey == _key
+                && _cachedActionLabel == actionLabel
+            )
+                return _cachedLabel;
+
+            _cachedLabel = isGamepad ? $"[A] {actionLabel}" : $"[{_key}] {actionLabel}";
+            _cachedIsGamepad = isGamepad;
+            _cachedKey = _key;
+            _cachedActionLabel = actionLabel;
+            return _cachedLabel;
         }
     }
 }

@@ -1,5 +1,6 @@
 using UnityEngine;
 using UnityEngine.AI;
+using UnityEngine.Pool;
 
 namespace CreativeAI.Gameplay
 {
@@ -257,8 +258,6 @@ namespace CreativeAI.Gameplay
         public float ArmHitRadius => armHitRadius;
 
         public Transform LiquidFirePos => liquidFirePos;
-        public GameObject LiquidPrefab => liquidPrefab;
-        public GameObject DamageAreaPrefab => damageAreaPrefab;
         public int LiquidShotMinCount => liquidShotMinCount;
         public int LiquidShotMaxCount => liquidShotMaxCount;
         public float LiquidFanAngle => liquidFanAngle;
@@ -276,9 +275,75 @@ namespace CreativeAI.Gameplay
         public int MinionDamage =>
             Mathf.RoundToInt(Status.CurrentAttackPower * minionDamageMultiplier);
 
+        // 液体弾と毒エリアは攻撃のたびに作って消さず、ここで使い回す。超えて戻ってきた分は破棄する
+        private const int LiquidPoolCapacity = 8;
+        private const int LiquidPoolMaxSize = 16;
+        private ObjectPool<MidBossLiquidProjectile> _liquidPool;
+        private ObjectPool<MidBossPoisonArea> _poisonAreaPool;
+
         protected override void Awake()
         {
             base.Awake();
+            _liquidPool = new ObjectPool<MidBossLiquidProjectile>(
+                createFunc: () => CreatePooled<MidBossLiquidProjectile>(liquidPrefab),
+                actionOnGet: projectile => projectile.gameObject.SetActive(true),
+                actionOnRelease: projectile => projectile.gameObject.SetActive(false),
+                actionOnDestroy: DestroyPooled,
+                defaultCapacity: LiquidPoolCapacity,
+                maxSize: LiquidPoolMaxSize
+            );
+            _poisonAreaPool = new ObjectPool<MidBossPoisonArea>(
+                createFunc: () => CreatePooled<MidBossPoisonArea>(damageAreaPrefab),
+                actionOnGet: area => area.gameObject.SetActive(true),
+                actionOnRelease: area => area.gameObject.SetActive(false),
+                actionOnDestroy: DestroyPooled,
+                defaultCapacity: LiquidPoolCapacity,
+                maxSize: LiquidPoolMaxSize
+            );
+        }
+
+        protected override void OnDestroy()
+        {
+            base.OnDestroy();
+            _liquidPool?.Dispose();
+            _poisonAreaPool?.Dispose();
+        }
+
+        /// <summary>液体弾を1つ出す。着弾や時間切れで <see cref="ReleaseLiquid"/> に返ってくる。</summary>
+        public MidBossLiquidProjectile SpawnLiquid(Vector3 position)
+        {
+            MidBossLiquidProjectile projectile = _liquidPool.Get();
+            projectile.transform.SetPositionAndRotation(position, Quaternion.identity);
+            return projectile;
+        }
+
+        /// <summary>着弾した位置に毒エリアを出す。プレハブが無ければ null。消える時は <see cref="ReleasePoisonArea"/> に返ってくる。</summary>
+        public MidBossPoisonArea SpawnPoisonArea(Vector3 position, Quaternion rotation)
+        {
+            if (damageAreaPrefab == null)
+                return null;
+            MidBossPoisonArea area = _poisonAreaPool.Get();
+            area.transform.SetPositionAndRotation(position, rotation);
+            return area;
+        }
+
+        public void ReleaseLiquid(MidBossLiquidProjectile projectile) =>
+            _liquidPool.Release(projectile);
+
+        public void ReleasePoisonArea(MidBossPoisonArea area) => _poisonAreaPool.Release(area);
+
+        private static T CreatePooled<T>(GameObject prefab)
+            where T : Component
+        {
+            GameObject obj = Instantiate(prefab);
+            return obj.TryGetComponent(out T component) ? component : obj.AddComponent<T>();
+        }
+
+        private static void DestroyPooled(Component component)
+        {
+            // 再生を止めた時など、シーンと一緒に破棄済みのものは飛ばす
+            if (component != null)
+                Destroy(component.gameObject);
         }
 
         protected override void Start()

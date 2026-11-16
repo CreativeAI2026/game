@@ -1,6 +1,5 @@
 using System;
 using System.Collections;
-using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 
@@ -130,19 +129,101 @@ namespace CreativeAI.Core
 
         private const string PlayerTag = "Player";
 
-        // 目印が無いとき SpawnPoint.Place は原点へ置いてしまうので、先に確かめて動かさずに警告する。
+        // 動かす相手(プレイヤー)と、目的地の目印を探す。見つからなければ、動かさずに警告して false。
+        // 目印が無いとき SpawnPoint.Place は原点へ置いてしまうので、先に確かめる。
+        private static bool TryFindPlayerAndPoint(
+            string command,
+            string spawnPointId,
+            out GameObject player,
+            out SpawnPoint point
+        )
+        {
+            player = GameObject.FindWithTag(PlayerTag);
+            point = SpawnPoint.Find(spawnPointId);
+            if (player != null && point != null)
+                return true;
+
+            Debug.LogWarning(
+                $"[EventPlayer] {command} を実行できません"
+                    + $"(player={(player != null ? player.name : "なし")}, SpawnPoint ID='{spawnPointId}')。"
+            );
+            return false;
+        }
+
         private static void MovePlayer(string spawnPointId)
         {
-            var player = GameObject.FindWithTag(PlayerTag);
-            if (player == null || SpawnPoint.Find(spawnPointId) == null)
+            if (TryFindPlayerAndPoint(PlayerMoveCommand, spawnPointId, out var player, out _))
+                SpawnPoint.Place(player, spawnPointId);
+        }
+
+        /// <summary>
+        /// プレイヤーを <see cref="SpawnPoint"/>(arg が ID)まで歩かせる command 名。着くまで次のステップへ進まない。
+        /// <see cref="PlayerMoveCommand"/> と違い、瞬間移動せず歩きのモーションで向かう。引き戻しに使う。
+        /// </summary>
+        public const string PlayerWalkCommand = "player.walkTo";
+
+        /// <summary>歩きが終わらないとき(壁に引っかかる等)に、想定の歩行時間へ掛ける余裕の倍率。</summary>
+        private const float WalkTimeoutScale = 2f;
+
+        /// <summary>歩行時間の下限に足す秒数。ごく近い目標でも、動き出しの時間は待つ。</summary>
+        private const float WalkTimeoutPadding = 2f;
+
+        // 歩かせている最中のプレイヤー。イベントを途中で打ち切ったとき、歩く指示を残さないための後始末に使う。
+        private IPlayerWalker _walking;
+
+        // 歩いて着くまで待つ。プレイヤーに歩かせる口(IPlayerWalker)が無いときは、動かさずに警告する。
+        // 時間内に着かない(壁に引っかかる等)ときは、止まって瞬間移動で置き、操作が戻れなくなるのを防ぐ。
+        private IEnumerator WalkPlayer(string spawnPointId)
+        {
+            if (
+                !TryFindPlayerAndPoint(
+                    PlayerWalkCommand,
+                    spawnPointId,
+                    out var player,
+                    out var point
+                )
+            )
+                yield break;
+            if (!player.TryGetComponent(out IPlayerWalker walker))
             {
                 Debug.LogWarning(
-                    $"[EventPlayer] {PlayerMoveCommand} を実行できません"
-                        + $"(player={(player != null ? player.name : "なし")}, SpawnPoint ID='{spawnPointId}')。"
+                    $"[EventPlayer] {PlayerWalkCommand} を実行できません(player='{player.name}' に IPlayerWalker がありません)。"
                 );
-                return;
+                yield break;
             }
-            SpawnPoint.Place(player, spawnPointId);
+
+            var target = point.transform.position;
+            var flat = target - player.transform.position;
+            flat.y = 0f;
+            var timeout =
+                flat.magnitude / Mathf.Max(walker.WalkSpeed, 0.01f) * WalkTimeoutScale
+                + WalkTimeoutPadding;
+
+            _walking = walker;
+            walker.WalkTo(target);
+            var elapsed = 0f;
+            while (walker.IsWalking && elapsed < timeout)
+            {
+                elapsed += Time.deltaTime;
+                yield return null;
+            }
+
+            if (walker.IsWalking)
+            {
+                Debug.LogWarning(
+                    $"[EventPlayer] {PlayerWalkCommand} が {timeout:F1} 秒で着かなかったため、'{spawnPointId}' へ直接置きました。"
+                );
+                StopWalking();
+                SpawnPoint.Place(player, spawnPointId);
+            }
+            _walking = null;
+        }
+
+        // 歩かせている最中なら止める。イベントを打ち切っても、あとで勝手に歩き出さないようにする。
+        private void StopWalking()
+        {
+            _walking?.StopWalking();
+            _walking = null;
         }
 
         public void Play(EventDefinition ev, BattleSetup battle = default)
@@ -277,6 +358,8 @@ namespace CreativeAI.Core
                         case StepKind.Command:
                             if (step.CommandName == PlayerMoveCommand)
                                 MovePlayer(step.Arg);
+                            else if (step.CommandName == PlayerWalkCommand)
+                                yield return WalkPlayer(step.Arg);
                             else if (View != null)
                                 yield return View.RunCommand(step.CommandName, step.Arg);
                             break;
@@ -304,6 +387,7 @@ namespace CreativeAI.Core
             }
             finally
             {
+                StopWalking();
                 EventPlaybackService.SetPlaying(false);
             }
         }
@@ -332,47 +416,6 @@ namespace CreativeAI.Core
     }
 
     /// <summary>
-    /// 会話イベント再生中(= 操作不能)かどうかを UI に伝える seam。EventPlayer が再生の開始/終了で
-    /// 更新し、HudIconBarView が購読して会話中は右上ナビ(セーブ/インベ入口)を隠す
-    /// (会話UI中はセーブ・インベントリ使用不可)。
-    /// </summary>
-    public static class EventPlaybackService
-    {
-        public static bool IsPlaying { get; private set; }
-        public static event System.Action<bool> PlayingChanged;
-
-        /// <summary>
-        /// プレイヤー操作を止めるべきか。再生中でも battle ステップ(Battle モード)の間は戦うので止めない。
-        /// PlayerInputHandler が入力を捨てる判定に使う。
-        /// </summary>
-        public static bool BlocksPlayerControl
-        {
-            get
-            {
-                if (!IsPlaying)
-                    return false;
-                var mode = GameModeManager.Instance;
-                return mode == null || mode.CurrentMode != GameMode.Battle;
-            }
-        }
-
-        public static void SetPlaying(bool playing)
-        {
-            if (IsPlaying == playing)
-                return;
-            IsPlaying = playing;
-            PlayingChanged?.Invoke(playing);
-        }
-
-        /// <summary>購読者には通知せずに初期状態へ戻す(<see cref="EventStatics"/> 用)。</summary>
-        internal static void ResetState()
-        {
-            IsPlaying = false;
-            PlayingChanged = null;
-        }
-    }
-
-    /// <summary>
     /// このプロジェクトは Editor の Enter Play Mode で Domain Reload を切っているため、static な値が前回の Play から持ち越される。
     /// 会話の途中で Play を止めると再生中フラグが立ったまま残り、次の Play で HUD が出ない・動けない・発火しない状態になるので、
     /// Play 開始時に Event 関連の static(再生中フラグ・各 seam)を初期化する。ビルドでは起動時に1回走るだけで無害。
@@ -389,132 +432,5 @@ namespace CreativeAI.Core
             ItemGiverService.Current = null;
             WeaponGiverService.Current = null;
         }
-    }
-
-    /// <summary>
-    /// 会話UIの seam。実体は UI アセンブリ(CreativeAI.UI)で実装し、EventPlayer に注入する。
-    /// Core を最下層に保つため、EventPlayer は具象UIではなくこの契約に依存する。
-    /// </summary>
-    public interface IDialogueView
-    {
-        /// <summary>1行表示し、プレイヤーが送るまで待つ(コルーチン)。</summary>
-        IEnumerator ShowLine(string speaker, string portrait, string text);
-
-        /// <summary>選択肢を提示し、選ばれた値を onSelected で返す(コルーチン)。</summary>
-        IEnumerator ShowChoice(IReadOnlyList<ChoiceOption> options, Action<string> onSelected);
-
-        /// <summary>
-        /// giveItem の入手演出。itemKey から絵と名前を引くのは UI 側(Core は Gameplay を参照しないため)。
-        /// message 省略時は UI が「〜を手に入れた。」を組み立てる。送り入力まで待つ(コルーチン)。
-        /// </summary>
-        IEnumerator ShowItemGet(string itemKey, string message);
-
-        /// <summary>
-        /// giveWeapon の入手演出。ShowItemGet の武器版(3Dモデルを回して見せる)。
-        /// </summary>
-        IEnumerator ShowWeaponGet(string weaponKey, string message);
-
-        /// <summary>
-        /// command ステップの演出コマンド(window.hide / portrait.left.shake / wait など)を実行する。
-        /// </summary>
-        IEnumerator RunCommand(string command, string argument);
-
-        /// <summary>
-        /// 会話ウィンドウを閉じる。イベント終了時と battle の直前に EventPlayer が呼ぶ。既に閉じていれば何もしない。
-        /// </summary>
-        IEnumerator Close();
-    }
-
-    /// <summary>
-    /// 実行時の IDialogueView を登録する seam。Core は UI を参照できず常駐同士で drag 配線もできないため、
-    /// 会話UIが生成時に登録し、EventPlayer は Inspector 未配線時のフォールバックとして見る。
-    /// </summary>
-    public static class DialogueViewService
-    {
-        public static IDialogueView Current { get; set; }
-    }
-
-    /// <summary>
-    /// 戦闘の入力一式。敵は events.json ではなくシーンの EventTrigger の Enemy スロットに
-    /// 配線した Prefab を使い、トリガー位置(または子の SpawnPoint)へ出す。
-    /// </summary>
-    public readonly struct BattleSetup
-    {
-        public readonly GameObject EnemyPrefab;
-        public readonly Vector3 Position;
-        public readonly Quaternion Rotation;
-
-        public BattleSetup(GameObject enemyPrefab, Vector3 position, Quaternion rotation)
-        {
-            EnemyPrefab = enemyPrefab;
-            Position = position;
-            Rotation = rotation;
-        }
-
-        /// <summary>敵 Prefab が配線されているか。false ならこの戦闘は警告してスキップする。</summary>
-        public bool HasEnemy => EnemyPrefab != null;
-    }
-
-    /// <summary>
-    /// battle ステップの seam(実体は戦闘班)。敵 Prefab をトリガー位置に出し、勝利まで待つコルーチン。
-    /// 敗北時はシーン再読込で再開されるので完了しない想定。
-    /// </summary>
-    public interface IBattleRunner
-    {
-        IEnumerator Run(BattleSetup setup);
-    }
-
-    /// <summary>
-    /// 実行時の IBattleRunner を登録する seam。Core は Gameplay を参照できず drag 配線もできないため、
-    /// GameSession が登録し、EventPlayer は Inspector 未配線時のフォールバックとして見る。
-    /// </summary>
-    public static class BattleRunnerService
-    {
-        public static IBattleRunner Current { get; set; }
-    }
-
-    /// <summary>
-    /// giveItem ステップの seam。実体は Gameplay(InventoryManager のラッパ)で実装し、
-    /// EventPlayer に注入する。Core は Gameplay を参照しないためこの契約を挟む。
-    /// </summary>
-    public interface IItemGiver
-    {
-        void Give(string itemKey);
-
-        /// <summary>
-        /// itemKey の「大事なもの」を1つ以上所持しているか(hasItem 条件の判定)。
-        /// 実体(InventoryManager)は itemKey を ItemCatalog で引き、カテゴリが 大事なもの の場合のみ
-        /// 所持数を見る。装備品/食材/武器のキーや未登録キーは対象外で false を返す。
-        /// </summary>
-        bool HasImportantItem(string itemKey);
-    }
-
-    /// <summary>
-    /// 実行時の IItemGiver を登録する seam。Core は Gameplay を参照できず drag 配線もできないため、
-    /// InventoryManager が Awake で登録し、EventPlayer は Inspector 未配線時のフォールバックとして見る。
-    /// </summary>
-    public static class ItemGiverService
-    {
-        public static IItemGiver Current { get; set; }
-    }
-
-    /// <summary>
-    /// giveWeapon ステップの seam(実体は WeaponManager、<see cref="IItemGiver"/> と対称)。
-    /// 未登録(プレイヤーリグが居ない)なら EventPlayer が警告してスキップする。
-    /// </summary>
-    public interface IWeaponGiver
-    {
-        /// <summary>weaponKey(sword/bow/scythe/hammer)の武器を1本入手する。既に所持なら何もしない。</summary>
-        void GiveWeapon(string weaponKey);
-    }
-
-    /// <summary>
-    /// 実行時に有効な IWeaponGiver を Core 側へ登録する seam。実装者(プレイヤーリグの WeaponManager)が
-    /// Awake で自身を登録し、EventPlayer は Inspector 未配線時のフォールバックとしてここを見る
-    /// (<see cref="ItemGiverService"/> と同じ思想)。
-    /// </summary>
-    public static class WeaponGiverService
-    {
-        public static IWeaponGiver Current { get; set; }
     }
 }

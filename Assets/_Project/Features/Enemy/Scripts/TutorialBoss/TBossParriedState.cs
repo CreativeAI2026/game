@@ -1,3 +1,4 @@
+using CreativeAI.Core;
 using UnityEngine;
 
 namespace CreativeAI.Gameplay
@@ -33,7 +34,7 @@ namespace CreativeAI.Gameplay
 
         public override void Enter()
         {
-            Debug.Log("[TutorialBoss] 大きく崩れる(パリィ/掴みからの脱出)");
+            DevLog.Log("[TutorialBoss] 大きく崩れる(パリィ/掴みからの脱出)");
 
             _timer = 0f;
 

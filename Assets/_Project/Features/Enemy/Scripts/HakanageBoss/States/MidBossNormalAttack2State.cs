@@ -1,3 +1,4 @@
+using CreativeAI.Core;
 using UnityEngine;
 
 namespace CreativeAI.Gameplay
@@ -13,7 +14,7 @@ namespace CreativeAI.Gameplay
 
         public override void Enter()
         {
-            Debug.Log("[MidBoss] 通常攻撃2ステート開始（未実装）");
+            DevLog.Log("[MidBoss] 通常攻撃2ステート開始（未実装）");
             // TODO: 通常攻撃2の実装（保留）
             con.ChangeState(
                 new MidBossWaitState(con, con.WaitAfterAttackDuration, new MidBossStartState(con))

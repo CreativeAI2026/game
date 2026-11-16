@@ -1,3 +1,4 @@
+using CreativeAI.Core;
 using UnityEngine;
 
 namespace CreativeAI.Gameplay
@@ -23,7 +24,7 @@ namespace CreativeAI.Gameplay
 
         public override void Enter()
         {
-            Debug.Log("[MidBoss] 遠距離攻撃2（液体）ステート開始");
+            DevLog.Log("[MidBoss] 遠距離攻撃2（液体）ステート開始");
             _phase = Phase.Windup;
             _phaseTimer = 0f;
 
@@ -119,15 +120,7 @@ namespace CreativeAI.Gameplay
 
                 Vector3 spawnPos = con.LiquidFirePos.position;
 
-                GameObject obj = Object.Instantiate(
-                    con.LiquidPrefab,
-                    spawnPos,
-                    Quaternion.identity
-                );
-                if (!obj.TryGetComponent(out MidBossLiquidProjectile proj))
-                {
-                    proj = obj.AddComponent<MidBossLiquidProjectile>();
-                }
+                MidBossLiquidProjectile proj = con.SpawnLiquid(spawnPos);
 
                 // 各弾の目標は扇形の各方向へ十分遠い地面上の点にする
                 // targetPosからの距離ではなく、スポーン位置からdirの方向に伸ばした先を目標にする
@@ -136,10 +129,10 @@ namespace CreativeAI.Gameplay
                 // Y座標はプレイヤーの地面と同じ高さにそろえる（正しい放物線になるよう）
                 adjustedTarget.y = targetPos.y;
                 proj.Initialize(
+                    con,
                     spawnPos,
                     adjustedTarget,
                     con.LiquidDamage,
-                    con.DamageAreaPrefab,
                     con.DamageAreaDuration,
                     con.DamageAreaInterval,
                     con.PoisonDuration,

@@ -1,3 +1,4 @@
+using CreativeAI.Core;
 using UnityEngine;
 using UnityEngine.AI;
 
@@ -40,11 +41,11 @@ namespace CreativeAI.Gameplay
 
         public override void Enter()
         {
-            Debug.Log("[MidBoss] ランダム移動ステート開始");
+            DevLog.Log("[MidBoss] ランダム移動ステート開始");
 
             // 移動スタイルをランダムに決定
             _style = Random.value < 0.5f ? MoveStyle.Zigzag : MoveStyle.BigStep;
-            Debug.Log($"[MidBoss] ランダム移動スタイル: {_style}");
+            DevLog.Log($"[MidBoss] ランダム移動スタイル: {_style}");
 
             _stepTimer = 0f;
             _isMoving = true;

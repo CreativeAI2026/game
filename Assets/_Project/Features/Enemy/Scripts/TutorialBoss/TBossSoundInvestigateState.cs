@@ -1,3 +1,4 @@
+using CreativeAI.Core;
 using UnityEngine;
 using UnityEngine.AI;
 
@@ -54,7 +55,7 @@ namespace CreativeAI.Gameplay
 
         public override void Enter()
         {
-            Debug.Log($"[TutorialBoss] 音調査ステート開始 確信度:{_confidence:F2}");
+            DevLog.Log($"[TutorialBoss] 音調査ステート開始 確信度:{_confidence:F2}");
 
             _mode = _confidence >= WalkThreshold ? Mode.Walk : Mode.LookOnly;
             _timeoutTimer = 0f;
@@ -183,7 +184,7 @@ namespace CreativeAI.Gameplay
 
         public override void Exit()
         {
-            Debug.Log("[TutorialBoss] 音調査ステート終了");
+            DevLog.Log("[TutorialBoss] 音調査ステート終了");
 
             SoundEventBus.OnSoundEmitted -= OnSoundHeard;
 

@@ -1,3 +1,4 @@
+using CreativeAI.Core;
 using UnityEngine;
 
 namespace CreativeAI.Gameplay
@@ -28,7 +29,7 @@ namespace CreativeAI.Gameplay
 
         public override void Enter()
         {
-            Debug.Log("[MidBoss] 遠距離攻撃1（突進）ステート開始");
+            DevLog.Log("[MidBoss] 遠距離攻撃1（突進）ステート開始");
             _phase = Phase.Windup;
             _phaseTimer = 0f;
 
@@ -110,7 +111,7 @@ namespace CreativeAI.Gameplay
             }
 
             // TODO: アニメーション導入時はここで Animator.SetTrigger("Dash") を追加
-            Debug.Log("[MidBoss] 突進開始");
+            DevLog.Log("[MidBoss] 突進開始");
         }
 
         private void UpdateDash()
@@ -118,7 +119,7 @@ namespace CreativeAI.Gameplay
             // タイムアウト
             if (_phaseTimer >= con.DashMaxDuration)
             {
-                Debug.Log("[MidBoss] 突進タイムアウト");
+                DevLog.Log("[MidBoss] 突進タイムアウト");
                 EndDash();
                 return;
             }
@@ -138,7 +139,7 @@ namespace CreativeAI.Gameplay
             {
                 if (hit.collider.CompareTag("Obstacle"))
                 {
-                    Debug.Log("[MidBoss] 壁にぶつかった。突進終了");
+                    DevLog.Log("[MidBoss] 壁にぶつかった。突進終了");
                     EndDash();
                     return;
                 }

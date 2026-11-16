@@ -1,3 +1,4 @@
+using CreativeAI.Core;
 using UnityEngine;
 
 namespace CreativeAI.Gameplay
@@ -17,7 +18,7 @@ namespace CreativeAI.Gameplay
 
         public override void Enter()
         {
-            Debug.Log("[MidBoss] 追跡ステート開始");
+            DevLog.Log("[MidBoss] 追跡ステート開始");
 
             // 追跡タイマーをステップ数でランダムに決定する
             _remainingSteps = Random.Range(con.ChaseStepCountMin, con.ChaseStepCountMax + 1);
@@ -107,7 +108,7 @@ namespace CreativeAI.Gameplay
 
         public override void Exit()
         {
-            Debug.Log("[MidBoss] 追跡ステート終了");
+            DevLog.Log("[MidBoss] 追跡ステート終了");
             if (con.Agent != null)
             {
                 con.Agent.ResetPath();

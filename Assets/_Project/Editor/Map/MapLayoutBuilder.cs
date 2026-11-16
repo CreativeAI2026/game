@@ -100,9 +100,10 @@ namespace CreativeAI.EditorTools
         // `&` は格子の壁(研究棟)。`$` と同じ線状の壁として列にまとめ、モデルだけ記号ごとに替える
         const char Glass = '$';
         const char Lattice = '&';
-        const char Fence = '-'; // 柵。ガラスと同じく列にまとめ、縁へ寄せ、角で継ぐ
+        internal const char Fence = '-'; // 柵。ガラスと同じく列にまとめ、縁へ寄せ、角で継ぐ
         const float GlassColliderThickness = 0.4f;
         const float GlassPanelDepth = 0.14f; // モデルの厚み(袖壁を作る幅の計算に使う)
+        const float GlassSlabClearance = 0.05f; // 床板へ埋めるガラスの上端を上の階の床面から下げる量(ちらつき防止)
 
         // 扉に近づいたと見なす球トリガー。壁が4u厚なので、扉の手前で気付ける大きさにする。
         const float DoorInteractRadius = 3.2f;
@@ -110,24 +111,28 @@ namespace CreativeAI.EditorTools
         const float DoorLeafColliderDepth = 0.4f; // 扉板の当たりの厚み(実寸0.17uだと薄すぎる)
 
         // 扉の拡大率。glb はプレイヤー(1.8u)基準の実寸だが、階高 8u の建物に対して小さすぎて
-        // 「人が通る所」に見えない。2.5 倍で `R` は外形 3.28 × 5.68u(1マス4uに収まる) /
+        // 「人が通る所」に見えない。2.5 倍で `R` は外形 3.10 × 5.68u(1マス4uに収まる) /
         // 開口 2.55 × 5.40u になる(壁の高さ 7.6u の 3/4 ほど)。
         const float DoorScale = 2.5f;
+
+        // 扉の高さだけに掛ける倍率。図書室の扉は幅が1マスちょうどなので、全体の拡大率は上げられない。
+        // 2.5 × 1.1 で `R` の外形の高さは 6.24u(壁の高さ 7.6u の 8 割ほど)になる
+        const float DoorHeightScale = 1.1f;
 
         // 扉の周りは**壁ではなくガラス**で埋める(袖・垂れ壁)。厚みは `$` の当たりと同じにして
         // 隣のガラス板と面が揃うようにする。見た目は `$` のモデルを開口の外だけ切り出して重ねる。
         const float DoorGlassThickness = GlassColliderThickness;
         const string GlassMaterialPath = "Assets/_Project/Art/Materials/Glass.mat";
 
-        // 扉 `R` `C` `L`。実寸は glb を Scale 1 で置いたときの外形。
-        // 原点は開口の中心・床面で、制御パネルのぶん左右非対称。値は **Unity 空間**:
-        // glTF -> Unity のインポートで X が反転するので、.glb で見た左右とは逆になる
-        // (例: ClassroomDoor-V は glb だと -0.74〜+0.765、Unity では -0.765〜+0.74)。
+        // 扉 `R` `C` `L`。実寸は glb を Scale 1 で置いたときの枠の外形(原点は開口の中心・床面)。
+        // 制御パネルは枠の外へ少しはみ出すが外形に含めない。含めると、パネルの無い高さで
+        // 枠と周りのガラスの間に隙間が空く(パネルはガラスの面の手前に付くので重なっても見えない)。
+        // モデルは元の *-V.glb の枠・扉板の左上の斜めの切り欠きを埋めて四角にしたもの。
         static readonly DoorDef[] Doors =
         {
-            new DoorDef('R', "Structure/LabDoor-V.glb", -0.685f, 0.620f, 2.270f),
-            new DoorDef('C', "Structure/ClassroomDoor-V.glb", -0.765f, 0.740f, 2.320f),
-            new DoorDef('L', "Structure/LibraryDoor-V.glb", -0.815f, 0.790f, 2.360f),
+            new DoorDef('R', "Structure/LabDoor-Square-V.glb", -0.620f, 0.620f, 2.270f),
+            new DoorDef('C', "Structure/ClassroomDoor-Square-V.glb", -0.740f, 0.740f, 2.320f),
+            new DoorDef('L', "Structure/LibraryDoor-Square-V.glb", -0.790f, 0.790f, 2.360f),
         };
 
         readonly struct DoorDef
@@ -148,7 +153,7 @@ namespace CreativeAI.EditorTools
             }
         }
 
-        static bool IsDoor(char c) => Doors.Any(d => d.Symbol == c);
+        internal static bool IsDoor(char c) => Doors.Any(d => d.Symbol == c);
 
         /// <summary>
         /// 扉が乗っている板の壁の記号。壁の向きに沿った隣のマスから取り、無ければ `$`
@@ -167,7 +172,7 @@ namespace CreativeAI.EditorTools
         }
 
         /// <summary>線状の板の壁(`$` ガラス / `&` 格子)か。</summary>
-        static bool IsPanel(char c) => c == Glass || c == Lattice;
+        internal static bool IsPanel(char c) => c == Glass || c == Lattice;
 
         readonly struct FloorDef
         {
@@ -252,10 +257,11 @@ namespace CreativeAI.EditorTools
             public float HandrailScale = 1f; // 手すりの太さの倍率(長さはマスに、高さは FenceHeight に合わせる)
             public StairsModel Stairs;
 
-            // 透明なガラス `$`。旧階高ぴったり(9.6u)で作ってある
+            // 透明なガラス `$`。旧階高ぴったり(9.6u)で作ってある。
+            // GlassWall-V から方立・無目を間引き、格子を縦2・横2に広げたもの
             static readonly (char, string[], float) GlassPanel = (
                 Glass,
-                new[] { "Structure/GlassWall-V.glb" },
+                new[] { "Structure/GlassWall-Wide.glb" },
                 9.6f
             );
 
@@ -347,12 +353,132 @@ namespace CreativeAI.EditorTools
             public readonly Dictionary<char, (GameObject[] Prefabs, float ModelHeight)> Kinds =
                 new Dictionary<char, (GameObject[], float)>();
 
+            // 1段の高さの目安(階高)。吹き抜けや最上階で高い壁は、1枚を伸ばさず階高ごとの段に積む
+            public float StoreyHeight;
+
+            /// <summary>壁の高さを階高ごとの段に分けたときの段数と1段の高さ。</summary>
+            public (int Count, float Height) Tiers(float wallHeight)
+            {
+                var n = Mathf.Max(1, Mathf.RoundToInt(wallHeight / StoreyHeight));
+                return (n, wallHeight / n);
+            }
+
             public (GameObject Prefab, float ModelHeight) Pick(char symbol, int row, int col)
             {
                 if (!Kinds.TryGetValue(symbol, out var k) || k.Prefabs.Length == 0)
                     return (null, 1f);
                 return (k.Prefabs[Mathf.Abs(row * 7 + col * 3) % k.Prefabs.Length], k.ModelHeight);
             }
+        }
+
+        /// <summary>
+        /// 床のあるマス。空白は床なし。上の階に着く階段のマスも床を抜く(階段の吹き抜け)。
+        /// 抜くのは「上の階の図での」マスなので Hole を使う(下の階の row とずれることがある)
+        /// </summary>
+        static bool[,] FloorMask(char[,] grid, List<StairCells> stairCells, int floor)
+        {
+            var rows = grid.GetLength(0);
+            var cols = grid.GetLength(1);
+            var mask = new bool[rows, cols];
+            for (var r = 0; r < rows; r++)
+            for (var c = 0; c < cols; c++)
+                mask[r, c] = grid[r, c] != Void;
+            foreach (var s in stairCells.Where(s => s.UpperFloor == floor))
+            foreach (var cell in s.Hole.Where(v => v.y >= 0 && v.y < rows && v.x < cols))
+                mask[cell.y, cell.x] = false;
+            return mask;
+        }
+
+        /// <summary>図を別の形(ミニマップなど)で使う側に渡す、1つの階の図。</summary>
+        public sealed class FloorPlan
+        {
+            /// <summary>建物の名前。</summary>
+            public string Building { get; }
+
+            /// <summary>階の名前(1F など)。</summary>
+            public string Floor { get; }
+
+            /// <summary>マス[row 0, col 0] の中心のワールド座標(Y は床面の高さ)。col は +X、row は +Z へ進む。</summary>
+            public Vector3 Origin { get; }
+
+            /// <summary>図の文字([row, col])。</summary>
+            public char[,] Grid { get; }
+
+            /// <summary>床のあるマス。階段の吹き抜けは false。</summary>
+            public bool[,] HasFloor { get; }
+
+            /// <summary>この階から上る階段(この階の図でのマス範囲と、上る向き)。</summary>
+            public IReadOnlyList<(RectInt Cells, Vector2Int Up)> Stairs { get; }
+
+            internal FloorPlan(
+                string building,
+                string floor,
+                Vector3 origin,
+                char[,] grid,
+                bool[,] hasFloor,
+                IReadOnlyList<(RectInt, Vector2Int)> stairs
+            )
+            {
+                Building = building;
+                Floor = floor;
+                Origin = origin;
+                Grid = grid;
+                HasFloor = hasFloor;
+                Stairs = stairs;
+            }
+        }
+
+        /// <summary>全建物・全階の図を読む。どれか1つでも読めなければ null。</summary>
+        public static List<FloorPlan> LoadFloorPlans()
+        {
+            var maps = LoadAll();
+            if (maps == null)
+                return null;
+
+            var plans = new List<FloorPlan>();
+            foreach (var map in maps)
+            {
+                var stairCells = CollectStairs(
+                    map.Grids,
+                    map.Floors,
+                    map.StairDirs,
+                    map.Building.Name
+                );
+                for (var f = 0; f < map.Floors.Length; f++)
+                {
+                    var stairs = stairCells
+                        .Where(s => s.LowerFloor == f)
+                        .Select(s =>
+                            (
+                                new RectInt(
+                                    s.Col0,
+                                    s.Row0,
+                                    s.Col1 - s.Col0 + 1,
+                                    s.Row1 - s.Row0 + 1
+                                ),
+                                s.Dir switch
+                                {
+                                    StairDir.North => Vector2Int.up,
+                                    StairDir.East => Vector2Int.right,
+                                    StairDir.South => Vector2Int.down,
+                                    _ => Vector2Int.left,
+                                }
+                            )
+                        )
+                        .ToList();
+                    plans.Add(
+                        new FloorPlan(
+                            map.Building.Name,
+                            map.Floors[f].Name,
+                            map.Floors[f].Origin,
+                            map.Grids[f],
+                            FloorMask(map.Grids[f], stairCells, f),
+                            stairs
+                        )
+                    );
+                }
+            }
+            return plans;
         }
 
         /// <summary>1つの建物について .md から読んだ図。</summary>
@@ -832,7 +958,7 @@ namespace CreativeAI.EditorTools
                 doorGlassMat = wallMat;
 
             var stairs = LoadModel(kit.Stairs.Asset, "階段は生成しません。");
-            var glass = new GlassParts();
+            var glass = new GlassParts { StoreyHeight = b.StoreyHeight };
             foreach (var (symbol, assets, modelHeight) in kit.Panels)
             {
                 var prefabs = assets
@@ -916,16 +1042,7 @@ namespace CreativeAI.EditorTools
                 var nr = g.GetLength(0);
                 var nc = g.GetLength(1);
 
-                // 空白は床なし。上の階に着く階段のマスも床を抜く(階段の吹き抜け)。
-                // 抜くのは「上の階の図での」マスなので Hole を使う(下の階の row とずれることがある)
-                var mask = new bool[nr, nc];
-                for (var r = 0; r < nr; r++)
-                for (var c = 0; c < nc; c++)
-                    mask[r, c] = g[r, c] != Void;
-                foreach (var s in stairCells.Where(s => s.UpperFloor == f))
-                foreach (var cell in s.Hole.Where(v => v.y >= 0 && v.y < nr && v.x < nc))
-                    mask[cell.y, cell.x] = false;
-
+                var mask = FloorMask(g, stairCells, f);
                 floorMasks[f] = mask;
                 fenceLayouts[f] = LineLayout.Build(g, mask, nr, nc, ch => ch == Fence);
                 glassLayouts[f] = LineLayout.Build(g, mask, nr, nc, IsPanel);
@@ -1010,6 +1127,26 @@ namespace CreativeAI.EditorTools
                                 || ug[ur, c] == Void;
                         });
 
+                // 真上に上の階の床板があるマス。ガラスは段を階高のまま積み、上端を床板の中へ埋める
+                // (床板の下面で止めるよう縮めると、隣の吹き抜けのマスと方立・無目の位置が食い違う)
+                bool SlabAbove(int r, int c) =>
+                    !floors[f].Detached
+                    && main.Any(g =>
+                    {
+                        if (
+                            Mathf.Abs(floors[g].Origin.y - floors[f].Origin.y - b.StoreyHeight)
+                            > 0.01f
+                        )
+                            return false;
+                        var um = floorMasks[g];
+                        var ur = r + rowOffsets[f] - rowOffsets[g];
+                        return ur >= 0 && ur < um.GetLength(0) && c < um.GetLength(1) && um[ur, c];
+                    });
+                (int Count, float Height) TiersAt(int r, int c) =>
+                    OpenAbove(r, c) ? glass.Tiers(openHeight)
+                    : SlabAbove(r, c) ? (1, b.StoreyHeight - GlassSlabClearance)
+                    : glass.Tiers(wallHeight);
+
                 if (handrail != null)
                 {
                     var fenceLayout = fenceLayouts[f];
@@ -1052,7 +1189,8 @@ namespace CreativeAI.EditorTools
                             fenceLayouts[f],
                             i,
                             wallMat,
-                            (r, c) => OpenAbove(r, c) ? openHeight : wallHeight
+                            (r, c) => OpenAbove(r, c) ? openHeight : wallHeight,
+                            TiersAt
                         );
                 }
 
@@ -1088,7 +1226,8 @@ namespace CreativeAI.EditorTools
                         glass,
                         PanelAlong(grid, rows, cols, r, c, eastWest),
                         WallOffsetAt(glassLayout, rows, cols, r, c, eastWest),
-                        OpenAbove(r, c) ? openHeight : wallHeight
+                        OpenAbove(r, c) ? openHeight : wallHeight,
+                        TiersAt(r, c)
                     );
                 }
             }
@@ -1919,18 +2058,45 @@ namespace CreativeAI.EditorTools
             go.transform.localScale = prefab.transform.localScale * scale;
         }
 
-        /// <summary>ガラス壁のモデルを、原点の床面を保ったまま壁の高さへ伸縮する。</summary>
-        static void FitToWallHeight(GameObject go, float modelHeight, float wallHeight)
+        /// <summary>ガラス壁のモデルを、原点の床面を保ったまま1段の高さへ伸縮する。</summary>
+        static void FitToHeight(GameObject go, float modelHeight, float height)
         {
             var s = go.transform.localScale;
-            go.transform.localScale = new Vector3(s.x, s.y * (wallHeight / modelHeight), s.z);
+            go.transform.localScale = new Vector3(s.x, s.y * (height / modelHeight), s.z);
+        }
+
+        /// <summary>
+        /// ガラス壁のモデルを段ごとに1枚ずつ床から積む。壁の高さまで1枚を伸ばすと、
+        /// 階ごとに伸ばし方が変わって方立・無目の位置と太さが揃わない。
+        /// </summary>
+        static void CreatePanelTiers(
+            Transform parent,
+            string name,
+            GameObject prefab,
+            float modelHeight,
+            (int Count, float Height) tiers,
+            Vector3 pos,
+            Quaternion rot,
+            float widthScale
+        )
+        {
+            for (var k = 0; k < tiers.Count; k++)
+            {
+                var go = (GameObject)PrefabUtility.InstantiatePrefab(prefab, parent);
+                go.name = tiers.Count == 1 ? name : $"{name}_{k}";
+                PlaceModel(go, prefab, pos + Vector3.up * (tiers.Height * k), rot);
+                FitToHeight(go, modelHeight, tiers.Height);
+                var scale = go.transform.localScale;
+                scale.x *= widthScale;
+                go.transform.localScale = scale;
+            }
         }
 
         /// <summary>
         /// 図の上でそのマスを通る壁の線が東西向きか。左右が壁なら東西、そうでなく上下が壁なら南北。
         /// 図の外は壁扱い(外周に接する扉・ガラスも向きが決まる)。
         /// </summary>
-        static bool IsEastWest(char[,] grid, int rows, int cols, int r, int c)
+        internal static bool IsEastWest(char[,] grid, int rows, int cols, int r, int c)
         {
             bool WallLike(int y, int x)
             {
@@ -2157,7 +2323,8 @@ namespace CreativeAI.EditorTools
             LineLayout fences,
             int runIndex,
             Material wallMat,
-            System.Func<int, int, float> heightAt
+            System.Func<int, int, float> heightAt,
+            System.Func<int, int, (int Count, float Height)> tiersAt
         )
         {
             var run = layout.Runs[runIndex];
@@ -2210,18 +2377,17 @@ namespace CreativeAI.EditorTools
                 var (prefab, modelHeight) = glass.Pick(grid[row, col], row, col);
                 if (prefab == null)
                     continue;
-                var go = (GameObject)PrefabUtility.InstantiatePrefab(prefab, parent);
-                go.name = $"GlassWall_{row}_{col}";
-                PlaceModel(
-                    go,
+                // 端で止めたぶん板の幅(モデルのローカル X)を縮める
+                CreatePanelTiers(
+                    parent,
+                    $"GlassWall_{row}_{col}",
                     prefab,
+                    modelHeight,
+                    tiersAt(row, col),
                     Place(row, col, (from + to) * 0.5f),
-                    Quaternion.Euler(0f, yaw, 0f)
+                    Quaternion.Euler(0f, yaw, 0f),
+                    (to - from) / Cell
                 );
-                FitToWallHeight(go, modelHeight, heightAt(row, col));
-                var scale = go.transform.localScale;
-                scale.x *= (to - from) / Cell; // 端で止めたぶん板の幅(モデルのローカル X)を縮める
-                go.transform.localScale = scale;
             }
 
             for (var i = 0; i < run.Length; i++)
@@ -2262,7 +2428,8 @@ namespace CreativeAI.EditorTools
                                 mid,
                                 span,
                                 layout.Offsets[other],
-                                wallHeight
+                                wallHeight,
+                                tiersAt(row, col)
                             );
                         continue;
                     }
@@ -2282,7 +2449,8 @@ namespace CreativeAI.EditorTools
                                 mid,
                                 span,
                                 WallOffsetAt(layout, rows, cols, nr, nc, doorHorizontal),
-                                wallHeight
+                                wallHeight,
+                                tiersAt(row, col)
                             );
                             continue;
                         }
@@ -2381,7 +2549,8 @@ namespace CreativeAI.EditorTools
             GlassParts glass,
             char panel,
             float wallOffset,
-            float wallHeight
+            float wallHeight,
+            (int Count, float Height) tiers
         )
         {
             var root = new GameObject($"Door_{def.Symbol}_{row}_{col}");
@@ -2401,13 +2570,21 @@ namespace CreativeAI.EditorTools
                 var go = (GameObject)PrefabUtility.InstantiatePrefab(prefab, root.transform);
                 go.name = $"{def.Symbol}_Door";
                 PlaceModel(go, prefab, Vector3.zero, Quaternion.identity, DoorScale);
+                go.transform.localPosition = Vector3.Scale(
+                    go.transform.localPosition,
+                    new Vector3(1f, DoorHeightScale, 1f)
+                );
+                go.transform.localScale = Vector3.Scale(
+                    go.transform.localScale,
+                    new Vector3(1f, DoorHeightScale, 1f)
+                );
                 AddDoorInteraction(root, go, DoorScale);
             }
 
             // 外形は拡大後の寸法で埋める(埋め残し / はみ出しを防ぐ)
             var minX = def.MinX * DoorScale;
             var maxX = def.MaxX * DoorScale;
-            var height = def.Height * DoorScale;
+            var height = def.Height * DoorScale * DoorHeightScale;
 
             var half = Cell * 0.5f;
 
@@ -2422,7 +2599,7 @@ namespace CreativeAI.EditorTools
                         name,
                         glassPrefab,
                         glassModelHeight,
-                        wallHeight,
+                        tiers,
                         min,
                         max
                     );
@@ -2459,11 +2636,11 @@ namespace CreativeAI.EditorTools
             );
         }
 
-        // 切り出したメッシュはシーンに埋め込まれるので、同じ形(扉の種類 × 壁の高さ)は使い回す
-        static readonly Dictionary<(Mesh, Vector2, Vector2, float), Mesh> ClippedMeshes = new();
+        // 切り出したメッシュはシーンに埋め込まれるので、同じ形(扉の種類 × 段の位置と高さ)は使い回す
+        static readonly Dictionary<(Mesh, Vector2, Vector2, Vector2), Mesh> ClippedMeshes = new();
 
         /// <summary>
-        /// `$` のモデルを隣と同じ伸縮で置き、親のローカルで X・Y が min〜max の範囲だけ残す。
+        /// `$` のモデルを隣と同じ段の積み方で置き、親のローカルで X・Y が min〜max の範囲だけ残す。
         /// 枠もガラスも箱なので、頂点を範囲へ寄せれば範囲との交わりになる(外の箱は潰れて見えなくなる)。
         /// </summary>
         static void CreateClippedGlass(
@@ -2471,51 +2648,57 @@ namespace CreativeAI.EditorTools
             string name,
             GameObject prefab,
             float modelHeight,
-            float wallHeight,
+            (int Count, float Height) tiers,
             Vector2 min,
             Vector2 max
         )
         {
             if (max.x - min.x < 0.01f || max.y - min.y < 0.01f)
                 return;
-            var go = (GameObject)PrefabUtility.InstantiatePrefab(prefab, parent);
-            // 差し替えたメッシュをシーンに持たせるため、プレハブとのつながりを切る
-            PrefabUtility.UnpackPrefabInstance(
-                go,
-                PrefabUnpackMode.Completely,
-                InteractionMode.AutomatedAction
-            );
-            go.name = name;
-            PlaceModel(go, prefab, Vector3.zero, Quaternion.identity);
-            FitToWallHeight(go, modelHeight, wallHeight);
-
             var vertices = new List<Vector3>();
-            foreach (var filter in go.GetComponentsInChildren<MeshFilter>(true))
+            for (var k = 0; k < tiers.Count; k++)
             {
-                var key = (filter.sharedMesh, min, max, wallHeight);
-                if (ClippedMeshes.TryGetValue(key, out var cached) && cached != null)
-                {
-                    filter.sharedMesh = cached;
-                    continue;
-                }
+                var bottom = tiers.Height * k;
+                if (bottom + tiers.Height <= min.y + 0.01f || bottom >= max.y - 0.01f)
+                    continue; // この段は範囲にかからない
+                var go = (GameObject)PrefabUtility.InstantiatePrefab(prefab, parent);
+                // 差し替えたメッシュをシーンに持たせるため、プレハブとのつながりを切る
+                PrefabUtility.UnpackPrefabInstance(
+                    go,
+                    PrefabUnpackMode.Completely,
+                    InteractionMode.AutomatedAction
+                );
+                go.name = tiers.Count == 1 ? name : $"{name}_{k}";
+                PlaceModel(go, prefab, Vector3.up * bottom, Quaternion.identity);
+                FitToHeight(go, modelHeight, tiers.Height);
 
-                // 扉ルートに対するモデルの置き方はどの扉でも同じなので、範囲と壁の高さで形が決まる
-                var toParent = parent.worldToLocalMatrix * filter.transform.localToWorldMatrix;
-                var fromParent = toParent.inverse;
-                var mesh = Object.Instantiate(filter.sharedMesh);
-                mesh.name = $"{filter.sharedMesh.name}_{name}";
-                mesh.GetVertices(vertices);
-                for (var i = 0; i < vertices.Count; i++)
+                foreach (var filter in go.GetComponentsInChildren<MeshFilter>(true))
                 {
-                    var p = toParent.MultiplyPoint3x4(vertices[i]);
-                    p.x = Mathf.Clamp(p.x, min.x, max.x);
-                    p.y = Mathf.Clamp(p.y, min.y, max.y);
-                    vertices[i] = fromParent.MultiplyPoint3x4(p);
+                    var key = (filter.sharedMesh, min, max, new Vector2(bottom, tiers.Height));
+                    if (ClippedMeshes.TryGetValue(key, out var cached) && cached != null)
+                    {
+                        filter.sharedMesh = cached;
+                        continue;
+                    }
+
+                    // 扉ルートに対するモデルの置き方はどの扉でも同じなので、範囲と段で形が決まる
+                    var toParent = parent.worldToLocalMatrix * filter.transform.localToWorldMatrix;
+                    var fromParent = toParent.inverse;
+                    var mesh = Object.Instantiate(filter.sharedMesh);
+                    mesh.name = $"{filter.sharedMesh.name}_{go.name}";
+                    mesh.GetVertices(vertices);
+                    for (var i = 0; i < vertices.Count; i++)
+                    {
+                        var p = toParent.MultiplyPoint3x4(vertices[i]);
+                        p.x = Mathf.Clamp(p.x, min.x, max.x);
+                        p.y = Mathf.Clamp(p.y, min.y, max.y);
+                        vertices[i] = fromParent.MultiplyPoint3x4(p);
+                    }
+                    mesh.SetVertices(vertices);
+                    mesh.RecalculateBounds();
+                    ClippedMeshes[key] = mesh;
+                    filter.sharedMesh = mesh;
                 }
-                mesh.SetVertices(vertices);
-                mesh.RecalculateBounds();
-                ClippedMeshes[key] = mesh;
-                filter.sharedMesh = mesh;
             }
         }
 
@@ -2603,7 +2786,8 @@ namespace CreativeAI.EditorTools
             float mid,
             float span,
             float otherOffset,
-            float wallHeight
+            float wallHeight,
+            (int Count, float Height) tiers
         )
         {
             // 継ぐのは「隣の列の面」なので、向きはこの列と直角になり、
@@ -2616,13 +2800,17 @@ namespace CreativeAI.EditorTools
             var (prefab, modelHeight) = glass.Pick(symbol, row, col);
             if (prefab != null)
             {
-                var go = (GameObject)PrefabUtility.InstantiatePrefab(prefab, parent);
-                go.name = $"GlassCorner_{row}_{col}";
-                PlaceModel(go, prefab, center, Quaternion.Euler(0f, yaw, 0f));
-                FitToWallHeight(go, modelHeight, wallHeight);
-                var scale = go.transform.localScale;
-                scale.x *= span / Cell; // 板の幅方向(モデルのローカル X)を継ぐ長さに合わせる
-                go.transform.localScale = scale;
+                // 板の幅方向(モデルのローカル X)を継ぐ長さに合わせる
+                CreatePanelTiers(
+                    parent,
+                    $"GlassCorner_{row}_{col}",
+                    prefab,
+                    modelHeight,
+                    tiers,
+                    center,
+                    Quaternion.Euler(0f, yaw, 0f),
+                    span / Cell
+                );
             }
 
             var collider = new GameObject($"GlassCornerCollider_{row}_{col}");
@@ -2824,7 +3012,7 @@ namespace CreativeAI.EditorTools
         // ---------------------------------------------------------------- マス→矩形
 
         /// <summary>true のマスを、なるべく大きい矩形にまとめる(オブジェクト数を減らすため)。</summary>
-        static List<RectInt> MergeRects(bool[,] mask, int rows, int cols)
+        internal static List<RectInt> MergeRects(bool[,] mask, int rows, int cols)
         {
             var used = new bool[rows, cols];
             var result = new List<RectInt>();

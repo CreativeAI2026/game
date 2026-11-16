@@ -60,8 +60,9 @@ namespace CreativeAI.Gameplay
                 _categoryNotPanicProducts[i] = 1f;
             }
 
-            foreach (PanicSignal signal in signals)
+            for (int i = 0; i < signals.Count; i++)
             {
+                PanicSignal signal = signals[i];
                 float evidence = Mathf.Clamp01(signal.Weight * signal.Score);
                 notPanicProduct *= 1f - evidence;
                 _categoryNotPanicProducts[(int)signal.Category] *= 1f - evidence;

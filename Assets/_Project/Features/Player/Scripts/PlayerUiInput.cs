@@ -6,10 +6,10 @@ using UnityEngine.InputSystem;
 namespace CreativeAI.Gameplay
 {
     /// <summary>
-    /// 画面(キャラ / インベ)を開閉する入力の受け口と、UI 操作が必要な場面のアクションマップ切替を担う。
+    /// 画面(キャラ / インベ / マップ)を開閉する入力の受け口と、UI 操作が必要な場面のアクションマップ切替を担う。
     /// 操作で開くUIの表示中(<see cref="UiPanelService.IsOpen"/>)と会話イベント中(<see cref="EventPlaybackService.BlocksPlayerControl"/>)は
     /// PlayerInput を UI マップへ、どちらも終わったら Player マップへ戻す。
-    /// C / I は両マップに同名のアクションがあるので、どちらのマップでも同じメッセージ(OnCharacter / OnInventory)で届く。
+    /// C / I / M は両マップに同名のアクションがあるので、どちらのマップでも同じメッセージ(OnCharacter / OnInventory / OnMap)で届く。
     /// どのパネルを開くかは UI 側(HudIconBarView)が決める(プレイヤーは UI を知らない)。
     /// </summary>
     [RequireComponent(typeof(PlayerInput))]
@@ -26,6 +26,9 @@ namespace CreativeAI.Gameplay
 
         /// <summary>セーブ画面の開閉キー(十字下)が押された。</summary>
         public event Action SavePressed;
+
+        /// <summary>全画面マップの開閉キー(M)が押された。</summary>
+        public event Action MapPressed;
 
         /// <summary>UI マップの Cancel(Esc / B 等)が押された。開いている画面を閉じるのに使う。</summary>
         public event Action CancelPressed;
@@ -85,6 +88,12 @@ namespace CreativeAI.Gameplay
         {
             if (value.isPressed)
                 SavePressed?.Invoke();
+        }
+
+        public void OnMap(InputValue value)
+        {
+            if (value.isPressed)
+                MapPressed?.Invoke();
         }
 
         public void OnCancel(InputValue value)

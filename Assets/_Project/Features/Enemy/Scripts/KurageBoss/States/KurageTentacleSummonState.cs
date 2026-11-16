@@ -81,18 +81,7 @@ namespace CreativeAI.Gameplay
                     boss.Player.transform.position,
                     boss.Mover.Path.StageBounds
                 );
-                KurageGroundTentacle tentacle = Object.Instantiate(
-                    boss.GroundTentaclePrefab,
-                    position,
-                    Quaternion.identity
-                );
-                tentacle.Begin(
-                    boss.Status,
-                    boss.Sounds,
-                    boss.Restraint,
-                    boss.Player.transform,
-                    spawn.Sweep
-                );
+                boss.SpawnGroundTentacle(position, spawn.Sweep);
                 _pending.RemoveAt(i);
             }
         }

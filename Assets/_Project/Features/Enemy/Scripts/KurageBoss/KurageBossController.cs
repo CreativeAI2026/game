@@ -1,6 +1,7 @@
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.Assertions;
+using UnityEngine.Pool;
 
 namespace CreativeAI.Gameplay
 {
@@ -113,6 +114,14 @@ namespace CreativeAI.Gameplay
         [SerializeField]
         private float _ringCooldown = 15f;
 
+        // 1回の攻撃で同時に出る触手の数の目安。これを超えて戻ってきた分は破棄する
+        private const int TentaclePoolCapacity = 12;
+        private const int TentaclePoolMaxSize = 16;
+
+        // 地面の触手は攻撃のたびに作って消さず、ここで使い回す
+        private ObjectPool<KurageGroundTentacle> _tentaclePool;
+        private System.Action<KurageGroundTentacle> _releaseTentacle;
+
         private float _nextTentacleTime;
         private float _nextRingTime;
 
@@ -149,7 +158,6 @@ namespace CreativeAI.Gameplay
         public float StabRetractDuration => _stabRetractDuration;
         public KurageStabReach StabReach { get; private set; }
         public KurageStabEffects StabEffects { get; private set; }
-        public KurageGroundTentacle GroundTentaclePrefab => _groundTentaclePrefab;
 
         public override bool IsAttacking =>
             currentState is KurageStabState or KurageTentacleSummonState or KurageRingThrowState;
@@ -175,6 +183,44 @@ namespace CreativeAI.Gameplay
             StabReach = GetComponent<KurageStabReach>();
             StabEffects = GetComponent<KurageStabEffects>();
             _phase = GetComponent<KuragePhaseTracker>();
+
+            _releaseTentacle = ReleaseTentacle;
+            _tentaclePool = new ObjectPool<KurageGroundTentacle>(
+                createFunc: () => Instantiate(_groundTentaclePrefab),
+                actionOnGet: tentacle => tentacle.gameObject.SetActive(true),
+                actionOnRelease: tentacle => tentacle.gameObject.SetActive(false),
+                actionOnDestroy: tentacle =>
+                {
+                    if (tentacle != null)
+                        Destroy(tentacle.gameObject);
+                },
+                defaultCapacity: TentaclePoolCapacity,
+                maxSize: TentaclePoolMaxSize
+            );
+        }
+
+        protected override void OnDestroy()
+        {
+            base.OnDestroy();
+            _tentaclePool?.Dispose();
+        }
+
+        /// <summary>地面の触手を指定の位置から出す。戻り切った触手はプールへ返って次の攻撃で使い回す。</summary>
+        /// <param name="sweep">突き出した後に、プレイヤーの方へ薙ぎ払うか</param>
+        public void SpawnGroundTentacle(Vector3 position, bool sweep)
+        {
+            KurageGroundTentacle tentacle = _tentaclePool.Get();
+            tentacle.transform.SetPositionAndRotation(position, Quaternion.identity);
+            tentacle.Begin(Status, Sounds, Restraint, Player.transform, sweep, _releaseTentacle);
+        }
+
+        private void ReleaseTentacle(KurageGroundTentacle tentacle)
+        {
+            // ボスが消えた後に戻ってきた分は、返す先が無いので破棄する
+            if (this == null)
+                Destroy(tentacle.gameObject);
+            else
+                _tentaclePool.Release(tentacle);
         }
 
         protected override void OnEnable()

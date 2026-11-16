@@ -238,6 +238,24 @@ namespace CreativeAI.Tests.EditMode
         }
 
         [Test]
+        public void PlayerMovedOutWithoutExitCallback_EventEnds_DoesNotFireAgain()
+        {
+            // 引き戻し(player.moveTo)は CharacterController を切って動かすので OnTriggerExit が届かない。
+            // 外へ出ているのに「中に居る」と覚えたままだと、終わるたびに撃ち直して引き戻しが止まらない。
+            AssignEvent(FiringEvent());
+            Subscribe();
+            EnterTrigger();
+            CollectionAssert.AreEqual(new[] { "cave_encounter" }, _player.Played);
+
+            EventPlaybackService.SetPlaying(true);
+            _playerGo.transform.position = new Vector3(100f, 0f, 0f); // ExitTrigger は呼ばない
+            EventPlaybackService.SetPlaying(false);
+            NextFrame();
+
+            Assert.AreEqual(1, _player.Played.Count, "外に居るので撃ち直さない");
+        }
+
+        [Test]
         public void Reset_MakesColliderTrigger()
         {
             var col = _triggerGo.GetComponent<Collider>();

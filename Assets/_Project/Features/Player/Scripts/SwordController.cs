@@ -1,3 +1,4 @@
+using CreativeAI.Core;
 using SoundKit;
 using UnityEngine;
 using UnityEngine.Assertions;
@@ -134,7 +135,6 @@ namespace CreativeAI.Gameplay
 
                     // この一撃までは防ぐが、メーターが尽きたら防御が割れて怯む。
                     // 怯みの開始で武器は中立状態へ戻る(PlayerFlinchHandler → ForceReset)
-                    // TODO : 防御が割れた時の専用アニメーションを追加する。
                     if (GuardGauge.Absorb(damage, Time.time))
                     {
                         _flinchHandler.TriggerFlinch();

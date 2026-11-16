@@ -1,3 +1,4 @@
+using CreativeAI.Core;
 using UnityEngine;
 
 namespace CreativeAI.Gameplay
@@ -14,7 +15,7 @@ namespace CreativeAI.Gameplay
 
         public override void Enter()
         {
-            Debug.Log("[MidBoss] Startステート");
+            DevLog.Log("[MidBoss] Startステート");
 
             if (con.Player == null)
             {

@@ -1,3 +1,4 @@
+using CreativeAI.Core;
 using UnityEngine;
 using UnityEngine.AI;
 
@@ -33,7 +34,7 @@ namespace CreativeAI.Gameplay
 
         public override void Enter()
         {
-            Debug.Log("[TutorialBoss] パトロールステート開始");
+            DevLog.Log("[TutorialBoss] パトロールステート開始");
 
             // 交戦が終わったので、次に見つけた時は攻撃までの待ち時間を新しく決める
             boss.EndCombatTempo();
@@ -107,7 +108,7 @@ namespace CreativeAI.Gameplay
 
         public override void Exit()
         {
-            Debug.Log("[TutorialBoss] パトロールステート終了");
+            DevLog.Log("[TutorialBoss] パトロールステート終了");
 
             // 音イベント解除
             SoundEventBus.OnSoundEmitted -= OnSoundHeard;
@@ -162,7 +163,7 @@ namespace CreativeAI.Gameplay
                 return false;
             }
 
-            Debug.Log("[TutorialBoss] 見えた気がした場所を確かめに行く");
+            DevLog.Log("[TutorialBoss] 見えた気がした場所を確かめに行く");
             boss.ChangeState(
                 new TBossSearchState(boss, boss.LastKnownPlayerPosition, cautious: true)
             );

@@ -1,3 +1,4 @@
+using CreativeAI.Core;
 using UnityEngine;
 
 namespace CreativeAI.Gameplay
@@ -16,7 +17,7 @@ namespace CreativeAI.Gameplay
 
         public override void Enter()
         {
-            Debug.Log("[MidBoss] 特殊攻撃（手下生成）ステート開始");
+            DevLog.Log("[MidBoss] 特殊攻撃（手下生成）ステート開始");
             _timer = 0f;
 
             if (con.Agent != null)

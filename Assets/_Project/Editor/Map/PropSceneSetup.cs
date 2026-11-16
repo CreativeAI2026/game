@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using CreativeAI.Gameplay;
+using CreativeAI.Core;
 using UnityEditor;
 using UnityEditor.SceneManagement;
 using UnityEngine;

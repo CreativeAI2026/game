@@ -1,3 +1,4 @@
+using CreativeAI.Core;
 using UnityEngine;
 
 namespace CreativeAI.Gameplay
@@ -25,7 +26,7 @@ namespace CreativeAI.Gameplay
 
         public override void Enter()
         {
-            Debug.Log($"[MidBoss] 待機ステート開始（{_duration}秒）");
+            DevLog.Log($"[MidBoss] 待機ステート開始（{_duration}秒）");
             _timer = 0f;
 
             if (con.Agent != null)

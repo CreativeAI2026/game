@@ -1,3 +1,4 @@
+using CreativeAI.Core;
 using UnityEngine;
 using UnityEngine.AI;
 
@@ -56,7 +57,7 @@ namespace CreativeAI.Gameplay
 
         public override void Enter()
         {
-            Debug.Log($"[TutorialBoss] 捜索ステート開始 目標:{_target}");
+            DevLog.Log($"[TutorialBoss] 捜索ステート開始 目標:{_target}");
 
             _phase = Phase.Move;
             _timer = 0f;
@@ -95,7 +96,7 @@ namespace CreativeAI.Gameplay
 
         public override void Exit()
         {
-            Debug.Log("[TutorialBoss] 捜索ステート終了");
+            DevLog.Log("[TutorialBoss] 捜索ステート終了");
 
             SoundEventBus.OnSoundEmitted -= OnSoundHeard;
 
@@ -181,7 +182,7 @@ namespace CreativeAI.Gameplay
 
         private void GiveUpSearch()
         {
-            Debug.Log("[TutorialBoss] 捜索を打ち切り、パトロールへ復帰");
+            DevLog.Log("[TutorialBoss] 捜索を打ち切り、パトロールへ復帰");
             boss.IsAlerted = false;
             boss.ChangeState(new TBossPatrolState(boss));
         }

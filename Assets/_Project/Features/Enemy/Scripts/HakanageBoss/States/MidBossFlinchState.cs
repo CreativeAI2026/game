@@ -1,3 +1,4 @@
+using CreativeAI.Core;
 using UnityEngine;
 
 namespace CreativeAI.Gameplay
@@ -19,7 +20,7 @@ namespace CreativeAI.Gameplay
 
         public override void Enter()
         {
-            Debug.Log("[MidBoss] 怯みステート開始");
+            DevLog.Log("[MidBoss] 怯みステート開始");
 
             if (con.Agent != null)
             {
@@ -58,7 +59,7 @@ namespace CreativeAI.Gameplay
 
         public override void Exit()
         {
-            Debug.Log("[MidBoss] 怯みステート終了");
+            DevLog.Log("[MidBoss] 怯みステート終了");
             if (con.Agent != null)
             {
                 con.Agent.isStopped = false;

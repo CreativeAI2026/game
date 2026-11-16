@@ -1,12 +1,13 @@
 using System.Collections;
 using UnityEngine;
+using UnityEngine.Rendering.Universal;
 
 namespace CreativeAI.Gameplay
 {
     /// <summary>
     /// 液体着弾後に生成される毒付与エリア。
     /// 一定間隔で OverlapBox を使い、エリア内のプレイヤーに毒を付与し続ける。
-    /// 持続時間終了後は当たり判定のみ先に無効化し、Decal Projectorをフェードアウトしてから破棄する。
+    /// 持続時間終了後は当たり判定のみ先に無効化し、Decal Projectorをフェードアウトしてから中ボスのプールへ返す。
     /// </summary>
     public class MidBossPoisonArea : MonoBehaviour
     {
@@ -28,9 +29,11 @@ namespace CreativeAI.Gameplay
         [SerializeField]
         private float _fadeOutDuration = 1.5f;
 
-        // DecalProjectorのfadeFactorをリフレクションで操作する（アセンブリ参照不要）
-        private Component _decalProjector;
-        private System.Reflection.PropertyInfo _fadeProp;
+        // 範囲内のプレイヤーを受け取る配列。毎回作らずに使い回す
+        private readonly Collider[] _overlapBuffer = new Collider[4];
+
+        private DecalProjector _decalProjector;
+        private MidBossController _owner;
 
         private float _duration;
         private float _poisonDuration;
@@ -43,22 +46,15 @@ namespace CreativeAI.Gameplay
 
         private void Awake()
         {
-            // アセンブリの文字列指定による取得失敗（即座に消える原因）を防ぐため、確実な探索方式に変更
-            Component[] comps = GetComponentsInChildren<Component>();
-            foreach (var c in comps)
-            {
-                if (c.GetType().Name == "DecalProjector")
-                {
-                    _decalProjector = c;
-                    _fadeProp = c.GetType().GetProperty("fadeFactor");
-                    break;
-                }
-            }
+            _decalProjector = GetComponentInChildren<DecalProjector>();
         }
 
         private LayerMask _playerLayer;
 
+        /// <summary>毒エリアを動かし始める。</summary>
+        /// <param name="owner">出した中ボス。消える時の戻し先</param>
         public void Initialize(
+            MidBossController owner,
             float duration,
             float interval,
             float poisonDuration,
@@ -67,6 +63,7 @@ namespace CreativeAI.Gameplay
             LayerMask playerLayer
         )
         {
+            _owner = owner;
             _duration = duration;
             _interval = interval;
             _poisonDuration = poisonDuration;
@@ -76,6 +73,8 @@ namespace CreativeAI.Gameplay
             _lifetimeTimer = 0f;
             _intervalTimer = _interval; // 生成直後に即座に判定を行う（タイムラグ排除）
             _isActive = true;
+            if (_decalProjector != null)
+                _decalProjector.fadeFactor = 1f;
         }
 
         private void Update()
@@ -89,7 +88,7 @@ namespace CreativeAI.Gameplay
             {
                 // 当たり判定を先に無効化し、Decalをフェードアウトしてから破棄
                 _isActive = false;
-                StartCoroutine(FadeOutAndDestroy());
+                StartCoroutine(FadeOutAndRelease());
                 return;
             }
 
@@ -103,25 +102,24 @@ namespace CreativeAI.Gameplay
             Vector3 halfExtents = new Vector3(_radius, _thickness * 0.5f, _radius);
             Vector3 center = transform.position + transform.up * _yOffset;
 
-            // TODO(Issue137): 毎フレーム配列を生成してGCが発生するため、OverlapBoxNonAlloc + 再利用バッファに置き換える。
-            //                あわせて下の localPos.magnitude <= _radius も sqrMagnitude 比較にする。
-            // LayerMaskを明示的に指定してOverlapBoxを実行
-            Collider[] hits = Physics.OverlapBox(
+            int hitCount = Physics.OverlapBoxNonAlloc(
                 center,
                 halfExtents,
+                _overlapBuffer,
                 transform.rotation,
                 _playerLayer
             );
 
             bool isPlayerInside = false;
 
-            foreach (var col in hits)
+            for (int i = 0; i < hitCount; i++)
             {
+                Collider col = _overlapBuffer[i];
                 // Y軸を無視した平面距離で円形に絞り込む
                 Vector3 localPos = transform.InverseTransformPoint(col.transform.position);
                 localPos.y = 0f;
 
-                if (localPos.magnitude <= _radius)
+                if (localPos.sqrMagnitude <= _radius * _radius)
                 {
                     isPlayerInside = true;
 
@@ -156,22 +154,26 @@ namespace CreativeAI.Gameplay
             }
         }
 
-        private IEnumerator FadeOutAndDestroy()
+        private IEnumerator FadeOutAndRelease()
         {
             float elapsed = 0f;
 
-            if (_decalProjector != null && _fadeProp != null)
+            if (_decalProjector != null)
             {
                 while (elapsed < _fadeOutDuration)
                 {
                     elapsed += Time.deltaTime;
                     float t = 1f - Mathf.Clamp01(elapsed / _fadeOutDuration);
-                    _fadeProp.SetValue(_decalProjector, t);
+                    _decalProjector.fadeFactor = t;
                     yield return null;
                 }
             }
 
-            Destroy(gameObject);
+            // 出した中ボスが消えた後は返す先が無いので破棄する
+            if (_owner != null)
+                _owner.ReleasePoisonArea(this);
+            else
+                Destroy(gameObject);
         }
 
 #if UNITY_EDITOR

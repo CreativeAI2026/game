@@ -20,7 +20,7 @@ namespace CreativeAI.Tests.EditMode
         public void SetUp()
         {
             _prefab = PrefabUtility.LoadPrefabContents(
-                "Assets/_Project/Features/UI/InventoryUI/Prefabs/InventoryPanel.prefab"
+                "Assets/_Project/Features/UI/Inventory/Prefabs/InventoryPanel.prefab"
             );
             _view = _prefab.GetComponentInChildren<ItemParameterListView>(true);
             Assert.IsNotNull(_view);

@@ -1,3 +1,4 @@
+using CreativeAI.Core;
 using UnityEngine;
 using UnityEngine.AI;
 
@@ -15,7 +16,7 @@ namespace CreativeAI.Gameplay
 
         public override void Enter()
         {
-            Debug.Log("[TutorialBoss] 死亡ステート開始");
+            DevLog.Log("[TutorialBoss] 死亡ステート開始");
 
             // 戦闘曲を止めて通常時の BGM へ戻す(TBossAlertAudio が変化を見て切り替える)
             boss.IsAlerted = false;

@@ -8,7 +8,7 @@ namespace CreativeAI.UI
     /// <summary>
     /// 画面右上の円形ナビ(キャラ / インベ / セーブ)。HP の HUD とは別 Canvas(HP は入力を受けず頻繁に更新されるため)。
     /// ボタンで <see cref="UiRouter.Toggle"/> を呼び、<see cref="GameModeManager.OnModeChanged"/> を購読して Field=表示 / Battle=非表示 を自分で切り替える。
-    /// 表示中はキーでも開ける(C=キャラ / I=インベ、UI マップの Cancel で閉じる)。キー入力は PlayerInputActions のアクションで、
+    /// 表示中はキーでも開ける(C=キャラ / I=インベ / M=全画面マップ、UI マップの Cancel で閉じる)。キー入力は PlayerInputActions のアクションで、
     /// プレイヤーの <see cref="PlayerUiInput"/> から受け取る(プレイヤーは実行時生成なので <see cref="PlayerRegistry"/> 経由)。
     /// 隠れるとき(戦闘・会話の開始)は開いているパネルも閉じる。
     /// </summary>
@@ -76,6 +76,7 @@ namespace CreativeAI.UI
                 _uiInput.CharacterPressed -= OnCharacterPressed;
                 _uiInput.InventoryPressed -= OnInventoryPressed;
                 _uiInput.SavePressed -= OnSavePressed;
+                _uiInput.MapPressed -= OnMapPressed;
                 _uiInput.CancelPressed -= OnCancelPressed;
             }
 
@@ -86,6 +87,7 @@ namespace CreativeAI.UI
                 _uiInput.CharacterPressed += OnCharacterPressed;
                 _uiInput.InventoryPressed += OnInventoryPressed;
                 _uiInput.SavePressed += OnSavePressed;
+                _uiInput.MapPressed += OnMapPressed;
                 _uiInput.CancelPressed += OnCancelPressed;
             }
         }
@@ -102,6 +104,8 @@ namespace CreativeAI.UI
         private void OnInventoryPressed() => ToggleByKey(UiRouter.UiId.Inventory);
 
         private void OnSavePressed() => ToggleByKey(UiRouter.UiId.Save);
+
+        private void OnMapPressed() => ToggleByKey(UiRouter.UiId.Map);
 
         private void ToggleByKey(UiRouter.UiId id)
         {
