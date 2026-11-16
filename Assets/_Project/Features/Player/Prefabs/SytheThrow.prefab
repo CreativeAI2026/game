@@ -5136,7 +5136,8 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: CreativeAI.Gameplay::CreativeAI.Gameplay.PlayerMeleeHitbox
   _meleeMultiplier: 1
-  _hitEffect: {fileID: 1758473627833946668, guid: fe43ffc680021e449a8c86605ce01634, type: 3}
+  _hitEffect: {fileID: 8841252265832173778, guid: 4098f9d3c02233a439d69404ed9ee783, type: 3}
+  _alignHitEffectToSwing: 0
   _hitSound: {fileID: 11400000, guid: 0d9bae69458819c4685a3eb1567babdd, type: 2}
   _hitboxRadius: 0.75
   _targetLayer:

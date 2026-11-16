@@ -31,6 +31,10 @@ namespace CreativeAI.Gameplay
         [SerializeField]
         private GameObject _hitEffect;
 
+        [Tooltip("壁などに刺さった時のエフェクトPrefab")]
+        [SerializeField]
+        private GameObject _stickEffect;
+
         [Header("着弾音設定")]
         [Tooltip("敵に当たった時の音")]
         [SerializeField]
@@ -100,7 +104,7 @@ namespace CreativeAI.Gameplay
             }
 
             ContactPoint contact = collision.GetContact(0);
-            SpawnHitEffect(contact.point, contact.normal);
+            SpawnEffect(_hitEffect, contact.point, contact.normal);
             WorldSoundPlayer.Play(_enemyHitSound, contact.point, this);
 
             _projectile.ReturnToPool();
@@ -111,21 +115,23 @@ namespace CreativeAI.Gameplay
             _projectile.StopFlying();
             _projectile.transform.SetParent(collision.transform, true);
 
-            Vector3 impactPoint = collision.GetContact(0).point;
+            ContactPoint contact = collision.GetContact(0);
+            Vector3 impactPoint = contact.point;
+            SpawnEffect(_stickEffect, impactPoint, contact.normal);
             WorldSoundPlayer.Play(_stickSound, impactPoint, this);
 
             // 着弾位置をSoundEventBusで敵AIに通知する
             SoundEventBus.Emit(new SoundEventData(SoundType.ArrowHit, impactPoint, _impactRadius));
         }
 
-        // TODO : 現在はダメージを与えたときにしか生成されないが、のちに壁に当たったときにも別のエフェクトを生成させる
-        private void SpawnHitEffect(Vector3 position, Vector3 normal)
+        /// <summary>エフェクトの前方(+Z)を、当たった面の外向きに合わせて再生する。</summary>
+        private static void SpawnEffect(GameObject effect, Vector3 position, Vector3 normal)
         {
-            if (_hitEffect == null)
+            if (effect == null)
                 return;
             Quaternion rotation =
                 normal != Vector3.zero ? Quaternion.LookRotation(normal) : Quaternion.identity;
-            EffectPool.Play(_hitEffect, position, rotation);
+            EffectPool.Play(effect, position, rotation);
         }
     }
 }

@@ -19,6 +19,13 @@ namespace CreativeAI.Gameplay
         [SerializeField]
         private GameObject _hitEffect;
 
+        [Tooltip(
+            "ON: エフェクトの前方(+Z)を武器を振った向き、上(+Y)を当たった面の外向きに合わせる(斬撃用)。"
+                + "OFF: エフェクトの前方を当たった面の外向きに合わせる"
+        )]
+        [SerializeField]
+        private bool _alignHitEffectToSwing;
+
         [Header("ヒット音")]
         [Tooltip("敵に当たった時の音。武器(判定)ごとに割り当てる")]
         [SerializeField]
@@ -36,6 +43,9 @@ namespace CreativeAI.Gameplay
         private PlayerStatus _playerStatus;
         private bool _isHitboxActive = false;
         private Vector3 _previousPosition;
+
+        // 直近で判定が動いた向き(= 武器を振った向き)。まだ動いていなければ zero
+        private Vector3 _swingDirection;
         private HashSet<Collider> _alreadyHitTargets = new HashSet<Collider>();
 
         // 物理クエリ結果の再利用バッファ(_targetLayer が広い場合も取りこぼさないよう大きめ)
@@ -68,10 +78,11 @@ namespace CreativeAI.Gameplay
             // 前フレームから現フレームまでの軌跡全体を太いレイで判定する
             if (distance > 0)
             {
+                _swingDirection = direction / distance;
                 int hitCount = Physics.SphereCastNonAlloc(
                     _previousPosition,
                     _hitboxRadius,
-                    direction.normalized,
+                    _swingDirection,
                     _castHits,
                     distance,
                     _targetLayer
@@ -144,6 +155,7 @@ namespace CreativeAI.Gameplay
             _alreadyHitTargets.Clear();
             // 軌跡判定の起点を記録し、最初のフレームで正しくSphereCastできるようにする
             _previousPosition = transform.position;
+            _swingDirection = Vector3.zero;
             _isHitboxActive = true;
         }
 
@@ -157,9 +169,18 @@ namespace CreativeAI.Gameplay
         {
             if (_hitEffect == null)
                 return;
-            Quaternion rotation =
-                normal != Vector3.zero ? Quaternion.LookRotation(normal) : Quaternion.identity;
-            EffectPool.Play(_hitEffect, position, rotation);
+            EffectPool.Play(_hitEffect, position, ResolveHitEffectRotation(normal));
+        }
+
+        private Quaternion ResolveHitEffectRotation(Vector3 normal)
+        {
+            // 判定がまだ動いていない最初のフレームで当たった場合は、振った向きが分からないので面の向きに合わせる
+            if (_alignHitEffectToSwing && _swingDirection != Vector3.zero)
+            {
+                Vector3 up = normal != Vector3.zero ? normal : Vector3.up;
+                return Quaternion.LookRotation(_swingDirection, up);
+            }
+            return normal != Vector3.zero ? Quaternion.LookRotation(normal) : Quaternion.identity;
         }
 
         private void OnDrawGizmosSelected()

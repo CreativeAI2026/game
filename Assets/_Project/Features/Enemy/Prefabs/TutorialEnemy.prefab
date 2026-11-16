@@ -860,7 +860,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: CreativeAI.Gameplay::CreativeAI.Gameplay.EnemyMeleeHitbox
   _meleeMultiplier: 1
   _enemyStatus: {fileID: 2372207900168909963}
-  _hitEffect: {fileID: 1758473627833946668, guid: fe43ffc680021e449a8c86605ce01634, type: 3}
+  _hitEffect: {fileID: 8841252265832173778, guid: 4098f9d3c02233a439d69404ed9ee783, type: 3}
   _hitSound: {fileID: 11400000, guid: 52f8e98fecb018048ac37faba34ed615, type: 2}
   _hitboxRadius: 1
   _targetLayer:
@@ -1285,8 +1285,9 @@ MonoBehaviour:
   grabPullDuration: 0.5
   grabPullDistance: 1.5
   grabPullLateralOffset: 0.5
-  electricEffectPrefab: {fileID: 9027514048236820043, guid: 8e1bf96441ff48241ab0f44e40d0b874, type: 3}
+  electricEffectPrefab: {fileID: 8660468279805029576, guid: 76193ff0670c3d049bc7d3f55573b0f4, type: 3}
   grabRetractDuration: 0.4
+  grabCameraTarget: {fileID: 0}
   panicPressureSettings:
     _tenseAttackIntervalScale: 0.8
     _tenseDirectAssaultBonus: 0.15

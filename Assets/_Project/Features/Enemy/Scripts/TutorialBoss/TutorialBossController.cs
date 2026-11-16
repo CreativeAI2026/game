@@ -297,9 +297,11 @@ namespace CreativeAI.Gameplay
         [SerializeField]
         private float grabPullLateralOffset = 0f;
 
-        [Tooltip("電撃エフェクトの ParticleSystem プレハブ（プレイヤーにアタッチして使用）。")]
+        [Tooltip(
+            "電撃エフェクトのプレハブ。ワイヤーの付け根からプレイヤーの首元までの間に電流を流す。"
+        )]
         [SerializeField]
-        private ParticleSystem electricEffectPrefab;
+        private ElectricArcEffect electricEffectPrefab;
 
         [Tooltip("触手の引っ込み演出にかかる時間（秒）。捕獲脱出後のリトラクト。")]
         [SerializeField]
@@ -398,7 +400,7 @@ namespace CreativeAI.Gameplay
         public float GrabPullDuration => grabPullDuration;
         public float GrabPullDistance => grabPullDistance;
         public float GrabPullLateralOffset => grabPullLateralOffset;
-        public ParticleSystem ElectricEffectPrefab => electricEffectPrefab;
+        public ElectricArcEffect ElectricEffectPrefab => electricEffectPrefab;
         public float GrabRetractDuration => grabRetractDuration;
         public Transform GrabCameraTarget => grabCameraTarget;
         public Transform KamaBone => kamaBone;

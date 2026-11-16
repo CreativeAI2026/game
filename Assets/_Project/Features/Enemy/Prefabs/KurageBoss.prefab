@@ -21,6 +21,7 @@ GameObject:
   - component: {fileID: 249553817374106429}
   - component: {fileID: 3487277980888971487}
   - component: {fileID: 8414664108098955601}
+  - component: {fileID: 5876773975100021574}
   m_Layer: 9
   m_Name: KurageBoss
   m_TagString: Enemy
@@ -307,6 +308,21 @@ MonoBehaviour:
   _thrustPrefab: {fileID: 510845882235045583, guid: ea20c6c9ab5098d4fbc3417741426a7f, type: 3}
   _thrustStartRatio: 0.12
   _gatherCleanupDelay: 1
+--- !u!114 &5876773975100021574
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1254817577893401342}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 1e444a4045b645a49b1721f64fa261b9, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: CreativeAI.Gameplay::CreativeAI.Gameplay.KurageRingEffects
+  _halo: {fileID: 6704097575574395445}
+  _restraintAuraPrefab: {fileID: 5495383204309770231, guid: 066f7eca64dc2a04eac55f6993a83113, type: 3}
+  _auraCleanupDelay: 2.5
 --- !u!1 &3134970511177144099
 GameObject:
   m_ObjectHideFlags: 0
@@ -353,7 +369,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: CreativeAI.Gameplay::CreativeAI.Gameplay.EnemyMeleeHitbox
   _meleeMultiplier: 1
   _enemyStatus: {fileID: 5922813433304993890}
-  _hitEffect: {fileID: 0}
+  _hitEffect: {fileID: 1758473627833946668, guid: fe43ffc680021e449a8c86605ce01634, type: 3}
   _hitSound: {fileID: 11400000, guid: 70036a6696cdefe4083edb7d02c6069a, type: 2}
   _hitboxRadius: 1.5
   _targetLayer:

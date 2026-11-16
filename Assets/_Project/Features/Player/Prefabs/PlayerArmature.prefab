@@ -1252,7 +1252,8 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: CreativeAI.Gameplay::CreativeAI.Gameplay.PlayerMeleeHitbox
   _meleeMultiplier: 1
-  _hitEffect: {fileID: 1758473627833946668, guid: fe43ffc680021e449a8c86605ce01634, type: 3}
+  _hitEffect: {fileID: 8841252265832173778, guid: 4098f9d3c02233a439d69404ed9ee783, type: 3}
+  _alignHitEffectToSwing: 0
   _hitSound: {fileID: 11400000, guid: 87d7b025d60c3f943b88807695d6635b, type: 2}
   _hitboxRadius: 1.5
   _targetLayer:
@@ -3294,6 +3295,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: CreativeAI.Gameplay::CreativeAI.Gameplay.PlayerMeleeHitbox
   _meleeMultiplier: 1.5
   _hitEffect: {fileID: 0}
+  _alignHitEffectToSwing: 0
   _hitSound: {fileID: 11400000, guid: dbeb8e50cee165f4e8bb88b2e2e02638, type: 2}
   _hitboxRadius: 3
   _targetLayer:
@@ -5290,7 +5292,8 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: CreativeAI.Gameplay::CreativeAI.Gameplay.PlayerMeleeHitbox
   _meleeMultiplier: 1
-  _hitEffect: {fileID: 1758473627833946668, guid: fe43ffc680021e449a8c86605ce01634, type: 3}
+  _hitEffect: {fileID: 5812038374820040852, guid: d74183456283d434f974eeebdec07cf4, type: 3}
+  _alignHitEffectToSwing: 0
   _hitSound: {fileID: 11400000, guid: 06264eece26847348b29355b366944d7, type: 2}
   _hitboxRadius: 1.5
   _targetLayer:
@@ -5713,6 +5716,12 @@ MonoBehaviour:
   _hitbox: {fileID: 7111180468013580485}
   _swingSound: {fileID: 11400000, guid: 2c786d35de08d41468aecafc457db117, type: 2}
   parryWindowDuration: 0.2
+  _guardGaugeSettings:
+    _max: 1500
+    _costPerDamage: 1
+    _regenPerSecond: 150
+    _regenDelay: 1.5
+    _recoverRatioAfterBreak: 0.5
   guardEffectPrefab: {fileID: 6283385569647498531, guid: c307aa68ab3e4cc4a8123308c3d2813d, type: 3}
   parryEffectPrefab: {fileID: 358637981425055526, guid: 00deabee16ae5674b93d3e9f636735e0, type: 3}
   _guardSound: {fileID: 11400000, guid: 7ab6fd05aeda5534abbc9cb4c0800d4a, type: 2}
@@ -22644,7 +22653,8 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: CreativeAI.Gameplay::CreativeAI.Gameplay.PlayerMeleeHitbox
   _meleeMultiplier: 1
-  _hitEffect: {fileID: 1758473627833946668, guid: fe43ffc680021e449a8c86605ce01634, type: 3}
+  _hitEffect: {fileID: 8841252265832173778, guid: 4098f9d3c02233a439d69404ed9ee783, type: 3}
+  _alignHitEffectToSwing: 1
   _hitSound: {fileID: 11400000, guid: 8a7e240c1340a9e49915a3522c7a4e25, type: 2}
   _hitboxRadius: 1.5
   _targetLayer:
@@ -24260,6 +24270,8 @@ MonoBehaviour:
   UpperChestTrackingTarget: {fileID: 7309617434048872567}
   TopClamp: 30
   BottomClamp: -25
+  _aimMouseLookSensitivityMulti: 0.5
+  _aimControllerLookSensitivityMulti: 0.1
   CameraAngleOverride: 0
   LockCameraPosition: 0
 --- !u!114 &5410422798457887496

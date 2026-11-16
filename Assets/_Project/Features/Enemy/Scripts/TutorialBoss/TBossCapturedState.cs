@@ -22,7 +22,7 @@ namespace CreativeAI.Gameplay
         private float _timer;
         private float _damageTimer;
         private readonly MashEscapeGauge _escapeGauge = new MashEscapeGauge();
-        private ParticleSystem _electricEffect;
+        private ElectricArcEffect _electricEffect;
         private LoopingSound _electricLoop;
 
         private PlayerController _playerController;
@@ -179,6 +179,7 @@ namespace CreativeAI.Gameplay
             if (_phase != Phase.Escape)
             {
                 UpdateTentacleIkTarget();
+                UpdateElectricEffectEndpoints();
                 ForcePlayerLookAtBoss();
             }
             else
@@ -391,13 +392,8 @@ namespace CreativeAI.Gameplay
         {
             if (boss.ElectricEffectPrefab == null || boss.Player == null)
                 return;
-            _electricEffect = Object.Instantiate(boss.ElectricEffectPrefab, boss.Player.transform);
-            Vector3 localNeckPos =
-                _neckBone != null
-                    ? boss.Player.transform.InverseTransformPoint(_neckBone.position)
-                    : new Vector3(0f, 1.4f, 0f);
-            _electricEffect.transform.localPosition = localNeckPos;
-            _electricEffect.Play();
+            _electricEffect = Object.Instantiate(boss.ElectricEffectPrefab);
+            UpdateElectricEffectEndpoints();
 
             // 電撃の音はエフェクトと同じ位置(プレイヤーの首元)から鳴らす。エフェクトごとに作り、エフェクトと一緒に破棄される
             _electricLoop = new LoopingSound(_electricEffect.gameObject);
@@ -411,9 +407,23 @@ namespace CreativeAI.Gameplay
             // エフェクトは粒子が消えるまで2秒残すので、その間にフェードして止まる
             _electricLoop.Stop();
             _electricLoop = null;
-            _electricEffect.Stop(true, ParticleSystemStopBehavior.StopEmitting);
+            _electricEffect.StopFlow();
             Object.Destroy(_electricEffect.gameObject, 2f);
             _electricEffect = null;
+        }
+
+        /// <summary>電流の両端(ワイヤーの付け根 → プレイヤーの首元)を、動いた後の位置で電撃エフェクトへ渡す。</summary>
+        private void UpdateElectricEffectEndpoints()
+        {
+            if (_electricEffect == null || boss.WireBone == null)
+                return;
+
+            // 付け根の求め方は TBossAttackFeasibility.GetWireOrigin と同じ(引き伸ばす前の手首の位置)
+            Vector3 wireOrigin = boss.WireBone.parent.TransformPoint(
+                boss.InitialWireBoneLocalPosition
+            );
+            Vector3 neck = _neckBone != null ? _neckBone.position : boss.WireBone.position;
+            _electricEffect.SetEndpoints(wireOrigin, neck);
         }
 
         private void ForcePlayerLookAtBoss()
