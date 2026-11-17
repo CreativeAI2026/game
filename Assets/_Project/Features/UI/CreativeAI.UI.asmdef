@@ -2,7 +2,6 @@
     "name": "CreativeAI.UI",
     "rootNamespace": "CreativeAI.UI",
     "references": [
-        "CreativeAI.Core",
         "CreativeAI.Gameplay",
         "DOTween.Modules",
         "Unity.TextMeshPro",
