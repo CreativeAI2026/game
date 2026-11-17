@@ -1,6 +1,5 @@
 using System.IO;
 using System.Text.RegularExpressions;
-using CreativeAI.Core;
 using CreativeAI.Gameplay;
 using CreativeAI.UI;
 using NUnit.Framework;

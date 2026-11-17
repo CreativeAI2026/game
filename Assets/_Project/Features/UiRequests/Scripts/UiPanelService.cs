@@ -1,6 +1,6 @@
 using UnityEngine;
 
-namespace CreativeAI.Core
+namespace CreativeAI.Gameplay
 {
     /// <summary>
     /// 操作で開くUI(キャラ / インベ / セーブ / 調合 / マップ)のどれかが開いているかを伝える静的サービス。

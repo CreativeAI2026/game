@@ -1,4 +1,4 @@
-namespace CreativeAI.Core
+namespace CreativeAI.Gameplay
 {
     /// <summary>
     /// 合成画面を開く依頼の静的サービス。ワールド側(Gameplay)は UI を参照できないので、

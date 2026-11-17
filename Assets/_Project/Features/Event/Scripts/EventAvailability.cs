@@ -1,6 +1,6 @@
 using System;
 
-namespace CreativeAI.Core
+namespace CreativeAI.Gameplay
 {
     /// <summary>
     /// いま、そのイベントを発火できる条件が揃っているか(進行度・フラグ・所持品・1回きりの見終え)。

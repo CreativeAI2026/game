@@ -1,6 +1,6 @@
 using UnityEngine;
 
-namespace CreativeAI.Core
+namespace CreativeAI.Gameplay
 {
     /// <summary>
     /// 入力を使わず、目標の位置まで歩いて向かえるプレイヤー。

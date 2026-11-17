@@ -1,6 +1,5 @@
 using System;
 using System.Collections.Generic;
-using CreativeAI.Core;
 using UnityEngine;
 using UnityEngine.Assertions;
 #if UNITY_EDITOR

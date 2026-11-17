@@ -1,4 +1,4 @@
-namespace CreativeAI.Core
+namespace CreativeAI.Gameplay
 {
     /// <summary>
     /// giveWeapon ステップの届け先。実体はプレイヤーの WeaponManager で、プレビュー・テストは差し替える。

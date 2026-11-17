@@ -1,4 +1,4 @@
-namespace CreativeAI.Core
+namespace CreativeAI.Gameplay
 {
     /// <summary>
     /// giveItem ステップと hasItem 条件の届け先。実体は InventoryManager で、プレビュー・テストは差し替える。

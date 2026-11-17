@@ -2,7 +2,7 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Text.RegularExpressions;
-using CreativeAI.Core;
+using CreativeAI.Gameplay;
 using NUnit.Framework;
 using UnityEditor;
 using UnityEngine;

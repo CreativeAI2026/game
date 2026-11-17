@@ -1,5 +1,5 @@
 using CreativeAI.Gameplay;
-using CreativeAI.UI.CharacterUI;
+using CreativeAI.UI;
 using NUnit.Framework;
 using TMPro;
 using UnityEditor;

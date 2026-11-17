@@ -1,7 +1,7 @@
 using System.Diagnostics;
 using Debug = UnityEngine.Debug;
 
-namespace CreativeAI.Core
+namespace CreativeAI.Gameplay
 {
     /// <summary>
     /// エディタと開発ビルドだけで出すログ。リリースビルドでは呼び出しごと消え、引数の文字列も作られない。

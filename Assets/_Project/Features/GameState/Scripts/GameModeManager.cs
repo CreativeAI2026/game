@@ -1,7 +1,7 @@
 using System;
 using UnityEngine;
 
-namespace CreativeAI.Core
+namespace CreativeAI.Gameplay
 {
     /// <summary>イベント再生から戦闘モードへの出入りを通知する契約。</summary>
     public interface IEventGameMode

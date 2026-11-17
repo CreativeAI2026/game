@@ -2,7 +2,7 @@ using CreativeAI.Gameplay;
 using TMPro;
 using UnityEngine;
 
-namespace CreativeAI.UI.CharacterUI
+namespace CreativeAI.UI
 {
     /// <summary>
     /// Character画面のStatusPanelへ、プレイヤーの現在ステータスを反映する。

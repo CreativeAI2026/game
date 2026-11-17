@@ -1,7 +1,7 @@
 using UnityEngine;
 using Vector = System.Numerics.Vector2;
 
-namespace CreativeAI.VisualTeam
+namespace CreativeAI.Gameplay
 {
     [CreateAssetMenu(fileName = "Emotion", menuName = "Scriptable Objects/Emotion")]
     public class Emotion : ScriptableObject

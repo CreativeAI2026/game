@@ -1,10 +1,9 @@
 using System;
 using System.Collections;
-using CreativeAI.Gameplay;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 
-namespace CreativeAI.Core
+namespace CreativeAI.Gameplay
 {
     /// <summary>
     /// EventTrigger から託された会話イベントを順に再生し、終了時に進行度を進める指揮役。

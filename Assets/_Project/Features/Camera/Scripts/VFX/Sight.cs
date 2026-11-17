@@ -1,7 +1,7 @@
 using Unity.InferenceEngine;
 using UnityEngine;
 
-namespace CreativeAI.VisualTeam
+namespace CreativeAI.Gameplay
 {
     [CreateAssetMenu(fileName = "Sight", menuName = "Scriptable Objects/Sight")]
     public class Sight : ScriptableObject

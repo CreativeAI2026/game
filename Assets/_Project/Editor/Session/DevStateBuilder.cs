@@ -2,7 +2,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using CreativeAI.Core;
+using CreativeAI.Gameplay;
 using CreativeAI.Session;
 
 namespace CreativeAI.EditorTools

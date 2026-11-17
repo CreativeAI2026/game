@@ -1,8 +1,8 @@
 using System.IO;
 using System.Linq;
 using System.Text.RegularExpressions;
-using CreativeAI.Core;
 using CreativeAI.EditorTools;
+using CreativeAI.Gameplay;
 using NUnit.Framework;
 using UnityEditor;
 using UnityEngine;

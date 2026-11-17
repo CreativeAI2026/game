@@ -1,4 +1,4 @@
-using CreativeAI.Core;
+using CreativeAI.Gameplay;
 using CreativeAI.UI;
 using NUnit.Framework;
 using UnityEngine;

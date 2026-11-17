@@ -1,6 +1,6 @@
 using UnityEngine;
 
-namespace CreativeAI.Core
+namespace CreativeAI.Gameplay
 {
     /// <summary>
     /// マップピンとピンまでの道筋の見た目(画像・材質)をまとめた設定アセット。

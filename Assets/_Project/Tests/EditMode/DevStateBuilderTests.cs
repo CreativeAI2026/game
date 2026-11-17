@@ -1,6 +1,6 @@
 using System.Collections.Generic;
-using CreativeAI.Core;
 using CreativeAI.EditorTools;
+using CreativeAI.Gameplay;
 using CreativeAI.Session;
 using NUnit.Framework;
 using UnityEngine;
