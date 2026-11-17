@@ -65,7 +65,7 @@ game/                          ← リポジトリルート
 │   │   │   ├── Art/           エフェクトの生成・アニメーションの書き出し・取り込み時の処理
 │   │   │   ├── UI/            HUD の確認用 Inspector・プレビュー操作・フォントの掃除・会話スキップ
 │   │   │   └── Playtest/      ボス体験用ビルド
-│   │   └── Tests/             EditMode / PlayMode テストと共通ヘルパー（Shared）
+│   │   └── Tests/             EditMode / PlayMode テストと共通ヘルパー（Shared）。EditMode は確かめるクラスと同じ構成のフォルダに置く（例: Features/UI/HUD のテストは EditMode/Features/UI/HUD。Editor/ のテストは Unity の特別なフォルダ名を避けて EditMode/EditorTools/）
 │   ├── Plugins/               外部アセット（DOTween・Unity 用アナライザ）
 │   ├── Resources/             DOTween の設定（DOTween がこの場所を前提にしているので動かさない）
 │   ├── UI Toolkit/            TextMesh Pro の既定フォント等
