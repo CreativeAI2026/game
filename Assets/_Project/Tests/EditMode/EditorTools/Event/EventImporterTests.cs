@@ -1176,7 +1176,7 @@ namespace CreativeAI.Tests.EditMode
         private static EventImporter.Report ParseUseItem(string useItemStep)
         {
             var json =
-                @"{ ""events"": [ { ""id"": ""use_item"", ""conditions"": [ { ""type"": ""progress"", ""value"": 0 } ],
+                @"{ ""events"": [ { ""id"": ""use_item"", ""activation"": ""interact"", ""conditions"": [ { ""type"": ""progress"", ""value"": 0 } ],
                     ""steps"": [ "
                 + useItemStep
                 + @", { ""kind"": ""line"", ""text"": ""開いた"" } ], ""nextProgress"": 1 } ] }";
@@ -1261,11 +1261,51 @@ namespace CreativeAI.Tests.EditMode
             );
         }
 
+        [TestCase(@"""accept"": [ ""card_key"" ]")]
+        [TestCase(@"""accept"": [ null ]")]
+        [TestCase(@"""accept"": [ { ""itemKey"": ""card_key"", ""count"": 99999999999 } ]")]
+        public void Parse_UseItem_MalformedAccept_IsErrorNotException(string accept)
+        {
+            var report = ParseUseItem(
+                @"{ ""kind"": ""useItem"", "
+                    + accept
+                    + @", ""consume"": true, ""wrong"": ""違う"" }"
+            );
+
+            Assert.IsTrue(report.HasErrors);
+            Assert.IsTrue(
+                report.Diagnostics.Any(d => d.Message.Contains("accept")),
+                string.Join("\n", report.Diagnostics)
+            );
+        }
+
+        [TestCase("")]
+        [TestCase(@"""activation"": ""auto"",")]
+        public void Parse_UseItem_NotInteract_IsError(string activation)
+        {
+            // 自動発火だと、やめて打ち切ってもトリガーの中で同じイベントがすぐ再発火し、抜け出せなくなる。
+            var json =
+                @"{ ""events"": [ { ""id"": ""use_item_auto"", "
+                + activation
+                + @" ""conditions"": [ { ""type"": ""progress"", ""value"": 0 } ],
+                    ""steps"": [ { ""kind"": ""useItem"", ""accept"": [ { ""itemKey"": ""card_key"", ""count"": 1 } ], ""consume"": true, ""wrong"": ""違う"" },
+                        { ""kind"": ""line"", ""text"": ""開いた"" } ], ""nextProgress"": 1 } ] }";
+            var catalog = new EventImporter.ImportCatalog(new HashSet<string> { "card_key" });
+
+            var report = EventImporter.Parse(json, catalog);
+
+            Assert.IsTrue(report.HasErrors);
+            Assert.IsTrue(
+                report.Diagnostics.Any(d => d.Message.Contains("interact")),
+                string.Join("\n", report.Diagnostics)
+            );
+        }
+
         [Test]
         public void Parse_UseItem_InsideBranch_IsError()
         {
             const string json =
-                @"{ ""events"": [ { ""id"": ""use_item_branch"", ""conditions"": [ { ""type"": ""progress"", ""value"": 0 } ],
+                @"{ ""events"": [ { ""id"": ""use_item_branch"", ""activation"": ""interact"", ""conditions"": [ { ""type"": ""progress"", ""value"": 0 } ],
                     ""steps"": [ { ""kind"": ""branch"", ""flag"": ""f"", ""cases"": { ""a"": [
                         { ""kind"": ""useItem"", ""accept"": [ { ""itemKey"": ""card_key"", ""count"": 1 } ], ""consume"": true, ""wrong"": ""違う"" } ] } },
                         { ""kind"": ""line"", ""text"": ""終わり"" } ], ""nextProgress"": 1 } ] }";

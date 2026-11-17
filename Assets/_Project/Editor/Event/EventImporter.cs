@@ -393,6 +393,20 @@ namespace CreativeAI.EditorTools
                 ok = false;
             }
 
+            // useItem は「やめる」でイベントを打ち切る。自動発火だと、トリガーの中に居るままなので
+            // 条件を満たしたまま同じイベントがすぐ再発火し、抜け出せなくなる。調べる([E])に限る。
+            if (
+                activation != EventActivation.Interact
+                && steps.Any(s => s != null && s.Kind == StepKind.UseItem)
+            )
+            {
+                report.Error(
+                    id,
+                    "useItem を含むイベントは activation を \"interact\" にしてください(自動発火だとやめても再発火します)。"
+                );
+                ok = false;
+            }
+
             // --- nextProgress(progress の value より大きい) ---
             // 進行度==で発火 → 終了時に nextProgress へ進めて value と一致しなくなる。
             // これで「どのイベントもちょうど1回だけ発火する」を保証する。
@@ -1016,15 +1030,24 @@ namespace CreativeAI.EditorTools
             {
                 for (int c = 0; c < candidates.Count; c++)
                 {
-                    var itemKey = (candidates[c]?["itemKey"] as JValue)?.Value as string;
-                    var countToken = candidates[c]?["count"] as JValue;
+                    if (candidates[c] is not JObject candidate)
+                    {
+                        report.Error(
+                            id,
+                            $"{location} useItem の accept[{c}] は {{ \"itemKey\", \"count\" }} のオブジェクトで書いてください。"
+                        );
+                        ok = false;
+                        continue;
+                    }
+                    var itemKey = (candidate["itemKey"] as JValue)?.Value as string;
+                    var countToken = candidate["count"] as JValue;
                     if (string.IsNullOrEmpty(itemKey))
                     {
                         report.Error(id, $"{location} useItem の accept[{c}] は itemKey が必須。");
                         ok = false;
                         continue;
                     }
-                    if (countToken?.Value is not long count || count < 1)
+                    if (countToken?.Value is not long count || count < 1 || count > int.MaxValue)
                     {
                         report.Error(
                             id,

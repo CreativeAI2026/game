@@ -158,12 +158,16 @@ namespace CreativeAI.Gameplay
         [SerializeField]
         private int _count;
 
+        /// <summary>正解候補を作る。</summary>
+        /// <param name="itemKey">正解のアイテムのキー(ItemData.key)。</param>
+        /// <param name="count">正解に必要な個数(1以上)。</param>
         public UseItemCandidate(string itemKey, int count)
         {
             _itemKey = itemKey;
             _count = count;
         }
 
+        /// <summary>正解のアイテムのキー(ItemData.key)。</summary>
         public string ItemKey => _itemKey;
 
         /// <summary>正解に必要な個数(1以上)。</summary>

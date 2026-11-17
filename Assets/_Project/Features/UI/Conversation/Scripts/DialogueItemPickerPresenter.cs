@@ -2,9 +2,7 @@ using System;
 using System.Collections.Generic;
 using TMPro;
 using UnityEngine;
-using UnityEngine.EventSystems;
 using UnityEngine.UI;
-using UIEventTrigger = UnityEngine.EventSystems.EventTrigger;
 
 namespace CreativeAI.UI
 {
@@ -20,6 +18,7 @@ namespace CreativeAI.UI
         private const float PromptHeight = 64f;
         private const float RowHeight = 64f;
         private const float RowSpacing = 8f;
+        private const float ViewportHeight = PanelHeight - Padding * 3f - PromptHeight;
         private const float IconSize = 48f;
         private const string DefaultPrompt = "何を使う?";
         private const string CancelLabel = "やめる";
@@ -34,7 +33,7 @@ namespace CreativeAI.UI
         private readonly List<Image> _rowBackgrounds = new();
         private readonly List<Action> _rowActions = new();
         private GameObject _root;
-        private ScrollRect _scroll;
+        private RectTransform _contentRect;
         private int _selectedIndex = -1;
 
         public DialogueItemPickerPresenter(Transform parent, TMP_FontAsset font)
@@ -102,13 +101,14 @@ namespace CreativeAI.UI
                 .FitMode
                 .PreferredSize;
 
-            _scroll = panel.AddComponent<ScrollRect>();
-            _scroll.viewport = viewportRect;
-            _scroll.content = contentRect;
-            _scroll.horizontal = false;
-            _scroll.vertical = true;
-            _scroll.movementType = ScrollRect.MovementType.Clamped;
-            _scroll.scrollSensitivity = 30f;
+            _contentRect = contentRect;
+            var scroll = panel.AddComponent<ScrollRect>();
+            scroll.viewport = viewportRect;
+            scroll.content = contentRect;
+            scroll.horizontal = false;
+            scroll.vertical = true;
+            scroll.movementType = ScrollRect.MovementType.Clamped;
+            scroll.scrollSensitivity = 30f;
 
             // 呼び出し元の再入を防ぐ: 一度選んだら以降の選択は無視する。
             bool picked = false;
@@ -163,7 +163,7 @@ namespace CreativeAI.UI
             if (_root != null)
                 UnityEngine.Object.Destroy(_root);
             _root = null;
-            _scroll = null;
+            _contentRect = null;
             _rowBackgrounds.Clear();
             _rowActions.Clear();
             _selectedIndex = -1;
@@ -183,10 +183,8 @@ namespace CreativeAI.UI
             button.onClick.AddListener(() => onClick());
 
             // マウスを乗せたら、その行を選択する(キーボードの選択と同じ見た目にそろえる)。
-            var trigger = row.AddComponent<UIEventTrigger>();
-            var enter = new UIEventTrigger.Entry { eventID = EventTriggerType.PointerEnter };
-            enter.callback.AddListener(_ => Select(index));
-            trigger.triggers.Add(enter);
+            // 色だけ変える。スクロール位置は動かさない(動かすと、止めたマウスの下に別の行が来て連鎖する)。
+            row.AddComponent<ItemPickerRowHover>().Configure(() => Select(index, false));
 
             float textLeft = Padding / 2f;
             if (icon != null)
@@ -219,7 +217,9 @@ namespace CreativeAI.UI
             _rowActions.Add(onClick);
         }
 
-        private void Select(int index)
+        // 選択行を変える。scroll が true のときだけ、選んだ行が見える範囲に入るよう最小限スクロールする
+        // (キーボード用。マウスのホバーでは色だけ変える)。
+        private void Select(int index, bool scroll = true)
         {
             if (_rowBackgrounds.Count == 0)
                 return;
@@ -228,10 +228,28 @@ namespace CreativeAI.UI
             for (int i = 0; i < _rowBackgrounds.Count; i++)
                 _rowBackgrounds[i].color = i == index ? RowFocusColor : RowColor;
 
-            // 選択行がスクロールの外に出ないよう、位置を行番号に合わせる。
-            if (_scroll != null && _rowBackgrounds.Count > 1)
-                _scroll.verticalNormalizedPosition =
-                    1f - index / (float)(_rowBackgrounds.Count - 1);
+            if (scroll)
+                ScrollToKeepVisible(index);
+        }
+
+        private void ScrollToKeepVisible(int index)
+        {
+            if (_contentRect == null)
+                return;
+
+            float pitch = RowHeight + RowSpacing;
+            float rowTop = index * pitch;
+            float rowBottom = rowTop + RowHeight;
+            float contentHeight = _rowBackgrounds.Count * pitch - RowSpacing;
+            float maxOffset = Mathf.Max(0f, contentHeight - ViewportHeight);
+
+            // Content は上端基準で、anchoredPosition.y が下へスクロールした量になる。
+            float offset = _contentRect.anchoredPosition.y;
+            if (rowTop < offset)
+                offset = rowTop;
+            else if (rowBottom > offset + ViewportHeight)
+                offset = rowBottom - ViewportHeight;
+            _contentRect.anchoredPosition = new Vector2(0f, Mathf.Clamp(offset, 0f, maxOffset));
         }
 
         private TMP_Text CreateText(

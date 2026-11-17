@@ -473,6 +473,7 @@ namespace CreativeAI.UI
             _speedPresenter?.Cancel();
             _rewardPresenter?.HideAll();
             _choicePresenter?.Clear();
+            _itemPicker?.Clear();
             _rewardPresentationActive = false;
         }
 
@@ -557,6 +558,7 @@ namespace CreativeAI.UI
             CancelRewardPresentation();
             State = ConversationState.ShowingChoices; // 送り入力を止め、キー入力をピッカーへ回す
             SetWindowHidden(false);
+            _chromePresenter.StopBounce();
             yield return ShowAnimated();
 
             _itemPicker ??= new DialogueItemPickerPresenter(
@@ -901,6 +903,7 @@ namespace CreativeAI.UI
             _rewardPresenter.HideAll();
             _choicePresenter.Clear();
             _choicePresenter.SetActive(false);
+            _itemPicker?.Clear();
             ResetTransientModes();
             State = ConversationState.Hidden;
         }
@@ -910,6 +913,7 @@ namespace CreativeAI.UI
             State = ConversationState.Exiting;
             _rewardPresenter?.HideAll();
             SetChoicesActive(false);
+            _itemPicker?.Clear();
             ResetTransientModes();
             _chromePresenter?.HideImmediate();
             State = ConversationState.Hidden;
