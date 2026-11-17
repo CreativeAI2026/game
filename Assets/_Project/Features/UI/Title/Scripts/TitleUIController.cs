@@ -17,15 +17,6 @@ namespace CreativeAI.UI
         [SerializeField]
         private string _nextSceneName = SceneNames.FieldArea01;
 
-        [SerializeField]
-        private GameObject _playerRigPrefab; // 「はじめる/続きから」で生成するプレイヤーリグ。未割当なら警告してプレイヤーは出ない
-
-        [SerializeField]
-        private GameObject _cameraRigPrefab; // フィールドに入った時点で生成するカメラリグ。未割当なら警告して画面にカメラが無くなる
-
-        [SerializeField]
-        private GameObject _uiRootPrefab; // セッション常駐の UI レイヤー(UIRoot Prefab)。会話UI・即時食材使用UI も UIRoot が束ねる。未割当なら UI は出ない
-
         private void Awake()
         {
             if (_tapToStartButton == null)
@@ -86,89 +77,34 @@ namespace CreativeAI.UI
             }
         }
 
-        /// <summary>「はじめる」: セッション常駐を新規生成してフィールドへ(所持品はまっさら)。ロード後に開始位置へ置く。</summary>
+        /// <summary>「はじめる」: はじめから遊ぶ(中身は Session 層の <see cref="IGameStarter"/>)。</summary>
         private void OnTapToStart()
         {
-            if (!EnsureSession())
+            if (!TryGetStarter(out var starter) || !starter.StartNewGame(_nextSceneName))
                 return;
-
-            // はじめから: 前回のプレイで拾った記録を持ち越さず、アイテムを全部置き直す。
-            PickedItemRegistry.Clear();
-
             _tapToStartButton.interactable = false;
-            SceneController.Instance.LoadScene(
-                _nextSceneName,
-                onSceneActivated: () => SpawnPoint.Place(SpawnRigs(), SpawnPoint.StartId)
-            );
         }
 
-        /// <summary>「続きから」: セッション常駐を生成→セーブ復元→保存シーンへ。ロード後にプレイヤーを保存座標へ配置。</summary>
+        /// <summary>「続きから」: セーブから続ける。セーブが壊れていて読めなければ、押しても毎回失敗するのでボタンを塞ぐ。</summary>
         private void OnContinue()
         {
-            if (!EnsureSession())
+            if (!TryGetStarter(out var starter))
                 return;
-
-            // 進行度・フラグ・所持品はここで同期復元される(ItemCatalog は Resources 経由でシーン非依存)。
-            var data = SaveService.Load();
-            if (data == null)
-            {
-                // セーブが壊れていて読めない。押しても毎回失敗するのでボタンを塞ぐ
-                if (_continueButton != null)
-                    _continueButton.interactable = false;
-                return;
-            }
-
-            // 保存したシーンが読めない(名前が変わった等)ときは開始シーンの開始位置から再開する。
-            // 座標はそのシーンのものではないので使わない。
-            bool sceneLoadable = SceneController.CanLoad(data.sceneName);
-            if (!sceneLoadable && !string.IsNullOrEmpty(data.sceneName))
-                Debug.LogWarning(
-                    $"[TitleUIController] 保存シーン {data.sceneName} を読み込めないため {_nextSceneName} から再開します。"
-                );
-            string scene = sceneLoadable ? data.sceneName : _nextSceneName;
-
-            _tapToStartButton.interactable = false;
+            var started = starter.ContinueGame(_nextSceneName);
             if (_continueButton != null)
                 _continueButton.interactable = false;
-
-            // 座標・現在HP はシーンロード後でないと配置できないため、完了コールバックで復元する。
-            SceneController.Instance.LoadScene(
-                scene,
-                onSceneActivated: () =>
-                {
-                    var player = SpawnRigs();
-                    SaveService.RestorePlayerState(data);
-                    if (!sceneLoadable)
-                        SpawnPoint.Place(player, SpawnPoint.StartId);
-                }
-            );
+            if (started)
+                _tapToStartButton.interactable = false;
         }
 
-        /// <summary>
-        /// SceneController の存在確認と、セッション常駐の生成を行う。
-        /// </summary>
-        private bool EnsureSession()
+        private static bool TryGetStarter(out IGameStarter starter)
         {
-            if (SceneController.Instance == null)
-            {
+            starter = GameStartService.Current;
+            if (starter == null)
                 Debug.LogError(
-                    "[TitleUIController] SceneController.Instance is null. Title シーンに PersistentSystems(SceneController)がありません。"
+                    "[TitleUIController] GameStartService.Current が登録されていません。"
                 );
-                return false;
-            }
-
-            GameSession.EnsureResidents(_uiRootPrefab);
-            return true;
-        }
-
-        /// <summary>
-        /// フィールドに入った時点でカメラリグ→プレイヤーリグの順に出し、プレイヤーを返す。
-        /// タイトルのカメラを掴まないようロード後に出す。プレイヤーは Awake で MainCamera を探すのでカメラが先。
-        /// </summary>
-        private GameObject SpawnRigs()
-        {
-            GameSession.EnsureCameraRig(_cameraRigPrefab);
-            return GameSession.EnsurePlayerRig(_playerRigPrefab);
+            return starter != null;
         }
     }
 }

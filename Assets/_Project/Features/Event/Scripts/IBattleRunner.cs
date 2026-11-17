@@ -25,20 +25,11 @@ namespace CreativeAI.Core
     }
 
     /// <summary>
-    /// battle ステップの seam(実体は戦闘班)。敵 Prefab をトリガー位置に出し、勝利まで待つコルーチン。
-    /// 敗北時はシーン再読込で再開されるので完了しない想定。
+    /// battle ステップの実行役。敵 Prefab をトリガー位置に出し、勝利まで待つコルーチン。
+    /// 実体は BattleRunner で、プレビュー・テストは差し替える。敗北時はシーン再読込で再開されるので完了しない想定。
     /// </summary>
     public interface IBattleRunner
     {
         IEnumerator Run(BattleSetup setup);
-    }
-
-    /// <summary>
-    /// 実行時の IBattleRunner を登録する seam。Core は Gameplay を参照できず drag 配線もできないため、
-    /// GameSession が登録し、EventPlayer は Inspector 未配線時のフォールバックとして見る。
-    /// </summary>
-    public static class BattleRunnerService
-    {
-        public static IBattleRunner Current { get; set; }
     }
 }

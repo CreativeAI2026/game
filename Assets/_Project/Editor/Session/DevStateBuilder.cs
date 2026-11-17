@@ -3,7 +3,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using CreativeAI.Core;
-using CreativeAI.UI;
+using CreativeAI.Session;
 
 namespace CreativeAI.EditorTools
 {

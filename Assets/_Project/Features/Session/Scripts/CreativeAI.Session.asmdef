@@ -1,7 +1,11 @@
 {
-    "name": "CreativeAI.Core",
-    "rootNamespace": "CreativeAI.Core",
-    "references": [],
+    "name": "CreativeAI.Session",
+    "rootNamespace": "CreativeAI.Session",
+    "references": [
+        "CreativeAI.Gameplay",
+        "CreativeAI.UI",
+        "Unity.InputSystem"
+    ],
     "includePlatforms": [],
     "excludePlatforms": [],
     "allowUnsafeCode": false,

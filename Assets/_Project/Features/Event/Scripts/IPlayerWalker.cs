@@ -4,7 +4,7 @@ namespace CreativeAI.Core
 {
     /// <summary>
     /// 入力を使わず、目標の位置まで歩いて向かえるプレイヤー。
-    /// EventPlayer(Core)がプレイヤーの実装(Gameplay)を知らずに、引き戻し(player.walkTo)を頼むための窓口。
+    /// EventPlayer がプレイヤーの実装(PlayerController)全体に依存せず、引き戻し(player.walkTo)だけを頼むための窓口。
     /// </summary>
     public interface IPlayerWalker
     {

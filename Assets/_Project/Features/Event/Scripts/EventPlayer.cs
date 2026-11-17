@@ -1,5 +1,6 @@
 using System;
 using System.Collections;
+using CreativeAI.Gameplay;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 
@@ -60,8 +61,8 @@ namespace CreativeAI.Core
 
         private IDialogueView View => _view ??= DialogueViewService.Current;
         private IItemGiver Items => _items ??= ItemGiverService.Current;
-        private IWeaponGiver Weapons => _weapons ??= WeaponGiverService.Current;
-        private IBattleRunner BattleRunner => _battle ??= BattleRunnerService.Current;
+        private IWeaponGiver Weapons => _weapons ?? FindPlayerWeapons();
+        private IBattleRunner Battle => _battle ??= new BattleRunner();
         private IEventProgress Progress =>
             _progress is UnityEngine.Object obj && obj == null
                 ? ProgressManager.Instance
@@ -70,6 +71,15 @@ namespace CreativeAI.Core
             _gameMode is UnityEngine.Object obj && obj == null
                 ? GameModeManager.Instance
                 : _gameMode ?? GameModeManager.Instance;
+
+        // 武器の届け先は今いるプレイヤーの WeaponManager。プレイヤーは入れ替わるので覚えておかない。
+        private static IWeaponGiver FindPlayerWeapons()
+        {
+            var player = PlayerRegistry.Current;
+            return player != null && player.TryGetComponent(out WeaponManager weapons)
+                ? weapons
+                : null;
+        }
 
         /// <summary>seam の代わりに依存を注入する(プレビュー / テスト用)。</summary>
         public void Inject(
@@ -329,7 +339,7 @@ namespace CreativeAI.Core
                         case StepKind.GiveWeapon:
                             if (Weapons == null)
                                 Debug.LogWarning(
-                                    $"[EventPlayer] IWeaponGiver 未登録 (event={ev.Id}). giveWeapon '{step.WeaponKey}' をスキップ。"
+                                    $"[EventPlayer] 武器の届け先が無い (event={ev.Id}). giveWeapon '{step.WeaponKey}' をスキップ。"
                                         + " プレイヤーリグ(WeaponManager)が居ないシーンでは武器は渡されません。"
                                 );
                             else
@@ -341,17 +351,13 @@ namespace CreativeAI.Core
                         case StepKind.Battle:
                             var mode = GameModes;
                             mode?.EnterBattle();
-                            if (BattleRunner == null)
-                                Debug.LogWarning(
-                                    $"[EventPlayer] IBattleRunner 未設定 (event={ev.Id}). 戦闘をスキップ。"
-                                );
-                            else if (!battle.HasEnemy)
+                            if (!battle.HasEnemy)
                                 Debug.LogWarning(
                                     $"[EventPlayer] battle ステップに敵 Prefab が未配線 (event={ev.Id})."
                                         + " EventTrigger の Enemy スロットにアサインしてください。戦闘をスキップ。"
                                 );
                             else
-                                yield return BattleRunner.Run(battle);
+                                yield return Battle.Run(battle);
                             mode?.ExitBattle();
                             break;
 
@@ -428,9 +434,7 @@ namespace CreativeAI.Core
             EventPlaybackService.ResetState();
             EventPlayerService.Current = null;
             DialogueViewService.Current = null;
-            BattleRunnerService.Current = null;
             ItemGiverService.Current = null;
-            WeaponGiverService.Current = null;
         }
     }
 }

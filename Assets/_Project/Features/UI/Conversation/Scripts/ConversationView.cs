@@ -771,7 +771,7 @@ namespace CreativeAI.UI
 
         /// <summary>
         /// IDialogueView 実装: giveItem ステップの入手演出。itemKey→アイコン/名前の解決はここで行う
-        /// (Core は Gameplay を参照しないため、EventPlayer はキーだけ渡す)。
+        /// (見せ方は UI の担当なので、EventPlayer はキーだけ渡す)。
         /// message 省略時は「〜を手に入れた。」を名前から組み立てる。
         /// </summary>
         public IEnumerator ShowItemGet(string itemKey, string message)

@@ -3,9 +3,9 @@
     "rootNamespace": "CreativeAI.Tests.EditMode",
     "references": [
         "CreativeAI.Tests.Shared",
-        "CreativeAI.Core",
         "CreativeAI.Gameplay",
         "CreativeAI.UI",
+        "CreativeAI.Session",
         "SoundKit",
         "Unity.TextMeshPro",
         "CreativeAI.EditorTools",

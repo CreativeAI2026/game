@@ -30,7 +30,7 @@ game/                          ← リポジトリルート
 │   │   │   ├── Camera/        カメラリグ・ズーム・揺れ
 │   │   │   ├── Audio/         プレイヤーの立てた物音を敵が聞きつける仕組み（音の再生は Modules/SoundKit）
 │   │   │   ├── Effects/       エフェクトの使い回し（ObjectPool）
-│   │   │   ├── Session/       常駐一式の生成（GameSession）・フィールドを直接 Play したときの起動。Data/dev_state.json
+│   │   │   ├── Session/       ゲームの開始（タイトルから・フィールドを直接 Play）と常駐一式の生成。UI より上の独自のアセンブリ。Data/dev_state.json
 │   │   │   ├── UI/            各機能の画面
 │   │   │   │   ├── Root/          UIRoot・画面切り替え・EventSystem
 │   │   │   │   ├── Slots/         アイテムを入れるスロットの部品

@@ -4,7 +4,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using CreativeAI.Core;
-using CreativeAI.UI;
+using CreativeAI.Session;
 using UnityEditor;
 using UnityEditor.SceneManagement;
 using UnityEngine;

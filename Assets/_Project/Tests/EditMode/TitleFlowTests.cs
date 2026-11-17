@@ -1,10 +1,10 @@
 using CreativeAI.Core;
 using CreativeAI.Gameplay;
+using CreativeAI.Session;
 using CreativeAI.UI;
 using NUnit.Framework;
 using UnityEngine;
 using UnityEngine.TestTools;
-using UnityEngine.UI;
 
 namespace CreativeAI.Tests.EditMode
 {
@@ -15,19 +15,12 @@ namespace CreativeAI.Tests.EditMode
     /// </summary>
     public class TitleFlowTests
     {
-        private GameObject _titleGo;
-        private TitleUIController _title;
         private readonly TestResidents _residents = new();
 
         [SetUp]
         public void SetUp()
         {
             _residents.Add<SceneController>();
-
-            _titleGo = new GameObject("TitleUI");
-            _title = _titleGo.AddComponent<TitleUIController>();
-            var button = _titleGo.AddComponent<Button>();
-            TestReflection.SetField(_title, "_tapToStartButton", button);
         }
 
         [TearDown]
@@ -38,7 +31,7 @@ namespace CreativeAI.Tests.EditMode
             DestroyResident<GameModeManager>();
             DestroyResident<InventoryManager>();
             DestroyResident<EventPlayer>();
-            Object.DestroyImmediate(_titleGo);
+            DestroyResident<UIRoot>();
         }
 
         private static void DestroyResident<T>()
@@ -49,7 +42,7 @@ namespace CreativeAI.Tests.EditMode
             TestReflection.SetStaticProperty<T>("Instance", null);
         }
 
-        private bool EnsureSession() => (bool)TestReflection.Invoke(_title, "EnsureSession");
+        private static bool EnsureSession() => GameStarter.EnsureSession(out _);
 
         private static int CountOf<T>()
             where T : MonoBehaviour =>
@@ -64,7 +57,6 @@ namespace CreativeAI.Tests.EditMode
             Assert.AreEqual(1, CountOf<GameModeManager>(), "① モード");
             Assert.AreEqual(1, CountOf<EventPlayer>(), "① 会話イベント指揮役");
             Assert.AreEqual(1, CountOf<InventoryManager>(), "② 所持品");
-            Assert.IsNotNull(BattleRunnerService.Current, "④ 戦闘実行の seam");
         }
 
         [Test]

@@ -5,7 +5,7 @@ using CreativeAI.Gameplay;
 using UnityEngine;
 using UnityEngine.AI;
 
-namespace CreativeAI.UI
+namespace CreativeAI.Session
 {
     /// <summary>
     /// 開発用: フィールドを直接 Play したときに始める状態(進行度・フラグ・大事なもの・武器・HP)。
@@ -72,7 +72,7 @@ namespace CreativeAI.UI
             )
                 position = floor.position;
             // CharacterController は自前で位置を保持するので、当てが効かないよう一旦切ってから動かす
-            // (SpawnPoint.Place と同じ扱い。Core は触らず、開発用の置き方はここで完結させる)。
+            // (SpawnPoint.Place と同じ扱い。SpawnPoint は触らず、開発用の置き方はここで完結させる)。
             bool hasController = player.TryGetComponent(out CharacterController controller);
             if (hasController)
                 controller.enabled = false;

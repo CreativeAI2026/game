@@ -125,7 +125,7 @@ namespace CreativeAI.Core
 
     /// <summary>
     /// 遷移中に出す暗転・読み込み表示の窓口。実体は UI 側(LoadingOverlayController)で、
-    /// Core は UI を参照できないためこの契約を挟む。SceneController が子から探して使う。
+    /// Gameplay は UI を参照できないためこの契約を挟む。SceneController が子から探して使う。
     /// </summary>
     public interface ILoadingOverlay
     {

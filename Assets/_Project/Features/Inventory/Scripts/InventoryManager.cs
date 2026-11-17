@@ -42,8 +42,8 @@ namespace CreativeAI.Gameplay
             _craftingService ??= new CraftingService(InventoryService);
 
         /// <summary>
-        /// セッション常駐の Inventory を1つだけ生成する(既存ならそれを返す)。Core から Gameplay は参照できないため Core ではなくここに置き、
-        /// Title フローから マネージャ生成の後・プレイヤー生成の前に呼ぶ。
+        /// セッション常駐の Inventory を1つだけ生成する(既存ならそれを返す)。
+        /// GameSession から マネージャ生成の後・プレイヤー生成の前に呼ぶ。
         /// </summary>
         public static InventoryManager EnsureResident()
         {

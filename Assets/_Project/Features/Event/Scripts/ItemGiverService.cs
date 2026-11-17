@@ -1,8 +1,7 @@
 namespace CreativeAI.Core
 {
     /// <summary>
-    /// giveItem ステップの seam。実体は Gameplay(InventoryManager のラッパ)で実装し、
-    /// EventPlayer に注入する。Core は Gameplay を参照しないためこの契約を挟む。
+    /// giveItem ステップと hasItem 条件の届け先。実体は InventoryManager で、プレビュー・テストは差し替える。
     /// </summary>
     public interface IItemGiver
     {
@@ -17,8 +16,8 @@ namespace CreativeAI.Core
     }
 
     /// <summary>
-    /// 実行時の IItemGiver を登録する seam。Core は Gameplay を参照できず drag 配線もできないため、
-    /// InventoryManager が Awake で登録し、EventPlayer は Inspector 未配線時のフォールバックとして見る。
+    /// 実行時の IItemGiver を登録する窓口。InventoryManager が Awake で登録し、
+    /// EventPlayer と hasItem 条件の判定(<see cref="EventAvailability"/>)が見る。テストは偽物を差し込める。
     /// </summary>
     public static class ItemGiverService
     {

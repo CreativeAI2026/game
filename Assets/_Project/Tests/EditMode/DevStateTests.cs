@@ -2,7 +2,7 @@ using System.Collections.Generic;
 using System.Linq;
 using CreativeAI.Core;
 using CreativeAI.Gameplay;
-using CreativeAI.UI;
+using CreativeAI.Session;
 using NUnit.Framework;
 using UnityEngine;
 

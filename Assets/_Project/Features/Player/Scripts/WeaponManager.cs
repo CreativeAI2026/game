@@ -303,15 +303,6 @@ namespace CreativeAI.Gameplay
                 _defaultAnimatorController = _animator.runtimeAnimatorController;
             }
             TryGetComponent(out _playerController);
-
-            // giveWeapon の届け先として自身を登録する(IItemGiver / InventoryManager と同じ思想)。
-            WeaponGiverService.Current = this;
-        }
-
-        private void OnDestroy()
-        {
-            if (ReferenceEquals(WeaponGiverService.Current, this))
-                WeaponGiverService.Current = null;
         }
 
         private void Start()

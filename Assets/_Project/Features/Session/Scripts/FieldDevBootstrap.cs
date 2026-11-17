@@ -1,11 +1,12 @@
 using System.Collections;
 using CreativeAI.Core;
 using CreativeAI.Gameplay;
+using CreativeAI.UI;
 using UnityEngine;
 using UnityEngine.EventSystems;
 using UnityEngine.InputSystem.UI;
 
-namespace CreativeAI.UI
+namespace CreativeAI.Session
 {
     /// <summary>
     /// 開発用シーンを Title を経由せず直接 Play したとき、常駐システム(マネージャ / Inventory / UIRoot / 会話UI)を
@@ -45,15 +46,7 @@ namespace CreativeAI.UI
             )
                 return;
 
-            var config = Resources.Load<ResidentBootstrapConfig>(nameof(ResidentBootstrapConfig));
-            if (config == null)
-            {
-                Debug.LogWarning(
-                    "[FieldDevBootstrap] ResidentBootstrapConfig が Resources に見つかりません。"
-                        + "Tools/CreativeAI/UI/Create Resident Bootstrap Config で作成してください。"
-                );
-            }
-
+            var config = ResidentBootstrapConfig.Load();
             GameSession.EnsureResidents(config != null ? config.uiRootPrefab : null);
             EnsureEventSystem();
 

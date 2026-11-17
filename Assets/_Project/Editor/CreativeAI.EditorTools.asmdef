@@ -2,8 +2,8 @@
     "name": "CreativeAI.EditorTools",
     "rootNamespace": "CreativeAI.EditorTools",
     "references": [
-        "CreativeAI.Core",
         "CreativeAI.UI",
+        "CreativeAI.Session",
         "CreativeAI.Gameplay",
         "Unity.InputSystem",
         "Unity.TextMeshPro",
