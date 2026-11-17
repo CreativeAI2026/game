@@ -51,9 +51,9 @@ namespace CreativeAI.Gameplay
             );
 
             // プレイヤーの移動・回転に引きずられないよう、親なし(シーン直下)で生成する
+            // (待機中の見た目非表示は ScytheBoomerang.Awake 側で行う)
             _boomerang = Instantiate(_boomerangPrefab);
             _boomerang.SetOwner(Player.GetComponent<PlayerStatus>());
-            _boomerang.gameObject.SetActive(false);
             _boomerang.Caught += OnBoomerangCaught;
         }
 

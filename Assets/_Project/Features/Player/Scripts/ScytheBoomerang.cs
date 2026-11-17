@@ -80,7 +80,7 @@ namespace CreativeAI.Gameplay
         [Header("軌跡")]
         [Tooltip(
             "飛行中の軌跡(子のパーティクルごと再生する)。投げた瞬間に再生し、受け取りで消す。"
-                + "Tools/CreativeAI/VFX/鎌の投擲軌跡を生成 で作られる"
+                + "刃先(回転軸から最も遠い点)に置いた ThrowTrail を割り当てる"
         )]
         [SerializeField]
         private ParticleSystem _trail;
@@ -100,6 +100,7 @@ namespace CreativeAI.Gameplay
 
         private PlayerMeleeHitbox _hitbox;
         private LoopingSound _flightLoop;
+        private MeshRenderer[] _modelRenderers;
         private Phase _phase = Phase.Idle;
         private Vector3 _direction;
         private float _traveled;
@@ -117,8 +118,12 @@ namespace CreativeAI.Gameplay
         {
             _hitbox = GetComponent<PlayerMeleeHitbox>();
             _flightLoop = new LoopingSound(gameObject);
+            _modelRenderers = GetComponentsInChildren<MeshRenderer>(true);
             Assert.IsNotNull(_spinRoot, $"{name}: 回転させるモデル(_spinRoot)が未設定です");
             Assert.IsNotNull(_trail, $"{name}: 軌跡(_trail)が未設定です");
+
+            SetModelVisible(false);
+            _trail.Stop(true, ParticleSystemStopBehavior.StopEmittingAndClear);
         }
 
         /// <summary>
@@ -150,13 +155,15 @@ namespace CreativeAI.Gameplay
             );
             Vector3 startPosition = isOriginBlocked ? blockedPoint : origin;
 
+            // 前回の残像が古い位置から繋がらないようクリアしてから新しい位置へ移す
+            _trail.Stop(true, ParticleSystemStopBehavior.StopEmittingAndClear);
             transform.SetPositionAndRotation(startPosition, Quaternion.LookRotation(direction));
             _direction = direction;
             _returnTarget = returnTarget;
             _traveled = 0f;
             _phase = Phase.Outbound;
 
-            gameObject.SetActive(true);
+            SetModelVisible(true);
             _trail.Play(true);
             _hitbox.EnableHitbox();
             _flightLoop.Play(_flightLoopSound, this);
@@ -198,11 +205,14 @@ namespace CreativeAI.Gameplay
         public void ForceCatch()
         {
             if (IsFlying)
-                Catch();
+                Catch(clearTrailImmediately: true);
         }
 
         private void Update()
         {
+            if (!IsFlying)
+                return;
+
             switch (_phase)
             {
                 case Phase.Outbound:
@@ -213,7 +223,8 @@ namespace CreativeAI.Gameplay
                     break;
             }
 
-            _spinRoot.Rotate(_spinAxis, _spinSpeed * Time.deltaTime, Space.Self);
+            if (IsFlying)
+                _spinRoot.Rotate(_spinAxis, _spinSpeed * Time.deltaTime, Space.Self);
         }
 
         private void UpdateOutbound()
@@ -284,16 +295,27 @@ namespace CreativeAI.Gameplay
             _hitbox.EnableHitbox();
         }
 
-        private void Catch()
+        private void Catch(bool clearTrailImmediately = false)
         {
             _phase = Phase.Idle;
             _hitbox.DisableHitbox();
-            // 停止したまま非表示にしておき、次に投げた瞬間に前回の粒が残っていないようにする
-            _trail.Stop(true, ParticleSystemStopBehavior.StopEmittingAndClear);
-            // すぐ非表示にするのでフェードは進まない。鳴りかけのまま残らないよう即座に止める
+            // GameObject ごと非アクティブにすると残っている軌跡まで一瞬で消えるため、
+            // 鎌のメッシュだけを隠して放出を止め、残った軌跡は寿命で自然に消えさせる
+            SetModelVisible(false);
+            _trail.Stop(
+                true,
+                clearTrailImmediately
+                    ? ParticleSystemStopBehavior.StopEmittingAndClear
+                    : ParticleSystemStopBehavior.StopEmitting
+            );
             _flightLoop.StopImmediately();
-            gameObject.SetActive(false);
             Caught?.Invoke();
+        }
+
+        private void SetModelVisible(bool visible)
+        {
+            foreach (MeshRenderer renderer in _modelRenderers)
+                renderer.enabled = visible;
         }
     }
 }
