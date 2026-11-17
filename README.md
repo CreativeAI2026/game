@@ -49,7 +49,7 @@ game/                          ← リポジトリルート
 │   │   │   │   └── SaveDialog/    セーブ確認
 │   │   │   └── Playtest/      試遊会用の舞台（独自のアセンブリ）
 │   │   ├── DevTools/          開発でだけ使うもの（フィールドを直接 Play したときの起動・Data/dev_state.json・UI 確認シーンの動かし役・デバッグ表示）。一番上の独自のアセンブリ
-│   │   ├── Art/               素材を種類ごとに（Models / Textures / Materials / Animations / Shaders / VFX（エフェクトの Prefab）/ UI）
+│   │   ├── Art/               素材を種類ごとに（Models / Textures / Materials / Animations / Shaders / VFX / UI）。VFX は見た目だけのエフェクト。当たり判定・取得などゲームのルールを持つ物は各機能の Prefabs/ へ
 │   │   ├── Audio/             SE・SoundCue・AudioMixer
 │   │   ├── Scenes/            シーン（Title / Field / Battle / UI プレビュー）
 │   │   ├── Settings/          URP（Renderer・全体設定・既定の Volume）/ Input System の設定
