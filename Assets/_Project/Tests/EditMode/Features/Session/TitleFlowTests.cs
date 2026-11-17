@@ -10,7 +10,7 @@ namespace CreativeAI.Tests.EditMode
     /// <summary>
     /// タイトルの「はじめる / 続きから」で常駐一式を正しい順に生成するかの検証。
     /// 生成順はマネージャ → Inventory → UIRoot → プレイヤー。
-    /// シーンロードと冪等性ガードは TitleFlowPlayModeTests 側。
+    /// シーンロードは SceneLoadPlayModeTests、二重生成しないことは SessionResidencyPlayModeTests 側。
     /// </summary>
     public class TitleFlowTests
     {
