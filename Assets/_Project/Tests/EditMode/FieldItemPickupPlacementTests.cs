@@ -17,7 +17,8 @@ namespace CreativeAI.Tests.EditMode
     public class FieldItemPickupPlacementTests
     {
         private const string ScenePath = "Assets/_Project/Scenes/Field/Field_Area01_Items.unity";
-        private const string PrefabPath = "Assets/_Project/Art/VFX/Pickup/ItemPickup.prefab";
+        private const string PrefabPath =
+            "Assets/_Project/Art/VFX/Pickup/ItemPickup.prefab";
 
         private readonly List<GameObject> _created = new();
 

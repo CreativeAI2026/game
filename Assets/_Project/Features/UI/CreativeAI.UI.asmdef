@@ -8,8 +8,7 @@
         "Unity.InputSystem",
         "Unity.RenderPipelines.Universal.Runtime",
         "UniTask",
-        "UniTask.DOTween",
-        "SoundKit"
+        "UniTask.DOTween"
     ],
     "includePlatforms": [],
     "excludePlatforms": [],

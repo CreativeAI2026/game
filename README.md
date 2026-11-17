@@ -28,7 +28,8 @@ game/                          ← リポジトリルート
 │   │   │   ├── Field/         扉・調べる・拾えるアイテムと拾い済みの記録
 │   │   │   ├── SaveSystem/    セーブ・ロード
 │   │   │   ├── Camera/        カメラリグ・ズーム・揺れ
-│   │   │   ├── Audio/         プレイヤーの立てた物音を敵が聞きつける仕組み（音の再生は Modules/SoundKit）
+│   │   │   ├── Audio/         プレイヤーの立てた物音を敵が聞きつける仕組み
+│   │   │   ├── Sound/         音を鳴らす部品（効果音・BGM・UI 音・音量設定）。使い方は Sound/README.md
 │   │   │   ├── Effects/       エフェクトの使い回し（ObjectPool）
 │   │   │   ├── Session/       ゲームの開始（タイトルから）と常駐一式の生成。UI より上の独自のアセンブリ
 │   │   │   ├── UI/            各機能の画面
@@ -47,7 +48,6 @@ game/                          ← リポジトリルート
 │   │   │   │   ├── Map/           ミニマップ・全画面マップ
 │   │   │   │   └── SaveDialog/    セーブ確認
 │   │   │   └── Playtest/      試遊会用の舞台（独自のアセンブリ）
-│   │   ├── Modules/           プロジェクトに依存しない仕組み（SoundKit：音の再生・音量設定）
 │   │   ├── DevTools/          開発でだけ使うもの（フィールドを直接 Play したときの起動・Data/dev_state.json・UI 確認シーンの動かし役・デバッグ表示）。一番上の独自のアセンブリ
 │   │   ├── Art/               素材を種類ごとに（Models / Textures / Materials / Animations / Shaders / VFX（エフェクトの Prefab）/ UI）
 │   │   ├── Audio/             SE・SoundCue・AudioMixer
@@ -61,6 +61,7 @@ game/                          ← リポジトリルート
 │   │   │   ├── Map/           マップ生成・NavMesh / オクルージョン / ミニマップの焼き込み・小物シーン・アイテム配置
 │   │   │   ├── Player/        弓の構えの調整・射程の編集・武器データの Inspector
 │   │   │   ├── Panic/         焦り度ログの集計
+│   │   │   ├── Sound/         音素材の音量そろえ・音声エディタ（ffmpeg）
 │   │   │   ├── Art/           エフェクトの生成・アニメーションの書き出し・取り込み時の処理
 │   │   │   ├── UI/            HUD の確認用 Inspector・プレビュー操作・フォントの掃除・会話スキップ
 │   │   │   └── Playtest/      ボス体験用ビルド

@@ -2,7 +2,6 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using CreativeAI.Gameplay;
-using SoundKit;
 using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
@@ -732,7 +731,7 @@ namespace CreativeAI.UI
         }
 
         // 登録した素材からキーで引く。同じキーが複数あれば先に登録したほうを使う。
-        private SoundKit.SoundCue FindSound(string key)
+        private SoundCue FindSound(string key)
         {
             foreach (var entry in _sounds ?? Array.Empty<DialogueSoundEntry>())
                 if (entry.Key == key)

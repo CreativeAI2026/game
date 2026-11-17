@@ -5,10 +5,9 @@
         "Unity.InputSystem",
         "Unity.Cinemachine",
         "Unity.TextMeshPro",
+        "UnityEngine.UI",
         "Unity.Animation.Rigging",
         "UniTask",
-        "SoundKit",
-        "SoundKit.UGUI",
         "Unity.InferenceEngine",
         "Unity.RenderPipelines.Universal.Runtime",
         "Unity.RenderPipelines.Core.Runtime"
