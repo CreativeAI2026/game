@@ -14,9 +14,9 @@ game/                          ← リポジトリルート
 ├── Assets/
 │   ├── _Project/              本プロジェクトのアセット（基本ここに置く）
 │   │   ├── Features/          ゲーム機能。機能ごとに Scripts / Prefabs / Data（設定アセット・JSON）を置く
-│   │   │   ├── GameState/     進行度・ゲームモード
+│   │   │   ├── GameState/     進行度・ゲームモード・メニューが開いているか
 │   │   │   ├── SceneFlow/     シーン遷移・到着位置・シーンの重ね読み
-│   │   │   ├── UiRequests/    ゲーム側から UI への依頼（操作表示・調合画面・画面の開閉）
+│   │   │   ├── UiRequests/    ゲーム側から UI への依頼（会話・暗転・調合画面・操作表示）
 │   │   │   ├── Event/         会話イベントの定義・再生、他機能との窓口。Data/events.json が台本
 │   │   │   ├── MapPin/        マップピンとピンまでの道筋の線
 │   │   │   ├── Player/        プレイヤー・武器・焦り度の判定（Panic）
