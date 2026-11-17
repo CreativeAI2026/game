@@ -6,7 +6,7 @@ namespace CreativeAI.Gameplay
     /// <summary>
     /// battle ステップの実体(IBattleRunner)。EventTrigger.Enemy に配線された敵 Prefab(events.json ではなくこのスロットで解決)を1体トリガー位置に出し、倒されるまで待って EventPlayer に制御を返す。
     /// 状態もコルーチンも持たないので MonoBehaviour にしない。EventPlayer が1つ作って使う。
-    /// TODO(戦闘班): カメラ・アリーナ・敗北時は非戦闘時と共通で確定済み(その場戦闘・追従カメラ・直近セーブ再開)。
+    /// 戦闘はその場で行い、カメラも普段のまま(専用のアリーナやカメラへの切り替えはしない)。
     /// </summary>
     public sealed class BattleRunner : IBattleRunner
     {

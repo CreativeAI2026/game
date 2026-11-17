@@ -82,7 +82,6 @@ namespace CreativeAI.UI
             _vignetteCoroutine = StartCoroutine(VignetteCoroutine());
         }
 
-        // TODO : UniTask導入後に、これをUniTaskで実装しなおす
         private IEnumerator VignetteCoroutine()
         {
             float elapsed = 0f;
