@@ -5,7 +5,7 @@ namespace CreativeAI.Session
     /// <summary>
     /// セッション常駐(UIRoot・カメラリグ・プレイヤーリグ)の Prefab 参照を1箇所に集約する設定アセット。
     /// Resources から読み、タイトルからの開始(<see cref="GameStarter"/>)と
-    /// 開発用の直接 Play(<see cref="FieldDevBootstrap"/>)の両方が使う。
+    /// 開発用の直接 Play(DevTools の FieldDevBootstrap)の両方が使う。
     /// </summary>
     [CreateAssetMenu(
         fileName = "ResidentBootstrapConfig",

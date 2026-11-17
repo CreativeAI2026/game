@@ -1,10 +1,11 @@
 using System.Collections.Generic;
+using CreativeAI.Gameplay;
 using TMPro;
 using UnityEngine;
 using UnityEngine.InputSystem;
 using UnityEngine.UI;
 
-namespace CreativeAI.Gameplay
+namespace CreativeAI.DevTools
 {
     /// <summary>
     /// PanicDetector の焦り度スコアと各指標をリアルタイムでデバッグ表示するUIコンポーネント。

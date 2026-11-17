@@ -30,7 +30,7 @@ game/                          ← リポジトリルート
 │   │   │   ├── Camera/        カメラリグ・ズーム・揺れ
 │   │   │   ├── Audio/         プレイヤーの立てた物音を敵が聞きつける仕組み（音の再生は Modules/SoundKit）
 │   │   │   ├── Effects/       エフェクトの使い回し（ObjectPool）
-│   │   │   ├── Session/       ゲームの開始（タイトルから・フィールドを直接 Play）と常駐一式の生成。UI より上の独自のアセンブリ。Data/dev_state.json
+│   │   │   ├── Session/       ゲームの開始（タイトルから）と常駐一式の生成。UI より上の独自のアセンブリ
 │   │   │   ├── UI/            各機能の画面
 │   │   │   │   ├── Root/          UIRoot・画面切り替え・EventSystem
 │   │   │   │   ├── Slots/         アイテムを入れるスロットの部品
@@ -48,6 +48,7 @@ game/                          ← リポジトリルート
 │   │   │   │   └── SaveDialog/    セーブ確認
 │   │   │   └── Playtest/      試遊会用の舞台（独自のアセンブリ）
 │   │   ├── Modules/           プロジェクトに依存しない仕組み（SoundKit：音の再生・音量設定）
+│   │   ├── DevTools/          開発でだけ使うもの（フィールドを直接 Play したときの起動・Data/dev_state.json・UI 確認シーンの動かし役・デバッグ表示）。一番上の独自のアセンブリ
 │   │   ├── Art/               素材を種類ごとに（Models / Textures / Materials / Animations / Shaders / VFX（エフェクトの Prefab）/ UI）
 │   │   ├── Audio/             SE・SoundCue・AudioMixer
 │   │   ├── Scenes/            シーン（Title / Field / Battle / UI プレビュー）
@@ -55,7 +56,7 @@ game/                          ← リポジトリルート
 │   │   ├── Resources/         実行時ロードするアセット（ItemCatalog・常駐生成の設定・UI 音・マップピンの見た目）
 │   │   ├── Editor/            Editor 拡張（Tools メニュー）。CiBuild.cs は CI のビルドの入口
 │   │   │   ├── Event/         events.json の取り込み
-│   │   │   ├── Session/       Dev State ウィンドウ（好きなイベントの直前から Play）
+│   │   │   ├── DevTools/      Dev State ウィンドウ（好きなイベントの直前から Play）
 │   │   │   ├── Items/         アイテムの同期・アイコンの取り込み設定と透過チェック
 │   │   │   ├── Map/           マップ生成・NavMesh / オクルージョン / ミニマップの焼き込み・小物シーン・アイテム配置
 │   │   │   ├── Player/        弓の構えの調整・射程の編集・武器データの Inspector
@@ -90,3 +91,6 @@ game/                          ← リポジトリルート
 ```
 
 ★ は `.gitignore` で除外されています。
+
+アセンブリはフォルダで決まる: `Features/UI` の下は UI、`Session`・`Playtest`・`DevTools` はそれぞれ独自、それ以外の `Features` は Gameplay。
+使える向きは DevTools → Session → UI → Gameplay の一方通行（本番のコードは DevTools を使わない）。Gameplay から UI に頼むときは `UiRequests` の窓口を通す。

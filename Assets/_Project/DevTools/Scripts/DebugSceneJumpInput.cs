@@ -1,8 +1,9 @@
+using CreativeAI.Gameplay;
 using UnityEngine;
 using UnityEngine.InputSystem;
 using UnityEngine.SceneManagement;
 
-namespace CreativeAI.Gameplay
+namespace CreativeAI.DevTools
 {
     /// <summary>
     /// 指定キー（既定: F3）で、設定したテスト用シーンへ遷移するデバッグ用コンポーネント。

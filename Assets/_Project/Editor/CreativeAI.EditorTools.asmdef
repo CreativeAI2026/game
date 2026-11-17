@@ -4,6 +4,7 @@
     "references": [
         "CreativeAI.UI",
         "CreativeAI.Session",
+        "CreativeAI.DevTools",
         "CreativeAI.Gameplay",
         "Unity.InputSystem",
         "Unity.TextMeshPro",

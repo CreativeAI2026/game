@@ -6,6 +6,7 @@
         "CreativeAI.Gameplay",
         "CreativeAI.UI",
         "CreativeAI.Session",
+        "CreativeAI.DevTools",
         "SoundKit",
         "Unity.TextMeshPro",
         "CreativeAI.EditorTools",

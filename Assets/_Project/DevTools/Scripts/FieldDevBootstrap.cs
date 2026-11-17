@@ -1,11 +1,12 @@
 using System.Collections;
 using CreativeAI.Gameplay;
+using CreativeAI.Session;
 using CreativeAI.UI;
 using UnityEngine;
 using UnityEngine.EventSystems;
 using UnityEngine.InputSystem.UI;
 
-namespace CreativeAI.Session
+namespace CreativeAI.DevTools
 {
     /// <summary>
     /// 開発用シーンを Title を経由せず直接 Play したとき、常駐システム(マネージャ / Inventory / UIRoot / 会話UI)を

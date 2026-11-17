@@ -1,7 +1,7 @@
 ﻿using System.Collections.Generic;
 using UnityEngine;
 
-namespace CreativeAI.Session
+namespace CreativeAI.DevTools
 {
     [DefaultExecutionOrder(10000)]
     public sealed class PreviewOnlyPlayer : MonoBehaviour

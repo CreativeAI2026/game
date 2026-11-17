@@ -4,7 +4,7 @@ using CreativeAI.Gameplay;
 using UnityEngine;
 using UnityEngine.AI;
 
-namespace CreativeAI.Session
+namespace CreativeAI.DevTools
 {
     /// <summary>
     /// 開発用: フィールドを直接 Play したときに始める状態(進行度・フラグ・大事なもの・武器・HP)。
@@ -15,14 +15,13 @@ namespace CreativeAI.Session
     public sealed class DevState
     {
         /// <summary>Assets からの相対パス。events.json と同じ場所に置き、書く人が迷わないようにする。</summary>
-        public const string AssetPath = "Assets/_Project/Features/Session/Data/dev_state.json";
+        public const string AssetPath = "Assets/_Project/DevTools/Data/dev_state.json";
 
         /// <summary>
         /// 個人用の置き場(.gitignore 済み)。あればこちらが <see cref="AssetPath"/> より優先される。
         /// 開始位置のように人ごとに違う設定は、共有の dev_state.json ではなくこちらへ書く。
         /// </summary>
-        public const string LocalAssetPath =
-            "Assets/_Project/Features/Session/Data/dev_state.local.json";
+        public const string LocalAssetPath = "Assets/_Project/DevTools/Data/dev_state.local.json";
 
         /// <summary>読む dev_state のパス。個人用があればそれ、無ければ共有のもの(どちらも無くても共有のパスを返す)。</summary>
         public static string ResolvePath() =>

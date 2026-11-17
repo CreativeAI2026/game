@@ -2,9 +2,10 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using CreativeAI.Gameplay;
+using CreativeAI.UI;
 using UnityEngine;
 
-namespace CreativeAI.UI
+namespace CreativeAI.DevTools
 {
     /// <summary>
     /// UI_ConversationPreview 専用のプレビュー駆動役。

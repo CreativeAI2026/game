@@ -6,7 +6,7 @@ namespace CreativeAI.Session
 {
     /// <summary>
     /// 1回のプレイ(「はじめる/続きから」〜タイトルに戻るまで)の間ずっと残る常駐一式を作る(冪等)。
-    /// タイトルからの開始(<see cref="GameStarter"/>)と、開発用の直接 Play(<see cref="FieldDevBootstrap"/>)が同じ手順を通る。
+    /// タイトルからの開始(<see cref="GameStarter"/>)と、開発用の直接 Play(DevTools の FieldDevBootstrap)が同じ手順を通る。
     /// </summary>
     public static class GameSession
     {
