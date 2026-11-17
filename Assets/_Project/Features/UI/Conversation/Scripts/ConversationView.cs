@@ -249,6 +249,7 @@ namespace CreativeAI.UI
         private Button _hideControlButton;
 
         private DialogueChoicePresenter _choicePresenter;
+        private DialogueItemPickerPresenter _itemPicker;
         private readonly DialogueTextPlayer _textPlayer = new();
         private readonly DialoguePortraitPresenter _portraitPresenter = new();
         private ConversationChromePresenter _chromePresenter;
@@ -397,7 +398,11 @@ namespace CreativeAI.UI
                 SetAutoMode,
                 SetWindowHidden,
                 SetTextSpeed,
-                () => _choicePresenter?.HandleKeyboardInput()
+                () =>
+                {
+                    _choicePresenter?.HandleKeyboardInput();
+                    _itemPicker?.HandleKeyboardInput();
+                }
             );
             _backdropPresenter ??= new DialogueBackdropPresenter(
                 _root != null ? _root.transform : transform
@@ -540,6 +545,47 @@ namespace CreativeAI.UI
 
             yield return _choiceFlow.Execute(options, onSelected);
             State = ConversationState.Entering;
+        }
+
+        /// <summary>
+        /// IDialogueView 実装: useItem ステップの持ち物ピッカー。未装備の持ち物の一覧と「やめる」を出し、
+        /// 選んだ itemKey(やめたら null、キーを持たないアイテムは空文字)を <paramref name="onPicked"/> で返す。
+        /// </summary>
+        public IEnumerator ShowItemPicker(string prompt, Action<string> onPicked)
+        {
+            InitializePresenters();
+            CancelRewardPresentation();
+            State = ConversationState.ShowingChoices; // 送り入力を止め、キー入力をピッカーへ回す
+            SetWindowHidden(false);
+            yield return ShowAnimated();
+
+            _itemPicker ??= new DialogueItemPickerPresenter(
+                _root != null ? _root.transform : transform,
+                _nameText != null ? _nameText.font : null
+            );
+            var inventory = InventoryManager.Instance;
+            var entries = ItemPickerEntries.Build(
+                inventory != null ? inventory.GetAllItems() : null
+            );
+
+            bool hasPicked = false;
+            string picked = null;
+            _itemPicker.Show(
+                prompt,
+                entries,
+                value =>
+                {
+                    picked = value;
+                    hasPicked = true;
+                }
+            );
+            while (!hasPicked)
+                yield return null;
+
+            _itemPicker.Clear();
+            State = ConversationState.Entering;
+            BlockAdvanceInput(0.15f);
+            onPicked?.Invoke(picked);
         }
 
         /// <summary>
