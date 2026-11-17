@@ -1170,5 +1170,111 @@ namespace CreativeAI.Tests.EditMode
             Assert.IsTrue(report.Diagnostics.Any(d => d.Message.Contains("id")));
             Assert.IsTrue(report.Diagnostics.Any(d => d.Message.Contains("steps")));
         }
+
+        // --- useItem ---
+
+        private static EventImporter.Report ParseUseItem(string useItemStep)
+        {
+            var json =
+                @"{ ""events"": [ { ""id"": ""use_item"", ""conditions"": [ { ""type"": ""progress"", ""value"": 0 } ],
+                    ""steps"": [ "
+                + useItemStep
+                + @", { ""kind"": ""line"", ""text"": ""開いた"" } ], ""nextProgress"": 1 } ] }";
+            var catalog = new EventImporter.ImportCatalog(
+                new HashSet<string> { "card_key", "apple" }
+            );
+            return EventImporter.Parse(json, catalog);
+        }
+
+        private const string ValidUseItem =
+            @"{ ""kind"": ""useItem"", ""accept"": [ { ""itemKey"": ""card_key"", ""count"": 2 }, { ""itemKey"": ""apple"", ""count"": 1 } ],
+                ""consume"": true, ""prompt"": ""何を使う?"", ""speaker"": ""係員"", ""wrong"": ""違うようだ。"", ""onWrong"": ""end"" }";
+
+        [Test]
+        public void Parse_UseItem_Valid_BuildsStep()
+        {
+            var report = ParseUseItem(ValidUseItem);
+
+            Assert.IsFalse(report.HasErrors, string.Join("\n", report.Diagnostics));
+            var step = report.Events[0].Steps[0];
+            Assert.AreEqual(StepKind.UseItem, step.Kind);
+            Assert.AreEqual(2, step.Accept.Count);
+            Assert.AreEqual("card_key", step.Accept[0].ItemKey);
+            Assert.AreEqual(2, step.Accept[0].Count);
+            Assert.AreEqual("apple", step.Accept[1].ItemKey);
+            Assert.IsTrue(step.Consume);
+            Assert.AreEqual("何を使う?", step.Prompt);
+            Assert.AreEqual("係員", step.Speaker);
+            Assert.AreEqual("違うようだ。", step.Text);
+            Assert.IsTrue(step.EndOnWrong);
+        }
+
+        [Test]
+        public void Parse_UseItem_DefaultsOnWrongToRetry()
+        {
+            var report = ParseUseItem(
+                @"{ ""kind"": ""useItem"", ""accept"": [ { ""itemKey"": ""card_key"", ""count"": 1 } ], ""consume"": false, ""wrong"": ""違う"" }"
+            );
+
+            Assert.IsFalse(report.HasErrors, string.Join("\n", report.Diagnostics));
+            var step = report.Events[0].Steps[0];
+            Assert.IsFalse(step.EndOnWrong);
+            Assert.IsFalse(step.Consume);
+        }
+
+        [TestCase(
+            @"{ ""kind"": ""useItem"", ""accept"": [ { ""itemKey"": ""card_key"", ""count"": 1 } ], ""wrong"": ""違う"" }",
+            "consume"
+        )]
+        [TestCase(
+            @"{ ""kind"": ""useItem"", ""accept"": [], ""consume"": true, ""wrong"": ""違う"" }",
+            "accept"
+        )]
+        [TestCase(
+            @"{ ""kind"": ""useItem"", ""accept"": [ { ""itemKey"": ""nonexistent"", ""count"": 1 } ], ""consume"": true, ""wrong"": ""違う"" }",
+            "nonexistent"
+        )]
+        [TestCase(
+            @"{ ""kind"": ""useItem"", ""accept"": [ { ""itemKey"": ""card_key"", ""count"": 0 } ], ""consume"": true, ""wrong"": ""違う"" }",
+            "count"
+        )]
+        [TestCase(
+            @"{ ""kind"": ""useItem"", ""accept"": [ { ""itemKey"": ""card_key"", ""count"": 1 }, { ""itemKey"": ""card_key"", ""count"": 2 } ], ""consume"": true, ""wrong"": ""違う"" }",
+            "重複"
+        )]
+        [TestCase(
+            @"{ ""kind"": ""useItem"", ""accept"": [ { ""itemKey"": ""card_key"", ""count"": 1 } ], ""consume"": true }",
+            "wrong"
+        )]
+        [TestCase(
+            @"{ ""kind"": ""useItem"", ""accept"": [ { ""itemKey"": ""card_key"", ""count"": 1 } ], ""consume"": true, ""wrong"": ""違う"", ""onWrong"": ""loop"" }",
+            "onWrong"
+        )]
+        public void Parse_UseItem_Invalid_IsErrorMentioning(string step, string expected)
+        {
+            var report = ParseUseItem(step);
+
+            Assert.IsTrue(report.HasErrors);
+            Assert.IsTrue(
+                report.Diagnostics.Any(d => d.Message.Contains(expected)),
+                string.Join("\n", report.Diagnostics)
+            );
+        }
+
+        [Test]
+        public void Parse_UseItem_InsideBranch_IsError()
+        {
+            const string json =
+                @"{ ""events"": [ { ""id"": ""use_item_branch"", ""conditions"": [ { ""type"": ""progress"", ""value"": 0 } ],
+                    ""steps"": [ { ""kind"": ""branch"", ""flag"": ""f"", ""cases"": { ""a"": [
+                        { ""kind"": ""useItem"", ""accept"": [ { ""itemKey"": ""card_key"", ""count"": 1 } ], ""consume"": true, ""wrong"": ""違う"" } ] } },
+                        { ""kind"": ""line"", ""text"": ""終わり"" } ], ""nextProgress"": 1 } ] }";
+            var catalog = new EventImporter.ImportCatalog(new HashSet<string> { "card_key" });
+
+            var report = EventImporter.Parse(json, catalog);
+
+            Assert.IsTrue(report.HasErrors);
+            Assert.IsTrue(report.Diagnostics.Any(d => d.Message.Contains("useItem")));
+        }
     }
 }

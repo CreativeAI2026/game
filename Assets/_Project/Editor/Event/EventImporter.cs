@@ -469,11 +469,19 @@ namespace CreativeAI.EditorTools
                     location = location.Substring(start);
                 var step = token as JObject;
                 string kind = (step?["kind"] as JValue)?.Value as string;
-                if (insideBranch && (kind == "choice" || kind == "branch" || kind == "battle"))
+                if (
+                    insideBranch
+                    && (
+                        kind == "choice"
+                        || kind == "branch"
+                        || kind == "battle"
+                        || kind == "useItem"
+                    )
+                )
                 {
                     report.Error(
                         id,
-                        $"{location}: branch 内に choice / branch / battle は配置できません。"
+                        $"{location}: branch 内に choice / branch / battle / useItem は配置できません。"
                     );
                     continue;
                 }
@@ -751,18 +759,14 @@ namespace CreativeAI.EditorTools
                         );
                         return null;
                     }
-                    // カタログにはあるが立ち絵アセット未登録 = 実行時は既定の立ち絵に落ちる。
-                    // 絵の準備待ちでも書き進められるようエラーにはせず警告にとどめる。
-                    if (
-                        !string.IsNullOrEmpty(portrait)
-                        && catalog?.RegisteredPortraitKeys != null
-                        && !catalog.RegisteredPortraitKeys.Contains(portrait)
-                    )
-                        report.Warn(
-                            id,
-                            $"{location} line の portrait '{portrait}' は立ち絵アセット未登録です(実行時は既定の立ち絵になります)。"
-                        );
+                    WarnIfPortraitUnregistered(portrait, "line", id, location, report, catalog);
                     return EventStep.Line(speaker, portrait, text);
+                }
+
+                case "useItem":
+                {
+                    kind = StepKind.UseItem;
+                    return ParseUseItem(step, id, location, report, catalog);
                 }
 
                 case "choice":
@@ -960,10 +964,152 @@ namespace CreativeAI.EditorTools
                 default:
                     report.Error(
                         id,
-                        $"{location} の kind '{kindStr}' は不正(line / choice / setFlag / giveItem / giveWeapon / battle / command のみ)。"
+                        $"{location} の kind '{kindStr}' は不正(line / choice / setFlag / giveItem / giveWeapon / battle / command / useItem のみ)。"
                     );
                     return null;
             }
+        }
+
+        // カタログにはあるが立ち絵アセット未登録 = 実行時は既定の立ち絵に落ちる。
+        // 絵の準備待ちでも書き進められるようエラーにはせず警告にとどめる。
+        private static void WarnIfPortraitUnregistered(
+            string portrait,
+            string stepName,
+            string id,
+            string location,
+            Report report,
+            ImportCatalog catalog
+        )
+        {
+            if (
+                !string.IsNullOrEmpty(portrait)
+                && catalog?.RegisteredPortraitKeys != null
+                && !catalog.RegisteredPortraitKeys.Contains(portrait)
+            )
+                report.Warn(
+                    id,
+                    $"{location} {stepName} の portrait '{portrait}' は立ち絵アセット未登録です(実行時は既定の立ち絵になります)。"
+                );
+        }
+
+        // useItem ステップ: accept(正解候補) / consume / wrong が必須。prompt・speaker・portrait・onWrong は省略可。
+        private static EventStep ParseUseItem(
+            JObject step,
+            string id,
+            string location,
+            Report report,
+            ImportCatalog catalog
+        )
+        {
+            bool ok = true;
+
+            var accept = new List<UseItemCandidate>();
+            if (step["accept"] is not JArray candidates || candidates.Count == 0)
+            {
+                report.Error(
+                    id,
+                    $"{location} useItem は accept(正解の itemKey と count)が1つ以上必須。"
+                );
+                ok = false;
+            }
+            else
+            {
+                for (int c = 0; c < candidates.Count; c++)
+                {
+                    var itemKey = (candidates[c]?["itemKey"] as JValue)?.Value as string;
+                    var countToken = candidates[c]?["count"] as JValue;
+                    if (string.IsNullOrEmpty(itemKey))
+                    {
+                        report.Error(id, $"{location} useItem の accept[{c}] は itemKey が必須。");
+                        ok = false;
+                        continue;
+                    }
+                    if (countToken?.Value is not long count || count < 1)
+                    {
+                        report.Error(
+                            id,
+                            $"{location} useItem の accept[{c}] の count は1以上の整数が必須。"
+                        );
+                        ok = false;
+                        continue;
+                    }
+                    if (catalog?.ItemKeys != null && !catalog.ItemKeys.Contains(itemKey))
+                    {
+                        report.Error(
+                            id,
+                            $"{location} useItem の itemKey '{itemKey}' が ItemData カタログに存在しません。"
+                        );
+                        ok = false;
+                        continue;
+                    }
+                    if (accept.Any(a => a.ItemKey == itemKey))
+                    {
+                        report.Error(
+                            id,
+                            $"{location} useItem の accept に itemKey '{itemKey}' が重複しています。"
+                        );
+                        ok = false;
+                        continue;
+                    }
+                    accept.Add(new UseItemCandidate(itemKey, (int)count));
+                }
+                if (catalog?.ItemKeys == null)
+                    report.Warn(
+                        id,
+                        $"{location} useItem の itemKey は未検証(item カタログ未提供)。"
+                    );
+            }
+
+            // consume は書き忘れを防ぐため既定を置かず、bool を必須にする。
+            if ((step["consume"] as JValue)?.Value is not bool consume)
+            {
+                report.Error(
+                    id,
+                    $"{location} useItem は consume(true / false)が必須。正解のとき消費するかを明示してください。"
+                );
+                ok = false;
+                consume = false;
+            }
+
+            var wrong = (step["wrong"] as JValue)?.Value as string;
+            if (string.IsNullOrEmpty(wrong))
+            {
+                report.Error(id, $"{location} useItem は wrong(間違いのセリフ)が必須。");
+                ok = false;
+            }
+
+            var onWrong = (step["onWrong"] as JValue)?.Value as string;
+            if (onWrong != null && onWrong != "retry" && onWrong != "end")
+            {
+                report.Error(
+                    id,
+                    $"{location} useItem の onWrong '{onWrong}' は不正(retry / end のみ)。"
+                );
+                ok = false;
+            }
+
+            var portrait = (step["portrait"] as JValue)?.Value as string;
+            if (!string.IsNullOrEmpty(portrait) && !PortraitKeys.Contains(portrait))
+            {
+                report.Error(
+                    id,
+                    $"{location} useItem の portrait '{portrait}' はカタログに存在しません。"
+                );
+                ok = false;
+            }
+            WarnIfPortraitUnregistered(portrait, "useItem", id, location, report, catalog);
+
+            if (!ok)
+                return null;
+            return EventStep.UseItem(
+                accept.ToArray(),
+                consume,
+                wrong,
+                (step["speaker"] as JValue)?.Value as string,
+                portrait,
+                (step["prompt"] as JValue)?.Value as string,
+                onWrong == "end"
+            );
         }
 
         /// <summary>
