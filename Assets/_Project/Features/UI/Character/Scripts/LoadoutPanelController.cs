@@ -269,7 +269,7 @@ namespace CreativeAI.UI
                 _detailAreaLayout = detail != null ? detail.GetComponent<LayoutElement>() : null;
                 _detailExpandedHeight =
                     _detailAreaLayout != null ? _detailAreaLayout.preferredHeight : 0;
-                _detailParameterRow = FindGameObject(detail, "ParamaterRow");
+                _detailParameterRow = FindGameObject(detail, "ParameterRow");
                 var parameterLayout =
                     _detailParameterRow != null
                         ? _detailParameterRow.GetComponent<LayoutElement>()
@@ -325,7 +325,7 @@ namespace CreativeAI.UI
                     "DropErrorMessage"
                 );
 
-            Transform parameterRoot = transform.Find("InventoryArea/DetailArea/ParamaterRow");
+            Transform parameterRoot = transform.Find("InventoryArea/DetailArea/ParameterRow");
             if (_quickParameterPattern == null)
                 _quickParameterPattern = FindGameObject(parameterRoot, "QuickItemPattern");
             if (_equipmentParameterPattern == null)
@@ -333,7 +333,7 @@ namespace CreativeAI.UI
 
             Transform quickParameter =
                 parameterRoot != null
-                    ? parameterRoot.Find("QuickItemPattern/ItemParamaterArea")
+                    ? parameterRoot.Find("QuickItemPattern/ItemParameterArea")
                     : null;
             if (_quickParameterLabel == null)
                 _quickParameterLabel = FindComponent<TMP_Text>(quickParameter, "Label");

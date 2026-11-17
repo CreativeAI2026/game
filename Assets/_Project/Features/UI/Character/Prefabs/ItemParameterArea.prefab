@@ -172,7 +172,7 @@ GameObject:
   - component: {fileID: 4576579404337683633}
   - component: {fileID: 804447905375712051}
   m_Layer: 0
-  m_Name: ItemParamaterArea
+  m_Name: ItemParameterArea
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
