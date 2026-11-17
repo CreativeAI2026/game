@@ -182,6 +182,13 @@ namespace CreativeAI.Gameplay
             return HasItem(data, 1);
         }
 
+        /// <summary>IItemGiver。itemKey のアイテムの所持数(未装備のぶん。全カテゴリ)。</summary>
+        public int CountItem(string itemKey) => InventoryService.CountByKey(itemKey);
+
+        /// <summary>IItemGiver。itemKey の未装備のアイテムを count 個消費する。足りなければ false。</summary>
+        public bool Consume(string itemKey, int count) =>
+            InventoryService.ConsumeByKey(itemKey, count);
+
         public void RemoveItem(ItemData data, int count = 1)
         {
             InventoryService.RemoveItem(data, count);

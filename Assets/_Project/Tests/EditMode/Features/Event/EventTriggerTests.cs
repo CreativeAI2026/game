@@ -26,6 +26,10 @@ namespace CreativeAI.Tests.EditMode
             public void Give(string itemKey) => Owned.Add(itemKey);
 
             public bool HasImportantItem(string itemKey) => Owned.Contains(itemKey);
+
+            public int CountItem(string itemKey) => 0;
+
+            public bool Consume(string itemKey, int count) => false;
         }
 
         private readonly TestResidents _residents = new();

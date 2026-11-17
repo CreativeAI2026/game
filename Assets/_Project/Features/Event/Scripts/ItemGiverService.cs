@@ -13,6 +13,16 @@ namespace CreativeAI.Gameplay
         /// 所持数を見る。装備品/食材/武器のキーや未登録キーは対象外で false を返す。
         /// </summary>
         bool HasImportantItem(string itemKey);
+
+        /// <summary>
+        /// itemKey のアイテムの所持数(未装備のぶんの合計。全カテゴリ対象)。useItem ステップの正解判定に使う。
+        /// </summary>
+        int CountItem(string itemKey);
+
+        /// <summary>
+        /// itemKey の未装備のアイテムを count 個消費する。足りなければ何も変えず false。
+        /// </summary>
+        bool Consume(string itemKey, int count);
     }
 
     /// <summary>

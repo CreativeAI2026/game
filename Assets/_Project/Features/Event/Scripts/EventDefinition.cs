@@ -143,6 +143,31 @@ namespace CreativeAI.Gameplay
         Branch,
         Jump,
         SetFlag,
+
+        /// <summary>持ち物から1つ選んで使わせ、正解なら進む。やめる・間違えて終了ではイベントを打ち切る。</summary>
+        UseItem,
+    }
+
+    /// <summary>useItem ステップの正解候補1つ(アイテムのキー + 必要な個数)。</summary>
+    [Serializable]
+    public sealed class UseItemCandidate
+    {
+        [SerializeField]
+        private string _itemKey;
+
+        [SerializeField]
+        private int _count;
+
+        public UseItemCandidate(string itemKey, int count)
+        {
+            _itemKey = itemKey;
+            _count = count;
+        }
+
+        public string ItemKey => _itemKey;
+
+        /// <summary>正解に必要な個数(1以上)。</summary>
+        public int Count => _count;
     }
 
     [Serializable]
@@ -239,6 +264,19 @@ namespace CreativeAI.Gameplay
 
         [SerializeField]
         private int _joinTarget;
+
+        [SerializeField]
+        private UseItemCandidate[] _accept = Array.Empty<UseItemCandidate>(); // useItem
+
+        [SerializeField]
+        private bool _consume; // useItem: 正解のとき消費するか
+
+        [SerializeField]
+        private string _prompt; // useItem: ピッカーの案内文(省略可)
+
+        [SerializeField]
+        private bool _endOnWrong; // useItem: 間違えたらイベントを打ち切るか(false なら選び直し)
+
         public IReadOnlyList<EventBranchCase> Cases => _cases;
         public int JoinTarget => _joinTarget;
 
@@ -259,6 +297,30 @@ namespace CreativeAI.Gameplay
                 _thenTarget = thenTarget,
                 _elseTarget = elseTarget,
                 _joinTarget = join,
+            };
+
+        /// <summary>
+        /// 持ち物から1つ選んで使わせるステップ。間違いのセリフは line と同じ speaker / portrait / text で持つ。
+        /// </summary>
+        public static EventStep UseItem(
+            UseItemCandidate[] accept,
+            bool consume,
+            string wrongText,
+            string speaker = null,
+            string portrait = null,
+            string prompt = null,
+            bool endOnWrong = false
+        ) =>
+            new()
+            {
+                _kind = StepKind.UseItem,
+                _accept = accept ?? Array.Empty<UseItemCandidate>(),
+                _consume = consume,
+                _text = wrongText,
+                _speaker = speaker,
+                _portrait = portrait,
+                _prompt = prompt,
+                _endOnWrong = endOnWrong,
             };
 
         public static EventStep Jump(int target) =>
@@ -364,6 +426,18 @@ namespace CreativeAI.Gameplay
 
         /// <summary>command ステップの引数(不要なら null)。</summary>
         public string Arg => _arg;
+
+        /// <summary>useItem ステップの正解候補(どれか1つを満たせば正解)。</summary>
+        public IReadOnlyList<UseItemCandidate> Accept => _accept;
+
+        /// <summary>useItem ステップで、正解のとき選んだ候補の個数を消費するか。</summary>
+        public bool Consume => _consume;
+
+        /// <summary>useItem ステップのピッカーの案内文(省略時は null / 空)。</summary>
+        public string Prompt => _prompt;
+
+        /// <summary>useItem ステップで、間違えたらイベントを打ち切るか(false なら選び直し)。</summary>
+        public bool EndOnWrong => _endOnWrong;
     }
 
     public enum ConditionType

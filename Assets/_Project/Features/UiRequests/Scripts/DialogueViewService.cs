@@ -17,6 +17,12 @@ namespace CreativeAI.Gameplay
         IEnumerator ShowChoice(IReadOnlyList<ChoiceOption> options, Action<string> onSelected);
 
         /// <summary>
+        /// useItem ステップの持ち物ピッカー。持ち物から1つ選ばせ、選んだ itemKey を onPicked で返す(コルーチン)。
+        /// やめたときは null、itemKey を持たないアイテムを選んだときは空文字。prompt は案内文(空なら UI の既定文)。
+        /// </summary>
+        IEnumerator ShowItemPicker(string prompt, Action<string> onPicked);
+
+        /// <summary>
         /// giveItem の入手演出。itemKey から絵と名前を引くのは UI 側(見せ方は UI の担当のため)。
         /// message 省略時は UI が「〜を手に入れた。」を組み立てる。送り入力まで待つ(コルーチン)。
         /// </summary>

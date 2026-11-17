@@ -19,6 +19,10 @@ namespace CreativeAI.Tests.EditMode
             public void Give(string itemKey) => Given.Add(itemKey);
 
             public bool HasImportantItem(string itemKey) => Given.Contains(itemKey);
+
+            public int CountItem(string itemKey) => 0;
+
+            public bool Consume(string itemKey, int count) => false;
         }
 
         private GameObject _pmGo;
