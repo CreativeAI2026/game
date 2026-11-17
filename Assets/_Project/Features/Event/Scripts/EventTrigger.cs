@@ -1,6 +1,6 @@
 using UnityEngine;
 
-namespace CreativeAI.Core
+namespace CreativeAI.Gameplay
 {
     /// <summary>
     /// シーン上のトリガーに配置する非常駐コンポーネント。プレイヤー侵入を検知し、

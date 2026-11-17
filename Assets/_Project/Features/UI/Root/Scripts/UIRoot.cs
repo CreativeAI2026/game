@@ -15,7 +15,7 @@ namespace CreativeAI.UI
 
         /// <summary>
         /// UI レイヤーを Prefab から1回だけ生成する(既に在ればそれを返す。Prefab 未割当なら警告して null)。
-        /// <see cref="GameSession"/> から、マネージャ生成後に呼ぶ(HudIconBarView が生成時にモードを購読するため)。
+        /// Session 層の GameSession から、マネージャ生成後に呼ぶ(HudIconBarView が生成時にモードを購読するため)。
         /// </summary>
         public static UIRoot EnsureResident(GameObject uiRootPrefab)
         {
@@ -25,7 +25,7 @@ namespace CreativeAI.UI
             if (uiRootPrefab == null)
             {
                 Debug.LogWarning(
-                    "[UIRoot] uiRootPrefab が未割当です。UIRoot Prefab を Title の TitleUIController にドラッグしてください。"
+                    "[UIRoot] uiRootPrefab が未割当です。Resources/ResidentBootstrapConfig の uiRootPrefab に UIRoot Prefab を設定してください。"
                 );
                 return null;
             }

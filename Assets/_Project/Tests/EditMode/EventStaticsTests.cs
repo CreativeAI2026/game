@@ -1,6 +1,6 @@
 using System.Collections;
 using System.Collections.Generic;
-using CreativeAI.Core;
+using CreativeAI.Gameplay;
 using NUnit.Framework;
 
 namespace CreativeAI.Tests.EditMode
@@ -82,8 +82,6 @@ namespace CreativeAI.Tests.EditMode
             Assert.IsNull(DialogueViewService.Current);
             Assert.IsNull(EventPlayerService.Current);
             Assert.IsNull(ItemGiverService.Current);
-            Assert.IsNull(WeaponGiverService.Current);
-            Assert.IsNull(BattleRunnerService.Current);
         }
     }
 }

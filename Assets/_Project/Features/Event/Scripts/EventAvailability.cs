@@ -1,6 +1,6 @@
 using System;
 
-namespace CreativeAI.Core
+namespace CreativeAI.Gameplay
 {
     /// <summary>
     /// いま、そのイベントを発火できる条件が揃っているか(進行度・フラグ・所持品・1回きりの見終え)。
@@ -17,8 +17,7 @@ namespace CreativeAI.Core
             if (ev == null || progress == null)
                 return false;
 
-            // hasItem 条件用の所持判定。Inventory は Gameplay 側にあり Core から直接触れないため
-            // ItemGiverService seam 経由(未登録なら所持なし扱い)。giveItem と同じ経路。
+            // hasItem 条件用の所持判定。giveItem と同じ ItemGiverService 経由(未登録なら所持なし扱い)。
             var giver = ItemGiverService.Current;
             Func<string, bool> hasItem = giver != null ? giver.HasImportantItem : null;
             return ev.ConditionsMet(progress.Progress, progress.GetFlag, hasItem);

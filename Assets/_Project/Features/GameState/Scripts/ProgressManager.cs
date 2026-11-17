@@ -2,7 +2,7 @@ using System;
 using System.Collections.Generic;
 using UnityEngine;
 
-namespace CreativeAI.Core
+namespace CreativeAI.Gameplay
 {
     /// <summary>イベント再生が読み書きするフラグと進行度の保存先。</summary>
     public interface IEventProgress

@@ -5,7 +5,7 @@ using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
 
-namespace CreativeAI.UI.CharacterUI
+namespace CreativeAI.UI
 {
     [Serializable]
     public sealed class CharacterWeaponSelection

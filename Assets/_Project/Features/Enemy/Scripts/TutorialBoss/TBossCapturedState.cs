@@ -1,6 +1,4 @@
 using System.Collections.Generic;
-using CreativeAI.Core;
-using SoundKit;
 using UnityEngine;
 
 namespace CreativeAI.Gameplay

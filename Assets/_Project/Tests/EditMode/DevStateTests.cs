@@ -1,8 +1,7 @@
 using System.Collections.Generic;
 using System.Linq;
-using CreativeAI.Core;
+using CreativeAI.DevTools;
 using CreativeAI.Gameplay;
-using CreativeAI.UI;
 using NUnit.Framework;
 using UnityEngine;
 

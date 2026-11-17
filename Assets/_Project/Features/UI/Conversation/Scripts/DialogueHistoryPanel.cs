@@ -1,7 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Text;
-using CreativeAI.Core;
+using CreativeAI.Gameplay;
 using TMPro;
 using UnityEngine;
 using UnityEngine.EventSystems;

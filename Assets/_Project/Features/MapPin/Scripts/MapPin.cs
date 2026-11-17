@@ -1,7 +1,7 @@
 using System.Collections.Generic;
 using UnityEngine;
 
-namespace CreativeAI.Core
+namespace CreativeAI.Gameplay
 {
     /// <summary>
     /// マップピン。穴の空いたしずく形の 2D 画像を縦に立て、縦軸まわりに横回転させながら上下に浮かせる。
@@ -19,11 +19,8 @@ namespace CreativeAI.Core
         private const float BobAmplitude = 0.15f;
         private const float BobHertz = 0.6f;
         private const float FadeSeconds = 0.25f; // 出入りの透明度が変わりきるまで
-        private const float PlayerSearchInterval = 0.5f; // プレイヤーが居ない間に探し直す間隔(秒)
 
         private static readonly List<MapPin> s_active = new();
-        private static Transform s_player;
-        private static float s_nextPlayerSearchTime;
 
         private Vector3 _basePosition;
         private Transform _face;
@@ -34,19 +31,13 @@ namespace CreativeAI.Core
         /// <summary>今ある(作られて消えていない)ピン。HUD が距離や方向の表示に使う。</summary>
         public static IReadOnlyList<MapPin> Active => s_active;
 
-        /// <summary>プレイヤー(Player タグ)。見つからなければ null。</summary>
+        /// <summary>プレイヤー。居なければ null。</summary>
         public static Transform PlayerTransform
         {
             get
             {
-                // 居ない場面(タイトル等)で、ピンの数だけ毎フレーム探さないよう間隔を空ける
-                if (s_player == null && Time.unscaledTime >= s_nextPlayerSearchTime)
-                {
-                    var go = GameObject.FindGameObjectWithTag("Player");
-                    s_player = go != null ? go.transform : null;
-                    s_nextPlayerSearchTime = Time.unscaledTime + PlayerSearchInterval;
-                }
-                return s_player;
+                var player = PlayerRegistry.Current;
+                return player != null ? player.transform : null;
             }
         }
 
@@ -68,8 +59,6 @@ namespace CreativeAI.Core
         private static void ResetState()
         {
             s_active.Clear();
-            s_player = null;
-            s_nextPlayerSearchTime = 0f;
         }
 
         private void Awake() => _basePosition = transform.position;

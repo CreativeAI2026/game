@@ -3,14 +3,13 @@ using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
 using CreativeAI.Gameplay;
-using CreativeAI.UI;
 using DG.Tweening;
 using TMPro;
 using UnityEngine;
 using UnityEngine.Events;
 using UnityEngine.UI;
 
-namespace CreativeAI.UI.CharacterUI
+namespace CreativeAI.UI
 {
     /// <summary>
     /// Loadout画面の一覧、詳細、クイックアイテム3枠、装備3枠をまとめて制御する。
@@ -270,7 +269,7 @@ namespace CreativeAI.UI.CharacterUI
                 _detailAreaLayout = detail != null ? detail.GetComponent<LayoutElement>() : null;
                 _detailExpandedHeight =
                     _detailAreaLayout != null ? _detailAreaLayout.preferredHeight : 0;
-                _detailParameterRow = FindGameObject(detail, "ParamaterRow");
+                _detailParameterRow = FindGameObject(detail, "ParameterRow");
                 var parameterLayout =
                     _detailParameterRow != null
                         ? _detailParameterRow.GetComponent<LayoutElement>()
@@ -326,7 +325,7 @@ namespace CreativeAI.UI.CharacterUI
                     "DropErrorMessage"
                 );
 
-            Transform parameterRoot = transform.Find("InventoryArea/DetailArea/ParamaterRow");
+            Transform parameterRoot = transform.Find("InventoryArea/DetailArea/ParameterRow");
             if (_quickParameterPattern == null)
                 _quickParameterPattern = FindGameObject(parameterRoot, "QuickItemPattern");
             if (_equipmentParameterPattern == null)
@@ -334,7 +333,7 @@ namespace CreativeAI.UI.CharacterUI
 
             Transform quickParameter =
                 parameterRoot != null
-                    ? parameterRoot.Find("QuickItemPattern/ItemParamaterArea")
+                    ? parameterRoot.Find("QuickItemPattern/ItemParameterArea")
                     : null;
             if (_quickParameterLabel == null)
                 _quickParameterLabel = FindComponent<TMP_Text>(quickParameter, "Label");

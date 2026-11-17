@@ -5,7 +5,7 @@ using UnityEngine;
 using UnityEngine.Rendering;
 using UnityEngine.Rendering.Universal;
 
-namespace CreativeAI.VisualTeam
+namespace CreativeAI.Gameplay
 {
     public class PostProcessor : MonoBehaviour
     {

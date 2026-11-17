@@ -2,7 +2,6 @@
     "name": "CreativeAI.Playtest",
     "rootNamespace": "CreativeAI.Playtest",
     "references": [
-        "CreativeAI.Core",
         "CreativeAI.Gameplay",
         "Unity.InputSystem"
     ],

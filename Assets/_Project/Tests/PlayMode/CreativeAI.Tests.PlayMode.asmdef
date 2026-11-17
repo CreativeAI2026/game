@@ -3,9 +3,9 @@
     "rootNamespace": "CreativeAI.Tests.PlayMode",
     "references": [
         "CreativeAI.Tests.Shared",
-        "CreativeAI.Core",
         "CreativeAI.Gameplay",
         "CreativeAI.UI",
+        "CreativeAI.Session",
         "Unity.TextMeshPro",
         "UnityEngine.TestRunner",
         "Unity.InputSystem"

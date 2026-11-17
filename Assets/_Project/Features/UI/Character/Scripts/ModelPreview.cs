@@ -5,7 +5,7 @@ using UnityEngine.Rendering;
 using UnityEngine.Rendering.Universal;
 using UnityEngine.UI;
 
-namespace CreativeAI.UI.CharacterUI
+namespace CreativeAI.UI
 {
     // Copies only render data. No gameplay object, Animator, collider or script is instantiated.
     [RequireComponent(typeof(RawImage))]

@@ -1,7 +1,7 @@
 using Unity.InferenceEngine;
 using UnityEngine;
 
-namespace CreativeAI.VisualTeam
+namespace CreativeAI.Gameplay
 {
     public class Inferer : MonoBehaviour
     {

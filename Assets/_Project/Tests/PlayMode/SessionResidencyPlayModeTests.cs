@@ -1,11 +1,10 @@
 using System.Collections;
-using CreativeAI.Core;
 using CreativeAI.Gameplay;
+using CreativeAI.Session;
 using CreativeAI.UI;
 using NUnit.Framework;
 using UnityEngine;
 using UnityEngine.TestTools;
-using UnityEngine.UI;
 
 namespace CreativeAI.Tests.PlayMode
 {
@@ -15,8 +14,6 @@ namespace CreativeAI.Tests.PlayMode
     /// </summary>
     public class SessionResidencyPlayModeTests
     {
-        private GameObject _titleGo;
-        private TitleUIController _title;
         private GameObject _sceneControllerGo;
 
         [SetUp]
@@ -24,14 +21,6 @@ namespace CreativeAI.Tests.PlayMode
         {
             _sceneControllerGo = new GameObject("PersistentSystems");
             _sceneControllerGo.AddComponent<SceneController>();
-
-            // Awake が _tapToStartButton を要求するので、非アクティブで組んでから起こす。
-            _titleGo = new GameObject("TitleUI");
-            _titleGo.SetActive(false);
-            _title = _titleGo.AddComponent<TitleUIController>();
-            var button = _titleGo.AddComponent<Button>();
-            TestReflection.SetField(_title, "_tapToStartButton", button);
-            _titleGo.SetActive(true);
         }
 
         [UnityTearDown]
@@ -41,7 +30,7 @@ namespace CreativeAI.Tests.PlayMode
             DestroyResident<GameModeManager>();
             DestroyResident<InventoryManager>();
             DestroyResident<EventPlayer>();
-            Object.Destroy(_titleGo);
+            DestroyResident<UIRoot>();
             Object.Destroy(_sceneControllerGo);
             yield return null; // Destroy の反映を待つ(次のテストへ持ち越さない)
         }
@@ -53,7 +42,7 @@ namespace CreativeAI.Tests.PlayMode
                 Object.Destroy(found.gameObject);
         }
 
-        private bool EnsureSession() => (bool)TestReflection.Invoke(_title, "EnsureSession");
+        private static bool EnsureSession() => GameStarter.EnsureSession(out _);
 
         private static int CountOf<T>()
             where T : MonoBehaviour =>
