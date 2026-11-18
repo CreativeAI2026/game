@@ -149,7 +149,6 @@ namespace CreativeAI.Gameplay
                 ctx.ComboStep = 1;
 
             RequestAttack();
-            ctx.OnAttackStateEntered();
         }
 
         public override void Exit()

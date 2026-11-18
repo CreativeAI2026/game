@@ -45,14 +45,9 @@ namespace CreativeAI.Gameplay
         /// </summary>
         public GuardGauge GuardGauge => _guardGauge ??= new GuardGauge(_guardGaugeSettings);
 
-        // 仮モデル専用の見た目補正。本番アニメーションで向きが付いたら外す(無ければ何もしない)
-        private MockWeaponPose _mockPose;
-
         protected override void Awake()
         {
             base.Awake();
-            TryGetComponent(out _mockPose);
-
             _flinchHandler = Player.GetComponent<PlayerFlinchHandler>();
             Assert.IsNotNull(_flinchHandler, $"{name}: PlayerFlinchHandler が見つかりません");
         }
@@ -70,17 +65,6 @@ namespace CreativeAI.Gameplay
             {
                 _parryTimer -= Time.deltaTime;
             }
-        }
-
-        public override void OnAttackStateEntered()
-        {
-            SetMockPose(MockWeaponPoseKey.Attack);
-        }
-
-        public void SetMockPose(MockWeaponPoseKey key)
-        {
-            if (_mockPose != null)
-                _mockPose.SetPose(key);
         }
 
         /// <summary>

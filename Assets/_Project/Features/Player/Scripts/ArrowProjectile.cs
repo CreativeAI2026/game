@@ -148,7 +148,8 @@ namespace CreativeAI.Gameplay
                     : transform.rotation;
 
             // ルート(矢の尾)から先端(ArrowTip)までのオフセットを引いて、先端を着弾点に合わせる
-            Vector3 tipOffset = stickRotation * Vector3.Scale(_tip.transform.localPosition, transform.lossyScale);
+            Vector3 tipOffset =
+                stickRotation * Vector3.Scale(_tip.transform.localPosition, transform.lossyScale);
             transform.SetPositionAndRotation(impactPoint - tipOffset, stickRotation);
         }
 

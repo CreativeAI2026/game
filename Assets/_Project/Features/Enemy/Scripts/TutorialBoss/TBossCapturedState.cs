@@ -117,10 +117,6 @@ namespace CreativeAI.Gameplay
             }
             GrabEscapeEvents.OnCameraPull?.Invoke();
 
-            if (boss.WireRig != null)
-            {
-                boss.WireRig.weight = 1f;
-            }
             if (boss.WireBone != null)
             {
                 // 特殊攻撃の射出でWireBoneの回転は既に上書きされているため、
@@ -224,10 +220,6 @@ namespace CreativeAI.Gameplay
                 boss.SetAgentStopped(false);
             }
 
-            if (boss.WireRig != null)
-            {
-                boss.WireRig.weight = 0f;
-            }
             if (boss.WireBone != null)
             {
                 boss.WireBone.SetLocalPositionAndRotation(
@@ -333,10 +325,6 @@ namespace CreativeAI.Gameplay
                     );
             }
 
-            if (boss.WireRig != null)
-            {
-                boss.WireRig.weight = 0f;
-            }
             if (boss.WireBone != null)
             {
                 _escapeStartLocalPos = boss.WireBone.localPosition;
@@ -358,24 +346,13 @@ namespace CreativeAI.Gameplay
 
         private void UpdateTentacleIkTarget()
         {
-            if (_neckBone != null)
+            if (_neckBone != null && boss.WireBone != null)
             {
-                // Rig (Position Constraint) を使う場合のターゲット移動
-                if (boss.WireIkTarget != null)
-                {
-                    boss.WireIkTarget.position = _neckBone.position;
-                }
-
-                // スクリプトで強制的に追従させるモード（Rigを使用しない場合）
-                if (!boss.ForceStraightWireByRig && boss.WireBone != null)
-                {
-                    // ワイヤーをプレイヤーの首元に直接移動
-                    // ワイヤーの向きをボスの正面（プレイヤーのいる方向）へ向ける
-                    boss.WireBone.SetPositionAndRotation(
-                        _neckBone.position,
-                        Quaternion.FromToRotation(Vector3.up, boss.transform.forward)
-                    );
-                }
+                // ワイヤーをプレイヤーの首元に直接移動し、向きをボスの正面（プレイヤーのいる方向）へ向ける
+                boss.WireBone.SetPositionAndRotation(
+                    _neckBone.position,
+                    Quaternion.FromToRotation(Vector3.up, boss.transform.forward)
+                );
             }
         }
 

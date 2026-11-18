@@ -32,7 +32,6 @@ namespace CreativeAI.Gameplay
         public override void Enter()
         {
             sword.ReleaseControlLocks();
-            sword.SetMockPose(MockWeaponPoseKey.Idle);
         }
 
         public override void Update()
@@ -67,8 +66,6 @@ namespace CreativeAI.Gameplay
             sword.Animator.SetBool(PlayerAnimatorParams.IsGuarding, true);
 
             sword.GuardGauge.BeginGuard(Time.time);
-
-            sword.SetMockPose(MockWeaponPoseKey.Guard);
         }
 
         public override void Update()
@@ -86,8 +83,6 @@ namespace CreativeAI.Gameplay
         {
             sword.Animator.SetBool(PlayerAnimatorParams.IsGuarding, false);
             sword.GuardGauge.EndGuard(Time.time);
-
-            sword.SetMockPose(MockWeaponPoseKey.Idle);
         }
     }
 
@@ -112,7 +107,6 @@ namespace CreativeAI.Gameplay
         {
             sword.LockControls();
 
-            sword.SetMockPose(MockWeaponPoseKey.Attack);
             sword.StartAnimatorAction(PlayerAnimatorParams.Parry);
 
             _requestTime = Time.time;
@@ -191,11 +185,6 @@ namespace CreativeAI.Gameplay
                 sword.ReturnAnimatorToLocomotion();
                 sword.ChangeState(new SwordStateFree(sword));
             }
-        }
-
-        public override void Exit()
-        {
-            sword.SetMockPose(MockWeaponPoseKey.Idle);
         }
     }
 }

@@ -194,37 +194,6 @@ Transform:
   - {fileID: 1697572253468351292}
   m_Father: {fileID: 2575015804060950711}
   m_LocalEulerAnglesHint: {x: 6.0708466, y: -4.2809453, z: -35.840317}
---- !u!1 &1391787576439892058
-GameObject:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  serializedVersion: 6
-  m_Component:
-  - component: {fileID: 8828499702587284344}
-  m_Layer: 0
-  m_Name: WireTargetIK
-  m_TagString: Untagged
-  m_Icon: {fileID: 0}
-  m_NavMeshLayer: 0
-  m_StaticEditorFlags: 0
-  m_IsActive: 0
---- !u!4 &8828499702587284344
-Transform:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1391787576439892058}
-  serializedVersion: 2
-  m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
-  m_LocalPosition: {x: 0, y: 0, z: 0}
-  m_LocalScale: {x: 1, y: 1, z: 1}
-  m_ConstrainProportionsScale: 0
-  m_Children: []
-  m_Father: {fileID: 1893048592292776664}
-  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &1399435758507540286
 GameObject:
   m_ObjectHideFlags: 0
@@ -1099,7 +1068,6 @@ GameObject:
   - component: {fileID: 5171432070424172861}
   - component: {fileID: 2372207900168909963}
   - component: {fileID: 2712959532436082730}
-  - component: {fileID: 6520629328544636731}
   - component: {fileID: 46750526854519525}
   - component: {fileID: 8619806142362087819}
   - component: {fileID: 8976847890986444829}
@@ -1132,7 +1100,6 @@ Transform:
   m_Children:
   - {fileID: 7353175452111572213}
   - {fileID: 7046865131735415053}
-  - {fileID: 8828499702587284344}
   - {fileID: 874908489831357549}
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
@@ -1209,11 +1176,8 @@ MonoBehaviour:
   wireBone: {fileID: 1027086871884667031}
   InitialWireBoneLocalPosition: {x: 0, y: 0, z: 0}
   InitialWireBoneLocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  wireRig: {fileID: 0}
-  wireIkTarget: {fileID: 8696649166186818781}
   specialAttackAimDuration: 1.5
   specialAttackShootDuration: 0.3
-  forceStraightWireByRig: 0
   attack1StrikeDistance: 3.5
   attack1MaxStepIn: 1.5
   attack2HomingRotateSpeed: 10
@@ -1317,35 +1281,6 @@ MonoBehaviour:
     _cueLeadSeconds: 0.5
   LastHeardSoundPosition: {x: 0, y: 0, z: 0}
   LostSightTimer: 0
---- !u!114 &6520629328544636731
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 5311719788049856507}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: b64c04da6aedabf44acb9fa8e205e239, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: CreativeAI.Gameplay::CreativeAI.Gameplay.TBossAttack2Tuner
-  boss: {fileID: 2712959532436082730}
-  previewClip: {fileID: 7400000, guid: 6c724574059749f4ca38f61d5b66fb02, type: 2}
-  sampleRoot: {fileID: 7353175452111572213}
-  previewEnabled: 0
-  previewNormalizedTime: 0
-  bladeBone: {fileID: 929248616917899202}
-  bladeEdgeLocalDirection: {x: 0, y: 0, z: 1}
-  swingSampleDelta: 0.03
-  slowMotion: 0
-  slowMotionScale: 0.25
-  drawGizmos: 1
-  gizmoScale: 0.3
-  _capturedBones: []
-  _capturedPositions: []
-  _capturedRotations: []
-  _capturedScales: []
-  _isPreviewing: 0
 --- !u!114 &46750526854519525
 MonoBehaviour:
   m_ObjectHideFlags: 0

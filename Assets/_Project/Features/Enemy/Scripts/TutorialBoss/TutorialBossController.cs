@@ -1,7 +1,6 @@
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.AI;
-using UnityEngine.Animations.Rigging;
 using UnityEngine.Assertions;
 
 namespace CreativeAI.Gameplay
@@ -146,16 +145,6 @@ namespace CreativeAI.Gameplay
         [HideInInspector]
         public Quaternion InitialWireBoneLocalRotation = Quaternion.identity;
 
-        [Tooltip("AnimationRiggingのRigコンポーネント（捕獲時のプレイヤー追従ON/OFF用）。")]
-        [SerializeField]
-        private Rig wireRig;
-
-        [Tooltip(
-            "ワイヤーIKのターゲットTransform（捕獲時にプレイヤーの首の位置をコピーして追従させる）。"
-        )]
-        [SerializeField]
-        private Transform wireIkTarget;
-
         [Tooltip("特殊攻撃の狙いフェーズの時間（秒）。")]
         [SerializeField]
         private float specialAttackAimDuration = 1.5f;
@@ -163,13 +152,6 @@ namespace CreativeAI.Gameplay
         [Tooltip("特殊攻撃の射出フェーズの時間（秒）。")]
         [SerializeField]
         private float specialAttackShootDuration = 0.3f;
-
-        [Header("特殊攻撃 向き強制設定")]
-        [Tooltip(
-            "true: Rig(Position Constraint)を使ってワイヤーを正面に引っ張る。\nfalse: スクリプトで強制的に位置と回転を正面に上書きする。"
-        )]
-        [SerializeField]
-        private bool forceStraightWireByRig = true;
 
         [Header("通常攻撃（踏み込み）設定")]
         [Tooltip(
@@ -323,11 +305,8 @@ namespace CreativeAI.Gameplay
         public float NormalAttack2Cooldown => normalAttack2Cooldown;
         public float SpecialAttackCooldown => specialAttackCooldown;
         public Transform WireBone => wireBone;
-        public Rig WireRig => wireRig;
-        public Transform WireIkTarget => wireIkTarget;
         public float SpecialAttackAimDuration => specialAttackAimDuration;
         public float SpecialAttackShootDuration => specialAttackShootDuration;
-        public bool ForceStraightWireByRig => forceStraightWireByRig;
         public float WireHitRadius => wireHitRadius;
 
         /// <summary>
