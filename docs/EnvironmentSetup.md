@@ -12,6 +12,9 @@ Git と SSH 鍵の設定がまだなら先に [GitSetup.md](GitSetup.md) の手�
 
 ```bash
 git clone git@github.com:CreativeAI2026/game.git
+```
+
+```bash
 cd game
 ```
 
@@ -34,18 +37,22 @@ CSharpier をローカルで動かすために .NET SDK を入れる。`mise.tom
 
 mise が入っていない場合は先に [MiseSetup.md](MiseSetup.md) の手順で入れる。
 
-```bash
-# 初回のみ：mise.toml に書かれた dotnet 10.0.300 を取得
-mise install
+初回のみ、`mise.toml` に書かれた dotnet 10.0.300 を取得する。
 
-# CSharpier（dotnet ツール）を取得
+```bash
+mise install
+```
+
+CSharpier（dotnet ツール）を取得する。
+
+```bash
 mise exec -- dotnet tool restore
 ```
 
-動作確認:
+動作確認（1.2.6 が出れば OK）。
 
 ```bash
-mise exec -- dotnet csharpier --version   # 1.2.6 が出れば OK
+mise exec -- dotnet csharpier --version
 ```
 
 ---

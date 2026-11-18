@@ -24,6 +24,9 @@ winget install Git.Git
 
 ```bash
 git config --global user.name "<GitHub のユーザー名>"
+```
+
+```bash
 git config --global user.email "<GitHub に登録したメールアドレス>"
 ```
 
