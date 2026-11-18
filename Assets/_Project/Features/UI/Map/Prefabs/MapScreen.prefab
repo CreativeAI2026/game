@@ -325,7 +325,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 9405cd4e11a954705939589ad3d12446, type: 3}
   m_Name: 
   m_EditorClassIdentifier: CreativeAI.UI::CreativeAI.UI.MinimapShapeGraphic
-  m_Material: {fileID: 0}
+  m_Material: {fileID: 2100000, guid: a9ad59a7dca94269a9814a39fc4566d5, type: 2}
   m_Color: {r: 1, g: 1, b: 1, a: 1}
   m_RaycastTarget: 0
   m_RaycastPadding: {x: 0, y: 0, z: 0, w: 0}
