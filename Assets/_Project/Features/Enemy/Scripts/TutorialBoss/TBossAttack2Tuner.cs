@@ -7,9 +7,8 @@ using UnityEditor;
 namespace CreativeAI.Gameplay
 {
     /// <summary>
-    /// 通常攻撃2（鎌）のリーチ・しなりを Edit モードで調整するデバッグ用コンポーネント。アニメを任意時刻で止めた姿勢に伸長・しなりを適用して確認でき、値もそのまま保存される。
-    /// 本番と同じ TBossLimbChainDriver / TutorialBossController の設定で計算するので、見えている姿勢が実際の攻撃と一致する。
-    /// 目安: リーチは previewExtensionProgress=1 で判定球が地面に潜らない伸び量を、しなりは previewFlexMotion ON で stiffness / tipLooseness / dampingRatio を詰める。
+    /// 通常攻撃2（鞭の二段攻撃）を Edit モードで確認するデバッグ用コンポーネント。アニメを任意時刻で止めた姿勢を見られる。
+    /// 腕の伸びと動きはクリップに焼いてあるため、ここで変えられるのは見る時刻だけ。攻撃判定の範囲は TBossArmSweepHitbox のギズモで確認する。
     /// </summary>
     [ExecuteAlways]
     public class TBossAttack2Tuner : MonoBehaviour
@@ -31,7 +30,7 @@ namespace CreativeAI.Gameplay
         private Transform sampleRoot;
 
         [Header("プレビュー")]
-        [Tooltip("ONにするとEditモードでアニメーション＋補正を適用する。OFFで元のポーズへ戻す。")]
+        [Tooltip("ONにするとEditモードでアニメーションの姿勢を適用する。OFFで元のポーズへ戻す。")]
         [SerializeField]
         private bool previewEnabled;
 
@@ -42,20 +41,8 @@ namespace CreativeAI.Gameplay
         [SerializeField]
         private float previewNormalizedTime;
 
-        [Tooltip("リーチの伸び具合（0＝伸ばさない、1＝Attack2ReachExtensionまで伸ばす）。")]
-        [Range(0f, 1f)]
-        [SerializeField]
-        private float previewExtensionProgress = 1f;
-
-        [Tooltip(
-            "ONでバネの遅れ・波・ドループも再現する（時間で揺れる）。\n"
-                + "角度補正の調整中はOFFにして、補正だけが反映された静止姿勢を見るのが分かりやすい。"
-        )]
-        [SerializeField]
-        private bool previewFlexMotion;
-
         [Header("刃の向きの確認")]
-        [Tooltip("刃の向きを測る基準ボーン。未設定ならボスのKamaBoneを使う。")]
+        [Tooltip("刃の向きを測る基準ボーン（左手）。未設定なら刃の向きは表示しない。")]
         [SerializeField]
         private Transform bladeBone;
 
@@ -110,8 +97,6 @@ namespace CreativeAI.Gameplay
         [HideInInspector]
         private bool _isPreviewing;
 
-        private TBossLimbChainDriver _previewDriver;
-        private TBossLimbChainSettings _previewSettingsSource;
         private bool _didSetTimeScale;
 
         // ギズモ表示用にUpdateで算出しておく
@@ -159,13 +144,6 @@ namespace CreativeAI.Gameplay
             {
                 CaptureRestPose();
                 _isPreviewing = true;
-            }
-            else if (_previewDriver == null)
-            {
-                // スクリプト再コンパイル後など、ドライバが持っていた伸長の記録だけが失われた状態。
-                // 伸びたままの姿勢を土台にすると、その上にもう一度伸長が乗ってしまうため、
-                // 一度保存しておいた姿勢へ戻してからやり直す。
-                RestoreRestPose();
             }
 
             UpdatePreviewPose();
@@ -220,10 +198,9 @@ namespace CreativeAI.Gameplay
             float length = Mathf.Max(0.0001f, previewClip.length);
             float time = previewNormalizedTime * length;
 
-            Transform blade = ResolveBladeBone();
+            Transform blade = bladeBone;
 
             // 振りの方向は「少し先の時刻での刃の位置」との差分で求める。
-            // 補正を掛けた状態同士で比較しないと意味がないため、どちらも同じ手順でポーズを作る。
             if (blade != null && swingSampleDelta > 0f)
             {
                 ApplyPoseAt(Mathf.Min(length, time + swingSampleDelta));
@@ -244,70 +221,13 @@ namespace CreativeAI.Gameplay
                     : -1f;
         }
 
-        /// <summary>
-        /// 指定時刻のアニメーションをサンプリングし、その上に本番と同じ補正・伸長を適用する。
-        /// </summary>
         private void ApplyPoseAt(float time)
         {
             Transform root = ResolveSampleRoot();
-            if (root == null)
+            if (root != null)
             {
-                return;
+                previewClip.SampleAnimation(root.gameObject, time);
             }
-
-            previewClip.SampleAnimation(root.gameObject, time);
-
-            TBossLimbChainDriver driver = GetPreviewDriver();
-            if (driver == null || !driver.IsValid)
-            {
-                return;
-            }
-
-            float extension = boss.Attack2ReachExtension * previewExtensionProgress;
-
-            float wavePower =
-                previewFlexMotion && boss.Attack2ReachExtension > 0.0001f
-                    ? Mathf.Clamp01(extension / boss.Attack2ReachExtension)
-                    : 0f;
-
-            // バネの遅れを飛ばすのに ResetState を使ってはいけない。
-            // ResetState は伸長の累積防止に使う記録も破棄するため、毎フレーム呼ぶと
-            // 前フレームに足した分を差し戻せず腕が際限なく伸びる。snapToTargetを使う。
-            // Editモードでは Time.deltaTime が当てにならないため固定値を渡す。
-            driver.Apply(extension, wavePower, 1f / 60f, !previewFlexMotion);
-        }
-
-        private TBossLimbChainDriver GetPreviewDriver()
-        {
-            if (boss == null)
-            {
-                return null;
-            }
-
-            TBossLimbChainSettings settings = boss.KamaChainSettings;
-            if (settings == null)
-            {
-                return null;
-            }
-
-            // 設定の差し替えに追従できるよう、参照が変わったら作り直す
-            if (_previewDriver == null || _previewSettingsSource != settings)
-            {
-                _previewDriver = new TBossLimbChainDriver(settings);
-                _previewSettingsSource = settings;
-            }
-
-            return _previewDriver;
-        }
-
-        private Transform ResolveBladeBone()
-        {
-            if (bladeBone != null)
-            {
-                return bladeBone;
-            }
-
-            return boss != null ? boss.KamaBone : null;
         }
 
         private Vector3 GetBladeEdgeDirection(Transform blade)
@@ -379,8 +299,6 @@ namespace CreativeAI.Gameplay
             _capturedPositions = null;
             _capturedRotations = null;
             _capturedScales = null;
-            _previewDriver = null;
-            _previewSettingsSource = null;
         }
 
         // ────────────────────────────────────────────
@@ -500,13 +418,13 @@ namespace CreativeAI.Gameplay
             );
         }
 
-        [ContextMenu("時刻ジャンプ/リーチ伸ばし開始へ")]
+        [ContextMenu("時刻ジャンプ/腕を伸ばし始める所へ")]
         private void JumpToReachExtend()
         {
             JumpToEvent("OnAttack2ReachExtend", int.MinValue);
         }
 
-        [ContextMenu("時刻ジャンプ/リーチ戻し開始へ")]
+        [ContextMenu("時刻ジャンプ/腕を戻し終える所へ")]
         private void JumpToReachRetract()
         {
             JumpToEvent("OnAttack2ReachRetract", int.MinValue);
@@ -515,7 +433,7 @@ namespace CreativeAI.Gameplay
         [ContextMenu("時刻ジャンプ/判定開始へ")]
         private void JumpToHitboxEnable()
         {
-            JumpToEvent("TriggerEnableHitbox", int.MinValue);
+            JumpToEvent("EnableArmSweepHitbox", int.MinValue);
         }
 
         /// <summary>
@@ -593,40 +511,12 @@ namespace CreativeAI.Gameplay
                 return;
             }
 
-            DrawChain();
             DrawBladeDirections();
-            DrawHitbox();
-        }
-
-        private void DrawChain()
-        {
-            TBossLimbChainSettings settings = boss.KamaChainSettings;
-            if (settings == null || settings.bones == null)
-            {
-                return;
-            }
-
-            Gizmos.color = Color.cyan;
-            for (int i = 0; i < settings.bones.Length; i++)
-            {
-                Transform bone = settings.bones[i];
-                if (bone == null)
-                {
-                    continue;
-                }
-
-                Gizmos.DrawWireSphere(bone.position, gizmoScale * 0.12f);
-
-                if (i + 1 < settings.bones.Length && settings.bones[i + 1] != null)
-                {
-                    Gizmos.DrawLine(bone.position, settings.bones[i + 1].position);
-                }
-            }
         }
 
         private void DrawBladeDirections()
         {
-            Transform blade = ResolveBladeBone();
+            Transform blade = bladeBone;
             if (blade == null)
             {
                 return;
@@ -661,32 +551,6 @@ namespace CreativeAI.Gameplay
                     origin + Vector3.up * (gizmoScale * 0.6f),
                     $"刃と振りの角度: {_edgeToSwingAngle:F0}° {judgement}"
                 );
-            }
-#endif
-        }
-
-        private void DrawHitbox()
-        {
-            EnemyMeleeHitbox hitbox = boss.MeleeHitbox;
-            if (hitbox == null)
-            {
-                return;
-            }
-
-            float radius = hitbox.HitboxRadius;
-            Vector3 center = hitbox.transform.position;
-
-            // 判定球の下端がボスの足元より下＝地面に潜っている状態を色で知らせる
-            bool underGround = center.y - radius < boss.transform.position.y;
-            Gizmos.color = underGround
-                ? new Color(1f, 0.3f, 0.3f, 0.6f)
-                : new Color(1f, 1f, 1f, 0.35f);
-            Gizmos.DrawWireSphere(center, radius);
-
-#if UNITY_EDITOR
-            if (underGround)
-            {
-                Handles.Label(center, "判定が地面に潜っています");
             }
 #endif
         }

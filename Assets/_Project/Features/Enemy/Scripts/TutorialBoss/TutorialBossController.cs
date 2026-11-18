@@ -187,52 +187,9 @@ namespace CreativeAI.Gameplay
         private float attack1MaxStepIn = 1.5f;
 
         [Header("通常攻撃2（鎌）設定")]
-        [Tooltip("鎌の付け根として伸縮・角度補正を行うボーン。左手（mixamorig:LeftHand）を想定。")]
-        [SerializeField]
-        private Transform kamaBone;
-
-        [Tooltip(
-            "鎌ボーンの初期ローカル座標（リトラクト時に戻す位置）。実行時に自動取得されます。"
-        )]
-        [HideInInspector]
-        public Vector3 InitialKamaBoneLocalPosition;
-
-        [Tooltip(
-            "鎌ボーンの初期ローカル回転（リトラクト時に戻す姿勢）。実行時に自動取得されます。"
-        )]
-        [HideInInspector]
-        public Quaternion InitialKamaBoneLocalRotation = Quaternion.identity;
-
-        [Tooltip("鎌が伸びる方向を示すkamaBoneのローカル軸。通常はUp(0,1,0)のままで良い。")]
-        [SerializeField]
-        private Vector3 kamaExtendLocalAxis = Vector3.up;
-
-        [Tooltip(
-            "リーチ上昇時に伸ばす長さ（メートル）。\n"
-                + "このモデルの腕は肩から先端まで約0.74mしかないため、0.2〜0.3程度から調整する。"
-                + "1mなどを指定すると腕が倍以上に伸びて軌道が破綻する。"
-        )]
-        [SerializeField]
-        private float attack2ReachExtension = 0.25f;
-
-        [Tooltip("リーチを伸ばす間、アニメーション速度を落とす倍率（0=完全停止、1=通常速度）。")]
-        [SerializeField]
-        [Range(0f, 1f)]
-        private float attack2ReachHoldAnimatorSpeed = 0f;
-
-        [Tooltip(
-            "リーチを伸ばすために低速/停止させておく時間（秒、実時間）。この間に鎌を伸ばしきる。"
-        )]
-        [SerializeField]
-        private float attack2ReachHoldDuration = 0.3f;
-
-        [Tooltip("鎌の伸縮（伸ばす/戻す共通）にかける時間（秒）。")]
-        [SerializeField]
-        private float attack2ReachLerpDuration = 0.2f;
-
         [Tooltip(
             "通常攻撃2で、振りに入る前にプレイヤーへ向き直る速度。0で向き直らない。\n"
-                + "リーチを伸ばし始めた時点（OnAttack2ReachExtend）で向きを固定するため、\n"
+                + "腕を伸ばし始めた時点（OnAttack2ReachExtend）で向きを固定するため、\n"
                 + "振りに入った後の回避は可能なまま、振りの前だけ狙いを付け直す。"
         )]
         [SerializeField]
@@ -254,14 +211,18 @@ namespace CreativeAI.Gameplay
         [SerializeField]
         private EnemyMeleeHitbox meleeHitbox;
 
+        [Tooltip("通常攻撃2で使う、伸びた腕全体の攻撃判定。")]
+        [SerializeField]
+        private TBossArmSweepHitbox armSweepHitbox;
+
+        [Tooltip("通常攻撃2で、地面に刺した鎌を引きずる時の火花。")]
+        [SerializeField]
+        private TBossGroundDragSparks groundDragSparks;
+
         [Header("しなやかな腕（ボーン連鎖）設定")]
         [Tooltip("特殊攻撃（ワイヤー）側の腕の連鎖。根元→先端の順に設定する。")]
         [SerializeField]
         private TBossLimbChainSettings wireChainSettings = new TBossLimbChainSettings();
-
-        [Tooltip("通常攻撃2（鎌）側の腕の連鎖。根元→先端の順に設定する。")]
-        [SerializeField]
-        private TBossLimbChainSettings kamaChainSettings = new TBossLimbChainSettings();
 
         [Header("障害物設定")]
         [SerializeField]
@@ -404,28 +365,17 @@ namespace CreativeAI.Gameplay
         public ElectricArcEffect ElectricEffectPrefab => electricEffectPrefab;
         public float GrabRetractDuration => grabRetractDuration;
         public Transform GrabCameraTarget => grabCameraTarget;
-        public Transform KamaBone => kamaBone;
-        public Vector3 KamaExtendLocalAxis => kamaExtendLocalAxis;
-        public float Attack2ReachExtension => attack2ReachExtension;
-        public float Attack2ReachHoldAnimatorSpeed => attack2ReachHoldAnimatorSpeed;
-        public float Attack2ReachHoldDuration => attack2ReachHoldDuration;
-        public float Attack2ReachLerpDuration => attack2ReachLerpDuration;
         public float Attack2HomingRotateSpeed => attack2HomingRotateSpeed;
         public float Attack2PullDistance => attack2PullDistance;
         public float Attack2PullDuration => attack2PullDuration;
         public EnemyMeleeHitbox MeleeHitbox => meleeHitbox;
+        public TBossArmSweepHitbox ArmSweepHitbox => armSweepHitbox;
 
         /// <summary>ワイヤー側の腕の連鎖設定。Awakeが走らないEditモードのデバッグ用途でも参照できるよう公開する。</summary>
         public TBossLimbChainSettings WireChainSettings => wireChainSettings;
 
-        /// <summary>鎌側の腕の連鎖設定。Awakeが走らないEditモードのデバッグ用途でも参照できるよう公開する。</summary>
-        public TBossLimbChainSettings KamaChainSettings => kamaChainSettings;
-
         /// <summary>ワイヤー側の腕をしなやかに動かすドライバ。Awakeで生成される。</summary>
         public TBossLimbChainDriver WireChainDriver { get; private set; }
-
-        /// <summary>鎌側の腕をしなやかに動かすドライバ。Awakeで生成される。</summary>
-        public TBossLimbChainDriver KamaChainDriver { get; private set; }
 
         /// <summary>行動に合わせて鳴らす音。同じ GameObject の TutorialBossSounds をAwakeで取得する。</summary>
         public TutorialBossSounds Sounds { get; private set; }
@@ -624,14 +574,16 @@ namespace CreativeAI.Gameplay
                 InitialWireBoneLocalRotation = wireBone.localRotation;
             }
 
-            if (kamaBone != null)
-            {
-                InitialKamaBoneLocalPosition = kamaBone.localPosition;
-                InitialKamaBoneLocalRotation = kamaBone.localRotation;
-            }
+            Assert.IsNotNull(
+                armSweepHitbox,
+                $"{name}: 腕全体の攻撃判定（armSweepHitbox）が未設定です"
+            );
+            Assert.IsNotNull(
+                groundDragSparks,
+                $"{name}: 引きずりの火花（groundDragSparks）が未設定です"
+            );
 
             WireChainDriver = new TBossLimbChainDriver(wireChainSettings);
-            KamaChainDriver = new TBossLimbChainDriver(kamaChainSettings);
 
             _perception = new TBossPerception(this);
             _lookAround = new TBossLookAround(Animator);
@@ -897,7 +849,7 @@ namespace CreativeAI.Gameplay
 
         /// <summary>
         /// 攻撃の振りが途中で打ち切られた時の後始末。振り終わりのAnimationEventが呼ばれないため、
-        /// 攻撃判定と鎌の軌跡が出たまま残らないよう、ここで止める。
+        /// 攻撃判定・鎌の軌跡・引きずりの火花が出たまま残らないよう、ここで止める。
         /// </summary>
         public void StopSwingEffects()
         {
@@ -905,6 +857,8 @@ namespace CreativeAI.Gameplay
             {
                 meleeHitbox.DisableHitbox();
             }
+            armSweepHitbox.DisableHitbox();
+            groundDragSparks.EndDrag();
             HideScytheTrail();
         }
 
@@ -1083,7 +1037,7 @@ namespace CreativeAI.Gameplay
         }
 
         /// <summary>
-        /// 通常攻撃2のアニメーション中、鎌のリーチを伸ばし始める箇所で呼ばれるAnimationEvent。
+        /// 通常攻撃2のアニメーション中、腕を伸ばして振りに入る箇所で呼ばれるAnimationEvent。
         /// 各振りの直前に置く。1クリップ内で複数回呼んでよい。
         /// </summary>
         public void OnAttack2ReachExtend()
@@ -1095,8 +1049,8 @@ namespace CreativeAI.Gameplay
         }
 
         /// <summary>
-        /// 通常攻撃2のアニメーション中、鎌のリーチを元の長さへ戻し始める箇所で呼ばれるAnimationEvent。
-        /// 振り切った直後に置く。OnAttack2ReachExtendと対で、1クリップ内で複数回呼んでよい。
+        /// 通常攻撃2のアニメーション中、腕を戻し終えた箇所で呼ばれるAnimationEvent。
+        /// OnAttack2ReachExtendと対で、1クリップ内で複数回呼んでよい。
         /// </summary>
         public void OnAttack2ReachRetract()
         {
@@ -1107,15 +1061,52 @@ namespace CreativeAI.Gameplay
         }
 
         /// <summary>
-        /// 通常攻撃2のアニメーション中、鎌のリーチを即座に元の長さへ戻すAnimationEvent。
-        /// 補間を待たないため、クリップ終端で確実に元の長さへ戻したい場合に置く。
+        /// 通常攻撃2で、伸びた腕全体の攻撃判定を始めるAnimationEvent。振り始めに置く。
         /// </summary>
-        public void OnAttack2ReachReset()
+        public void EnableArmSweepHitbox()
         {
-            if (currentState is TBossNormalAttack2State attack2State)
+            if (currentState is TBossNormalAttack2State)
             {
-                attack2State.OnReachReset();
+                armSweepHitbox.EnableHitbox();
             }
+        }
+
+        /// <summary>
+        /// 通常攻撃2で、伸びた腕全体の攻撃判定を止めるAnimationEvent。振り切った直後に置く。
+        /// </summary>
+        public void DisableArmSweepHitbox()
+        {
+            armSweepHitbox.DisableHitbox();
+        }
+
+        /// <summary>
+        /// 通常攻撃2で、振り下ろした鎌が地面に刺さった瞬間に呼ばれるAnimationEvent。
+        /// </summary>
+        public void OnAttack2GroundImpact()
+        {
+            if (currentState is TBossNormalAttack2State)
+            {
+                groundDragSparks.PlayImpact();
+            }
+        }
+
+        /// <summary>
+        /// 通常攻撃2で、地面に刺した鎌を引きずり始める箇所で呼ばれるAnimationEvent。
+        /// </summary>
+        public void OnAttack2GroundDragStart()
+        {
+            if (currentState is TBossNormalAttack2State)
+            {
+                groundDragSparks.BeginDrag();
+            }
+        }
+
+        /// <summary>
+        /// 通常攻撃2で、鎌が地面から離れる箇所で呼ばれるAnimationEvent。
+        /// </summary>
+        public void OnAttack2GroundDragEnd()
+        {
+            groundDragSparks.EndDrag();
         }
 
         // 同じ攻撃が何回連続で選ばれたら次は避けるか（3回目の選択をブロックする）。
