@@ -32,6 +32,12 @@ namespace CreativeAI.Gameplay
         [SerializeField]
         private int _impactBurstCount = 40;
 
+        [Tooltip("火花の音")]
+        [SerializeField]
+        private SoundCue _sparkSE;
+
+        private LoopingSound _sparkLoop;
+
         private bool _isDragging;
 
         private void Awake()
@@ -39,6 +45,8 @@ namespace CreativeAI.Gameplay
             Assert.IsNotNull(_tip, $"{name}: TBossGroundDragSparks の先端が未設定です");
             Assert.IsNotNull(_sparks, $"{name}: TBossGroundDragSparks の火花が未設定です");
             SetEmission(false);
+
+            _sparkLoop = new LoopingSound(gameObject);
         }
 
         /// <summary>鎌が地面に刺さった瞬間の火花を出す。</summary>
@@ -46,6 +54,7 @@ namespace CreativeAI.Gameplay
         {
             MoveToGround();
             _sparks.Emit(_impactBurstCount);
+            _sparkLoop.Play(_sparkSE, this);
         }
 
         /// <summary>引きずりの火花を出し始める。</summary>
@@ -61,6 +70,8 @@ namespace CreativeAI.Gameplay
         {
             _isDragging = false;
             SetEmission(false);
+
+            _sparkLoop.Stop();
         }
 
         // アニメーションが骨を動かした後の先端の位置を使うため LateUpdate で追う
