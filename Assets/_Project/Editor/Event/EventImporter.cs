@@ -38,6 +38,7 @@ namespace CreativeAI.EditorTools
             "girl_wry_smile",
             "girl_surprised",
             "robot_normal",
+            "robot_thinking",
             "gramophone_normal",
         };
 

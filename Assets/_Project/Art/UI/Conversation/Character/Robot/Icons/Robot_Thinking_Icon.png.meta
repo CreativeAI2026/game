@@ -1,0 +1,16 @@
+fileFormatVersion: 2
+guid: eb455ca8568a4529bc6baccc25f8e8f4
+TextureImporter:
+  internalIDToNameTable: []
+  externalObjects: {}
+  serializedVersion: 13
+  mipmaps: {enableMipMap: 0}
+  textureSettings: {serializedVersion: 2, filterMode: 1, wrapU: 1, wrapV: 1, wrapW: 1}
+  spriteMode: 1
+  spritePixelsToUnits: 100
+  alphaIsTransparency: 1
+  textureType: 8
+  spriteSheet: {serializedVersion: 2, sprites: [], outline: [], physicsShape: [], bones: [], spriteID: c38cd4abe6cd4834bfe61dc8128d34f0, internalID: 0, vertices: [], indices: , edges: [], weights: [], secondaryTextures: [], nameFileIdTable: {}}
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 

@@ -20,3 +20,6 @@ MonoBehaviour:
   - PortraitKey: robot_normal
     Sprite: {fileID: 21300000, guid: 62f4360e0d8ceb24381ca11609dc0ab1, type: 3}
     Icon: {fileID: 21300000, guid: 10900000000000000000000000000001, type: 3}
+  - PortraitKey: robot_thinking
+    Sprite: {fileID: 21300000, guid: 3f6c8677230d5cd4d88e2d5790be3edd, type: 3}
+    Icon: {fileID: 21300000, guid: eb455ca8568a4529bc6baccc25f8e8f4, type: 3}
