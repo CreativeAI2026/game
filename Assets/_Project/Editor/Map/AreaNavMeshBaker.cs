@@ -15,7 +15,7 @@ namespace CreativeAI.EditorTools
     /// Field_Area01 の NavMesh(敵が歩ける範囲)を焼く。Map の当たり(Ground / Obstacle レイヤーの Collider)から作るので、
     /// 当たりの無い小物は対象外(プレイヤーも擦り抜けるのと揃う)。扉板は開閉するので通れる扱いにする。
     /// 小物(机・椅子など)は別の小物シーンにあるので、ベイクの間だけ Additive で重ねて当たりを含める
-    /// (含めないと NavMesh が小物の上を通ってしまい、道筋の線や敵の経路が小物を貫く)。
+    /// (含めないと NavMesh が小物の上を通ってしまい、敵の経路が小物を貫く)。
     /// NavMeshSurface は Map の外の `NavMesh` ルートに置く(Rebuild で Map ごと消えないように)。
     /// </summary>
     public static class AreaNavMeshBaker

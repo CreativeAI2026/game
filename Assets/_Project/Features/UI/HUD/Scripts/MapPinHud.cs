@@ -16,8 +16,12 @@ namespace CreativeAI.UI
     {
         private const float EdgeMargin = 0.08f; // 画面の端から矢印までの余白(短辺に対する割合)
         private const float ArrowSizeRatio = 0.05f; // 矢印の大きさ(画面の高さに対する割合)
-        private const float FontSizeRatio = 0.03f;
-        private static readonly Color ArrowColor = new(1f, 0.8f, 0.15f, 0.95f);
+        private const float FontSizeRatio = 0.04f;
+
+        // ミニマップのピンと同じ黄色と縁取りの色(目的地の色をそろえる)
+        private static readonly Color ArrowColor = new(1f, 0.8f, 0.15f, 1f);
+        private static readonly Color OutlineColor = new(0.05f, 0.07f, 0.1f, 0.9f);
+        private static readonly Vector2 OutlineDistance = new(1.5f, -1.5f);
 
         private sealed class Marker
         {
@@ -85,6 +89,9 @@ namespace CreativeAI.UI
             image.sprite = _arrowSprite;
             image.color = ArrowColor;
             image.raycastTarget = false;
+            var outline = arrowGo.AddComponent<Outline>();
+            outline.effectColor = OutlineColor;
+            outline.effectDistance = OutlineDistance;
 
             var labelGo = new GameObject(
                 "Distance",
@@ -96,7 +103,7 @@ namespace CreativeAI.UI
             label.alignment = TextAlignmentOptions.Center;
             label.color = Color.white;
             label.outlineColor = new Color32(0, 0, 0, 255);
-            label.outlineWidth = 0.25f;
+            label.outlineWidth = 0.18f;
             label.raycastTarget = false;
             label.textWrappingMode = TextWrappingModes.NoWrap;
 
