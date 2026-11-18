@@ -14,5 +14,9 @@ brew install mise
 winget install jdx.mise
 ```
 
-インストール後はターミナルを開き直し、`mise --version` で確認する。
+インストール後はターミナルを開き直し、バージョンが出ることを確認する。
+
+```bash
+mise --version
+```
 

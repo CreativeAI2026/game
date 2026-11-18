@@ -16,7 +16,11 @@ brew install git
 winget install Git.Git
 ```
 
-インストール後はターミナルを開き直し、`git --version` で確認する。
+インストール後はターミナルを開き直し、バージョンが出ることを確認する。
+
+```bash
+git --version
+```
 
 ## 名前とメールアドレスの設定
 
