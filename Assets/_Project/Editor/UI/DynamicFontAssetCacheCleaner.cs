@@ -1,3 +1,4 @@
+using System;
 using System.Reflection;
 using TMPro;
 using UnityEditor;
@@ -5,8 +6,12 @@ using UnityEngine;
 
 namespace CreativeAI.EditorTools
 {
-    [InitializeOnLoad]
-    internal static class DynamicFontAssetCacheCleaner
+    /// <summary>
+    /// 日本語フォントの動的キャッシュ（使った文字のグリフ）を、フォントが保存される直前に消す。
+    /// 文字はプレイ中だけでなく EditMode テストやエディット中の UI 表示でも増えるため、
+    /// プレイ終了時ではなく保存の直前で消し、どの経路でもキャッシュ入りのままコミットされないようにする。
+    /// </summary>
+    internal sealed class DynamicFontAssetCacheCleaner : AssetModificationProcessor
     {
         private const string FontGuid = "b99b78d9239e217499db95a88bb2a233";
 
@@ -16,28 +21,19 @@ namespace CreativeAI.EditorTools
             BindingFlags.Instance | BindingFlags.NonPublic
         );
 
-        static DynamicFontAssetCacheCleaner()
+        private static string[] OnWillSaveAssets(string[] paths)
         {
-            EditorApplication.playModeStateChanged += OnPlayModeStateChanged;
+            string fontPath = AssetDatabase.GUIDToAssetPath(FontGuid);
+            if (!string.IsNullOrEmpty(fontPath) && Array.IndexOf(paths, fontPath) >= 0)
+            {
+                ClearCachedGlyphs(AssetDatabase.LoadAssetAtPath<TMP_FontAsset>(fontPath));
+            }
+
+            return paths;
         }
 
-        private static void OnPlayModeStateChanged(PlayModeStateChange state)
+        private static void ClearCachedGlyphs(TMP_FontAsset font)
         {
-            if (state != PlayModeStateChange.EnteredEditMode)
-                return;
-
-            EditorApplication.delayCall -= ClearAfterPlay;
-            EditorApplication.delayCall += ClearAfterPlay;
-        }
-
-        private static void ClearAfterPlay()
-        {
-            if (EditorApplication.isPlayingOrWillChangePlaymode)
-                return;
-
-            var font = AssetDatabase.LoadAssetAtPath<TMP_FontAsset>(
-                AssetDatabase.GUIDToAssetPath(FontGuid)
-            );
             if (
                 font == null
                 || font.atlasPopulationMode != AtlasPopulationMode.Dynamic
@@ -59,8 +55,6 @@ namespace CreativeAI.EditorTools
 
             ClearDynamicData.Invoke(font, null);
             TMPro_EventManager.ON_FONT_PROPERTY_CHANGED(true, font);
-            EditorUtility.SetDirty(font);
-            AssetDatabase.SaveAssetIfDirty(font);
         }
     }
 }
