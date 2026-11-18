@@ -5,7 +5,7 @@ using UnityEngine;
 using UnityEngine.Animations;
 using UnityEngine.Playables;
 
-namespace CreativeAI.UI.CharacterUI
+namespace CreativeAI.UI
 {
     // Isolated render rig; only its own Animator and PlayableGraph drive preview poses.
     internal sealed class CharacterPreviewPose : IDisposable

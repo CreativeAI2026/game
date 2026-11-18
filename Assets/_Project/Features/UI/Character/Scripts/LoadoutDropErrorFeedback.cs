@@ -2,7 +2,7 @@ using DG.Tweening;
 using TMPro;
 using UnityEngine;
 
-namespace CreativeAI.UI.CharacterUI
+namespace CreativeAI.UI
 {
     [DisallowMultipleComponent]
     [RequireComponent(typeof(RectTransform), typeof(CanvasGroup))]

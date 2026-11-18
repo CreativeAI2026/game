@@ -1,9 +1,7 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
-using CreativeAI.Core;
 using CreativeAI.Gameplay;
-using SoundKit;
 using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
@@ -733,7 +731,7 @@ namespace CreativeAI.UI
         }
 
         // 登録した素材からキーで引く。同じキーが複数あれば先に登録したほうを使う。
-        private SoundKit.SoundCue FindSound(string key)
+        private SoundCue FindSound(string key)
         {
             foreach (var entry in _sounds ?? Array.Empty<DialogueSoundEntry>())
                 if (entry.Key == key)
@@ -771,7 +769,7 @@ namespace CreativeAI.UI
 
         /// <summary>
         /// IDialogueView 実装: giveItem ステップの入手演出。itemKey→アイコン/名前の解決はここで行う
-        /// (Core は Gameplay を参照しないため、EventPlayer はキーだけ渡す)。
+        /// (見せ方は UI の担当なので、EventPlayer はキーだけ渡す)。
         /// message 省略時は「〜を手に入れた。」を名前から組み立てる。
         /// </summary>
         public IEnumerator ShowItemGet(string itemKey, string message)

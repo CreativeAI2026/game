@@ -2,7 +2,7 @@
 using CreativeAI.Gameplay;
 using UnityEngine;
 
-namespace CreativeAI.UI.CharacterUI
+namespace CreativeAI.UI
 {
     public sealed class CharacterPreviewController : MonoBehaviour
     {

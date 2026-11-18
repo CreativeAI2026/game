@@ -1,4 +1,3 @@
-using CreativeAI.Core;
 using CreativeAI.Gameplay;
 using CreativeAI.Tests;
 using NUnit.Framework.Interfaces;

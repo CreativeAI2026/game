@@ -4,7 +4,7 @@ using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
 using System.Text.RegularExpressions;
-using CreativeAI.Core;
+using CreativeAI.Gameplay;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 
@@ -38,6 +38,7 @@ namespace CreativeAI.EditorTools
             "girl_wry_smile",
             "girl_surprised",
             "robot_normal",
+            "robot_thinking",
             "gramophone_normal",
         };
 

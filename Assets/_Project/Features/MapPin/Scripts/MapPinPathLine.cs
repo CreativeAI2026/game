@@ -2,7 +2,7 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.AI;
 
-namespace CreativeAI.Core
+namespace CreativeAI.Gameplay
 {
     /// <summary>
     /// プレイヤーからマップピンまでの道筋を、地面に沿って矢じりを並べた線で描く。

@@ -2,7 +2,7 @@ using System;
 using System.Collections.Generic;
 using UnityEngine;
 
-namespace CreativeAI.Core
+namespace CreativeAI.Gameplay
 {
     /// <summary>
     /// 本体シーンの読み込みにつられて始まった、追加の非同期読み込み(重ねる小物シーンなど)を集める窓口。

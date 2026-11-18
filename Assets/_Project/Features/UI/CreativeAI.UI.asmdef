@@ -2,15 +2,13 @@
     "name": "CreativeAI.UI",
     "rootNamespace": "CreativeAI.UI",
     "references": [
-        "CreativeAI.Core",
         "CreativeAI.Gameplay",
         "DOTween.Modules",
         "Unity.TextMeshPro",
         "Unity.InputSystem",
         "Unity.RenderPipelines.Universal.Runtime",
         "UniTask",
-        "UniTask.DOTween",
-        "SoundKit"
+        "UniTask.DOTween"
     ],
     "includePlatforms": [],
     "excludePlatforms": [],

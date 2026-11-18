@@ -1,5 +1,5 @@
 using System;
-using CreativeAI.Core;
+using CreativeAI.Gameplay;
 using UnityEngine;
 
 namespace CreativeAI.Playtest

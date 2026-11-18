@@ -1,19 +1,18 @@
-using CreativeAI.Core;
 using CreativeAI.Gameplay;
+using CreativeAI.UI;
 using UnityEngine;
 
-namespace CreativeAI.UI
+namespace CreativeAI.Session
 {
     /// <summary>
     /// 1回のプレイ(「はじめる/続きから」〜タイトルに戻るまで)の間ずっと残る常駐一式を作る(冪等)。
-    /// 本番のタイトル(TitleUIController)と、開発用の直接 Play(FieldDevBootstrap)が同じ手順を通る。
-    /// Core / Gameplay / UI の全部を参照できるのは UI 層なので、ここに置く。
+    /// タイトルからの開始(<see cref="GameStarter"/>)と、開発用の直接 Play(DevTools の FieldDevBootstrap)が同じ手順を通る。
     /// </summary>
     public static class GameSession
     {
         /// <summary>
         /// 常駐を生成順どおりに作る。既に在るものはそのまま使う。
-        /// 順番: マネージャ → 所持品 → UI → 戦闘
+        /// 順番: マネージャ → 所持品 → UI
         /// (UI は GameModeManager / InventoryManager を購読し、会話UIは生成時に DialogueViewService へ自己登録するため)。
         /// カメラリグ・プレイヤーリグはタイトルのカメラと重ならないようフィールドに入ってから
         /// <see cref="EnsureCameraRig"/> → <see cref="EnsurePlayerRig"/> の順で別に呼ぶ。
@@ -29,7 +28,6 @@ namespace CreativeAI.UI
 
             InventoryManager.EnsureResident();
             UIRoot.EnsureResident(uiRootPrefab);
-            BattleRunnerService.Current ??= new BattleRunner();
         }
 
         /// <summary>

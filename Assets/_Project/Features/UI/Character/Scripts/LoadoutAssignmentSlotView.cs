@@ -1,12 +1,11 @@
 using System;
 using CreativeAI.Gameplay;
-using CreativeAI.UI;
 using TMPro;
 using UnityEngine;
 using UnityEngine.EventSystems;
 using UnityEngine.UI;
 
-namespace CreativeAI.UI.CharacterUI
+namespace CreativeAI.UI
 {
     /// <summary>
     /// Loadout画面のクイックアイテム・装備スロット共通表示。

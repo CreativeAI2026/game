@@ -1,83 +1,85 @@
-using CreativeAI.Gameplay;
 using Unity.Cinemachine;
 using UnityEngine;
 
-/// <summary>
-/// TBossCapturedState の各フェーズに合わせて Cinemachine Virtual Camera の Priority を切り替える。
-/// GrabEscapeEvents（イベントバス）を購読することで、Gameplay アセンブリへの直接依存なしに動作する。
-/// </summary>
-public class GrabCameraController : MonoBehaviour
+namespace CreativeAI.Gameplay
 {
-    [Header("Cinemachine Cameras")]
-    [Tooltip("通常のメインカメラ")]
-    public CinemachineCamera vcamMain;
-
-    [Tooltip("引き寄せフェーズ用カメラ")]
-    public CinemachineCamera vcamPull;
-
-    [Tooltip("電撃ダメージフェーズ用カメラ（顔横アングル等）")]
-    public CinemachineCamera vcamDamage;
-
-    [Tooltip("脱出成功フェーズ用カメラ")]
-    public CinemachineCamera vcamEscape;
-
-    private void OnEnable()
+    /// <summary>
+    /// TBossCapturedState の各フェーズに合わせて Cinemachine Virtual Camera の Priority を切り替える。
+    /// GrabEscapeEvents（イベントバス）を購読して切り替えるので、ボス側はカメラを直接知らなくてよい。
+    /// </summary>
+    public class GrabCameraController : MonoBehaviour
     {
-        GrabEscapeEvents.OnSetDamageCameraTarget += SetDamageCameraTarget;
-        GrabEscapeEvents.OnCameraPull += StartPullPhase;
-        GrabEscapeEvents.OnCameraDamage += StartDamagePhase;
-        GrabEscapeEvents.OnCameraEscape += StartEscapePhase;
-        GrabEscapeEvents.OnCameraEnd += EndGrab;
-    }
+        [Header("Cinemachine Cameras")]
+        [Tooltip("通常のメインカメラ")]
+        public CinemachineCamera vcamMain;
 
-    private void OnDisable()
-    {
-        GrabEscapeEvents.OnSetDamageCameraTarget -= SetDamageCameraTarget;
-        GrabEscapeEvents.OnCameraPull -= StartPullPhase;
-        GrabEscapeEvents.OnCameraDamage -= StartDamagePhase;
-        GrabEscapeEvents.OnCameraEscape -= StartEscapePhase;
-        GrabEscapeEvents.OnCameraEnd -= EndGrab;
-    }
+        [Tooltip("引き寄せフェーズ用カメラ")]
+        public CinemachineCamera vcamPull;
 
-    public void SetDamageCameraTarget(Transform target)
-    {
-        if (vcamDamage != null && target != null)
-            vcamDamage.Target.TrackingTarget = target;
-    }
+        [Tooltip("電撃ダメージフェーズ用カメラ（顔横アングル等）")]
+        public CinemachineCamera vcamDamage;
 
-    private void ResetGrabCameras()
-    {
-        if (vcamPull != null)
-            vcamPull.Priority = 0;
-        if (vcamDamage != null)
-            vcamDamage.Priority = 0;
-        if (vcamEscape != null)
-            vcamEscape.Priority = 0;
-    }
+        [Tooltip("脱出成功フェーズ用カメラ")]
+        public CinemachineCamera vcamEscape;
 
-    public void StartPullPhase()
-    {
-        ResetGrabCameras();
-        if (vcamPull != null)
-            vcamPull.Priority = 20;
-    }
+        private void OnEnable()
+        {
+            GrabEscapeEvents.OnSetDamageCameraTarget += SetDamageCameraTarget;
+            GrabEscapeEvents.OnCameraPull += StartPullPhase;
+            GrabEscapeEvents.OnCameraDamage += StartDamagePhase;
+            GrabEscapeEvents.OnCameraEscape += StartEscapePhase;
+            GrabEscapeEvents.OnCameraEnd += EndGrab;
+        }
 
-    public void StartDamagePhase()
-    {
-        ResetGrabCameras();
-        if (vcamDamage != null)
-            vcamDamage.Priority = 20;
-    }
+        private void OnDisable()
+        {
+            GrabEscapeEvents.OnSetDamageCameraTarget -= SetDamageCameraTarget;
+            GrabEscapeEvents.OnCameraPull -= StartPullPhase;
+            GrabEscapeEvents.OnCameraDamage -= StartDamagePhase;
+            GrabEscapeEvents.OnCameraEscape -= StartEscapePhase;
+            GrabEscapeEvents.OnCameraEnd -= EndGrab;
+        }
 
-    public void StartEscapePhase()
-    {
-        ResetGrabCameras();
-        if (vcamEscape != null)
-            vcamEscape.Priority = 20;
-    }
+        public void SetDamageCameraTarget(Transform target)
+        {
+            if (vcamDamage != null && target != null)
+                vcamDamage.Target.TrackingTarget = target;
+        }
 
-    public void EndGrab()
-    {
-        ResetGrabCameras();
+        private void ResetGrabCameras()
+        {
+            if (vcamPull != null)
+                vcamPull.Priority = 0;
+            if (vcamDamage != null)
+                vcamDamage.Priority = 0;
+            if (vcamEscape != null)
+                vcamEscape.Priority = 0;
+        }
+
+        public void StartPullPhase()
+        {
+            ResetGrabCameras();
+            if (vcamPull != null)
+                vcamPull.Priority = 20;
+        }
+
+        public void StartDamagePhase()
+        {
+            ResetGrabCameras();
+            if (vcamDamage != null)
+                vcamDamage.Priority = 20;
+        }
+
+        public void StartEscapePhase()
+        {
+            ResetGrabCameras();
+            if (vcamEscape != null)
+                vcamEscape.Priority = 20;
+        }
+
+        public void EndGrab()
+        {
+            ResetGrabCameras();
+        }
     }
 }

@@ -2,7 +2,7 @@ using CreativeAI.Gameplay;
 using UnityEditor;
 using UnityEngine;
 
-namespace CreativeAI.Editor.UI
+namespace CreativeAI.EditorTools
 {
     [CustomEditor(typeof(WeaponData))]
     [CanEditMultipleObjects]

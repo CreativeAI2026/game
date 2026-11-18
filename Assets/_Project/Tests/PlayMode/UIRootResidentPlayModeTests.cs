@@ -1,6 +1,6 @@
 using System.Collections;
-using CreativeAI.Core;
 using CreativeAI.Gameplay;
+using CreativeAI.Session;
 using CreativeAI.UI;
 using NUnit.Framework;
 using TMPro;

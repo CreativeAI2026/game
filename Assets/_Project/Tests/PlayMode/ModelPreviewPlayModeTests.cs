@@ -4,7 +4,6 @@ using System.IO;
 using System.Linq;
 using CreativeAI.Gameplay;
 using CreativeAI.UI;
-using CreativeAI.UI.CharacterUI;
 using NUnit.Framework;
 using UnityEngine;
 using UnityEngine.EventSystems;

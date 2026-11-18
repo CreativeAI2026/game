@@ -1,6 +1,6 @@
 using UnityEngine;
 
-namespace CreativeAI.VisualTeam
+namespace CreativeAI.Gameplay
 {
     /// <summary>
     /// カメラから見た敵の状況を、画像ではなく幾何計算（視錐台・ビューポート座標・Linecast）で求めて、

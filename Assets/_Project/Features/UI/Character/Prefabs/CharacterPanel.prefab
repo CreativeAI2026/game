@@ -4724,7 +4724,7 @@ GameObject:
   - component: {fileID: 575516140718692488}
   - component: {fileID: 2711728117771688262}
   m_Layer: 0
-  m_Name: ParamaterRow
+  m_Name: ParameterRow
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -7111,7 +7111,7 @@ PrefabInstance:
     m_Modifications:
     - target: {fileID: 4282124093072887357, guid: f9f9d006f4778a249b875539eb4fb7ac, type: 3}
       propertyPath: m_Name
-      value: ItemParamaterArea
+      value: ItemParameterArea
       objectReference: {fileID: 0}
     - target: {fileID: 4576579404337683633, guid: f9f9d006f4778a249b875539eb4fb7ac, type: 3}
       propertyPath: m_MinWidth
