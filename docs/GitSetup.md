@@ -16,7 +16,11 @@ brew install git
 winget install Git.Git
 ```
 
-インストール後はターミナルを開き直し、`git --version` で確認する。
+インストール後はターミナルを開き直し、バージョンが出ることを確認する。
+
+```bash
+git --version
+```
 
 ## 名前とメールアドレスの設定
 
@@ -24,6 +28,9 @@ winget install Git.Git
 
 ```bash
 git config --global user.name "<GitHub のユーザー名>"
+```
+
+```bash
 git config --global user.email "<GitHub に登録したメールアドレス>"
 ```
 

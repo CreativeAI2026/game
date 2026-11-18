@@ -21,9 +21,16 @@
 
 コミット前にリポジトリルートで実行する（CI は整形漏れを検出するだけで自動修正はしない）。
 
+整形漏れを確認する（何も出なければ OK）。
+
 ```bash
-mise exec -- dotnet csharpier check .    # 整形漏れの確認（何も出なければ OK）
-mise exec -- dotnet csharpier format .   # 整形を適用
+mise exec -- dotnet csharpier check .
+```
+
+整形を適用する。
+
+```bash
+mise exec -- dotnet csharpier format .
 ```
 
 ---
