@@ -41,6 +41,8 @@ jobs:
           UNITY_LICENSE: ${{ secrets.UNITY_LICENSE }}
           UNITY_EMAIL: ${{ secrets.UNITY_EMAIL }}
           UNITY_PASSWORD: ${{ secrets.UNITY_PASSWORD }}
+          # game-ci の CLI の最新版を調べるときに使う(トークンなしだと 403 で落ちることがある)
+          GITHUB_TOKEN: ${{ github.token }}
         with:
           unityVersion: 6000.4.5f1
           targetPlatform: StandaloneLinux64
