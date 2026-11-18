@@ -3,8 +3,8 @@ using UnityEngine;
 namespace CreativeAI.Gameplay
 {
     /// <summary>
-    /// マップピンとピンまでの道筋の見た目(画像・材質)をまとめた設定アセット。
-    /// ピンも道筋もコードで生成するので、参照はこのアセット1つに集め、Resources から読む。
+    /// マップピンの見た目(画像・材質)をまとめた設定アセット。
+    /// ピンはコードで生成するので、参照はこのアセット1つに集め、Resources から読む。
     /// </summary>
     [CreateAssetMenu(fileName = "MapPinVisuals", menuName = "CreativeAI/Map Pin Visuals")]
     public sealed class MapPinVisuals : ScriptableObject
@@ -18,9 +18,6 @@ namespace CreativeAI.Gameplay
         [Tooltip("壁に隠されず常に手前に描く材質")]
         [SerializeField]
         private Material _pinMaterial;
-
-        [SerializeField]
-        private Material _pathLineMaterial;
 
         /// <summary>Resources から読んだ設定。見つからなければ警告して null。</summary>
         public static MapPinVisuals Instance
@@ -41,8 +38,5 @@ namespace CreativeAI.Gameplay
 
         /// <summary>ピンの材質。</summary>
         public Material PinMaterial => _pinMaterial;
-
-        /// <summary>ピンまでの道筋の線の材質。</summary>
-        public Material PathLineMaterial => _pathLineMaterial;
     }
 }

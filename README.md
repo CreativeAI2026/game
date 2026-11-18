@@ -18,7 +18,7 @@ game/                          ← リポジトリルート
 │   │   │   ├── SceneFlow/     シーン遷移・到着位置・シーンの重ね読み
 │   │   │   ├── UiRequests/    ゲーム側から UI への依頼（会話・暗転・調合画面・操作表示）
 │   │   │   ├── Event/         会話イベントの定義・再生、他機能との窓口。Data/events.json が台本
-│   │   │   ├── MapPin/        マップピンとピンまでの道筋の線
+│   │   │   ├── MapPin/        マップピン（目的地の小さいマーク）
 │   │   │   ├── Player/        プレイヤー・武器・焦り度の判定（Panic）
 │   │   │   ├── Enemy/         敵・ボス（TutorialBoss / KurageBoss / HakanageBoss）
 │   │   │   ├── Combat/        当たり判定・ダメージ計算・各キャラの能力値
