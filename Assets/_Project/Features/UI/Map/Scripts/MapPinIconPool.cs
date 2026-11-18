@@ -5,7 +5,7 @@ using UnityEngine;
 namespace CreativeAI.UI
 {
     /// <summary>
-    /// マップに出すピンの記号を、表示中のピンの数だけ型から複製して使い回す。ミニマップと全画面マップで共用する。
+    /// マップに出すピンの記号を、ピンの数だけ型から複製して使い回す。ミニマップと全画面マップで共用する。
     /// 位置の決め方と「いま見ている階か」はマップ側(<see cref="IPlacement"/>)が決め、別の階のピンは薄く出す。
     /// </summary>
     public sealed class MapPinIconPool
@@ -40,7 +40,7 @@ namespace CreativeAI.UI
                 _template.gameObject.SetActive(false);
         }
 
-        /// <summary>表示中のピンの数だけ記号を出して置き、余った記号を隠す。</summary>
+        /// <summary>ピンの数だけ記号を出して置き、余った記号を隠す。</summary>
         public void Refresh(MinimapLayout layout, IPlacement placement, float otherLevelAlpha)
         {
             if (_template == null)
@@ -52,8 +52,8 @@ namespace CreativeAI.UI
             for (var i = 0; i < active.Count; i++)
             {
                 var pin = active[i];
-                if (pin == null || !pin.Shown)
-                    continue;
+                if (pin == null)
+                    continue; // 会話・メニュー中でピンの 3D 表示が隠れていても、マップには出す
 
                 var slot = GetSlot(shown);
                 var anchor = pin.Anchor;
@@ -78,6 +78,21 @@ namespace CreativeAI.UI
                 slot.Icon.gameObject.SetActive(false);
                 slot.Pin = null; // 消えたピンを持ち続けない
                 _slots[i] = slot;
+            }
+        }
+
+        /// <summary>ピンのある階を <paramref name="hasPin"/>(階の番号で引く)に記録する。階の一覧のボタンの印に使う。</summary>
+        public static void FindLevelsWithPins(MinimapLayout layout, bool[] hasPin)
+        {
+            System.Array.Clear(hasPin, 0, hasPin.Length);
+            var active = MapPin.Active;
+            for (var i = 0; i < active.Count; i++)
+            {
+                if (active[i] == null)
+                    continue;
+                var level = layout.FindLevel(active[i].Anchor);
+                if (level >= 0 && level < hasPin.Length)
+                    hasPin[level] = true;
             }
         }
 

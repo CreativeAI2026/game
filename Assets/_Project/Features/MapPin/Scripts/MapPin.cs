@@ -4,19 +4,18 @@ using UnityEngine;
 namespace CreativeAI.Gameplay
 {
     /// <summary>
-    /// マップピン。穴の空いたしずく形の 2D 画像を縦に立て、縦軸まわりに横回転させながら上下に浮かせる。
-    /// 子に画像を持ち、このオブジェクト自身を回す・上下させる(基準位置は生成時の位置)。
-    /// 会話・戦闘・メニュー中は隠す。地面の道筋の線は、出ているピンのうちプレイヤーに一番近い1つだけに出す。
+    /// マップピン。穴の空いたしずく形の小さい 2D 画像を、目的地の少し上で常にカメラへ向けて浮かせる。
+    /// 近くでは一定の大きさ、遠くでは画面上の大きさが変わらないよう拡大する(小さすぎて見失わないため)。
+    /// 子に画像を持ち、このオブジェクト自身を上下させる(基準位置は生成時の位置)。
+    /// 会話・戦闘・メニュー中は隠す。
     /// </summary>
     public sealed class MapPin : MonoBehaviour
     {
         private const float HoverHeight = 0.5f; // 先端が指定位置より浮く高さ
         private const float SpriteHeight = 1.5f; // 画像の高さ(ワールド長、拡大前)
-        private const float Scale = 2f; // 画像の拡大率。大きいほど目立つ
-        private const float FullSizeDistance = 15f; // これより遠いと、見失わないよう大きくする
-        private const float MaxDistanceBoost = 3f; // 大きくする倍率の上限
-        private const float SpinDegreesPerSecond = 90f;
-        private const float BobAmplitude = 0.15f;
+        private const float Scale = 0.6f; // 画像の拡大率。小さいマークにする
+        private const float FullSizeDistance = 10f; // これより遠いと、画面上の大きさを保つよう拡大する
+        private const float BobAmplitude = 0.1f;
         private const float BobHertz = 0.6f;
         private const float FadeSeconds = 0.25f; // 出入りの透明度が変わりきるまで
 
@@ -26,7 +25,6 @@ namespace CreativeAI.Gameplay
         private Transform _face;
         private SpriteRenderer _renderer;
         private float _alpha; // 画像の透明度(0 で見えない)
-        private MapPinPathLine _pathLine;
 
         /// <summary>今ある(作られて消えていない)ピン。HUD が距離や方向の表示に使う。</summary>
         public static IReadOnlyList<MapPin> Active => s_active;
@@ -46,11 +44,7 @@ namespace CreativeAI.Gameplay
 
         /// <summary>ピンの頭の少し上。距離の表示を出す位置に使う。</summary>
         public Vector3 Top =>
-            _basePosition
-            + Vector3.up
-                * (
-                    HoverHeight + (_face != null ? _face.localScale.y : Scale) * SpriteHeight + 0.3f
-                );
+            _basePosition + Vector3.up * (HoverHeight + Scale * SpriteHeight + 0.3f);
 
         /// <summary>見せている最中か。会話・戦闘・メニュー中は false。</summary>
         public bool Shown { get; private set; } = true;
@@ -67,30 +61,29 @@ namespace CreativeAI.Gameplay
 
         private void OnDisable() => s_active.Remove(this);
 
-        private void OnDestroy() => _pathLine?.Destroy();
-
         private void Update()
         {
             Shown = !IsBusy();
             UpdateFade();
-            if (!Shown)
-            {
-                _pathLine?.Tick(_basePosition, false);
-                if (_alpha > 0f)
-                    Animate(); // 消える間も回して、止まって見えないようにする
-                return;
-            }
-
-            Animate();
-            _pathLine?.Tick(_basePosition, IsClosestShownPin());
+            if (Shown || _alpha > 0f)
+                Bob(); // 消える間も浮かせて、止まって見えないようにする
         }
 
-        private void Animate()
+        // カメラが動いた後で、向きと大きさを合わせる。
+        private void LateUpdate()
         {
-            transform.Rotate(0f, SpinDegreesPerSecond * Time.deltaTime, 0f, Space.World);
+            var cam = Camera.main;
+            if (_face == null || cam == null)
+                return;
+            _face.rotation = cam.transform.rotation;
+            var distance = Vector3.Distance(cam.transform.position, transform.position);
+            _face.localScale = Vector3.one * (Scale * Mathf.Max(1f, distance / FullSizeDistance));
+        }
+
+        private void Bob()
+        {
             var offset = Mathf.Sin(Time.time * BobHertz * Mathf.PI * 2f) * BobAmplitude;
             transform.position = _basePosition + Vector3.up * offset;
-            ApplyDistanceScale();
         }
 
         // 出し入れで急に現れたり消えたりしないよう、画像を透明度で出し入れする。
@@ -104,11 +97,9 @@ namespace CreativeAI.Gameplay
                 _renderer.color = new Color(1f, 1f, 1f, _alpha);
         }
 
-        /// <summary>ピンと地面の線をまとめて消す(エディットモードでは OnDestroy が走らないため明示する)。</summary>
+        /// <summary>ピンを消す。</summary>
         public void Remove()
         {
-            _pathLine?.Destroy();
-            _pathLine = null;
             if (Application.isPlaying)
                 Destroy(gameObject);
             else
@@ -124,39 +115,6 @@ namespace CreativeAI.Gameplay
                 || (mode != null && mode.CurrentMode == GameMode.Battle);
         }
 
-        // 見せているピンのうち、プレイヤーに一番近いのが自分か(同じ近さなら先に作られたほうを優先)。
-        private bool IsClosestShownPin()
-        {
-            var player = PlayerTransform;
-            if (player == null)
-                return true;
-
-            var mine = (_basePosition - player.position).sqrMagnitude;
-            foreach (var other in s_active)
-            {
-                if (other == this || !other.Shown)
-                    continue;
-                var theirs = (other._basePosition - player.position).sqrMagnitude;
-                if (
-                    theirs < mine
-                    || (theirs == mine && s_active.IndexOf(other) < s_active.IndexOf(this))
-                )
-                    return false;
-            }
-            return true;
-        }
-
-        // 遠くでは小さくて見えなくなるので、カメラから離れるほど大きくする(上限あり)。
-        private void ApplyDistanceScale()
-        {
-            var cam = Camera.main;
-            if (_face == null || cam == null)
-                return;
-            var distance = Vector3.Distance(cam.transform.position, transform.position);
-            var boost = Mathf.Clamp(distance / FullSizeDistance, 1f, MaxDistanceBoost);
-            _face.localScale = Vector3.one * (Scale * boost);
-        }
-
         /// <summary>指定位置にピンを作る。画像が無ければ null。</summary>
         public static MapPin Create(Vector3 position, Transform parent = null)
         {
@@ -170,7 +128,7 @@ namespace CreativeAI.Gameplay
 
             var face = new GameObject("Face");
             face.transform.SetParent(root.transform, false);
-            // 縦に立てる(先端が下)。画像の先端が基準なので、HoverHeight だけ地面から浮かせる。
+            // 先端が下。画像の先端が基準なので、HoverHeight だけ地面から浮かせる。
             face.transform.localPosition = Vector3.up * HoverHeight;
             face.transform.localScale = Vector3.one * Scale;
             var renderer = face.AddComponent<SpriteRenderer>();
@@ -185,7 +143,6 @@ namespace CreativeAI.Gameplay
             pin._face = face.transform;
             pin._renderer = renderer;
             renderer.color = new Color(1f, 1f, 1f, 0f); // 出始めは透明から
-            pin._pathLine = new MapPinPathLine();
             return pin;
         }
     }

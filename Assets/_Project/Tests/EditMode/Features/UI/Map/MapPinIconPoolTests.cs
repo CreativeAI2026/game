@@ -8,7 +8,7 @@ namespace CreativeAI.Tests.EditMode
 {
     /// <summary>
     /// マップのピンの記号を、表示中のピンの数だけ出して置き、別の階のピンを薄くすることの検証。
-    /// 記号を使い回しても、担当のピンが替わったときは階を調べ直すことを確かめる。
+    /// 記号を使い回しても、担当のピンが替わったときは階を調べ直すことを確かめる。ピンのある階の判定も確かめる。
     /// </summary>
     public sealed class MapPinIconPoolTests
     {
@@ -167,6 +167,18 @@ namespace CreativeAI.Tests.EditMode
             pool.Refresh(_layout, _placement, OtherLevelAlpha);
 
             Assert.AreEqual(1f, ShownIcons()[0].color.a);
+        }
+
+        [Test]
+        public void FindLevelsWithPins_MarksOnlyLevelsThatHavePins()
+        {
+            AddPin(new Vector3(30f, 10f, 40f)); // 2F
+            var hasPin = new[] { true, true };
+
+            MapPinIconPool.FindLevelsWithPins(_layout, hasPin);
+
+            Assert.IsFalse(hasPin[0]);
+            Assert.IsTrue(hasPin[1]);
         }
     }
 }

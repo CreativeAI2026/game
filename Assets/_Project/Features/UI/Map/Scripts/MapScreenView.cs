@@ -52,6 +52,8 @@ namespace CreativeAI.UI
 
         private readonly List<Button> _floorButtons = new();
         private readonly List<int> _buttonLevels = new(); // ボタンごとの階の番号
+        private readonly List<GameObject> _buttonPinMarks = new(); // ボタンごとの「この階にピンがある」黄色い丸
+        private bool[] _levelHasPin;
         private readonly MinimapLayout.Level[] _shown = new MinimapLayout.Level[1];
         private MapPinIconPool _pins;
         private Transform _player;
@@ -98,6 +100,17 @@ namespace CreativeAI.UI
             content.anchoredPosition = -_center * _pixelsPerUnit;
             UpdatePlayer();
             _pins.Refresh(_layout, this, _otherFloorAlpha);
+            UpdateFloorPinMarks();
+        }
+
+        // ピンのある階のボタンに、黄色い丸の印を出す。
+        private void UpdateFloorPinMarks()
+        {
+            if (_levelHasPin == null)
+                return;
+            MapPinIconPool.FindLevelsWithPins(_layout, _levelHasPin);
+            for (var i = 0; i < _buttonPinMarks.Count; i++)
+                _buttonPinMarks[i].SetActive(_levelHasPin[_buttonLevels[i]]);
         }
 
         /// <summary>ダブルクリックで閉じる。</summary>
@@ -111,6 +124,7 @@ namespace CreativeAI.UI
         {
             if (_layout == null || _floorButtonTemplate == null)
                 return;
+            _levelHasPin = new bool[_layout.Levels.Count];
             // 建物ごと(図の順)に、上の階を上に並べる
             var order = new List<int>();
             for (var i = 0; i < _layout.Levels.Count; i++)
@@ -139,7 +153,26 @@ namespace CreativeAI.UI
                 button.onClick.AddListener(() => ShowLevel(index));
                 _floorButtons.Add(button);
                 _buttonLevels.Add(index);
+                _buttonPinMarks.Add(CreatePinMark(button));
             }
+        }
+
+        // 階ボタンの右端に、ピンと同じ色の黄色い丸を置く。
+        private GameObject CreatePinMark(Button button)
+        {
+            var go = new GameObject("PinMark", typeof(RectTransform), typeof(MinimapIconGraphic));
+            var mark = go.GetComponent<MinimapIconGraphic>();
+            mark.SetShape(MinimapIconGraphic.IconShape.Dot);
+            mark.color = _pinTemplate.color;
+            mark.raycastTarget = false;
+            var rect = mark.rectTransform;
+            rect.SetParent(button.transform, false);
+            rect.anchorMin = rect.anchorMax = new Vector2(1f, 0.5f);
+            rect.pivot = new Vector2(1f, 0.5f);
+            rect.anchoredPosition = new Vector2(-8f, 0f);
+            rect.sizeDelta = new Vector2(24f, 24f);
+            go.SetActive(false);
+            return go;
         }
 
         private int FirstIndexOf(string buildingId)
