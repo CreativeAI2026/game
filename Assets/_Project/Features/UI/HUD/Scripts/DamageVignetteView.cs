@@ -1,11 +1,11 @@
+using System;
 using System.Collections;
+using System.Threading;
 using CreativeAI.Gameplay;
+using Cysharp.Threading.Tasks;
 using UnityEngine;
 using UnityEngine.Assertions;
 using UnityEngine.UI;
-using Cysharp.Threading.Tasks;
-using System;
-using System.Threading;
 
 namespace CreativeAI.UI
 {
@@ -40,7 +40,7 @@ namespace CreativeAI.UI
         [Range(0f, 1f)]
         private float _maxAlpha = 0.7f;
 
-        CancellationTokenSource _cts; 
+        CancellationTokenSource _cts;
         private PlayerStatus _status;
 
         private void Awake()
@@ -88,7 +88,8 @@ namespace CreativeAI.UI
 
         private void CancelVignette()
         {
-            if (_cts == null) return;
+            if (_cts == null)
+                return;
             _cts.Cancel();
             _cts.Dispose();
             _cts = null;
@@ -105,7 +106,7 @@ namespace CreativeAI.UI
             }
             SetAlpha(_maxAlpha);
 
-            await UniTask.Delay(TimeSpan.FromSeconds(_sustainDuration), cancellationToken : ct);
+            await UniTask.Delay(TimeSpan.FromSeconds(_sustainDuration), cancellationToken: ct);
 
             elapsed = 0f;
             while (elapsed < _fadeOutDuration)
