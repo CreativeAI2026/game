@@ -25,11 +25,19 @@ namespace CreativeAI.Tests
             throw new MissingFieldException(type.FullName, name);
         }
 
-        private static MethodInfo FindMethod(Type type, string name)
+        // 同名のオーバーロードがあるとき(Graphic.OnPopulateMesh など)は、引数の型で選ぶ。
+        private static MethodInfo FindMethod(Type type, string name, object[] args)
         {
+            var types = new Type[args.Length];
+            for (var i = 0; i < args.Length; i++)
+                types[i] = args[i]?.GetType();
+            var canMatchByType = Array.TrueForAll(types, t => t != null);
+
             for (var t = type; t != null; t = t.BaseType)
             {
-                var m = t.GetMethod(name, InstanceFlags);
+                var m = canMatchByType
+                    ? t.GetMethod(name, InstanceFlags, null, types, null)
+                    : t.GetMethod(name, InstanceFlags);
                 if (m != null)
                     return m;
             }
@@ -47,7 +55,7 @@ namespace CreativeAI.Tests
         {
             try
             {
-                return FindMethod(target.GetType(), name).Invoke(target, args);
+                return FindMethod(target.GetType(), name, args).Invoke(target, args);
             }
             catch (TargetInvocationException e) when (e.InnerException != null)
             {
