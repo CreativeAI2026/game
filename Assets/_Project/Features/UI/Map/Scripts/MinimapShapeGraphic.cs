@@ -7,6 +7,8 @@ namespace CreativeAI.UI
     /// <summary>
     /// ミニマップの1つの階を、テクスチャを使わず四角形の組み合わせで描く(拡大しても線がにじまない)。
     /// 頂点はワールドの XZ そのまま(1 = 1u)。表示の大きさは RectTransform の scale で決める。
+    /// 細い線は、専用のシェーダー(MinimapShape)で縁をなめらかにし、画面上の太さに下限を付ける。
+    /// そのために、各四角形の頂点へ「縁までの距離の測り方」を持たせる(uv0 = 中心からの画面上のずれ、uv1 = 縁までの半幅)。
     /// </summary>
     [RequireComponent(typeof(CanvasRenderer))]
     public sealed class MinimapShapeGraphic : MaskableGraphic
@@ -47,10 +49,25 @@ namespace CreativeAI.UI
         [SerializeField, Tooltip("階段の段の線の太さ(u)")]
         private float _stepWidth = 0.25f;
 
+        // 縁の種類。Line は細い方向だけ、Outline は両方向を、なめらかにして太さの下限を保つ。Hard はなめらかにしない(塗りつぶし)。
+        private enum EdgeStyle
+        {
+            Hard,
+            Line,
+            Outline,
+        }
+
+        private const float AntiAliasMarginPixels = 1f; // なめらかな縁を描くため、四角形を外へ広げる量(画面上の px)
+        private const float NoEdge = 10000f; // 縁までの半幅がこれ以上なら、その方向はなめらかにしない
+
+        [SerializeField, Tooltip("線の太さの下限(画面上の px)。これより細い線は、この太さで描く")]
+        private float _minLinePixels = 1f;
+
         private static readonly IReadOnlyList<MinimapLayout.Level> NoLevels =
             new MinimapLayout.Level[0];
 
         private IReadOnlyList<MinimapLayout.Level> _levels = NoLevels;
+        private float _builtScale = 1f; // 頂点を作ったときの、1u あたりの画面上の px
 
         /// <summary>
         /// 描く階(同じ高さの別の建物を並べて描くときは複数)。形を作り直すので、変わったときだけ呼ぶ。
@@ -62,6 +79,27 @@ namespace CreativeAI.UI
             FitRectToLevels();
             SetVerticesDirty();
         }
+
+        protected override void OnEnable()
+        {
+            base.OnEnable();
+            // シェーダーへ縁の情報を渡す uv1 を、キャンバスが送るようにする
+            var parent = canvas;
+            if (parent == null)
+                return;
+            parent.additionalShaderChannels |= AdditionalCanvasShaderChannels.TexCoord1;
+            parent.rootCanvas.additionalShaderChannels |= AdditionalCanvasShaderChannels.TexCoord1;
+        }
+
+        // 拡大率(マップ画面の大きさ変更など)が変わったら、画面上の px で決める縁の幅を作り直す。
+        private void Update()
+        {
+            if (Mathf.Abs(ScreenScale() - _builtScale) > _builtScale * 0.005f)
+                SetVerticesDirty();
+        }
+
+        // 1u が画面上で何 px か(Overlay のキャンバスでは、全体の拡大率を含む lossyScale がそのまま px)。
+        private float ScreenScale() => Mathf.Max(Mathf.Abs(rectTransform.lossyScale.x), 0.0001f);
 
         // 矩形を描く範囲に合わせる(頂点はワールド座標のまま)。大きさ 0 だと RectMask2D に範囲外として間引かれる
         private void FitRectToLevels()
@@ -91,12 +129,19 @@ namespace CreativeAI.UI
         protected override void OnPopulateMesh(VertexHelper vh)
         {
             vh.Clear();
+            _builtScale = ScreenScale();
 
             // 縁取り: 床を少し広げて先に塗り、上から床を重ねると外周にだけ線が残る
             foreach (var level in _levels)
             foreach (var shape in level.Shapes)
                 if (shape.Kind is MinimapLayout.ShapeKind.Floor or MinimapLayout.ShapeKind.Stairs)
-                    AddRect(vh, Expand(shape.Rect, _edgeWidth), _edgeColor);
+                    AddRect(
+                        vh,
+                        Expand(shape.Rect, _edgeWidth),
+                        _edgeColor,
+                        EdgeStyle.Outline,
+                        _edgeWidth
+                    );
 
             foreach (var level in _levels)
             foreach (var shape in level.Shapes)
@@ -113,16 +158,16 @@ namespace CreativeAI.UI
                         AddRect(vh, shape.Rect, _wallColor);
                         break;
                     case MinimapLayout.ShapeKind.WallEdge:
-                        AddRect(vh, shape.Rect, _wallEdgeColor);
+                        AddRect(vh, shape.Rect, _wallEdgeColor, EdgeStyle.Line);
                         break;
                     case MinimapLayout.ShapeKind.Fence:
-                        AddRect(vh, shape.Rect, _fenceColor);
+                        AddRect(vh, shape.Rect, _fenceColor, EdgeStyle.Line);
                         break;
                     case MinimapLayout.ShapeKind.Glass:
-                        AddRect(vh, shape.Rect, _glassColor);
+                        AddRect(vh, shape.Rect, _glassColor, EdgeStyle.Line);
                         break;
                     case MinimapLayout.ShapeKind.Door:
-                        AddRect(vh, shape.Rect, _doorColor);
+                        AddRect(vh, shape.Rect, _doorColor, EdgeStyle.Line);
                         break;
                 }
             }
@@ -151,7 +196,8 @@ namespace CreativeAI.UI
                 AddRect(
                     vh,
                     step,
-                    Color.Lerp(_stairsColor, _stairsStepColor, 0.35f + 0.65f * brightness)
+                    Color.Lerp(_stairsColor, _stairsStepColor, 0.35f + 0.65f * brightness),
+                    EdgeStyle.Line
                 );
             }
         }
@@ -164,16 +210,96 @@ namespace CreativeAI.UI
                 rect.height + amount * 2f
             );
 
-        private void AddRect(VertexHelper vh, Rect rect, Color tint)
+        /// <summary>
+        /// 細い線の、太さの下限とやわらかい縁を含めた半幅。戻り値は頂点を置く半幅(u)で、
+        /// <paramref name="edgeHalfPixels"/> は線そのものの半幅(画面上の px)。
+        /// </summary>
+        /// <param name="halfUnits">四角形の半幅(u)。</param>
+        /// <param name="thicknessUnits">下限と比べる、線の太さ(u)。</param>
+        /// <param name="scale">1u が画面上で何 px か。</param>
+        /// <param name="minPixels">線の太さの下限(px)。</param>
+        public static float LineExtent(
+            float halfUnits,
+            float thicknessUnits,
+            float scale,
+            float minPixels,
+            out float edgeHalfPixels
+        )
+        {
+            // 下限に足りない分を、両側へ半分ずつ太らせる
+            var growUnits = Mathf.Max(0f, minPixels - thicknessUnits * scale) * 0.5f / scale;
+            var edgeHalf = halfUnits + growUnits;
+            edgeHalfPixels = edgeHalf * scale;
+            return edgeHalf + AntiAliasMarginPixels / scale;
+        }
+
+        // style が Hard 以外のときは、なめらかな縁の分だけ外へ広げ、シェーダーが縁までの距離を測れるようにする。
+        private void AddRect(
+            VertexHelper vh,
+            Rect rect,
+            Color tint,
+            EdgeStyle style = EdgeStyle.Hard,
+            float thickness = 0f
+        )
         {
             Color32 c = tint * color;
+            var scale = _builtScale;
+            var half = rect.size * 0.5f;
+            var extent = half;
+            var edgeHalfPixels = new Vector2(NoEdge, NoEdge);
+            if (style != EdgeStyle.Hard)
+            {
+                if (style == EdgeStyle.Line)
+                    thickness = Mathf.Min(rect.width, rect.height);
+                if (style == EdgeStyle.Outline || half.x < half.y)
+                    extent.x = LineExtent(
+                        half.x,
+                        thickness,
+                        scale,
+                        _minLinePixels,
+                        out edgeHalfPixels.x
+                    );
+                if (style == EdgeStyle.Outline || half.x >= half.y)
+                    extent.y = LineExtent(
+                        half.y,
+                        thickness,
+                        scale,
+                        _minLinePixels,
+                        out edgeHalfPixels.y
+                    );
+            }
+
+            var edge = new Vector4(edgeHalfPixels.x, edgeHalfPixels.y, 0f, 0f);
+            var center = rect.center;
             var start = vh.currentVertCount;
-            vh.AddVert(new Vector3(rect.xMin, rect.yMin), c, Vector4.zero);
-            vh.AddVert(new Vector3(rect.xMin, rect.yMax), c, Vector4.zero);
-            vh.AddVert(new Vector3(rect.xMax, rect.yMax), c, Vector4.zero);
-            vh.AddVert(new Vector3(rect.xMax, rect.yMin), c, Vector4.zero);
+            AddCorner(vh, c, center, extent, scale, -1f, -1f, edge);
+            AddCorner(vh, c, center, extent, scale, -1f, 1f, edge);
+            AddCorner(vh, c, center, extent, scale, 1f, 1f, edge);
+            AddCorner(vh, c, center, extent, scale, 1f, -1f, edge);
             vh.AddTriangle(start, start + 1, start + 2);
             vh.AddTriangle(start + 2, start + 3, start);
+        }
+
+        private static void AddCorner(
+            VertexHelper vh,
+            Color32 c,
+            Vector2 center,
+            Vector2 extent,
+            float scale,
+            float signX,
+            float signY,
+            Vector4 edge
+        )
+        {
+            var offset = new Vector2(signX * extent.x, signY * extent.y);
+            vh.AddVert(
+                center + offset,
+                c,
+                new Vector4(offset.x * scale, offset.y * scale, 0f, 0f), // 中心からの画面上のずれ(px)
+                edge, // 縁までの半幅(px)
+                Vector3.zero,
+                Vector4.zero
+            );
         }
     }
 }
