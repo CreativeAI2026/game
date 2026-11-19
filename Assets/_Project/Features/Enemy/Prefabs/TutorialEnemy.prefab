@@ -191,39 +191,9 @@ Transform:
   - {fileID: 9195118020648260393}
   - {fileID: 2184382393309018755}
   - {fileID: 7461510181477197354}
+  - {fileID: 1697572253468351292}
   m_Father: {fileID: 2575015804060950711}
   m_LocalEulerAnglesHint: {x: 6.0708466, y: -4.2809453, z: -35.840317}
---- !u!1 &1391787576439892058
-GameObject:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  serializedVersion: 6
-  m_Component:
-  - component: {fileID: 8828499702587284344}
-  m_Layer: 0
-  m_Name: WireTargetIK
-  m_TagString: Untagged
-  m_Icon: {fileID: 0}
-  m_NavMeshLayer: 0
-  m_StaticEditorFlags: 0
-  m_IsActive: 0
---- !u!4 &8828499702587284344
-Transform:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1391787576439892058}
-  serializedVersion: 2
-  m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
-  m_LocalPosition: {x: 0, y: 0, z: 0}
-  m_LocalScale: {x: 1, y: 1, z: 1}
-  m_ConstrainProportionsScale: 0
-  m_Children: []
-  m_Father: {fileID: 1893048592292776664}
-  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &1399435758507540286
 GameObject:
   m_ObjectHideFlags: 0
@@ -256,6 +226,37 @@ Transform:
   - {fileID: 5611434011972798073}
   m_Father: {fileID: 6528939550659002668}
   m_LocalEulerAnglesHint: {x: -58.04549, y: -3.1084113, z: -3.9218764}
+--- !u!1 &1541411772656338864
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 1697572253468351292}
+  m_Layer: 0
+  m_Name: KamaTip
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &1697572253468351292
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1541411772656338864}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 4.184228, y: -1.9666921, z: 2.224624}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 929248616917899202}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &1576697514963515360
 GameObject:
   m_ObjectHideFlags: 0
@@ -860,7 +861,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: CreativeAI.Gameplay::CreativeAI.Gameplay.EnemyMeleeHitbox
   _meleeMultiplier: 1
   _enemyStatus: {fileID: 2372207900168909963}
-  _hitEffect: {fileID: 1758473627833946668, guid: fe43ffc680021e449a8c86605ce01634, type: 3}
+  _hitEffect: {fileID: 8841252265832173778, guid: 4098f9d3c02233a439d69404ed9ee783, type: 3}
   _hitSound: {fileID: 11400000, guid: 52f8e98fecb018048ac37faba34ed615, type: 2}
   _hitboxRadius: 1
   _targetLayer:
@@ -1067,7 +1068,6 @@ GameObject:
   - component: {fileID: 5171432070424172861}
   - component: {fileID: 2372207900168909963}
   - component: {fileID: 2712959532436082730}
-  - component: {fileID: 6520629328544636731}
   - component: {fileID: 46750526854519525}
   - component: {fileID: 8619806142362087819}
   - component: {fileID: 8976847890986444829}
@@ -1076,6 +1076,8 @@ GameObject:
   - component: {fileID: 853281290651280276}
   - component: {fileID: 9177305125567738132}
   - component: {fileID: 6054995865906015935}
+  - component: {fileID: 7646025808317547966}
+  - component: {fileID: 4125569072629592703}
   m_Layer: 9
   m_Name: TutorialEnemy
   m_TagString: Enemy
@@ -1098,7 +1100,7 @@ Transform:
   m_Children:
   - {fileID: 7353175452111572213}
   - {fileID: 7046865131735415053}
-  - {fileID: 8828499702587284344}
+  - {fileID: 874908489831357549}
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!95 &5171432070424172861
@@ -1174,25 +1176,16 @@ MonoBehaviour:
   wireBone: {fileID: 1027086871884667031}
   InitialWireBoneLocalPosition: {x: 0, y: 0, z: 0}
   InitialWireBoneLocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  wireRig: {fileID: 0}
-  wireIkTarget: {fileID: 8696649166186818781}
   specialAttackAimDuration: 1.5
   specialAttackShootDuration: 0.3
-  forceStraightWireByRig: 0
   attack1StrikeDistance: 3.5
   attack1MaxStepIn: 1.5
-  kamaBone: {fileID: 929248616917899202}
-  InitialKamaBoneLocalPosition: {x: 0, y: 0, z: 0}
-  InitialKamaBoneLocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  kamaExtendLocalAxis: {x: 0, y: 1, z: 1}
-  attack2ReachExtension: 6
-  attack2ReachHoldAnimatorSpeed: 0.5
-  attack2ReachHoldDuration: 0.3
-  attack2ReachLerpDuration: 0.2
   attack2HomingRotateSpeed: 10
   attack2PullDistance: 0.6
   attack2PullDuration: 0.15
   meleeHitbox: {fileID: 8483316474948940861}
+  armSweepHitbox: {fileID: 7646025808317547966}
+  groundDragSparks: {fileID: 4125569072629592703}
   wireChainSettings:
     bones:
     - {fileID: 4905898004056013356}
@@ -1233,48 +1226,6 @@ MonoBehaviour:
     autoDetectBoneAxis: 1
     boneLengthLocalAxis: {x: 0, y: 1, z: 0}
     applyExtension: 1
-  kamaChainSettings:
-    bones:
-    - {fileID: 8506564032205069911}
-    - {fileID: 5152746753529763166}
-    - {fileID: 2575015804060950711}
-    - {fileID: 929248616917899202}
-    - {fileID: 9195118020648260393}
-    stiffness: 400
-    dampingRatio: 0.2
-    tipLooseness: 0.1
-    extensionDistribution:
-      serializedVersion: 2
-      m_Curve:
-      - serializedVersion: 3
-        time: 0
-        value: 0.4
-        inSlope: 0
-        outSlope: 0.6
-        tangentMode: 0
-        weightedMode: 0
-        inWeight: 0
-        outWeight: 0
-      - serializedVersion: 3
-        time: 1
-        value: 1
-        inSlope: 0.6
-        outSlope: 0
-        tangentMode: 0
-        weightedMode: 0
-        inWeight: 0
-        outWeight: 0
-      m_PreInfinity: 2
-      m_PostInfinity: 2
-      m_RotationOrder: 4
-    waveAmplitude: 8
-    waveFrequency: 2.5
-    wavePhasePerBone: 1
-    waveLocalAxis: {x: 1, y: 0, z: 0}
-    droopAngle: 0
-    autoDetectBoneAxis: 1
-    boneLengthLocalAxis: {x: 0, y: 1, z: 0}
-    applyExtension: 1
   obstacleLayer:
     serializedVersion: 2
     m_Bits: 65
@@ -1285,8 +1236,9 @@ MonoBehaviour:
   grabPullDuration: 0.5
   grabPullDistance: 1.5
   grabPullLateralOffset: 0.5
-  electricEffectPrefab: {fileID: 9027514048236820043, guid: 8e1bf96441ff48241ab0f44e40d0b874, type: 3}
+  electricEffectPrefab: {fileID: 8660468279805029576, guid: 76193ff0670c3d049bc7d3f55573b0f4, type: 3}
   grabRetractDuration: 0.4
+  grabCameraTarget: {fileID: 0}
   panicPressureSettings:
     _tenseAttackIntervalScale: 0.8
     _tenseDirectAssaultBonus: 0.15
@@ -1329,37 +1281,6 @@ MonoBehaviour:
     _cueLeadSeconds: 0.5
   LastHeardSoundPosition: {x: 0, y: 0, z: 0}
   LostSightTimer: 0
---- !u!114 &6520629328544636731
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 5311719788049856507}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: b64c04da6aedabf44acb9fa8e205e239, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: CreativeAI.Gameplay::CreativeAI.Gameplay.TBossAttack2Tuner
-  boss: {fileID: 2712959532436082730}
-  previewClip: {fileID: 7400000, guid: 6c724574059749f4ca38f61d5b66fb02, type: 2}
-  sampleRoot: {fileID: 7353175452111572213}
-  previewEnabled: 0
-  previewNormalizedTime: 0
-  previewExtensionProgress: 0
-  previewFlexMotion: 1
-  bladeBone: {fileID: 929248616917899202}
-  bladeEdgeLocalDirection: {x: 0, y: 0, z: 1}
-  swingSampleDelta: 0.03
-  slowMotion: 0
-  slowMotionScale: 0.25
-  drawGizmos: 1
-  gizmoScale: 0.3
-  _capturedBones: []
-  _capturedPositions: []
-  _capturedRotations: []
-  _capturedScales: []
-  _isPreviewing: 0
 --- !u!114 &46750526854519525
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -1534,6 +1455,50 @@ MonoBehaviour:
   _holdSeconds: 0.1
   _fadeSeconds: 0.35
   _residualFadeSeconds: 0.3
+--- !u!114 &7646025808317547966
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 5311719788049856507}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 3524f60f5d5e7b24e996d080948f1500, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: CreativeAI.Gameplay::CreativeAI.Gameplay.TBossArmSweepHitbox
+  _chain:
+  - {fileID: 5152746753529763166}
+  - {fileID: 2575015804060950711}
+  - {fileID: 929248616917899202}
+  - {fileID: 1697572253468351292}
+  _radius: 0.35
+  _targetLayer:
+    serializedVersion: 2
+    m_Bits: 128
+  _enemyStatus: {fileID: 2372207900168909963}
+  _meleeMultiplier: 1
+  _hitEffect: {fileID: 8841252265832173778, guid: 4098f9d3c02233a439d69404ed9ee783, type: 3}
+  _hitSound: {fileID: 11400000, guid: 52f8e98fecb018048ac37faba34ed615, type: 2}
+--- !u!114 &4125569072629592703
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 5311719788049856507}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: acd85bb200cfad64fbeea4edb9b18328, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: CreativeAI.Gameplay::CreativeAI.Gameplay.TBossGroundDragSparks
+  _tip: {fileID: 1697572253468351292}
+  _sparks: {fileID: 8007370866458534691}
+  _groundLayer:
+    serializedVersion: 2
+    m_Bits: 73
+  _impactBurstCount: 40
+  _sparkSE: {fileID: 11400000, guid: 0f00c5a3c13ba0c439dfed433389db2c, type: 2}
 --- !u!1 &5539002945800126270
 GameObject:
   m_ObjectHideFlags: 0
@@ -2367,3 +2332,78 @@ Transform:
   m_Children: []
   m_Father: {fileID: 6175830234687592577}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!1001 &5609464781956256841
+PrefabInstance:
+  m_ObjectHideFlags: 0
+  serializedVersion: 2
+  m_Modification:
+    serializedVersion: 3
+    m_TransformParent: {fileID: 1893048592292776664}
+    m_Modifications:
+    - target: {fileID: 2506032325759055722, guid: a8eb89867a2368a48ac2424bd78d1ee5, type: 3}
+      propertyPath: InitialModule.startSizeY.minMaxState
+      value: 3
+      objectReference: {fileID: 0}
+    - target: {fileID: 2506032325759055722, guid: a8eb89867a2368a48ac2424bd78d1ee5, type: 3}
+      propertyPath: InitialModule.startSizeZ.minMaxState
+      value: 3
+      objectReference: {fileID: 0}
+    - target: {fileID: 4754849980497135652, guid: a8eb89867a2368a48ac2424bd78d1ee5, type: 3}
+      propertyPath: m_LocalPosition.x
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 4754849980497135652, guid: a8eb89867a2368a48ac2424bd78d1ee5, type: 3}
+      propertyPath: m_LocalPosition.y
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 4754849980497135652, guid: a8eb89867a2368a48ac2424bd78d1ee5, type: 3}
+      propertyPath: m_LocalPosition.z
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 4754849980497135652, guid: a8eb89867a2368a48ac2424bd78d1ee5, type: 3}
+      propertyPath: m_LocalRotation.w
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 4754849980497135652, guid: a8eb89867a2368a48ac2424bd78d1ee5, type: 3}
+      propertyPath: m_LocalRotation.x
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 4754849980497135652, guid: a8eb89867a2368a48ac2424bd78d1ee5, type: 3}
+      propertyPath: m_LocalRotation.y
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 4754849980497135652, guid: a8eb89867a2368a48ac2424bd78d1ee5, type: 3}
+      propertyPath: m_LocalRotation.z
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 4754849980497135652, guid: a8eb89867a2368a48ac2424bd78d1ee5, type: 3}
+      propertyPath: m_LocalEulerAnglesHint.x
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 4754849980497135652, guid: a8eb89867a2368a48ac2424bd78d1ee5, type: 3}
+      propertyPath: m_LocalEulerAnglesHint.y
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 4754849980497135652, guid: a8eb89867a2368a48ac2424bd78d1ee5, type: 3}
+      propertyPath: m_LocalEulerAnglesHint.z
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 4895930341509797539, guid: a8eb89867a2368a48ac2424bd78d1ee5, type: 3}
+      propertyPath: m_Name
+      value: KamaGroundSparks
+      objectReference: {fileID: 0}
+    m_RemovedComponents: []
+    m_RemovedGameObjects: []
+    m_AddedGameObjects: []
+    m_AddedComponents: []
+  m_SourcePrefab: {fileID: 100100000, guid: a8eb89867a2368a48ac2424bd78d1ee5, type: 3}
+--- !u!4 &874908489831357549 stripped
+Transform:
+  m_CorrespondingSourceObject: {fileID: 4754849980497135652, guid: a8eb89867a2368a48ac2424bd78d1ee5, type: 3}
+  m_PrefabInstance: {fileID: 5609464781956256841}
+  m_PrefabAsset: {fileID: 0}
+--- !u!198 &8007370866458534691 stripped
+ParticleSystem:
+  m_CorrespondingSourceObject: {fileID: 2506032325759055722, guid: a8eb89867a2368a48ac2424bd78d1ee5, type: 3}
+  m_PrefabInstance: {fileID: 5609464781956256841}
+  m_PrefabAsset: {fileID: 0}

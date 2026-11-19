@@ -294,9 +294,6 @@ namespace CreativeAI.Gameplay
         /// </summary>
         public bool CanStartGroundAction => Player.Grounded;
 
-        /// <summary>攻撃ステートに入った瞬間に呼ばれる。武器の見た目の調整などに使う。</summary>
-        public virtual void OnAttackStateEntered() { }
-
         /// <summary>近接攻撃(ダッシュ接近・コンボ)の対象を <see cref="dashSearchRadius"/> 内の最寄りの敵から探す。</summary>
         public Transform FindMeleeTarget() => FindNearestEnemy(dashSearchRadius);
 

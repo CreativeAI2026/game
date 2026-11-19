@@ -841,11 +841,11 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 275c68e67b2df401996e3ca41a3cc81c, type: 3}
   m_Name: 
   m_EditorClassIdentifier: CreativeAI.Gameplay::CreativeAI.Gameplay.DoorInteractor
-  _door: {fileID: 9800628}
   _playerTag: Player
+  _key: 19
+  _door: {fileID: 9800628}
   _openLabel: "\u6249\u3092\u958B\u3051\u308B"
   _closeLabel: "\u6249\u3092\u9589\u3058\u308B"
-  _key: 19
 --- !u!135 &9800627
 SphereCollider:
   m_ObjectHideFlags: 0
@@ -6329,11 +6329,11 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 275c68e67b2df401996e3ca41a3cc81c, type: 3}
   m_Name: 
   m_EditorClassIdentifier: CreativeAI.Gameplay::CreativeAI.Gameplay.DoorInteractor
-  _door: {fileID: 181556364}
   _playerTag: Player
+  _key: 19
+  _door: {fileID: 181556364}
   _openLabel: "\u6249\u3092\u958B\u3051\u308B"
   _closeLabel: "\u6249\u3092\u9589\u3058\u308B"
-  _key: 19
 --- !u!135 &181556363
 SphereCollider:
   m_ObjectHideFlags: 0
@@ -11602,11 +11602,11 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 275c68e67b2df401996e3ca41a3cc81c, type: 3}
   m_Name: 
   m_EditorClassIdentifier: CreativeAI.Gameplay::CreativeAI.Gameplay.DoorInteractor
-  _door: {fileID: 322068070}
   _playerTag: Player
+  _key: 19
+  _door: {fileID: 322068070}
   _openLabel: "\u6249\u3092\u958B\u3051\u308B"
   _closeLabel: "\u6249\u3092\u9589\u3058\u308B"
-  _key: 19
 --- !u!135 &322068069
 SphereCollider:
   m_ObjectHideFlags: 0
@@ -15124,11 +15124,11 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 275c68e67b2df401996e3ca41a3cc81c, type: 3}
   m_Name: 
   m_EditorClassIdentifier: CreativeAI.Gameplay::CreativeAI.Gameplay.DoorInteractor
-  _door: {fileID: 379009866}
   _playerTag: Player
+  _key: 19
+  _door: {fileID: 379009866}
   _openLabel: "\u6249\u3092\u958B\u3051\u308B"
   _closeLabel: "\u6249\u3092\u9589\u3058\u308B"
-  _key: 19
 --- !u!135 &379009865
 SphereCollider:
   m_ObjectHideFlags: 0
@@ -16311,11 +16311,11 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 275c68e67b2df401996e3ca41a3cc81c, type: 3}
   m_Name: 
   m_EditorClassIdentifier: CreativeAI.Gameplay::CreativeAI.Gameplay.DoorInteractor
-  _door: {fileID: 410906901}
   _playerTag: Player
+  _key: 19
+  _door: {fileID: 410906901}
   _openLabel: "\u6249\u3092\u958B\u3051\u308B"
   _closeLabel: "\u6249\u3092\u9589\u3058\u308B"
-  _key: 19
 --- !u!135 &410906900
 SphereCollider:
   m_ObjectHideFlags: 0
@@ -17043,11 +17043,11 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 275c68e67b2df401996e3ca41a3cc81c, type: 3}
   m_Name: 
   m_EditorClassIdentifier: CreativeAI.Gameplay::CreativeAI.Gameplay.DoorInteractor
-  _door: {fileID: 424303425}
   _playerTag: Player
+  _key: 19
+  _door: {fileID: 424303425}
   _openLabel: "\u6249\u3092\u958B\u3051\u308B"
   _closeLabel: "\u6249\u3092\u9589\u3058\u308B"
-  _key: 19
 --- !u!135 &424303424
 SphereCollider:
   m_ObjectHideFlags: 0
@@ -23045,11 +23045,11 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 275c68e67b2df401996e3ca41a3cc81c, type: 3}
   m_Name: 
   m_EditorClassIdentifier: CreativeAI.Gameplay::CreativeAI.Gameplay.DoorInteractor
-  _door: {fileID: 543486902}
   _playerTag: Player
+  _key: 19
+  _door: {fileID: 543486902}
   _openLabel: "\u6249\u3092\u958B\u3051\u308B"
   _closeLabel: "\u6249\u3092\u9589\u3058\u308B"
-  _key: 19
 --- !u!135 &543486901
 SphereCollider:
   m_ObjectHideFlags: 0
@@ -25946,11 +25946,11 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 275c68e67b2df401996e3ca41a3cc81c, type: 3}
   m_Name: 
   m_EditorClassIdentifier: CreativeAI.Gameplay::CreativeAI.Gameplay.DoorInteractor
-  _door: {fileID: 603473815}
   _playerTag: Player
+  _key: 19
+  _door: {fileID: 603473815}
   _openLabel: "\u6249\u3092\u958B\u3051\u308B"
   _closeLabel: "\u6249\u3092\u9589\u3058\u308B"
-  _key: 19
 --- !u!135 &603473814
 SphereCollider:
   m_ObjectHideFlags: 0
@@ -32751,11 +32751,11 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 275c68e67b2df401996e3ca41a3cc81c, type: 3}
   m_Name: 
   m_EditorClassIdentifier: CreativeAI.Gameplay::CreativeAI.Gameplay.DoorInteractor
-  _door: {fileID: 750651718}
   _playerTag: Player
+  _key: 19
+  _door: {fileID: 750651718}
   _openLabel: "\u6249\u3092\u958B\u3051\u308B"
   _closeLabel: "\u6249\u3092\u9589\u3058\u308B"
-  _key: 19
 --- !u!135 &750651717
 SphereCollider:
   m_ObjectHideFlags: 0
@@ -32847,11 +32847,11 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 275c68e67b2df401996e3ca41a3cc81c, type: 3}
   m_Name: 
   m_EditorClassIdentifier: CreativeAI.Gameplay::CreativeAI.Gameplay.DoorInteractor
-  _door: {fileID: 754051877}
   _playerTag: Player
+  _key: 19
+  _door: {fileID: 754051877}
   _openLabel: "\u6249\u3092\u958B\u3051\u308B"
   _closeLabel: "\u6249\u3092\u9589\u3058\u308B"
-  _key: 19
 --- !u!135 &754051876
 SphereCollider:
   m_ObjectHideFlags: 0
@@ -33759,11 +33759,11 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 275c68e67b2df401996e3ca41a3cc81c, type: 3}
   m_Name: 
   m_EditorClassIdentifier: CreativeAI.Gameplay::CreativeAI.Gameplay.DoorInteractor
-  _door: {fileID: 792454589}
   _playerTag: Player
+  _key: 19
+  _door: {fileID: 792454589}
   _openLabel: "\u6249\u3092\u958B\u3051\u308B"
   _closeLabel: "\u6249\u3092\u9589\u3058\u308B"
-  _key: 19
 --- !u!135 &792454588
 SphereCollider:
   m_ObjectHideFlags: 0
@@ -34728,11 +34728,11 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 275c68e67b2df401996e3ca41a3cc81c, type: 3}
   m_Name: 
   m_EditorClassIdentifier: CreativeAI.Gameplay::CreativeAI.Gameplay.DoorInteractor
-  _door: {fileID: 819275180}
   _playerTag: Player
+  _key: 19
+  _door: {fileID: 819275180}
   _openLabel: "\u6249\u3092\u958B\u3051\u308B"
   _closeLabel: "\u6249\u3092\u9589\u3058\u308B"
-  _key: 19
 --- !u!135 &819275179
 SphereCollider:
   m_ObjectHideFlags: 0
@@ -38101,11 +38101,11 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 275c68e67b2df401996e3ca41a3cc81c, type: 3}
   m_Name: 
   m_EditorClassIdentifier: CreativeAI.Gameplay::CreativeAI.Gameplay.DoorInteractor
-  _door: {fileID: 894923740}
   _playerTag: Player
+  _key: 19
+  _door: {fileID: 894923740}
   _openLabel: "\u6249\u3092\u958B\u3051\u308B"
   _closeLabel: "\u6249\u3092\u9589\u3058\u308B"
-  _key: 19
 --- !u!135 &894923739
 SphereCollider:
   m_ObjectHideFlags: 0
@@ -43189,11 +43189,11 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 275c68e67b2df401996e3ca41a3cc81c, type: 3}
   m_Name: 
   m_EditorClassIdentifier: CreativeAI.Gameplay::CreativeAI.Gameplay.DoorInteractor
-  _door: {fileID: 999121883}
   _playerTag: Player
+  _key: 19
+  _door: {fileID: 999121883}
   _openLabel: "\u6249\u3092\u958B\u3051\u308B"
   _closeLabel: "\u6249\u3092\u9589\u3058\u308B"
-  _key: 19
 --- !u!135 &999121882
 SphereCollider:
   m_ObjectHideFlags: 0
@@ -52563,11 +52563,11 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 275c68e67b2df401996e3ca41a3cc81c, type: 3}
   m_Name: 
   m_EditorClassIdentifier: CreativeAI.Gameplay::CreativeAI.Gameplay.DoorInteractor
-  _door: {fileID: 1203227869}
   _playerTag: Player
+  _key: 19
+  _door: {fileID: 1203227869}
   _openLabel: "\u6249\u3092\u958B\u3051\u308B"
   _closeLabel: "\u6249\u3092\u9589\u3058\u308B"
-  _key: 19
 --- !u!135 &1203227868
 SphereCollider:
   m_ObjectHideFlags: 0
@@ -55608,11 +55608,11 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 275c68e67b2df401996e3ca41a3cc81c, type: 3}
   m_Name: 
   m_EditorClassIdentifier: CreativeAI.Gameplay::CreativeAI.Gameplay.DoorInteractor
-  _door: {fileID: 1258132683}
   _playerTag: Player
+  _key: 19
+  _door: {fileID: 1258132683}
   _openLabel: "\u6249\u3092\u958B\u3051\u308B"
   _closeLabel: "\u6249\u3092\u9589\u3058\u308B"
-  _key: 19
 --- !u!135 &1258132682
 SphereCollider:
   m_ObjectHideFlags: 0
@@ -56793,11 +56793,11 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 275c68e67b2df401996e3ca41a3cc81c, type: 3}
   m_Name: 
   m_EditorClassIdentifier: CreativeAI.Gameplay::CreativeAI.Gameplay.DoorInteractor
-  _door: {fileID: 1298663262}
   _playerTag: Player
+  _key: 19
+  _door: {fileID: 1298663262}
   _openLabel: "\u6249\u3092\u958B\u3051\u308B"
   _closeLabel: "\u6249\u3092\u9589\u3058\u308B"
-  _key: 19
 --- !u!135 &1298663261
 SphereCollider:
   m_ObjectHideFlags: 0
@@ -60618,11 +60618,11 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 275c68e67b2df401996e3ca41a3cc81c, type: 3}
   m_Name: 
   m_EditorClassIdentifier: CreativeAI.Gameplay::CreativeAI.Gameplay.DoorInteractor
-  _door: {fileID: 1359031919}
   _playerTag: Player
+  _key: 19
+  _door: {fileID: 1359031919}
   _openLabel: "\u6249\u3092\u958B\u3051\u308B"
   _closeLabel: "\u6249\u3092\u9589\u3058\u308B"
-  _key: 19
 --- !u!135 &1359031918
 SphereCollider:
   m_ObjectHideFlags: 0
@@ -61159,11 +61159,11 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 275c68e67b2df401996e3ca41a3cc81c, type: 3}
   m_Name: 
   m_EditorClassIdentifier: CreativeAI.Gameplay::CreativeAI.Gameplay.DoorInteractor
-  _door: {fileID: 1383277420}
   _playerTag: Player
+  _key: 19
+  _door: {fileID: 1383277420}
   _openLabel: "\u6249\u3092\u958B\u3051\u308B"
   _closeLabel: "\u6249\u3092\u9589\u3058\u308B"
-  _key: 19
 --- !u!135 &1383277419
 SphereCollider:
   m_ObjectHideFlags: 0
@@ -69616,11 +69616,11 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 275c68e67b2df401996e3ca41a3cc81c, type: 3}
   m_Name: 
   m_EditorClassIdentifier: CreativeAI.Gameplay::CreativeAI.Gameplay.DoorInteractor
-  _door: {fileID: 1533221627}
   _playerTag: Player
+  _key: 19
+  _door: {fileID: 1533221627}
   _openLabel: "\u6249\u3092\u958B\u3051\u308B"
   _closeLabel: "\u6249\u3092\u9589\u3058\u308B"
-  _key: 19
 --- !u!135 &1533221626
 SphereCollider:
   m_ObjectHideFlags: 0
@@ -78161,11 +78161,11 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 275c68e67b2df401996e3ca41a3cc81c, type: 3}
   m_Name: 
   m_EditorClassIdentifier: CreativeAI.Gameplay::CreativeAI.Gameplay.DoorInteractor
-  _door: {fileID: 1724052325}
   _playerTag: Player
+  _key: 19
+  _door: {fileID: 1724052325}
   _openLabel: "\u6249\u3092\u958B\u3051\u308B"
   _closeLabel: "\u6249\u3092\u9589\u3058\u308B"
-  _key: 19
 --- !u!135 &1724052324
 SphereCollider:
   m_ObjectHideFlags: 0
@@ -80503,11 +80503,11 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 275c68e67b2df401996e3ca41a3cc81c, type: 3}
   m_Name: 
   m_EditorClassIdentifier: CreativeAI.Gameplay::CreativeAI.Gameplay.DoorInteractor
-  _door: {fileID: 1787113544}
   _playerTag: Player
+  _key: 19
+  _door: {fileID: 1787113544}
   _openLabel: "\u6249\u3092\u958B\u3051\u308B"
   _closeLabel: "\u6249\u3092\u9589\u3058\u308B"
-  _key: 19
 --- !u!135 &1787113543
 SphereCollider:
   m_ObjectHideFlags: 0
@@ -81113,11 +81113,11 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 275c68e67b2df401996e3ca41a3cc81c, type: 3}
   m_Name: 
   m_EditorClassIdentifier: CreativeAI.Gameplay::CreativeAI.Gameplay.DoorInteractor
-  _door: {fileID: 1804740049}
   _playerTag: Player
+  _key: 19
+  _door: {fileID: 1804740049}
   _openLabel: "\u6249\u3092\u958B\u3051\u308B"
   _closeLabel: "\u6249\u3092\u9589\u3058\u308B"
-  _key: 19
 --- !u!135 &1804740048
 SphereCollider:
   m_ObjectHideFlags: 0
@@ -82439,11 +82439,11 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 275c68e67b2df401996e3ca41a3cc81c, type: 3}
   m_Name: 
   m_EditorClassIdentifier: CreativeAI.Gameplay::CreativeAI.Gameplay.DoorInteractor
-  _door: {fileID: 1833712526}
   _playerTag: Player
+  _key: 19
+  _door: {fileID: 1833712526}
   _openLabel: "\u6249\u3092\u958B\u3051\u308B"
   _closeLabel: "\u6249\u3092\u9589\u3058\u308B"
-  _key: 19
 --- !u!135 &1833712525
 SphereCollider:
   m_ObjectHideFlags: 0
@@ -85240,11 +85240,11 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 275c68e67b2df401996e3ca41a3cc81c, type: 3}
   m_Name: 
   m_EditorClassIdentifier: CreativeAI.Gameplay::CreativeAI.Gameplay.DoorInteractor
-  _door: {fileID: 1915389251}
   _playerTag: Player
+  _key: 19
+  _door: {fileID: 1915389251}
   _openLabel: "\u6249\u3092\u958B\u3051\u308B"
   _closeLabel: "\u6249\u3092\u9589\u3058\u308B"
-  _key: 19
 --- !u!135 &1915389250
 SphereCollider:
   m_ObjectHideFlags: 0
@@ -88758,6 +88758,55 @@ Transform:
   m_CorrespondingSourceObject: {fileID: -3910990755373119420, guid: e7e9dfa87f7bb4942bad1ea5af5bd163, type: 3}
   m_PrefabInstance: {fileID: 5914771}
   m_PrefabAsset: {fileID: 0}
+--- !u!1 &1987625097
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 1987625099}
+  - component: {fileID: 1987625098}
+  m_Layer: 0
+  m_Name: Global Volume
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!114 &1987625098
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1987625097}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 172515602e62fb746b5d573b38a5fe58, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Unity.RenderPipelines.Core.Runtime::UnityEngine.Rendering.Volume
+  m_IsGlobal: 1
+  priority: 0
+  blendDistance: 0
+  weight: 1
+  sharedProfile: {fileID: 11400000, guid: 35af823eeeaabcb45ad329a32e82dd60, type: 2}
+--- !u!4 &1987625099
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1987625097}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 141.52913, y: -37.100224, z: -4.5824833}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!4 &1988857262 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: -3446161680948791849, guid: 9c52fd0878148f34e9016b4780f5fa3d, type: 3}
@@ -98143,13 +98192,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 5496514868187160189, guid: 4d30f9d77d1f9c64bb9fe22315f2c5c2, type: 3}
       propertyPath: m_WarningMessage
-      value: "\nBinding warning: Some generic clip(s) animate transforms that are
-        already bound by a Humanoid avatar. These transforms can only be changed
-        by Humanoid clips.\n\tTransform 'mixamorig:LeftHand'\n\tTransform 'mixamorig:LeftHandThumb1'\n\tTransform
-        'mixamorig:RightUpLeg'\n\tTransform 'mixamorig:LeftUpLeg'\n\tTransform 'mixamorig:LeftHandMiddle1'\n\tTransform
-        'mixamorig:Hips'\n\tTransform 'mixamorig:LeftHandIndex1'\n\tTransform 'mixamorig:LeftHandPinky1'\n\tTransform
-        'mixamorig:LeftHandRing1'\n\tTransform 'mixamorig:RightFoot'\n\tand more
-        ...\n\tFrom animation clip 'Player_Die'"
+      value: 
       objectReference: {fileID: 0}
     - target: {fileID: 6027125060283945667, guid: 4d30f9d77d1f9c64bb9fe22315f2c5c2, type: 3}
       propertyPath: m_LocalPosition.x
@@ -99662,7 +99705,7 @@ MonoBehaviour:
     m_Bits: 1
   m_VolumeTrigger: {fileID: 0}
   m_VolumeFrameworkUpdateModeOption: 2
-  m_RenderPostProcessing: 0
+  m_RenderPostProcessing: 1
   m_Antialiasing: 0
   m_AntialiasingQuality: 2
   m_StopNaN: 0
@@ -99845,6 +99888,7 @@ SceneRoots:
   - {fileID: 1945854054}
   - {fileID: 469582493}
   - {fileID: 917239321}
+  - {fileID: 1987625099}
   - {fileID: 1405349297}
   - {fileID: 812245157}
   - {fileID: 1624931768}

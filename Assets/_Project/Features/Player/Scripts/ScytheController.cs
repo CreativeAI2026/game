@@ -50,9 +50,9 @@ namespace CreativeAI.Gameplay
             );
 
             // プレイヤーの移動・回転に引きずられないよう、親なし(シーン直下)で生成する
+            // (待機中の見た目非表示は ScytheBoomerang.Awake 側で行う)
             _boomerang = Instantiate(_boomerangPrefab);
             _boomerang.SetOwner(Player.GetComponent<PlayerStatus>());
-            _boomerang.gameObject.SetActive(false);
             _boomerang.Caught += OnBoomerangCaught;
         }
 
@@ -110,8 +110,11 @@ namespace CreativeAI.Gameplay
         public void LaunchBoomerang(Transform target)
         {
             Vector3 origin = transform.position;
+            // 壁際では手元が壁にめり込むため、壁の手前側にあるプレイヤーの軸(手と同じ高さ)から手元までの間を調べさせる
+            Vector3 playerPosition = PlayerTransform.position;
+            Vector3 bodyPoint = new Vector3(playerPosition.x, origin.y, playerPosition.z);
             _heldModel.SetActive(false);
-            _boomerang.Launch(origin, ResolveThrowDirection(target, origin), transform);
+            _boomerang.Launch(bodyPoint, origin, ResolveThrowDirection(target, origin), transform);
             WorldSoundPlayer.Play(_throwSound, origin, this);
         }
 

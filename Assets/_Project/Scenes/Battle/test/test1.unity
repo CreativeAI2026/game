@@ -4290,37 +4290,6 @@ Transform:
   m_Children: []
   m_Father: {fileID: 1652517602}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!1 &1037973360
-GameObject:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  serializedVersion: 6
-  m_Component:
-  - component: {fileID: 1037973361}
-  m_Layer: 0
-  m_Name: WireTargetIK
-  m_TagString: Untagged
-  m_Icon: {fileID: 0}
-  m_NavMeshLayer: 0
-  m_StaticEditorFlags: 0
-  m_IsActive: 0
---- !u!4 &1037973361
-Transform:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1037973360}
-  serializedVersion: 2
-  m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
-  m_LocalPosition: {x: 0, y: 0, z: 0}
-  m_LocalScale: {x: 1, y: 1, z: 1}
-  m_ConstrainProportionsScale: 0
-  m_Children: []
-  m_Father: {fileID: 1582496459}
-  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &1038091446
 GameObject:
   m_ObjectHideFlags: 0
@@ -6654,7 +6623,6 @@ GameObject:
   - component: {fileID: 1582496458}
   - component: {fileID: 1582496457}
   - component: {fileID: 1582496456}
-  - component: {fileID: 1582496455}
   - component: {fileID: 1582496454}
   - component: {fileID: 1582496453}
   - component: {fileID: 1582496452}
@@ -6844,37 +6812,6 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: CreativeAI.Gameplay::CreativeAI.Gameplay.EnemyAnimationEventReceiver
   _meleeHitbox: {fileID: 1786110274}
---- !u!114 &1582496455
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1582496446}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: b64c04da6aedabf44acb9fa8e205e239, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: CreativeAI.Gameplay::CreativeAI.Gameplay.TBossAttack2Tuner
-  boss: {fileID: 1582496456}
-  previewClip: {fileID: 7400000, guid: 6c724574059749f4ca38f61d5b66fb02, type: 2}
-  sampleRoot: {fileID: 1830598419}
-  previewEnabled: 0
-  previewNormalizedTime: 0
-  previewExtensionProgress: 0
-  previewFlexMotion: 1
-  bladeBone: {fileID: 181976334}
-  bladeEdgeLocalDirection: {x: 0, y: 0, z: 1}
-  swingSampleDelta: 0.03
-  slowMotion: 0
-  slowMotionScale: 0.25
-  drawGizmos: 1
-  gizmoScale: 0.3
-  _capturedBones: []
-  _capturedPositions: []
-  _capturedRotations: []
-  _capturedScales: []
-  _isPreviewing: 0
 --- !u!114 &1582496456
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -6912,25 +6849,16 @@ MonoBehaviour:
   wireBone: {fileID: 1089717484}
   InitialWireBoneLocalPosition: {x: 0, y: 0, z: 0}
   InitialWireBoneLocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  wireRig: {fileID: 0}
-  wireIkTarget: {fileID: 266421356}
   specialAttackAimDuration: 1.5
   specialAttackShootDuration: 0.3
-  forceStraightWireByRig: 0
   attack1StrikeDistance: 3.5
   attack1MaxStepIn: 1.5
-  kamaBone: {fileID: 181976334}
-  InitialKamaBoneLocalPosition: {x: 0, y: 0, z: 0}
-  InitialKamaBoneLocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  kamaExtendLocalAxis: {x: 0, y: 1, z: 1}
-  attack2ReachExtension: 6
-  attack2ReachHoldAnimatorSpeed: 0.5
-  attack2ReachHoldDuration: 0.3
-  attack2ReachLerpDuration: 0.2
   attack2HomingRotateSpeed: 10
   attack2PullDistance: 0.6
   attack2PullDuration: 0.15
   meleeHitbox: {fileID: 1786110276}
+  armSweepHitbox: {fileID: 0}
+  groundDragSparks: {fileID: 0}
   wireChainSettings:
     bones:
     - {fileID: 408718078}
@@ -6971,48 +6899,6 @@ MonoBehaviour:
     autoDetectBoneAxis: 1
     boneLengthLocalAxis: {x: 0, y: 1, z: 0}
     applyExtension: 1
-  kamaChainSettings:
-    bones:
-    - {fileID: 1175834136}
-    - {fileID: 1685003885}
-    - {fileID: 1715417813}
-    - {fileID: 181976334}
-    - {fileID: 1374137752}
-    stiffness: 400
-    dampingRatio: 0.2
-    tipLooseness: 0.1
-    extensionDistribution:
-      serializedVersion: 2
-      m_Curve:
-      - serializedVersion: 3
-        time: 0
-        value: 0.4
-        inSlope: 0
-        outSlope: 0.6
-        tangentMode: 0
-        weightedMode: 0
-        inWeight: 0
-        outWeight: 0
-      - serializedVersion: 3
-        time: 1
-        value: 1
-        inSlope: 0.6
-        outSlope: 0
-        tangentMode: 0
-        weightedMode: 0
-        inWeight: 0
-        outWeight: 0
-      m_PreInfinity: 2
-      m_PostInfinity: 2
-      m_RotationOrder: 4
-    waveAmplitude: 8
-    waveFrequency: 2.5
-    wavePhasePerBone: 1
-    waveLocalAxis: {x: 1, y: 0, z: 0}
-    droopAngle: 0
-    autoDetectBoneAxis: 1
-    boneLengthLocalAxis: {x: 0, y: 1, z: 0}
-    applyExtension: 1
   obstacleLayer:
     serializedVersion: 2
     m_Bits: 65
@@ -7025,6 +6911,7 @@ MonoBehaviour:
   grabPullLateralOffset: 0.5
   electricEffectPrefab: {fileID: 9027514048236820043, guid: 8e1bf96441ff48241ab0f44e40d0b874, type: 3}
   grabRetractDuration: 0.4
+  grabCameraTarget: {fileID: 0}
   panicPressureSettings:
     _tenseAttackIntervalScale: 0.8
     _tenseDirectAssaultBonus: 0.15
@@ -7118,7 +7005,6 @@ Transform:
   m_Children:
   - {fileID: 1830598419}
   - {fileID: 87929257}
-  - {fileID: 1037973361}
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!4 &1591043055 stripped
@@ -7687,8 +7573,8 @@ MonoBehaviour:
   duration: 0.3
   panelSpacingX: 225
   panelSpacingY: 100
-  _canvas: {fileID: 0}
-  _raycaster: {fileID: 0}
+  _unselectedIconTint: {r: 0.6, g: 0.6, b: 0.6, a: 1}
+  _group: {fileID: 0}
   switchUI: {fileID: 1192582638}
 --- !u!114 &1750203048
 MonoBehaviour:
@@ -12448,6 +12334,8 @@ MonoBehaviour:
     scrollSpeed: 0.75
     hpBarLeftColor: {r: 0.7058824, g: 0.039215688, b: 0.121568635, a: 1}
     hpBarRightColor: {r: 0.52156866, g: 0, b: 0.043137256, a: 1}
+  _ekgArea: 0
+  _reverseHpBarGradient: 0
 --- !u!1 &7518591653073637733
 GameObject:
   m_ObjectHideFlags: 0

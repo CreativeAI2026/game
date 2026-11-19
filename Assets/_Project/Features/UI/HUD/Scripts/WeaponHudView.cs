@@ -35,7 +35,6 @@ namespace CreativeAI.UI
     ///
     /// ■ アイコンの見え方(並べ直しのたびに決める)
     ///   選択中のアイコンはそのまま、それ以外は _unselectedIconTint を掛けて暗く(薄く)する。
-    ///   4本所持のときだけ、下のパネルのアイコンを出さない。
     ///
     /// ■ 描画順(アニメーション中も毎フレーム更新)
     ///   switchUI → 常に最前面 / 選択中パネル → その直下 /
@@ -72,7 +71,6 @@ namespace CreativeAI.UI
         [Header("アイコンの見え方")]
         [Tooltip(
             "選択中以外のパネルのアイコンに掛ける色。RGB を下げると暗く、A を下げると薄くなる。"
-                + "4本所持のときの下のパネルだけはアイコンを出さない"
         )]
         [SerializeField]
         private Color _unselectedIconTint = new Color(0.6f, 0.6f, 0.6f, 1f);
@@ -291,7 +289,7 @@ namespace CreativeAI.UI
 
                 if (panel.background != null)
                     panel.background.color = slot == 0 ? lightColor : darkColor;
-                ApplyIconLook(panel, slot, count);
+                ApplyIconLook(panel, slot);
             }
 
             _layoutVersion++;
@@ -313,12 +311,9 @@ namespace CreativeAI.UI
 
         /// <summary>
         /// 選択中はそのまま、それ以外は暗く(_unselectedIconTint)する。
-        /// 4本所持のときの下のパネル(slot 2 = 選択中の真向かい)はアイコンを出さない(パネルの背景だけ残す)。
         /// </summary>
-        private void ApplyIconLook(WeaponPanel panel, int slot, int count)
+        private void ApplyIconLook(WeaponPanel panel, int slot)
         {
-            bool hidden = count == 4 && slot == 2;
-            panel.icon.enabled = panel.icon.sprite != null && !hidden;
             panel.icon.color =
                 slot == 0 ? _templateIcon.color : _templateIcon.color * _unselectedIconTint;
         }

@@ -167,11 +167,6 @@ namespace CreativeAI.Gameplay
                 // 地面・障害物に着弾したら毒付与エリアを生成
                 _hasLanded = true;
 
-                if (_landEffect != null)
-                {
-                    EffectPool.Play(_landEffect, transform.position, Quaternion.identity);
-                }
-
                 // Triggerでは法線が取れないため、移動方向にRaycastを飛ばして着弾面の法線を取得する
                 Vector3 moveDir = _rb.linearVelocity.normalized;
                 Vector3 normal = Vector3.up; // デフォルトは上向き（床）
@@ -190,6 +185,16 @@ namespace CreativeAI.Gameplay
                 {
                     normal = hit.normal;
                     spawnPos = hit.point;
+                }
+
+                if (_landEffect != null)
+                {
+                    // エフェクトは上(+Y)を面の外向きとして作ってあるので、着弾した床や壁の向きに合わせる
+                    EffectPool.Play(
+                        _landEffect,
+                        spawnPos,
+                        Quaternion.FromToRotation(Vector3.up, normal)
+                    );
                 }
 
                 SpawnPoisonArea(spawnPos, normal);

@@ -115,15 +115,15 @@ namespace CreativeAI.Gameplay
             // 投擲中の攻撃入力は捨てる(戻った直後に勝手に攻撃が出ないように)
             scythe.Input.ConsumeAttack();
 
-            AnimatorStateInfo state = scythe.Animator.GetCurrentAnimatorStateInfo(0);
-            bool isPlayingThrow = state.shortNameHash == ThrowHash;
-            bool isTransitioningToThrow =
-                scythe.Animator.IsInTransition(0)
-                && scythe.Animator.GetNextAnimatorStateInfo(0).shortNameHash == ThrowHash;
+            // 遷移中は遷移先で判定する。続けて投げた直後は、前回の Throw から移動モーションへ抜ける遷移の最中で、
+            // 現在のステートだけを見ると抜けかけの前回の Throw を「始まった」と数えてしまう。
+            // そうなると遷移が終わった時点で「イベント無しで終わった」とみなして手放し、
+            // まだ消費されていない Throw の Trigger を Exit で消すため、投げモーションが出ないまま棒立ちになる
+            bool isThrowPlaying = scythe.IsThrowAnimationPlaying();
 
             if (!_hasStartedAction)
             {
-                if (isPlayingThrow || isTransitioningToThrow)
+                if (isThrowPlaying)
                 {
                     _hasStartedAction = true;
                 }
@@ -140,7 +140,7 @@ namespace CreativeAI.Gameplay
 
             // ThrowRelease を受け取らないまま投げモーションが終わった = クリップにイベントが無い。
             // 操作不能のまま固まらないよう、ここで手放して警告する
-            if (!isPlayingThrow && !isTransitioningToThrow)
+            if (!isThrowPlaying)
             {
                 Debug.LogWarning(
                     $"[{scythe.name}] Throw で ThrowRelease イベントを受信しないままモーションが終了しました。"

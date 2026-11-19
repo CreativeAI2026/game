@@ -63,37 +63,6 @@ Transform:
   - {fileID: 6075351058713150373}
   m_Father: {fileID: 1845533431375404718}
   m_LocalEulerAnglesHint: {x: 8.110206, y: 9.420632, z: 2.2253249}
---- !u!1 &849887567194980987
-GameObject:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  serializedVersion: 6
-  m_Component:
-  - component: {fileID: 1852730803634323704}
-  m_Layer: 0
-  m_Name: WireTargetIK
-  m_TagString: Untagged
-  m_Icon: {fileID: 0}
-  m_NavMeshLayer: 0
-  m_StaticEditorFlags: 0
-  m_IsActive: 0
---- !u!4 &1852730803634323704
-Transform:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 849887567194980987}
-  serializedVersion: 2
-  m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
-  m_LocalPosition: {x: 0, y: 0, z: 0}
-  m_LocalScale: {x: 1, y: 1, z: 1}
-  m_ConstrainProportionsScale: 0
-  m_Children: []
-  m_Father: {fileID: 388581957625394431}
-  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &912831728992352082
 GameObject:
   m_ObjectHideFlags: 0
@@ -662,6 +631,37 @@ Transform:
   - {fileID: 365940938046265568}
   m_Father: {fileID: 1845533431375404718}
   m_LocalEulerAnglesHint: {x: 70.91624, y: 78.74414, z: 146.85126}
+--- !u!1 &2891262581818156712
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 2868197520633412988}
+  m_Layer: 0
+  m_Name: KamaTip
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &2868197520633412988
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2891262581818156712}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 4.184228, y: -1.9666921, z: 2.224624}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 1901832672389039962}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &2944116624955021139
 GameObject:
   m_ObjectHideFlags: 0
@@ -1628,6 +1628,7 @@ Transform:
   - {fileID: 8943795232202073966}
   - {fileID: 7827159801874638260}
   - {fileID: 613133244503355184}
+  - {fileID: 2868197520633412988}
   m_Father: {fileID: 8085733769643542715}
   m_LocalEulerAnglesHint: {x: 6.0708466, y: -4.2809453, z: -35.840317}
 --- !u!1 &7286871391853192847
@@ -1866,7 +1867,6 @@ GameObject:
   - component: {fileID: 9192815703794646151}
   - component: {fileID: 8044525322465505519}
   - component: {fileID: 6651505341501837335}
-  - component: {fileID: 2138825131943173874}
   - component: {fileID: 713255837580694372}
   - component: {fileID: 2895699084816440320}
   - component: {fileID: 1754323012212967584}
@@ -1875,6 +1875,8 @@ GameObject:
   - component: {fileID: 6489549019847874736}
   - component: {fileID: 8757089991867238868}
   - component: {fileID: 8167846719697555986}
+  - component: {fileID: 3989032024992404480}
+  - component: {fileID: 6693414882147537055}
   m_Layer: 9
   m_Name: TutorialBoss
   m_TagString: Enemy
@@ -1897,7 +1899,7 @@ Transform:
   m_Children:
   - {fileID: 3995788210570856906}
   - {fileID: 3885520623964393432}
-  - {fileID: 1852730803634323704}
+  - {fileID: 5970872714479836740}
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!95 &9192815703794646151
@@ -1973,25 +1975,16 @@ MonoBehaviour:
   wireBone: {fileID: 7802992965196024321}
   InitialWireBoneLocalPosition: {x: 0, y: 0, z: 0}
   InitialWireBoneLocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  wireRig: {fileID: 0}
-  wireIkTarget: {fileID: 1182122420749771456}
   specialAttackAimDuration: 1.5
   specialAttackShootDuration: 0.3
-  forceStraightWireByRig: 0
   attack1StrikeDistance: 3.5
   attack1MaxStepIn: 1.5
-  kamaBone: {fileID: 1901832672389039962}
-  InitialKamaBoneLocalPosition: {x: 0, y: 0, z: 0}
-  InitialKamaBoneLocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  kamaExtendLocalAxis: {x: 0, y: 1, z: 1}
-  attack2ReachExtension: 6
-  attack2ReachHoldAnimatorSpeed: 0.5
-  attack2ReachHoldDuration: 0.3
-  attack2ReachLerpDuration: 0.2
   attack2HomingRotateSpeed: 10
   attack2PullDistance: 0.6
   attack2PullDuration: 0.15
   meleeHitbox: {fileID: 3850796961752555934}
+  armSweepHitbox: {fileID: 3989032024992404480}
+  groundDragSparks: {fileID: 6693414882147537055}
   wireChainSettings:
     bones:
     - {fileID: 7433142924824284451}
@@ -2032,48 +2025,6 @@ MonoBehaviour:
     autoDetectBoneAxis: 1
     boneLengthLocalAxis: {x: 0, y: 1, z: 0}
     applyExtension: 1
-  kamaChainSettings:
-    bones:
-    - {fileID: 5530688271368477942}
-    - {fileID: 365940938046265568}
-    - {fileID: 8085733769643542715}
-    - {fileID: 1901832672389039962}
-    - {fileID: 8943795232202073966}
-    stiffness: 400
-    dampingRatio: 0.2
-    tipLooseness: 0.1
-    extensionDistribution:
-      serializedVersion: 2
-      m_Curve:
-      - serializedVersion: 3
-        time: 0
-        value: 0.4
-        inSlope: 0
-        outSlope: 0.6
-        tangentMode: 0
-        weightedMode: 0
-        inWeight: 0
-        outWeight: 0
-      - serializedVersion: 3
-        time: 1
-        value: 1
-        inSlope: 0.6
-        outSlope: 0
-        tangentMode: 0
-        weightedMode: 0
-        inWeight: 0
-        outWeight: 0
-      m_PreInfinity: 2
-      m_PostInfinity: 2
-      m_RotationOrder: 4
-    waveAmplitude: 8
-    waveFrequency: 2.5
-    wavePhasePerBone: 1
-    waveLocalAxis: {x: 1, y: 0, z: 0}
-    droopAngle: 0
-    autoDetectBoneAxis: 1
-    boneLengthLocalAxis: {x: 0, y: 1, z: 0}
-    applyExtension: 1
   obstacleLayer:
     serializedVersion: 2
     m_Bits: 65
@@ -2084,7 +2035,7 @@ MonoBehaviour:
   grabPullDuration: 0.5
   grabPullDistance: 1.5
   grabPullLateralOffset: 0.5
-  electricEffectPrefab: {fileID: 9027514048236820043, guid: 8e1bf96441ff48241ab0f44e40d0b874, type: 3}
+  electricEffectPrefab: {fileID: 8660468279805029576, guid: 76193ff0670c3d049bc7d3f55573b0f4, type: 3}
   grabRetractDuration: 0.4
   grabCameraTarget: {fileID: 3885520623964393432}
   panicPressureSettings:
@@ -2129,37 +2080,6 @@ MonoBehaviour:
     _cueLeadSeconds: 0.5
   LastHeardSoundPosition: {x: 0, y: 0, z: 0}
   LostSightTimer: 0
---- !u!114 &2138825131943173874
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 9072946834079532967}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: b64c04da6aedabf44acb9fa8e205e239, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: CreativeAI.Gameplay::CreativeAI.Gameplay.TBossAttack2Tuner
-  boss: {fileID: 6651505341501837335}
-  previewClip: {fileID: 7400000, guid: 6c724574059749f4ca38f61d5b66fb02, type: 2}
-  sampleRoot: {fileID: 3995788210570856906}
-  previewEnabled: 0
-  previewNormalizedTime: 0
-  previewExtensionProgress: 0
-  previewFlexMotion: 1
-  bladeBone: {fileID: 1901832672389039962}
-  bladeEdgeLocalDirection: {x: 0, y: 0, z: 1}
-  swingSampleDelta: 0.03
-  slowMotion: 0
-  slowMotionScale: 0.25
-  drawGizmos: 1
-  gizmoScale: 0.3
-  _capturedBones: []
-  _capturedPositions: []
-  _capturedRotations: []
-  _capturedScales: []
-  _isPreviewing: 0
 --- !u!114 &713255837580694372
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -2334,6 +2254,49 @@ MonoBehaviour:
   _holdSeconds: 0.1
   _fadeSeconds: 0.35
   _residualFadeSeconds: 0.3
+--- !u!114 &3989032024992404480
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 9072946834079532967}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 3524f60f5d5e7b24e996d080948f1500, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: CreativeAI.Gameplay::CreativeAI.Gameplay.TBossArmSweepHitbox
+  _chain:
+  - {fileID: 365940938046265568}
+  - {fileID: 8085733769643542715}
+  - {fileID: 1901832672389039962}
+  - {fileID: 2868197520633412988}
+  _radius: 0.35
+  _targetLayer:
+    serializedVersion: 2
+    m_Bits: 128
+  _enemyStatus: {fileID: 8044525322465505519}
+  _meleeMultiplier: 1
+  _hitEffect: {fileID: 1758473627833946668, guid: fe43ffc680021e449a8c86605ce01634, type: 3}
+  _hitSound: {fileID: 11400000, guid: 52f8e98fecb018048ac37faba34ed615, type: 2}
+--- !u!114 &6693414882147537055
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 9072946834079532967}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: acd85bb200cfad64fbeea4edb9b18328, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: CreativeAI.Gameplay::CreativeAI.Gameplay.TBossGroundDragSparks
+  _tip: {fileID: 2868197520633412988}
+  _sparks: {fileID: 3595953720496038154}
+  _groundLayer:
+    serializedVersion: 2
+    m_Bits: 73
+  _impactBurstCount: 40
 --- !u!1 &9182639161629794582
 GameObject:
   m_ObjectHideFlags: 0
@@ -2368,3 +2331,70 @@ Transform:
   - {fileID: 7346369552276977379}
   m_Father: {fileID: 5415504423386113891}
   m_LocalEulerAnglesHint: {x: 7.830994, y: -49.978745, z: 2.9968157}
+--- !u!1001 &1378193587898586720
+PrefabInstance:
+  m_ObjectHideFlags: 0
+  serializedVersion: 2
+  m_Modification:
+    serializedVersion: 3
+    m_TransformParent: {fileID: 388581957625394431}
+    m_Modifications:
+    - target: {fileID: 4754849980497135652, guid: a8eb89867a2368a48ac2424bd78d1ee5, type: 3}
+      propertyPath: m_LocalPosition.x
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 4754849980497135652, guid: a8eb89867a2368a48ac2424bd78d1ee5, type: 3}
+      propertyPath: m_LocalPosition.y
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 4754849980497135652, guid: a8eb89867a2368a48ac2424bd78d1ee5, type: 3}
+      propertyPath: m_LocalPosition.z
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 4754849980497135652, guid: a8eb89867a2368a48ac2424bd78d1ee5, type: 3}
+      propertyPath: m_LocalRotation.w
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 4754849980497135652, guid: a8eb89867a2368a48ac2424bd78d1ee5, type: 3}
+      propertyPath: m_LocalRotation.x
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 4754849980497135652, guid: a8eb89867a2368a48ac2424bd78d1ee5, type: 3}
+      propertyPath: m_LocalRotation.y
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 4754849980497135652, guid: a8eb89867a2368a48ac2424bd78d1ee5, type: 3}
+      propertyPath: m_LocalRotation.z
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 4754849980497135652, guid: a8eb89867a2368a48ac2424bd78d1ee5, type: 3}
+      propertyPath: m_LocalEulerAnglesHint.x
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 4754849980497135652, guid: a8eb89867a2368a48ac2424bd78d1ee5, type: 3}
+      propertyPath: m_LocalEulerAnglesHint.y
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 4754849980497135652, guid: a8eb89867a2368a48ac2424bd78d1ee5, type: 3}
+      propertyPath: m_LocalEulerAnglesHint.z
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 4895930341509797539, guid: a8eb89867a2368a48ac2424bd78d1ee5, type: 3}
+      propertyPath: m_Name
+      value: KamaGroundSparks
+      objectReference: {fileID: 0}
+    m_RemovedComponents: []
+    m_RemovedGameObjects: []
+    m_AddedGameObjects: []
+    m_AddedComponents: []
+  m_SourcePrefab: {fileID: 100100000, guid: a8eb89867a2368a48ac2424bd78d1ee5, type: 3}
+--- !u!198 &3595953720496038154 stripped
+ParticleSystem:
+  m_CorrespondingSourceObject: {fileID: 2506032325759055722, guid: a8eb89867a2368a48ac2424bd78d1ee5, type: 3}
+  m_PrefabInstance: {fileID: 1378193587898586720}
+  m_PrefabAsset: {fileID: 0}
+--- !u!4 &5970872714479836740 stripped
+Transform:
+  m_CorrespondingSourceObject: {fileID: 4754849980497135652, guid: a8eb89867a2368a48ac2424bd78d1ee5, type: 3}
+  m_PrefabInstance: {fileID: 1378193587898586720}
+  m_PrefabAsset: {fileID: 0}

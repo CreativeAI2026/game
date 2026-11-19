@@ -90,11 +90,6 @@ namespace CreativeAI.Gameplay
                 boss.Animator.SetTrigger(SpecialAttackTriggerHash);
             }
 
-            if (boss.WireRig != null)
-            {
-                boss.WireRig.weight = 0f;
-            }
-
             if (boss.WireBone != null)
             {
                 // 直前の攻撃で上書きされた姿勢ではなく、Awakeで保存した本来の初期姿勢を復元先とする
@@ -103,11 +98,6 @@ namespace CreativeAI.Gameplay
             else
             {
                 Debug.LogWarning("[TutorialBoss] WireBone が未設定です。");
-            }
-
-            if (boss.ForceStraightWireByRig && boss.WireRig != null)
-            {
-                boss.WireRig.weight = 1f;
             }
 
             // 前回の攻撃で残ったバネの速度・姿勢を破棄し、開始フレームのガクつきを防ぐ
@@ -211,11 +201,6 @@ namespace CreativeAI.Gameplay
             {
                 boss.Animator.speed = 1f;
             }
-
-            if (boss.WireRig != null)
-            {
-                boss.WireRig.weight = 0f;
-            }
         }
 
         public void OnPoseReady()
@@ -279,21 +264,8 @@ namespace CreativeAI.Gameplay
                 Quaternion.FromToRotation(Vector3.up, forward)
                 * Quaternion.Euler(noiseX, 0f, noiseZ);
 
-            if (boss.ForceStraightWireByRig)
-            {
-                if (boss.WireIkTarget != null)
-                {
-                    // IKターゲットを真正面に移動させてRig(Position Constraint)に引っ張らせる
-                    boss.WireIkTarget.position = originPos + forward * currentLength;
-                }
-                // 回転はスクリプトで直接真正面に補正し、アニメーションのねじれを打ち消す
-                boss.WireBone.rotation = finalRot;
-            }
-            else
-            {
-                // スクリプトで強制的にワールド座標系で位置と回転を真正面に上書きする
-                boss.WireBone.SetPositionAndRotation(originPos + forward * currentLength, finalRot);
-            }
+            // ワールド座標系で位置と回転を真正面に上書きする
+            boss.WireBone.SetPositionAndRotation(originPos + forward * currentLength, finalRot);
         }
 
         private void UpdateAimPhase()

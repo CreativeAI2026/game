@@ -79,7 +79,7 @@ namespace CreativeAI.Gameplay
         [Header("軌跡")]
         [Tooltip(
             "飛行中の軌跡(子のパーティクルごと再生する)。投げた瞬間に再生し、受け取りで消す。"
-                + "Tools/CreativeAI/VFX/鎌の投擲軌跡を生成 で作られる"
+                + "刃先(回転軸から最も遠い点)に置いた ThrowTrail を割り当てる"
         )]
         [SerializeField]
         private ParticleSystem _trail;
@@ -99,6 +99,7 @@ namespace CreativeAI.Gameplay
 
         private PlayerMeleeHitbox _hitbox;
         private LoopingSound _flightLoop;
+        private MeshRenderer[] _modelRenderers;
         private Phase _phase = Phase.Idle;
         private Vector3 _direction;
         private float _traveled;
@@ -116,8 +117,12 @@ namespace CreativeAI.Gameplay
         {
             _hitbox = GetComponent<PlayerMeleeHitbox>();
             _flightLoop = new LoopingSound(gameObject);
+            _modelRenderers = GetComponentsInChildren<MeshRenderer>(true);
             Assert.IsNotNull(_spinRoot, $"{name}: 回転させるモデル(_spinRoot)が未設定です");
             Assert.IsNotNull(_trail, $"{name}: 軌跡(_trail)が未設定です");
+
+            SetModelVisible(false);
+            _trail.Stop(true, ParticleSystemStopBehavior.StopEmittingAndClear);
         }
 
         /// <summary>
@@ -126,32 +131,87 @@ namespace CreativeAI.Gameplay
         /// </summary>
         public void SetOwner(PlayerStatus owner) => _hitbox.SetOwner(owner);
 
+        /// <param name="safePoint">
+        /// 障害物の手前側にあることが確実な点(プレイヤーの軸上など)。ここから <paramref name="origin"/> までに
+        /// 障害物があれば、その手前から飛び始めてすぐ折り返す。
+        /// </param>
         /// <param name="origin">投げ始めの位置。</param>
         /// <param name="direction">行きの進行方向(正規化済み)。</param>
         /// <param name="returnTarget">戻り先。移動する手元を毎フレーム追う。</param>
-        public void Launch(Vector3 origin, Vector3 direction, Transform returnTarget)
+        public void Launch(
+            Vector3 safePoint,
+            Vector3 origin,
+            Vector3 direction,
+            Transform returnTarget
+        )
         {
-            transform.SetPositionAndRotation(origin, Quaternion.LookRotation(direction));
+            // SphereCast は始点で重なっている障害物を検出しないため、手元が壁にめり込んだ位置から
+            // 飛ばすと壁をすり抜ける。壁の手前側から手元までの間を先に調べておく
+            bool isOriginBlocked = TryFindObstacleBetween(
+                safePoint,
+                origin,
+                out Vector3 blockedPoint
+            );
+            Vector3 startPosition = isOriginBlocked ? blockedPoint : origin;
+
+            // 前回の残像が古い位置から繋がらないようクリアしてから新しい位置へ移す
+            _trail.Stop(true, ParticleSystemStopBehavior.StopEmittingAndClear);
+            transform.SetPositionAndRotation(startPosition, Quaternion.LookRotation(direction));
             _direction = direction;
             _returnTarget = returnTarget;
             _traveled = 0f;
             _phase = Phase.Outbound;
 
-            gameObject.SetActive(true);
+            SetModelVisible(true);
             _trail.Play(true);
             _hitbox.EnableHitbox();
             _flightLoop.Play(_flightLoopSound, this);
+
+            if (isOriginBlocked)
+                BounceOffObstacle();
+        }
+
+        /// <summary>
+        /// <paramref name="from"/> から <paramref name="to"/> までに障害物があれば、ぶつかる直前の位置を返す。
+        /// </summary>
+        private bool TryFindObstacleBetween(Vector3 from, Vector3 to, out Vector3 blockedPoint)
+        {
+            Vector3 offset = to - from;
+            float distance = offset.magnitude;
+            blockedPoint = to;
+            if (distance <= Mathf.Epsilon)
+                return false;
+
+            Vector3 direction = offset / distance;
+            if (
+                !Physics.SphereCast(
+                    from,
+                    _obstacleProbeRadius,
+                    direction,
+                    out RaycastHit hit,
+                    distance,
+                    _obstacleLayer,
+                    QueryTriggerInteraction.Ignore
+                )
+            )
+                return false;
+
+            blockedPoint = from + direction * hit.distance;
+            return true;
         }
 
         /// <summary>飛行中なら即座に受け取り扱いにする(武器切替・破棄時の後始末用)。</summary>
         public void ForceCatch()
         {
             if (IsFlying)
-                Catch();
+                Catch(clearTrailImmediately: true);
         }
 
         private void Update()
         {
+            if (!IsFlying)
+                return;
+
             switch (_phase)
             {
                 case Phase.Outbound:
@@ -162,7 +222,8 @@ namespace CreativeAI.Gameplay
                     break;
             }
 
-            _spinRoot.Rotate(_spinAxis, _spinSpeed * Time.deltaTime, Space.Self);
+            if (IsFlying)
+                _spinRoot.Rotate(_spinAxis, _spinSpeed * Time.deltaTime, Space.Self);
         }
 
         private void UpdateOutbound()
@@ -183,8 +244,7 @@ namespace CreativeAI.Gameplay
             );
             if (hitObstacle)
             {
-                WorldSoundPlayer.Play(_obstacleHitSound, transform.position, this);
-                BeginReturn();
+                BounceOffObstacle();
                 return;
             }
 
@@ -220,6 +280,12 @@ namespace CreativeAI.Gameplay
             }
         }
 
+        private void BounceOffObstacle()
+        {
+            WorldSoundPlayer.Play(_obstacleHitSound, transform.position, this);
+            BeginReturn();
+        }
+
         private void BeginReturn()
         {
             _phase = Phase.Returning;
@@ -228,16 +294,27 @@ namespace CreativeAI.Gameplay
             _hitbox.EnableHitbox();
         }
 
-        private void Catch()
+        private void Catch(bool clearTrailImmediately = false)
         {
             _phase = Phase.Idle;
             _hitbox.DisableHitbox();
-            // 停止したまま非表示にしておき、次に投げた瞬間に前回の粒が残っていないようにする
-            _trail.Stop(true, ParticleSystemStopBehavior.StopEmittingAndClear);
-            // すぐ非表示にするのでフェードは進まない。鳴りかけのまま残らないよう即座に止める
+            // GameObject ごと非アクティブにすると残っている軌跡まで一瞬で消えるため、
+            // 鎌のメッシュだけを隠して放出を止め、残った軌跡は寿命で自然に消えさせる
+            SetModelVisible(false);
+            _trail.Stop(
+                true,
+                clearTrailImmediately
+                    ? ParticleSystemStopBehavior.StopEmittingAndClear
+                    : ParticleSystemStopBehavior.StopEmitting
+            );
             _flightLoop.StopImmediately();
-            gameObject.SetActive(false);
             Caught?.Invoke();
+        }
+
+        private void SetModelVisible(bool visible)
+        {
+            foreach (MeshRenderer renderer in _modelRenderers)
+                renderer.enabled = visible;
         }
     }
 }

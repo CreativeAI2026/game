@@ -498,7 +498,7 @@
                 {
                     "name": "",
                     "id": "35b87e88-1cd1-4b79-82d4-b5e9c8664027",
-                    "path": "<Keyboard>/i",
+                    "path": "<Keyboard>/b",
                     "interactions": "",
                     "processors": "",
                     "groups": "KeyboardMouse",
@@ -514,6 +514,17 @@
                     "processors": "",
                     "groups": "Gamepad",
                     "action": "Inventory",
+                    "isComposite": false,
+                    "isPartOfComposite": false
+                },
+                {
+                    "name": "",
+                    "id": "3f6a0676-a396-415b-8a31-05825a211f70",
+                    "path": "<Keyboard>/p",
+                    "interactions": "",
+                    "processors": "",
+                    "groups": ";KeyboardMouse",
+                    "action": "Save",
                     "isComposite": false,
                     "isPartOfComposite": false
                 },

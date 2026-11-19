@@ -14,7 +14,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: SoundKit::SoundKit.SoundCue
   _clips:
   - {fileID: 8300000, guid: e2508da733bd5f34f8e18403f2eeab78, type: 3}
-  _volume: 1
+  _volume: 0.1
   _loudnessOffsetDb: 0
   _allowClipping: 0
   _pitchVariation: 0

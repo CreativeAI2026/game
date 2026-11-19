@@ -32,13 +32,12 @@ namespace CreativeAI.Gameplay
         public override void Enter()
         {
             sword.ReleaseControlLocks();
-            sword.GuardHitCount = 0;
-            sword.SetMockPose(MockWeaponPoseKey.Idle);
         }
 
         public override void Update()
         {
-            if (sword.Input.subAction)
+            // 防御が割れた後は、メーターが一定量戻るまで構えられない
+            if (sword.Input.subAction && !sword.GuardGauge.IsBroken(Time.time))
             {
                 sword.ChangeState(new SwordStateGuard(sword));
                 return;
@@ -66,16 +65,15 @@ namespace CreativeAI.Gameplay
             sword.LockControls();
             sword.Animator.SetBool(PlayerAnimatorParams.IsGuarding, true);
 
-            sword.GuardHitCount = 0;
-
-            sword.SetMockPose(MockWeaponPoseKey.Guard);
+            sword.GuardGauge.BeginGuard(Time.time);
         }
 
         public override void Update()
         {
             sword.Input.ConsumeAttack();
 
-            if (!sword.Input.subAction)
+            // 割れたのに怯めなかった場合(掴まれ中など)も、構えたまま残さない
+            if (!sword.Input.subAction || sword.GuardGauge.IsBroken(Time.time))
             {
                 sword.ChangeState(new SwordStateFree(sword));
             }
@@ -84,8 +82,7 @@ namespace CreativeAI.Gameplay
         public override void Exit()
         {
             sword.Animator.SetBool(PlayerAnimatorParams.IsGuarding, false);
-
-            sword.SetMockPose(MockWeaponPoseKey.Idle);
+            sword.GuardGauge.EndGuard(Time.time);
         }
     }
 
@@ -110,7 +107,6 @@ namespace CreativeAI.Gameplay
         {
             sword.LockControls();
 
-            sword.SetMockPose(MockWeaponPoseKey.Attack);
             sword.StartAnimatorAction(PlayerAnimatorParams.Parry);
 
             _requestTime = Time.time;
@@ -189,11 +185,6 @@ namespace CreativeAI.Gameplay
                 sword.ReturnAnimatorToLocomotion();
                 sword.ChangeState(new SwordStateFree(sword));
             }
-        }
-
-        public override void Exit()
-        {
-            sword.SetMockPose(MockWeaponPoseKey.Idle);
         }
     }
 }
