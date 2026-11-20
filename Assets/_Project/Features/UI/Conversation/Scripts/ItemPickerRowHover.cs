@@ -5,7 +5,7 @@ using UnityEngine.EventSystems;
 namespace CreativeAI.UI
 {
     /// <summary>
-    /// 持ち物ピッカーの行にマウスが乗ったことを知らせる。EventTrigger はスクロールやドラッグまで受け取って
+    /// 持ち物ピッカーのマス・ボタンにマウスが乗ったことを知らせる。EventTrigger はスクロールやドラッグまで受け取って
     /// 親の ScrollRect に届かなくしてしまうため、乗ったときだけを受ける専用の部品にしている。
     /// </summary>
     internal sealed class ItemPickerRowHover : MonoBehaviour, IPointerEnterHandler

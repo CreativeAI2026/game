@@ -7,34 +7,42 @@ using UnityEngine.UI;
 namespace CreativeAI.UI
 {
     /// <summary>
-    /// useItem の持ち物ピッカー。持ち物の一覧(アイコン・名前・所持数)と「やめる」を、実行時にコードで組んだ
-    /// スクロール付きのパネルとして出す。Prefab は持たない。選択はマウスと、上下 + 決定 / キャンセルの入力。
+    /// useItem の持ち物ピッカー。持ち物をアイコンのグリッドで並べ、選択中の名前と所持数を下に出し、「やめる」を置く。
+    /// 実行時にコードで組む(Prefab は持たない)。選択はマウスと、上下左右 + 決定 / キャンセルの入力。
     /// </summary>
     internal sealed class DialogueItemPickerPresenter
     {
         private const float PanelWidth = 640f;
-        private const float PanelHeight = 600f;
+        private const float PanelHeight = 640f;
         private const float Padding = 24f;
+        private const float Gap = 12f;
         private const float PromptHeight = 64f;
-        private const float RowHeight = 64f;
-        private const float RowSpacing = 8f;
-        private const float ViewportHeight = PanelHeight - Padding * 3f - PromptHeight;
-        private const float IconSize = 48f;
+        private const float NameHeight = 40f;
+        private const float CancelHeight = 56f;
+        private const float CellSize = 120f;
+        private const float CellSpacing = 12f;
+        private const int Columns = 4;
+        private const float ViewportHeight =
+            PanelHeight - Padding * 2f - PromptHeight - Gap * 3f - NameHeight - CancelHeight;
         private const string DefaultPrompt = "何を使う?";
         private const string CancelLabel = "やめる";
 
         private static readonly Color DimColor = new(0f, 0f, 0f, 0.5f);
         private static readonly Color PanelColor = new(0.05f, 0.07f, 0.1f, 0.92f);
-        private static readonly Color RowColor = new(1f, 1f, 1f, 0.1f);
-        private static readonly Color RowFocusColor = new(0.55f, 0.75f, 1f, 0.4f);
+        private static readonly Color CellColor = new(1f, 1f, 1f, 0.1f);
+        private static readonly Color CellFocusColor = new(0.55f, 0.75f, 1f, 0.4f);
 
         private readonly Transform _parent;
         private readonly TMP_FontAsset _font;
-        private readonly List<Image> _rowBackgrounds = new();
-        private readonly List<Action> _rowActions = new();
+        private readonly List<Image> _backgrounds = new(); // 添字は ItemPickerGridNavigation と同じ(最後が「やめる」)
+        private readonly List<Action> _actions = new();
+        private readonly List<string> _names = new(); // 持ち物ごとの「名前 ×所持数」。「やめる」は含めない
         private GameObject _root;
         private RectTransform _contentRect;
+        private TMP_Text _nameText;
         private int _selectedIndex = -1;
+
+        private int ItemCount => _names.Count;
 
         public DialogueItemPickerPresenter(Transform parent, TMP_FontAsset font)
         {
@@ -62,53 +70,9 @@ namespace CreativeAI.UI
             Anchor(panel.GetComponent<RectTransform>(), new Vector2(PanelWidth, PanelHeight));
             panel.AddComponent<Image>().color = PanelColor;
 
-            var promptText = CreateText(
-                "Prompt",
-                panel.transform,
-                string.IsNullOrWhiteSpace(prompt) ? DefaultPrompt : prompt,
-                30f,
-                TextAlignmentOptions.MidlineLeft
-            );
-            var promptRect = promptText.rectTransform;
-            promptRect.anchorMin = new Vector2(0f, 1f);
-            promptRect.anchorMax = new Vector2(1f, 1f);
-            promptRect.pivot = new Vector2(0.5f, 1f);
-            promptRect.offsetMin = new Vector2(Padding, -Padding - PromptHeight);
-            promptRect.offsetMax = new Vector2(-Padding, -Padding);
-
-            var viewport = CreateRect("Viewport", panel.transform);
-            var viewportRect = viewport.GetComponent<RectTransform>();
-            viewportRect.anchorMin = Vector2.zero;
-            viewportRect.anchorMax = Vector2.one;
-            viewportRect.offsetMin = new Vector2(Padding, Padding);
-            viewportRect.offsetMax = new Vector2(-Padding, -Padding * 2f - PromptHeight);
-            viewport.AddComponent<RectMask2D>();
-
-            var content = CreateRect("Content", viewport.transform);
-            var contentRect = content.GetComponent<RectTransform>();
-            contentRect.anchorMin = new Vector2(0f, 1f);
-            contentRect.anchorMax = new Vector2(1f, 1f);
-            contentRect.pivot = new Vector2(0.5f, 1f);
-            contentRect.anchoredPosition = Vector2.zero;
-            contentRect.sizeDelta = Vector2.zero;
-            var layout = content.AddComponent<VerticalLayoutGroup>();
-            layout.spacing = RowSpacing;
-            layout.childControlWidth = true;
-            layout.childControlHeight = true;
-            layout.childForceExpandWidth = true;
-            layout.childForceExpandHeight = false;
-            content.AddComponent<ContentSizeFitter>().verticalFit = ContentSizeFitter
-                .FitMode
-                .PreferredSize;
-
-            _contentRect = contentRect;
-            var scroll = panel.AddComponent<ScrollRect>();
-            scroll.viewport = viewportRect;
-            scroll.content = contentRect;
-            scroll.horizontal = false;
-            scroll.vertical = true;
-            scroll.movementType = ScrollRect.MovementType.Clamped;
-            scroll.scrollSensitivity = 30f;
+            BuildPrompt(panel.transform, prompt);
+            var content = BuildScrollArea(panel);
+            _nameText = BuildNameText(panel.transform);
 
             // 呼び出し元の再入を防ぐ: 一度選んだら以降の選択は無視する。
             bool picked = false;
@@ -123,38 +87,28 @@ namespace CreativeAI.UI
             foreach (var entry in entries ?? Array.Empty<ItemPickerEntries.Entry>())
             {
                 var captured = entry;
-                AddRow(
-                    content.transform,
-                    captured.Icon,
-                    $"{captured.Name}  ×{captured.Count}",
-                    () => Pick(captured.ItemKey)
-                );
+                AddCell(content, captured, () => Pick(captured.ItemKey));
             }
-            AddRow(content.transform, null, CancelLabel, () => Pick(null));
+            AddCancel(panel.transform, () => Pick(null));
 
             Select(0);
         }
 
-        /// <summary>上下で選択を動かし、決定で選び、キャンセルで「やめる」を選ぶ。毎フレーム呼ぶ。</summary>
+        /// <summary>上下左右で選択を動かし、決定で選び、キャンセルで「やめる」を選ぶ。毎フレーム呼ぶ。</summary>
         public void HandleKeyboardInput()
         {
-            if (_root == null || _rowActions.Count == 0)
+            if (_root == null || _actions.Count == 0)
                 return;
 
             if (UiInputActionMap.WasCancelPressedThisFrame())
             {
-                _rowActions[^1].Invoke();
+                _actions[^1].Invoke();
                 return;
             }
             if (UiInputActionMap.TryReadDiscreteMove(out Vector2Int step))
-            {
-                if (step.y > 0)
-                    Select(Mathf.Max(0, _selectedIndex - 1));
-                else if (step.y < 0)
-                    Select(Mathf.Min(_rowActions.Count - 1, _selectedIndex + 1));
-            }
+                Select(ItemPickerGridNavigation.Move(_selectedIndex, step, ItemCount, Columns));
             if (UiInputActionMap.WasSubmitPressedThisFrame() && _selectedIndex >= 0)
-                _rowActions[_selectedIndex].Invoke();
+                _actions[_selectedIndex].Invoke();
         }
 
         /// <summary>パネルを片付ける。</summary>
@@ -164,71 +118,192 @@ namespace CreativeAI.UI
                 UnityEngine.Object.Destroy(_root);
             _root = null;
             _contentRect = null;
-            _rowBackgrounds.Clear();
-            _rowActions.Clear();
+            _nameText = null;
+            _backgrounds.Clear();
+            _actions.Clear();
+            _names.Clear();
             _selectedIndex = -1;
         }
 
-        private void AddRow(Transform parent, Sprite icon, string label, Action onClick)
+        private void BuildPrompt(Transform panel, string prompt)
         {
-            int index = _rowActions.Count;
-            var row = CreateRect($"Row{index}", parent);
-            var background = row.AddComponent<Image>();
-            background.color = RowColor;
-            row.AddComponent<LayoutElement>().preferredHeight = RowHeight;
+            var promptText = CreateText(
+                "Prompt",
+                panel,
+                string.IsNullOrWhiteSpace(prompt) ? DefaultPrompt : prompt,
+                30f,
+                TextAlignmentOptions.MidlineLeft
+            );
+            var rect = promptText.rectTransform;
+            rect.anchorMin = new Vector2(0f, 1f);
+            rect.anchorMax = new Vector2(1f, 1f);
+            rect.pivot = new Vector2(0.5f, 1f);
+            rect.offsetMin = new Vector2(Padding, -Padding - PromptHeight);
+            rect.offsetMax = new Vector2(-Padding, -Padding);
+        }
 
-            var button = row.AddComponent<Button>();
+        // グリッドを入れるスクロール領域を組み、グリッドの親(Content)を返す。
+        private Transform BuildScrollArea(GameObject panel)
+        {
+            var viewport = CreateRect("Viewport", panel.transform);
+            var viewportRect = viewport.GetComponent<RectTransform>();
+            viewportRect.anchorMin = new Vector2(0f, 1f);
+            viewportRect.anchorMax = new Vector2(1f, 1f);
+            viewportRect.pivot = new Vector2(0.5f, 1f);
+            viewportRect.offsetMin = new Vector2(
+                Padding,
+                -(Padding + PromptHeight + Gap + ViewportHeight)
+            );
+            viewportRect.offsetMax = new Vector2(-Padding, -(Padding + PromptHeight + Gap));
+            viewport.AddComponent<RectMask2D>();
+
+            var content = CreateRect("Content", viewport.transform);
+            var contentRect = content.GetComponent<RectTransform>();
+            contentRect.anchorMin = new Vector2(0f, 1f);
+            contentRect.anchorMax = new Vector2(1f, 1f);
+            contentRect.pivot = new Vector2(0.5f, 1f);
+            contentRect.anchoredPosition = Vector2.zero;
+            contentRect.sizeDelta = Vector2.zero;
+            var grid = content.AddComponent<GridLayoutGroup>();
+            grid.cellSize = new Vector2(CellSize, CellSize);
+            grid.spacing = new Vector2(CellSpacing, CellSpacing);
+            grid.startCorner = GridLayoutGroup.Corner.UpperLeft;
+            grid.startAxis = GridLayoutGroup.Axis.Horizontal;
+            grid.childAlignment = TextAnchor.UpperCenter;
+            grid.constraint = GridLayoutGroup.Constraint.FixedColumnCount;
+            grid.constraintCount = Columns;
+            content.AddComponent<ContentSizeFitter>().verticalFit = ContentSizeFitter
+                .FitMode
+                .PreferredSize;
+
+            _contentRect = contentRect;
+            var scroll = panel.AddComponent<ScrollRect>();
+            scroll.viewport = viewportRect;
+            scroll.content = contentRect;
+            scroll.horizontal = false;
+            scroll.vertical = true;
+            scroll.movementType = ScrollRect.MovementType.Clamped;
+            scroll.scrollSensitivity = 30f;
+            return content.transform;
+        }
+
+        // グリッドの下に、選択中の持ち物の名前と所持数を出す欄。
+        private TMP_Text BuildNameText(Transform panel)
+        {
+            var text = CreateText("Name", panel, string.Empty, 28f, TextAlignmentOptions.Center);
+            var rect = text.rectTransform;
+            rect.anchorMin = new Vector2(0f, 0f);
+            rect.anchorMax = new Vector2(1f, 0f);
+            rect.pivot = new Vector2(0.5f, 0f);
+            rect.offsetMin = new Vector2(Padding, Padding + CancelHeight + Gap);
+            rect.offsetMax = new Vector2(-Padding, Padding + CancelHeight + Gap + NameHeight);
+            return text;
+        }
+
+        private void AddCell(Transform parent, ItemPickerEntries.Entry entry, Action onClick)
+        {
+            var cell = CreateRect($"Cell{_actions.Count}", parent);
+            var background = SetUpButton(cell, onClick);
+
+            if (entry.Icon != null)
+            {
+                var iconObject = CreateRect("Icon", cell.transform);
+                Stretch(iconObject.GetComponent<RectTransform>());
+                iconObject.GetComponent<RectTransform>().offsetMin = new Vector2(12f, 12f);
+                iconObject.GetComponent<RectTransform>().offsetMax = new Vector2(-12f, -12f);
+                var image = iconObject.AddComponent<Image>();
+                image.sprite = entry.Icon;
+                image.preserveAspect = true;
+                image.raycastTarget = false;
+            }
+            else
+            {
+                // 絵の無いアイテムは、マスの中に名前を出して見分けられるようにする。
+                var fallback = CreateText(
+                    "NameFallback",
+                    cell.transform,
+                    entry.Name,
+                    20f,
+                    TextAlignmentOptions.Center
+                );
+                Stretch(fallback.rectTransform);
+            }
+
+            if (entry.Count > 1)
+            {
+                var count = CreateText(
+                    "Count",
+                    cell.transform,
+                    $"×{entry.Count}",
+                    22f,
+                    TextAlignmentOptions.BottomRight
+                );
+                Stretch(count.rectTransform);
+                count.rectTransform.offsetMin = new Vector2(6f, 4f);
+                count.rectTransform.offsetMax = new Vector2(-8f, 0f);
+            }
+
+            _names.Add($"{entry.Name}  ×{entry.Count}");
+            _backgrounds.Add(background);
+            _actions.Add(onClick);
+        }
+
+        private void AddCancel(Transform panel, Action onClick)
+        {
+            var button = CreateRect("Cancel", panel);
+            var rect = button.GetComponent<RectTransform>();
+            rect.anchorMin = new Vector2(0f, 0f);
+            rect.anchorMax = new Vector2(1f, 0f);
+            rect.pivot = new Vector2(0.5f, 0f);
+            rect.offsetMin = new Vector2(Padding, Padding);
+            rect.offsetMax = new Vector2(-Padding, Padding + CancelHeight);
+            var background = SetUpButton(button, onClick);
+
+            var label = CreateText(
+                "Label",
+                button.transform,
+                CancelLabel,
+                28f,
+                TextAlignmentOptions.Center
+            );
+            Stretch(label.rectTransform);
+
+            _backgrounds.Add(background);
+            _actions.Add(onClick);
+        }
+
+        // マス / 「やめる」に共通の、背景・クリック・マウスホバーの設定。背景の Image を返す。
+        private Image SetUpButton(GameObject target, Action onClick)
+        {
+            int index = _actions.Count;
+            var background = target.AddComponent<Image>();
+            background.color = CellColor;
+
+            var button = target.AddComponent<Button>();
             button.transition = Selectable.Transition.None;
             button.targetGraphic = background;
             button.onClick.AddListener(() => onClick());
 
-            // マウスを乗せたら、その行を選択する(キーボードの選択と同じ見た目にそろえる)。
-            // 色だけ変える。スクロール位置は動かさない(動かすと、止めたマウスの下に別の行が来て連鎖する)。
-            row.AddComponent<ItemPickerRowHover>().Configure(() => Select(index, false));
-
-            float textLeft = Padding / 2f;
-            if (icon != null)
-            {
-                var iconObject = CreateRect("Icon", row.transform);
-                var iconRect = iconObject.GetComponent<RectTransform>();
-                iconRect.anchorMin = iconRect.anchorMax = new Vector2(0f, 0.5f);
-                iconRect.pivot = new Vector2(0f, 0.5f);
-                iconRect.anchoredPosition = new Vector2(Padding / 2f, 0f);
-                iconRect.sizeDelta = new Vector2(IconSize, IconSize);
-                var image = iconObject.AddComponent<Image>();
-                image.sprite = icon;
-                image.preserveAspect = true;
-                image.raycastTarget = false;
-                textLeft += IconSize + Padding / 2f;
-            }
-
-            var text = CreateText(
-                "Label",
-                row.transform,
-                label,
-                28f,
-                TextAlignmentOptions.MidlineLeft
-            );
-            Stretch(text.rectTransform);
-            text.rectTransform.offsetMin = new Vector2(textLeft, 0f);
-            text.rectTransform.offsetMax = new Vector2(-Padding / 2f, 0f);
-
-            _rowBackgrounds.Add(background);
-            _rowActions.Add(onClick);
+            // マウスを乗せたら、その位置を選択する(キーボードの選択と同じ見た目にそろえる)。
+            // 色と名前だけ変える。スクロール位置は動かさない(動かすと、止めたマウスの下に別のマスが来て連鎖する)。
+            target.AddComponent<ItemPickerRowHover>().Configure(() => Select(index, false));
+            return background;
         }
 
-        // 選択行を変える。scroll が true のときだけ、選んだ行が見える範囲に入るよう最小限スクロールする
-        // (キーボード用。マウスのホバーでは色だけ変える)。
+        // 選択位置を変える。scroll が true のときだけ、選んだマスが見える範囲に入るよう最小限スクロールする
+        // (キーボード用。マウスのホバーでは色と名前だけ変える)。
         private void Select(int index, bool scroll = true)
         {
-            if (_rowBackgrounds.Count == 0)
+            if (_backgrounds.Count == 0)
                 return;
-            index = Mathf.Clamp(index, 0, _rowBackgrounds.Count - 1);
+            index = Mathf.Clamp(index, 0, _backgrounds.Count - 1);
             _selectedIndex = index;
-            for (int i = 0; i < _rowBackgrounds.Count; i++)
-                _rowBackgrounds[i].color = i == index ? RowFocusColor : RowColor;
+            for (int i = 0; i < _backgrounds.Count; i++)
+                _backgrounds[i].color = i == index ? CellFocusColor : CellColor;
+            if (_nameText != null)
+                _nameText.text = index < ItemCount ? _names[index] : string.Empty;
 
-            if (scroll)
+            if (scroll && index < ItemCount)
                 ScrollToKeepVisible(index);
         }
 
@@ -237,10 +312,11 @@ namespace CreativeAI.UI
             if (_contentRect == null)
                 return;
 
-            float pitch = RowHeight + RowSpacing;
-            float rowTop = index * pitch;
-            float rowBottom = rowTop + RowHeight;
-            float contentHeight = _rowBackgrounds.Count * pitch - RowSpacing;
+            float pitch = CellSize + CellSpacing;
+            int rows = (ItemCount + Columns - 1) / Columns;
+            float rowTop = index / Columns * pitch;
+            float rowBottom = rowTop + CellSize;
+            float contentHeight = rows * pitch - CellSpacing;
             float maxOffset = Mathf.Max(0f, contentHeight - ViewportHeight);
 
             // Content は上端基準で、anchoredPosition.y が下へスクロールした量になる。
