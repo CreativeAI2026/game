@@ -26,6 +26,7 @@ namespace CreativeAI.UI
             PanelHeight - Padding * 2f - PromptHeight - Gap * 3f - NameHeight - CancelHeight;
         private const string DefaultPrompt = "何を使う?";
         private const string CancelLabel = "やめる";
+        private const string ControlGuide = "SELECT   ARROWS     CONFIRM   ENTER     CANCEL   ESC";
 
         private static readonly Color DimColor = new(0f, 0f, 0f, 0.5f);
         private static readonly Color PanelColor = new(0.05f, 0.07f, 0.1f, 0.92f);
@@ -73,6 +74,7 @@ namespace CreativeAI.UI
             BuildPrompt(panel.transform, prompt);
             var content = BuildScrollArea(panel);
             _nameText = BuildNameText(panel.transform);
+            BuildControlGuide(panel.transform);
 
             // 呼び出し元の再入を防ぐ: 一度選んだら以降の選択は無視する。
             bool picked = false;
@@ -185,6 +187,25 @@ namespace CreativeAI.UI
             scroll.movementType = ScrollRect.MovementType.Clamped;
             scroll.scrollSensitivity = 30f;
             return content.transform;
+        }
+
+        // パネルの下に、使える操作を 1 行で出す(会話ウィンドウの操作ガイドと同じ書き方にそろえる)。
+        private void BuildControlGuide(Transform panel)
+        {
+            var text = CreateText(
+                "ControlGuide",
+                panel,
+                ControlGuide,
+                22f,
+                TextAlignmentOptions.Center
+            );
+            text.color = new Color(1f, 1f, 1f, 0.8f);
+            var rect = text.rectTransform;
+            rect.anchorMin = new Vector2(0f, 0f);
+            rect.anchorMax = new Vector2(1f, 0f);
+            rect.pivot = new Vector2(0.5f, 1f);
+            rect.offsetMin = new Vector2(0f, -48f);
+            rect.offsetMax = new Vector2(0f, -8f);
         }
 
         // グリッドの下に、選択中の持ち物の名前と所持数を出す欄。
