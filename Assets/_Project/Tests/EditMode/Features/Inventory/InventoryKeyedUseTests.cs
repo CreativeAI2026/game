@@ -66,6 +66,16 @@ namespace CreativeAI.Tests.EditMode
         }
 
         [Test]
+        public void ConsumeFromStack_Instance_RemovesItFromInventory()
+        {
+            // 個体は Count が常に 1 で減らせないため、消費したら丸ごと取り除く必要がある。
+            var instance = AddInstance();
+
+            Assert.IsTrue(_service.ConsumeFromStack(instance, 1));
+            Assert.AreEqual(0, _service.GetAllItems().Count);
+        }
+
+        [Test]
         public void ConsumeByKey_ExactCount_ReturnsTrue()
         {
             AddInstance();

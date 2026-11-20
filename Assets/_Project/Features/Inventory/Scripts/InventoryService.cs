@@ -142,9 +142,10 @@ namespace CreativeAI.Gameplay
             if (!_items.Contains(stack))
                 return false;
 
+            // 個体(ロール済み)は Count が常に 1 で減らせないので、1 つ消費した時点で丸ごと取り除く。
             stack.Count -= count;
             bool quickFoodChanged = false;
-            if (stack.Count <= 0)
+            if (stack.IsInstance || stack.Count <= 0)
             {
                 _items.Remove(stack);
                 quickFoodChanged = ClearQuickFoodReferencing(stack);
