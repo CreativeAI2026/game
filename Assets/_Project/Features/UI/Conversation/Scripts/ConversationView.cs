@@ -582,7 +582,15 @@ namespace CreativeAI.UI
                 }
             );
             while (!hasPicked)
+            {
+                // 選ぶ前にこの UI ごとシーンが消えたら、やめた扱いで返す(待ち続けるとイベントが終わらず操作が戻らない)。
+                if (this == null)
+                {
+                    onPicked?.Invoke(null);
+                    yield break;
+                }
                 yield return null;
+            }
 
             _itemPicker.Clear();
             State = ConversationState.Entering;
