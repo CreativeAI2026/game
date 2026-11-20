@@ -137,7 +137,7 @@ namespace CreativeAI.Gameplay
 
             if (_playerEscape != null && !boss.IsPlayerDead)
             {
-                _playerEscape.TriggerEscape(away);
+                _playerEscape.TriggerRepelled(away);
             }
         }
 
