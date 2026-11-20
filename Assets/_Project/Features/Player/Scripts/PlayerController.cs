@@ -84,7 +84,7 @@ namespace CreativeAI.Gameplay
         /// <summary>弓を構えているか(書き手: 弓)。</summary>
         public bool IsAiming { get; set; }
 
-        /// <summary>怯み中か(書き手: PlayerFlinchHandler)。</summary>
+        /// <summary>怯み中か(書き手: PlayerFlinchHandler。敵にはじき返された間は PlayerEscapeHandler)。武器はこの間、入力を受け付けない。</summary>
         public bool IsFlinching { get; set; }
 
         /// <summary>敵に掴まれているか(書き手: 掴み攻撃を行う敵)。</summary>

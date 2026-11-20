@@ -30,12 +30,21 @@ namespace CreativeAI.Gameplay
         [SerializeField]
         private float _retreatDuration = 1.0f;
 
+        [Tooltip(
+            "はじき返された時、後退の後に脱出モーションの終わりを待つ上限（秒）。遷移の設定漏れなどでモーションが終わらない時の保険"
+        )]
+        [SerializeField]
+        private float _repelMotionEndTimeout = 1.0f;
+
         private PlayerController _playerController;
         private CharacterController _characterController;
         private WeaponManager _weaponManager;
         private PlayerFlinchHandler _flinchHandler;
         private Animator _animator;
         private Coroutine _retreatCoroutine;
+
+        // はじき返されて、怯み中の扱いにしているか。掴みからの脱出では立てない(掴み中の扱いは掴んだ敵が持つ)
+        private bool _isRepelled;
 
         private void Awake()
         {
@@ -59,13 +68,15 @@ namespace CreativeAI.Gameplay
             awayDirection.Normalize();
 
             _animator.SetTrigger(PlayerAnimatorParams.Escaped);
-            StartRetreat(awayDirection);
+            StartRetreat(awayDirection, holdUntilMotionEnds: false);
         }
 
         /// <summary>
         /// 敵にはじき返された。掴みから脱出した時と同じモーションを、どの状態からでも再生し、
-        /// 敵の方を向いたまま awayDirection(敵から離れる向き)へ後退させる。その間は全操作を制限する。
-        /// 敵がパリィされて崩れるのと同じく、プレイヤー側の隙として見せる。
+        /// 敵の方を向いたまま awayDirection(敵から離れる向き)へ後退させる。
+        /// 敵がパリィされて崩れるのと同じく、プレイヤー側の隙として見せるため、モーションが終わるまで
+        /// 移動・攻撃・ガード・パリィを一切受け付けない(武器は Locks ではなく怯み中かどうかで止まるので、怯み中の扱いにする)。
+        /// 掴みからの脱出は、掴み中の扱いを掴んだ敵が終わるまで持つので、この扱いはしない。
         /// </summary>
         public void TriggerRepelled(Vector3 awayDirection)
         {
@@ -85,7 +96,9 @@ namespace CreativeAI.Gameplay
             // 直前の行動の「移動へ戻る」指示が残っていると、脱出モーションに入った直後に抜けてしまう
             _animator.ResetTrigger(PlayerAnimatorParams.ReturnToLocomotion);
             _animator.SetTrigger(PlayerAnimatorParams.Repelled);
-            StartRetreat(awayDirection);
+            StartRetreat(awayDirection, holdUntilMotionEnds: true);
+            _playerController.IsFlinching = true;
+            _isRepelled = true;
         }
 
         /// <summary>
@@ -101,17 +114,27 @@ namespace CreativeAI.Gameplay
                 return;
 
             StopCoroutine(_retreatCoroutine);
-            _retreatCoroutine = null;
-            _playerController.Locks.Release(this);
+            EndRetreat();
         }
 
-        private void StartRetreat(Vector3 direction)
+        private void StartRetreat(Vector3 direction, bool holdUntilMotionEnds)
         {
             Cancel();
-            _retreatCoroutine = StartCoroutine(RetreatCoroutine(direction));
+            _retreatCoroutine = StartCoroutine(RetreatCoroutine(direction, holdUntilMotionEnds));
         }
 
-        private IEnumerator RetreatCoroutine(Vector3 direction)
+        private void EndRetreat()
+        {
+            _retreatCoroutine = null;
+            _playerController.Locks.Release(this);
+            if (_isRepelled)
+            {
+                _playerController.IsFlinching = false;
+                _isRepelled = false;
+            }
+        }
+
+        private IEnumerator RetreatCoroutine(Vector3 direction, bool holdUntilMotionEnds)
         {
             _playerController.Locks.Set(this, PlayerLock.All);
 
@@ -126,8 +149,38 @@ namespace CreativeAI.Gameplay
                 yield return null;
             }
 
-            _playerController.Locks.Release(this);
-            _retreatCoroutine = null;
+            if (holdUntilMotionEnds)
+                yield return WaitForEscapedMotionEnd();
+
+            EndRetreat();
+        }
+
+        /// <summary>
+        /// 脱出モーション(Escaped ステート)を抜けるまで待つ。後退はクリップの途中で終わるので、
+        /// その後の立て直しの間も動けないようにするために使う。
+        /// </summary>
+        private IEnumerator WaitForEscapedMotionEnd()
+        {
+            float waited = 0f;
+            while (waited < _repelMotionEndTimeout)
+            {
+                bool isPlaying =
+                    _animator.GetCurrentAnimatorStateInfo(0).shortNameHash
+                    == PlayerAnimatorStates.Escaped;
+                bool isTransitioningIn =
+                    _animator.IsInTransition(0)
+                    && _animator.GetNextAnimatorStateInfo(0).shortNameHash
+                        == PlayerAnimatorStates.Escaped;
+                if (!isPlaying && !isTransitioningIn)
+                    yield break;
+
+                waited += Time.deltaTime;
+                yield return null;
+            }
+
+            Debug.LogWarning(
+                "[PlayerEscapeHandler] はじき返された後、脱出モーション「Escaped」が上限の時間内に終わりませんでした。Animator の遷移を確認してください。"
+            );
         }
     }
 }

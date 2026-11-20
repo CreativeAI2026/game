@@ -108,6 +108,9 @@ namespace CreativeAI.Gameplay
         public static readonly int Slam = Animator.StringToHash("Slam");
         public static readonly int Flinch = Animator.StringToHash("Flinch");
 
+        /// <summary>掴みからの脱出・はじき返された時のモーション。</summary>
+        public static readonly int Escaped = Animator.StringToHash("Escaped");
+
         /// <summary>弓の構え・発射を再生する上半身レイヤーの名前。</summary>
         public const string UpperBodyLayerName = "UpperBody Layer";
 
