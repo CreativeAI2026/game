@@ -71,6 +71,12 @@ namespace CreativeAI.Tests.EditMode
             public readonly List<string> WeaponGets = new();
             public readonly List<string> Commands = new();
 
+            public IEnumerator ShowItemPicker(string prompt, Action<string> onPicked)
+            {
+                onPicked?.Invoke(null);
+                yield break;
+            }
+
             public IEnumerator ShowItemGet(string itemKey, string message)
             {
                 ItemGets.Add(itemKey);
@@ -98,6 +104,10 @@ namespace CreativeAI.Tests.EditMode
             public void Give(string itemKey) => Given.Add(itemKey);
 
             public bool HasImportantItem(string itemKey) => Owned.Contains(itemKey);
+
+            public int CountItem(string itemKey) => 0;
+
+            public bool Consume(string itemKey, int count) => false;
         }
 
         private sealed class FakeWeaponGiver : IWeaponGiver

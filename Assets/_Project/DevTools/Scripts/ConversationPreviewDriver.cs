@@ -82,6 +82,11 @@ namespace CreativeAI.DevTools
 
             public bool HasImportantItem(string key) => _owned.Contains(key);
 
+            // プレビューは大事なもの(1個)だけを持つ扱い。本番の所持品は触らない。
+            public int CountItem(string key) => _owned.Contains(key) ? 1 : 0;
+
+            public bool Consume(string key, int count) => count <= 1 && _owned.Remove(key);
+
             public void GiveWeapon(string key) { }
         }
 

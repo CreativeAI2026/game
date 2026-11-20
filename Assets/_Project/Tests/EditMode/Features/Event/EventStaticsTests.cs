@@ -26,6 +26,12 @@ namespace CreativeAI.Tests.EditMode
                 yield break;
             }
 
+            public IEnumerator ShowItemPicker(string prompt, System.Action<string> onPicked)
+            {
+                onPicked?.Invoke(null);
+                yield break;
+            }
+
             public IEnumerator ShowItemGet(string itemKey, string message)
             {
                 yield break;

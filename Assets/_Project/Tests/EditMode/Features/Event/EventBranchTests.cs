@@ -57,6 +57,12 @@ namespace CreativeAI.Tests.EditMode
                 yield break;
             }
 
+            public IEnumerator ShowItemPicker(string prompt, Action<string> onPicked)
+            {
+                onPicked?.Invoke(null);
+                yield break;
+            }
+
             public IEnumerator ShowItemGet(string key, string message)
             {
                 yield break;
@@ -85,6 +91,10 @@ namespace CreativeAI.Tests.EditMode
             public void Give(string key) { }
 
             public bool HasImportantItem(string key) => Owned;
+
+            public int CountItem(string key) => 0;
+
+            public bool Consume(string key, int count) => false;
         }
 
         private sealed class MemoryProgress : IEventProgress

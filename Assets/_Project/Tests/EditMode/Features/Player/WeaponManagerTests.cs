@@ -255,7 +255,7 @@ namespace CreativeAI.Tests.EditMode
         }
 
         [Test]
-        public void WeaponKeys_MatchScenarioReferenceCatalogOrder()
+        public void WeaponKeys_MatchScenarioCatalogOrder()
         {
             CollectionAssert.AreEqual(
                 new[] { "sword", "bow", "scythe", "hammer" },

@@ -249,6 +249,7 @@ namespace CreativeAI.UI
         private Button _hideControlButton;
 
         private DialogueChoicePresenter _choicePresenter;
+        private DialogueItemPickerPresenter _itemPicker;
         private readonly DialogueTextPlayer _textPlayer = new();
         private readonly DialoguePortraitPresenter _portraitPresenter = new();
         private ConversationChromePresenter _chromePresenter;
@@ -397,7 +398,11 @@ namespace CreativeAI.UI
                 SetAutoMode,
                 SetWindowHidden,
                 SetTextSpeed,
-                () => _choicePresenter?.HandleKeyboardInput()
+                () =>
+                {
+                    _choicePresenter?.HandleKeyboardInput();
+                    _itemPicker?.HandleKeyboardInput();
+                }
             );
             _backdropPresenter ??= new DialogueBackdropPresenter(
                 _root != null ? _root.transform : transform
@@ -468,6 +473,7 @@ namespace CreativeAI.UI
             _speedPresenter?.Cancel();
             _rewardPresenter?.HideAll();
             _choicePresenter?.Clear();
+            _itemPicker?.Dismiss();
             _rewardPresentationActive = false;
         }
 
@@ -540,6 +546,56 @@ namespace CreativeAI.UI
 
             yield return _choiceFlow.Execute(options, onSelected);
             State = ConversationState.Entering;
+        }
+
+        /// <summary>
+        /// IDialogueView 実装: useItem ステップの持ち物ピッカー。未装備の持ち物の一覧と「やめる」を出し、
+        /// 選んだ itemKey(やめたら null、キーを持たないアイテムは空文字)を <paramref name="onPicked"/> で返す。
+        /// </summary>
+        public IEnumerator ShowItemPicker(string prompt, Action<string> onPicked)
+        {
+            InitializePresenters();
+            CancelRewardPresentation();
+            State = ConversationState.ShowingChoices; // 送り入力を止め、キー入力をピッカーへ回す
+            SetWindowHidden(false);
+            _chromePresenter.StopBounce();
+            yield return ShowAnimated();
+
+            _itemPicker ??= new DialogueItemPickerPresenter(
+                _root != null ? _root.transform : transform,
+                _nameText != null ? _nameText.font : null
+            );
+            var inventory = InventoryManager.Instance;
+            var entries = ItemPickerEntries.Build(
+                inventory != null ? inventory.GetAllItems() : null
+            );
+
+            bool hasPicked = false;
+            string picked = null;
+            _itemPicker.Show(
+                prompt,
+                entries,
+                value =>
+                {
+                    picked = value;
+                    hasPicked = true;
+                }
+            );
+            while (!hasPicked)
+            {
+                // 選ぶ前にこの UI ごとシーンが消えたら、やめた扱いで返す(待ち続けるとイベントが終わらず操作が戻らない)。
+                if (this == null)
+                {
+                    onPicked?.Invoke(null);
+                    yield break;
+                }
+                yield return null;
+            }
+
+            _itemPicker.Clear();
+            State = ConversationState.Entering;
+            BlockAdvanceInput(0.15f);
+            onPicked?.Invoke(picked);
         }
 
         /// <summary>
@@ -855,6 +911,7 @@ namespace CreativeAI.UI
             _rewardPresenter.HideAll();
             _choicePresenter.Clear();
             _choicePresenter.SetActive(false);
+            _itemPicker?.Dismiss();
             ResetTransientModes();
             State = ConversationState.Hidden;
         }
@@ -864,6 +921,7 @@ namespace CreativeAI.UI
             State = ConversationState.Exiting;
             _rewardPresenter?.HideAll();
             SetChoicesActive(false);
+            _itemPicker?.Dismiss();
             ResetTransientModes();
             _chromePresenter?.HideImmediate();
             State = ConversationState.Hidden;

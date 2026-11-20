@@ -235,6 +235,77 @@ namespace CreativeAI.Gameplay
             _walking = null;
         }
 
+        // 持ち物から選ばせ、正解なら true で返る。やめた・間違えて終了(EndOnWrong)・シーン切替・UI が無いときは false。
+        // 間違いは消費せずセリフを出し、既定では選び直させる。
+        private IEnumerator RunUseItem(
+            EventDefinition ev,
+            EventStep step,
+            int generation,
+            Action<bool> done
+        )
+        {
+            if (View == null || Items == null)
+            {
+                Debug.LogWarning(
+                    $"[EventPlayer] useItem を実行できません(event={ev.Id}, 会話UI={(View != null ? "あり" : "なし")}, IItemGiver={(Items != null ? "あり" : "なし")})。"
+                );
+                done(false);
+                yield break;
+            }
+
+            while (true)
+            {
+                string picked = null;
+                yield return View.ShowItemPicker(step.Prompt, value => picked = value);
+                if (generation != _sceneGeneration)
+                {
+                    done(false);
+                    yield break;
+                }
+                if (picked == null)
+                {
+                    // やめた: セリフがあれば出してから打ち切る。
+                    if (!string.IsNullOrEmpty(step.CancelText))
+                        yield return View.ShowLine(step.Speaker, step.Portrait, step.CancelText);
+                    done(false);
+                    yield break;
+                }
+
+                if (IsCorrectUse(step, picked))
+                {
+                    // 使った実感を出す: セリフがあれば、次のステップへ進む前に出す。
+                    if (!string.IsNullOrEmpty(step.UsedText))
+                        yield return View.ShowLine(step.Speaker, step.Portrait, step.UsedText);
+                    done(true);
+                    yield break;
+                }
+
+                yield return View.ShowLine(step.Speaker, step.Portrait, step.Text);
+                if (step.EndOnWrong || generation != _sceneGeneration)
+                {
+                    done(false);
+                    yield break;
+                }
+            }
+        }
+
+        // 選んだアイテムが正解の候補で、個数が足りれば true(消費する設定ならここで消費する)。
+        private bool IsCorrectUse(EventStep step, string itemKey)
+        {
+            UseItemCandidate match = null;
+            foreach (var candidate in step.Accept)
+            {
+                if (candidate != null && candidate.ItemKey == itemKey)
+                {
+                    match = candidate;
+                    break;
+                }
+            }
+            if (match == null || Items.CountItem(itemKey) < match.Count)
+                return false;
+            return !step.Consume || Items.Consume(itemKey, match.Count);
+        }
+
         public void Play(EventDefinition ev, BattleSetup battle = default)
         {
             if (ev == null)
@@ -358,6 +429,18 @@ namespace CreativeAI.Gameplay
                             else
                                 yield return Battle.Run(battle);
                             mode?.ExitBattle();
+                            break;
+
+                        case StepKind.UseItem:
+                            bool useItemDone = false;
+                            yield return RunUseItem(ev, step, generation, ok => useItemDone = ok);
+                            if (!useItemDone)
+                            {
+                                // やめた・間違えて終了・シーン切替: 進行度も 1 回きりの印も進めずに打ち切る。
+                                if (View != null)
+                                    yield return View.Close();
+                                yield break;
+                            }
                             break;
 
                         case StepKind.Command:

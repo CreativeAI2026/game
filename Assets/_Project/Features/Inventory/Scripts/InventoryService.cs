@@ -97,6 +97,43 @@ namespace CreativeAI.Gameplay
             return true;
         }
 
+        /// <summary>
+        /// key のアイテムの所持数(未装備のスタックの合計)。装備中のものは数えない。key が空なら 0。
+        /// </summary>
+        public int CountByKey(string key)
+        {
+            if (string.IsNullOrEmpty(key))
+                return 0;
+
+            return _items
+                .Where(stack => !stack.IsEquipped && stack.Data != null && stack.Data.key == key)
+                .Sum(stack => stack.Count);
+        }
+
+        /// <summary>
+        /// key の未装備のアイテムを count 個消費する。足りなければ何も変えず false。
+        /// 複数のスタック(装備品の個体など)にまたがっていても、未装備のものから順に消費する。
+        /// </summary>
+        public bool ConsumeByKey(string key, int count)
+        {
+            if (count <= 0 || CountByKey(key) < count)
+                return false;
+
+            var remaining = count;
+            var candidates = _items
+                .Where(stack => !stack.IsEquipped && stack.Data != null && stack.Data.key == key)
+                .ToList();
+            foreach (var stack in candidates)
+            {
+                var take = Math.Min(stack.Count, remaining);
+                ConsumeFromStack(stack, take);
+                remaining -= take;
+                if (remaining == 0)
+                    break;
+            }
+            return true;
+        }
+
         public bool ConsumeFromStack(ItemStack stack, int count = 1)
         {
             if (stack == null || count <= 0 || stack.Count < count)
@@ -105,9 +142,10 @@ namespace CreativeAI.Gameplay
             if (!_items.Contains(stack))
                 return false;
 
+            // 個体(ロール済み)は Count が常に 1 で減らせないので、1 つ消費した時点で丸ごと取り除く。
             stack.Count -= count;
             bool quickFoodChanged = false;
-            if (stack.Count <= 0)
+            if (stack.IsInstance || stack.Count <= 0)
             {
                 _items.Remove(stack);
                 quickFoodChanged = ClearQuickFoodReferencing(stack);
