@@ -345,14 +345,18 @@ namespace CreativeAI.EditorTools
 
             // 進行度で1回きりのイベントは、progress 条件を必ず1つ含む(進行度==でちょうど1回だけ発火する前提)。
             // repeat を書いたイベントは進行度に頼らず1回きり/何度でもを決めるので、章を問わず置ける(progress は任意)。
-            // not を付けた progress は「その進行度でないとき」なので、1回きりの根拠には数えない。
+            // not を付けた progress は「その進行度でないとき」、min / max の progress は「進行度の範囲」なので、
+            // どちらも1回きりの根拠には数えない。
             var progressValues = conditions
-                .Where(c => c.Type == ConditionType.Progress && !c.Negated)
+                .Where(c => c.Type == ConditionType.Progress && !c.Negated && !c.IsRange)
                 .Select(c => c.ProgressValue)
                 .ToList();
             if (repeat == EventRepeat.Progress && progressValues.Count == 0)
             {
-                report.Error(id, "conditions に progress 条件が必須です(1つ以上)。");
+                report.Error(
+                    id,
+                    "conditions に progress 条件(value で指定したもの)が必須です(1つ以上)。min / max だけでは1回きりにならないので、repeat を書くか value を足してください。"
+                );
                 ok = false;
             }
 
@@ -673,12 +677,45 @@ namespace CreativeAI.EditorTools
             switch (type)
             {
                 case "progress":
-                    if (cond["value"]?.Type != JTokenType.Integer)
+                    // value(ちょうど一致)か、min / max(以上・以下。両方で範囲)のどちらか。混ぜられない。
+                    bool hasValue = cond["value"] != null;
+                    bool hasMin = cond["min"] != null;
+                    bool hasMax = cond["max"] != null;
+                    if (hasValue == (hasMin || hasMax))
                     {
-                        report.Error(id, $"{location} progress の value は整数(必須)。");
+                        report.Error(
+                            id,
+                            $"{location} progress は value(ちょうど一致)か、min / max(以上・以下)のどちらかを指定してください(混ぜられません)。"
+                        );
                         return null;
                     }
-                    return EventCondition.Progress(cond["value"].Value<int>(), not);
+                    foreach (var progressKey in new[] { "value", "min", "max" })
+                    {
+                        if (
+                            cond[progressKey] != null
+                            && cond[progressKey].Type != JTokenType.Integer
+                        )
+                        {
+                            report.Error(
+                                id,
+                                $"{location} progress の {progressKey} は整数にしてください。"
+                            );
+                            return null;
+                        }
+                    }
+                    if (hasValue)
+                        return EventCondition.Progress(cond["value"].Value<int>(), not);
+                    int? rangeMin = hasMin ? cond["min"].Value<int>() : null;
+                    int? rangeMax = hasMax ? cond["max"].Value<int>() : null;
+                    if (rangeMin > rangeMax)
+                    {
+                        report.Error(
+                            id,
+                            $"{location} progress の min ({rangeMin}) は max ({rangeMax}) 以下にしてください。"
+                        );
+                        return null;
+                    }
+                    return EventCondition.ProgressRange(rangeMin, rangeMax, not);
 
                 case "flag":
                     var key = (cond["key"] as JValue)?.Value as string;
