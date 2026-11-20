@@ -541,6 +541,7 @@ namespace CreativeAI.Gameplay
             currentState is TBossChaseState
             || currentState is TBossWatchState
             || currentState is TBossGuardState
+            || currentState is TBossGuardAdvanceState
             || (currentState is TBossPatrolState && IsSuspicious);
 
         /// <summary>
@@ -587,6 +588,12 @@ namespace CreativeAI.Gameplay
                 _playerStatus = Player.GetComponent<PlayerStatus>();
                 Assert.IsNotNull(_playerStatus, $"{name}: プレイヤーに PlayerStatus がありません");
 
+                _playerController = Player.GetComponent<PlayerController>();
+                Assert.IsNotNull(
+                    _playerController,
+                    $"{name}: プレイヤーに PlayerController がありません（弓を構えたのを見て防御できません）"
+                );
+
                 _playerInput = Player.GetComponent<PlayerInputHandler>();
                 Assert.IsNotNull(
                     _playerInput,
@@ -618,6 +625,12 @@ namespace CreativeAI.Gameplay
 
             Guard = TryGetComponent(out TBossGuard guard) ? guard : null;
             Assert.IsNotNull(Guard, $"{name}: TBossGuard が同じ GameObject にありません");
+
+            _upperBodyGuardLayer = Animator.GetLayerIndex(UpperBodyGuardLayerName);
+            Assert.IsTrue(
+                _upperBodyGuardLayer >= 0,
+                $"{name}: Animator に上半身の構えのレイヤー「{UpperBodyGuardLayerName}」がありません"
+            );
         }
 
         protected override void Start()
@@ -639,6 +652,8 @@ namespace CreativeAI.Gameplay
                 _playerInput.OnAttackPressed += OnPlayerAttackPressed;
             }
             Guard.Repelled += OnRepelled;
+            BowController.OnFired += OnPlayerRangedAttack;
+            ScytheController.OnThrown += OnPlayerRangedAttack;
         }
 
         protected override void OnDisable()
@@ -653,6 +668,8 @@ namespace CreativeAI.Gameplay
                 _playerInput.OnAttackPressed -= OnPlayerAttackPressed;
             }
             Guard.Repelled -= OnRepelled;
+            BowController.OnFired -= OnPlayerRangedAttack;
+            ScytheController.OnThrown -= OnPlayerRangedAttack;
         }
 
         /// <summary>
@@ -723,13 +740,77 @@ namespace CreativeAI.Gameplay
         private void UpdateRepelTrigger()
         {
             Guard.CanRepel =
-                currentState is TBossWatchState or TBossChaseState or TBossGuardState
+                currentState
+                    is TBossWatchState
+                        or TBossChaseState
+                        or TBossGuardState
+                        or TBossGuardAdvanceState
                 && Player != null
                 && !IsPlayerDead;
             if (!Guard.CanRepel)
             {
                 Guard.ClearMash();
             }
+        }
+
+        /// <summary>弓を構え始めた瞬間を見て、遠距離の防御を引く（撃った・投げた瞬間はイベントで受ける）。</summary>
+        private void UpdateRangedGuardTrigger()
+        {
+            if (_playerController == null)
+            {
+                return;
+            }
+
+            bool aiming = _playerController.IsAiming;
+            if (aiming && !_wasPlayerAiming)
+            {
+                TryStartRangedGuard();
+            }
+            _wasPlayerAiming = aiming;
+        }
+
+        private void OnPlayerRangedAttack() => TryStartRangedGuard();
+
+        /// <summary>
+        /// 明らかに距離を取って遠距離攻撃をしてきそうな時（様子見の間合いの外で構える・撃つ・投げる）に確率を引き、
+        /// 当たれば構えてにじり寄る。外れたら普段どおり追いかける。続けて引きすぎないよう間隔を空ける。
+        /// </summary>
+        private void TryStartRangedGuard()
+        {
+            if (
+                currentState is not (TBossChaseState or TBossWatchState)
+                || Player == null
+                || IsPlayerDead
+                || Time.time < _nextRangedGuardRollTime
+            )
+            {
+                return;
+            }
+
+            float distance = Vector3.Distance(transform.position, Player.transform.position);
+            if (distance <= watchDistanceMax)
+            {
+                return;
+            }
+
+            _nextRangedGuardRollTime = Time.time + Guard.Settings.RangedGuardRollInterval;
+            if (Guard.RollRangedGuard())
+            {
+                ChangeState(new TBossGuardAdvanceState(this));
+            }
+        }
+
+        /// <summary>上半身だけ構えのモーションを重ねるか。構えたまま歩く時に使う（足は移動のモーションのまま）。</summary>
+        public void SetUpperBodyGuard(bool active) => _upperBodyGuardTarget = active ? 1f : 0f;
+
+        private void UpdateUpperBodyGuardLayer()
+        {
+            float weight = Mathf.MoveTowards(
+                Animator.GetLayerWeight(_upperBodyGuardLayer),
+                _upperBodyGuardTarget,
+                Time.deltaTime / UpperBodyGuardFadeDuration
+            );
+            Animator.SetLayerWeight(_upperBodyGuardLayer, weight);
         }
 
         /// <summary>連打の最後の一撃が当たったその瞬間に、払いを始める（プレイヤーののけぞりも同じフレームで始まる）。</summary>
@@ -772,6 +853,8 @@ namespace CreativeAI.Gameplay
             _perception.Tick(Time.deltaTime);
             TickPanicPressure();
             UpdateRepelTrigger();
+            UpdateRangedGuardTrigger();
+            UpdateUpperBodyGuardLayer();
 
             if (currentState is not TBossCapturedState)
             {
@@ -981,6 +1064,17 @@ namespace CreativeAI.Gameplay
 
         private bool _isRunAnimationActive;
 
+        // 上半身だけ構えを重ねるレイヤー（構えてにじり寄る時に使う）。切り替えは急に変わらないよう少しかけて混ぜる
+        private const string UpperBodyGuardLayerName = "GuardUpper";
+        private const float UpperBodyGuardFadeDuration = 0.15f;
+        private int _upperBodyGuardLayer;
+        private float _upperBodyGuardTarget;
+
+        // 遠距離の防御: 弓を構え始めた瞬間を見るための前フレームの値と、次に確率を引ける時刻
+        private PlayerController _playerController;
+        private bool _wasPlayerAiming;
+        private float _nextRangedGuardRollTime;
+
         /// <summary>
         /// Animatorの IsRunning を実際の移動速度から決める。
         /// 各ステートが「走る」と宣言したまま経路に詰まると、その場で走りモーションを続けて固まって見えるため、
@@ -1062,6 +1156,7 @@ namespace CreativeAI.Gameplay
                 || currentState is TBossFlinchState
                 || currentState is TBossParriedState
                 || currentState is TBossGuardState
+                || currentState is TBossGuardAdvanceState
                 || currentState is TBossRepelState
                 || currentState is TBossDeathState;
         }

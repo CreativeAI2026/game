@@ -41,6 +41,29 @@ namespace CreativeAI.Gameplay
         [SerializeField]
         private float _postAttackGuardDuration = 1.5f;
 
+        [Header("遠距離の防御（距離を取って弓を構える・撃つ・鎌を投げた時）")]
+        [Tooltip(
+            "距離を取って遠距離攻撃をしてきそうな時に、構えてにじり寄る確率（0〜1）を、HPの段階ごとに並べる。外れたら普段どおり追いかける"
+        )]
+        [SerializeField, Range(0f, 1f)]
+        private float[] _rangedGuardChanceByPhase = { 0.35f, 0.5f, 0.65f };
+
+        [Tooltip(
+            "遠距離の防御の確率を引いてから、次に引けるまでの間隔（秒）。撃つたびに引き直して必ず構えるのを防ぐ"
+        )]
+        [SerializeField]
+        private float _rangedGuardRollInterval = 3f;
+
+        [Tooltip("構えてにじり寄る速さ（m/秒）")]
+        [SerializeField]
+        private float _guardAdvanceSpeed = 1.0f;
+
+        [Tooltip(
+            "構えてにじり寄る時間（秒、x:最短 y:最長）。この間にプレイヤーが攻撃の間合いへ入ってこなければ、自分から攻撃に入る"
+        )]
+        [SerializeField]
+        private Vector2 _guardAdvanceDurationRange = new Vector2(3f, 5f);
+
         [Header("防御の向き")]
         [Tooltip(
             "正面から左右に何度までの攻撃を防ぐか。これより横・背後から当たった攻撃は通る（回り込めば崩せる）"
@@ -85,6 +108,21 @@ namespace CreativeAI.Gameplay
 
         /// <summary>攻撃後の防御を続ける時間（秒）。</summary>
         public float PostAttackGuardDuration => _postAttackGuardDuration;
+
+        /// <summary>遠距離の防御の確率を引く間隔（秒）。</summary>
+        public float RangedGuardRollInterval => _rangedGuardRollInterval;
+
+        /// <summary>構えてにじり寄る速さ（m/秒）。</summary>
+        public float GuardAdvanceSpeed => _guardAdvanceSpeed;
+
+        /// <summary>構えてにじり寄る時間（秒、x:最短 y:最長）。</summary>
+        public Vector2 GuardAdvanceDurationRange => _guardAdvanceDurationRange;
+
+        /// <summary>段階ごとに並べた遠距離の防御確率の数。HPの段階の数と合わせる。</summary>
+        public int RangedGuardPhaseCount => _rangedGuardChanceByPhase.Length;
+
+        /// <summary>HPの段階に応じた、遠距離攻撃に対して構えてにじり寄る確率。</summary>
+        public float GetRangedGuardChance(int phaseIndex) => _rangedGuardChanceByPhase[phaseIndex];
 
         /// <summary>正面から左右に何度までの攻撃を防ぐか。</summary>
         public float GuardHalfAngle => _guardHalfAngle;

@@ -61,6 +61,11 @@ namespace CreativeAI.Gameplay
                 _settings.PostAttackGuardPhaseCount,
                 $"{name}: 攻撃後の防御確率の数が、HPの段階の数と合っていません"
             );
+            Assert.AreEqual(
+                _phase.PhaseCount,
+                _settings.RangedGuardPhaseCount,
+                $"{name}: 遠距離の防御確率の数が、HPの段階の数と合っていません"
+            );
             Assert.IsNotNull(
                 _blockEffect,
                 $"{name}: 受け止めた時の火花（_blockEffect）が未設定です"
@@ -150,6 +155,10 @@ namespace CreativeAI.Gameplay
         /// <summary>攻撃の後に防御するかを、今のHPの段階の確率で引く。</summary>
         public bool RollPostAttackGuard() =>
             Random.value < _settings.GetPostAttackGuardChance(_phase.CurrentPhaseIndex);
+
+        /// <summary>距離を取った遠距離攻撃に対して、構えてにじり寄るかを今のHPの段階の確率で引く。</summary>
+        public bool RollRangedGuard() =>
+            Random.value < _settings.GetRangedGuardChance(_phase.CurrentPhaseIndex);
 
         /// <summary>
         /// 当たった位置が、ボスの正面から左右 halfAngle 度以内か（水平方向だけで見る）。

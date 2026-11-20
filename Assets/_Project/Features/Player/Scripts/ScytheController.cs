@@ -1,3 +1,4 @@
+using System;
 using UnityEngine;
 using UnityEngine.Assertions;
 
@@ -14,6 +15,9 @@ namespace CreativeAI.Gameplay
     /// </summary>
     public class ScytheController : MeleeWeaponController
     {
+        /// <summary>鎌を投げた瞬間に発火する静的イベント(弓の <see cref="BowController.OnFired"/> と同じ扱い)。敵が遠距離攻撃を読むのに使う。</summary>
+        public static event Action OnThrown;
+
         [Header("投擲")]
         [Tooltip(
             "投擲で狙う敵を探す半径（m）。近接のダッシュ接近(dashSearchRadius)とは別。"
@@ -116,6 +120,7 @@ namespace CreativeAI.Gameplay
             _heldModel.SetActive(false);
             _boomerang.Launch(bodyPoint, origin, ResolveThrowDirection(target, origin), transform);
             WorldSoundPlayer.Play(_throwSound, origin, this);
+            OnThrown?.Invoke();
         }
 
         /// <summary>
