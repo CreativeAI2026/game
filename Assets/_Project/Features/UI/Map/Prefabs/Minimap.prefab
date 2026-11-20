@@ -604,7 +604,6 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 8718254951587218632}
-  - component: {fileID: 4466330942372768763}
   - component: {fileID: 481234198794401837}
   m_Layer: 5
   m_Name: Map
@@ -632,14 +631,6 @@ RectTransform:
   m_AnchoredPosition: {x: 0, y: 0}
   m_SizeDelta: {x: 0, y: 0}
   m_Pivot: {x: 0.5, y: 0.5}
---- !u!222 &4466330942372768763
-CanvasRenderer:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 3408953067267148113}
-  m_CullTransparentMesh: 1
 --- !u!114 &481234198794401837
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -649,17 +640,10 @@ MonoBehaviour:
   m_GameObject: {fileID: 3408953067267148113}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 9405cd4e11a954705939589ad3d12446, type: 3}
+  m_Script: {fileID: 11500000, guid: 9357ca3c4a2b4dbe8d9457ae49860e50, type: 3}
   m_Name: 
-  m_EditorClassIdentifier: CreativeAI.UI::CreativeAI.UI.MinimapShapeGraphic
-  m_Material: {fileID: 2100000, guid: a9ad59a7dca94269a9814a39fc4566d5, type: 2}
-  m_Color: {r: 1, g: 1, b: 1, a: 1}
-  m_RaycastTarget: 0
-  m_RaycastPadding: {x: 0, y: 0, z: 0, w: 0}
-  m_Maskable: 1
-  m_OnCullStateChanged:
-    m_PersistentCalls:
-      m_Calls: []
+  m_EditorClassIdentifier: CreativeAI.UI::CreativeAI.UI.MinimapMap
+  _material: {fileID: 2100000, guid: a9ad59a7dca94269a9814a39fc4566d5, type: 2}
   _floorColor: {r: 0.27, g: 0.32, b: 0.39, a: 1}
   _edgeColor: {r: 0.5, g: 0.57, b: 0.66, a: 1}
   _wallColor: {r: 0.13, g: 0.16, b: 0.2, a: 1}
@@ -672,6 +656,7 @@ MonoBehaviour:
   _edgeWidth: 0.5
   _stepSpacing: 0.9
   _stepWidth: 0.25
+  _minLinePixels: 1
 --- !u!1 &5309937661910847552
 GameObject:
   m_ObjectHideFlags: 0
