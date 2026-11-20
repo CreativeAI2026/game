@@ -74,7 +74,7 @@ namespace CreativeAI.UI
             BuildPrompt(panel.transform, prompt);
             var content = BuildScrollArea(panel);
             _nameText = BuildNameText(panel.transform);
-            BuildControlGuide(panel.transform);
+            BuildControlGuide(_root.transform);
 
             // 呼び出し元の再入を防ぐ: 一度選んだら以降の選択は無視する。
             bool picked = false;
@@ -189,23 +189,22 @@ namespace CreativeAI.UI
             return content.transform;
         }
 
-        // パネルの下に、使える操作を 1 行で出す(会話ウィンドウの操作ガイドと同じ書き方にそろえる)。
-        private void BuildControlGuide(Transform panel)
+        // 画面の左下に、使える操作を 1 行で出す。会話ウィンドウの操作ガイドと同じ位置・書き方にそろえる
+        // (ピッカーの暗幕がそちらを覆うので、重ならない)。
+        private void BuildControlGuide(Transform screen)
         {
             var text = CreateText(
                 "ControlGuide",
-                panel,
+                screen,
                 ControlGuide,
-                22f,
-                TextAlignmentOptions.Center
+                20f,
+                TextAlignmentOptions.BottomLeft
             );
-            text.color = new Color(1f, 1f, 1f, 0.8f);
+            text.color = new Color(1f, 1f, 1f, 0.62f);
             var rect = text.rectTransform;
-            rect.anchorMin = new Vector2(0f, 0f);
-            rect.anchorMax = new Vector2(1f, 0f);
-            rect.pivot = new Vector2(0.5f, 1f);
-            rect.offsetMin = new Vector2(0f, -48f);
-            rect.offsetMax = new Vector2(0f, -8f);
+            rect.anchorMin = rect.anchorMax = rect.pivot = Vector2.zero;
+            rect.anchoredPosition = new Vector2(26f, 20f);
+            rect.sizeDelta = new Vector2(620f, 38f);
         }
 
         // グリッドの下に、選択中の持ち物の名前と所持数を出す欄。
