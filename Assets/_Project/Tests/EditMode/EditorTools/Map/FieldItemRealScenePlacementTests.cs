@@ -113,16 +113,37 @@ namespace CreativeAI.Tests.EditMode
             foreach (var pickup in _pickups)
             {
                 var position = pickup.transform.position;
-                var path = new NavMeshPath();
                 var reachable =
                     NavMesh.SamplePosition(position, out var to, 1.5f, NavMesh.AllAreas)
-                    && NavMesh.CalculatePath(from.position, to.position, NavMesh.AllAreas, path)
-                    && path.status == NavMeshPathStatus.PathComplete;
+                    && IsReachable(from.position, to.position);
                 if (!reachable)
                     unreachable.Add($"{pickup.name} {position}");
             }
 
             Assert.That(unreachable, Is.Empty, "開始位置から歩いて行けないアイテムがあります。");
+        }
+
+        /// <summary>
+        /// from から to へ NavMesh 上でつながっているか。
+        /// CalculatePath は一度に探せる範囲に上限があり、遠いと道があっても途中までの経路(PathPartial)を返すので、
+        /// 届いた所から探し直す。つながっていなければ同じ所で止まる。
+        /// </summary>
+        private static bool IsReachable(Vector3 from, Vector3 to)
+        {
+            const int MaxRetries = 16;
+            var path = new NavMeshPath();
+            for (var i = 0; i < MaxRetries; i++)
+            {
+                if (!NavMesh.CalculatePath(from, to, NavMesh.AllAreas, path))
+                    return false;
+                if (path.status == NavMeshPathStatus.PathComplete)
+                    return true;
+                var end = path.corners[^1];
+                if (Vector3.Distance(end, from) < 0.5f)
+                    return false;
+                from = end;
+            }
+            return false;
         }
 
         [Test]

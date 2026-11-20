@@ -94,6 +94,7 @@ namespace CreativeAI.EditorTools
         const float RampThickness = 1f; // 斜面コライダーの厚み(すり抜け防止)
         const float RampLift = 0.03f; // 段鼻の面取りに引っかからないよう斜面を少し持ち上げる
         const float RampRailThickness = 0.4f;
+        const float UnderStairsGap = 0.1f; // 階段の下を埋める当たりの上面を、斜面からどれだけ下げるか
 
         // ガラス壁 `$`。モデルは 1マス幅(4.00u)なので横は等倍で1マス1枚置き、縦は壁の高さへ合わせる。
         // 当たりは薄い箱にする(`#` のように4u厚だとガラスの手前で止まって見える)。
@@ -2938,7 +2939,7 @@ namespace CreativeAI.EditorTools
         /// <summary>
         /// 階段の当たり。段形状だと蹴上げ(階高/段数)が CharacterController の StepOffset を超えて登れないので、
         /// 段鼻を通る斜面の箱にする。斜面は1踏面ぶん手前から始めて下階の床面と、上端で上階の床面と面一になる。
-        /// 左右には手すりぶんの壁を立てて、モデルの手すりを擦り抜けないようにする。
+        /// 左右には手すりぶんの壁を立てて、モデルの手すりを擦り抜けないようにする。斜面の下も埋める。
         /// </summary>
         static void CreateStairsRamp(
             Transform parent,
@@ -2989,6 +2990,63 @@ namespace CreativeAI.EditorTools
             var landing = top.AddComponent<BoxCollider>();
             landing.center = new Vector3(0f, -RampThickness * 0.5f, 0f);
             landing.size = new Vector3(width, RampThickness, tread);
+
+            // 斜面の下。モデルの側面は三角の板で塞がっているのに当たりが無いと、横から階段の下へ潜り込めるので埋める。
+            // 上面は斜面より少し下げて、歩く面は斜面の箱のままにする
+            var under = new GameObject("Under");
+            under.transform.SetParent(root.transform, false);
+            var fill = under.AddComponent<MeshCollider>();
+            fill.sharedMesh = CreateUnderStairsMesh(
+                $"StairsUnder_{s.Letter}",
+                width,
+                run,
+                tread * rise / run + RampLift - UnderStairsGap,
+                rise - UnderStairsGap,
+                run - tread
+            );
+            fill.convex = true;
+        }
+
+        /// <summary>
+        /// 階段の下を埋める柱状の当たり(横から見て、床・奥の端・上面の斜線で囲んだ形)。
+        /// 上面は上り口で <paramref name="startTop"/>、<paramref name="slopeEnd"/> で <paramref name="endTop"/> に達し、奥の端まで平ら。
+        /// </summary>
+        static Mesh CreateUnderStairsMesh(
+            string name,
+            float width,
+            float run,
+            float startTop,
+            float endTop,
+            float slopeEnd
+        )
+        {
+            // 横から見た輪郭(Z, Y)。左右(±X)に押し出す
+            var outline = new[]
+            {
+                new Vector2(0f, 0f),
+                new Vector2(run, 0f),
+                new Vector2(run, endTop),
+                new Vector2(slopeEnd, endTop),
+                new Vector2(0f, Mathf.Max(startTop, 0f)),
+            };
+            var vertices = new List<Vector3>();
+            foreach (var x in new[] { -width * 0.5f, width * 0.5f })
+            foreach (var p in outline)
+                vertices.Add(new Vector3(x, p.y, p.x));
+            // convex の MeshCollider は頂点から凸包を作るので、面は頂点を使い切る最低限でよい
+            var n = outline.Length;
+            var triangles = new List<int>();
+            for (var i = 1; i < n - 1; i++)
+            {
+                triangles.AddRange(new[] { 0, i, i + 1 });
+                triangles.AddRange(new[] { n, n + i + 1, n + i });
+            }
+            return new Mesh
+            {
+                name = name,
+                vertices = vertices.ToArray(),
+                triangles = triangles.ToArray(),
+            };
         }
 
         static Material GetOrCreateMaterial(string name, Color color)
