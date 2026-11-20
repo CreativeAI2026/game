@@ -2191,7 +2191,7 @@ MonoBehaviour:
   _electricLoopSound: {fileID: 11400000, guid: d52521399e2332645bba43817ca7eab4, type: 2}
   _escapeSound: {fileID: 11400000, guid: cd6779373ed4a1744840020d26d7b588, type: 2}
   _guardBlockSound: {fileID: 11400000, guid: 7ab6fd05aeda5534abbc9cb4c0800d4a, type: 2}
-  _repelSound: {fileID: 11400000, guid: f51ed5a909fd9cb459893cbcd4b90552, type: 2}
+  _repelSound: {fileID: 11400000, guid: 6e39ec6cabb1ad549b20c3722baed67e, type: 2}
   _pressureCueSound: {fileID: 11400000, guid: 9ae864485e104ef4593fde8b59c9e6f3, type: 2}
   _fallDownSound: {fileID: 11400000, guid: e715fb91619b5f344b93201f6eb50a45, type: 2}
 --- !u!114 &6489549019847874736
@@ -2343,12 +2343,12 @@ MonoBehaviour:
     _guardHalfAngle: 90
     _repelWindow: 2
     _repelHitCount: 4
-    _repelRadius: 5
-    _repelImpactNormalizedTime: 0.15
     _repelFollowUpNormalizedTime: 0.56
     _repelDealsDamage: 0
     _repelDamageMultiplier: 0.5
   _blockEffect: {fileID: 6283385569647498531, guid: c307aa68ab3e4cc4a8123308c3d2813d, type: 3}
+  _repelEffect: {fileID: 358637981425055526, guid: 00deabee16ae5674b93d3e9f636735e0, type: 3}
+  _repelCameraShake: 0.4
 --- !u!1 &9182639161629794582
 GameObject:
   m_ObjectHideFlags: 0

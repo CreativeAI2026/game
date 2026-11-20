@@ -58,18 +58,6 @@ namespace CreativeAI.Gameplay
         private int _repelHitCount = 4;
 
         [Tooltip(
-            "はじき返しが届く距離（m、ボスの中心からプレイヤーの中心まで）。これより遠いプレイヤー（弓など）は振り払う動きだけで怯まない"
-        )]
-        [SerializeField]
-        private float _repelRadius = 5f;
-
-        [Tooltip(
-            "はじき返しのモーションのどこで振り払いが当たるか（Repel ステートの正規化時間 0〜1）。クリップの振りに合わせる"
-        )]
-        [SerializeField, Range(0f, 1f)]
-        private float _repelImpactNormalizedTime = 0.15f;
-
-        [Tooltip(
             "はじき返しのモーションのどこで次の攻撃（通常攻撃2か掴み）に移るか（正規化時間 0〜1）。モーションの終わりを待たずに流す"
         )]
         [SerializeField, Range(0f, 1f)]
@@ -106,12 +94,6 @@ namespace CreativeAI.Gameplay
 
         /// <summary>はじき返しに必要な被弾回数。</summary>
         public int RepelHitCount => _repelHitCount;
-
-        /// <summary>はじき返しが届く距離（m）。</summary>
-        public float RepelRadius => _repelRadius;
-
-        /// <summary>はじき返しの振り払いが当たる位置（Repel ステートの正規化時間）。</summary>
-        public float RepelImpactNormalizedTime => _repelImpactNormalizedTime;
 
         /// <summary>はじき返しから次の攻撃へ移る位置（Repel ステートの正規化時間）。</summary>
         public float RepelFollowUpNormalizedTime => _repelFollowUpNormalizedTime;

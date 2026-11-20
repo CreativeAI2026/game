@@ -71,7 +71,9 @@ namespace CreativeAI.Gameplay
         [SerializeField]
         private SoundCue _guardBlockSound;
 
-        [Tooltip("連打してきた相手を腕の鎌で振り払う(はじき返す)時の音")]
+        [Tooltip(
+            "連打してきた攻撃をはじき返した瞬間に、当たった位置から鳴らす音(プレイヤーのパリィと同じ音)"
+        )]
         [SerializeField]
         private SoundCue _repelSound;
 
@@ -122,7 +124,9 @@ namespace CreativeAI.Gameplay
         public void PlayGuardBlock(Vector3 position) =>
             WorldSoundPlayer.Play(_guardBlockSound, position, this);
 
-        public void PlayRepel() => PlayAtSelf(_repelSound);
+        /// <summary>はじき返した音を、はじいた攻撃が当たった位置から鳴らす。</summary>
+        public void PlayRepel(Vector3 position) =>
+            WorldSoundPlayer.Play(_repelSound, position, this);
 
         /// <summary>追い込み開始の合図の音を、目の位置から鳴らす。</summary>
         public void PlayPressureCue(Vector3 position) =>

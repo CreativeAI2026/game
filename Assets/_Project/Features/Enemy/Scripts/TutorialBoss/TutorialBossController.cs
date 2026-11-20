@@ -638,6 +638,7 @@ namespace CreativeAI.Gameplay
             {
                 _playerInput.OnAttackPressed += OnPlayerAttackPressed;
             }
+            Guard.Repelled += OnRepelled;
         }
 
         protected override void OnDisable()
@@ -651,6 +652,7 @@ namespace CreativeAI.Gameplay
             {
                 _playerInput.OnAttackPressed -= OnPlayerAttackPressed;
             }
+            Guard.Repelled -= OnRepelled;
         }
 
         /// <summary>
@@ -716,22 +718,24 @@ namespace CreativeAI.Gameplay
         }
 
         /// <summary>
-        /// 様子見・追跡・防御の間に連打されたら、はじき返す。攻撃・怯みなど、それ以外の行動中に殴られた分は数えない。
+        /// 様子見・追跡・防御の間だけ、連打されたらはじき返せるようにする。攻撃・怯みなど、それ以外の行動中に殴られた分は数えない。
         /// </summary>
         private void UpdateRepelTrigger()
         {
-            bool repelAllowed =
-                currentState is TBossWatchState or TBossChaseState or TBossGuardState;
-            if (!repelAllowed || Player == null || IsPlayerDead)
+            Guard.CanRepel =
+                currentState is TBossWatchState or TBossChaseState or TBossGuardState
+                && Player != null
+                && !IsPlayerDead;
+            if (!Guard.CanRepel)
             {
                 Guard.ClearMash();
-                return;
             }
+        }
 
-            if (Guard.IsMashed)
-            {
-                ChangeState(new TBossRepelState(this));
-            }
+        /// <summary>連打の最後の一撃が当たったその瞬間に、払いを始める（プレイヤーののけぞりも同じフレームで始まる）。</summary>
+        private void OnRepelled(PlayerAttackKind kind, Vector3 hitPoint)
+        {
+            ChangeState(new TBossRepelState(this, kind));
         }
 
         /// <summary>

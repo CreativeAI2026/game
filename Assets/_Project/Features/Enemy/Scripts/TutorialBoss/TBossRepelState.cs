@@ -3,9 +3,10 @@ using UnityEngine;
 namespace CreativeAI.Gameplay
 {
     /// <summary>
-    /// 連打してくる相手を、腕の鎌の短い薙ぎ払いではじき返すステート。
-    /// 届く距離のプレイヤーには、掴みから逃れた時と同じ後退モーション（<see cref="PlayerEscapeHandler"/>）を取らせる。
-    /// 押し返しとして扱うので、剣のガード・パリィでは防げない。遠くから矢を撃っている相手には振り払う動きだけになる。
+    /// 連打の最後の一撃を、腕の鎌の短い薙ぎ払いではじき返すステート。
+    /// 攻撃が当たったその瞬間（<see cref="TBossGuard.Repelled"/>）に入り、ボスの払いとプレイヤーののけぞりを同じフレームで始める。
+    /// はじいたのが近接攻撃なら、プレイヤーは掴みから逃れた時と同じモーションでのけぞって下がる（<see cref="PlayerEscapeHandler"/>）。
+    /// 矢・投げた鎌は武器だけをはじき、離れているプレイヤーは動かさない。
     /// はじき返したら、モーションの終わりを待たずに通常攻撃2か掴みへ流す（Animator を強制的に切り替えず、短いモーションから遷移させる）。
     /// </summary>
     public sealed class TBossRepelState : TBossBaseState
@@ -16,32 +17,24 @@ namespace CreativeAI.Gameplay
         // Repel ステートに入れないまま経過したら、トリガー取りこぼしとみなして復帰する
         private const float RepelStateTimeout = 2f;
 
-        private PlayerEscapeHandler _playerEscape;
-        private PlayerStatus _playerStatus;
+        private readonly PlayerAttackKind _repelledKind;
         private float _timer;
-        private bool _hasImpacted;
 
-        public TBossRepelState(TutorialBossController controller)
-            : base(controller) { }
+        /// <param name="repelledKind">はじいた攻撃の種類。近接攻撃ならプレイヤーものけぞらせる</param>
+        public TBossRepelState(TutorialBossController controller, PlayerAttackKind repelledKind)
+            : base(controller)
+        {
+            _repelledKind = repelledKind;
+        }
 
         public override void Enter()
         {
-            DevLog.Log("[TutorialBoss] はじき返し");
+            DevLog.Log($"[TutorialBoss] はじき返し（{_repelledKind}）");
 
             _timer = 0f;
-            _hasImpacted = false;
-            _playerEscape = boss.Player.GetComponent<PlayerEscapeHandler>();
-            _playerStatus = boss.Player.GetComponent<PlayerStatus>();
-            if (_playerEscape == null)
-            {
-                Debug.LogError(
-                    "[TutorialBoss] プレイヤーに PlayerEscapeHandler がありません。はじき返してもプレイヤーが下がりません。"
-                );
-            }
 
-            // 振り払いの最中も正面の攻撃は鎌で受け止める。殴られた回数は、はじき返したのでやり直す
+            // 振り払いの最中も正面の攻撃は鎌で受け止める
             boss.Guard.IsGuarding = true;
-            boss.Guard.ClearMash();
 
             if (boss.Agent != null && boss.Agent.isOnNavMesh)
             {
@@ -53,8 +46,12 @@ namespace CreativeAI.Gameplay
             boss.StopSwingEffects();
             FacePlayerImmediately();
             boss.ShowScytheTrail();
-            boss.Sounds.PlayRepel();
             boss.Animator.SetTrigger(RepelTriggerHash);
+
+            if (_repelledKind == PlayerAttackKind.Melee)
+            {
+                KnockBackPlayer();
+            }
         }
 
         public override void Update()
@@ -73,14 +70,7 @@ namespace CreativeAI.Gameplay
                 return;
             }
 
-            TBossGuardSettings settings = boss.Guard.Settings;
-            if (!_hasImpacted && progress >= settings.RepelImpactNormalizedTime)
-            {
-                _hasImpacted = true;
-                ApplyRepel(settings);
-            }
-
-            if (progress >= settings.RepelFollowUpNormalizedTime)
+            if (progress >= boss.Guard.Settings.RepelFollowUpNormalizedTime)
             {
                 // 通常攻撃2か掴みへ。どちらも間合い・射線が合わなければ様子見に戻る
                 if (!boss.TryStartRepelFollowUp())
@@ -115,29 +105,35 @@ namespace CreativeAI.Gameplay
             return state.shortNameHash == RepelStateHash;
         }
 
-        /// <summary>振り払いが当たった瞬間。届く距離のプレイヤーを下がらせ、設定によってはダメージも与える。</summary>
-        private void ApplyRepel(TBossGuardSettings settings)
+        /// <summary>はじかれたプレイヤーをのけぞらせて下がらせ、設定によってはダメージも与える。</summary>
+        private void KnockBackPlayer()
         {
-            Vector3 away = boss.Player.transform.position - boss.transform.position;
-            away.y = 0f;
-            if (away.magnitude > settings.RepelRadius || boss.IsPlayerDead)
+            if (!boss.Player.TryGetComponent(out PlayerEscapeHandler playerEscape))
             {
+                Debug.LogError(
+                    "[TutorialBoss] プレイヤーに PlayerEscapeHandler がありません。はじき返してもプレイヤーがのけぞりません。"
+                );
                 return;
             }
 
-            if (settings.RepelDealsDamage)
+            TBossGuardSettings settings = boss.Guard.Settings;
+            if (
+                settings.RepelDealsDamage
+                && boss.Player.TryGetComponent(out PlayerStatus playerStatus)
+            )
             {
-                // 後退モーションと重ならないよう、被弾の怯みは出さない
-                _playerStatus.TakeDamage(
+                // のけぞりのモーションと重ならないよう、被弾の怯みは出さない
+                playerStatus.TakeDamage(
                     boss.Status.CurrentAttackPower * settings.RepelDamageMultiplier,
                     false,
                     suppressFlinch: true
                 );
             }
 
-            if (_playerEscape != null && !boss.IsPlayerDead)
+            if (!boss.IsPlayerDead)
             {
-                _playerEscape.TriggerRepelled(away);
+                Vector3 away = boss.Player.transform.position - boss.transform.position;
+                playerEscape.TriggerRepelled(away);
             }
         }
 
