@@ -67,13 +67,13 @@ namespace CreativeAI.Gameplay
             "はじき返しのモーションのどこで振り払いが当たるか（Repel ステートの正規化時間 0〜1）。クリップの振りに合わせる"
         )]
         [SerializeField, Range(0f, 1f)]
-        private float _repelImpactNormalizedTime = 0.4f;
+        private float _repelImpactNormalizedTime = 0.15f;
 
         [Tooltip(
             "はじき返しのモーションのどこで次の攻撃（通常攻撃2か掴み）に移るか（正規化時間 0〜1）。モーションの終わりを待たずに流す"
         )]
         [SerializeField, Range(0f, 1f)]
-        private float _repelFollowUpNormalizedTime = 0.75f;
+        private float _repelFollowUpNormalizedTime = 0.56f;
 
         [Tooltip("はじき返しでプレイヤーにダメージを与えるか。オフなら押し出して怯ませるだけ")]
         [SerializeField]

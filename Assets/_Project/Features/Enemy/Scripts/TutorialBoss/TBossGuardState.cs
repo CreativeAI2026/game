@@ -20,7 +20,11 @@ namespace CreativeAI.Gameplay
 
         /// <param name="duration">構えを続ける時間（秒）</param>
         /// <param name="attackWhenDone">true なら構えが終わったら攻撃に移る（読みの防御）。false なら様子見へ戻る</param>
-        public TBossGuardState(TutorialBossController controller, float duration, bool attackWhenDone)
+        public TBossGuardState(
+            TutorialBossController controller,
+            float duration,
+            bool attackWhenDone
+        )
             : base(controller)
         {
             _duration = duration;
@@ -29,7 +33,9 @@ namespace CreativeAI.Gameplay
 
         public override void Enter()
         {
-            DevLog.Log($"[TutorialBoss] 防御開始（{_duration:0.0}秒、終わったら{(_attackWhenDone ? "攻撃" : "様子見")}）");
+            DevLog.Log(
+                $"[TutorialBoss] 防御開始（{_duration:0.0}秒、終わったら{(_attackWhenDone ? "攻撃" : "様子見")}）"
+            );
 
             _timer = 0f;
             boss.Guard.IsGuarding = true;

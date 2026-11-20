@@ -45,7 +45,10 @@ namespace CreativeAI.Gameplay
                 _settings.PostAttackGuardPhaseCount,
                 $"{name}: 攻撃後の防御確率の数が、HPの段階の数と合っていません"
             );
-            Assert.IsNotNull(_blockEffect, $"{name}: 受け止めた時の火花（_blockEffect）が未設定です");
+            Assert.IsNotNull(
+                _blockEffect,
+                $"{name}: 受け止めた時の火花（_blockEffect）が未設定です"
+            );
         }
 
         /// <inheritdoc/>

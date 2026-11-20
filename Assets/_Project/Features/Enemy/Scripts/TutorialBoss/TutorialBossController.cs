@@ -445,6 +445,7 @@ namespace CreativeAI.Gameplay
             "Flinch",
             "Parried",
             "Look",
+            "Repel",
         };
 
         /// <summary>
@@ -453,6 +454,9 @@ namespace CreativeAI.Gameplay
         /// </summary>
         protected override void OnBeforeStateEnter()
         {
+            // ここではまだ currentState が切り替わる前のステート。様子見の入り方（攻撃の後か等）の判断に使う
+            _previousState = currentState;
+
             if (Animator == null)
             {
                 return;
@@ -517,6 +521,15 @@ namespace CreativeAI.Gameplay
         // 今の掴みを、追い込みの歯止めの命中として数え済みか（掴みが終わったら戻す）
         private bool _hasCountedCurrentCapture;
 
+        // 今のステートの1つ前のステート。様子見に入った時に、攻撃の後か・防御の後かを見分けるのに使う
+        private IEnemyState _previousState;
+
+        // プレイヤーの攻撃ボタンの入力。押された瞬間に反応して防御するのに使う
+        private PlayerInputHandler _playerInput;
+
+        /// <summary>防御の判断と、プレイヤーの攻撃の受け止め。Awakeで同じ GameObject から取得する。</summary>
+        public TBossGuard Guard { get; private set; }
+
         /// <summary>プレイヤーが倒れているか。倒れたプレイヤーは知覚・攻撃の対象にしない。</summary>
         public bool IsPlayerDead => _playerStatus != null && _playerStatus.IsDead;
 
@@ -527,17 +540,19 @@ namespace CreativeAI.Gameplay
         public bool IsHeadAimActive =>
             currentState is TBossChaseState
             || currentState is TBossWatchState
+            || currentState is TBossGuardState
             || (currentState is TBossPatrolState && IsSuspicious);
 
         /// <summary>
-        /// 通常攻撃・通常攻撃2（鎌）・特殊攻撃（触手）のステート中か。走り込みの接近フェーズも含む。
+        /// 通常攻撃・通常攻撃2（鎌）・特殊攻撃（触手）・はじき返しのステート中か。走り込みの接近フェーズも含む。
         /// 捕獲は攻撃が当たった後の別ステートなので含めない。
         /// </summary>
         public override bool IsAttacking =>
             currentState
                 is TBossNormalAttackState
                     or TBossNormalAttack2State
-                    or TBossSpecialAttackState;
+                    or TBossSpecialAttackState
+                    or TBossRepelState;
 
         // ────────────────────────────────────────────
         //  Unity ライフサイクル
@@ -572,6 +587,12 @@ namespace CreativeAI.Gameplay
                 _playerStatus = Player.GetComponent<PlayerStatus>();
                 Assert.IsNotNull(_playerStatus, $"{name}: プレイヤーに PlayerStatus がありません");
 
+                _playerInput = Player.GetComponent<PlayerInputHandler>();
+                Assert.IsNotNull(
+                    _playerInput,
+                    $"{name}: プレイヤーに PlayerInputHandler がありません（攻撃入力に反応して防御できません）"
+                );
+
                 _playerPanic = Player.GetComponent<PanicDetector>();
                 if (_playerPanic == null)
                 {
@@ -594,6 +615,9 @@ namespace CreativeAI.Gameplay
 
             Sounds = TryGetComponent(out TutorialBossSounds sounds) ? sounds : null;
             Assert.IsNotNull(Sounds, $"{name}: TutorialBossSounds が同じ GameObject にありません");
+
+            Guard = TryGetComponent(out TBossGuard guard) ? guard : null;
+            Assert.IsNotNull(Guard, $"{name}: TBossGuard が同じ GameObject にありません");
         }
 
         protected override void Start()
@@ -610,6 +634,10 @@ namespace CreativeAI.Gameplay
             {
                 _playerStatus.Damaged += OnPlayerDamaged;
             }
+            if (_playerInput != null)
+            {
+                _playerInput.OnAttackPressed += OnPlayerAttackPressed;
+            }
         }
 
         protected override void OnDisable()
@@ -618,6 +646,91 @@ namespace CreativeAI.Gameplay
             if (_playerStatus != null)
             {
                 _playerStatus.Damaged -= OnPlayerDamaged;
+            }
+            if (_playerInput != null)
+            {
+                _playerInput.OnAttackPressed -= OnPlayerAttackPressed;
+            }
+        }
+
+        /// <summary>
+        /// プレイヤーが攻撃ボタンを押した瞬間に呼ばれる。様子見中なら、一定の確率で反応して防御する（反応の防御）。
+        /// </summary>
+        private void OnPlayerAttackPressed()
+        {
+            if (currentState is not TBossWatchState || !Guard.RollReactiveGuard())
+            {
+                return;
+            }
+
+            ChangeState(
+                new TBossGuardState(
+                    this,
+                    Guard.Settings.ReactiveGuardDuration,
+                    attackWhenDone: false
+                )
+            );
+        }
+
+        /// <summary>
+        /// 様子見に入った直後に呼ぶ。攻撃の後なら「攻撃後の防御」を、HPの段階に応じた確率で引く。
+        /// 追跡などから入ったなら「読みの防御」を引き、当たれば短く防御してから攻撃する。
+        /// 防御・はじき返しの後に戻ってきた時は引かない（防御が続けて出るのを防ぐ）。
+        /// 防御に切り替えたら true。
+        /// </summary>
+        public bool TryStartOpeningGuard()
+        {
+            if (_previousState is TBossGuardState or TBossRepelState)
+            {
+                return false;
+            }
+
+            bool afterAttack =
+                _previousState
+                is TBossNormalAttackState
+                    or TBossNormalAttack2State
+                    or TBossSpecialAttackState
+                    or TBossCapturedState;
+            if (afterAttack)
+            {
+                if (!Guard.RollPostAttackGuard())
+                {
+                    return false;
+                }
+                ChangeState(
+                    new TBossGuardState(
+                        this,
+                        Guard.Settings.PostAttackGuardDuration,
+                        attackWhenDone: false
+                    )
+                );
+                return true;
+            }
+
+            if (!Guard.RollReadGuard(out float duration))
+            {
+                return false;
+            }
+            ChangeState(new TBossGuardState(this, duration, attackWhenDone: true));
+            return true;
+        }
+
+        /// <summary>
+        /// 様子見・追跡・防御の間に連打されたら、はじき返す。攻撃・怯みなど、それ以外の行動中に殴られた分は数えない。
+        /// </summary>
+        private void UpdateRepelTrigger()
+        {
+            bool repelAllowed =
+                currentState is TBossWatchState or TBossChaseState or TBossGuardState;
+            if (!repelAllowed || Player == null || IsPlayerDead)
+            {
+                Guard.ClearMash();
+                return;
+            }
+
+            if (Guard.IsMashed)
+            {
+                ChangeState(new TBossRepelState(this));
             }
         }
 
@@ -654,6 +767,7 @@ namespace CreativeAI.Gameplay
             UpdateAnimatorParameters();
             _perception.Tick(Time.deltaTime);
             TickPanicPressure();
+            UpdateRepelTrigger();
 
             if (currentState is not TBossCapturedState)
             {
@@ -892,6 +1006,12 @@ namespace CreativeAI.Gameplay
         public override void ForceFlinch()
         {
             base.ForceFlinch();
+
+            // はじき返しは短い反撃なので、途中で殴られても怯まずにやり切る
+            if (currentState is TBossRepelState)
+            {
+                return;
+            }
             ChangeState(new TBossFlinchState(this));
         }
 
@@ -937,6 +1057,8 @@ namespace CreativeAI.Gameplay
                 || currentState is TBossCapturedState
                 || currentState is TBossFlinchState
                 || currentState is TBossParriedState
+                || currentState is TBossGuardState
+                || currentState is TBossRepelState
                 || currentState is TBossDeathState;
         }
 
@@ -1105,7 +1227,17 @@ namespace CreativeAI.Gameplay
         /// プレイヤーとの距離・地形・各攻撃のクールダウン・直前の選択履歴から攻撃を選び、仕掛けられれば遷移して true を返す。
         /// どの攻撃も成立しなければ何もせず false を返す（追跡中から呼んでも追跡を差し替えない）。
         /// </summary>
-        public bool TryStartAttack()
+        public bool TryStartAttack() =>
+            TryStartAttack(allowNormalAttack: true, ignoreCooldowns: false);
+
+        /// <summary>
+        /// はじき返した直後の追い打ち。通常攻撃2か掴みだけから選ぶ（通常攻撃は速すぎて、下がっている相手には避けようがないため除く）。
+        /// はじき返しへの返しなので、クールダウンは見ずに、間合い・地形だけで選ぶ。仕掛けられなければ false。
+        /// </summary>
+        public bool TryStartRepelFollowUp() =>
+            TryStartAttack(allowNormalAttack: false, ignoreCooldowns: true);
+
+        private bool TryStartAttack(bool allowNormalAttack, bool ignoreCooldowns)
         {
             if (Player == null || IsPlayerDead)
             {
@@ -1119,20 +1251,21 @@ namespace CreativeAI.Gameplay
             bool meleeHeightOk = AttackFeasibility.IsWithinMeleeHeight();
 
             bool normalEligible =
-                meleeHeightOk
+                allowNormalAttack
+                && meleeHeightOk
                 && distance <= Mathf.Max(attackRange, meleeChargeRange)
-                && Time.time >= _normalAttackReadyTime;
+                && (ignoreCooldowns || Time.time >= _normalAttackReadyTime);
             bool normal2Eligible =
                 meleeHeightOk
                 && distance <= Mathf.Max(normalAttack2Range, meleeChargeRange)
-                && Time.time >= _normalAttack2ReadyTime
+                && (ignoreCooldowns || Time.time >= _normalAttack2ReadyTime)
                 && (distance > normalAttack2Range || AttackFeasibility.HasMeleeLine());
             // 特殊攻撃（触手の拘束）は至近距離で使うと不自然なため、通常攻撃の射程より外側でのみ選択可能にする。
             // 空振りすると長いクールダウンを無駄にするため、射線が通っている時だけ選ぶ（重い判定なので最後に評価）
             bool specialEligible =
                 distance > attackRange
                 && distance <= specialAttackRange
-                && Time.time >= _specialAttackReadyTime
+                && (ignoreCooldowns || Time.time >= _specialAttackReadyTime)
                 && AttackFeasibility.HasClearWirePath();
 
             SuppressRepeatedChoice(ref normalEligible, ref normal2Eligible, ref specialEligible);
