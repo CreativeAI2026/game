@@ -280,7 +280,12 @@ namespace CreativeAI.Gameplay
 
         [SerializeField]
         private bool _endOnWrong; // useItem: 間違えたらイベントを打ち切るか(false なら選び直し)
-        private string _usedText; // useItem: 正解で使ったあとのセリフ(省略可) private string _cancelText; // useItem: やめたときのセリフ(省略可)
+
+        [SerializeField]
+        private string _usedText; // useItem: 正解で使ったあとのセリフ(省略可)
+
+        [SerializeField]
+        private string _cancelText; // useItem: やめたときのセリフ(省略可)
 
         public IReadOnlyList<EventBranchCase> Cases => _cases;
         public int JoinTarget => _joinTarget;
@@ -447,7 +452,12 @@ namespace CreativeAI.Gameplay
 
         /// <summary>useItem ステップで、間違えたらイベントを打ち切るか(false なら選び直し)。</summary>
         public bool EndOnWrong => _endOnWrong;
-        /// <summary>useItem: 正解で使ったあとに出すセリフ(省略可)。speaker / portrait は間違いのセリフと同じ。</summary> public string UsedText => _usedText;  /// <summary>useItem: 「やめる」を選んだときに出すセリフ(省略可)。speaker / portrait は間違いのセリフと同じ。</summary> public string CancelText => _cancelText;
+
+        /// <summary>useItem: 正解で使ったあとに出すセリフ(省略可)。speaker / portrait は間違いのセリフと同じ。</summary>
+        public string UsedText => _usedText;
+
+        /// <summary>useItem: 「やめる」を選んだときに出すセリフ(省略可)。speaker / portrait は間違いのセリフと同じ。</summary>
+        public string CancelText => _cancelText;
     }
 
     public enum ConditionType
