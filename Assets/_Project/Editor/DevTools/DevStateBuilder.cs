@@ -28,7 +28,8 @@ namespace CreativeAI.EditorTools
                     && condition.Type == ConditionType.Progress
                     && !condition.Negated
                 )
-                    return condition.ProgressValue;
+                    // 範囲(min / max)は、満たす最小の進行度(下限なしなら 0)。
+                    return condition.IsRange ? Math.Max(0, condition.Min) : condition.ProgressValue;
             return -1;
         }
 

@@ -479,7 +479,16 @@ namespace CreativeAI.Gameplay
         private ConditionType _type;
 
         [SerializeField]
-        private int _progressValue; // type == Progress: 進行度がこの値にちょうど一致で成立
+        private int _progressValue; // type == Progress(範囲でないとき): 進行度がこの値にちょうど一致で成立
+
+        [SerializeField]
+        private bool _isRange; // type == Progress: true なら _min 以上 _max 以下で成立(_progressValue は使わない)
+
+        [SerializeField]
+        private int _min = int.MinValue; // 範囲の下限(含む)。書かなければ下限なし
+
+        [SerializeField]
+        private int _max = int.MaxValue; // 範囲の上限(含む)。書かなければ上限なし
 
         [SerializeField]
         private string _flagKey; // type == Flag: 対象フラグのキー
@@ -503,6 +512,20 @@ namespace CreativeAI.Gameplay
                 _negate = not,
             };
 
+        /// <summary>
+        /// 進行度が <paramref name="min"/> 以上 <paramref name="max"/> 以下で成立する条件(events.json の <c>"min"</c> / <c>"max"</c>)。
+        /// 片方を null にすると、その側は無制限(min だけなら「以上」、max だけなら「以下」)。
+        /// </summary>
+        public static EventCondition ProgressRange(int? min, int? max, bool not = false) =>
+            new()
+            {
+                _type = ConditionType.Progress,
+                _isRange = true,
+                _min = min ?? int.MinValue,
+                _max = max ?? int.MaxValue,
+                _negate = not,
+            };
+
         public static EventCondition Flag(string key, string value, bool not = false) =>
             new()
             {
@@ -521,7 +544,19 @@ namespace CreativeAI.Gameplay
             };
 
         public ConditionType Type => _type;
+
+        /// <summary>progress 条件が「ちょうど一致」のときの進行度。範囲(<see cref="IsRange"/>)のときは使わない。</summary>
         public int ProgressValue => _progressValue;
+
+        /// <summary>progress 条件が範囲(min / max)で書かれているか。false なら「ちょうど一致」。</summary>
+        public bool IsRange => _isRange;
+
+        /// <summary>範囲の下限(含む)。下限なしなら <see cref="int.MinValue"/>。</summary>
+        public int Min => _min;
+
+        /// <summary>範囲の上限(含む)。上限なしなら <see cref="int.MaxValue"/>。</summary>
+        public int Max => _max;
+
         public string FlagKey => _flagKey;
         public string FlagValue => _flagValue;
         public string ItemKey => _itemKey;
@@ -547,7 +582,9 @@ namespace CreativeAI.Gameplay
         ) =>
             _type switch
             {
-                ConditionType.Progress => progress == _progressValue,
+                ConditionType.Progress => _isRange
+                    ? progress >= _min && progress <= _max
+                    : progress == _progressValue,
                 ConditionType.Flag => string.Equals(
                     getFlag?.Invoke(_flagKey),
                     _flagValue,

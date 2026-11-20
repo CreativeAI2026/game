@@ -22,6 +22,47 @@ namespace CreativeAI.Tests.EditMode
         }
 
         [Test]
+        public void ProgressRange_MinOnly_MetFromThatProgressOnward()
+        {
+            var c = EventCondition.ProgressRange(5, null);
+
+            Assert.IsFalse(c.IsMet(4, NoFlags));
+            Assert.IsTrue(c.IsMet(5, NoFlags));
+            Assert.IsTrue(c.IsMet(9, NoFlags)); // 進行度が進んでも成立し続ける
+        }
+
+        [Test]
+        public void ProgressRange_MaxOnly_MetUpToThatProgress()
+        {
+            var c = EventCondition.ProgressRange(null, 5);
+
+            Assert.IsTrue(c.IsMet(0, NoFlags));
+            Assert.IsTrue(c.IsMet(5, NoFlags));
+            Assert.IsFalse(c.IsMet(6, NoFlags));
+        }
+
+        [Test]
+        public void ProgressRange_MinAndMax_MetOnlyInsideInclusive()
+        {
+            var c = EventCondition.ProgressRange(3, 6);
+
+            Assert.IsFalse(c.IsMet(2, NoFlags));
+            Assert.IsTrue(c.IsMet(3, NoFlags));
+            Assert.IsTrue(c.IsMet(6, NoFlags));
+            Assert.IsFalse(c.IsMet(7, NoFlags));
+        }
+
+        [Test]
+        public void ProgressRange_Negated_MetOnlyOutsideRange()
+        {
+            var c = EventCondition.ProgressRange(3, 6, not: true);
+
+            Assert.IsTrue(c.IsMet(2, NoFlags));
+            Assert.IsFalse(c.IsMet(4, NoFlags));
+            Assert.IsTrue(c.IsMet(7, NoFlags));
+        }
+
+        [Test]
         public void Flag_Met_OnlyWhenValueMatches()
         {
             var c = EventCondition.Flag("girl_choice", "together");

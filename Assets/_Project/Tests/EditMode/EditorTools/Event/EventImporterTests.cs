@@ -462,6 +462,80 @@ namespace CreativeAI.Tests.EditMode
         }
 
         [Test]
+        public void Parse_MinMaxProgress_WithRepeat_BuildsRangeCondition()
+        {
+            const string json =
+                @"{ ""events"": [ { ""id"": ""x"", ""repeat"": ""always"",
+                    ""conditions"": [ { ""type"": ""progress"", ""min"": 5, ""max"": 8 } ], "
+                + RepeatSteps
+                + @" } ] }";
+
+            var report = EventImporter.Parse(json);
+
+            Assert.IsFalse(report.HasErrors);
+            var condition = report.Events[0].Conditions[0];
+            Assert.IsTrue(condition.IsRange);
+            Assert.AreEqual(5, condition.Min);
+            Assert.AreEqual(8, condition.Max);
+        }
+
+        [Test]
+        public void Parse_MinOnlyAndMaxOnly_LeaveTheOtherSideOpen()
+        {
+            const string json =
+                @"{ ""events"": [
+                    { ""id"": ""a"", ""repeat"": ""always"",
+                      ""conditions"": [ { ""type"": ""progress"", ""min"": 5 } ], "
+                + RepeatSteps
+                + @" },
+                    { ""id"": ""b"", ""repeat"": ""always"",
+                      ""conditions"": [ { ""type"": ""progress"", ""max"": 5 } ], "
+                + RepeatSteps
+                + @" } ] }";
+
+            var report = EventImporter.Parse(json);
+
+            Assert.IsFalse(report.HasErrors);
+            Assert.AreEqual(int.MaxValue, report.Events[0].Conditions[0].Max);
+            Assert.AreEqual(int.MinValue, report.Events[1].Conditions[0].Min);
+        }
+
+        [Test]
+        public void Parse_MinProgressAlone_DoesNotSatisfyProgressRequirement()
+        {
+            // repeat 無しのイベントは「ちょうど一致」の progress が必要。min だけだと進めても再発火するので不可。
+            const string json =
+                @"{ ""events"": [ { ""id"": ""x"",
+                    ""conditions"": [ { ""type"": ""progress"", ""min"": 3 } ], "
+                + RepeatSteps
+                + @",
+                    ""nextProgress"": 4 } ] }";
+
+            var report = EventImporter.Parse(json);
+
+            Assert.IsTrue(report.HasErrors);
+        }
+
+        [TestCase(@"{ ""type"": ""progress"" }")]
+        [TestCase(@"{ ""type"": ""progress"", ""value"": 3, ""min"": 3 }")]
+        [TestCase(@"{ ""type"": ""progress"", ""max"": 3, ""value"": 3 }")]
+        [TestCase(@"{ ""type"": ""progress"", ""min"": ""3"" }")]
+        [TestCase(@"{ ""type"": ""progress"", ""min"": 6, ""max"": 3 }")]
+        public void Parse_ProgressNeedsValueOrValidMinMax(string condition)
+        {
+            var json =
+                @"{ ""events"": [ { ""id"": ""x"", ""repeat"": ""always"", ""conditions"": [ "
+                + condition
+                + @" ], "
+                + RepeatSteps
+                + @" } ] }";
+
+            var report = EventImporter.Parse(json);
+
+            Assert.IsTrue(report.HasErrors);
+        }
+
+        [Test]
         public void Parse_NotCondition_BuildsNegatedCondition()
         {
             const string json =
