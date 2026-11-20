@@ -6,12 +6,16 @@ namespace CreativeAI.Gameplay
     /// 距離を取って遠距離攻撃をしてくる相手へ、腕の鎌で正面を受け止めながらにじり寄るステート。
     /// 上半身だけ構えのモーションを重ね、足は移動のモーションのままゆっくり歩く。
     /// プレイヤーが攻撃の間合いへ入ってきたら攻撃し、入ってこなければ一定時間待ってから自分から攻撃に入る。
-    /// 見失ったら追跡へ戻る。
+    /// しばらく見えないままなら追跡へ戻る（撃たれている間は位置が分かっているので戻らない）。
     /// </summary>
     public sealed class TBossGuardAdvanceState : TBossBaseState
     {
         // プレイヤーへ向き直る速さ（防御のステートと同じ）
         private const float RotateSpeed = 8f;
+
+        // 見えなくなってから追跡へ戻るまでの猶予（秒）。遠くから撃つ相手は光の外に出やすく、
+        // 一瞬見えないだけで戻すと構えた直後に追跡へ戻ってしまう。撃たれるたびに猶予はやり直す（コントローラー側）
+        private const float LostSightGraceBeforeChase = 2f;
 
         private float _timer;
         private float _duration;
@@ -46,10 +50,18 @@ namespace CreativeAI.Gameplay
                 return;
             }
 
-            if (!boss.CheckPlayerTracked())
+            if (boss.CheckPlayerTracked())
             {
-                boss.ChangeState(new TBossChaseState(boss));
-                return;
+                boss.LostSightTimer = 0f;
+            }
+            else
+            {
+                boss.LostSightTimer += Time.deltaTime;
+                if (boss.LostSightTimer >= LostSightGraceBeforeChase)
+                {
+                    boss.ChangeState(new TBossChaseState(boss, continueLostSightTimer: true));
+                    return;
+                }
             }
 
             Vector3 playerPosition = boss.Player.transform.position;

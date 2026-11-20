@@ -769,7 +769,16 @@ namespace CreativeAI.Gameplay
             _wasPlayerAiming = aiming;
         }
 
-        private void OnPlayerRangedAttack() => TryStartRangedGuard();
+        private void OnPlayerRangedAttack()
+        {
+            // 撃たれた・投げられたことで相手の位置は分かるので、にじり寄りの見失いをやり直す
+            if (currentState is TBossGuardAdvanceState)
+            {
+                LostSightTimer = 0f;
+                return;
+            }
+            TryStartRangedGuard();
+        }
 
         /// <summary>
         /// 明らかに距離を取って遠距離攻撃をしてきそうな時（様子見の間合いの外で構える・撃つ・投げる）に確率を引き、
