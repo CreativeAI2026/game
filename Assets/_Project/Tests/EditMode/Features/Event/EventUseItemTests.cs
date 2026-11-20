@@ -143,7 +143,9 @@ namespace CreativeAI.Tests.EditMode
             bool consume = true,
             bool endOnWrong = false,
             int count = 1,
-            EventRepeat repeat = EventRepeat.Progress
+            EventRepeat repeat = EventRepeat.Progress,
+            string usedText = null,
+            string cancelText = null
         ) =>
             EventDefinition.Create(
                 "use_item_test",
@@ -154,7 +156,9 @@ namespace CreativeAI.Tests.EditMode
                         new[] { new UseItemCandidate(Key, count) },
                         consume,
                         "違うようだ。",
-                        endOnWrong: endOnWrong
+                        endOnWrong: endOnWrong,
+                        usedText: usedText,
+                        cancelText: cancelText
                     ),
                     EventStep.Line("", "", "開いた"),
                 },
@@ -257,6 +261,57 @@ namespace CreativeAI.Tests.EditMode
             CollectionAssert.DoesNotContain(_view.Lines, "開いた");
             Assert.AreEqual(1, _items.Stock[Key]);
             Assert.IsFalse(EventPlaybackService.IsPlaying, "再生中フラグは戻す");
+        }
+
+        [Test]
+        public void UseItem_Factory_ExposesUsedAndCancelText()
+        {
+            var step = EventStep.UseItem(
+                new[] { new UseItemCandidate("card_key", 1) },
+                true,
+                "違うようだ。",
+                usedText: "カードキーを使った。",
+                cancelText: "やめておこう。"
+            );
+
+            Assert.AreEqual("カードキーを使った。", step.UsedText);
+            Assert.AreEqual("やめておこう。", step.CancelText);
+        }
+
+        [Test]
+        public void UseItem_Correct_WithUsedText_ShowsItBeforeContinuing()
+        {
+            _items.Stock[Key] = 1;
+            _view.Picks.Enqueue(Key);
+
+            Drive(_player.PlayRoutine(UseItemEvent(usedText: "カードキーを使った。")));
+
+            CollectionAssert.AreEqual(new[] { "カードキーを使った。", "開いた" }, _view.Lines);
+        }
+
+        [Test]
+        public void UseItem_Cancel_WithCancelText_ShowsItThenAbortsWithoutProgress()
+        {
+            _items.Stock[Key] = 1;
+            _view.Picks.Enqueue(null);
+
+            Drive(_player.PlayRoutine(UseItemEvent(cancelText: "やめておこう。")));
+
+            CollectionAssert.AreEqual(new[] { "やめておこう。" }, _view.Lines);
+            Assert.AreEqual(0, _progress.Progress);
+            Assert.IsTrue(_view.Closed);
+        }
+
+        [Test]
+        public void UseItem_Cancel_AfterWrongAnswer_ShowsCancelText()
+        {
+            _items.Stock["apple"] = 1;
+            _view.Picks.Enqueue("apple");
+            _view.Picks.Enqueue(null);
+
+            Drive(_player.PlayRoutine(UseItemEvent(cancelText: "やめておこう。")));
+
+            CollectionAssert.AreEqual(new[] { "違うようだ。", "やめておこう。" }, _view.Lines);
         }
 
         [Test]

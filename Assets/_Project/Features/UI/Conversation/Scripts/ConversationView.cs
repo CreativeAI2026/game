@@ -473,7 +473,7 @@ namespace CreativeAI.UI
             _speedPresenter?.Cancel();
             _rewardPresenter?.HideAll();
             _choicePresenter?.Clear();
-            _itemPicker?.Clear();
+            _itemPicker?.Dismiss();
             _rewardPresentationActive = false;
         }
 
@@ -903,7 +903,7 @@ namespace CreativeAI.UI
             _rewardPresenter.HideAll();
             _choicePresenter.Clear();
             _choicePresenter.SetActive(false);
-            _itemPicker?.Clear();
+            _itemPicker?.Dismiss();
             ResetTransientModes();
             State = ConversationState.Hidden;
         }
@@ -913,7 +913,7 @@ namespace CreativeAI.UI
             State = ConversationState.Exiting;
             _rewardPresenter?.HideAll();
             SetChoicesActive(false);
-            _itemPicker?.Clear();
+            _itemPicker?.Dismiss();
             ResetTransientModes();
             _chromePresenter?.HideImmediate();
             State = ConversationState.Hidden;

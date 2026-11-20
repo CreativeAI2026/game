@@ -257,14 +257,25 @@ namespace CreativeAI.Gameplay
             {
                 string picked = null;
                 yield return View.ShowItemPicker(step.Prompt, value => picked = value);
-                if (generation != _sceneGeneration || picked == null)
+                if (generation != _sceneGeneration)
                 {
+                    done(false);
+                    yield break;
+                }
+                if (picked == null)
+                {
+                    // やめた: セリフがあれば出してから打ち切る。
+                    if (!string.IsNullOrEmpty(step.CancelText))
+                        yield return View.ShowLine(step.Speaker, step.Portrait, step.CancelText);
                     done(false);
                     yield break;
                 }
 
                 if (IsCorrectUse(step, picked))
                 {
+                    // 使った実感を出す: セリフがあれば、次のステップへ進む前に出す。
+                    if (!string.IsNullOrEmpty(step.UsedText))
+                        yield return View.ShowLine(step.Speaker, step.Portrait, step.UsedText);
                     done(true);
                     yield break;
                 }

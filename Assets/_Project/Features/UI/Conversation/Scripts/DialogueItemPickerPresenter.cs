@@ -26,6 +26,7 @@ namespace CreativeAI.UI
             PanelHeight - Padding * 2f - PromptHeight - Gap * 3f - NameHeight - CancelHeight;
         private const string DefaultPrompt = "何を使う?";
         private const string CancelLabel = "やめる";
+        private const string EmptyMessage = "使えそうな持ち物がない。";
         private const string ControlGuide = "SELECT   ARROWS     CONFIRM   ENTER     CANCEL   ESC";
 
         private static readonly Color DimColor = new(0f, 0f, 0f, 0.5f);
@@ -42,6 +43,7 @@ namespace CreativeAI.UI
         private RectTransform _contentRect;
         private TMP_Text _nameText;
         private int _selectedIndex = -1;
+        private string _rememberedKey; // 直前に選んだ itemKey。会話を閉じるまで覚える
 
         private int ItemCount => _names.Count;
 
@@ -83,6 +85,8 @@ namespace CreativeAI.UI
                 if (picked)
                     return;
                 picked = true;
+                if (value != null)
+                    _rememberedKey = value; // 選び直しのとき、さっき選んだ物にカーソルを合わせる
                 onPicked?.Invoke(value);
             }
 
@@ -93,7 +97,7 @@ namespace CreativeAI.UI
             }
             AddCancel(panel.transform, () => Pick(null));
 
-            Select(0);
+            Select(StartIndex(entries));
         }
 
         /// <summary>上下左右で選択を動かし、決定で選び、キャンセルで「やめる」を選ぶ。毎フレーム呼ぶ。</summary>
@@ -111,6 +115,26 @@ namespace CreativeAI.UI
                 Select(ItemPickerGridNavigation.Move(_selectedIndex, step, ItemCount, Columns));
             if (UiInputActionMap.WasSubmitPressedThisFrame() && _selectedIndex >= 0)
                 _actions[_selectedIndex].Invoke();
+        }
+
+        /// <summary>パネルを片付け、選んだ位置の記憶も忘れる(会話を閉じるとき)。</summary>
+        public void Dismiss()
+        {
+            Clear();
+            _rememberedKey = null;
+        }
+
+        // 開いたときにカーソルを置く位置。さっき選んだ物があればそこ、なければ先頭。
+        private int StartIndex(IReadOnlyList<ItemPickerEntries.Entry> entries)
+        {
+            if (_rememberedKey == null || entries == null)
+                return 0;
+            for (int i = 0; i < entries.Count; i++)
+            {
+                if (entries[i].ItemKey == _rememberedKey)
+                    return i;
+            }
+            return 0;
         }
 
         /// <summary>パネルを片付ける。</summary>
@@ -321,7 +345,10 @@ namespace CreativeAI.UI
             for (int i = 0; i < _backgrounds.Count; i++)
                 _backgrounds[i].color = i == index ? CellFocusColor : CellColor;
             if (_nameText != null)
-                _nameText.text = index < ItemCount ? _names[index] : string.Empty;
+                _nameText.text =
+                    index < ItemCount
+                        ? _names[index]
+                        : (ItemCount == 0 ? EmptyMessage : string.Empty);
 
             if (scroll && index < ItemCount)
                 ScrollToKeepVisible(index);

@@ -69,7 +69,7 @@ namespace CreativeAI.Tests.EditMode
         }
 
         [Test]
-        public void Build_OrdersByName()
+        public void Build_KeepsInventoryOrder_ByFirstAppearance()
         {
             var stacks = new List<ItemStack>
             {
@@ -80,7 +80,11 @@ namespace CreativeAI.Tests.EditMode
 
             var names = ItemPickerEntries.Build(stacks).Select(e => e.Name).ToList();
 
-            CollectionAssert.AreEqual(new[] { "あんぱん", "いちご", "ぶどう" }, names);
+            CollectionAssert.AreEqual(
+                new[] { "ぶどう", "あんぱん", "いちご" },
+                names,
+                "並べ替えず、インベントリと同じ順(最初に出た順)"
+            );
         }
 
         [Test]

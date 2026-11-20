@@ -1,4 +1,3 @@
-using System;
 using System.Collections.Generic;
 using System.Linq;
 using CreativeAI.Gameplay;
@@ -8,7 +7,7 @@ namespace CreativeAI.UI
 {
     /// <summary>
     /// useItem の持ち物ピッカーに並べるアイテム一覧を作る。未装備で所持数が1以上のものを、
-    /// 同じアイテムごとに合算して名前順に並べる(装備品の個体は1つにまとめる)。
+    /// 同じアイテムごとに合算し、インベントリと同じ順(最初に出た順)で並べる(装備品の個体は1つにまとめる)。
     /// </summary>
     internal static class ItemPickerEntries
     {
@@ -44,7 +43,6 @@ namespace CreativeAI.UI
                     group.Key.icon,
                     group.Sum(stack => stack.Count)
                 ))
-                .OrderBy(entry => entry.Name, StringComparer.Ordinal)
                 .ToList();
         }
     }

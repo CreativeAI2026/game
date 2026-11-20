@@ -1222,6 +1222,23 @@ namespace CreativeAI.Tests.EditMode
             Assert.IsFalse(step.Consume);
         }
 
+        [Test]
+        public void Parse_UseItem_UsedAndOnCancel_AreReadAndOptional()
+        {
+            var report = ParseUseItem(
+                @"{ ""kind"": ""useItem"", ""accept"": [ { ""itemKey"": ""card_key"", ""count"": 1 } ], ""consume"": true, ""wrong"": ""違う"", ""used"": ""カードキーを使った。"", ""onCancel"": ""やめておこう。"" }"
+            );
+
+            Assert.IsFalse(report.HasErrors, string.Join("\n", report.Diagnostics));
+            var step = report.Events[0].Steps[0];
+            Assert.AreEqual("カードキーを使った。", step.UsedText);
+            Assert.AreEqual("やめておこう。", step.CancelText);
+
+            var plain = ParseUseItem(ValidUseItem).Events[0].Steps[0];
+            Assert.IsNull(plain.UsedText, "省略したら出さない");
+            Assert.IsNull(plain.CancelText);
+        }
+
         [TestCase(
             @"{ ""kind"": ""useItem"", ""accept"": [ { ""itemKey"": ""card_key"", ""count"": 1 } ], ""wrong"": ""違う"" }",
             "consume"

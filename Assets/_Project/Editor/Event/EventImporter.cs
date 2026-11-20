@@ -1131,7 +1131,9 @@ namespace CreativeAI.EditorTools
                 (step["speaker"] as JValue)?.Value as string,
                 portrait,
                 (step["prompt"] as JValue)?.Value as string,
-                onWrong == "end"
+                onWrong == "end",
+                (step["used"] as JValue)?.Value as string,
+                (step["onCancel"] as JValue)?.Value as string
             );
         }
 
