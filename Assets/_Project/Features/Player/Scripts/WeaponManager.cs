@@ -22,7 +22,7 @@ namespace CreativeAI.Gameplay
         public const int NoWeapon = -1;
 
         /// <summary>
-        /// events.json の weaponKey(documents/ScenarioReference.md「武器カタログ」)と
+        /// events.json の weaponKey(documents/ScenarioCatalog.md「武器カタログ」)と
         /// <see cref="_slots"/> の index の対応。並び順が契約。
         /// </summary>
         public static readonly IReadOnlyList<string> WeaponKeys = new[]
