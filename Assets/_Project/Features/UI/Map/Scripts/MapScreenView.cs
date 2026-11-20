@@ -24,7 +24,7 @@ namespace CreativeAI.UI
         private RectTransform _viewport;
 
         [SerializeField]
-        private MinimapShapeGraphic _map;
+        private MinimapMap _map;
 
         [SerializeField]
         private RectTransform _playerIcon;
@@ -95,7 +95,7 @@ namespace CreativeAI.UI
             if (_levelIndex < 0)
                 return;
             Fit(); // 画面の大きさが変わっても収まるよう毎回合わせる(計算だけ)
-            var content = _map.rectTransform;
+            var content = _map.RectTransform;
             content.localScale = new Vector3(_pixelsPerUnit, _pixelsPerUnit, 1f);
             content.anchoredPosition = -_center * _pixelsPerUnit;
             UpdatePlayer();

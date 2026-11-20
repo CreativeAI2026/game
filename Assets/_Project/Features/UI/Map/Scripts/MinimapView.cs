@@ -22,7 +22,7 @@ namespace CreativeAI.UI
         private RectTransform _rotator;
 
         [SerializeField]
-        private MinimapShapeGraphic _map;
+        private MinimapMap _map;
 
         [SerializeField]
         private RectTransform _playerIcon;
@@ -107,8 +107,8 @@ namespace CreativeAI.UI
             _viewRotation = Quaternion.Euler(0f, 0f, viewYaw);
 
             _rotator.localRotation = _viewRotation;
-            _map.rectTransform.localScale = new Vector3(_pixelsPerUnit, _pixelsPerUnit, 1f);
-            _map.rectTransform.anchoredPosition = -_center * _pixelsPerUnit;
+            _map.RectTransform.localScale = new Vector3(_pixelsPerUnit, _pixelsPerUnit, 1f);
+            _map.RectTransform.anchoredPosition = -_center * _pixelsPerUnit;
 
             var forward = _player.forward;
             var playerYaw = Mathf.Atan2(forward.x, forward.z) * Mathf.Rad2Deg;
