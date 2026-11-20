@@ -92,6 +92,18 @@ namespace CreativeAI.Gameplay
 
         private void HitEnemy(Collision collision)
         {
+            ContactPoint contact = collision.GetContact(0);
+
+            // 敵が受け止めたら、ダメージもヒットの演出も出さずに矢を消す(受け止めた演出は敵側が出す)
+            if (
+                collision.gameObject.TryGetComponent(out IPlayerAttackGuard guard)
+                && guard.ReceivePlayerAttack(PlayerAttackKind.Arrow, contact.point)
+            )
+            {
+                _projectile.ReturnToPool();
+                return;
+            }
+
             if (collision.gameObject.TryGetComponent(out IDamageable enemy))
             {
                 // ダメージ計算はPlayerStatusに委譲し、装備やバフの影響を一元管理する
@@ -102,7 +114,6 @@ namespace CreativeAI.Gameplay
                 enemy.TakeDamage(finalDamage, isCritical);
             }
 
-            ContactPoint contact = collision.GetContact(0);
             SpawnEffect(_hitEffect, contact.point, contact.normal);
             WorldSoundPlayer.Play(_enemyHitSound, contact.point, this);
 

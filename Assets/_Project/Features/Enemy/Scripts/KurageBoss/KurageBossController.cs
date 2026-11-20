@@ -13,7 +13,7 @@ namespace CreativeAI.Gameplay
     /// ここは攻撃の選択と、部品どうしのつなぎ(わっかが捕まえたら拘束し、ボスは待機する等)だけを行う。
     /// </summary>
     [RequireComponent(typeof(EnemyStatus))]
-    [RequireComponent(typeof(KuragePhaseTracker))]
+    [RequireComponent(typeof(EnemyHpPhaseTracker))]
     [RequireComponent(typeof(KurageOrbitMover))]
     [RequireComponent(typeof(KurageBossSounds))]
     [RequireComponent(typeof(KurageHaloRing))]
@@ -50,6 +50,34 @@ namespace CreativeAI.Gameplay
         [Tooltip("正面をステージへ向け直す速さ（度/秒）。突きで向きを変えた後に戻る速さ")]
         [SerializeField]
         private float _turnSpeed = 90f;
+
+        [Header("HPの段階")]
+        [Tooltip("HPの段階（EnemyHpPhaseTracker）ごとの行動の値。段階の数と同じだけ並べる")]
+        [SerializeField]
+        private KuragePhaseSettings[] _phaseSettings = new KuragePhaseSettings[]
+        {
+            // 第1段階
+            new KuragePhaseSettings(
+                orbitDurationRange: new Vector2(2f, 4f),
+                speedUpProbability: 0f,
+                turnProbability: 0f,
+                doubleAttackProbability: 0f
+            ),
+            // 第2段階
+            new KuragePhaseSettings(
+                orbitDurationRange: new Vector2(1.5f, 3f),
+                speedUpProbability: 0.35f,
+                turnProbability: 0.25f,
+                doubleAttackProbability: 0.25f
+            ),
+            // 第3段階
+            new KuragePhaseSettings(
+                orbitDurationRange: new Vector2(1f, 2.2f),
+                speedUpProbability: 0.5f,
+                turnProbability: 0.5f,
+                doubleAttackProbability: 0.5f
+            ),
+        };
 
         [Header("攻撃の選びやすさ（重み）")]
         [SerializeField]
@@ -132,7 +160,9 @@ namespace CreativeAI.Gameplay
         /// <summary>今の攻撃が終わった後に、もう1回攻撃を続けるか。</summary>
         private bool _followUpPending;
 
-        private KuragePhaseTracker _phase;
+        private EnemyHpPhaseTracker _phase;
+
+        private KuragePhaseSettings CurrentPhase => _phaseSettings[_phase.CurrentPhaseIndex];
 
         public KurageOrbitMover Mover { get; private set; }
         public KurageBossSounds Sounds { get; private set; }
@@ -143,10 +173,10 @@ namespace CreativeAI.Gameplay
         public float HighOrbitSpeed => _highOrbitSpeed;
         public float OrbitAcceleration => _orbitAcceleration;
         public float SpeedUpDurationRatio => _speedUpDurationRatio;
-        public float SpeedUpProbability => _phase.CurrentPhase.SpeedUpProbability;
-        public Vector2 OrbitDurationRange => _phase.CurrentPhase.OrbitDurationRange;
-        public float TurnProbability => _phase.CurrentPhase.TurnProbability;
-        public float DoubleAttackProbability => _phase.CurrentPhase.DoubleAttackProbability;
+        public float SpeedUpProbability => CurrentPhase.SpeedUpProbability;
+        public Vector2 OrbitDurationRange => CurrentPhase.OrbitDurationRange;
+        public float TurnProbability => CurrentPhase.TurnProbability;
+        public float DoubleAttackProbability => CurrentPhase.DoubleAttackProbability;
         public float OrbitTowardPlayerChance => _orbitTowardPlayerChance;
         public float TurnSpeed => _turnSpeed;
         public float StabChaseDuration => _stabChaseDuration;
@@ -182,7 +212,12 @@ namespace CreativeAI.Gameplay
             Restraint = GetComponent<KurageRingRestraint>();
             StabReach = GetComponent<KurageStabReach>();
             StabEffects = GetComponent<KurageStabEffects>();
-            _phase = GetComponent<KuragePhaseTracker>();
+            _phase = GetComponent<EnemyHpPhaseTracker>();
+            Assert.AreEqual(
+                _phase.PhaseCount,
+                _phaseSettings.Length,
+                $"{name}: 段階ごとの行動の値（_phaseSettings）の数が、HPの段階の数と合っていません"
+            );
 
             _releaseTentacle = ReleaseTentacle;
             _tentaclePool = new ObjectPool<KurageGroundTentacle>(
