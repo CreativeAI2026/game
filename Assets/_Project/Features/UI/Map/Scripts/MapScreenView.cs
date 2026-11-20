@@ -50,9 +50,33 @@ namespace CreativeAI.UI
         [SerializeField]
         private Color _floorButtonSelectedColor = new(0.2f, 0.42f, 0.66f, 1f);
 
-        private readonly List<Button> _floorButtons = new();
-        private readonly List<int> _buttonLevels = new(); // ボタンごとの階の番号
-        private readonly List<GameObject> _buttonPinMarks = new(); // ボタンごとの「この階にピンがある」黄色い丸
+        [SerializeField, Tooltip("選んでいる階のボタンを、左へずらす幅(px)")]
+        private float _selectedPopOut = 14f;
+
+        [SerializeField, Tooltip("選んでいる階の左に出す、三角のカーソルの色")]
+        private Color _cursorColor = new(1f, 0.82f, 0.25f, 1f);
+
+        [SerializeField, Tooltip("ボタンのスライドとカーソルの上下の速さ(大きいほど速い)")]
+        private float _slideSpeed = 16f;
+
+        private const float CursorSize = 22f; // 三角のカーソルの大きさ(px)
+        private const float CursorGap = 4f; // カーソルと、ずれたボタンの左端のすき間(px)
+
+        /// <summary>階ボタン1つぶんの部品。</summary>
+        private sealed class FloorButton
+        {
+            public Button Button;
+            public RectTransform Slot; // レイアウトグループが並べる枠。ボタンはこの中で左右に動かす
+            public int Level; // 階の番号
+            public float Offset; // ボタンの今の横のずれ(px。左が負)
+            public GameObject PinMark; // 「この階にピンがある」黄色い丸
+            public GameObject HereMark; // 「プレイヤーが今いる階」の矢印
+        }
+
+        private readonly List<FloorButton> _floorButtons = new();
+        private RectTransform _floorsRoot; // 階ボタンの枠を並べる親
+        private RectTransform _cursor; // 選んでいる階の左に出す右向きの三角。階を替えると上下に動く
+        private bool _snapFloorList; // 開いた直後は、動かさずに最終位置へ置く
         private bool[] _levelHasPin;
         private readonly MinimapLayout.Level[] _shown = new MinimapLayout.Level[1];
         private MapPinIconPool _pins;
@@ -75,6 +99,7 @@ namespace CreativeAI.UI
         {
             PlayerRegistry.Changed += Bind;
             Bind(PlayerRegistry.Current);
+            _snapFloorList = true;
 
             // 開くたびに、いる階を出す
             if (_layout == null)
@@ -100,17 +125,58 @@ namespace CreativeAI.UI
             content.anchoredPosition = -_center * _pixelsPerUnit;
             UpdatePlayer();
             _pins.Refresh(_layout, this, _otherFloorAlpha);
-            UpdateFloorPinMarks();
+            UpdateFloorMarks();
+            AnimateFloorList();
         }
 
-        // ピンのある階のボタンに、黄色い丸の印を出す。
-        private void UpdateFloorPinMarks()
+        // 選んでいる階のボタンを左へずらし、三角のカーソルをその階の高さへ動かす(どちらもなめらかに)。
+        // マップを開いている間はゲームの時間が止まっていることがあるので、止まらない時間で動かす。
+        private void AnimateFloorList()
+        {
+            if (_floorsRoot == null || _cursor == null)
+                return;
+            if (_snapFloorList)
+                LayoutRebuilder.ForceRebuildLayoutImmediate(_floorsRoot); // 枠の位置を先に確定する
+            var blend = _snapFloorList ? 1f : 1f - Mathf.Exp(-_slideSpeed * Time.unscaledDeltaTime);
+
+            FloorButton selected = null;
+            foreach (var floor in _floorButtons)
+            {
+                var isSelected = floor.Level == _levelIndex;
+                if (isSelected)
+                    selected = floor;
+                floor.Offset = Mathf.Lerp(floor.Offset, isSelected ? -_selectedPopOut : 0f, blend);
+                ((RectTransform)floor.Button.transform).anchoredPosition = new Vector2(
+                    floor.Offset,
+                    0f
+                );
+            }
+
+            _cursor.gameObject.SetActive(selected != null);
+            if (selected == null)
+                return;
+            var slot = selected.Slot;
+            var left = _floorsRoot.InverseTransformPoint(
+                slot.TransformPoint(new Vector3(slot.rect.xMin, slot.rect.center.y, 0f))
+            );
+            var x = left.x - _selectedPopOut - CursorGap - CursorSize * 0.5f;
+            var y = _snapFloorList ? left.y : Mathf.Lerp(_cursor.localPosition.y, left.y, blend);
+            _cursor.localPosition = new Vector3(x, y, 0f);
+            _snapFloorList = false;
+        }
+
+        // ピンのある階のボタンに黄色い丸、プレイヤーがいる階のボタンに矢印の印を出す。
+        private void UpdateFloorMarks()
         {
             if (_levelHasPin == null)
                 return;
             MapPinIconPool.FindLevelsWithPins(_layout, _levelHasPin);
-            for (var i = 0; i < _buttonPinMarks.Count; i++)
-                _buttonPinMarks[i].SetActive(_levelHasPin[_buttonLevels[i]]);
+            var playerLevel = _player != null ? _layout.FindLevel(_player.position) : -1;
+            foreach (var button in _floorButtons)
+            {
+                button.PinMark.SetActive(_levelHasPin[button.Level]);
+                button.HereMark.SetActive(button.Level == playerLevel);
+            }
         }
 
         /// <summary>ダブルクリックで閉じる。</summary>
@@ -141,36 +207,100 @@ namespace CreativeAI.UI
                 }
             );
 
+            _floorsRoot = (RectTransform)_floorButtonTemplate.transform.parent;
+            var templateLayout = _floorButtonTemplate.GetComponent<LayoutElement>();
+            var slotHeight = templateLayout != null ? templateLayout.preferredHeight : 60f;
+
             foreach (var index in order)
             {
-                var button = Instantiate(
-                    _floorButtonTemplate,
-                    _floorButtonTemplate.transform.parent,
-                    false
+                // レイアウトグループが並べるのは枠で、ボタンは枠の中を左右に動かす(ボタン自体を動かすと並べ直しと競合する)
+                var slotObject = new GameObject(
+                    "FloorSlot",
+                    typeof(RectTransform),
+                    typeof(LayoutElement)
                 );
+                var slot = (RectTransform)slotObject.transform;
+                slot.SetParent(_floorsRoot, false);
+                slotObject.GetComponent<LayoutElement>().preferredHeight = slotHeight;
+
+                var button = Instantiate(_floorButtonTemplate, slot, false);
                 button.gameObject.SetActive(true);
+                var buttonRect = (RectTransform)button.transform;
+                buttonRect.anchorMin = Vector2.zero;
+                buttonRect.anchorMax = Vector2.one;
+                buttonRect.offsetMin = Vector2.zero;
+                buttonRect.offsetMax = Vector2.zero;
                 button.GetComponentInChildren<TMP_Text>().text = _layout.Levels[index].Title;
                 button.onClick.AddListener(() => ShowLevel(index));
-                _floorButtons.Add(button);
-                _buttonLevels.Add(index);
-                _buttonPinMarks.Add(CreatePinMark(button));
+                _floorButtons.Add(
+                    new FloorButton
+                    {
+                        Button = button,
+                        Slot = slot,
+                        Level = index,
+                        // 右端に、ピンと同じ色の黄色い丸。その左に、プレイヤーと同じ色の矢印
+                        PinMark = CreateIcon(
+                            button.transform,
+                            "PinMark",
+                            MinimapIconGraphic.IconShape.Dot,
+                            _pinTemplate.color,
+                            1f,
+                            -20f,
+                            24f
+                        ),
+                        HereMark = CreateIcon(
+                            button.transform,
+                            "HereMark",
+                            MinimapIconGraphic.IconShape.Arrow,
+                            _playerGraphic.color,
+                            1f,
+                            -47f,
+                            22f
+                        ),
+                    }
+                );
             }
+
+            // カーソルはレイアウトの対象にしない(並べ方に含めると、ボタンの間に空きができる)
+            _cursor = (RectTransform)
+                CreateIcon(
+                    _floorsRoot,
+                    "Cursor",
+                    MinimapIconGraphic.IconShape.Arrow,
+                    _cursorColor,
+                    0.5f,
+                    0f,
+                    CursorSize,
+                    -90f // 矢じりは上向きなので、右向きに回す
+                ).transform;
+            _cursor.gameObject.AddComponent<LayoutElement>().ignoreLayout = true;
         }
 
-        // 階ボタンの右端に、ピンと同じ色の黄色い丸を置く。
-        private GameObject CreatePinMark(Button button)
+        // 親の子に、小さな記号を置く(最初は隠す)。
+        // anchorX は基準にする端(0 = 左端、1 = 右端)、centerX はその端から記号の中心までの距離(px)。
+        private static GameObject CreateIcon(
+            Transform parent,
+            string name,
+            MinimapIconGraphic.IconShape shape,
+            Color color,
+            float anchorX,
+            float centerX,
+            float size,
+            float rotation = 0f
+        )
         {
-            var go = new GameObject("PinMark", typeof(RectTransform), typeof(MinimapIconGraphic));
-            var mark = go.GetComponent<MinimapIconGraphic>();
-            mark.SetShape(MinimapIconGraphic.IconShape.Dot);
-            mark.color = _pinTemplate.color;
-            mark.raycastTarget = false;
-            var rect = mark.rectTransform;
-            rect.SetParent(button.transform, false);
-            rect.anchorMin = rect.anchorMax = new Vector2(1f, 0.5f);
-            rect.pivot = new Vector2(1f, 0.5f);
-            rect.anchoredPosition = new Vector2(-8f, 0f);
-            rect.sizeDelta = new Vector2(24f, 24f);
+            var go = new GameObject(name, typeof(RectTransform), typeof(MinimapIconGraphic));
+            var icon = go.GetComponent<MinimapIconGraphic>();
+            icon.SetShape(shape);
+            icon.color = color;
+            icon.raycastTarget = false;
+            var rect = icon.rectTransform;
+            rect.SetParent(parent, false);
+            rect.anchorMin = rect.anchorMax = new Vector2(anchorX, 0.5f);
+            rect.pivot = new Vector2(0.5f, 0.5f); // 回しても中心が動かないようにする
+            rect.anchoredPosition = new Vector2(centerX, 0f);
+            rect.sizeDelta = new Vector2(size, size);
+            rect.localRotation = Quaternion.Euler(0f, 0f, rotation);
             go.SetActive(false);
             return go;
         }
@@ -196,9 +326,11 @@ namespace CreativeAI.UI
             if (_floorTitle != null)
                 _floorTitle.text = level.Title;
 
-            for (var i = 0; i < _floorButtons.Count; i++)
-                _floorButtons[i].image.color =
-                    _buttonLevels[i] == index ? _floorButtonSelectedColor : _floorButtonColor;
+            foreach (var floor in _floorButtons)
+            {
+                var selected = floor.Level == index;
+                floor.Button.image.color = selected ? _floorButtonSelectedColor : _floorButtonColor;
+            }
         }
 
         /// <summary>今の階の全体が表示範囲に収まるよう、中心と拡大率を決める。</summary>
