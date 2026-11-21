@@ -54,6 +54,9 @@ namespace CreativeAI.Gameplay
 
         public static readonly int Escaped = Animator.StringToHash("Escaped");
 
+        /// <summary>敵にはじき返された。掴みからの脱出と同じモーションへ、どの状態からでも入る(Escaped は拘束中からしか入れない)。</summary>
+        public static readonly int Repelled = Animator.StringToHash("Repelled");
+
         // --- 死亡(PlayerDeathHandler) ---
         public static readonly int Die = Animator.StringToHash("Die");
 
@@ -83,6 +86,7 @@ namespace CreativeAI.Gameplay
             ("Grabbed", AnimatorControllerParameterType.Trigger),
             ("RingStruggle", AnimatorControllerParameterType.Trigger),
             ("Escaped", AnimatorControllerParameterType.Trigger),
+            ("Repelled", AnimatorControllerParameterType.Trigger),
             ("Die", AnimatorControllerParameterType.Trigger),
         };
     }
@@ -103,6 +107,9 @@ namespace CreativeAI.Gameplay
         public static readonly int Throw = Animator.StringToHash("Throw");
         public static readonly int Slam = Animator.StringToHash("Slam");
         public static readonly int Flinch = Animator.StringToHash("Flinch");
+
+        /// <summary>掴みからの脱出・はじき返された時のモーション。</summary>
+        public static readonly int Escaped = Animator.StringToHash("Escaped");
 
         /// <summary>弓の構え・発射を再生する上半身レイヤーの名前。</summary>
         public const string UpperBodyLayerName = "UpperBody Layer";

@@ -1877,6 +1877,8 @@ GameObject:
   - component: {fileID: 8167846719697555986}
   - component: {fileID: 3989032024992404480}
   - component: {fileID: 6693414882147537055}
+  - component: {fileID: 40763675683545215}
+  - component: {fileID: 6503697951772901856}
   m_Layer: 9
   m_Name: TutorialBoss
   m_TagString: Enemy
@@ -2188,6 +2190,8 @@ MonoBehaviour:
   _grabSound: {fileID: 11400000, guid: 6685ffd4c20570b46a7adae8ee90f213, type: 2}
   _electricLoopSound: {fileID: 11400000, guid: d52521399e2332645bba43817ca7eab4, type: 2}
   _escapeSound: {fileID: 11400000, guid: cd6779373ed4a1744840020d26d7b588, type: 2}
+  _guardBlockSound: {fileID: 11400000, guid: 7ab6fd05aeda5534abbc9cb4c0800d4a, type: 2}
+  _repelSound: {fileID: 11400000, guid: 6e39ec6cabb1ad549b20c3722baed67e, type: 2}
   _pressureCueSound: {fileID: 11400000, guid: 9ae864485e104ef4593fde8b59c9e6f3, type: 2}
   _fallDownSound: {fileID: 11400000, guid: e715fb91619b5f344b93201f6eb50a45, type: 2}
 --- !u!114 &6489549019847874736
@@ -2297,6 +2301,54 @@ MonoBehaviour:
     serializedVersion: 2
     m_Bits: 73
   _impactBurstCount: 40
+  _sparkSE: {fileID: 0}
+--- !u!114 &40763675683545215
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 9072946834079532967}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: c49c5da9d1202f747a82d6357fb7ffbd, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: CreativeAI.Gameplay::CreativeAI.Gameplay.EnemyHpPhaseTracker
+  _phaseHpRatios:
+  - 1
+  - 0.66
+  - 0.33
+--- !u!114 &6503697951772901856
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 9072946834079532967}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 1b535424ad003ea41901fc8e700701d0, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: CreativeAI.Gameplay::CreativeAI.Gameplay.TBossGuard
+  _settings:
+    _reactiveGuardChance: 0.3
+    _reactiveGuardDuration: 1.5
+    _readGuardChance: 0.3
+    _readGuardDurationRange: {x: 0.5, y: 1}
+    _postAttackGuardChanceByPhase:
+    - 0.2
+    - 0.45
+    - 0.7
+    _postAttackGuardDuration: 1.5
+    _guardHalfAngle: 90
+    _repelWindow: 2
+    _repelHitCount: 4
+    _repelFollowUpNormalizedTime: 0.56
+    _repelDealsDamage: 0
+    _repelDamageMultiplier: 0.5
+  _blockEffect: {fileID: 6283385569647498531, guid: c307aa68ab3e4cc4a8123308c3d2813d, type: 3}
+  _repelEffect: {fileID: 358637981425055526, guid: 00deabee16ae5674b93d3e9f636735e0, type: 3}
+  _repelCameraShake: 0.4
 --- !u!1 &9182639161629794582
 GameObject:
   m_ObjectHideFlags: 0

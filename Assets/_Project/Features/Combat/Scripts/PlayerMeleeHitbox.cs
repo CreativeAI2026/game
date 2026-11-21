@@ -14,6 +14,12 @@ namespace CreativeAI.Gameplay
         [SerializeField]
         private float _meleeMultiplier = 1.0f;
 
+        [Tooltip(
+            "この判定の攻撃の種類。敵が防御・はじき返しの扱いを変えるのに使う(ハンマーの範囲攻撃は Slam、投げた鎌は Thrown)"
+        )]
+        [SerializeField]
+        private PlayerAttackKind _attackKind = PlayerAttackKind.Melee;
+
         [Header("ヒットエフェクト")]
         [SerializeField]
         private GameObject _hitEffect;
@@ -133,6 +139,13 @@ namespace CreativeAI.Gameplay
             {
                 // 1スイングにつき同一対象へは1回だけヒットさせる
                 _alreadyHitTargets.Add(other);
+
+                // 敵が受け止めたら、ダメージもヒットの演出も出さない(受け止めた演出は敵側が出す)
+                if (
+                    other.TryGetComponent(out IPlayerAttackGuard guard)
+                    && guard.ReceivePlayerAttack(_attackKind, hitPoint)
+                )
+                    return;
 
                 float finalDamage = _playerStatus.RollDamage(_meleeMultiplier, out bool isCritical);
                 enemy.TakeDamage(finalDamage, isCritical);

@@ -1252,6 +1252,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: CreativeAI.Gameplay::CreativeAI.Gameplay.PlayerMeleeHitbox
   _meleeMultiplier: 1
+  _attackKind: 0
   _hitEffect: {fileID: 8841252265832173778, guid: 4098f9d3c02233a439d69404ed9ee783, type: 3}
   _alignHitEffectToSwing: 0
   _hitSound: {fileID: 11400000, guid: 87d7b025d60c3f943b88807695d6635b, type: 2}
@@ -3294,6 +3295,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: CreativeAI.Gameplay::CreativeAI.Gameplay.PlayerMeleeHitbox
   _meleeMultiplier: 1.5
+  _attackKind: 1
   _hitEffect: {fileID: 0}
   _alignHitEffectToSwing: 0
   _hitSound: {fileID: 11400000, guid: dbeb8e50cee165f4e8bb88b2e2e02638, type: 2}
@@ -5292,6 +5294,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: CreativeAI.Gameplay::CreativeAI.Gameplay.PlayerMeleeHitbox
   _meleeMultiplier: 1
+  _attackKind: 0
   _hitEffect: {fileID: 5812038374820040852, guid: d74183456283d434f974eeebdec07cf4, type: 3}
   _alignHitEffectToSwing: 0
   _hitSound: {fileID: 11400000, guid: 06264eece26847348b29355b366944d7, type: 2}
@@ -22653,6 +22656,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: CreativeAI.Gameplay::CreativeAI.Gameplay.PlayerMeleeHitbox
   _meleeMultiplier: 1
+  _attackKind: 0
   _hitEffect: {fileID: 8841252265832173778, guid: 4098f9d3c02233a439d69404ed9ee783, type: 3}
   _alignHitEffectToSwing: 1
   _hitSound: {fileID: 11400000, guid: 8a7e240c1340a9e49915a3522c7a4e25, type: 2}

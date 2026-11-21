@@ -7,6 +7,7 @@ namespace CreativeAI.Gameplay
     /// 発見後に攻撃の機会を伺う様子見ステート。交戦全体の時計（TBossCombatTempo）で攻撃時刻が来たら仕掛ける。
     /// 近すぎれば下がり、遠すぎれば詰め、適正距離ではプレイヤーの視野外側へ回り込む（間合い管理）。
     /// プレイヤーが走って離れたら歩いて追わず、追跡（走り）へ切り替える。
+    /// 入った直後に1回だけ、防御するか（攻撃の後なら攻撃後の防御、それ以外なら読みの防御）を引く。
     /// </summary>
     public class TBossWatchState : TBossBaseState
     {
@@ -32,6 +33,10 @@ namespace CreativeAI.Gameplay
 
         private float _strafeDirection;
         private PlayerController _playerController;
+
+        // 入った直後の防御の抽選を済ませたか。Enter の中で別ステートへ切り替えると
+        // 切り替えの途中でさらに切り替えることになるため、最初の Update で1回だけ引く
+        private bool _hasCheckedOpeningGuard;
 
         public TBossWatchState(TutorialBossController controller)
             : base(controller) { }
@@ -65,8 +70,20 @@ namespace CreativeAI.Gameplay
                 return;
             }
 
+            bool tracked = boss.CheckPlayerTracked();
+
+            // 見えている相手にだけ構える（見えていないのに構えても受け止める攻撃が来ない）
+            if (!_hasCheckedOpeningGuard)
+            {
+                _hasCheckedOpeningGuard = true;
+                if (tracked && boss.TryStartOpeningGuard())
+                {
+                    return;
+                }
+            }
+
             // 見失い判定（至近距離なら光の外でも捕捉を維持する）
-            if (!boss.CheckPlayerTracked())
+            if (!tracked)
             {
                 boss.LostSightTimer += Time.deltaTime;
                 if (boss.LostSightTimer >= LostSightGraceBeforeChase)
