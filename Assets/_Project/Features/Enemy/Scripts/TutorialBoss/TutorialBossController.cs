@@ -625,12 +625,6 @@ namespace CreativeAI.Gameplay
 
             Guard = TryGetComponent(out TBossGuard guard) ? guard : null;
             Assert.IsNotNull(Guard, $"{name}: TBossGuard が同じ GameObject にありません");
-
-            _upperBodyGuardLayer = Animator.GetLayerIndex(UpperBodyGuardLayerName);
-            Assert.IsTrue(
-                _upperBodyGuardLayer >= 0,
-                $"{name}: Animator に上半身の構えのレイヤー「{UpperBodyGuardLayerName}」がありません"
-            );
         }
 
         protected override void Start()
@@ -809,19 +803,6 @@ namespace CreativeAI.Gameplay
             }
         }
 
-        /// <summary>上半身だけ構えのモーションを重ねるか。構えたまま歩く時に使う（足は移動のモーションのまま）。</summary>
-        public void SetUpperBodyGuard(bool active) => _upperBodyGuardTarget = active ? 1f : 0f;
-
-        private void UpdateUpperBodyGuardLayer()
-        {
-            float weight = Mathf.MoveTowards(
-                Animator.GetLayerWeight(_upperBodyGuardLayer),
-                _upperBodyGuardTarget,
-                Time.deltaTime / UpperBodyGuardFadeDuration
-            );
-            Animator.SetLayerWeight(_upperBodyGuardLayer, weight);
-        }
-
         /// <summary>連打の最後の一撃が当たったその瞬間に、払いを始める（プレイヤーののけぞりも同じフレームで始まる）。</summary>
         private void OnRepelled(PlayerAttackKind kind, Vector3 hitPoint)
         {
@@ -863,7 +844,6 @@ namespace CreativeAI.Gameplay
             TickPanicPressure();
             UpdateRepelTrigger();
             UpdateRangedGuardTrigger();
-            UpdateUpperBodyGuardLayer();
 
             if (currentState is not TBossCapturedState)
             {
@@ -1072,12 +1052,6 @@ namespace CreativeAI.Gameplay
         private const float RunAnimationExitSpeedRatio = 0.4f;
 
         private bool _isRunAnimationActive;
-
-        // 上半身だけ構えを重ねるレイヤー（構えてにじり寄る時に使う）。切り替えは急に変わらないよう少しかけて混ぜる
-        private const string UpperBodyGuardLayerName = "GuardUpper";
-        private const float UpperBodyGuardFadeDuration = 0.15f;
-        private int _upperBodyGuardLayer;
-        private float _upperBodyGuardTarget;
 
         // 遠距離の防御: 弓を構え始めた瞬間を見るための前フレームの値と、次に確率を引ける時刻
         private PlayerController _playerController;

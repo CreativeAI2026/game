@@ -54,15 +54,23 @@ namespace CreativeAI.Gameplay
         [SerializeField]
         private float _rangedGuardRollInterval = 3f;
 
-        [Tooltip("構えてにじり寄る速さ（m/秒）")]
+        [Tooltip(
+            "構えてにじり寄る速さ（m/秒）。モーションはこの速さに合わせて再生速度が変わるので、足は滑らない"
+        )]
         [SerializeField]
-        private float _guardAdvanceSpeed = 1.0f;
+        private float _guardAdvanceSpeed = 0.45f;
+
+        [Tooltip(
+            "にじり寄りのモーション（TBoss_GuardAdvance）を1倍で再生した時に進む速さ（m/秒）。1周1.67秒で0.75m（ボスの大きさ2.5倍の時）。モーションを作り直した時だけ変える"
+        )]
+        [SerializeField]
+        private float _guardAdvanceClipSpeed = 0.45f;
 
         [Tooltip(
             "構えてにじり寄る時間（秒、x:最短 y:最長）。この間にプレイヤーが攻撃の間合いへ入ってこなければ、自分から攻撃に入る"
         )]
         [SerializeField]
-        private Vector2 _guardAdvanceDurationRange = new Vector2(3f, 5f);
+        private Vector2 _guardAdvanceDurationRange = new Vector2(6f, 9f);
 
         [Header("防御の向き")]
         [Tooltip(
@@ -114,6 +122,9 @@ namespace CreativeAI.Gameplay
 
         /// <summary>構えてにじり寄る速さ（m/秒）。</summary>
         public float GuardAdvanceSpeed => _guardAdvanceSpeed;
+
+        /// <summary>にじり寄りのモーションを1倍で再生した時に進む速さ（m/秒）。</summary>
+        public float GuardAdvanceClipSpeed => _guardAdvanceClipSpeed;
 
         /// <summary>構えてにじり寄る時間（秒、x:最短 y:最長）。</summary>
         public Vector2 GuardAdvanceDurationRange => _guardAdvanceDurationRange;
