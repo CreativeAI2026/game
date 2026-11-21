@@ -1537,13 +1537,21 @@ MonoBehaviour:
     _readGuardChance: 0.3
     _readGuardDurationRange: {x: 0.5, y: 1}
     _postAttackGuardChanceByPhase:
-    - 0.2
-    - 0.45
-    - 0.7
+    - 0.3
+    - 0.5
+    - 1
     _postAttackGuardDuration: 1.5
+    _rangedGuardChanceByPhase:
+    - 0.5
+    - 0.7
+    - 0.9
+    _rangedGuardRollInterval: 0
+    _guardAdvanceSpeed: 0.45
+    _guardAdvanceClipSpeed: 0.45
+    _guardAdvanceDurationRange: {x: 6, y: 9}
     _guardHalfAngle: 90
     _repelWindow: 2
-    _repelHitCount: 4
+    _repelHitCount: 3
     _repelFollowUpNormalizedTime: 0.56
     _repelDealsDamage: 0
     _repelDamageMultiplier: 0.5
