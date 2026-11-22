@@ -5,31 +5,16 @@ using UnityEngine;
 namespace CreativeAI.UI
 {
     /// <summary>
-    /// ミニマップに描く図形を、建物の階ごとにまとめたデータ。
+    /// ミニマップに描く図を、建物の階ごとにまとめたデータ。
     /// マップの文字図からエディタの Bake Minimap で作る(手では編集しない)。座標はワールドの XZ(x = X, y = Z)。
     /// </summary>
     [CreateAssetMenu(menuName = "CreativeAI/UI/Minimap Layout", fileName = "MinimapLayout")]
     public sealed class MinimapLayout : ScriptableObject
     {
-        /// <summary>図形の種類。描く順(下から)に並べている。</summary>
-        public enum ShapeKind
-        {
-            Floor,
-            Stairs,
-            Wall,
-            WallEdge,
-            Fence,
-            Glass,
-            Door,
-        }
-
-        /// <summary>1つの図形。<see cref="Up"/> は階段の上る向き(それ以外は zero)。</summary>
+        /// <summary>階段。段の線はシェーダーで描くので、範囲と上る向きだけ持つ。</summary>
         [Serializable]
-        public struct Shape
+        public struct Stair
         {
-            /// <summary>種類。</summary>
-            public ShapeKind Kind;
-
             /// <summary>ワールドの XZ での範囲。</summary>
             public Rect Rect;
 
@@ -37,7 +22,7 @@ namespace CreativeAI.UI
             public Vector2 Up;
         }
 
-        /// <summary>1つの建物の1つの階の図形一式。</summary>
+        /// <summary>1つの建物の1つの階の図(距離フィールドのテクスチャと階段)。</summary>
         [Serializable]
         public sealed class Level
         {
@@ -53,11 +38,20 @@ namespace CreativeAI.UI
             /// <summary>床面の高さ(ワールド Y)。</summary>
             public float Height;
 
-            /// <summary>図形のある XZ の範囲。</summary>
+            /// <summary>床と階段のある XZ の範囲(縁取りの余白は含めない)。</summary>
             public Rect Bounds;
 
-            /// <summary>描く図形(<see cref="ShapeKind"/> の順に並んでいる)。</summary>
-            public List<Shape> Shapes = new();
+            /// <summary>距離フィールド(RGBA。決まりは <see cref="MinimapField"/>)。<see cref="FieldRect"/> を覆う。</summary>
+            public Texture2D Field;
+
+            /// <summary>線の種類を選ぶ ID 画像(R8。値は <see cref="MinimapField.LineKind"/>)。<see cref="Field"/> と同じ範囲。</summary>
+            public Texture2D Ids;
+
+            /// <summary>階段の一覧。</summary>
+            public List<Stair> Stairs = new();
+
+            /// <summary>テクスチャが覆う XZ の範囲。</summary>
+            public Rect FieldRect => MinimapField.FieldRect(Bounds);
 
             /// <summary>建物の表示名を添えた階の名前(例: 研究棟 2F)。</summary>
             public string Title => string.IsNullOrEmpty(Building) ? Label : $"{Building} {Label}";

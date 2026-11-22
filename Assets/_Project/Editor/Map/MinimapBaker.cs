@@ -1,19 +1,28 @@
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using CreativeAI.UI;
 using UnityEditor;
 using UnityEngine;
+using UnityEngine.Experimental.Rendering;
 
 namespace CreativeAI.EditorTools
 {
     /// <summary>
-    /// マップの文字図(<see cref="MapLayoutBuilder"/> と同じもの)から、ミニマップの図形データを作る。
-    /// 建物の階ごとに1つずつ作る。Tools &gt; CreativeAI &gt; Map から実行。
+    /// マップの文字図(<see cref="MapLayoutBuilder"/> と同じもの)から、ミニマップの距離フィールドのテクスチャを焼く。
+    /// 建物の階ごとに、距離フィールドと線の種類の ID 画像を 1 枚ずつ PNG で書き出し、<see cref="MinimapLayout"/> にまとめる。
+    /// Tools &gt; CreativeAI &gt; Map から実行。
     /// </summary>
     public static class MinimapBaker
     {
         /// <summary>書き出し先。</summary>
         public const string AssetPath = "Assets/_Project/Features/UI/Map/Data/MinimapLayout.asset";
+
+        /// <summary>テクスチャ(PNG)の書き出し先のフォルダ。</summary>
+        public const string TextureFolder = "Assets/_Project/Features/UI/Map/Data/Fields";
+
+        /// <summary>テクスチャの合計の大きさの目安(バイト)。超えたら警告する。</summary>
+        private const long TextureBudgetBytes = 15L * 1024 * 1024;
 
         private const float Cell = MapLayoutBuilder.Cell;
 
@@ -22,10 +31,12 @@ namespace CreativeAI.EditorTools
         {
             { "Lab", "研究棟" },
         };
-        private const float WallEdgeWidth = 0.6f; // 壁が床に面する縁の線の太さ(u)
-        private const float GlassWidth = 0.7f; // ガラス・格子の線の太さ(u)
-        private const float FenceWidth = 0.5f; // 柵の線の太さ(u)
-        private const float DoorWidth = 1.4f; // 扉の線の太さ(u)
+        private static readonly float WallEdgeWidth = MinimapField.LineWidth(
+            MinimapField.LineKind.WallEdge
+        ); // 壁が床に面する縁の線の太さ(u)
+        private static readonly float DoorWidth = MinimapField.LineWidth(
+            MinimapField.LineKind.Door
+        ); // 扉の線の太さ(u)
         private const float DoorInset = 0.4f; // 扉の線を両隣の壁から離す量(u)。壁と見分けるため
 
         [MenuItem("Tools/CreativeAI/Map/Bake Minimap")]
@@ -35,8 +46,24 @@ namespace CreativeAI.EditorTools
             if (plans == null)
                 return;
 
+            Directory.CreateDirectory(TextureFolder);
             // 図の読み込み順(建物ごとに低い階から)のまま並べる
-            var levels = plans.Select(BuildLevel).ToList();
+            var levels = plans.Select(BuildLevel).Where(level => level != null).ToList();
+            AssetDatabase.Refresh();
+            DeleteStaleTextures(levels);
+
+            long bytes = 0;
+            foreach (var level in levels)
+            {
+                level.Field = ImportTexture(FieldPath(level, "field"), false);
+                level.Ids = ImportTexture(FieldPath(level, "ids"), true);
+                var size = TextureBytes(level.Field) + TextureBytes(level.Ids);
+                bytes += size;
+                Debug.Log(
+                    $"[MinimapBaker] {level.Title}(高さ {level.Height:F1}): "
+                        + $"{level.Field.width}x{level.Field.height} テクセル、階段 {level.Stairs.Count} 個、{size / 1024f / 1024f:F2}MB"
+                );
+            }
 
             var layout = AssetDatabase.LoadAssetAtPath<MinimapLayout>(AssetPath);
             if (layout == null)
@@ -48,11 +75,46 @@ namespace CreativeAI.EditorTools
             EditorUtility.SetDirty(layout);
             AssetDatabase.SaveAssets();
 
-            foreach (var level in levels)
-                Debug.Log(
-                    $"[MinimapBaker] {level.Title}(高さ {level.Height:F1}): 図形 {level.Shapes.Count} 個"
+            var total = $"テクスチャは合計 {bytes / 1024f / 1024f:F1}MB";
+            if (bytes > TextureBudgetBytes)
+                Debug.LogWarning($"[MinimapBaker] {total}で、目安の 15MB を超えています。");
+            Debug.Log(
+                $"[MinimapBaker] {AssetPath} に {levels.Count} 階ぶん書き出しました。{total}。"
+            );
+        }
+
+        // 実行時に GPU に載る大きさ。Profiler.GetRuntimeMemorySizeLong は Editor では CPU 側の写しも数えて 2 倍になるので、
+        // 画像の縦横と形式から計算する(ミップマップは無い)
+        private static long TextureBytes(Texture2D texture) =>
+            (long)
+                GraphicsFormatUtility.ComputeMipmapSize(
+                    texture.width,
+                    texture.height,
+                    texture.graphicsFormat
                 );
-            Debug.Log($"[MinimapBaker] {AssetPath} に {levels.Count} 階ぶん書き出しました。");
+
+        // 階の名前を変えたり階を消したりして、今回書き出さなかった古い PNG を消す
+        private static void DeleteStaleTextures(List<MinimapLayout.Level> levels)
+        {
+            var current = new HashSet<string>(
+                levels.SelectMany(level =>
+                    new[] { FieldPath(level, "field"), FieldPath(level, "ids") }
+                )
+            );
+            foreach (var file in Directory.GetFiles(TextureFolder, "*.png"))
+            {
+                var path = file.Replace('\\', '/');
+                if (current.Contains(path))
+                    continue;
+                AssetDatabase.DeleteAsset(path);
+                Debug.Log($"[MinimapBaker] 使われなくなった {path} を消しました。");
+            }
+        }
+
+        private static string FieldPath(MinimapLayout.Level level, string kind)
+        {
+            var building = string.IsNullOrEmpty(level.BuildingId) ? "Main" : level.BuildingId;
+            return $"{TextureFolder}/{building}_{level.Label}_{kind}.png";
         }
 
         private static MinimapLayout.Level BuildLevel(MapLayoutBuilder.FloorPlan plan)
@@ -66,59 +128,59 @@ namespace CreativeAI.EditorTools
                 Label = plan.Floor,
                 Height = plan.Origin.y,
             };
-            AddPlan(level.Shapes, plan);
 
-            // 種類の順に描く(床 → 階段 → 壁 → 線)
-            level.Shapes = level.Shapes.OrderBy(s => s.Kind).ToList();
-            // 図形のある範囲(建物の図の余白は含めない)。全画面マップはこれが収まるように描く
-            level.Bounds = level
-                .Shapes.Select(s => s.Rect)
-                .Aggregate(
-                    (a, b) =>
-                        Rect.MinMaxRect(
-                            Mathf.Min(a.xMin, b.xMin),
-                            Mathf.Min(a.yMin, b.yMin),
-                            Mathf.Max(a.xMax, b.xMax),
-                            Mathf.Max(a.yMax, b.yMax)
-                        )
-                );
-            return level;
-        }
-
-        private static void AddPlan(
-            List<MinimapLayout.Shape> shapes,
-            MapLayoutBuilder.FloorPlan plan
-        )
-        {
             var grid = plan.Grid;
             var rows = grid.GetLength(0);
             var cols = grid.GetLength(1);
 
-            // 階段の本体は床とは別に塗る(下の階の図では床なしのマスにかかることがある)
+            // 階段の本体は床とは別に持つ(下の階の図では床なしのマスにかかることがある)
             var stairMask = new bool[rows, cols];
-            foreach (var (cells, _) in plan.Stairs)
+            foreach (var (cells, up) in plan.Stairs)
+            {
                 for (var r = cells.yMin; r < cells.yMax; r++)
                 for (var c = cells.xMin; c < cells.xMax; c++)
                     if (r >= 0 && c >= 0 && r < rows && c < cols)
                         stairMask[r, c] = true;
+                level.Stairs.Add(
+                    new MinimapLayout.Stair { Rect = CellsRect(plan, cells), Up = up }
+                );
+            }
 
-            var floorMask = new bool[rows, cols];
+            var groundMask = new bool[rows, cols];
             var wallMask = new bool[rows, cols];
+            int minRow = rows,
+                maxRow = -1,
+                minCol = cols,
+                maxCol = -1;
             for (var r = 0; r < rows; r++)
             for (var c = 0; c < cols; c++)
             {
-                floorMask[r, c] = plan.HasFloor[r, c] && !stairMask[r, c];
+                groundMask[r, c] = plan.HasFloor[r, c] || stairMask[r, c];
                 wallMask[r, c] = plan.HasFloor[r, c] && grid[r, c] == '#';
+                if (!groundMask[r, c])
+                    continue;
+                minRow = Mathf.Min(minRow, r);
+                maxRow = Mathf.Max(maxRow, r);
+                minCol = Mathf.Min(minCol, c);
+                maxCol = Mathf.Max(maxCol, c);
             }
 
-            foreach (var rect in MapLayoutBuilder.MergeRects(floorMask, rows, cols))
-                Add(shapes, MinimapLayout.ShapeKind.Floor, CellsRect(plan, rect));
-            foreach (var (cells, up) in plan.Stairs)
-                Add(shapes, MinimapLayout.ShapeKind.Stairs, CellsRect(plan, cells), up);
-            foreach (var rect in MapLayoutBuilder.MergeRects(wallMask, rows, cols))
-                Add(shapes, MinimapLayout.ShapeKind.Wall, CellsRect(plan, rect));
-            AddWallEdges(shapes, plan, wallMask);
+            if (maxRow < 0)
+            {
+                Debug.LogError(
+                    $"[MinimapBaker] {level.Title}: 床も階段も無い階なので、ミニマップに入れません。マップの文字図を確かめてください。"
+                );
+                return null;
+            }
 
+            // 床と階段のある範囲(建物の図の余白は含めない)。全画面マップはこれが収まるように描く
+            level.Bounds = CellsRect(
+                plan,
+                new RectInt(minCol, minRow, maxCol - minCol + 1, maxRow - minRow + 1)
+            );
+
+            var lines = new List<MinimapDistanceField.Line>();
+            AddWallEdges(lines, plan, wallMask);
             for (var r = 0; r < rows; r++)
             for (var c = 0; c < cols; c++)
             {
@@ -126,12 +188,70 @@ namespace CreativeAI.EditorTools
                     continue;
                 var ch = grid[r, c];
                 if (MapLayoutBuilder.IsPanel(ch))
-                    AddLine(shapes, plan, r, c, MinimapLayout.ShapeKind.Glass, GlassWidth);
+                    AddLine(lines, plan, r, c, MinimapField.LineKind.Glass);
                 else if (ch == MapLayoutBuilder.Fence)
-                    AddLine(shapes, plan, r, c, MinimapLayout.ShapeKind.Fence, FenceWidth);
+                    AddLine(lines, plan, r, c, MinimapField.LineKind.Fence);
                 else if (MapLayoutBuilder.IsDoor(ch))
-                    AddDoor(shapes, plan, r, c);
+                    AddDoor(lines, plan, r, c);
             }
+
+            var image = MinimapDistanceField.Build(
+                level.FieldRect,
+                new Vector2(plan.Origin.x, plan.Origin.z),
+                Cell,
+                groundMask,
+                stairMask,
+                wallMask,
+                lines
+            );
+            WritePng(FieldPath(level, "field"), image.Width, image.Height, image.Field);
+            WritePng(
+                FieldPath(level, "ids"),
+                image.Width,
+                image.Height,
+                image.Ids.Select(id => new Color32(id, id, id, 255)).ToArray()
+            );
+            return level;
+        }
+
+        private static void WritePng(string assetPath, int width, int height, Color32[] pixels)
+        {
+            var texture = new Texture2D(width, height, TextureFormat.RGBA32, false, true);
+            texture.SetPixels32(pixels);
+            File.WriteAllBytes(assetPath, texture.EncodeToPNG());
+            Object.DestroyImmediate(texture);
+        }
+
+        /// <summary>
+        /// 書き出した PNG を、データとして正しく読めるように取り込み直す
+        /// (色を補正しない・縮小しない・圧縮しない・端を繰り返さない)。ID 画像は 1 チャンネルにして補間しない。
+        /// </summary>
+        private static Texture2D ImportTexture(string assetPath, bool ids)
+        {
+            AssetDatabase.ImportAsset(assetPath, ImportAssetOptions.ForceSynchronousImport);
+            var importer = (TextureImporter)AssetImporter.GetAtPath(assetPath);
+            importer.textureType = ids
+                ? TextureImporterType.SingleChannel
+                : TextureImporterType.Default;
+            if (ids)
+            {
+                // 1 チャンネルにするときの読み元(R)は、TextureImporterSettings 経由でしか決められない
+                var settings = new TextureImporterSettings();
+                importer.ReadTextureSettings(settings);
+                settings.singleChannelComponent = TextureImporterSingleChannelComponent.Red;
+                importer.SetTextureSettings(settings);
+            }
+            importer.sRGBTexture = false;
+            importer.alphaIsTransparency = false;
+            importer.mipmapEnabled = false;
+            importer.isReadable = false;
+            importer.npotScale = TextureImporterNPOTScale.None;
+            importer.wrapMode = TextureWrapMode.Clamp;
+            importer.filterMode = ids ? FilterMode.Point : FilterMode.Bilinear;
+            importer.textureCompression = TextureImporterCompression.Uncompressed;
+            importer.maxTextureSize = 8192;
+            importer.SaveAndReimport();
+            return AssetDatabase.LoadAssetAtPath<Texture2D>(assetPath);
         }
 
         /// <summary>
@@ -139,7 +259,7 @@ namespace CreativeAI.EditorTools
         /// 壁のかたまりは暗く塗り、部屋の形はこの線で見せる。
         /// </summary>
         private static void AddWallEdges(
-            List<MinimapLayout.Shape> shapes,
+            List<MinimapDistanceField.Line> lines,
             MapLayoutBuilder.FloorPlan plan,
             bool[,] wallMask
         )
@@ -165,26 +285,26 @@ namespace CreativeAI.EditorTools
                 var cell = CellsRect(plan, new RectInt(c, r, 1, 1));
                 if (Open(r, c - 1))
                     Add(
-                        shapes,
-                        MinimapLayout.ShapeKind.WallEdge,
+                        lines,
+                        MinimapField.LineKind.WallEdge,
                         new Rect(cell.xMin, cell.yMin, WallEdgeWidth, cell.height)
                     );
                 if (Open(r, c + 1))
                     Add(
-                        shapes,
-                        MinimapLayout.ShapeKind.WallEdge,
+                        lines,
+                        MinimapField.LineKind.WallEdge,
                         new Rect(cell.xMax - WallEdgeWidth, cell.yMin, WallEdgeWidth, cell.height)
                     );
                 if (Open(r - 1, c))
                     Add(
-                        shapes,
-                        MinimapLayout.ShapeKind.WallEdge,
+                        lines,
+                        MinimapField.LineKind.WallEdge,
                         new Rect(cell.xMin, cell.yMin, cell.width, WallEdgeWidth)
                     );
                 if (Open(r + 1, c))
                     Add(
-                        shapes,
-                        MinimapLayout.ShapeKind.WallEdge,
+                        lines,
+                        MinimapField.LineKind.WallEdge,
                         new Rect(cell.xMin, cell.yMax - WallEdgeWidth, cell.width, WallEdgeWidth)
                     );
             }
@@ -197,18 +317,17 @@ namespace CreativeAI.EditorTools
         /// 同じ種類の隣が無ければ壁の向きに1本引く。
         /// </summary>
         private static void AddLine(
-            List<MinimapLayout.Shape> shapes,
+            List<MinimapDistanceField.Line> lines,
             MapLayoutBuilder.FloorPlan plan,
             int r,
             int c,
-            MinimapLayout.ShapeKind kind,
-            float width
+            MinimapField.LineKind kind
         )
         {
             var grid = plan.Grid;
             var rows = grid.GetLength(0);
             var cols = grid.GetLength(1);
-            var isFence = kind == MinimapLayout.ShapeKind.Fence;
+            var isFence = kind == MinimapField.LineKind.Fence;
             char? At(int y, int x) =>
                 y < 0 || x < 0 || y >= rows || x >= cols || !plan.HasFloor[y, x]
                     ? null
@@ -246,22 +365,23 @@ namespace CreativeAI.EditorTools
             }
 
             var center = CellCenter(plan, r, c);
+            var width = MinimapField.LineWidth(kind);
             var half = width * 0.5f;
             var reach = Cell * 0.5f;
-            Add(shapes, kind, new Rect(center.x - half, center.y - half, width, width));
+            Add(lines, kind, new Rect(center.x - half, center.y - half, width, width));
             if (west)
-                Add(shapes, kind, new Rect(center.x - reach, center.y - half, reach, width));
+                Add(lines, kind, new Rect(center.x - reach, center.y - half, reach, width));
             if (east)
-                Add(shapes, kind, new Rect(center.x, center.y - half, reach, width));
+                Add(lines, kind, new Rect(center.x, center.y - half, reach, width));
             if (south)
-                Add(shapes, kind, new Rect(center.x - half, center.y - reach, width, reach));
+                Add(lines, kind, new Rect(center.x - half, center.y - reach, width, reach));
             if (north)
-                Add(shapes, kind, new Rect(center.x - half, center.y, width, reach));
+                Add(lines, kind, new Rect(center.x - half, center.y, width, reach));
         }
 
         /// <summary>扉。壁の向きに沿った太い線を、両隣の壁から少し離して引く。</summary>
         private static void AddDoor(
-            List<MinimapLayout.Shape> shapes,
+            List<MinimapDistanceField.Line> lines,
             MapLayoutBuilder.FloorPlan plan,
             int r,
             int c
@@ -285,7 +405,7 @@ namespace CreativeAI.EditorTools
                     DoorWidth,
                     length
                 );
-            Add(shapes, MinimapLayout.ShapeKind.Door, rect);
+            Add(lines, MinimapField.LineKind.Door, rect);
         }
 
         private static Vector2 CellCenter(MapLayoutBuilder.FloorPlan plan, int r, int c) =>
@@ -301,18 +421,9 @@ namespace CreativeAI.EditorTools
             );
 
         private static void Add(
-            List<MinimapLayout.Shape> shapes,
-            MinimapLayout.ShapeKind kind,
-            Rect rect,
-            Vector2Int up = default
-        ) =>
-            shapes.Add(
-                new MinimapLayout.Shape
-                {
-                    Kind = kind,
-                    Rect = rect,
-                    Up = up,
-                }
-            );
+            List<MinimapDistanceField.Line> lines,
+            MinimapField.LineKind kind,
+            Rect rect
+        ) => lines.Add(new MinimapDistanceField.Line(kind, rect));
     }
 }
