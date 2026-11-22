@@ -1006,6 +1006,27 @@ namespace CreativeAI.EditorTools
                 !floors[f].Detached && perimeterMask[r + rowOffsets[f], c];
             if (b.Perimeter)
             {
+                // 外周のガラスは枠とガラス板を箱で組む。枠の色はほかの `$` とそろえるため `$` のモデルの材質を使い、
+                // ガラス板は外が見えない黒い反射ガラスにする
+                var (glassModel, _) = glass.Pick(Glass, 0, 0);
+                var glassRenderer =
+                    glassModel != null
+                        ? glassModel.GetComponentInChildren<MeshRenderer>(true)
+                        : null;
+                var glassMats =
+                    glassRenderer != null ? glassRenderer.sharedMaterials : new Material[0];
+                bool Clear(Material m) =>
+                    m.renderQueue > (int)UnityEngine.Rendering.RenderQueue.GeometryLast;
+                var glassFrameMat = glassMats.FirstOrDefault(m => m != null && !Clear(m));
+                if (glassFrameMat == null)
+                    glassFrameMat = wallMat;
+                var glassPaneMat = GetOrCreateDarkGlass();
+                var perimeterGlass = CollectPerimeterGlass(
+                    mainFloors,
+                    mainGrids,
+                    mainOffsets,
+                    perimeterMask
+                );
                 CreatePerimeterWall(
                     buildingRoot.transform,
                     b,
@@ -1013,10 +1034,23 @@ namespace CreativeAI.EditorTools
                     mainGrids,
                     mainOffsets,
                     perimeterMask,
+                    perimeterGlass,
                     worldRows,
                     worldCols,
-                    wallMat
+                    wallMat,
+                    glassFrameMat,
+                    glassPaneMat
                 );
+                // 外周のガラスは外周壁と一緒に作ったので、階ごとの薄いガラスの列からは外す
+                // (外周壁の一部として `#` と同じ扱いにする。向き・寄せの判定でも壁として見える)
+                foreach (var f in main)
+                {
+                    var g = grids[f];
+                    for (var r = 0; r < g.GetLength(0); r++)
+                    for (var c = 0; c < g.GetLength(1); c++)
+                        if (IsPanel(g[r, c]) && OnPerimeter(f, r, c))
+                            g[r, c] = '#';
+                }
                 CreateRoof(
                     buildingRoot.transform,
                     b,
@@ -1167,14 +1201,6 @@ namespace CreativeAI.EditorTools
                 }
 
                 // ガラス壁: 見た目は1マス1枚の等倍、当たりは run ごとの薄い箱
-                for (var r = 0; r < rows; r++)
-                for (var c = 0; c < cols; c++)
-                    if (IsPanel(grid[r, c]) && OnPerimeter(f, r, c))
-                        Debug.LogWarning(
-                            $"[MapLayoutBuilder] {where} row {r} col {c}: "
-                                + "`$` が建物の外周にあります。外周は1枚の壁で覆われるのでガラスは埋まります。"
-                        );
-
                 var glassLayout = glassLayouts[f];
                 if (glassLayout.Runs.Count > 0)
                 {
@@ -1767,9 +1793,12 @@ namespace CreativeAI.EditorTools
             List<char[,]> grids,
             int[] rowOffsets,
             bool[,] perimeter,
+            Dictionary<Vector2Int, PerimeterGlass> glassCells,
             int worldRows,
             int worldCols,
-            Material mat
+            Material mat,
+            Material glassFrameMat,
+            Material glassPaneMat
         )
         {
             var bottomY = floors.Min(f => f.Origin.y);
@@ -1807,6 +1836,8 @@ namespace CreativeAI.EditorTools
             var full = (bool[,])perimeter.Clone();
             foreach (var cell in exits.Keys)
                 full[cell.y, cell.x] = false;
+            foreach (var cell in glassCells.Keys)
+                full[cell.y, cell.x] = false;
 
             var rects = MergeRects(full, worldRows, worldCols);
             foreach (var rect in rects)
@@ -1833,11 +1864,263 @@ namespace CreativeAI.EditorTools
                     );
             }
 
+            CreatePerimeterGlass(
+                go.transform,
+                glassCells,
+                perimeter,
+                bottomY,
+                topY,
+                mat,
+                glassFrameMat,
+                glassPaneMat
+            );
+
             Debug.Log(
                 $"[MapLayoutBuilder] 外周壁: {worldCols} × {worldRows} マスの縁を高さ {height} "
                     + $"(Y {bottomY} 〜 {topY}) で {rects.Count} 個にまとめました"
-                    + (exits.Count > 0 ? $"(出入口 {exits.Count} マス)。" : "。")
+                    + (exits.Count > 0 ? $"(出入口 {exits.Count} マス)" : "")
+                    + (glassCells.Count > 0 ? $"(ガラス {glassCells.Count} マス)" : "")
+                    + "。"
             );
+        }
+
+        /// <summary>外周の縁に置いたガラス `$` の1マスぶんの高さの範囲(ワールドY)。</summary>
+        readonly struct PerimeterGlass
+        {
+            public readonly float Bottom; // その階の床面
+            public readonly float Top; // 上の階に壁があればその階の床板の下面。無ければ無限大(外周壁の上端まで)
+
+            public PerimeterGlass(float bottom, float top)
+            {
+                Bottom = bottom;
+                Top = top;
+            }
+        }
+
+        // 外周のガラスのマス目の目安。階高と同じにして、横の枠が各階の床の高さに来るようにする。
+        // 面の長さ・高さをこの大きさに近い枚数で割り切るので、1枚はほぼ正方形になる
+        const float PerimeterPaneSize = 8f;
+        const float PerimeterFrameWidth = 0.4f; // 外周のガラスの枠(方立・無目)の太さ
+
+        // 外周のガラス板を枠の面から奥へ下げる量(表裏それぞれ)。面がそろうと枠とガラスの境目に段差も影も
+        // できず平らに見えるので、ほんの少しだけ引っ込めて枠を浮かせる
+        const float PerimeterPaneInset = 0.25f;
+
+        /// <summary>
+        /// 外周の縁にある `$` を集める。外周は全階を貫く1枚の壁なので、ガラスはその階の床から
+        /// 上の階がそのマスを覆うまで(覆わなければ外周壁の上端まで)を通しで置く。
+        /// 同じマスを複数の階が `$` にしていれば、いちばん下の階から伸ばす。
+        /// </summary>
+        static Dictionary<Vector2Int, PerimeterGlass> CollectPerimeterGlass(
+            FloorDef[] floors, // 本棟の階だけ(grids / rowOffsets と同じ並び)
+            List<char[,]> grids,
+            int[] rowOffsets,
+            bool[,] perimeter
+        )
+        {
+            var cells = new Dictionary<Vector2Int, PerimeterGlass>();
+            var order = Enumerable
+                .Range(0, floors.Length)
+                .OrderBy(f => floors[f].Origin.y)
+                .ToArray();
+            foreach (var f in order)
+            {
+                var grid = grids[f];
+                for (var r = 0; r < grid.GetLength(0); r++)
+                for (var c = 0; c < grid.GetLength(1); c++)
+                {
+                    var cell = new Vector2Int(c, r + rowOffsets[f]);
+                    if (
+                        !IsPanel(grid[r, c])
+                        || !perimeter[cell.y, cell.x]
+                        || cells.ContainsKey(cell)
+                    )
+                        continue;
+
+                    // 上の階でこのマスがガラスでなければ、そこから上は外周壁のまま
+                    var top = float.PositiveInfinity;
+                    foreach (var u in order.Where(u => floors[u].Origin.y > floors[f].Origin.y))
+                    {
+                        var ur = cell.y - rowOffsets[u];
+                        var ug = grids[u];
+                        if (ur < 0 || ur >= ug.GetLength(0) || c >= ug.GetLength(1))
+                            continue;
+                        if (IsPanel(ug[ur, c]))
+                            continue;
+                        top = floors[u].Origin.y - FloorSlabThickness;
+                        break;
+                    }
+                    cells[cell] = new PerimeterGlass(floors[f].Origin.y, top);
+                }
+            }
+            return cells;
+        }
+
+        /// <summary>
+        /// 外周の縁のガラス。外周壁と同じく<b>1マスまるごとの厚み(4u)</b>で、枠もガラス板も
+        /// その厚みの箱で組む(`$` のモデルを伸ばすと、モデルのガラス板は 0.03u しかないので枠の中で凹む)。
+        /// 連続するマスを1枚の面にまとめ、面全体を <see cref="PerimeterPaneSize"/> 角ほどのマス目に割る。
+        /// 当たりは面ごとの箱。ガラスの上下で外周壁が続くところ(下の階・上の階がガラスでない所)は外周壁の箱で埋める。
+        /// </summary>
+        static void CreatePerimeterGlass(
+            Transform parent,
+            Dictionary<Vector2Int, PerimeterGlass> cells,
+            bool[,] perimeter,
+            float bottomY,
+            float topY,
+            Material wallMat,
+            Material frameMat,
+            Material paneMat
+        )
+        {
+            if (cells.Count == 0)
+                return;
+            var rows = perimeter.GetLength(0);
+            var cols = perimeter.GetLength(1);
+
+            // 外周の縁は1マス幅の輪なので、東西の隣も縁なら東西に延びる壁
+            bool OnRing(int r, int c) =>
+                r >= 0 && c >= 0 && r < rows && c < cols && perimeter[r, c];
+            bool EastWest(Vector2Int cell) =>
+                OnRing(cell.y, cell.x - 1) || OnRing(cell.y, cell.x + 1);
+
+            foreach (var (cell, g) in cells)
+            {
+                var rect = new RectInt(cell.x, cell.y, 1, 1);
+                var below = g.Bottom - FloorSlabThickness - bottomY;
+                if (below > 0.01f)
+                    CreateBox(parent, "PerimeterBelowGlass", rect, below, below * 0.5f, wallMat);
+                var top = Mathf.Min(g.Top, topY);
+                var above = topY - top;
+                if (above > 0.01f)
+                    CreateBox(
+                        parent,
+                        "PerimeterAboveGlass",
+                        rect,
+                        above,
+                        top - bottomY + above * 0.5f,
+                        wallMat
+                    );
+            }
+
+            // 同じ線上で高さの範囲が同じマスを、途切れずに続くところごとに1枚の面にする
+            var lines = cells.GroupBy(kv =>
+            {
+                var eastWest = EastWest(kv.Key);
+                return (
+                    eastWest,
+                    Line: eastWest ? kv.Key.y : kv.Key.x,
+                    kv.Value.Bottom,
+                    Top: Mathf.Min(kv.Value.Top, topY)
+                );
+            });
+            foreach (var line in lines)
+            {
+                var along = line.Select(kv => line.Key.eastWest ? kv.Key.x : kv.Key.y)
+                    .OrderBy(i => i)
+                    .ToList();
+                for (int s = 0, e = 1; e <= along.Count; e++)
+                {
+                    if (e < along.Count && along[e] == along[e - 1] + 1)
+                        continue;
+                    CreateGlassFacade(
+                        parent,
+                        line.Key.eastWest,
+                        Cell * line.Key.Line,
+                        Cell * along[s] - Cell * 0.5f,
+                        Cell * along[e - 1] + Cell * 0.5f,
+                        line.Key.Bottom - bottomY,
+                        line.Key.Top - bottomY,
+                        frameMat,
+                        paneMat
+                    );
+                    s = e;
+                }
+            }
+        }
+
+        /// <summary>
+        /// 外周のガラスの面1枚。枠(方立・無目)は奥行き1マス、ガラス板は表裏を <see cref="PerimeterPaneInset"/> ずつ
+        /// 引っ込めた箱で組む。
+        /// 位置は親(外周壁)のローカル。from/to は面の延びる向きの両端、bottom/top は高さの両端。
+        /// </summary>
+        static void CreateGlassFacade(
+            Transform parent,
+            bool eastWest,
+            float line,
+            float from,
+            float to,
+            float bottom,
+            float top,
+            Material frameMat,
+            Material paneMat
+        )
+        {
+            var length = to - from;
+            var height = top - bottom;
+            var name = eastWest
+                ? $"PerimeterGlass_{from:0}_{line:0}"
+                : $"PerimeterGlass_{line:0}_{from:0}";
+            var facade = new GameObject(name).transform;
+            facade.SetParent(parent, false);
+
+            void Box(string part, float a0, float a1, float y0, float y1, float depth, Material mat)
+            {
+                var center = new Vector3((a0 + a1) * 0.5f, (y0 + y1) * 0.5f, line);
+                var size = new Vector3(a1 - a0, y1 - y0, depth);
+                if (!eastWest)
+                {
+                    center = new Vector3(center.z, center.y, center.x);
+                    size = new Vector3(size.z, size.y, size.x);
+                }
+                var go = CreateFiller(facade, part, center, size, mat);
+                // 当たりは面ごとの箱1つにまとめる
+                if (go != null)
+                    Object.DestroyImmediate(go.GetComponent<Collider>());
+            }
+
+            var columns = Mathf.Max(1, Mathf.RoundToInt(length / PerimeterPaneSize));
+            var tiers = Mathf.Max(1, Mathf.RoundToInt(height / PerimeterPaneSize));
+            var paneWidth = length / columns;
+            var paneHeight = height / tiers;
+            var half = PerimeterFrameWidth * 0.5f;
+
+            // 枠の芯の位置。両端の枠は面の内側に収める(外へ出すと隣の外周壁・床にめり込む)
+            float Mullion(float start, float pitch, int i, int count, float end) =>
+                i == 0 ? start + half
+                : i == count ? end - half
+                : start + pitch * i;
+
+            for (var i = 0; i <= columns; i++)
+            {
+                var x = Mullion(from, paneWidth, i, columns, to);
+                Box($"Mullion_{i}", x - half, x + half, bottom, top, Cell, frameMat);
+            }
+            for (var j = 0; j <= tiers; j++)
+            {
+                var y = Mullion(bottom, paneHeight, j, tiers, top);
+                Box($"Transom_{j}", from, to, y - half, y + half, Cell, frameMat);
+            }
+            for (var i = 0; i < columns; i++)
+            for (var j = 0; j < tiers; j++)
+                Box(
+                    $"Pane_{i}_{j}",
+                    Mullion(from, paneWidth, i, columns, to) + half,
+                    Mullion(from, paneWidth, i + 1, columns, to) - half,
+                    Mullion(bottom, paneHeight, j, tiers, top) + half,
+                    Mullion(bottom, paneHeight, j + 1, tiers, top) - half,
+                    Cell - PerimeterPaneInset * 2f,
+                    paneMat
+                );
+
+            var collider = new GameObject("Collider");
+            collider.transform.SetParent(facade, false);
+            collider.transform.localPosition = eastWest
+                ? new Vector3((from + to) * 0.5f, bottom + height * 0.5f, line)
+                : new Vector3(line, bottom + height * 0.5f, (from + to) * 0.5f);
+            collider.AddComponent<BoxCollider>().size = eastWest
+                ? new Vector3(length, height, Cell)
+                : new Vector3(Cell, height, length);
         }
 
         static void CreateBox(
@@ -3047,6 +3330,25 @@ namespace CreativeAI.EditorTools
                 vertices = vertices.ToArray(),
                 triangles = triangles.ToArray(),
             };
+        }
+
+        // 外周のガラス板の材質。外が見えないよう不透明にし、黒くつやを強くして、周りの映り込みとハイライトで
+        // ガラスの反射の質感を出す。既にあれば Editor で調整した値を上書きしない
+        const string DarkGlassMaterial = "Glass_Dark";
+
+        static Material GetOrCreateDarkGlass()
+        {
+            var existing = AssetDatabase.LoadAssetAtPath<Material>(
+                $"{MaterialDir}/{DarkGlassMaterial}.mat"
+            );
+            if (existing != null)
+                return existing;
+
+            var mat = GetOrCreateMaterial(DarkGlassMaterial, new Color(0.02f, 0.025f, 0.03f));
+            mat.SetFloat("_Smoothness", 0.95f);
+            EditorUtility.SetDirty(mat);
+            AssetDatabase.SaveAssetIfDirty(mat);
+            return mat;
         }
 
         static Material GetOrCreateMaterial(string name, Color color)
