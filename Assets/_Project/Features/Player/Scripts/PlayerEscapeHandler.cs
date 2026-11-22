@@ -16,6 +16,7 @@ namespace CreativeAI.Gameplay
     [RequireComponent(typeof(CharacterController))]
     [RequireComponent(typeof(WeaponManager))]
     [RequireComponent(typeof(PlayerFlinchHandler))]
+    [RequireComponent(typeof(PlayerHitInvincibility))]
     public class PlayerEscapeHandler : MonoBehaviour
     {
         [Tooltip(
@@ -40,6 +41,7 @@ namespace CreativeAI.Gameplay
         private CharacterController _characterController;
         private WeaponManager _weaponManager;
         private PlayerFlinchHandler _flinchHandler;
+        private PlayerHitInvincibility _invincible;
         private Animator _animator;
         private Coroutine _retreatCoroutine;
 
@@ -53,6 +55,7 @@ namespace CreativeAI.Gameplay
             _characterController = GetComponent<CharacterController>();
             _weaponManager = GetComponent<WeaponManager>();
             _flinchHandler = GetComponent<PlayerFlinchHandler>();
+            _invincible = GetComponent<PlayerHitInvincibility>();
             _animator = PlayerModel.Of(this).Animator;
         }
 
@@ -131,6 +134,7 @@ namespace CreativeAI.Gameplay
             {
                 _playerController.IsFlinching = false;
                 _isRepelled = false;
+                _invincible.StartGrace();
             }
         }
 

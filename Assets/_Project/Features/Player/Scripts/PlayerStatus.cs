@@ -42,6 +42,8 @@ namespace CreativeAI.Gameplay
 
         private PlayerFlinchHandler _flinchHandler;
 
+        private PlayerHitInvincibility _invincible;
+
         // 同じリグ上の武器管理(選択中武器の補正を読むだけ・改変しない)。武器を持たないリグでは null。
         private WeaponManager _weaponManager;
 
@@ -49,6 +51,7 @@ namespace CreativeAI.Gameplay
         {
             TryGetComponent(out _flinchHandler);
             TryGetComponent(out _weaponManager);
+            TryGetComponent(out _invincible);
         }
 
         private void OnEnable()
@@ -201,6 +204,10 @@ namespace CreativeAI.Gameplay
         public void TakeDamage(float damage, bool isCritical, bool suppressFlinch = false)
         {
             if (IsDead)
+                return;
+
+            // 無敵は攻撃の連続被弾を防ぐためのもの。毒・拘束などの持続ダメージ(suppressFlinch)は止めない
+            if (!suppressFlinch && _invincible != null && _invincible.IsInvincible)
                 return;
 
             float finalDamage = DamageFormula.ApplyDefense(damage, CurrentDefense);
