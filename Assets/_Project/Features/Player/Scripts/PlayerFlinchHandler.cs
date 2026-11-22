@@ -12,6 +12,7 @@ namespace CreativeAI.Gameplay
     /// </summary>
     [RequireComponent(typeof(PlayerController))]
     [RequireComponent(typeof(WeaponManager))]
+    [RequireComponent(typeof(PlayerHitInvincibility))]
     public class PlayerFlinchHandler : MonoBehaviour
     {
         [Tooltip(
@@ -24,12 +25,14 @@ namespace CreativeAI.Gameplay
         private WeaponManager _weaponManager;
         private Animator _animator;
         private Coroutine _flinchCoroutine;
+        private PlayerHitInvincibility _invincible;
         private bool _actionEndReceived;
 
         private void Awake()
         {
             _playerController = GetComponent<PlayerController>();
             _weaponManager = GetComponent<WeaponManager>();
+            _invincible = GetComponent<PlayerHitInvincibility>();
             _animator = PlayerModel.Of(this).Animator;
         }
 
@@ -77,6 +80,7 @@ namespace CreativeAI.Gameplay
 
             _animator.SetTrigger(PlayerAnimatorParams.ReturnToLocomotion);
             _playerController.IsFlinching = false;
+            _invincible.StartGrace();
             _playerController.Locks.Release(this);
             _flinchCoroutine = null;
         }

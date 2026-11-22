@@ -23843,6 +23843,7 @@ GameObject:
   - component: {fileID: 7071181715784651459}
   - component: {fileID: 4830021914783054791}
   - component: {fileID: 5178744169860583855}
+  - component: {fileID: 8281974482337481817}
   m_Layer: 7
   m_Name: PlayerArmature
   m_TagString: Player
@@ -24318,6 +24319,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: CreativeAI.Gameplay::CreativeAI.Gameplay.PlayerEscapeHandler
   _retreatDistance: 1.7
   _retreatDuration: 1
+  _repelMotionEndTimeout: 1
 --- !u!114 &4830021914783054791
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -24342,6 +24344,19 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 2dd966a31ce68c043bc349b3f170ba82, type: 3}
   m_Name: 
   m_EditorClassIdentifier: CreativeAI.Gameplay::CreativeAI.Gameplay.PlayerUiInput
+--- !u!114 &8281974482337481817
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 8457278659484452282}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: d51453598bfd27d46b88cfac2b84f888, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: CreativeAI.Gameplay::CreativeAI.Gameplay.PlayerHitInvincibility
+  _graceDuration: 0.3
 --- !u!1 &8473448211402975561
 GameObject:
   m_ObjectHideFlags: 0
