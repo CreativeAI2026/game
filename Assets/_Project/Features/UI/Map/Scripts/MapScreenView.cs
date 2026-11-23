@@ -3,6 +3,7 @@ using CreativeAI.Gameplay;
 using TMPro;
 using UnityEngine;
 using UnityEngine.EventSystems;
+using UnityEngine.InputSystem;
 using UnityEngine.UI;
 
 namespace CreativeAI.UI
@@ -59,6 +60,10 @@ namespace CreativeAI.UI
         [SerializeField, Tooltip("ボタンのスライドとカーソルの上下の速さ(大きいほど速い)")]
         private float _slideSpeed = 16f;
 
+        [SerializeField, Tooltip("建物が替わるところに足す、区切りの高さ(px)")]
+        private float _buildingGap = 20f;
+
+        private const float HoverBrighten = 0.12f; // マウスを乗せたとき、ボタンを白へ寄せる割合
         private const float CursorSize = 22f; // 三角のカーソルの大きさ(px)
         private const float CursorGap = 4f; // カーソルと、ずれたボタンの左端のすき間(px)
 
@@ -69,12 +74,14 @@ namespace CreativeAI.UI
             public RectTransform Slot; // レイアウトグループが並べる枠。ボタンはこの中で左右に動かす
             public int Level; // 階の番号
             public float Offset; // ボタンの今の横のずれ(px。左が負)
+            public float Hover; // マウスを乗せている度合い(0〜1。なめらかに変わる)
             public GameObject PinMark; // 「この階にピンがある」黄色い丸
             public GameObject HereMark; // 「プレイヤーが今いる階」の矢印
         }
 
         private readonly List<FloorButton> _floorButtons = new();
         private RectTransform _floorsRoot; // 階ボタンの枠を並べる親
+        private Canvas _rootCanvas; // マウスの位置を、階ボタンの上かどうか調べるのに使う
         private RectTransform _cursor; // 選んでいる階の左に出す右向きの三角。階を替えると上下に動く
         private bool _snapFloorList; // 開いた直後は、動かさずに最終位置へ置く
         private bool[] _levelHasPin;
@@ -89,6 +96,8 @@ namespace CreativeAI.UI
         private void Awake()
         {
             _playerGraphic = _playerIcon.GetComponent<Graphic>();
+            var canvas = GetComponentInParent<Canvas>();
+            _rootCanvas = canvas != null ? canvas.rootCanvas : null;
             _pins = new MapPinIconPool(_pinTemplate);
             if (_floorButtonTemplate != null)
                 _floorButtonTemplate.gameObject.SetActive(false);
@@ -139,12 +148,25 @@ namespace CreativeAI.UI
                 LayoutRebuilder.ForceRebuildLayoutImmediate(_floorsRoot); // 枠の位置を先に確定する
             var blend = _snapFloorList ? 1f : 1f - Mathf.Exp(-_slideSpeed * Time.unscaledDeltaTime);
 
+            var mouse = Mouse.current;
+            var hasPointer = mouse != null;
+            var pointer = hasPointer ? mouse.position.ReadValue() : Vector2.zero;
+            var overList = hasPointer && IsPointerOver(_floorsRoot, pointer);
+            HandleFloorInput(overList ? mouse.scroll.ReadValue().y : 0f);
+
             FloorButton selected = null;
             foreach (var floor in _floorButtons)
             {
                 var isSelected = floor.Level == _levelIndex;
                 if (isSelected)
                     selected = floor;
+                var hovered = overList && IsPointerOver(floor.Slot, pointer);
+                floor.Hover = Mathf.Lerp(floor.Hover, hovered ? 1f : 0f, blend);
+                floor.Button.image.color = Color.Lerp(
+                    isSelected ? _floorButtonSelectedColor : _floorButtonColor,
+                    Color.white,
+                    HoverBrighten * floor.Hover
+                );
                 floor.Offset = Mathf.Lerp(floor.Offset, isSelected ? -_selectedPopOut : 0f, blend);
                 ((RectTransform)floor.Button.transform).anchoredPosition = new Vector2(
                     floor.Offset,
@@ -163,6 +185,40 @@ namespace CreativeAI.UI
             var y = _snapFloorList ? left.y : Mathf.Lerp(_cursor.localPosition.y, left.y, blend);
             _cursor.localPosition = new Vector3(x, y, 0f);
             _snapFloorList = false;
+        }
+
+        private bool IsPointerOver(RectTransform rect, Vector2 screenPoint)
+        {
+            // Overlay のキャンバスはカメラを使わない
+            var eventCamera =
+                _rootCanvas != null && _rootCanvas.renderMode != RenderMode.ScreenSpaceOverlay
+                    ? _rootCanvas.worldCamera
+                    : null;
+            return RectTransformUtility.RectangleContainsScreenPoint(
+                rect,
+                screenPoint,
+                eventCamera
+            );
+        }
+
+        // 上下キー(ゲームパッドの十字・スティックも)と、階ボタンの上でのホイールで、階を1つずつ替える。
+        // 一覧は上の階が上なので、上へ動かすと一覧の前の階になる。
+        private void HandleFloorInput(float scroll)
+        {
+            var step = 0;
+            if (UiInputActionMap.TryReadDiscreteMove(out var move) && move.y != 0)
+                step = -move.y;
+            if (scroll != 0f)
+                step = scroll > 0f ? -1 : 1;
+            if (step == 0)
+                return;
+
+            var current = _floorButtons.FindIndex(floor => floor.Level == _levelIndex);
+            if (current < 0)
+                return;
+            var next = Mathf.Clamp(current + step, 0, _floorButtons.Count - 1);
+            if (next != current)
+                ShowLevel(_floorButtons[next].Level);
         }
 
         // ピンのある階のボタンに黄色い丸、プレイヤーがいる階のボタンに矢印の印を出す。
@@ -211,8 +267,14 @@ namespace CreativeAI.UI
             var templateLayout = _floorButtonTemplate.GetComponent<LayoutElement>();
             var slotHeight = templateLayout != null ? templateLayout.preferredHeight : 60f;
 
+            string previousBuilding = null;
             foreach (var index in order)
             {
+                var level = _layout.Levels[index];
+                if (previousBuilding != null && level.BuildingId != previousBuilding)
+                    CreateBuildingDivider();
+                previousBuilding = level.BuildingId;
+
                 // レイアウトグループが並べるのは枠で、ボタンは枠の中を左右に動かす(ボタン自体を動かすと並べ直しと競合する)
                 var slotObject = new GameObject(
                     "FloorSlot",
@@ -230,7 +292,7 @@ namespace CreativeAI.UI
                 buttonRect.anchorMax = Vector2.one;
                 buttonRect.offsetMin = Vector2.zero;
                 buttonRect.offsetMax = Vector2.zero;
-                button.GetComponentInChildren<TMP_Text>().text = _layout.Levels[index].Title;
+                button.GetComponentInChildren<TMP_Text>().text = FloorButtonLabel(level);
                 button.onClick.AddListener(() => ShowLevel(index));
                 _floorButtons.Add(
                     new FloorButton
@@ -274,6 +336,35 @@ namespace CreativeAI.UI
                     -90f // 矢じりは上向きなので、右向きに回す
                 ).transform;
             _cursor.gameObject.AddComponent<LayoutElement>().ignoreLayout = true;
+        }
+
+        // 階の記号(3F など)を大きく、建物の名前を小さくして並べる(リッチテキスト)。
+        private static string FloorButtonLabel(MinimapLayout.Level level) =>
+            string.IsNullOrEmpty(level.Building)
+                ? $"<size=125%>{level.Label}</size>"
+                : $"<size=70%>{level.Building}</size> <size=125%>{level.Label}</size>";
+
+        // 建物が替わるところに、空きと細い線を入れる。レイアウトグループが並べるので、高さだけ持つ枠にする。
+        private void CreateBuildingDivider()
+        {
+            var go = new GameObject(
+                "BuildingDivider",
+                typeof(RectTransform),
+                typeof(LayoutElement)
+            );
+            go.GetComponent<LayoutElement>().preferredHeight = _buildingGap;
+            go.transform.SetParent(_floorsRoot, false);
+
+            var line = new GameObject("Line", typeof(RectTransform), typeof(Image));
+            var image = line.GetComponent<Image>();
+            image.color = new Color(1f, 1f, 1f, 0.18f);
+            image.raycastTarget = false;
+            var rect = image.rectTransform;
+            rect.SetParent(go.transform, false);
+            rect.anchorMin = new Vector2(0f, 0.5f);
+            rect.anchorMax = new Vector2(1f, 0.5f);
+            rect.pivot = new Vector2(0.5f, 0.5f);
+            rect.sizeDelta = new Vector2(-24f, 2f); // 左右に 12px ずつ余白
         }
 
         // 親の子に、小さな記号を置く(最初は隠す)。
@@ -325,12 +416,6 @@ namespace CreativeAI.UI
             Fit();
             if (_floorTitle != null)
                 _floorTitle.text = level.Title;
-
-            foreach (var floor in _floorButtons)
-            {
-                var selected = floor.Level == index;
-                floor.Button.image.color = selected ? _floorButtonSelectedColor : _floorButtonColor;
-            }
         }
 
         /// <summary>今の階の全体が表示範囲に収まるよう、中心と拡大率を決める。</summary>
