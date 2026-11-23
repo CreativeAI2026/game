@@ -2,12 +2,14 @@ using System.Collections.Generic;
 using CreativeAI.Gameplay;
 using TMPro;
 using UnityEngine;
+using UnityEngine.InputSystem;
 
 namespace CreativeAI.UI
 {
     /// <summary>
     /// 画面の隅に出す円形のミニマップ。プレイヤーを中心に、いる階の図を描く(同じ高さの別の建物も並べて描く)。
     /// 既定ではカメラの向きが上になるよう図を回し、北の印を縁に出す。マップピンは範囲の外なら縁に寄せて出す。
+    /// Z キー(ゲームパッドは右スティック押し込み)で、広い範囲を見渡す縮小表示と行き来できる。階が替わると、枠の外に階の名前を数秒出す。
     /// 他の HUD と同じく、Field かつ会話イベント中でないときだけ出す(CanvasGroup で隠すだけで自身は動かし続ける)。
     /// </summary>
     public sealed class MinimapView : MonoBehaviour, MapPinIconPool.IPlacement
@@ -48,8 +50,31 @@ namespace CreativeAI.UI
         [SerializeField, Range(0f, 1f), Tooltip("別の階にあるピンの不透明度")]
         private float _otherFloorPinAlpha = 0.45f;
 
+        [
+            SerializeField,
+            Range(0.2f, 1f),
+            Tooltip("縮小表示のときの、ふだんに対する拡大率(小さいほど広く見える)")
+        ]
+        private float _wideScale = 0.5f;
+
+        [SerializeField, Tooltip("拡大率が切り替わる速さ(大きいほど速い)")]
+        private float _zoomSpeed = 10f;
+
+        [SerializeField, Tooltip("階が替わったときの階の名前を、出しておく秒数")]
+        private float _bannerSeconds = 2.2f;
+
+        private const float BannerFade = 0.25f; // 階の名前が出入りするときの秒数
+        private const float BannerFontSize = 28f;
+        private const float BannerGap = 26f; // 枠と階の名前のすき間(px)
+
         private CanvasGroup _group;
         private bool? _shown;
+        private InputAction _zoomAction;
+        private bool _wide; // 縮小表示か
+        private float _zoomScale = 1f; // 今の拡大率(なめらかに _wide へ向かう)
+        private float _scaledPixelsPerUnit;
+        private TMP_Text _banner;
+        private float _bannerTime = float.MaxValue; // 階の名前を出し始めてからの秒数
 
         private Transform _player;
         private Camera _camera;
@@ -66,15 +91,75 @@ namespace CreativeAI.UI
         {
             _group = ResidentUiVisibility.GetOrAddGroup(gameObject);
             _pins = new MapPinIconPool(_pinTemplate);
+            CreateBanner();
         }
 
         private void OnEnable()
         {
             PlayerRegistry.Changed += Bind;
             Bind(PlayerRegistry.Current);
+            _zoomAction = new InputAction("MinimapZoom", InputActionType.Button);
+            _zoomAction.AddBinding("<Keyboard>/z");
+            _zoomAction.AddBinding("<Gamepad>/rightStickPress");
+            _zoomAction.Enable();
         }
 
-        private void OnDisable() => PlayerRegistry.Changed -= Bind;
+        private void OnDisable()
+        {
+            PlayerRegistry.Changed -= Bind;
+            _zoomAction?.Dispose();
+            _zoomAction = null;
+        }
+
+        // 階が替わったときに出す、階の名前の札(最初は透明)。枠は円形に切り抜かれるので、枠の外(この画面の直下)に置く。
+        private void CreateBanner()
+        {
+            var go = new GameObject("FloorBanner", typeof(RectTransform), typeof(TextMeshProUGUI));
+            go.transform.SetParent(transform, false);
+            _banner = go.GetComponent<TextMeshProUGUI>();
+            if (_floorLabel != null)
+                _banner.font = _floorLabel.font;
+            _banner.fontSize = BannerFontSize;
+            _banner.alignment = TextAlignmentOptions.Center;
+            _banner.textWrappingMode = TextWrappingModes.NoWrap;
+            _banner.raycastTarget = false;
+            _banner.alpha = 0f;
+            _banner.rectTransform.sizeDelta = new Vector2(360f, 40f);
+        }
+
+        // 出し始めからの時間で、すっと出て、しばらく止まり、すっと消える。枠の位置に合わせて置く。
+        private void UpdateBanner()
+        {
+            if (_bannerTime >= _bannerSeconds)
+                return;
+            _bannerTime += Time.unscaledDeltaTime;
+            var alpha = Mathf.Min(
+                Mathf.Clamp01(_bannerTime / BannerFade),
+                Mathf.Clamp01((_bannerSeconds - _bannerTime) / BannerFade)
+            );
+            _banner.alpha = alpha;
+
+            // 画面の上半分に枠があれば下に、下半分なら上に出す(画面からはみ出さないように)
+            var below = _frame.position.y > Screen.height * 0.5f;
+            var rect = _frame.rect;
+            var y = below ? rect.yMin - BannerGap : rect.yMax + BannerGap;
+            _banner.rectTransform.position = _frame.TransformPoint(
+                new Vector3(rect.center.x, y, 0f)
+            );
+        }
+
+        private void UpdateZoom()
+        {
+            if (_zoomAction.WasPressedThisFrame() && !UiPanelService.IsOpen)
+                _wide = !_wide;
+            var target = _wide ? _wideScale : 1f;
+            _zoomScale = Mathf.Lerp(
+                _zoomScale,
+                target,
+                1f - Mathf.Exp(-_zoomSpeed * Time.unscaledDeltaTime)
+            );
+            _scaledPixelsPerUnit = _pixelsPerUnit * _zoomScale;
+        }
 
         private void Bind(PlayerController player) =>
             _player = player != null ? player.transform : null;
@@ -101,14 +186,20 @@ namespace CreativeAI.UI
             var levelIndex = _layout.FindLevel(position);
             if (levelIndex != _levelIndex)
                 ChangeLevel(levelIndex);
+            UpdateZoom();
+            UpdateBanner();
 
             var viewYaw =
                 _rotateWithCamera && _camera != null ? _camera.transform.eulerAngles.y : 0f;
             _viewRotation = Quaternion.Euler(0f, 0f, viewYaw);
 
             _rotator.localRotation = _viewRotation;
-            _map.RectTransform.localScale = new Vector3(_pixelsPerUnit, _pixelsPerUnit, 1f);
-            _map.RectTransform.anchoredPosition = -_center * _pixelsPerUnit;
+            _map.RectTransform.localScale = new Vector3(
+                _scaledPixelsPerUnit,
+                _scaledPixelsPerUnit,
+                1f
+            );
+            _map.RectTransform.anchoredPosition = -_center * _scaledPixelsPerUnit;
 
             var forward = _player.forward;
             var playerYaw = Mathf.Atan2(forward.x, forward.z) * Mathf.Rad2Deg;
@@ -133,9 +224,16 @@ namespace CreativeAI.UI
         // 階が変わったときだけ、同じ高さの階を集めて描き直し、階の名前を替える
         private void ChangeLevel(int levelIndex)
         {
+            var previous = _levelIndex;
             _levelIndex = levelIndex;
             _drawn.Clear();
             var level = levelIndex >= 0 ? _layout.Levels[levelIndex] : null;
+            // 最初の階の決定では出さず、階を移ったときだけ名前を出す
+            if (previous >= 0 && level != null && _banner != null)
+            {
+                _banner.text = level.Title;
+                _bannerTime = 0f;
+            }
             if (level != null)
                 _layout.LevelsAtHeight(level.Height, _drawn);
             _map.Show(_drawn);
@@ -147,7 +245,7 @@ namespace CreativeAI.UI
         {
             // 範囲の外にあるピンは、枠の縁に寄せて出す
             Vector2 offset =
-                _viewRotation * ((new Vector2(world.x, world.z) - _center) * _pixelsPerUnit);
+                _viewRotation * ((new Vector2(world.x, world.z) - _center) * _scaledPixelsPerUnit);
             if (offset.sqrMagnitude > _pinMaxRadius * _pinMaxRadius)
                 offset = offset.normalized * _pinMaxRadius;
             return offset;

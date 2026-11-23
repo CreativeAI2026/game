@@ -31,6 +31,7 @@ namespace CreativeAI.UI
 
         private readonly MinimapIconGraphic _template;
         private readonly List<Slot> _slots = new();
+        private int _shownCount; // 直近の Refresh で出した記号の数
 
         /// <summary>型を受け取り、型そのものは隠しておく。型が無ければ何も出さない。</summary>
         public MapPinIconPool(MinimapIconGraphic template)
@@ -79,6 +80,41 @@ namespace CreativeAI.UI
                 slot.Pin = null; // 消えたピンを持ち続けない
                 _slots[i] = slot;
             }
+            _shownCount = shown;
+        }
+
+        /// <summary>
+        /// 画面上の点 <paramref name="screenPoint"/> から <paramref name="radius"/>(px)以内にある、一番近い記号のピンを探す。
+        /// 見つかれば、ピンの先端の位置と、そのピンのある階の番号も返す。
+        /// </summary>
+        public bool TryFindPinAt(
+            Vector2 screenPoint,
+            Camera eventCamera,
+            float radius,
+            out Vector3 anchor,
+            out int level
+        )
+        {
+            anchor = default;
+            level = -1;
+            var nearest = radius * radius;
+            var found = false;
+            for (var i = 0; i < _shownCount; i++)
+            {
+                var slot = _slots[i];
+                var iconPoint = RectTransformUtility.WorldToScreenPoint(
+                    eventCamera,
+                    slot.Icon.rectTransform.position
+                );
+                var distance = (iconPoint - screenPoint).sqrMagnitude;
+                if (distance > nearest)
+                    continue;
+                nearest = distance;
+                anchor = slot.Anchor;
+                level = slot.Level;
+                found = true;
+            }
+            return found;
         }
 
         /// <summary>ピンのある階を <paramref name="hasPin"/>(階の番号で引く)に記録する。階の一覧のボタンの印に使う。</summary>
