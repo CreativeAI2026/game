@@ -201,12 +201,14 @@ namespace CreativeAI.Tests.EditMode
         }
 
         [Test]
-        public void FindLevelsWithPins_MarksOnlyLevelsThatHavePins()
+        public void MarkLevelsWithPins_MarksOnlyLevelsThatHavePins()
         {
             AddPin(new Vector3(30f, 10f, 40f)); // 2F
+            var pool = new MapPinIconPool(_template);
+            pool.Refresh(_layout, _placement, OtherLevelAlpha);
             var hasPin = new[] { true, true };
 
-            MapPinIconPool.FindLevelsWithPins(_layout, hasPin);
+            pool.MarkLevelsWithPins(hasPin);
 
             Assert.IsFalse(hasPin[0]);
             Assert.IsTrue(hasPin[1]);

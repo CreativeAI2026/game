@@ -2,7 +2,6 @@ using System.Collections.Generic;
 using CreativeAI.Gameplay;
 using TMPro;
 using UnityEngine;
-using UnityEngine.InputSystem;
 
 namespace CreativeAI.UI
 {
@@ -69,7 +68,8 @@ namespace CreativeAI.UI
 
         private CanvasGroup _group;
         private bool? _shown;
-        private InputAction _zoomAction;
+        private PlayerUiInput _uiInput;
+        private Canvas _rootCanvas; // バナーの位置を、画面の上下のどちらかで決めるのに使う
         private bool _wide; // 縮小表示か
         private float _zoomScale = 1f; // 今の拡大率(なめらかに _wide へ向かう)
         private float _scaledPixelsPerUnit;
@@ -90,6 +90,8 @@ namespace CreativeAI.UI
         private void Awake()
         {
             _group = ResidentUiVisibility.GetOrAddGroup(gameObject);
+            var canvas = GetComponentInParent<Canvas>();
+            _rootCanvas = canvas != null ? canvas.rootCanvas : null;
             _pins = new MapPinIconPool(_pinTemplate);
             CreateBanner();
         }
@@ -98,17 +100,19 @@ namespace CreativeAI.UI
         {
             PlayerRegistry.Changed += Bind;
             Bind(PlayerRegistry.Current);
-            _zoomAction = new InputAction("MinimapZoom", InputActionType.Button);
-            _zoomAction.AddBinding("<Keyboard>/z");
-            _zoomAction.AddBinding("<Gamepad>/rightStickPress");
-            _zoomAction.Enable();
         }
 
         private void OnDisable()
         {
             PlayerRegistry.Changed -= Bind;
-            _zoomAction?.Dispose();
-            _zoomAction = null;
+            Bind(null);
+        }
+
+        // 縮小表示の切り替えキーは、プレイヤーの入力の受け口から受け取る(Player マップのときだけ届く)
+        private void OnZoomPressed()
+        {
+            if (_shown == true)
+                _wide = !_wide;
         }
 
         // 階が替わったときに出す、階の名前の札(最初は透明)。枠は円形に切り抜かれるので、枠の外(この画面の直下)に置く。
@@ -140,7 +144,13 @@ namespace CreativeAI.UI
             _banner.alpha = alpha;
 
             // 画面の上半分に枠があれば下に、下半分なら上に出す(画面からはみ出さないように)
-            var below = _frame.position.y > Screen.height * 0.5f;
+            var eventCamera =
+                _rootCanvas != null && _rootCanvas.renderMode != RenderMode.ScreenSpaceOverlay
+                    ? _rootCanvas.worldCamera
+                    : null;
+            var below =
+                RectTransformUtility.WorldToScreenPoint(eventCamera, _frame.position).y
+                > Screen.height * 0.5f;
             var rect = _frame.rect;
             var y = below ? rect.yMin - BannerGap : rect.yMax + BannerGap;
             _banner.rectTransform.position = _frame.TransformPoint(
@@ -150,8 +160,6 @@ namespace CreativeAI.UI
 
         private void UpdateZoom()
         {
-            if (_zoomAction.WasPressedThisFrame() && !UiPanelService.IsOpen)
-                _wide = !_wide;
             var target = _wide ? _wideScale : 1f;
             _zoomScale = Mathf.Lerp(
                 _zoomScale,
@@ -161,8 +169,15 @@ namespace CreativeAI.UI
             _scaledPixelsPerUnit = _pixelsPerUnit * _zoomScale;
         }
 
-        private void Bind(PlayerController player) =>
+        private void Bind(PlayerController player)
+        {
+            if (_uiInput != null)
+                _uiInput.MinimapZoomPressed -= OnZoomPressed;
+            _uiInput = player != null ? player.GetComponent<PlayerUiInput>() : null;
+            if (_uiInput != null)
+                _uiInput.MinimapZoomPressed += OnZoomPressed;
             _player = player != null ? player.transform : null;
+        }
 
         private void LateUpdate()
         {

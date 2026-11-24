@@ -19,6 +19,7 @@ namespace CreativeAI.UI
             IPointerClickHandler,
             IBeginDragHandler,
             IDragHandler,
+            IEndDragHandler,
             MapPinIconPool.IPlacement
     {
         [SerializeField]
@@ -183,6 +184,8 @@ namespace CreativeAI.UI
         // 階を替えた直後は地図を薄くして、元の濃さへ戻す。止まらない時間で動かす。
         private void UpdateFade()
         {
+            if (_fadeTime >= _fadeSeconds)
+                return; // 戻りきっている間は何もしない
             _fadeTime = Mathf.Min(_fadeTime + Time.unscaledDeltaTime, _fadeSeconds);
             var t = _fadeSeconds > 0f ? _fadeTime / _fadeSeconds : 1f;
             _viewGroup.alpha = Mathf.Lerp(_fadeStartAlpha, 1f, t);
@@ -249,6 +252,9 @@ namespace CreativeAI.UI
             _dragging =
                 eventData.button == PointerEventData.InputButton.Left
                 && !IsOverFloorList(eventData.position);
+
+        /// <summary>ドラッグを終える。</summary>
+        public void OnEndDrag(PointerEventData eventData) => _dragging = false;
 
         /// <summary>ドラッグした分だけ地図を動かす。</summary>
         public void OnDrag(PointerEventData eventData)
@@ -346,7 +352,7 @@ namespace CreativeAI.UI
         {
             if (_levelHasPin == null)
                 return;
-            MapPinIconPool.FindLevelsWithPins(_layout, _levelHasPin);
+            _pins.MarkLevelsWithPins(_levelHasPin);
             var playerLevel = _player != null ? _layout.FindLevel(_player.position) : -1;
             foreach (var button in _floorButtons)
             {
@@ -568,6 +574,7 @@ namespace CreativeAI.UI
                 var title = level >= 0 ? _layout.Levels[level].Title : "ピン";
                 _tooltipText.text = meters >= 0 ? $"{title}\n現在地から {meters}m" : title;
                 _tooltip.gameObject.SetActive(true);
+                _tooltip.SetAsLastSibling(); // 出すときに1度だけ、他の部品より手前へ
                 var size = _tooltipText.GetPreferredValues(_tooltipText.text);
                 _tooltip.sizeDelta = new Vector2(size.x + 24f, size.y + 12f);
             }
@@ -586,7 +593,6 @@ namespace CreativeAI.UI
             position.y = Mathf.Max(position.y, rect.yMin + _tooltip.sizeDelta.y);
             _tooltip.anchorMin = _tooltip.anchorMax = new Vector2(0.5f, 0.5f);
             _tooltip.anchoredPosition = position - rect.center; // 中心アンカーからの位置に直す
-            _tooltip.SetAsLastSibling();
         }
 
         // 階の記号(3F など)を大きく、建物の名前を小さくして並べる(リッチテキスト)。
@@ -663,6 +669,8 @@ namespace CreativeAI.UI
             _levelIndex = index;
             ResetView();
             _fadeTime = opening ? _fadeSeconds : 0f;
+            if (opening)
+                _viewGroup.alpha = 1f; // 前回の途中で閉じても、薄いまま開かない
             var level = index >= 0 ? _layout.Levels[index] : null;
             _shown[0] = level;
             _map.Show(level != null ? _shown : null);

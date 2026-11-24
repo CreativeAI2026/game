@@ -53,6 +53,22 @@ namespace CreativeAI.UI
         [SerializeField, Tooltip("線の太さの下限(画面上の px)。これより細い線は、この太さで描く")]
         private float _minLinePixels = 1f;
 
+        // シェーダーの設定名(毎回文字列で引かないよう、番号にしておく)
+        private static readonly int FloorColorId = Shader.PropertyToID("_FloorColor");
+        private static readonly int EdgeColorId = Shader.PropertyToID("_EdgeColor");
+        private static readonly int WallColorId = Shader.PropertyToID("_WallColor");
+        private static readonly int WallEdgeColorId = Shader.PropertyToID("_WallEdgeColor");
+        private static readonly int GlassColorId = Shader.PropertyToID("_GlassColor");
+        private static readonly int FenceColorId = Shader.PropertyToID("_FenceColor");
+        private static readonly int DoorColorId = Shader.PropertyToID("_DoorColor");
+        private static readonly int StairsColorId = Shader.PropertyToID("_StairsColor");
+        private static readonly int StairsStepColorId = Shader.PropertyToID("_StairsStepColor");
+        private static readonly int SpreadId = Shader.PropertyToID("_Spread");
+        private static readonly int MinLinePixelsId = Shader.PropertyToID("_MinLinePixels");
+        private static readonly int EdgeWidthId = Shader.PropertyToID("_EdgeWidth");
+        private static readonly int StepWidthId = Shader.PropertyToID("_StepWidth");
+        private static readonly int LineHalfId = Shader.PropertyToID("_LineHalf");
+
         private readonly List<MinimapLevelGraphic> _graphics = new();
         private Material _template;
 
@@ -132,21 +148,21 @@ namespace CreativeAI.UI
 
         private void ApplySettings(Material template)
         {
-            template.SetColor("_FloorColor", _floorColor);
-            template.SetColor("_EdgeColor", _edgeColor);
-            template.SetColor("_WallColor", _wallColor);
-            template.SetColor("_WallEdgeColor", _wallEdgeColor);
-            template.SetColor("_GlassColor", _glassColor);
-            template.SetColor("_FenceColor", _fenceColor);
-            template.SetColor("_DoorColor", _doorColor);
-            template.SetColor("_StairsColor", _stairsColor);
-            template.SetColor("_StairsStepColor", _stairsStepColor);
-            template.SetFloat("_Spread", MinimapField.Spread);
-            template.SetFloat("_MinLinePixels", _minLinePixels);
-            template.SetFloat("_EdgeWidth", _edgeWidth);
-            template.SetFloat("_StepWidth", _stepWidth);
+            template.SetColor(FloorColorId, _floorColor);
+            template.SetColor(EdgeColorId, _edgeColor);
+            template.SetColor(WallColorId, _wallColor);
+            template.SetColor(WallEdgeColorId, _wallEdgeColor);
+            template.SetColor(GlassColorId, _glassColor);
+            template.SetColor(FenceColorId, _fenceColor);
+            template.SetColor(DoorColorId, _doorColor);
+            template.SetColor(StairsColorId, _stairsColor);
+            template.SetColor(StairsStepColorId, _stairsStepColor);
+            template.SetFloat(SpreadId, MinimapField.Spread);
+            template.SetFloat(MinLinePixelsId, _minLinePixels);
+            template.SetFloat(EdgeWidthId, _edgeWidth);
+            template.SetFloat(StepWidthId, _stepWidth);
             template.SetVector(
-                "_LineHalf",
+                LineHalfId,
                 new Vector4(
                     MinimapField.LineWidth(MinimapField.LineKind.WallEdge) * 0.5f,
                     MinimapField.LineWidth(MinimapField.LineKind.Fence) * 0.5f,

@@ -117,16 +117,16 @@ namespace CreativeAI.UI
             return found;
         }
 
-        /// <summary>ピンのある階を <paramref name="hasPin"/>(階の番号で引く)に記録する。階の一覧のボタンの印に使う。</summary>
-        public static void FindLevelsWithPins(MinimapLayout layout, bool[] hasPin)
+        /// <summary>
+        /// 直近の <see cref="Refresh"/> で出したピンのある階を <paramref name="hasPin"/>(階の番号で引く)に記録する。
+        /// 階の一覧のボタンの印に使う。階は記号が覚えているので、毎フレーム探し直さない。
+        /// </summary>
+        public void MarkLevelsWithPins(bool[] hasPin)
         {
             System.Array.Clear(hasPin, 0, hasPin.Length);
-            var active = MapPin.Active;
-            for (var i = 0; i < active.Count; i++)
+            for (var i = 0; i < _shownCount; i++)
             {
-                if (active[i] == null)
-                    continue;
-                var level = layout.FindLevel(active[i].Anchor);
+                var level = _slots[i].Level;
                 if (level >= 0 && level < hasPin.Length)
                     hasPin[level] = true;
             }
