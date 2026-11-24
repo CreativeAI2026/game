@@ -153,10 +153,15 @@ Transform:
   - {fileID: 111557721}
   - {fileID: 111557731}
   - {fileID: 111557741}
-  - {fileID: 111557801}
   - {fileID: 111557751}
   - {fileID: 111557761}
   - {fileID: 111557771}
+  - {fileID: 111557781}
+  - {fileID: 111557791}
+  - {fileID: 111557801}
+  - {fileID: 111557811}
+  - {fileID: 111557821}
+  - {fileID: 111557831}
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &111557700
@@ -171,7 +176,7 @@ GameObject:
   - component: {fileID: 111557703}
   - component: {fileID: 111557704}
   m_Layer: 0
-  m_Name: Event_1_AwakingHero
+  m_Name: Event_0_AwakingHero
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -186,7 +191,7 @@ Transform:
   m_GameObject: {fileID: 111557700}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: -592, y: -56.8, z: -30.5}
+  m_LocalPosition: {x: -206, y: -26.06, z: 200}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -243,7 +248,7 @@ GameObject:
   - component: {fileID: 111557713}
   - component: {fileID: 111557714}
   m_Layer: 0
-  m_Name: Event_2_EncounteringTutorialBoss
+  m_Name: Event_1_EncounteringTutorialBoss
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -258,7 +263,7 @@ Transform:
   m_GameObject: {fileID: 111557710}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: -482, y: -40.8, z: 15.5}
+  m_LocalPosition: {x: -198.4, y: -24.8, z: 164.3}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -283,7 +288,7 @@ BoxCollider:
   m_ProvidesContacts: 0
   m_Enabled: 1
   serializedVersion: 3
-  m_Size: {x: 13, y: 8, z: 1}
+  m_Size: {x: 14, y: 8, z: 14}
   m_Center: {x: 0, y: 0, z: 0}
 --- !u!114 &111557714
 MonoBehaviour:
@@ -315,7 +320,7 @@ GameObject:
   - component: {fileID: 111557723}
   - component: {fileID: 111557724}
   m_Layer: 0
-  m_Name: Event_3_HidingFromTutorialBoss
+  m_Name: Event_2_HidingFromTutorialBoss
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -330,11 +335,10 @@ Transform:
   m_GameObject: {fileID: 111557720}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: -714, y: -40.8, z: 15}
+  m_LocalPosition: {x: -128, y: -24.8, z: 181.9}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
-  m_Children:
-  - {fileID: 729155236}
+  m_Children: []
   m_Father: {fileID: 111557608}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!65 &111557723
@@ -356,7 +360,7 @@ BoxCollider:
   m_ProvidesContacts: 0
   m_Enabled: 1
   serializedVersion: 3
-  m_Size: {x: 8, y: 8, z: 1}
+  m_Size: {x: 8, y: 8, z: 10}
   m_Center: {x: 0, y: 0, z: 0}
 --- !u!114 &111557724
 MonoBehaviour:
@@ -375,7 +379,7 @@ MonoBehaviour:
   _enemy: {fileID: 0}
   _spawnPoint: {fileID: 0}
   _showPin: 1
-  _pinPoint: {fileID: 729155236}
+  _pinPoint: {fileID: 0}
 --- !u!1 &111557730
 GameObject:
   m_ObjectHideFlags: 0
@@ -388,7 +392,7 @@ GameObject:
   - component: {fileID: 111557733}
   - component: {fileID: 111557734}
   m_Layer: 0
-  m_Name: Event_4_BattleTutorial
+  m_Name: Event_3_BattleTutorial
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -403,11 +407,10 @@ Transform:
   m_GameObject: {fileID: 111557730}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: -481.9, y: -40.8, z: 116}
+  m_LocalPosition: {x: -160, y: -8.8, z: 40.5}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
-  m_Children:
-  - {fileID: 111557791}
+  m_Children: []
   m_Father: {fileID: 111557608}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!65 &111557733
@@ -429,7 +432,7 @@ BoxCollider:
   m_ProvidesContacts: 0
   m_Enabled: 1
   serializedVersion: 3
-  m_Size: {x: 10, y: 8, z: 40}
+  m_Size: {x: 16, y: 8, z: 16}
   m_Center: {x: 0, y: 0, z: 0}
 --- !u!114 &111557734
 MonoBehaviour:
@@ -446,7 +449,7 @@ MonoBehaviour:
   _event: {fileID: 11400000, guid: d4bf9259631b1144faba7f3c58703f85, type: 2}
   _playerTag: Player
   _enemy: {fileID: 9072946834079532967, guid: 7ebfa4e675c9e394a9cc1c70bfde687f, type: 3}
-  _spawnPoint: {fileID: 111557791}
+  _spawnPoint: {fileID: 0}
   _showPin: 0
   _pinPoint: {fileID: 0}
 --- !u!1 &111557740
@@ -461,7 +464,7 @@ GameObject:
   - component: {fileID: 111557743}
   - component: {fileID: 111557744}
   m_Layer: 0
-  m_Name: Event_5_ItemCombinationTutorial
+  m_Name: Event_4_ItemCombinationTutorial
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -476,7 +479,7 @@ Transform:
   m_GameObject: {fileID: 111557740}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: -650, y: -40, z: 38}
+  m_LocalPosition: {x: -188.6, y: -40.8, z: -4}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -501,7 +504,7 @@ BoxCollider:
   m_ProvidesContacts: 0
   m_Enabled: 1
   serializedVersion: 3
-  m_Size: {x: 55, y: 8, z: 20}
+  m_Size: {x: 10, y: 8, z: 10}
   m_Center: {x: 0, y: 0, z: 0}
 --- !u!114 &111557744
 MonoBehaviour:
@@ -533,7 +536,7 @@ GameObject:
   - component: {fileID: 111557753}
   - component: {fileID: 111557754}
   m_Layer: 0
-  m_Name: Event_7_FirstAppearanceRobot
+  m_Name: Event_5_EscapeResearchBuilding
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -548,7 +551,7 @@ Transform:
   m_GameObject: {fileID: 111557750}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: -451.87, y: -24.8, z: 195.7}
+  m_LocalPosition: {x: 121.4, y: -40.8, z: -24}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -573,7 +576,7 @@ BoxCollider:
   m_ProvidesContacts: 0
   m_Enabled: 1
   serializedVersion: 3
-  m_Size: {x: 14, y: 8, z: 14}
+  m_Size: {x: 12, y: 8, z: 8}
   m_Center: {x: 0, y: 0, z: 0}
 --- !u!114 &111557754
 MonoBehaviour:
@@ -587,7 +590,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: a56586cdac5543269b931c89ed799761, type: 3}
   m_Name: 
   m_EditorClassIdentifier: CreativeAI.Core::CreativeAI.Core.EventTrigger
-  _event: {fileID: 11400000, guid: aeb862e96fcec204b9c92442b8887db2, type: 2}
+  _event: {fileID: 11400000, guid: 1c6303c9beff8dd4a96ced552fd0ea83, type: 2}
   _playerTag: Player
   _enemy: {fileID: 0}
   _spawnPoint: {fileID: 0}
@@ -605,7 +608,7 @@ GameObject:
   - component: {fileID: 111557763}
   - component: {fileID: 111557764}
   m_Layer: 0
-  m_Name: Event_8_EscapeResearchBuilding
+  m_Name: Event_6_InMole
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -620,7 +623,7 @@ Transform:
   m_GameObject: {fileID: 111557760}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: -220.5, y: -24.8, z: 200}
+  m_LocalPosition: {x: 157.8, y: -40.8, z: -1.6}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -645,7 +648,7 @@ BoxCollider:
   m_ProvidesContacts: 0
   m_Enabled: 1
   serializedVersion: 3
-  m_Size: {x: 1, y: 8, z: 9}
+  m_Size: {x: 10, y: 8, z: 10}
   m_Center: {x: 0, y: 0, z: 0}
 --- !u!114 &111557764
 MonoBehaviour:
@@ -659,7 +662,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: a56586cdac5543269b931c89ed799761, type: 3}
   m_Name: 
   m_EditorClassIdentifier: CreativeAI.Core::CreativeAI.Core.EventTrigger
-  _event: {fileID: 11400000, guid: 1c6303c9beff8dd4a96ced552fd0ea83, type: 2}
+  _event: {fileID: 11400000, guid: aeb862e96fcec204b9c92442b8887db2, type: 2}
   _playerTag: Player
   _enemy: {fileID: 0}
   _spawnPoint: {fileID: 0}
@@ -677,7 +680,7 @@ GameObject:
   - component: {fileID: 111557773}
   - component: {fileID: 111557774}
   m_Layer: 0
-  m_Name: Event_9_EncounteringStrangeHead
+  m_Name: Event_7_EncounteringStrangeHead
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -692,7 +695,7 @@ Transform:
   m_GameObject: {fileID: 111557770}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: -210, y: -24.8, z: 201}
+  m_LocalPosition: {x: 131.9, y: -24.8, z: 184}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -717,7 +720,7 @@ BoxCollider:
   m_ProvidesContacts: 0
   m_Enabled: 1
   serializedVersion: 3
-  m_Size: {x: 8, y: 8, z: 26}
+  m_Size: {x: 8, y: 8, z: 8}
   m_Center: {x: 0, y: 0, z: 0}
 --- !u!114 &111557774
 MonoBehaviour:
@@ -737,6 +740,78 @@ MonoBehaviour:
   _spawnPoint: {fileID: 0}
   _showPin: 0
   _pinPoint: {fileID: 0}
+--- !u!1 &111557780
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 111557781}
+  - component: {fileID: 111557783}
+  - component: {fileID: 111557784}
+  m_Layer: 0
+  m_Name: Event_8_ScreemGirl
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &111557781
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 111557780}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: -195.2, y: -24.8, z: 164.3}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 111557608}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!65 &111557783
+BoxCollider:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 111557780}
+  m_Material: {fileID: 0}
+  m_IncludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_ExcludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_LayerOverridePriority: 0
+  m_IsTrigger: 1
+  m_ProvidesContacts: 0
+  m_Enabled: 1
+  serializedVersion: 3
+  m_Size: {x: 14, y: 8, z: 14}
+  m_Center: {x: 0, y: 0, z: 0}
+--- !u!114 &111557784
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 111557780}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: a56586cdac5543269b931c89ed799761, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: CreativeAI.Core::CreativeAI.Core.EventTrigger
+  _event: {fileID: 11400000, guid: eae9bf72b0102825467c965202cea66f, type: 2}
+  _playerTag: Player
+  _enemy: {fileID: 0}
+  _spawnPoint: {fileID: 0}
+  _showPin: 0
+  _pinPoint: {fileID: 0}
 --- !u!1 &111557790
 GameObject:
   m_ObjectHideFlags: 0
@@ -746,8 +821,10 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 111557791}
+  - component: {fileID: 111557793}
+  - component: {fileID: 111557794}
   m_Layer: 0
-  m_Name: EnemySpawn
+  m_Name: Event_9_BattleJellyfish
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -762,12 +839,51 @@ Transform:
   m_GameObject: {fileID: 111557790}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 0, y: -4, z: 62}
+  m_LocalPosition: {x: 87.5, y: -24.8, z: 228.4}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
-  m_Father: {fileID: 111557731}
+  m_Father: {fileID: 111557608}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!65 &111557793
+BoxCollider:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 111557790}
+  m_Material: {fileID: 0}
+  m_IncludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_ExcludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_LayerOverridePriority: 0
+  m_IsTrigger: 1
+  m_ProvidesContacts: 0
+  m_Enabled: 1
+  serializedVersion: 3
+  m_Size: {x: 10, y: 8, z: 10}
+  m_Center: {x: 0, y: 0, z: 0}
+--- !u!114 &111557794
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 111557790}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: a56586cdac5543269b931c89ed799761, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: CreativeAI.Core::CreativeAI.Core.EventTrigger
+  _event: {fileID: 11400000, guid: 3e721015d4280d163b54794a536d3550, type: 2}
+  _playerTag: Player
+  _enemy: {fileID: 1254817577893401342, guid: c7f978d0c9f6e3945bedfc3add346733, type: 3}
+  _spawnPoint: {fileID: 0}
+  _showPin: 0
+  _pinPoint: {fileID: 0}
 --- !u!1 &111557800
 GameObject:
   m_ObjectHideFlags: 0
@@ -780,7 +896,7 @@ GameObject:
   - component: {fileID: 111557803}
   - component: {fileID: 111557804}
   m_Layer: 0
-  m_Name: Event_6_ItemCombinationDone
+  m_Name: Event_10_GoFloor1
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -795,7 +911,7 @@ Transform:
   m_GameObject: {fileID: 111557800}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: -650, y: -40.8, z: 25.5}
+  m_LocalPosition: {x: -587, y: -40.8, z: 26}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -820,7 +936,7 @@ BoxCollider:
   m_ProvidesContacts: 0
   m_Enabled: 1
   serializedVersion: 3
-  m_Size: {x: 60, y: 10, z: 40}
+  m_Size: {x: 12, y: 8, z: 12}
   m_Center: {x: 0, y: 0, z: 0}
 --- !u!114 &111557804
 MonoBehaviour:
@@ -834,13 +950,13 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: a56586cdac5543269b931c89ed799761, type: 3}
   m_Name: 
   m_EditorClassIdentifier: CreativeAI.Core::CreativeAI.Core.EventTrigger
-  _event: {fileID: 11400000, guid: fed80f30faa1be64285c1277d74496a9, type: 2}
+  _event: {fileID: 11400000, guid: 50f1733458f115f1056279674d09b3f9, type: 2}
   _playerTag: Player
   _enemy: {fileID: 0}
   _spawnPoint: {fileID: 0}
   _showPin: 0
   _pinPoint: {fileID: 0}
---- !u!1 &729155235
+--- !u!1 &111557810
 GameObject:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -848,29 +964,214 @@ GameObject:
   m_PrefabAsset: {fileID: 0}
   serializedVersion: 6
   m_Component:
-  - component: {fileID: 729155236}
+  - component: {fileID: 111557811}
+  - component: {fileID: 111557813}
+  - component: {fileID: 111557814}
   m_Layer: 0
-  m_Name: MapPinPos
+  m_Name: Event_11_AgainStrangeHead
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
   m_IsActive: 1
---- !u!4 &729155236
+--- !u!4 &111557811
 Transform:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 729155235}
+  m_GameObject: {fileID: 111557810}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 0, y: -4, z: 0}
+  m_LocalPosition: {x: -521, y: -40.8, z: 26}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
-  m_Father: {fileID: 111557721}
+  m_Father: {fileID: 111557608}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!65 &111557813
+BoxCollider:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 111557810}
+  m_Material: {fileID: 0}
+  m_IncludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_ExcludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_LayerOverridePriority: 0
+  m_IsTrigger: 1
+  m_ProvidesContacts: 0
+  m_Enabled: 1
+  serializedVersion: 3
+  m_Size: {x: 12, y: 8, z: 12}
+  m_Center: {x: 0, y: 0, z: 0}
+--- !u!114 &111557814
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 111557810}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: a56586cdac5543269b931c89ed799761, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: CreativeAI.Core::CreativeAI.Core.EventTrigger
+  _event: {fileID: 11400000, guid: a245fd8feaf71c1d5447fbb70596f7ef, type: 2}
+  _playerTag: Player
+  _enemy: {fileID: 0}
+  _spawnPoint: {fileID: 0}
+  _showPin: 0
+  _pinPoint: {fileID: 0}
+--- !u!1 &111557820
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 111557821}
+  - component: {fileID: 111557823}
+  - component: {fileID: 111557824}
+  m_Layer: 0
+  m_Name: Event_14_SecondRound
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &111557821
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 111557820}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 96.2, y: -24.8, z: 198.4}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 111557608}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!65 &111557823
+BoxCollider:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 111557820}
+  m_Material: {fileID: 0}
+  m_IncludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_ExcludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_LayerOverridePriority: 0
+  m_IsTrigger: 1
+  m_ProvidesContacts: 0
+  m_Enabled: 1
+  serializedVersion: 3
+  m_Size: {x: 10, y: 8, z: 10}
+  m_Center: {x: 0, y: 0, z: 0}
+--- !u!114 &111557824
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 111557820}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: a56586cdac5543269b931c89ed799761, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: CreativeAI.Core::CreativeAI.Core.EventTrigger
+  _event: {fileID: 11400000, guid: 6ea76d4ebe237a410b70efcea9541eb8, type: 2}
+  _playerTag: Player
+  _enemy: {fileID: 0}
+  _spawnPoint: {fileID: 0}
+  _showPin: 0
+  _pinPoint: {fileID: 0}
+--- !u!1 &111557830
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 111557831}
+  - component: {fileID: 111557833}
+  - component: {fileID: 111557834}
+  m_Layer: 0
+  m_Name: Event_15_SumireAgain
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &111557831
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 111557830}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 166.3, y: -24.8, z: 199}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 111557608}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!65 &111557833
+BoxCollider:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 111557830}
+  m_Material: {fileID: 0}
+  m_IncludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_ExcludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_LayerOverridePriority: 0
+  m_IsTrigger: 1
+  m_ProvidesContacts: 0
+  m_Enabled: 1
+  serializedVersion: 3
+  m_Size: {x: 10, y: 8, z: 10}
+  m_Center: {x: 0, y: 0, z: 0}
+--- !u!114 &111557834
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 111557830}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: a56586cdac5543269b931c89ed799761, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: CreativeAI.Core::CreativeAI.Core.EventTrigger
+  _event: {fileID: 11400000, guid: e821ef674774400cd99b8409fec611b5, type: 2}
+  _playerTag: Player
+  _enemy: {fileID: 0}
+  _spawnPoint: {fileID: 0}
+  _showPin: 0
+  _pinPoint: {fileID: 0}
 --- !u!1660057539 &9223372036854775807
 SceneRoots:
   m_ObjectHideFlags: 0

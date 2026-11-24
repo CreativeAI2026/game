@@ -1,0 +1,844 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 858f11bf7ac04ef1a88f80026e740e0f, type: 3}
+  m_Name: 10nt_go_floor1
+  m_EditorClassIdentifier: CreativeAI.Gameplay::CreativeAI.Gameplay.EventDefinition
+  _id: 10nt_go_floor1
+  _conditions:
+  - _type: 0
+    _progressValue: 10
+    _isRange: 0
+    _min: -2147483648
+    _max: 2147483647
+    _flagKey: 
+    _flagValue: 
+    _itemKey: 
+    _negate: 0
+  - _type: 1
+    _progressValue: 0
+    _isRange: 0
+    _min: -2147483648
+    _max: 2147483647
+    _flagKey: hero_choice
+    _flagValue: notsame
+    _itemKey: 
+    _negate: 0
+  _steps:
+  - _kind: 0
+    _speaker: 
+    _portrait: hero_normal
+    _text: "\u300C1\u968E\u306F\u2026 \u3053\u3053\u3067\u5408\u3063\u3066\u308B\u3088\u306A\u3002\u5439\u304D\u629C\u3051\u306E\u4E0B\u3063\u3066\u3053\u3068\u306F\u30A2\u30C3\u30C1\u306E\u65B9\u304B\u3002\u300D"
+    _flagKey: 
+    _flagValue: 
+    _options: []
+    _itemKey: 
+    _weaponKey: 
+    _message: 
+    _command: 
+    _arg: 
+    _cases: []
+    _thenTarget: 0
+    _elseTarget: 0
+    _joinTarget: 0
+    _accept: []
+    _consume: 0
+    _prompt: 
+    _endOnWrong: 0
+    _usedText: 
+    _cancelText: 
+  - _kind: 0
+    _speaker: 
+    _portrait: hero_normal
+    _text: "\u300C\u3064\u304B\u3001\u4ECA\u3055\u3089\u306A\u3093\u3060\u3051\u3069\u3055\u3002
+      \u30A2\u30F3\u30BF\u3001\u3042\u3093\u306A\u30E4\u30D0\u3044\u306E\u306B\u8972\u308F\u308C\u3066\u305F\u306E\u306B\u30DE\u30B8\u3067\u602A\u6211\u3072\u3068\u3064\u306A\u304B\u3063\u305F\u306E\u304B\uFF1F\u300D"
+    _flagKey: 
+    _flagValue: 
+    _options: []
+    _itemKey: 
+    _weaponKey: 
+    _message: 
+    _command: 
+    _arg: 
+    _cases: []
+    _thenTarget: 0
+    _elseTarget: 0
+    _joinTarget: 0
+    _accept: []
+    _consume: 0
+    _prompt: 
+    _endOnWrong: 0
+    _usedText: 
+    _cancelText: 
+  - _kind: 0
+    _speaker: 
+    _portrait: girl_surprised
+    _text: "\u300C\u3048\u3063\u2026\uFF1F\u300D"
+    _flagKey: 
+    _flagValue: 
+    _options: []
+    _itemKey: 
+    _weaponKey: 
+    _message: 
+    _command: 
+    _arg: 
+    _cases: []
+    _thenTarget: 0
+    _elseTarget: 0
+    _joinTarget: 0
+    _accept: []
+    _consume: 0
+    _prompt: 
+    _endOnWrong: 0
+    _usedText: 
+    _cancelText: 
+  - _kind: 0
+    _speaker: 
+    _portrait: girl_normal
+    _text: "\u300C\u3042\u3001\u3044\u3048\u3001\u5B9F\u306F\u2026 \u3044\u304F\u3064\u3082\u50B7\u3092\u3064\u3051\u3089\u308C\u3066\u3001\u8840\u3082\u51FA\u305F\u3093\u3067\u3059\u3002
+      \u3067\u3082\u2026\u3002\u300D"
+    _flagKey: 
+    _flagValue: 
+    _options: []
+    _itemKey: 
+    _weaponKey: 
+    _message: 
+    _command: 
+    _arg: 
+    _cases: []
+    _thenTarget: 0
+    _elseTarget: 0
+    _joinTarget: 0
+    _accept: []
+    _consume: 0
+    _prompt: 
+    _endOnWrong: 0
+    _usedText: 
+    _cancelText: 
+  - _kind: 0
+    _speaker: 
+    _portrait: girl_normal
+    _text: "\u300C\u4F53\u304C\u3053\u3046\u2026 \u5965\u306E\u65B9\u304B\u3089\u71B1\u304F\u306A\u308B\u611F\u899A\u3068\u4E00\u7DD2\u306B\u3001\u52DD\u624B\u306B\u50B7\u304C\u585E\u304C\u3063\u3066\u6CBB\u3063\u3061\u3083\u3063\u305F\u3093\u3067\u3059\u3002\u300D"
+    _flagKey: 
+    _flagValue: 
+    _options: []
+    _itemKey: 
+    _weaponKey: 
+    _message: 
+    _command: 
+    _arg: 
+    _cases: []
+    _thenTarget: 0
+    _elseTarget: 0
+    _joinTarget: 0
+    _accept: []
+    _consume: 0
+    _prompt: 
+    _endOnWrong: 0
+    _usedText: 
+    _cancelText: 
+  - _kind: 0
+    _speaker: 
+    _portrait: hero_surprised
+    _text: "\u300C\u306F\uFF1F \u52DD\u624B\u306B\u6CBB\u3063\u305F\uFF1F\u300D"
+    _flagKey: 
+    _flagValue: 
+    _options: []
+    _itemKey: 
+    _weaponKey: 
+    _message: 
+    _command: 
+    _arg: 
+    _cases: []
+    _thenTarget: 0
+    _elseTarget: 0
+    _joinTarget: 0
+    _accept: []
+    _consume: 0
+    _prompt: 
+    _endOnWrong: 0
+    _usedText: 
+    _cancelText: 
+  - _kind: 0
+    _speaker: 
+    _portrait: girl_normal
+    _text: "\u300C\u306F\u3044\u2026 \u5B9F\u306F\u3001\u3042\u306E\u30AF\u30E9\u30B2\u307F\u305F\u3044\u306A\u5316\u3051\u7269\u306B\u8972\u308F\u308C\u308B\u524D\u306B\u3082\u4E00\u5EA6\u8EE2\u3093\u3067\u602A\u6211\u3092\u3057\u305F\u3093\u3067\u3059\u3051\u3069\u3002\u300D"
+    _flagKey: 
+    _flagValue: 
+    _options: []
+    _itemKey: 
+    _weaponKey: 
+    _message: 
+    _command: 
+    _arg: 
+    _cases: []
+    _thenTarget: 0
+    _elseTarget: 0
+    _joinTarget: 0
+    _accept: []
+    _consume: 0
+    _prompt: 
+    _endOnWrong: 0
+    _usedText: 
+    _cancelText: 
+  - _kind: 0
+    _speaker: 
+    _portrait: girl_normal
+    _text: "\u300C\u305D\u306E\u6642\u306E\u50B7\u3082\u3001\u540C\u3058\u611F\u3058\u3067\u4F53\u304C\u71B1\u304F\u306A\u3063\u3066\u3059\u3050\u306B\u6CBB\u3063\u3066\u3057\u307E\u3063\u3066\u3002\u300D"
+    _flagKey: 
+    _flagValue: 
+    _options: []
+    _itemKey: 
+    _weaponKey: 
+    _message: 
+    _command: 
+    _arg: 
+    _cases: []
+    _thenTarget: 0
+    _elseTarget: 0
+    _joinTarget: 0
+    _accept: []
+    _consume: 0
+    _prompt: 
+    _endOnWrong: 0
+    _usedText: 
+    _cancelText: 
+  - _kind: 0
+    _speaker: 
+    _portrait: robot_normal
+    _text: "\u300C\u307B\u3046\u3001\u4EBA\u9593\u306E\u81EA\u7136\u6CBB\u7652\u3068\u3057\u3066\u306F\u3042\u308A\u5F97\u306A\u3044\u901F\u5EA6\u3067\u3059\u306D\u3002
+      \u5FF5\u306E\u305F\u3081\u751F\u4F53\u30B9\u30AD\u30E3\u30F3\u3092\u884C\u3044\u307E\u3057\u3087\u3046\u304B\u3002\u300D"
+    _flagKey: 
+    _flagValue: 
+    _options: []
+    _itemKey: 
+    _weaponKey: 
+    _message: 
+    _command: 
+    _arg: 
+    _cases: []
+    _thenTarget: 0
+    _elseTarget: 0
+    _joinTarget: 0
+    _accept: []
+    _consume: 0
+    _prompt: 
+    _endOnWrong: 0
+    _usedText: 
+    _cancelText: 
+  - _kind: 0
+    _speaker: 
+    _portrait: robot_normal
+    _text: "\u300C\u2026\u3080\u3002 \u78BA\u304B\u306B\u5916\u50B7\u306F\u898B\u5F53\u305F\u308A\u307E\u305B\u3093\u304C\u3001\u7D30\u80DE\u306E\u4EE3\u8B1D\u6D3B\u6027\u304C\u7570\u5E38\u306A\u6570\u5024\u3092\u793A\u3057\u3066\u3044\u307E\u3059\u3002
+      \u6C17\u5473\u306E\u60AA\u3044\u4F53\u8CEA\u3082\u3042\u3063\u305F\u3082\u306E\u3067\u3059\u306D\u3002\u300D"
+    _flagKey: 
+    _flagValue: 
+    _options: []
+    _itemKey: 
+    _weaponKey: 
+    _message: 
+    _command: 
+    _arg: 
+    _cases: []
+    _thenTarget: 0
+    _elseTarget: 0
+    _joinTarget: 0
+    _accept: []
+    _consume: 0
+    _prompt: 
+    _endOnWrong: 0
+    _usedText: 
+    _cancelText: 
+  - _kind: 0
+    _speaker: 
+    _portrait: hero_confused
+    _text: "\u300C\u306A\u3093\u3060\u305D\u308C\u3002 \u307E\u3042\u3001\u75DB\u304F\u306D\u3047\u3093\u306A\u3089\u3044\u3044\u3051\u3069\u3055\u3002\u300D"
+    _flagKey: 
+    _flagValue: 
+    _options: []
+    _itemKey: 
+    _weaponKey: 
+    _message: 
+    _command: 
+    _arg: 
+    _cases: []
+    _thenTarget: 0
+    _elseTarget: 0
+    _joinTarget: 0
+    _accept: []
+    _consume: 0
+    _prompt: 
+    _endOnWrong: 0
+    _usedText: 
+    _cancelText: 
+  - _kind: 0
+    _speaker: 
+    _portrait: gramophone_normal
+    _text: "\u300C\u3048\u3048\u3001\u5B9F\u306B\u7D20\u6674\u3089\u3057\u3044\u3002
+      \u50B7\u3064\u3044\u3066\u3082\u3059\u3050\u306B\u5143\u901A\u308A\u306B\u306A\u308B\u3068\u3044\u3046\u306E\u306F\u3001\u3053\u306E\u904E\u9177\u306A\u6ABB\u3092\u751F\u304D\u629C\u304F\u4E0A\u3067\u4F55\u3088\u308A\u306E\u624D\u80FD\u3068\u8A00\u3048\u307E\u3057\u3087\u3046\u3002\u300D"
+    _flagKey: 
+    _flagValue: 
+    _options: []
+    _itemKey: 
+    _weaponKey: 
+    _message: 
+    _command: 
+    _arg: 
+    _cases: []
+    _thenTarget: 0
+    _elseTarget: 0
+    _joinTarget: 0
+    _accept: []
+    _consume: 0
+    _prompt: 
+    _endOnWrong: 0
+    _usedText: 
+    _cancelText: 
+  - _kind: 0
+    _speaker: 
+    _portrait: girl_surprised
+    _text: "\u300C\u3042\u3063\u3001\u30AA\u30F3\u30AD\u3055\u3093\uFF01\u300D"
+    _flagKey: 
+    _flagValue: 
+    _options: []
+    _itemKey: 
+    _weaponKey: 
+    _message: 
+    _command: 
+    _arg: 
+    _cases: []
+    _thenTarget: 0
+    _elseTarget: 0
+    _joinTarget: 0
+    _accept: []
+    _consume: 0
+    _prompt: 
+    _endOnWrong: 0
+    _usedText: 
+    _cancelText: 
+  - _kind: 0
+    _speaker: 
+    _portrait: hero_surprised
+    _text: "\u300C\u3046\u308F\u3001\u3069\u3063\u304B\u3089\u6E67\u3044\u3066\u51FA\u305F\u3093\u3059\u304B\u3002\u300D"
+    _flagKey: 
+    _flagValue: 
+    _options: []
+    _itemKey: 
+    _weaponKey: 
+    _message: 
+    _command: 
+    _arg: 
+    _cases: []
+    _thenTarget: 0
+    _elseTarget: 0
+    _joinTarget: 0
+    _accept: []
+    _consume: 0
+    _prompt: 
+    _endOnWrong: 0
+    _usedText: 
+    _cancelText: 
+  - _kind: 0
+    _speaker: 
+    _portrait: gramophone_normal
+    _text: "\u300C\u3053\u3093\u306B\u3061\u306F\u3001\u30B9\u30DF\u30EC\u3055\u3093\u3002
+      \u305D\u308C\u306B\u8CB4\u65B9\u3082\u2026\u3054\u7121\u4E8B\u3067\u4F55\u3088\u308A\u3067\u3059\u3002\u300D"
+    _flagKey: 
+    _flagValue: 
+    _options: []
+    _itemKey: 
+    _weaponKey: 
+    _message: 
+    _command: 
+    _arg: 
+    _cases: []
+    _thenTarget: 0
+    _elseTarget: 0
+    _joinTarget: 0
+    _accept: []
+    _consume: 0
+    _prompt: 
+    _endOnWrong: 0
+    _usedText: 
+    _cancelText: 
+  - _kind: 0
+    _speaker: 
+    _portrait: gramophone_normal
+    _text: "\u300C\u3069\u3046\u3084\u3089\u7121\u4E8B\u306B\u5408\u6D41\u3067\u304D\u305F\u3088\u3046\u3067\u3059\u306D\u3002\u300D"
+    _flagKey: 
+    _flagValue: 
+    _options: []
+    _itemKey: 
+    _weaponKey: 
+    _message: 
+    _command: 
+    _arg: 
+    _cases: []
+    _thenTarget: 0
+    _elseTarget: 0
+    _joinTarget: 0
+    _accept: []
+    _consume: 0
+    _prompt: 
+    _endOnWrong: 0
+    _usedText: 
+    _cancelText: 
+  - _kind: 0
+    _speaker: 
+    _portrait: girl_smile
+    _text: "\u300C\u306F\u3044\u3001\u30A2\u30AA\u30A4\u3055\u3093\u3068\u30CF\u30EA\u30DC\u30C6\u3055\u3093\u304C\u5316\u3051\u7269\u304B\u3089\u52A9\u3051\u3066\u304F\u3060\u3055\u3063\u305F\u3093\u3067\u3059\uFF01\u300D"
+    _flagKey: 
+    _flagValue: 
+    _options: []
+    _itemKey: 
+    _weaponKey: 
+    _message: 
+    _command: 
+    _arg: 
+    _cases: []
+    _thenTarget: 0
+    _elseTarget: 0
+    _joinTarget: 0
+    _accept: []
+    _consume: 0
+    _prompt: 
+    _endOnWrong: 0
+    _usedText: 
+    _cancelText: 
+  - _kind: 0
+    _speaker: 
+    _portrait: girl_smile
+    _text: "\u300C\u2026\u3042\u3063\u3001\u98DF\u3079\u7269\u3082\u3042\u308A\u304C\u3068\u3046\u3054\u3056\u3044\u307E\u3057\u305F\u3002\u304A\u304B\u3052\u3067\u5143\u6C17\u304C\u51FA\u307E\u3057\u305F\u3002\u300D"
+    _flagKey: 
+    _flagValue: 
+    _options: []
+    _itemKey: 
+    _weaponKey: 
+    _message: 
+    _command: 
+    _arg: 
+    _cases: []
+    _thenTarget: 0
+    _elseTarget: 0
+    _joinTarget: 0
+    _accept: []
+    _consume: 0
+    _prompt: 
+    _endOnWrong: 0
+    _usedText: 
+    _cancelText: 
+  - _kind: 0
+    _speaker: 
+    _portrait: gramophone_normal
+    _text: "\u300C\u3044\u3048\u3044\u3048\u3001\u79C1\u305F\u3061\u306F\u4EF2\u9593\u3067\u3057\u3087\u3046\u3002
+      \u304A\u5F79\u306B\u7ACB\u3066\u3066\u5149\u6804\u3067\u3059\u3088\u3002\u300D"
+    _flagKey: 
+    _flagValue: 
+    _options: []
+    _itemKey: 
+    _weaponKey: 
+    _message: 
+    _command: 
+    _arg: 
+    _cases: []
+    _thenTarget: 0
+    _elseTarget: 0
+    _joinTarget: 0
+    _accept: []
+    _consume: 0
+    _prompt: 
+    _endOnWrong: 0
+    _usedText: 
+    _cancelText: 
+  - _kind: 0
+    _speaker: 
+    _portrait: hero_normal
+    _text: "\u300C\u2026\u3093\u3067\u3001\u4FFA\u305F\u3061\u306F\u3053\u308C\u304B\u30891\u968E\u306B\u843D\u3061\u305F\u30B9\u30DF\u30EC\u306E\u30A2\u30AF\u30BB\u30B5\u30EA\u3092\u62FE\u3063\u3066\u3001\u305D\u306E\u307E\u307E\u5916\u306B\u51FA\u3088\u3046\u3068\u601D\u3063\u3066\u3093\u3060\u3051\u3069\u3055\u3002
+      1\u968E\u306A\u3089\u51FA\u53E3\u3042\u3093\u3060\u308D\uFF1F\u300D"
+    _flagKey: 
+    _flagValue: 
+    _options: []
+    _itemKey: 
+    _weaponKey: 
+    _message: 
+    _command: 
+    _arg: 
+    _cases: []
+    _thenTarget: 0
+    _elseTarget: 0
+    _joinTarget: 0
+    _accept: []
+    _consume: 0
+    _prompt: 
+    _endOnWrong: 0
+    _usedText: 
+    _cancelText: 
+  - _kind: 0
+    _speaker: 
+    _portrait: gramophone_normal
+    _text: "\u300C\u3048\u3048\u3001\u5916\u90E8\u3078\u901A\u3058\u308B\u6249\u306A\u3089\u307E\u3055\u306B\u3053\u306E1\u968E\u306B\u3054\u3056\u3044\u307E\u3059\u3068\u3082\u3002\u300D"
+    _flagKey: 
+    _flagValue: 
+    _options: []
+    _itemKey: 
+    _weaponKey: 
+    _message: 
+    _command: 
+    _arg: 
+    _cases: []
+    _thenTarget: 0
+    _elseTarget: 0
+    _joinTarget: 0
+    _accept: []
+    _consume: 0
+    _prompt: 
+    _endOnWrong: 0
+    _usedText: 
+    _cancelText: 
+  - _kind: 0
+    _speaker: 
+    _portrait: gramophone_normal
+    _text: "\u300C\u305F\u3060\u3001\u751F\u618E\u3068\u53B3\u91CD\u306A\u30ED\u30C3\u30AF\u304C\u304B\u304B\u3063\u3066\u304A\u308A\u307E\u3057\u3066\u306D\u3002
+      \u958B\u3051\u308B\u306B\u306F\u5C02\u7528\u306E\u300E\u9375\u300F\u304C\u5FC5\u8981\u306B\u306A\u308A\u307E\u3059\u3002\u300D"
+    _flagKey: 
+    _flagValue: 
+    _options: []
+    _itemKey: 
+    _weaponKey: 
+    _message: 
+    _command: 
+    _arg: 
+    _cases: []
+    _thenTarget: 0
+    _elseTarget: 0
+    _joinTarget: 0
+    _accept: []
+    _consume: 0
+    _prompt: 
+    _endOnWrong: 0
+    _usedText: 
+    _cancelText: 
+  - _kind: 0
+    _speaker: 
+    _portrait: hero_anger
+    _text: "\u300C\u9375\u3043\uFF1F \u307E\u305F\u304B\u3088\u2026 \u3069\u3053\u306B\u3042\u3093\u3060\u3088\u3001\u305D\u308C\u3002\u300D"
+    _flagKey: 
+    _flagValue: 
+    _options: []
+    _itemKey: 
+    _weaponKey: 
+    _message: 
+    _command: 
+    _arg: 
+    _cases: []
+    _thenTarget: 0
+    _elseTarget: 0
+    _joinTarget: 0
+    _accept: []
+    _consume: 0
+    _prompt: 
+    _endOnWrong: 0
+    _usedText: 
+    _cancelText: 
+  - _kind: 0
+    _speaker: 
+    _portrait: gramophone_normal
+    _text: "\u300C\u3075\u3080\u2026\u3002\u8CB4\u65B9\u3001\u6700\u521D\u306B\u76EE\u899A\u3081\u305F\u533A\u753B\u304B\u3089\u51FA\u308B\u969B\u306B\u767D\u3044\u7570\u5F62\u3068\u4EA4\u6226\u306A\u3055\u3063\u305F\u3067\u3057\u3087\u3046\uFF1F
+      \u305D\u306E\u6298\u3001\u30A2\u30EC\u304C\u30AB\u30FC\u30C9\u30AD\u30FC\u3092\u843D\u3068\u3057\u305F\u306F\u305A\u3067\u3059\u3002\u300D"
+    _flagKey: 
+    _flagValue: 
+    _options: []
+    _itemKey: 
+    _weaponKey: 
+    _message: 
+    _command: 
+    _arg: 
+    _cases: []
+    _thenTarget: 0
+    _elseTarget: 0
+    _joinTarget: 0
+    _accept: []
+    _consume: 0
+    _prompt: 
+    _endOnWrong: 0
+    _usedText: 
+    _cancelText: 
+  - _kind: 0
+    _speaker: 
+    _portrait: hero_confused
+    _text: "\u300C\u3042\uFF1F\u2026 \u3042\u3042\u3001\u8A00\u308F\u308C\u3066\u307F\u308C\u3070\u3001\u3042\u306E\u767D\u3044\u306E\u304C\u9375\u6301\u3063\u3066\u305F\u306A\u3002\u3064\u30FC\u304B\u3001\u306A\u3093\u3067\u305D\u3093\u306A\u3053\u3068\u77E5\u3063\u3066\u3093\u3059\u304B\u3002\u300D"
+    _flagKey: 
+    _flagValue: 
+    _options: []
+    _itemKey: 
+    _weaponKey: 
+    _message: 
+    _command: 
+    _arg: 
+    _cases: []
+    _thenTarget: 0
+    _elseTarget: 0
+    _joinTarget: 0
+    _accept: []
+    _consume: 0
+    _prompt: 
+    _endOnWrong: 0
+    _usedText: 
+    _cancelText: 
+  - _kind: 0
+    _speaker: 
+    _portrait: gramophone_normal
+    _text: "\u300C\u79C1\u306F\u8A18\u9332\u4FC2\u3067\u3059\u304B\u3089\u306D\u3002\u2026\u30A2\u30EC\u306E\u5916\u898B\u306B\u3001\u5236\u670D\u306E\u540D\u6B8B\u304C\u3042\u3063\u305F\u306E\u306B\u304A\u6C17\u3065\u304D\u3067\u3057\u305F\u304B\uFF1F\u300D"
+    _flagKey: 
+    _flagValue: 
+    _options: []
+    _itemKey: 
+    _weaponKey: 
+    _message: 
+    _command: 
+    _arg: 
+    _cases: []
+    _thenTarget: 0
+    _elseTarget: 0
+    _joinTarget: 0
+    _accept: []
+    _consume: 0
+    _prompt: 
+    _endOnWrong: 0
+    _usedText: 
+    _cancelText: 
+  - _kind: 0
+    _speaker: 
+    _portrait: gramophone_normal
+    _text: "\u300C\u30A2\u30EC\u306F\u5143\u3005\u3001\u3053\u306E\u65BD\u8A2D\u306E\u8B66\u5099\u54E1\u3060\u3063\u305F\u305D\u3046\u3067\u3059\u3088\u3002\u300D"
+    _flagKey: 
+    _flagValue: 
+    _options: []
+    _itemKey: 
+    _weaponKey: 
+    _message: 
+    _command: 
+    _arg: 
+    _cases: []
+    _thenTarget: 0
+    _elseTarget: 0
+    _joinTarget: 0
+    _accept: []
+    _consume: 0
+    _prompt: 
+    _endOnWrong: 0
+    _usedText: 
+    _cancelText: 
+  - _kind: 0
+    _speaker: 
+    _portrait: robot_normal
+    _text: "\u300C\u306A\u308B\u307B\u3069\u3002\u65BD\u8A2D\u306E\u8B66\u5099\u54E1\u3067\u3042\u308C\u3070\u3001\u5916\u90E8\u6249\u306E\u9375\u3092\u7BA1\u7406\u3057\u3066\u3044\u3066\u3082\u4E0D\u601D\u8B70\u3067\u306F\u3042\u308A\u307E\u305B\u3093\u306D\u3002\u300D"
+    _flagKey: 
+    _flagValue: 
+    _options: []
+    _itemKey: 
+    _weaponKey: 
+    _message: 
+    _command: 
+    _arg: 
+    _cases: []
+    _thenTarget: 0
+    _elseTarget: 0
+    _joinTarget: 0
+    _accept: []
+    _consume: 0
+    _prompt: 
+    _endOnWrong: 0
+    _usedText: 
+    _cancelText: 
+  - _kind: 0
+    _speaker: 
+    _portrait: robot_normal
+    _text: "\u300C\u4ED8\u8FD1\u306B\u4E2D\u578B\u306E\u751F\u4F53\u53CD\u5FDC\u304C\u4E00\u3064
+      \u2026\u5642\u3092\u3059\u308C\u3070\u3001\u3068\u3044\u3046\u30E4\u30C4\u304B\u3082\u3057\u308C\u307E\u305B\u3093\u306D\u3002\u300D"
+    _flagKey: 
+    _flagValue: 
+    _options: []
+    _itemKey: 
+    _weaponKey: 
+    _message: 
+    _command: 
+    _arg: 
+    _cases: []
+    _thenTarget: 0
+    _elseTarget: 0
+    _joinTarget: 0
+    _accept: []
+    _consume: 0
+    _prompt: 
+    _endOnWrong: 0
+    _usedText: 
+    _cancelText: 
+  - _kind: 0
+    _speaker: 
+    _portrait: gramophone_normal
+    _text: "\u300C\u3048\u3048\u3002 \u624B\u8CA0\u3044\u3068\u306A\u3063\u305F\u30A2\u30EC\u306F\u3001\u304A\u305D\u3089\u304F1\u968E\u306E\u3069\u3053\u304B\u306B\u6F5C\u3093\u3067\u3044\u308B\u306E\u3067\u306F\u306A\u3044\u304B\u3068\u3002\u300D"
+    _flagKey: 
+    _flagValue: 
+    _options: []
+    _itemKey: 
+    _weaponKey: 
+    _message: 
+    _command: 
+    _arg: 
+    _cases: []
+    _thenTarget: 0
+    _elseTarget: 0
+    _joinTarget: 0
+    _accept: []
+    _consume: 0
+    _prompt: 
+    _endOnWrong: 0
+    _usedText: 
+    _cancelText: 
+  - _kind: 0
+    _speaker: 
+    _portrait: hero_confused
+    _text: "\u300C\u3063\u3066\u3053\u3068\u306F\u2026 \u5931\u304F\u3057\u7269\u62FE\u3044\u3064\u3064\u3042\u306E\u5316\u3051\u7269\u3092\u3076\u3063\u5012\u305B\u3070\u3001\u30EF\u30F3\u30C1\u30E3\u30F3\u3053\u3053\u304B\u3089\u51FA\u308B\u9375\u3082\u30B2\u30C3\u30C8\u3067\u304D\u308B\u3063\u3066\u3053\u3068\u304B\u3002\u300D"
+    _flagKey: 
+    _flagValue: 
+    _options: []
+    _itemKey: 
+    _weaponKey: 
+    _message: 
+    _command: 
+    _arg: 
+    _cases: []
+    _thenTarget: 0
+    _elseTarget: 0
+    _joinTarget: 0
+    _accept: []
+    _consume: 0
+    _prompt: 
+    _endOnWrong: 0
+    _usedText: 
+    _cancelText: 
+  - _kind: 0
+    _speaker: 
+    _portrait: gramophone_normal
+    _text: "\u300C\u3048\u3048\u3001\u5B9F\u306B\u5408\u7406\u7684\u306A\u63A8\u6E2C\u3067\u3059\u3002
+      \u30B9\u30DF\u30EC\u3055\u3093\u3092\u52A9\u3051\u3001\u3064\u3044\u3067\u306B\u9375\u3082\u596A\u3044\u53D6\u308B\u2026
+      \u304A\u512A\u3057\u3044\u8CB4\u65B9\u306A\u3089\u304D\u3063\u3068\u6210\u3057\u9042\u3052\u3089\u308C\u308B\u3053\u3068\u3067\u3057\u3087\u3046\u3002\u300D"
+    _flagKey: 
+    _flagValue: 
+    _options: []
+    _itemKey: 
+    _weaponKey: 
+    _message: 
+    _command: 
+    _arg: 
+    _cases: []
+    _thenTarget: 0
+    _elseTarget: 0
+    _joinTarget: 0
+    _accept: []
+    _consume: 0
+    _prompt: 
+    _endOnWrong: 0
+    _usedText: 
+    _cancelText: 
+  - _kind: 0
+    _speaker: 
+    _portrait: girl_fear
+    _text: "\u300C\u3067\u3001\u3067\u3082\u30A2\u30AA\u30A4\u3055\u3093\u2026 \u308F\u305F\u3057\u306E\u305B\u3044\u3067\u3001\u307E\u305F\u5371\u967A\u306A\u76EE\u306B\u906D\u308F\u305B\u3066\u3057\u307E\u3046\u3093\u3058\u3083\u2026\u2026\u3002\u300D"
+    _flagKey: 
+    _flagValue: 
+    _options: []
+    _itemKey: 
+    _weaponKey: 
+    _message: 
+    _command: 
+    _arg: 
+    _cases: []
+    _thenTarget: 0
+    _elseTarget: 0
+    _joinTarget: 0
+    _accept: []
+    _consume: 0
+    _prompt: 
+    _endOnWrong: 0
+    _usedText: 
+    _cancelText: 
+  - _kind: 0
+    _speaker: 
+    _portrait: hero_smile
+    _text: "\u300C\u6C17\u306B\u3059\u3093\u306A\u3063\u3066\u3002 \u3069\u3063\u3061\u307F\u3061\u9375\u304C\u5FC5\u8981\u306A\u3089\u3001\u305D\u3044\u3064\u3092\u63A2\u3057\u3066\u5012\u3055\u306A\u304D\u3083\u306A\u3093\u306D\u30FC\u3093\u3060\u3057\u3002\u300D"
+    _flagKey: 
+    _flagValue: 
+    _options: []
+    _itemKey: 
+    _weaponKey: 
+    _message: 
+    _command: 
+    _arg: 
+    _cases: []
+    _thenTarget: 0
+    _elseTarget: 0
+    _joinTarget: 0
+    _accept: []
+    _consume: 0
+    _prompt: 
+    _endOnWrong: 0
+    _usedText: 
+    _cancelText: 
+  - _kind: 0
+    _speaker: 
+    _portrait: hero_normal
+    _text: "\u300C\u3088\u3057\u3001\u4E2D\u592E\u884C\u304F\u304B\u3002\u300D"
+    _flagKey: 
+    _flagValue: 
+    _options: []
+    _itemKey: 
+    _weaponKey: 
+    _message: 
+    _command: 
+    _arg: 
+    _cases: []
+    _thenTarget: 0
+    _elseTarget: 0
+    _joinTarget: 0
+    _accept: []
+    _consume: 0
+    _prompt: 
+    _endOnWrong: 0
+    _usedText: 
+    _cancelText: 
+  - _kind: 0
+    _speaker: 
+    _portrait: gramophone_normal
+    _text: "\u300C\u3069\u3046\u304B\u304A\u6C17\u3092\u3064\u3051\u3066\u3002 \u304A\u5B22\u3055\u3093\u306E\u305D\u306E\u71B1\u304C\u3001\u3053\u308C\u4EE5\u4E0A\u9177\u304F\u306A\u3089\u306A\u3044\u3053\u3068\u3092\u7948\u3063\u3066\u304A\u308A\u307E\u3059\u3088\u3002\u300D"
+    _flagKey: 
+    _flagValue: 
+    _options: []
+    _itemKey: 
+    _weaponKey: 
+    _message: 
+    _command: 
+    _arg: 
+    _cases: []
+    _thenTarget: 0
+    _elseTarget: 0
+    _joinTarget: 0
+    _accept: []
+    _consume: 0
+    _prompt: 
+    _endOnWrong: 0
+    _usedText: 
+    _cancelText: 
+  _nextProgress: 11
+  _repeat: 0
+  _keepsProgress: 0
+  _activation: 0
