@@ -9,6 +9,7 @@ namespace CreativeAI.Tests.EditMode
     /// <summary>
     /// ミニマップの距離フィールドの計算の検証(床・壁の縁までの距離、線の芯までの距離、8 ビットへの詰め方)。
     /// 1 マスだけの図で、縁が 1 テクセル未満の精度で残り、四角形の角が丸まらないことを確かめる。
+    /// 歩ける床から遠い壁のかたまりを外す処理(TrimDeepWalls)も確かめる。
     /// </summary>
     public sealed class MinimapDistanceFieldTests
     {
@@ -219,6 +220,84 @@ namespace CreativeAI.Tests.EditMode
             var i = y * image.Width + x;
             Assert.AreEqual((byte)MinimapField.LineKind.Door, image.Ids[i]);
             Assert.Less(MinimapField.DecodeUnsigned(image.Field[i].b), 0.7f);
+        }
+
+        // 1 行の図。'.' = 歩ける床、'#' = 壁、' ' = 床なし(階段は無し)
+        private static (bool[,] ground, bool[,] wall, bool[,] stairs) Row(string cells)
+        {
+            var ground = new bool[1, cells.Length];
+            var wall = new bool[1, cells.Length];
+            for (var c = 0; c < cells.Length; c++)
+            {
+                ground[0, c] = cells[c] != ' ';
+                wall[0, c] = cells[c] == '#';
+            }
+            return (ground, wall, new bool[1, cells.Length]);
+        }
+
+        [Test]
+        public void TrimDeepWalls_床から遠い壁のかたまりを外す()
+        {
+            var (ground, wall, stairs) = Row(".######");
+
+            var trimmed = MinimapDistanceField.TrimDeepWalls(ground, wall, stairs, 2);
+
+            Assert.AreEqual(4, trimmed);
+            Assert.IsTrue(wall[0, 1] && wall[0, 2]); // 床から 2 マスまでは残る
+            Assert.IsFalse(wall[0, 3] || wall[0, 6]);
+            Assert.IsFalse(ground[0, 3] || ground[0, 6]); // 床としても数えない(描く範囲から外れる)
+            Assert.IsTrue(ground[0, 0]);
+        }
+
+        [Test]
+        public void TrimDeepWalls_両側に床のある厚い壁は残す()
+        {
+            var (ground, wall, stairs) = Row(".####.");
+
+            var trimmed = MinimapDistanceField.TrimDeepWalls(ground, wall, stairs, 2);
+
+            Assert.AreEqual(0, trimmed);
+        }
+
+        [Test]
+        public void TrimDeepWalls_斜めも1マスと数える()
+        {
+            var ground = new bool[5, 5];
+            var wall = new bool[5, 5];
+            for (var r = 0; r < 5; r++)
+            for (var c = 0; c < 5; c++)
+            {
+                ground[r, c] = true;
+                wall[r, c] = r != 0 || c != 0; // (0, 0) だけが歩ける床
+            }
+
+            var trimmed = MinimapDistanceField.TrimDeepWalls(ground, wall, new bool[5, 5], 2);
+
+            Assert.AreEqual(16, trimmed); // 残るのは (0, 0) から 3x3 の範囲(壁 8 マス)
+            Assert.IsTrue(wall[2, 2]);
+            Assert.IsFalse(wall[3, 3]);
+        }
+
+        [Test]
+        public void TrimDeepWalls_階段も歩ける床として数える()
+        {
+            var (ground, wall, stairs) = Row(".#####");
+            stairs[0, 5] = true; // 壁の列の反対側の端に階段
+            wall[0, 5] = false;
+
+            var trimmed = MinimapDistanceField.TrimDeepWalls(ground, wall, stairs, 2);
+
+            Assert.AreEqual(0, trimmed); // 壁は両端から 2 マス以内に収まる
+        }
+
+        [Test]
+        public void TrimDeepWalls_歩ける床が無ければ壁も全部外す()
+        {
+            var (ground, wall, stairs) = Row("###");
+
+            var trimmed = MinimapDistanceField.TrimDeepWalls(ground, wall, stairs, 2);
+
+            Assert.AreEqual(3, trimmed);
         }
 
         private static bool[,] AllTrue()

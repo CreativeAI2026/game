@@ -29,6 +29,71 @@ namespace CreativeAI.EditorTools
             }
         }
 
+        /// <summary>
+        /// 歩ける床(壁でない床・階段)から <paramref name="keep"/> マスより遠い壁のマスを、床なし・壁なしにする(外したマス数を返す)。
+        /// 図に描いた「中に入れない壁のかたまり」が、ミニマップで暗い四角として出るのを防ぐ。
+        /// 距離は 8 方向の最大(斜めも 1 マス)。壁の厚みが <paramref name="keep"/> × 2 マス以下なら、壁は残る。
+        /// </summary>
+        public static int TrimDeepWalls(bool[,] ground, bool[,] wall, bool[,] stairs, int keep)
+        {
+            var rows = ground.GetLength(0);
+            var cols = ground.GetLength(1);
+            const int Far = int.MaxValue / 2;
+            var distance = new int[rows, cols];
+            for (var r = 0; r < rows; r++)
+            for (var c = 0; c < cols; c++)
+                distance[r, c] = stairs[r, c] || (ground[r, c] && !wall[r, c]) ? 0 : Far;
+
+            // 前から後ろ、後ろから前の 2 回なぞると、8 方向の最大距離が求まる
+            for (var r = 0; r < rows; r++)
+            for (var c = 0; c < cols; c++)
+                Relax(distance, r, c, ForwardNeighbors);
+            for (var r = rows - 1; r >= 0; r--)
+            for (var c = cols - 1; c >= 0; c--)
+                Relax(distance, r, c, BackwardNeighbors);
+
+            var trimmed = 0;
+            for (var r = 0; r < rows; r++)
+            for (var c = 0; c < cols; c++)
+            {
+                if (!wall[r, c] || distance[r, c] <= keep)
+                    continue;
+                wall[r, c] = false;
+                ground[r, c] = false;
+                trimmed++;
+            }
+            return trimmed;
+        }
+
+        // なぞる向きごとの、先に距離が決まっている隣(行の差, 列の差)
+        private static readonly (int Row, int Col)[] ForwardNeighbors =
+        {
+            (-1, -1),
+            (-1, 0),
+            (-1, 1),
+            (0, -1),
+        };
+        private static readonly (int Row, int Col)[] BackwardNeighbors =
+        {
+            (1, 1),
+            (1, 0),
+            (1, -1),
+            (0, 1),
+        };
+
+        // 隣の距離 + 1 のほうが近ければ、そのマスの距離を縮める(表の外は無いものとして扱う)
+        private static void Relax(int[,] distance, int r, int c, (int Row, int Col)[] neighbors)
+        {
+            foreach (var (dr, dc) in neighbors)
+            {
+                var y = r + dr;
+                var x = c + dc;
+                if (y < 0 || x < 0 || y >= distance.GetLength(0) || x >= distance.GetLength(1))
+                    continue;
+                distance[r, c] = Math.Min(distance[r, c], distance[y, x] + 1);
+            }
+        }
+
         /// <summary>計算結果。画像は左下が原点で、1 行ずつ上へ並ぶ(テクスチャと同じ)。</summary>
         public sealed class Image
         {

@@ -26,6 +26,9 @@ namespace CreativeAI.EditorTools
 
         private const float Cell = MapLayoutBuilder.Cell;
 
+        // 歩ける床からこのマス数までの壁だけ描く。厚みが 2 倍以下の壁は全部残り、それより遠い壁のかたまりは外す
+        private const int WallKeepCells = 2;
+
         // 建物の表示名(全画面マップの階の名前に添える)。載っていない建物(本棟)は名前を添えない
         private static readonly Dictionary<string, string> BuildingNames = new()
         {
@@ -148,6 +151,25 @@ namespace CreativeAI.EditorTools
 
             var groundMask = new bool[rows, cols];
             var wallMask = new bool[rows, cols];
+            for (var r = 0; r < rows; r++)
+            for (var c = 0; c < cols; c++)
+            {
+                groundMask[r, c] = plan.HasFloor[r, c] || stairMask[r, c];
+                wallMask[r, c] = plan.HasFloor[r, c] && grid[r, c] == '#';
+            }
+
+            // 歩ける床から遠い壁(図に塗りつぶしで描いた、中に入れない壁のかたまり)は、暗い四角になって見えるので外す
+            var trimmed = MinimapDistanceField.TrimDeepWalls(
+                groundMask,
+                wallMask,
+                stairMask,
+                WallKeepCells
+            );
+            if (trimmed > 0)
+                Debug.Log(
+                    $"[MinimapBaker] {level.Title}: 歩ける床から {WallKeepCells} マスより遠い壁 {trimmed} マスをミニマップから外しました。"
+                );
+
             int minRow = rows,
                 maxRow = -1,
                 minCol = cols,
@@ -155,8 +177,6 @@ namespace CreativeAI.EditorTools
             for (var r = 0; r < rows; r++)
             for (var c = 0; c < cols; c++)
             {
-                groundMask[r, c] = plan.HasFloor[r, c] || stairMask[r, c];
-                wallMask[r, c] = plan.HasFloor[r, c] && grid[r, c] == '#';
                 if (!groundMask[r, c])
                     continue;
                 minRow = Mathf.Min(minRow, r);
