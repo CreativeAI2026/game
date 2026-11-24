@@ -1,0 +1,282 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 858f11bf7ac04ef1a88f80026e740e0f, type: 3}
+  m_Name: 19_again_jellyfish
+  m_EditorClassIdentifier: CreativeAI.Gameplay::CreativeAI.Gameplay.EventDefinition
+  _id: 19_again_jellyfish
+  _conditions:
+  - _type: 0
+    _progressValue: 19
+    _isRange: 0
+    _min: -2147483648
+    _max: 2147483647
+    _flagKey: 
+    _flagValue: 
+    _itemKey: 
+    _negate: 0
+  - _type: 1
+    _progressValue: 0
+    _isRange: 0
+    _min: -2147483648
+    _max: 2147483647
+    _flagKey: hero_choice
+    _flagValue: same
+    _itemKey: 
+    _negate: 0
+  _steps:
+  - _kind: 0
+    _speaker: 
+    _portrait: 
+    _text: "\u51FA\u53E3\u306B\u5411\u304B\u3063\u3066\u8D70\u308B\u8DB3\u5143\u304B\u3089\u3001\u7A81\u7136\u89E6\u624B\u304C\u7A81\u304D\u51FA\u3066\u304D\u305F\u3002"
+    _flagKey: 
+    _flagValue: 
+    _options: []
+    _itemKey: 
+    _weaponKey: 
+    _message: 
+    _command: 
+    _arg: 
+    _cases: []
+    _thenTarget: 0
+    _elseTarget: 0
+    _joinTarget: 0
+    _accept: []
+    _consume: 0
+    _prompt: 
+    _endOnWrong: 0
+    _usedText: 
+    _cancelText: 
+  - _kind: 0
+    _speaker: 
+    _portrait: hero_surprised
+    _text: "\u3046\u308F\u3063\uFF01"
+    _flagKey: 
+    _flagValue: 
+    _options: []
+    _itemKey: 
+    _weaponKey: 
+    _message: 
+    _command: 
+    _arg: 
+    _cases: []
+    _thenTarget: 0
+    _elseTarget: 0
+    _joinTarget: 0
+    _accept: []
+    _consume: 0
+    _prompt: 
+    _endOnWrong: 0
+    _usedText: 
+    _cancelText: 
+  - _kind: 0
+    _speaker: 
+    _portrait: 
+    _text: "\u6575\u306E\u59FF\u3092\u63A2\u3059\u3002 \u5468\u56F2\u306B\u306F\u898B\u5F53\u305F\u3089\u306A\u3044\u3002"
+    _flagKey: 
+    _flagValue: 
+    _options: []
+    _itemKey: 
+    _weaponKey: 
+    _message: 
+    _command: 
+    _arg: 
+    _cases: []
+    _thenTarget: 0
+    _elseTarget: 0
+    _joinTarget: 0
+    _accept: []
+    _consume: 0
+    _prompt: 
+    _endOnWrong: 0
+    _usedText: 
+    _cancelText: 
+  - _kind: 0
+    _speaker: 
+    _portrait: girl_surprised
+    _text: "\u30A2\u30AA\u30A4\u3055\u3093\uFF01 \u4E0A\u3067\u3059\uFF01"
+    _flagKey: 
+    _flagValue: 
+    _options: []
+    _itemKey: 
+    _weaponKey: 
+    _message: 
+    _command: 
+    _arg: 
+    _cases: []
+    _thenTarget: 0
+    _elseTarget: 0
+    _joinTarget: 0
+    _accept: []
+    _consume: 0
+    _prompt: 
+    _endOnWrong: 0
+    _usedText: 
+    _cancelText: 
+  - _kind: 0
+    _speaker: 
+    _portrait: 
+    _text: "\u982D\u4E0A\u3092\u898B\u4E0A\u3052\u308B\u3068\u3001\u4E88\u60F3\u901A\u308A\u30AF\u30E9\u30B2\u306B\u4F3C\u305F\u7570\u5F62\u304C\u5B99\u306B\u6D6E\u3044\u3066\u3044\u305F\u3002"
+    _flagKey: 
+    _flagValue: 
+    _options: []
+    _itemKey: 
+    _weaponKey: 
+    _message: 
+    _command: 
+    _arg: 
+    _cases: []
+    _thenTarget: 0
+    _elseTarget: 0
+    _joinTarget: 0
+    _accept: []
+    _consume: 0
+    _prompt: 
+    _endOnWrong: 0
+    _usedText: 
+    _cancelText: 
+  - _kind: 0
+    _speaker: 
+    _portrait: hero_anger
+    _text: "\u30CF\u30C3\uFF01 \u4E0A\u7B49\u3060\uFF01 \u6483\u3061\u843D\u3068\u3057\u3066\u3084\u308B\uFF01"
+    _flagKey: 
+    _flagValue: 
+    _options: []
+    _itemKey: 
+    _weaponKey: 
+    _message: 
+    _command: 
+    _arg: 
+    _cases: []
+    _thenTarget: 0
+    _elseTarget: 0
+    _joinTarget: 0
+    _accept: []
+    _consume: 0
+    _prompt: 
+    _endOnWrong: 0
+    _usedText: 
+    _cancelText: 
+  - _kind: 4
+    _speaker: 
+    _portrait: 
+    _text: 
+    _flagKey: 
+    _flagValue: 
+    _options: []
+    _itemKey: 
+    _weaponKey: 
+    _message: 
+    _command: 
+    _arg: 
+    _cases: []
+    _thenTarget: 0
+    _elseTarget: 0
+    _joinTarget: 0
+    _accept: []
+    _consume: 0
+    _prompt: 
+    _endOnWrong: 0
+    _usedText: 
+    _cancelText: 
+  - _kind: 0
+    _speaker: 
+    _portrait: hero_normal
+    _text: "\u30CF\u30A1\u2026\u2026\u3002"
+    _flagKey: 
+    _flagValue: 
+    _options: []
+    _itemKey: 
+    _weaponKey: 
+    _message: 
+    _command: 
+    _arg: 
+    _cases: []
+    _thenTarget: 0
+    _elseTarget: 0
+    _joinTarget: 0
+    _accept: []
+    _consume: 0
+    _prompt: 
+    _endOnWrong: 0
+    _usedText: 
+    _cancelText: 
+  - _kind: 0
+    _speaker: 
+    _portrait: hero_question
+    _text: "\u307F\u3093\u306A\u3001\u602A\u6211\u306F\u306A\u3044\u304B\uFF1F"
+    _flagKey: 
+    _flagValue: 
+    _options: []
+    _itemKey: 
+    _weaponKey: 
+    _message: 
+    _command: 
+    _arg: 
+    _cases: []
+    _thenTarget: 0
+    _elseTarget: 0
+    _joinTarget: 0
+    _accept: []
+    _consume: 0
+    _prompt: 
+    _endOnWrong: 0
+    _usedText: 
+    _cancelText: 
+  - _kind: 0
+    _speaker: 
+    _portrait: gramophone_normal
+    _text: "\u8CB4\u65B9\u304C\u653B\u6483\u3092\u5F15\u304D\u4ED8\u3051\u3066\u304F\u308C\u305F\u304A\u304B\u3052\u3067\u3057\u3087\u3046\u3002
+      \u79C1\u305F\u3061\u306F\u306A\u3093\u3068\u3082\u3042\u308A\u307E\u305B\u3093\u3002"
+    _flagKey: 
+    _flagValue: 
+    _options: []
+    _itemKey: 
+    _weaponKey: 
+    _message: 
+    _command: 
+    _arg: 
+    _cases: []
+    _thenTarget: 0
+    _elseTarget: 0
+    _joinTarget: 0
+    _accept: []
+    _consume: 0
+    _prompt: 
+    _endOnWrong: 0
+    _usedText: 
+    _cancelText: 
+  - _kind: 0
+    _speaker: 
+    _portrait: hero_smile
+    _text: "\u306A\u3089\u826F\u304B\u3063\u305F\uFF01 \u884C\u304F\u305E\uFF01"
+    _flagKey: 
+    _flagValue: 
+    _options: []
+    _itemKey: 
+    _weaponKey: 
+    _message: 
+    _command: 
+    _arg: 
+    _cases: []
+    _thenTarget: 0
+    _elseTarget: 0
+    _joinTarget: 0
+    _accept: []
+    _consume: 0
+    _prompt: 
+    _endOnWrong: 0
+    _usedText: 
+    _cancelText: 
+  _nextProgress: 20
+  _repeat: 0
+  _keepsProgress: 0
+  _activation: 0
