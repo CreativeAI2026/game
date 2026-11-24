@@ -76,15 +76,7 @@ namespace CreativeAI.Tests.EditMode
         /// </summary>
         private static readonly HashSet<string> NotPlacedYet = new()
         {
-            // 12・13 は戦闘の敵 Prefab が決まるまで置かない
-            "12_again",
-            "13_battle_girl",
-            "16_modifying_sumire",
-            "17_find_exit",
-            "18_againagain_tutorial",
-            "19_again_jellyfish",
-            "20_again_goldfish",
-            "21_end",
+            // 後藤ルートは ID8〜12 と同じ場所のため、まだ置いていない
             "8nt_screem_girl",
             "9nt_battle_jellyfish",
             "10nt_go_floor1",
@@ -193,6 +185,19 @@ namespace CreativeAI.Tests.EditMode
             );
         }
 
+        /// <summary>
+        /// 戦闘の敵 Prefab がまだ決まっていないイベントの id。敵を設定したらこの一覧から消す。
+        /// </summary>
+        private static readonly HashSet<string> BattleWithoutEnemyYet = new()
+        {
+            "9_battle_jellyfish",
+            "12_again",
+            "13_battle_girl",
+            "18_againagain_tutorial",
+            "19_again_jellyfish",
+            "20_again_goldfish",
+        };
+
         [Test]
         public void BattleEvents_HaveAnEnemyPrefab()
         {
@@ -200,7 +205,11 @@ namespace CreativeAI.Tests.EditMode
             foreach (var t in _triggers)
             {
                 var ev = EventOf(t);
-                if (ev == null || !ev.Steps.Any(s => s.Kind == StepKind.Battle))
+                if (
+                    ev == null
+                    || BattleWithoutEnemyYet.Contains(ev.Id)
+                    || !ev.Steps.Any(s => s.Kind == StepKind.Battle)
+                )
                     continue;
 
                 var enemy = EnemyOf(t);
