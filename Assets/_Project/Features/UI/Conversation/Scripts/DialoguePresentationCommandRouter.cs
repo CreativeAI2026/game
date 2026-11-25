@@ -20,7 +20,6 @@ namespace CreativeAI.UI
         private readonly Func<IEnumerator> _close;
         private readonly Func<string, IEnumerator> _showPortrait;
         private readonly DialogueStageCommands _stage;
-        private readonly Action<string, string> _external;
 
         public DialoguePresentationCommandRouter(
             Action<bool> setWindowHidden,
@@ -34,8 +33,7 @@ namespace CreativeAI.UI
             > playEffect,
             Func<IEnumerator> close,
             Func<string, IEnumerator> showPortrait,
-            DialogueStageCommands stage,
-            Action<string, string> external
+            DialogueStageCommands stage
         )
         {
             _setWindowHidden = setWindowHidden;
@@ -45,7 +43,6 @@ namespace CreativeAI.UI
             _close = close;
             _showPortrait = showPortrait;
             _stage = stage;
-            _external = external;
         }
 
         public IEnumerator Execute(string command, string argument)
@@ -125,14 +122,6 @@ namespace CreativeAI.UI
                     IEnumerator stage = _stage.Create(command, argument);
                     if (stage != null)
                         yield return stage;
-                    else if (
-                        command != null
-                        && (
-                            command.StartsWith("camera.", StringComparison.OrdinalIgnoreCase)
-                            || command.StartsWith("background.", StringComparison.OrdinalIgnoreCase)
-                        )
-                    )
-                        _external(command, argument);
                     else
                         Debug.LogWarning($"[ConversationView] 未対応の演出コマンドです: {command}");
                     break;

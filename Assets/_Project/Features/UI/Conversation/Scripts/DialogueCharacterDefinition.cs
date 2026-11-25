@@ -29,9 +29,6 @@ namespace CreativeAI.UI
         }
 
         [SerializeField]
-        private string _id;
-
-        [SerializeField]
         private string _displayName;
 
         [SerializeField]
@@ -50,7 +47,6 @@ namespace CreativeAI.UI
         [SerializeField]
         private Expression[] _expressions = Array.Empty<Expression>();
 
-        public string Id => _id;
         public string DisplayName => _displayName;
         public DialoguePortraitSide Side => _side;
         public Color ThemeColor => _themeColor;

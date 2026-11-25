@@ -16,7 +16,6 @@ namespace CreativeAI.UI
     public sealed class ConversationView : MonoBehaviour, IDialogueView
     {
         public static ConversationView Instance { get; private set; }
-        public event Action<string, string> ExternalPresentationCommandRequested;
 
         public enum ConversationState
         {
@@ -201,9 +200,6 @@ namespace CreativeAI.UI
 
         [Header("武器モデル受け取り表示")]
         [SerializeField]
-        private GameObject _weaponModelPrefab; // 武器のダミー3Dモデル(Katana)。将来は giveWeapon の weaponKey から解決
-
-        [SerializeField]
         private Vector3 _weaponModelEuler = new(10f, -20f, 0f); // 静止表示するモデルの傾き(見栄えの3/4アングル)
 
         [SerializeField]
@@ -336,7 +332,6 @@ namespace CreativeAI.UI
                 );
             }
             _rewardPresenter ??= new DialogueRewardPresenter(
-                transform,
                 _itemRewardImage,
                 _itemRewardBackdrop,
                 _weaponRewardImage,
@@ -414,9 +409,7 @@ namespace CreativeAI.UI
                 PlayPortraitEffect,
                 () => HideAnimated(),
                 ShowPortraitByKey,
-                new DialogueStageCommands(_backdropPresenter, FindSound, FindBackground),
-                (command, argument) =>
-                    ExternalPresentationCommandRequested?.Invoke(command, argument)
+                new DialogueStageCommands(_backdropPresenter, FindSound, FindBackground)
             );
             _portraitPresenter.Configure(
                 _portrait,
@@ -630,7 +623,7 @@ namespace CreativeAI.UI
 
         /// <summary>
         /// 受け取った武器の3Dモデルを RenderTexture 経由で <see cref="ShowItemGet"/> と同じ位置に表示し、送り入力まで回転させて待つ。
-        /// リグはシーンから離れた場所に実行時に組み、終了時に破棄する。<paramref name="modelPrefab"/> 未指定なら <see cref="_weaponModelPrefab"/>(ダミー)。
+        /// リグはシーンから離れた場所に実行時に組み、終了時に破棄する。
         /// </summary>
         public IEnumerator ShowWeaponGet(
             GameObject modelPrefab = null,
@@ -645,7 +638,7 @@ namespace CreativeAI.UI
             SetChoicesActive(false);
 
             var model = _rewardPresenter.ShowWeapon(
-                modelPrefab != null ? modelPrefab : _weaponModelPrefab,
+                modelPrefab,
                 _weaponModelEuler,
                 _weaponTextureSize,
                 _weaponImageSize,
@@ -842,8 +835,7 @@ namespace CreativeAI.UI
 
         /// <summary>
         /// IDialogueView 実装: giveWeapon ステップの入手演出。3Dモデルは WeaponData がまだ参照を
-        /// 持たないため解決できず、Inspector のダミー(_weaponModelPrefab)にフォールバックする
-        /// (モデル参照は武器を持つ側=WeaponManager 班の担当)。
+        /// 持たないため解決できず、モデルなしで表示する(モデル参照は武器を持つ側=WeaponManager 班の担当)。
         /// </summary>
         public IEnumerator ShowWeaponGet(string weaponKey, string message)
         {

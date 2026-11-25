@@ -26,7 +26,6 @@ namespace CreativeAI.DevTools
         private static readonly WaitForSecondsRealtime LoopInterval = new(0.4f);
         private static readonly Speaker Protagonist = new("hero_normal");
         private static readonly Speaker Robot = new("robot_normal");
-        private static readonly Speaker FragileGirl = new("girl_normal");
         private static readonly Speaker FragileGirlWorried = new("girl_wry_smile");
         private static readonly Speaker FragileGirlFrightened = new("girl_fear");
         private static readonly Speaker FragileGirlSmile = new("girl_smile");

@@ -70,7 +70,6 @@ namespace CreativeAI.UI
         private bool _hasWarnedMissingReferences;
         private bool _layoutRefreshPending;
 
-        public bool HasRequiredReferences => ResolveReferences();
         public bool IsVisible => _container != null && _container.gameObject.activeSelf;
 
         public static bool ShouldShowCount(ItemData item, int count) =>
@@ -191,32 +190,6 @@ namespace CreativeAI.UI
             _containerCanvasGroup.alpha = 0f;
             _container.gameObject.SetActive(false);
             _layoutRefreshPending = false;
-        }
-
-        public void AnimateAppear(float duration)
-        {
-            if (!ResolveReferences() || !IsVisible)
-                return;
-
-            _countText.rectTransform.DOKill();
-            _countTextCanvasGroup.DOKill();
-            _countText.rectTransform.localScale = Vector3.one * 0.7f;
-            _countTextCanvasGroup.alpha = 1f;
-            _countText
-                .rectTransform.DOScale(Vector3.one, duration)
-                .SetEase(Ease.OutBack)
-                .SetUpdate(true);
-        }
-
-        public void PlayHide(float duration)
-        {
-            if (!ResolveReferences() || !IsVisible)
-                return;
-
-            _countText.rectTransform.DOKill();
-            _countTextCanvasGroup.DOKill();
-            _countText.rectTransform.DOScale(Vector3.one * 0.35f, duration).SetUpdate(true);
-            _countTextCanvasGroup.DOFade(0f, duration).SetUpdate(true);
         }
 
         public void KillTween()

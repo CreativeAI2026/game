@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using CreativeAI.Gameplay;
 using UnityEngine;
 using UnityEngine.EventSystems;
-using UnityEngine.InputSystem;
 using UnityEngine.UI;
 
 namespace CreativeAI.UI

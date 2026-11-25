@@ -25,14 +25,6 @@ namespace CreativeAI.UI
         private ConversationControlButton[] _controls;
         private bool _idleDimmed;
 
-        public void Configure(CanvasGroup group, TMP_Text tooltip, CanvasGroup tooltipGroup)
-        {
-            _group = group;
-            _tooltip = tooltip;
-            _tooltipGroup = tooltipGroup;
-            CacheView();
-        }
-
         private void Awake() => CacheView();
 
         private void OnEnable()

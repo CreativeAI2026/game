@@ -194,11 +194,6 @@ namespace CreativeAI.Gameplay
             InventoryService.RemoveItem(data, count);
         }
 
-        public bool ConsumeItem(ItemData data, int count = 1)
-        {
-            return InventoryService.ConsumeItem(data, count);
-        }
-
         public bool TryUse(ItemStack stack)
         {
             if (_playerStatus == null)

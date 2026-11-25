@@ -2,7 +2,6 @@ using System.Collections.Generic;
 using DG.Tweening;
 using UnityEngine;
 using UnityEngine.EventSystems;
-using UnityEngine.InputSystem;
 using UnityEngine.UI;
 
 namespace CreativeAI.UI
@@ -63,7 +62,6 @@ namespace CreativeAI.UI
 
         public bool HoverScaleEnabled => _hoverScaleEnabled;
         public bool BounceEnabled => _bounceEnabled;
-        public RectTransform Target => _targetRect;
 
         private void Awake()
         {

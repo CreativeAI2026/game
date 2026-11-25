@@ -1,5 +1,4 @@
 using System;
-using UnityEngine.InputSystem;
 
 namespace CreativeAI.UI
 {

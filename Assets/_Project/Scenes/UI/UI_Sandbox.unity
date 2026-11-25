@@ -733,14 +733,6 @@ PrefabInstance:
     serializedVersion: 3
     m_TransformParent: {fileID: 0}
     m_Modifications:
-    - target: {fileID: 101565113982107968, guid: d0c8f5a2fab99460a9cbf61536da8406, type: 3}
-      propertyPath: _normalSprite
-      value: 
-      objectReference: {fileID: 21300000, guid: 6cbf59261e64b254abaed5e26026cf0a, type: 3}
-    - target: {fileID: 101565113982107968, guid: d0c8f5a2fab99460a9cbf61536da8406, type: 3}
-      propertyPath: _customSelectedSprite
-      value: 
-      objectReference: {fileID: 21300000, guid: 0c48e27eb2c1a3449b5ada4983361f22, type: 3}
     - target: {fileID: 309674764281236788, guid: d0c8f5a2fab99460a9cbf61536da8406, type: 3}
       propertyPath: m_AnchorMax.y
       value: 1
@@ -781,14 +773,6 @@ PrefabInstance:
       propertyPath: m_SizeDelta.y
       value: -17
       objectReference: {fileID: 0}
-    - target: {fileID: 523968616837207403, guid: d0c8f5a2fab99460a9cbf61536da8406, type: 3}
-      propertyPath: _normalSprite
-      value: 
-      objectReference: {fileID: 21300000, guid: 92330c31b085fd445ab0e38018a2a74b, type: 3}
-    - target: {fileID: 523968616837207403, guid: d0c8f5a2fab99460a9cbf61536da8406, type: 3}
-      propertyPath: _customSelectedSprite
-      value: 
-      objectReference: {fileID: 21300000, guid: 3cb20ff4d8fa4414b99b1c99e5ec91a9, type: 3}
     - target: {fileID: 591856888775479689, guid: d0c8f5a2fab99460a9cbf61536da8406, type: 3}
       propertyPath: m_LocalPosition.x
       value: 0
@@ -1745,14 +1729,6 @@ PrefabInstance:
       propertyPath: m_AnchorMax.y
       value: 1
       objectReference: {fileID: 0}
-    - target: {fileID: 8050214368941702561, guid: d0c8f5a2fab99460a9cbf61536da8406, type: 3}
-      propertyPath: _normalSprite
-      value: 
-      objectReference: {fileID: 21300000, guid: 62ba948e226f9a748959217cd27e8229, type: 3}
-    - target: {fileID: 8050214368941702561, guid: d0c8f5a2fab99460a9cbf61536da8406, type: 3}
-      propertyPath: _customSelectedSprite
-      value: 
-      objectReference: {fileID: 21300000, guid: 486ab09c3acb2cf47a0acf0e832c81f1, type: 3}
     - target: {fileID: 8057591805494174662, guid: d0c8f5a2fab99460a9cbf61536da8406, type: 3}
       propertyPath: m_AnchorMax.y
       value: 1

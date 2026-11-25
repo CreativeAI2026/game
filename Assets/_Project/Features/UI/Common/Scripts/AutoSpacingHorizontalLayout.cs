@@ -12,22 +12,6 @@ namespace CreativeAI.UI
         [SerializeField, Min(0f)]
         private float _maxSpacing = 200f;
 
-        public float MinSpacing
-        {
-            get => _minSpacing;
-            set
-            {
-                SetProperty(ref _minSpacing, Mathf.Max(0f, value));
-                SetProperty(ref _maxSpacing, Mathf.Max(_minSpacing, _maxSpacing));
-            }
-        }
-
-        public float MaxSpacing
-        {
-            get => _maxSpacing;
-            set => SetProperty(ref _maxSpacing, Mathf.Max(_minSpacing, value));
-        }
-
         public override void CalculateLayoutInputHorizontal()
         {
             base.CalculateLayoutInputHorizontal();

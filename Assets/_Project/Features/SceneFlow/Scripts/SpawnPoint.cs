@@ -15,8 +15,6 @@ namespace CreativeAI.Gameplay
         [Tooltip("到着位置の ID。そのシーン内で一意。「はじめる」の開始位置は start")]
         private string _id = StartId;
 
-        public string Id => _id;
-
         /// <summary>ロード済みのシーンから ID で探す。無ければ null。</summary>
         public static SpawnPoint Find(string id)
         {

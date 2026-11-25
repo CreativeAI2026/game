@@ -48,16 +48,9 @@ namespace CreativeAI.UI
         private bool _hasWarnedMissingFrame;
         private bool _hasWarnedMissingSprite;
 
-        public bool IsSelected => _selected;
         public bool HasVisibleCount => _hasVisibleCount;
         public RectTransform FrameRect => _frame != null ? _frame.rectTransform : null;
         public Sprite CurrentSprite => _frame != null ? _frame.sprite : null;
-        public bool HasRequiredReferences =>
-            _frame != null
-            && _normalSprite != null
-            && _selectedSprite != null
-            && _itemSetSprite != null
-            && _itemWithCountSprite != null;
 
         private void OnEnable() => ApplyVisual();
 
