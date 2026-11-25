@@ -16,7 +16,7 @@ GameObject:
   - component: {fileID: 5711550544720709037}
   - component: {fileID: 9100000000000000001}
   m_Layer: 0
-  m_Name: TabButton
+  m_Name: MenuTabButton
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
