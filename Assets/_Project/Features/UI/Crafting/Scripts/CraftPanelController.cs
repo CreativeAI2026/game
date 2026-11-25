@@ -752,8 +752,8 @@ namespace CreativeAI.UI
             )
             {
                 if (
-                    UiInputActionMap.WasSubmitPressedThisFrame()
-                    || UiInputActionMap.WasCancelPressedThisFrame()
+                    UIInputActionMap.WasSubmitPressedThisFrame()
+                    || UIInputActionMap.WasCancelPressedThisFrame()
                 )
                 {
                     HideResult();
@@ -765,8 +765,8 @@ namespace CreativeAI.UI
                 return;
 
             if (
-                UiInputActionMap.WasPressedThisFrame(UiInputActionMap.TabPrev)
-                || UiInputActionMap.WasPressedThisFrame(UiInputActionMap.TabNext)
+                UIInputActionMap.WasPressedThisFrame(UIInputActionMap.TabPrev)
+                || UIInputActionMap.WasPressedThisFrame(UIInputActionMap.TabNext)
             )
             {
                 SelectMaterialCategory(
@@ -777,13 +777,13 @@ namespace CreativeAI.UI
                 return;
             }
 
-            if (UiInputActionMap.WasPressedThisFrame(UiInputActionMap.CraftExecute))
+            if (UIInputActionMap.WasPressedThisFrame(UIInputActionMap.CraftExecute))
             {
                 StartCraft();
                 return;
             }
 
-            if (UiInputActionMap.WasPressedThisFrame(UiInputActionMap.AuxAction))
+            if (UIInputActionMap.WasPressedThisFrame(UIInputActionMap.AuxAction))
             {
                 if (SlotKeyboardFocus.IsFocused(this))
                 {
@@ -802,7 +802,7 @@ namespace CreativeAI.UI
             if (_selectedMaterialSlotIndex < 0 || !SlotKeyboardFocus.IsFocused(this))
                 return;
 
-            if (UiInputActionMap.TryReadDiscreteMove(out Vector2Int step))
+            if (UIInputActionMap.TryReadDiscreteMove(out Vector2Int step))
             {
                 if (step.x != 0)
                 {
@@ -818,7 +818,7 @@ namespace CreativeAI.UI
                         _inventory.SelectFirstVisibleSlotAndClaimFocus();
                 }
             }
-            else if (UiInputActionMap.WasSubmitPressedThisFrame())
+            else if (UIInputActionMap.WasSubmitPressedThisFrame())
             {
                 if (_materials[_selectedMaterialSlotIndex] != null)
                     ClearSlotAnimated(_selectedMaterialSlotIndex);

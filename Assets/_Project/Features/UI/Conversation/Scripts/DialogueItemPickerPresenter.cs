@@ -106,14 +106,14 @@ namespace CreativeAI.UI
             if (_root == null || _actions.Count == 0)
                 return;
 
-            if (UiInputActionMap.WasCancelPressedThisFrame())
+            if (UIInputActionMap.WasCancelPressedThisFrame())
             {
                 _actions[^1].Invoke();
                 return;
             }
-            if (UiInputActionMap.TryReadDiscreteMove(out Vector2Int step))
+            if (UIInputActionMap.TryReadDiscreteMove(out Vector2Int step))
                 Select(ItemPickerGridNavigation.Move(_selectedIndex, step, ItemCount, Columns));
-            if (UiInputActionMap.WasSubmitPressedThisFrame() && _selectedIndex >= 0)
+            if (UIInputActionMap.WasSubmitPressedThisFrame() && _selectedIndex >= 0)
                 _actions[_selectedIndex].Invoke();
         }
 

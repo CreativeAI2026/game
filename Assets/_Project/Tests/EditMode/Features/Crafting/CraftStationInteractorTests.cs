@@ -21,13 +21,13 @@ namespace CreativeAI.Tests.EditMode
             _go = new GameObject("CraftStation", typeof(BoxCollider));
             _interactor = _go.AddComponent<CraftStationInteractor>();
             _requests = 0;
-            CraftUiRequestService.Requested += CountRequest;
+            CraftUIRequestService.Requested += CountRequest;
         }
 
         [TearDown]
         public void TearDown()
         {
-            CraftUiRequestService.Requested -= CountRequest;
+            CraftUIRequestService.Requested -= CountRequest;
             InteractPromptService.Clear();
             EventPlaybackService.SetPlaying(false);
             Object.DestroyImmediate(_go);

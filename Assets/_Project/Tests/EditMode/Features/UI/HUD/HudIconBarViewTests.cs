@@ -105,15 +105,15 @@ namespace CreativeAI.Tests.EditMode
         [Test]
         public void BattleStarts_ClosesOpenPanel()
         {
-            var routerGo = new GameObject("UiRouter");
+            var routerGo = new GameObject("UIRouter");
             var panel = new GameObject("InventoryUI");
             try
             {
-                var router = routerGo.AddComponent<UiRouter>();
+                var router = routerGo.AddComponent<UIRouter>();
                 TestReflection.SetField(router, "_inventoryUI", panel);
                 TestReflection.Invoke(router, "Awake");
                 TestReflection.SetField(_bar, "_router", router);
-                router.Open(UiRouter.UiId.Inventory);
+                router.Open(UIRouter.UIId.Inventory);
 
                 _gmm.EnterBattle();
 
@@ -121,7 +121,7 @@ namespace CreativeAI.Tests.EditMode
             }
             finally
             {
-                UiPanelService.ResetState();
+                UIPanelService.ResetState();
                 Object.DestroyImmediate(panel);
                 Object.DestroyImmediate(routerGo);
             }
@@ -160,14 +160,14 @@ namespace CreativeAI.Tests.EditMode
             }
         }
 
-        // キー(PlayerUiInput のイベント)で開閉する。購読先の選び方ではなく、押されたときの判定を検証する。
-        private void WithRouter(System.Action<UiRouter, GameObject> body)
+        // キー(PlayerUIInput のイベント)で開閉する。購読先の選び方ではなく、押されたときの判定を検証する。
+        private void WithRouter(System.Action<UIRouter, GameObject> body)
         {
-            var routerGo = new GameObject("UiRouter");
+            var routerGo = new GameObject("UIRouter");
             var panel = new GameObject("InventoryUI");
             try
             {
-                var router = routerGo.AddComponent<UiRouter>();
+                var router = routerGo.AddComponent<UIRouter>();
                 TestReflection.SetField(router, "_inventoryUI", panel);
                 TestReflection.Invoke(router, "Awake");
                 TestReflection.SetField(_bar, "_router", router);
@@ -175,7 +175,7 @@ namespace CreativeAI.Tests.EditMode
             }
             finally
             {
-                UiPanelService.ResetState();
+                UIPanelService.ResetState();
                 Object.DestroyImmediate(panel);
                 Object.DestroyImmediate(routerGo);
             }
@@ -202,7 +202,7 @@ namespace CreativeAI.Tests.EditMode
             WithRouter(
                 (router, panel) =>
                 {
-                    router.Open(UiRouter.UiId.Inventory);
+                    router.Open(UIRouter.UIId.Inventory);
 
                     TestReflection.Invoke(_bar, "OnCancelPressed");
 

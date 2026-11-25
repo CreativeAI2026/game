@@ -6,15 +6,15 @@ namespace CreativeAI.UI
 {
     /// <summary>
     /// 画面右上の円形ナビ(キャラ / インベ / セーブ)。HP の HUD とは別 Canvas(HP は入力を受けず頻繁に更新されるため)。
-    /// ボタンで <see cref="UiRouter.Toggle"/> を呼び、<see cref="GameModeManager.OnModeChanged"/> を購読して Field=表示 / Battle=非表示 を自分で切り替える。
+    /// ボタンで <see cref="UIRouter.Toggle"/> を呼び、<see cref="GameModeManager.OnModeChanged"/> を購読して Field=表示 / Battle=非表示 を自分で切り替える。
     /// 表示中はキーでも開ける(C=キャラ / I=インベ / M=全画面マップ、UI マップの Cancel で閉じる)。キー入力は PlayerInputActions のアクションで、
-    /// プレイヤーの <see cref="PlayerUiInput"/> から受け取る(プレイヤーは実行時生成なので <see cref="PlayerRegistry"/> 経由)。
+    /// プレイヤーの <see cref="PlayerUIInput"/> から受け取る(プレイヤーは実行時生成なので <see cref="PlayerRegistry"/> 経由)。
     /// 隠れるとき(戦闘・会話の開始)は開いているパネルも閉じる。
     /// </summary>
     public sealed class HudIconBarView : MonoBehaviour
     {
         [SerializeField]
-        private UiRouter _router;
+        private UIRouter _router;
 
         [SerializeField]
         private Button _characterButton;
@@ -30,19 +30,19 @@ namespace CreativeAI.UI
         private CanvasGroup _group;
 
         private GameModeManager _gameMode;
-        private PlayerUiInput _uiInput;
+        private PlayerUIInput _uiInput;
         private bool _shown;
 
         private void Awake()
         {
             if (_group == null)
-                _group = ResidentUiVisibility.GetOrAddGroup(gameObject);
+                _group = ResidentUIVisibility.GetOrAddGroup(gameObject);
             if (_router == null)
-                _router = GetComponentInParent<UiRouter>(true); // 親 UIRoot の排他ルータ
+                _router = GetComponentInParent<UIRouter>(true); // 親 UIRoot の排他ルータ
 
-            Bind(_characterButton, UiRouter.UiId.Character);
-            Bind(_inventoryButton, UiRouter.UiId.Inventory);
-            Bind(_saveButton, UiRouter.UiId.Save);
+            Bind(_characterButton, UIRouter.UIId.Character);
+            Bind(_inventoryButton, UIRouter.UIId.Inventory);
+            Bind(_saveButton, UIRouter.UIId.Save);
         }
 
         private void OnEnable()
@@ -79,7 +79,7 @@ namespace CreativeAI.UI
                 _uiInput.CancelPressed -= OnCancelPressed;
             }
 
-            _uiInput = player != null ? player.GetComponent<PlayerUiInput>() : null;
+            _uiInput = player != null ? player.GetComponent<PlayerUIInput>() : null;
 
             if (_uiInput != null)
             {
@@ -91,22 +91,22 @@ namespace CreativeAI.UI
             }
         }
 
-        private void Bind(Button button, UiRouter.UiId id)
+        private void Bind(Button button, UIRouter.UIId id)
         {
             if (button == null || _router == null)
                 return;
             button.onClick.AddListener(() => _router.Toggle(id));
         }
 
-        private void OnCharacterPressed() => ToggleByKey(UiRouter.UiId.Character);
+        private void OnCharacterPressed() => ToggleByKey(UIRouter.UIId.Character);
 
-        private void OnInventoryPressed() => ToggleByKey(UiRouter.UiId.Inventory);
+        private void OnInventoryPressed() => ToggleByKey(UIRouter.UIId.Inventory);
 
-        private void OnSavePressed() => ToggleByKey(UiRouter.UiId.Save);
+        private void OnSavePressed() => ToggleByKey(UIRouter.UIId.Save);
 
-        private void OnMapPressed() => ToggleByKey(UiRouter.UiId.Map);
+        private void OnMapPressed() => ToggleByKey(UIRouter.UIId.Map);
 
-        private void ToggleByKey(UiRouter.UiId id)
+        private void ToggleByKey(UIRouter.UIId id)
         {
             if (_shown && _router != null)
                 _router.Toggle(id);

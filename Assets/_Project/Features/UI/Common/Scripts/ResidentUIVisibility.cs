@@ -6,7 +6,7 @@ namespace CreativeAI.UI
     /// 常駐UIの出し入れ。GameObject ごと止めると購読が切れて戻れないため、CanvasGroup で透明・入力なしにして生かしたまま隠す。
     /// Canvas は UIRoot 側の入れ物が持つので、中身はこの CanvasGroup で出し入れする。
     /// </summary>
-    public static class ResidentUiVisibility
+    public static class ResidentUIVisibility
     {
         /// <summary>自分の CanvasGroup を返す。無ければ付ける(Prefab に置き忘れても隠せるように)。</summary>
         public static CanvasGroup GetOrAddGroup(GameObject owner) =>

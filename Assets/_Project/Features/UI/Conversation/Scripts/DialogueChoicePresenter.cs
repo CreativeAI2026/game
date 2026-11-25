@@ -146,7 +146,7 @@ namespace CreativeAI.UI
             if (_spawned.Count == 0)
                 return;
 
-            if (UiInputActionMap.TryReadDiscreteMove(out Vector2Int step))
+            if (UIInputActionMap.TryReadDiscreteMove(out Vector2Int step))
             {
                 if (step.y > 0)
                     SelectRelative(-1);
@@ -154,7 +154,7 @@ namespace CreativeAI.UI
                     SelectRelative(1);
             }
 
-            if (UiInputActionMap.WasSubmitPressedThisFrame())
+            if (UIInputActionMap.WasSubmitPressedThisFrame())
             {
                 if (_selectedIndex < 0)
                     Select(0);

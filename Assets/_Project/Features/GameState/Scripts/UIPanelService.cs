@@ -6,7 +6,7 @@ namespace CreativeAI.Gameplay
     /// 操作で開くUI(キャラ / インベ / セーブ / 調合 / マップ)のどれかが開いているかを伝える静的サービス。
     /// プレイヤー(Gameplay)は UI を参照できないので、UI 側が書き込み、プレイヤー側は購読して操作を止める・カーソルを出す。
     /// </summary>
-    public static class UiPanelService
+    public static class UIPanelService
     {
         public static bool IsOpen { get; private set; }
         public static event System.Action<bool> OpenChanged;

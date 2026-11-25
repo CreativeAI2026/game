@@ -25,7 +25,7 @@ namespace CreativeAI.Tests.PlayMode
 
         private GameObject _player;
         private WeaponManager _manager;
-        private UiRouter _router;
+        private UIRouter _router;
         private CharacterPreviewController _controller;
         private ModelPreview _character;
         private ModelPreview _weapon;
@@ -54,9 +54,9 @@ namespace CreativeAI.Tests.PlayMode
             );
             _player = PlayerRegistry.Current.gameObject;
             _manager = _player.GetComponent<WeaponManager>();
-            _router = UIRoot.Instance.GetComponentInChildren<UiRouter>(true);
+            _router = UIRoot.Instance.GetComponentInChildren<UIRouter>(true);
             Assert.NotNull(_router);
-            _router.Open(UiRouter.UiId.Character);
+            _router.Open(UIRouter.UIId.Character);
             yield return null;
             _controller = UIRoot.Instance.GetComponentInChildren<CharacterPreviewController>(true);
             Assert.NotNull(_controller, "CharacterPanel Prefab にプレビューの参照が入っている");
@@ -459,7 +459,7 @@ namespace CreativeAI.Tests.PlayMode
             Assert.False(oldTexture.IsCreated());
 
             yield return null;
-            _router.Open(UiRouter.UiId.Character);
+            _router.Open(UIRouter.UIId.Character);
             yield return PlayModeWait.Until(
                 () => _character.Texture != null && _character.MeshCount > 0,
                 "開き直したプレビュー"

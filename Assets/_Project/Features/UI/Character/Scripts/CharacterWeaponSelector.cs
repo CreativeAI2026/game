@@ -137,7 +137,7 @@ namespace CreativeAI.UI
             if (_weapons.Count <= 1)
                 return;
 
-            if (!UiInputActionMap.TryReadDiscreteMove(out Vector2Int step))
+            if (!UIInputActionMap.TryReadDiscreteMove(out Vector2Int step))
                 return;
 
             int direction = step.x != 0 ? step.x : -step.y;
@@ -214,7 +214,7 @@ namespace CreativeAI.UI
                         label.color =
                             weapon == selectedWeapon
                                 ? Color.white
-                                : UiVisualTheme.Muted * new Color(.7f, .7f, .7f, 1);
+                                : UIVisualTheme.Muted * new Color(.7f, .7f, .7f, 1);
                 }
             }
 

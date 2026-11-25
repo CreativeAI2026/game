@@ -12,7 +12,7 @@ namespace CreativeAI.UI
     /// 全画面マップ(M で開く)。北を上に固定し、1つの階の全体が画面に収まるように描いて、プレイヤーの現在地とマップピンを重ねる。
     /// 右の階ボタン(建物ごとに上の階から並ぶ)や上下キーで別の階を見られる(階を替えるたびに全体表示に戻る)。
     /// ホイールで拡大・縮小、ドラッグで移動でき、ピンにマウスを乗せると階と距離を出す。
-    /// ダブルクリックで閉じる(M・Esc では <see cref="UiRouter"/> 側が閉じる)。
+    /// ダブルクリックで閉じる(M・Esc では <see cref="UIRouter"/> 側が閉じる)。
     /// </summary>
     public sealed class MapScreenView
         : MonoBehaviour,
@@ -331,7 +331,7 @@ namespace CreativeAI.UI
         private void HandleFloorInput(float scroll)
         {
             var step = 0;
-            if (UiInputActionMap.TryReadDiscreteMove(out var move) && move.y != 0)
+            if (UIInputActionMap.TryReadDiscreteMove(out var move) && move.y != 0)
                 step = -move.y;
             if (scroll != 0f)
                 step = scroll > 0f ? -1 : 1;
@@ -364,7 +364,7 @@ namespace CreativeAI.UI
         public void OnPointerClick(PointerEventData eventData)
         {
             if (eventData.button == PointerEventData.InputButton.Left && eventData.clickCount >= 2)
-                gameObject.SetActive(false); // UiRouter はパネルのオン・オフの通知を受けるので、ここで閉じてよい
+                gameObject.SetActive(false); // UIRouter はパネルのオン・オフの通知を受けるので、ここで閉じてよい
         }
 
         private void CreateFloorButtons()

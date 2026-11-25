@@ -15,14 +15,14 @@ namespace CreativeAI.UI
         private TextMeshProUGUI _label;
 
         private CanvasGroup _group;
-        private UiRouter _router;
+        private UIRouter _router;
         private GameModeManager _gameMode;
         private string _current;
 
         private void Awake()
         {
-            _group = ResidentUiVisibility.GetOrAddGroup(gameObject);
-            _router = GetComponentInParent<UiRouter>(true);
+            _group = ResidentUIVisibility.GetOrAddGroup(gameObject);
+            _router = GetComponentInParent<UIRouter>(true);
         }
 
         private void OnEnable()
@@ -34,7 +34,7 @@ namespace CreativeAI.UI
             if (_gameMode != null)
                 _gameMode.OnModeChanged += OnModeChanged;
             EventPlaybackService.PlayingChanged += OnPlaybackChanged;
-            UiPanelService.OpenChanged += OnPanelOpenChanged;
+            UIPanelService.OpenChanged += OnPanelOpenChanged;
             Apply();
         }
 
@@ -44,7 +44,7 @@ namespace CreativeAI.UI
             if (_gameMode != null)
                 _gameMode.OnModeChanged -= OnModeChanged;
             EventPlaybackService.PlayingChanged -= OnPlaybackChanged;
-            UiPanelService.OpenChanged -= OnPanelOpenChanged;
+            UIPanelService.OpenChanged -= OnPanelOpenChanged;
         }
 
         private void OnLabelChanged(string label)

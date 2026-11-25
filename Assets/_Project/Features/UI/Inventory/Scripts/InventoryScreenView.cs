@@ -38,8 +38,8 @@ namespace CreativeAI.UI
         private int _lastCount = -1;
         private InventoryManager _manager;
         private Tween _cursorTween;
-        private static readonly Color Ink = UiVisualTheme.Ink;
-        private static readonly Color Gold = UiVisualTheme.Gold;
+        private static readonly Color Ink = UIVisualTheme.Ink;
+        private static readonly Color Gold = UIVisualTheme.Gold;
 
         private void OnEnable()
         {
@@ -78,13 +78,13 @@ namespace CreativeAI.UI
         {
             if (_tabs != null && _tabs.ButtonCount > 1)
             {
-                if (UiInputActionMap.WasPressedThisFrame(UiInputActionMap.TabPrev))
+                if (UIInputActionMap.WasPressedThisFrame(UIInputActionMap.TabPrev))
                 {
                     _tabs.SelectTab(
                         (_tabs.CurrentIndex - 1 + _tabs.ButtonCount) % _tabs.ButtonCount
                     );
                 }
-                else if (UiInputActionMap.WasPressedThisFrame(UiInputActionMap.TabNext))
+                else if (UIInputActionMap.WasPressedThisFrame(UIInputActionMap.TabNext))
                 {
                     _tabs.SelectTab((_tabs.CurrentIndex + 1) % _tabs.ButtonCount);
                 }
@@ -134,7 +134,7 @@ namespace CreativeAI.UI
             _useButton.gameObject.SetActive(canUse);
             _useButton.interactable = canUse;
             if (_useLabel != null)
-                _useLabel.color = canUse ? UiVisualTheme.ActionInk : UiVisualTheme.Muted;
+                _useLabel.color = canUse ? UIVisualTheme.ActionInk : UIVisualTheme.Muted;
         }
 
         private void OnTabSelected(int index, TabDefinition definition)

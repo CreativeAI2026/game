@@ -115,7 +115,7 @@ namespace CreativeAI.UI
         private void Awake()
         {
             if (_group == null)
-                _group = ResidentUiVisibility.GetOrAddGroup(gameObject);
+                _group = ResidentUIVisibility.GetOrAddGroup(gameObject);
         }
 
         private void Start()

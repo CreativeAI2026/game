@@ -12,9 +12,9 @@ namespace CreativeAI.UI
     /// UI 入力（移動・決定・キャンセル・タブ切替・会話ショートカット等）を取得する。
     /// 各 UI クラスが物理デバイス（Keyboard / Gamepad / Mouse）を直接参照せず、InputSystem と EventSystem ベースで入力を扱うための窓口。
     /// </summary>
-    public static class UiInputActionMap
+    public static class UIInputActionMap
     {
-        public const string UiMapName = "UI";
+        public const string UIMapName = "UI";
         public const string Navigate = "Navigate";
         public const string Submit = "Submit";
         public const string Cancel = "Cancel";
@@ -63,7 +63,7 @@ namespace CreativeAI.UI
 
         public static bool WasSubmitPressedThisFrame()
         {
-            var module = GetUiInputModule();
+            var module = GetUIInputModule();
             var submitAction =
                 module != null && module.submit != null ? module.submit.action : null;
             submitAction ??= ResolveAction(Submit);
@@ -72,7 +72,7 @@ namespace CreativeAI.UI
 
         public static bool WasCancelPressedThisFrame()
         {
-            var module = GetUiInputModule();
+            var module = GetUIInputModule();
             var cancelAction =
                 module != null && module.cancel != null ? module.cancel.action : null;
             cancelAction ??= ResolveAction(Cancel);
@@ -81,7 +81,7 @@ namespace CreativeAI.UI
 
         public static bool WasClickPressedThisFrame()
         {
-            var module = GetUiInputModule();
+            var module = GetUIInputModule();
             var clickAction =
                 module != null && module.leftClick != null ? module.leftClick.action : null;
             clickAction ??= ResolveAction(Click);
@@ -90,7 +90,7 @@ namespace CreativeAI.UI
 
         public static bool IsClickPressed()
         {
-            var module = GetUiInputModule();
+            var module = GetUIInputModule();
             var clickAction =
                 module != null && module.leftClick != null ? module.leftClick.action : null;
             clickAction ??= ResolveAction(Click);
@@ -99,7 +99,7 @@ namespace CreativeAI.UI
 
         public static bool TryReadPointerPosition(out Vector2 position)
         {
-            var module = GetUiInputModule();
+            var module = GetUIInputModule();
             var pointAction = module != null && module.point != null ? module.point.action : null;
             pointAction ??= ResolveAction(Point);
             if (pointAction != null)
@@ -114,7 +114,7 @@ namespace CreativeAI.UI
 
         public static Vector2 ReadNavigate()
         {
-            var module = GetUiInputModule();
+            var module = GetUIInputModule();
             var moveAction = module != null && module.move != null ? module.move.action : null;
             moveAction ??= ResolveAction(Navigate);
             return moveAction != null ? moveAction.ReadValue<Vector2>() : Vector2.zero;
@@ -162,7 +162,7 @@ namespace CreativeAI.UI
                 return;
             }
 
-            var module = GetUiInputModule();
+            var module = GetUIInputModule();
             float repeatDelay = module != null ? module.moveRepeatDelay : DefaultRepeatDelay;
             float repeatRate = module != null ? module.moveRepeatRate : DefaultRepeatRate;
 
@@ -184,7 +184,7 @@ namespace CreativeAI.UI
             _frameDiscreteStep = Vector2Int.zero;
         }
 
-        private static InputSystemUIInputModule GetUiInputModule()
+        private static InputSystemUIInputModule GetUIInputModule()
         {
             var eventSystem = EventSystem.current;
             if (eventSystem == null)
@@ -198,14 +198,14 @@ namespace CreativeAI.UI
 
         private static InputAction ResolveAction(string actionName)
         {
-            var module = GetUiInputModule();
+            var module = GetUIInputModule();
             if (module != null && module.actionsAsset != null)
             {
                 var asset = module.actionsAsset;
                 if (asset != _cachedAsset)
                 {
                     _cachedAsset = asset;
-                    _cachedUiMap = asset.FindActionMap(UiMapName, false);
+                    _cachedUiMap = asset.FindActionMap(UIMapName, false);
                     _cachedActions.Clear();
                 }
                 if (_cachedUiMap != null)
@@ -229,7 +229,7 @@ namespace CreativeAI.UI
                 && playerInput.actions != null
             )
             {
-                var uiMap = playerInput.actions.FindActionMap(UiMapName, false);
+                var uiMap = playerInput.actions.FindActionMap(UIMapName, false);
                 var action = uiMap?.FindAction(actionName, false);
                 if (action != null)
                 {
@@ -251,7 +251,7 @@ namespace CreativeAI.UI
                 return _fallbackMap;
             }
 
-            _fallbackMap = new InputActionMap(UiMapName);
+            _fallbackMap = new InputActionMap(UIMapName);
 
             var nav = _fallbackMap.AddAction(Navigate, InputActionType.PassThrough);
             nav.AddBinding("<Gamepad>/dpad");

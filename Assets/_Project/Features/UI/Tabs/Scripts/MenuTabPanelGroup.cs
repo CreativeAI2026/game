@@ -73,9 +73,9 @@ namespace CreativeAI.UI
             if (_tabs.Count <= 1)
                 return;
 
-            if (UiInputActionMap.WasPressedThisFrame(UiInputActionMap.TabPrev))
+            if (UIInputActionMap.WasPressedThisFrame(UIInputActionMap.TabPrev))
                 Select((CurrentIndex - 1 + _tabs.Count) % _tabs.Count);
-            else if (UiInputActionMap.WasPressedThisFrame(UiInputActionMap.TabNext))
+            else if (UIInputActionMap.WasPressedThisFrame(UIInputActionMap.TabNext))
                 Select((CurrentIndex + 1) % _tabs.Count);
         }
 

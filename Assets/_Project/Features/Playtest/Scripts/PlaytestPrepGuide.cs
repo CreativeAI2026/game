@@ -44,7 +44,7 @@ namespace CreativeAI.Playtest
 
         private void OnGUI()
         {
-            if (_arena.HasStarted || UiPanelService.IsOpen)
+            if (_arena.HasStarted || UIPanelService.IsOpen)
                 return;
 
             _style ??= new GUIStyle(GUI.skin.box)

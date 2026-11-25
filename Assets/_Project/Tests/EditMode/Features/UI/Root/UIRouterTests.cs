@@ -8,12 +8,12 @@ namespace CreativeAI.Tests.EditMode
     /// <summary>
     /// 操作で開く UI(キャラ / インベ / セーブ / 調合)が1つずつしか開かないことの検証。
     /// 開くのは常に1つで、別のを開くと前のが閉じる。
-    /// どれかが開いているかは UiPanelService に伝わる(プレイヤーの操作を止めるため)。
+    /// どれかが開いているかは UIPanelService に伝わる(プレイヤーの操作を止めるため)。
     /// </summary>
-    public class UiRouterTests
+    public class UIRouterTests
     {
         private GameObject _rootGo;
-        private UiRouter _router;
+        private UIRouter _router;
         private GameObject _character;
         private GameObject _inventory;
         private GameObject _save;
@@ -23,7 +23,7 @@ namespace CreativeAI.Tests.EditMode
         public void SetUp()
         {
             _rootGo = new GameObject("UIRoot");
-            _router = _rootGo.AddComponent<UiRouter>();
+            _router = _rootGo.AddComponent<UIRouter>();
 
             _character = new GameObject("CharacterUI");
             _inventory = new GameObject("InventoryUI");
@@ -62,7 +62,7 @@ namespace CreativeAI.Tests.EditMode
         [Test]
         public void Open_ShowsOnlyTheRequestedPanel()
         {
-            _router.Open(UiRouter.UiId.Inventory);
+            _router.Open(UIRouter.UIId.Inventory);
 
             Assert.IsTrue(_inventory.activeSelf);
             Assert.IsFalse(_character.activeSelf);
@@ -74,8 +74,8 @@ namespace CreativeAI.Tests.EditMode
         [Test]
         public void Open_Another_ClosesThePrevious()
         {
-            _router.Open(UiRouter.UiId.Inventory);
-            _router.Open(UiRouter.UiId.Save);
+            _router.Open(UIRouter.UIId.Inventory);
+            _router.Open(UIRouter.UIId.Save);
 
             Assert.IsFalse(_inventory.activeSelf, "排他: 前のパネルは閉じる");
             Assert.IsTrue(_save.activeSelf);
@@ -84,8 +84,8 @@ namespace CreativeAI.Tests.EditMode
         [Test]
         public void Open_None_ClosesAll()
         {
-            _router.Open(UiRouter.UiId.Craft);
-            _router.Open(UiRouter.UiId.None);
+            _router.Open(UIRouter.UIId.Craft);
+            _router.Open(UIRouter.UIId.None);
 
             Assert.IsFalse(_router.IsAnyPanelOpen);
         }
@@ -93,7 +93,7 @@ namespace CreativeAI.Tests.EditMode
         [Test]
         public void CloseAll_ClosesEveryPanel()
         {
-            _router.Open(UiRouter.UiId.Character);
+            _router.Open(UIRouter.UIId.Character);
 
             _router.CloseAll();
 
@@ -103,19 +103,19 @@ namespace CreativeAI.Tests.EditMode
         [Test]
         public void Toggle_OpensThenClosesTheSamePanel()
         {
-            _router.Toggle(UiRouter.UiId.Character);
+            _router.Toggle(UIRouter.UIId.Character);
             Assert.IsTrue(_character.activeSelf);
 
-            _router.Toggle(UiRouter.UiId.Character);
+            _router.Toggle(UIRouter.UIId.Character);
             Assert.IsFalse(_character.activeSelf, "同じものを押したら閉じる");
         }
 
         [Test]
         public void Toggle_SwitchesWhenAnotherPanelIsOpen()
         {
-            _router.Open(UiRouter.UiId.Character);
+            _router.Open(UIRouter.UIId.Character);
 
-            _router.Toggle(UiRouter.UiId.Inventory);
+            _router.Toggle(UIRouter.UIId.Inventory);
 
             Assert.IsFalse(_character.activeSelf);
             Assert.IsTrue(_inventory.activeSelf);
@@ -125,10 +125,10 @@ namespace CreativeAI.Tests.EditMode
         public void Toggle_AfterPanelClosedItself_ReopensIt()
         {
             // パネル側の戻るボタンで閉じた状態(activeSelf=false)からでも整合する。
-            _router.Open(UiRouter.UiId.Save);
+            _router.Open(UIRouter.UIId.Save);
             _save.SetActive(false);
 
-            _router.Toggle(UiRouter.UiId.Save);
+            _router.Toggle(UIRouter.UIId.Save);
 
             Assert.IsTrue(_save.activeSelf);
         }
@@ -139,9 +139,9 @@ namespace CreativeAI.Tests.EditMode
             TestReflection.Invoke(_router, "OnEnable");
             try
             {
-                _router.Open(UiRouter.UiId.Inventory);
+                _router.Open(UIRouter.UIId.Inventory);
 
-                CraftUiRequestService.Request();
+                CraftUIRequestService.Request();
 
                 Assert.IsTrue(_craft.activeSelf);
                 Assert.IsFalse(_inventory.activeSelf, "排他: 前のパネルは閉じる");
@@ -158,7 +158,7 @@ namespace CreativeAI.Tests.EditMode
             TestReflection.Invoke(_router, "OnEnable");
             TestReflection.Invoke(_router, "OnDisable");
 
-            CraftUiRequestService.Request();
+            CraftUIRequestService.Request();
 
             Assert.IsFalse(_craft.activeSelf);
         }
@@ -169,13 +169,13 @@ namespace CreativeAI.Tests.EditMode
             var noCraftGo = new GameObject("UIRootWithoutCraft");
             try
             {
-                var router = noCraftGo.AddComponent<UiRouter>(); // 調合パネル未割当のルーター
+                var router = noCraftGo.AddComponent<UIRouter>(); // 調合パネル未割当のルーター
                 TestReflection.SetField(router, "_inventoryUI", _inventory);
                 TestReflection.Invoke(router, "Awake");
                 TestReflection.Invoke(router, "OnEnable");
-                router.Open(UiRouter.UiId.Inventory);
+                router.Open(UIRouter.UIId.Inventory);
 
-                CraftUiRequestService.Request();
+                CraftUIRequestService.Request();
 
                 Assert.IsTrue(_inventory.activeSelf);
                 TestReflection.Invoke(router, "OnDisable");
@@ -189,41 +189,41 @@ namespace CreativeAI.Tests.EditMode
         [Test]
         public void Open_TellsUiPanelServiceItIsOpen()
         {
-            _router.Open(UiRouter.UiId.Character);
+            _router.Open(UIRouter.UIId.Character);
 
-            Assert.IsTrue(UiPanelService.IsOpen);
+            Assert.IsTrue(UIPanelService.IsOpen);
         }
 
         [Test]
         public void CloseAll_TellsUiPanelServiceItIsClosed()
         {
-            _router.Open(UiRouter.UiId.Character);
+            _router.Open(UIRouter.UIId.Character);
 
             _router.CloseAll();
 
-            Assert.IsFalse(UiPanelService.IsOpen);
+            Assert.IsFalse(UIPanelService.IsOpen);
         }
 
         [Test]
         public void Toggle_Closing_TellsUiPanelServiceItIsClosed()
         {
-            _router.Toggle(UiRouter.UiId.Inventory);
-            _router.Toggle(UiRouter.UiId.Inventory);
+            _router.Toggle(UIRouter.UIId.Inventory);
+            _router.Toggle(UIRouter.UIId.Inventory);
 
-            Assert.IsFalse(UiPanelService.IsOpen);
+            Assert.IsFalse(UIPanelService.IsOpen);
         }
 
         [Test]
         public void PanelClosedItself_IsPickedUpByActivityRelay()
         {
             // 戻るボタンはルータを通らずに SetActive(false) で閉じる。
-            _router.Open(UiRouter.UiId.Save);
+            _router.Open(UIRouter.UIId.Save);
             _save.SetActive(false);
 
             // EditMode では OnDisable が自動で走らないので、パネルに付いた通知役を明示的に呼ぶ。
-            TestReflection.Invoke(_save.GetComponent<UiPanelActivityRelay>(), "OnDisable");
+            TestReflection.Invoke(_save.GetComponent<UIPanelActivityRelay>(), "OnDisable");
 
-            Assert.IsFalse(UiPanelService.IsOpen);
+            Assert.IsFalse(UIPanelService.IsOpen);
         }
 
         [Test]
@@ -233,11 +233,11 @@ namespace CreativeAI.Tests.EditMode
             var go = new GameObject("Router2");
             try
             {
-                var router = go.AddComponent<UiRouter>();
+                var router = go.AddComponent<UIRouter>();
                 TestReflection.SetField(router, "_characterUI", _character);
                 TestReflection.Invoke(router, "Awake");
 
-                Assert.DoesNotThrow(() => router.Open(UiRouter.UiId.Craft));
+                Assert.DoesNotThrow(() => router.Open(UIRouter.UIId.Craft));
                 Assert.IsFalse(router.IsAnyPanelOpen);
             }
             finally

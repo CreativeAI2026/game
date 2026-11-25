@@ -6,16 +6,16 @@ namespace CreativeAI.Gameplay
 {
     /// <summary>
     /// 画面(キャラ / インベ / マップ)を開閉する入力の受け口と、UI 操作が必要な場面のアクションマップ切替を担う。
-    /// 操作で開くUIの表示中(<see cref="UiPanelService.IsOpen"/>)と会話イベント中(<see cref="EventPlaybackService.BlocksPlayerControl"/>)は
+    /// 操作で開くUIの表示中(<see cref="UIPanelService.IsOpen"/>)と会話イベント中(<see cref="EventPlaybackService.BlocksPlayerControl"/>)は
     /// PlayerInput を UI マップへ、どちらも終わったら Player マップへ戻す。
     /// C / I / M は両マップに同名のアクションがあるので、どちらのマップでも同じメッセージ(OnCharacter / OnInventory / OnMap)で届く。
     /// どのパネルを開くかは UI 側(HudIconBarView)が決める(プレイヤーは UI を知らない)。
     /// </summary>
     [RequireComponent(typeof(PlayerInput))]
-    public sealed class PlayerUiInput : MonoBehaviour
+    public sealed class PlayerUIInput : MonoBehaviour
     {
         private const string PlayerMapName = "Player";
-        private const string UiMapName = "UI";
+        private const string UIMapName = "UI";
 
         /// <summary>キャラ画面の開閉キー(C)が押された。</summary>
         public event Action CharacterPressed;
@@ -52,7 +52,7 @@ namespace CreativeAI.Gameplay
 
         private void OnEnable()
         {
-            UiPanelService.OpenChanged += OnControlStateChanged;
+            UIPanelService.OpenChanged += OnControlStateChanged;
             EventPlaybackService.PlayingChanged += OnControlStateChanged;
             _gameMode = GameModeManager.Instance;
             if (_gameMode != null)
@@ -62,7 +62,7 @@ namespace CreativeAI.Gameplay
 
         private void OnDisable()
         {
-            UiPanelService.OpenChanged -= OnControlStateChanged;
+            UIPanelService.OpenChanged -= OnControlStateChanged;
             EventPlaybackService.PlayingChanged -= OnControlStateChanged;
             if (_gameMode != null)
                 _gameMode.OnModeChanged -= OnModeChanged;
@@ -113,8 +113,8 @@ namespace CreativeAI.Gameplay
         // UI 表示中に Player マップを切ることで、移動・攻撃などが UI 操作中に一切届かないようにする。
         private void ApplyActionMap()
         {
-            bool needsUi = UiPanelService.IsOpen || EventPlaybackService.BlocksPlayerControl;
-            string mapName = needsUi ? UiMapName : PlayerMapName;
+            bool needsUi = UIPanelService.IsOpen || EventPlaybackService.BlocksPlayerControl;
+            string mapName = needsUi ? UIMapName : PlayerMapName;
             if (_playerInput.currentActionMap?.name == mapName)
                 return;
             _playerInput.SwitchCurrentActionMap(mapName);

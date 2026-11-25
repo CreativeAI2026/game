@@ -638,7 +638,7 @@ namespace CreativeAI.UI
             )
                 return;
 
-            if (UiInputActionMap.TryReadDiscreteMove(out Vector2Int step))
+            if (UIInputActionMap.TryReadDiscreteMove(out Vector2Int step))
             {
                 if (step.x < 0)
                     SelectSlotByOffset(-1);
@@ -649,7 +649,7 @@ namespace CreativeAI.UI
                 else if (step.y < 0)
                     SelectSlotVertically(1);
             }
-            else if (UiInputActionMap.WasSubmitPressedThisFrame())
+            else if (UIInputActionMap.WasSubmitPressedThisFrame())
             {
                 SubmitSelectedSlot();
             }

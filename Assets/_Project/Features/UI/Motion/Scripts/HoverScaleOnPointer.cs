@@ -473,7 +473,7 @@ namespace CreativeAI.UI
             if (
                 !_releaseLockOnOutsideClick
                 || !_isLocked
-                || !UiInputActionMap.WasClickPressedThisFrame()
+                || !UIInputActionMap.WasClickPressedThisFrame()
                 || IsPointerOverSelf()
             )
                 return;
@@ -509,7 +509,7 @@ namespace CreativeAI.UI
         {
             if (
                 EventSystem.current == null
-                || !UiInputActionMap.TryReadPointerPosition(out Vector2 pointerPosition)
+                || !UIInputActionMap.TryReadPointerPosition(out Vector2 pointerPosition)
             )
                 return false;
 

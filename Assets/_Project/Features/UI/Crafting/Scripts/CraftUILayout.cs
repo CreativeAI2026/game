@@ -9,7 +9,7 @@ namespace CreativeAI.UI
 {
     /// <summary>Binds the authored CraftPanel prefab without generating UI at runtime.</summary>
     [RequireComponent(typeof(CraftPanelController))]
-    public sealed class CraftUiLayout : MonoBehaviour
+    public sealed class CraftUILayout : MonoBehaviour
     {
         [SerializeField]
         private Image _predictionIcon;
@@ -167,14 +167,14 @@ namespace CreativeAI.UI
 
         private void SetTabColors(bool quick)
         {
-            var active = UiVisualTheme.SelectedTab;
-            var inactive = UiVisualTheme.Tab;
+            var active = UIVisualTheme.SelectedTab;
+            var inactive = UIVisualTheme.Tab;
             _quickButton.targetGraphic.color = quick ? active : inactive;
             _equipmentButton.targetGraphic.color = quick ? inactive : active;
             foreach (var text in _quickButton.GetComponentsInChildren<TMP_Text>(true))
-                text.color = quick ? UiVisualTheme.Gold : UiVisualTheme.Ink;
+                text.color = quick ? UIVisualTheme.Gold : UIVisualTheme.Ink;
             foreach (var text in _equipmentButton.GetComponentsInChildren<TMP_Text>(true))
-                text.color = quick ? UiVisualTheme.Ink : UiVisualTheme.Gold;
+                text.color = quick ? UIVisualTheme.Ink : UIVisualTheme.Gold;
         }
     }
 }

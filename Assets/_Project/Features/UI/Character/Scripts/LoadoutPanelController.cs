@@ -156,7 +156,7 @@ namespace CreativeAI.UI
         private void OnDestroy()
         {
             StopSlotAppearance();
-            UnbindUiEvents();
+            UnbindUIEvents();
             UnbindDataEvents();
         }
 
@@ -203,7 +203,7 @@ namespace CreativeAI.UI
             if (!ValidateRequiredReferences())
                 return false;
 
-            BindUiEvents();
+            BindUIEvents();
 
             if (_inventory != null)
                 _inventory.SetSelectFirstSlotOnRefresh(false);
@@ -448,7 +448,7 @@ namespace CreativeAI.UI
             }
         }
 
-        private void BindUiEvents()
+        private void BindUIEvents()
         {
             if (_eventsBound)
                 return;
@@ -496,7 +496,7 @@ namespace CreativeAI.UI
             _eventsBound = true;
         }
 
-        private void UnbindUiEvents()
+        private void UnbindUIEvents()
         {
             if (!_eventsBound)
                 return;
@@ -674,15 +674,15 @@ namespace CreativeAI.UI
                 return;
 
             if (
-                UiInputActionMap.WasPressedThisFrame(UiInputActionMap.SubTabPrev)
-                || UiInputActionMap.WasPressedThisFrame(UiInputActionMap.SubTabNext)
+                UIInputActionMap.WasPressedThisFrame(UIInputActionMap.SubTabPrev)
+                || UIInputActionMap.WasPressedThisFrame(UIInputActionMap.SubTabNext)
             )
             {
                 SelectFilter(_filter == Filter.Quick ? (int)Filter.Equipment : (int)Filter.Quick);
                 return;
             }
 
-            if (UiInputActionMap.WasPressedThisFrame(UiInputActionMap.AuxAction))
+            if (UIInputActionMap.WasPressedThisFrame(UIInputActionMap.AuxAction))
             {
                 if (SlotKeyboardFocus.IsFocused(this))
                 {
@@ -700,13 +700,13 @@ namespace CreativeAI.UI
             if (!SlotKeyboardFocus.IsFocused(this))
                 return;
 
-            if (UiInputActionMap.TryReadDiscreteMove(out Vector2Int step))
+            if (UIInputActionMap.TryReadDiscreteMove(out Vector2Int step))
             {
                 int delta = step.x != 0 ? step.x : -step.y;
                 if (delta != 0)
                     SelectFocusedAssignmentSlot(delta > 0 ? 1 : -1);
             }
-            else if (UiInputActionMap.WasSubmitPressedThisFrame())
+            else if (UIInputActionMap.WasSubmitPressedThisFrame())
             {
                 ExecuteDetailAction();
             }

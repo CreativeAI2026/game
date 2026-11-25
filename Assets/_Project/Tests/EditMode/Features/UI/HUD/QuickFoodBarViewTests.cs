@@ -15,7 +15,7 @@ namespace CreativeAI.Tests.EditMode
         private readonly TestResidents _residents = new();
         private GameModeManager _gmm;
         private GameObject _rootGo;
-        private UiRouter _router;
+        private UIRouter _router;
         private GameObject _panel;
         private GameObject _barGo;
         private QuickFoodBarView _bar;
@@ -27,7 +27,7 @@ namespace CreativeAI.Tests.EditMode
             _gmm = _residents.Add<GameModeManager>();
 
             _rootGo = new GameObject("UIRoot");
-            _router = _rootGo.AddComponent<UiRouter>();
+            _router = _rootGo.AddComponent<UIRouter>();
             _panel = new GameObject("InventoryUI");
             TestReflection.SetField(_router, "_inventoryUI", _panel);
             TestReflection.Invoke(_router, "Awake"); // パネル登録 + 全閉じ
@@ -105,7 +105,7 @@ namespace CreativeAI.Tests.EditMode
         [Test]
         public void WhenAPanelIsOpen_IsHidden()
         {
-            _router.Open(UiRouter.UiId.Inventory);
+            _router.Open(UIRouter.UIId.Inventory);
 
             Assert.IsFalse(Visible(), "インベ等を開いている間は隠す");
         }
@@ -113,7 +113,7 @@ namespace CreativeAI.Tests.EditMode
         [Test]
         public void AfterClosingPanels_IsShownAgain()
         {
-            _router.Open(UiRouter.UiId.Inventory);
+            _router.Open(UIRouter.UIId.Inventory);
             Assert.IsFalse(Visible());
 
             _router.CloseAll();

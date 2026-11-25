@@ -4,7 +4,8 @@ using UnityEngine.UI;
 
 namespace CreativeAI.UI
 {
-    public sealed class UiActionButtonStyle : MonoBehaviour
+    /// <summary>ボタンが押せるかどうかに合わせて、ボタンの文字の色を切り替える。</summary>
+    public sealed class UIActionButtonStyle : MonoBehaviour
     {
         [SerializeField]
         private Button _button;
@@ -19,7 +20,7 @@ namespace CreativeAI.UI
         private void Refresh()
         {
             if (_button != null && _label != null)
-                _label.color = _button.interactable ? UiVisualTheme.ActionInk : UiVisualTheme.Muted;
+                _label.color = _button.interactable ? UIVisualTheme.ActionInk : UIVisualTheme.Muted;
         }
     }
 }

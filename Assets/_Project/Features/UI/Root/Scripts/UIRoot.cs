@@ -7,7 +7,7 @@ namespace CreativeAI.UI
     /// Title フローで <see cref="EnsureResident"/> により1回だけ生成し DontDestroyOnLoad で常駐させる。状態は保存せず、フィールドシーンには UI を置かない。
     /// 直下は Canvas の入れ物(描画順はここで決める)で、中身は機能ごとの Prefab(Canvas を持たない)を入れる。
     /// Prefab 編集時の注意: 常駐UIは各自の CanvasGroup で出し分けるため、GameObject をオフで保存しない
-    /// (オフで保存すると実行時に二度と表示されない)。オン/オフで開閉するのは <see cref="UiRouter"/> が管理するパネルだけ。
+    /// (オフで保存すると実行時に二度と表示されない)。オン/オフで開閉するのは <see cref="UIRouter"/> が管理するパネルだけ。
     /// </summary>
     public sealed class UIRoot : MonoBehaviour
     {

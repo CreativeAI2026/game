@@ -67,7 +67,7 @@ namespace CreativeAI.UI
 
         private void Update()
         {
-            if (UiInputActionMap.WasPressedThisFrame(UiInputActionMap.DialogueHistory))
+            if (UIInputActionMap.WasPressedThisFrame(UIInputActionMap.DialogueHistory))
             {
                 if (
                     _openButton != null
@@ -76,14 +76,14 @@ namespace CreativeAI.UI
                     control.PlayShortcutFeedback();
                 SetOpen(!IsOpen);
             }
-            else if (IsOpen && UiInputActionMap.WasCancelPressedThisFrame())
+            else if (IsOpen && UIInputActionMap.WasCancelPressedThisFrame())
             {
                 SetOpen(false);
             }
 
             if (IsOpen && _scrollRect != null)
             {
-                float scrollInput = UiInputActionMap.ReadNavigate().y;
+                float scrollInput = UIInputActionMap.ReadNavigate().y;
                 if (Mathf.Abs(scrollInput) >= 0.2f)
                 {
                     float contentHeight = _content != null ? _content.rect.height : 0f;
