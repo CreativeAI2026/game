@@ -9,9 +9,8 @@ namespace CreativeAI.UI
     /// <summary>
     /// マップピンの距離表示と、画面の外にあるピンの方向を示す矢印。
     /// 画面内のピンには頭の上に「23m」と出し、画面外のピンには画面の端に矢印と距離を出す。
-    /// UIRoot の子として常駐し、ピンが無いときは何も出さない。
+    /// UIRoot の MapPinHudUI(Canvas)の中に画面いっぱいに広げて置き、ピンが無いときは何も出さない。
     /// </summary>
-    [RequireComponent(typeof(Canvas))]
     public sealed class MapPinHud : MonoBehaviour
     {
         private const float EdgeMargin = 0.08f; // 画面の端から矢印までの余白(短辺に対する割合)
@@ -45,7 +44,7 @@ namespace CreativeAI.UI
         private void Awake()
         {
             _canvasRoot = (RectTransform)transform;
-            _canvas = GetComponent<Canvas>();
+            _canvas = GetComponentInParent<Canvas>();
         }
 
         private void LateUpdate()
