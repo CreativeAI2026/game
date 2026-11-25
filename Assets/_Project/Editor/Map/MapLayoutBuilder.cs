@@ -76,7 +76,9 @@ namespace CreativeAI.EditorTools
 
         // 外周壁を最上階の壁の上端からさらに伸ばす高さ。屋根(天井)はこの上端に張る。
         // 外周壁のある建物では、最上階の `#` も同じ高さまで伸ばす(内側の壁だけ低いと不揃いに見える)
-        const float PerimeterExtraHeight = 16f;
+        // Area01 は 4F のボス(クラゲ、高さ約 17.5u)が屋根を突き抜けないよう 32u にしている。
+        // 外周ガラスの格子(8u 角)が各階の床の高さにそろうよう、8 の倍数にする
+        const float PerimeterExtraHeight = 32f;
 
         // 外周に開ける出入口。隣の建物へつながる開口で、外周壁をこの階の床の高さから上だけ抜く。
         const char Exit = 'X';
