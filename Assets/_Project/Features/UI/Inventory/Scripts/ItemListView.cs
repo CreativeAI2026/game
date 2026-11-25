@@ -68,9 +68,8 @@ namespace CreativeAI.UI
         private ItemSlot _currentSelectedSlot;
         private ItemStack _selectedStack;
         private readonly List<ItemSlot> _visibleSlots = new();
-        private readonly List<ItemSlot> _pooledSlots = new();
         private readonly HashSet<ItemStack> _craftAssignedStacks = new();
-        private bool _slotPoolInitialized;
+        private ItemSlotPool _slotPool;
         private bool _hasWarnedMissingDetailPanel;
         private bool _hasWarnedMissingItemsProvider;
         private bool _hasWarnedMissingDisplayProvider;
@@ -81,7 +80,7 @@ namespace CreativeAI.UI
         public void SetShowItemCounts(bool show)
         {
             _showItemCounts = show;
-            foreach (var slot in _pooledSlots)
+            foreach (var slot in SlotPool.All)
                 if (slot != null)
                     slot.SetShowCount(show);
         }
@@ -92,6 +91,9 @@ namespace CreativeAI.UI
             if (!enabled)
                 CreativeAI.UI.SlotKeyboardFocus.Release(this);
         }
+
+        private ItemSlotPool SlotPool =>
+            _slotPool ??= new ItemSlotPool(_slotsRoot, _slotPrefab, this);
 
         private void Awake()
         {
@@ -320,7 +322,7 @@ namespace CreativeAI.UI
 
         private ItemSlot CreateSlot(ItemStack stack, int index)
         {
-            var slot = GetSlotFromPool();
+            var slot = SlotPool.Get();
             if (slot == null)
                 return null;
 
@@ -341,49 +343,6 @@ namespace CreativeAI.UI
                 .OnComplete(slot.RefreshCountLayout);
 
             return slot;
-        }
-
-        private ItemSlot GetSlotFromPool()
-        {
-            InitializeSlotPool();
-
-            foreach (var slot in _pooledSlots)
-            {
-                // 表示中のスロットは必ずアクティブなので、非アクティブなら空き
-                if (slot != null && !slot.gameObject.activeSelf)
-                    return slot;
-            }
-
-            var createdObject = Instantiate(_slotPrefab, _slotsRoot, false);
-            if (!createdObject.TryGetComponent(out ItemSlot createdSlot))
-            {
-                Debug.LogError(
-                    $"{nameof(ItemListView)} '{name}' のSlot Prefab '{_slotPrefab.name}'に{nameof(ItemSlot)}がありません。Prefabのルートへ追加してください。",
-                    _slotPrefab
-                );
-                Destroy(createdObject);
-                return null;
-            }
-
-            _pooledSlots.Add(createdSlot);
-            return createdSlot;
-        }
-
-        private void InitializeSlotPool()
-        {
-            if (_slotPoolInitialized || _slotsRoot == null)
-                return;
-
-            _slotPoolInitialized = true;
-            for (int i = 0; i < _slotsRoot.childCount; i++)
-            {
-                var slot = _slotsRoot.GetChild(i).GetComponent<ItemSlot>();
-                if (slot == null || _pooledSlots.Contains(slot))
-                    continue;
-
-                _pooledSlots.Add(slot);
-                ReturnSlotToPool(slot);
-            }
         }
 
         private void RestoreSelectionAfterRefresh()
@@ -474,25 +433,12 @@ namespace CreativeAI.UI
 
         private void ClearSlots()
         {
-            InitializeSlotPool();
+            SlotPool.Initialize();
 
             foreach (var slot in _visibleSlots)
-                ReturnSlotToPool(slot);
+                SlotPool.Return(slot);
 
             _visibleSlots.Clear();
-        }
-
-        private static void ReturnSlotToPool(ItemSlot slot)
-        {
-            if (slot == null)
-                return;
-
-            slot.transform.DOKill();
-            slot.Deselect();
-            slot.SetCraftAssigned(false);
-            slot.SetItem(null);
-            slot.transform.localScale = Vector3.one;
-            slot.gameObject.SetActive(false);
         }
 
         private ItemSlot FindVisibleSlot(ItemStack stack)
