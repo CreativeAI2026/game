@@ -29,6 +29,9 @@ namespace CreativeAI.Gameplay
         /// <summary>全画面マップの開閉キー(M)が押された。</summary>
         public event Action MapPressed;
 
+        /// <summary>ミニマップの拡大・縮小の切り替えキー(Z / 右スティック押し込み)が押された。Player マップのときだけ届く。</summary>
+        public event Action MinimapZoomPressed;
+
         /// <summary>UI マップの Cancel(Esc / B 等)が押された。開いている画面を閉じるのに使う。</summary>
         public event Action CancelPressed;
 
@@ -93,6 +96,12 @@ namespace CreativeAI.Gameplay
         {
             if (value.isPressed)
                 MapPressed?.Invoke();
+        }
+
+        public void OnMinimapZoom(InputValue value)
+        {
+            if (value.isPressed)
+                MinimapZoomPressed?.Invoke();
         }
 
         public void OnCancel(InputValue value)

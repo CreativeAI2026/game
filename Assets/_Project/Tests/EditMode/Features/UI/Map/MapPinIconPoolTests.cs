@@ -8,7 +8,7 @@ namespace CreativeAI.Tests.EditMode
 {
     /// <summary>
     /// マップのピンの記号を、表示中のピンの数だけ出して置き、別の階のピンを薄くすることの検証。
-    /// 記号を使い回しても、担当のピンが替わったときは階を調べ直すことを確かめる。ピンのある階の判定も確かめる。
+    /// 記号を使い回しても、担当のピンが替わったときは階を調べ直すことを確かめる。ピンのある階の判定と、画面上の点から近いピンを探すことも確かめる。
     /// </summary>
     public sealed class MapPinIconPoolTests
     {
@@ -170,12 +170,45 @@ namespace CreativeAI.Tests.EditMode
         }
 
         [Test]
-        public void FindLevelsWithPins_MarksOnlyLevelsThatHavePins()
+        public void TryFindPinAt_ReturnsTheNearestPinWithinRadius()
+        {
+            AddPin(new Vector3(10f, 0f, 20f)); // 1F
+            AddPin(new Vector3(30f, 10f, 40f)); // 2F
+            var pool = new MapPinIconPool(_template);
+            pool.Refresh(_layout, _placement, OtherLevelAlpha);
+
+            var hit = pool.TryFindPinAt(
+                new Vector2(32f, 41f),
+                null,
+                10f,
+                out var anchor,
+                out var level
+            );
+
+            Assert.IsTrue(hit);
+            Assert.AreEqual(new Vector3(30f, 10f, 40f), anchor);
+            Assert.AreEqual(1, level);
+        }
+
+        [Test]
+        public void TryFindPinAt_ReturnsFalse_WhenNoPinIsWithinRadius()
+        {
+            AddPin(new Vector3(10f, 0f, 20f));
+            var pool = new MapPinIconPool(_template);
+            pool.Refresh(_layout, _placement, OtherLevelAlpha);
+
+            Assert.IsFalse(pool.TryFindPinAt(new Vector2(60f, 60f), null, 10f, out _, out _));
+        }
+
+        [Test]
+        public void MarkLevelsWithPins_MarksOnlyLevelsThatHavePins()
         {
             AddPin(new Vector3(30f, 10f, 40f)); // 2F
+            var pool = new MapPinIconPool(_template);
+            pool.Refresh(_layout, _placement, OtherLevelAlpha);
             var hasPin = new[] { true, true };
 
-            MapPinIconPool.FindLevelsWithPins(_layout, hasPin);
+            pool.MarkLevelsWithPins(hasPin);
 
             Assert.IsFalse(hasPin[0]);
             Assert.IsTrue(hasPin[1]);
