@@ -5,12 +5,12 @@ namespace CreativeAI.EditorTools
 {
     /// <summary>
     /// アイテムアイコンPNG(Art/UI/Items 配下)のインポート設定を標準へ自動で揃える AssetPostprocessor(冪等)。
-    /// Sprite / Alpha Is Transparency ON(<see cref="ItemIconTransparencyChecker"/> の期待と一致)、Mip Maps + Trilinear で縮小時のジャギを抑える。
+    /// Sprite / Alpha Is Transparency ON、Mip Maps + Trilinear で縮小時のジャギを抑える。
     /// Inspector で変えても再インポートで戻る。武器プレースホルダ(他班素材)は対象外。
     /// </summary>
     public sealed class ItemIconImportSettings : AssetPostprocessor
     {
-        // 対象フォルダ(アイテムアイコンの置き場)。ItemIconTransparencyChecker と揃える。
+        // 対象フォルダ(アイテムアイコンの置き場)。
         private static readonly string[] TargetFolders =
         {
             "Assets/_Project/Art/UI/Items/Food/",
