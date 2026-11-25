@@ -10,7 +10,7 @@ namespace CreativeAI.UI
 {
     /// <summary>
     /// 全画面マップ(M で開く)。北を上に固定し、1つの階の全体が画面に収まるように描いて、プレイヤーの現在地とマップピンを重ねる。
-    /// 右の階ボタン(建物ごとに上の階から並ぶ)や上下キーで別の階を見られ、「現在地へ」でいる階と全体表示に戻る。
+    /// 右の階ボタン(建物ごとに上の階から並ぶ)や上下キーで別の階を見られる(階を替えるたびに全体表示に戻る)。
     /// ホイールで拡大・縮小、ドラッグで移動でき、ピンにマウスを乗せると階と距離を出す。
     /// ダブルクリックで閉じる(M・Esc では <see cref="UiRouter"/> 側が閉じる)。
     /// </summary>
@@ -124,7 +124,6 @@ namespace CreativeAI.UI
         private bool _dragging;
         private CanvasGroup _viewGroup; // 階を替えたときのフェードに使う
         private float _fadeTime;
-        private Button _returnButton; // 「現在地へ」
         private RectTransform _tooltip; // ピンにマウスを乗せたときの説明
         private TMP_Text _tooltipText;
         private long _tooltipKey = -1; // 説明の文字を作り直すかの判定(階と距離)
@@ -359,22 +358,6 @@ namespace CreativeAI.UI
                 button.PinMark.SetActive(_levelHasPin[button.Level]);
                 button.HereMark.SetActive(button.Level == playerLevel);
             }
-            // いる階を見ていて、全体表示のままなら、戻る先が無い
-            if (_returnButton != null)
-                _returnButton.interactable =
-                    playerLevel >= 0 && (playerLevel != _levelIndex || _zoom > 1.001f);
-        }
-
-        // 今いる階を、全体表示で見せる。
-        private void ReturnToPlayer()
-        {
-            var playerLevel = _player != null ? _layout.FindLevel(_player.position) : -1;
-            if (playerLevel < 0)
-                return;
-            if (playerLevel != _levelIndex)
-                ShowLevel(playerLevel);
-            else
-                ResetView();
         }
 
         /// <summary>ダブルクリックで閉じる。</summary>
@@ -464,26 +447,6 @@ namespace CreativeAI.UI
                     }
                 );
             }
-
-            // 階の並びの下に、「現在地へ」のボタン(階ボタンと同じ見た目。カーソルや上下キーの対象にはしない)
-            CreateBuildingDivider();
-            var returnSlot = new GameObject(
-                "ReturnSlot",
-                typeof(RectTransform),
-                typeof(LayoutElement)
-            );
-            returnSlot.transform.SetParent(_floorsRoot, false);
-            returnSlot.GetComponent<LayoutElement>().preferredHeight = slotHeight;
-            _returnButton = Instantiate(_floorButtonTemplate, returnSlot.transform, false);
-            _returnButton.gameObject.SetActive(true);
-            var returnRect = (RectTransform)_returnButton.transform;
-            returnRect.anchorMin = Vector2.zero;
-            returnRect.anchorMax = Vector2.one;
-            returnRect.offsetMin = Vector2.zero;
-            returnRect.offsetMax = Vector2.zero;
-            _returnButton.image.color = _floorButtonColor;
-            _returnButton.GetComponentInChildren<TMP_Text>().text = "現在地へ";
-            _returnButton.onClick.AddListener(ReturnToPlayer);
 
             // カーソルはレイアウトの対象にしない(並べ方に含めると、ボタンの間に空きができる)
             _cursor = (RectTransform)
