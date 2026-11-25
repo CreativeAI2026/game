@@ -14,7 +14,7 @@ GameObject:
   - component: {fileID: 1274530155613917566}
   - component: {fileID: 5378275496938205285}
   m_Layer: 0
-  m_Name: PlaytestBattleStage
+  m_Name: PlaytestBattleArena
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -67,7 +67,7 @@ MonoBehaviour:
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 7311db1b3b10b9c43bc9f1aac87ade35, type: 3}
   m_Name: 
-  m_EditorClassIdentifier: CreativeAI.Playtest::CreativeAI.Playtest.PlaytestBattleStage
+  m_EditorClassIdentifier: CreativeAI.Gameplay::CreativeAI.Gameplay.BattleArena
   _enemies: []
   _playerTag: Player
   _entryDepth: 5
@@ -82,7 +82,7 @@ MonoBehaviour:
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: dacd3129d621771478e4b198e0936dbe, type: 3}
   m_Name: 
-  m_EditorClassIdentifier: CreativeAI.Playtest::CreativeAI.Playtest.PlaytestArenaLock
+  m_EditorClassIdentifier: CreativeAI.Gameplay::CreativeAI.Gameplay.BattleArenaLock
   _doorsToClose: []
   _showDuringBattle: []
   _hideDuringBattle: []
