@@ -160,7 +160,6 @@ namespace CreativeAI.Tests.EditMode
             "9_battle_jellyfish",
             "12_again",
             "13_battle_girl",
-            "18_againagain_tutorial",
             "19_again_jellyfish",
             "20_again_goldfish",
         };
