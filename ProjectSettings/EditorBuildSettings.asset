@@ -47,6 +47,9 @@ EditorBuildSettings:
   - enabled: 1
     path: Assets/_Project/Scenes/Field/Field_Area01_Bosses.unity
     guid: 698acff9e9a9a4975bbcb01f7e7df50b
+  - enabled: 1
+    path: Assets/_Project/Scenes/Field/Field_Area01_Props_Pillars.unity
+    guid: 2445708ed4437491481e5db773fdb056
   m_configObjects:
     com.unity.dt.app-ui: {fileID: 11400000, guid: 1b1c20d82303e4b5781c3ef50ac1449f, type: 2}
     com.unity.input.settings: {fileID: 11400000, guid: 9e7be553448fa2546aea5752021cbcf7, type: 2}
