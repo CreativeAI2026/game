@@ -70,49 +70,16 @@ namespace CreativeAI.Tests.EditMode
             Assert.That(_events, Is.Not.Empty, $"{DataDir} にイベントの .asset がありません。");
         }
 
-        /// <summary>
-        /// まだシーンに置いていないイベントの id。置いたらこの一覧から消す
-        /// (置いたのに残っていると <see cref="NotPlacedYetList_HasNoPlacedEvent"/> が落ちる)。
-        /// </summary>
-        private static readonly HashSet<string> NotPlacedYet = new()
-        {
-            // 後藤ルートは ID8〜12 と同じ場所のため、まだ置いていない
-            "8nt_screem_girl",
-            "9nt_battle_jellyfish",
-            "10nt_go_floor1",
-            "11nt_again",
-            "12nt_end",
-        };
-
         [Test]
         public void EveryEventAsset_HasATriggerInTheScene()
         {
             var placed = new HashSet<EventDefinition>(_triggers.Select(EventOf));
-            var missing = _events
-                .Where(e => !placed.Contains(e) && !NotPlacedYet.Contains(e.Id))
-                .Select(e => e.Id)
-                .ToList();
+            var missing = _events.Where(e => !placed.Contains(e)).Select(e => e.Id).ToList();
 
             Assert.That(
                 missing,
                 Is.Empty,
-                "シーンに置かれていないイベント(未配置なら NotPlacedYet に足す): "
-                    + string.Join(", ", missing)
-            );
-        }
-
-        [Test]
-        public void NotPlacedYetList_HasNoPlacedEvent()
-        {
-            var placedIds = new HashSet<string>(
-                _triggers.Select(EventOf).Where(e => e != null).Select(e => e.Id)
-            );
-            var stale = NotPlacedYet.Where(placedIds.Contains).ToList();
-
-            Assert.That(
-                stale,
-                Is.Empty,
-                "置いたのに NotPlacedYet に残っているイベント: " + string.Join(", ", stale)
+                "シーンに置かれていないイベント: " + string.Join(", ", missing)
             );
         }
 
