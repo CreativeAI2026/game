@@ -13,7 +13,6 @@ namespace CreativeAI.UI
         public struct TabEntry
         {
             public TabDefinition definition;
-            public GameObject view;
         }
 
         [SerializeField]
@@ -45,17 +44,14 @@ namespace CreativeAI.UI
         private readonly List<int> _buttonToEntryIndices = new();
         private int _currentIndex = -1;
         private bool _initialized;
-        private bool _interactionEnabled = true;
         public int CurrentIndex => _currentIndex;
         public TabDefinition CurrentDefinition => GetDefinitionForButtonIndex(_currentIndex);
-        public int EntryCount => _tabEntries?.Count ?? 0;
         public int ButtonCount => _buttons.Count;
 
         public TabButton GetButton(int index) =>
             index >= 0 && index < _buttons.Count ? _buttons[index] : null;
 
         public event Action<int, TabDefinition> OnTabDefinitionSelected;
-        public event Action<int, TabDefinition, GameObject> OnSelectionChanged;
 
         private void Start()
         {
@@ -87,8 +83,7 @@ namespace CreativeAI.UI
                 btn.Bind(entry.definition);
                 btn.AlignUnderlineTo(_underlineAlignmentTarget);
                 int captured = _buttons.Count;
-                btn.Button.onClick.AddListener(() => SelectTabFromUser(captured));
-                btn.Button.interactable = _interactionEnabled;
+                btn.Button.onClick.AddListener(() => SelectTabInternal(captured));
                 _buttons.Add(btn);
                 _buttonToEntryIndices.Add(entryIndex);
             }
@@ -140,12 +135,6 @@ namespace CreativeAI.UI
             SelectTabInternal(index);
         }
 
-        private void SelectTabFromUser(int index)
-        {
-            if (_interactionEnabled)
-                SelectTabInternal(index);
-        }
-
         private void SelectTabInternal(int index, bool forceSelectionChanged = false)
         {
             if (index < 0 || index >= _buttons.Count || index >= _buttonToEntryIndices.Count)
@@ -161,9 +150,7 @@ namespace CreativeAI.UI
             ApplySelection(index);
 
             TabDefinition definition = GetDefinitionForButtonIndex(index);
-            GameObject view = GetViewForButtonIndex(index);
             OnTabDefinitionSelected?.Invoke(index, definition);
-            OnSelectionChanged?.Invoke(index, definition, view);
         }
 
         private void ApplySelection(int buttonIndex)
@@ -242,34 +229,6 @@ namespace CreativeAI.UI
                 return GetDefinitionForEntry(_buttonToEntryIndices[buttonIndex]);
 
             return GetDefinitionForEntry(buttonIndex);
-        }
-
-        public GameObject GetView(int entryIndex)
-        {
-            if (entryIndex < 0 || entryIndex >= _tabEntries.Count)
-                return null;
-            return _tabEntries[entryIndex].view;
-        }
-
-        public GameObject GetViewForButtonIndex(int buttonIndex)
-        {
-            if (buttonIndex < 0 || _tabEntries == null)
-                return null;
-
-            if (buttonIndex < _buttonToEntryIndices.Count)
-                return GetView(_buttonToEntryIndices[buttonIndex]);
-
-            return GetView(buttonIndex);
-        }
-
-        public void SetInteractionEnabled(bool enabled)
-        {
-            _interactionEnabled = enabled;
-            foreach (var button in _buttons)
-            {
-                if (button != null && button.Button != null)
-                    button.Button.interactable = enabled;
-            }
         }
     }
 }

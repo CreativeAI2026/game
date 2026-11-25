@@ -88,15 +88,6 @@ namespace CreativeAI.Gameplay
                 QuickFoodChanged?.Invoke();
         }
 
-        public bool ConsumeItem(ItemData data, int count = 1)
-        {
-            if (data == null || count <= 0 || GetItemCount(data) < count)
-                return false;
-
-            RemoveItem(data, count);
-            return true;
-        }
-
         /// <summary>
         /// key のアイテムの所持数(未装備のスタックの合計)。装備中のものは数えない。key が空なら 0。
         /// </summary>

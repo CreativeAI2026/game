@@ -30,15 +30,6 @@ namespace CreativeAI.UI
         private Vector3 _selectedUnderlineScale = Vector3.one;
         private bool _selectionInitialized;
 
-        public Button Button
-        {
-            get
-            {
-                ResolveReferences();
-                return _button;
-            }
-        }
-
         public bool IsSelected { get; private set; }
 
         public event Action<MenuTabButton> Clicked;

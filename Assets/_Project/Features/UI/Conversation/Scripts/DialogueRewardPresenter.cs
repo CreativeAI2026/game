@@ -12,7 +12,6 @@ namespace CreativeAI.UI
         // 武器モデルだけを撮るためのレイヤー(キャラタブのプレビューと同じ)
         private const int RewardLayer = 31;
 
-        private readonly Transform _viewRoot;
         private GameObject _itemObject;
         private GameObject _itemBackdrop;
         private GameObject _weaponRig;
@@ -21,14 +20,12 @@ namespace CreativeAI.UI
         private RenderTexture _renderTexture;
 
         public DialogueRewardPresenter(
-            Transform viewRoot,
             Image itemImage,
             Image itemBackdrop,
             RawImage weaponImage,
             Image weaponBackdrop
         )
         {
-            _viewRoot = viewRoot;
             _itemObject = itemImage != null ? itemImage.gameObject : null;
             _itemBackdrop = itemBackdrop != null ? itemBackdrop.gameObject : null;
             _weaponImage = weaponImage != null ? weaponImage.gameObject : null;
@@ -278,20 +275,6 @@ namespace CreativeAI.UI
             light.cullingMask = 1 << RewardLayer;
             light.range = range;
             light.intensity = intensity;
-        }
-
-        private static void Place(
-            RectTransform rect,
-            Transform parent,
-            Vector2 position,
-            Vector2 size
-        )
-        {
-            rect.SetParent(parent, false);
-            rect.anchorMin = rect.anchorMax = rect.pivot = new Vector2(0.5f, 0.5f);
-            rect.anchoredPosition = position;
-            rect.sizeDelta = size;
-            rect.SetAsLastSibling();
         }
 
         private static bool TryComputeBounds(GameObject target, out Bounds bounds)

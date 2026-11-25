@@ -18,10 +18,6 @@ namespace CreativeAI.Gameplay
         )]
         public LayerMask enemyLayer;
 
-        /// <summary>現在の最寄りの敵(searchRadius 以内)。いなければ null。</summary>
-        public Transform CurrentTarget =>
-            CurrentTargetCollider != null ? CurrentTargetCollider.transform : null;
-
         /// <summary>現在の最寄りの敵のコライダー。</summary>
         public Collider CurrentTargetCollider { get; private set; }
 

@@ -5,7 +5,6 @@ using System.Linq;
 using CreativeAI.Gameplay;
 using TMPro;
 using UnityEngine;
-using UnityEngine.InputSystem;
 using UnityEngine.UI;
 
 namespace CreativeAI.UI

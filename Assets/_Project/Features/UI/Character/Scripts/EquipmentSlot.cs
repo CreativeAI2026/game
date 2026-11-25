@@ -40,22 +40,13 @@ namespace CreativeAI.UI
         protected override SlotHoverView HoverView => _hoverView;
         protected override SlotFrameView FrameView => _frameView;
 
-        public Button Button { get; private set; }
         public event Action<EquipmentSlot> Clicked;
-        public event Action<EquipmentSlot> DoubleClicked;
-
-        public new ItemData Item
-        {
-            get => _stack?.Data;
-            set => SetItem(value, FindInventoryCount(value));
-        }
 
         public ItemStack Stack => _stack;
 
         public void Init()
         {
             ResolveViewReferences();
-            Button = GetComponent<Button>();
             if (_iconView != null)
                 _iconView.SetEmptyAlpha(EmptyIconAlpha);
             if (_countBadgeView != null)
@@ -101,35 +92,9 @@ namespace CreativeAI.UI
                 _emptyView.SetEmpty(true);
         }
 
-        public new void ClearAnimated(Action onComplete = null)
-        {
-            _stack = null;
-            base.ClearAnimated(onComplete);
-        }
-
         public void UpdateCount()
         {
             SetCount(_stack?.Count ?? FindInventoryCount(_item));
-        }
-
-        public void EquipAnimated(ItemData item)
-        {
-            SetItemAnimated(item, FindInventoryCount(item));
-        }
-
-        public void EquipAnimated(ItemStack stack)
-        {
-            SetItemAnimated(stack?.Data, stack?.Count ?? 0);
-            _stack = stack;
-        }
-
-        public void SetSelected(bool selected)
-        {
-            ResolveViewReferences();
-            if (selected)
-                Select();
-            else
-                Deselect();
         }
 
         public void OnPointerDown(PointerEventData eventData)
@@ -146,9 +111,9 @@ namespace CreativeAI.UI
                 return;
 
             if (eventData.clickCount >= 2)
-                DoubleClicked?.Invoke(this);
-            else
-                Clicked?.Invoke(this);
+                return;
+
+            Clicked?.Invoke(this);
         }
 
         private static int FindInventoryCount(ItemData item)

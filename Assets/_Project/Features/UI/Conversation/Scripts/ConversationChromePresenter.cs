@@ -181,7 +181,7 @@ namespace CreativeAI.UI
                 body.rectTransform.anchoredPosition = _bodyBasePosition;
                 return;
             }
-            _lineTextAnimation = _owner.StartCoroutine(AnimateLineText(name, body, showName));
+            _lineTextAnimation = _owner.StartCoroutine(AnimateLineText(name, showName));
         }
 
         public void StartBounce()
@@ -367,14 +367,6 @@ namespace CreativeAI.UI
                 _window.anchoredPosition = _windowBasePosition;
         }
 
-        private static void Stretch(RectTransform rect)
-        {
-            rect.anchorMin = Vector2.zero;
-            rect.anchorMax = Vector2.one;
-            rect.offsetMin = Vector2.zero;
-            rect.offsetMax = Vector2.zero;
-        }
-
         private static float FrameDelta() => Mathf.Max(Time.unscaledDeltaTime, 1f / 60f);
 
         private const string DefaultGuide = "NEXT   ENTER / SPACE";
@@ -470,7 +462,7 @@ namespace CreativeAI.UI
         private float CalculateIndicatorBounceOffset(float phase, float height) =>
             Mathf.Sin(Mathf.Clamp01(phase) * Mathf.PI) * height;
 
-        private IEnumerator AnimateLineText(TMP_Text name, TMP_Text body, bool showName)
+        private IEnumerator AnimateLineText(TMP_Text name, bool showName)
         {
             const float duration = 0.24f;
             const float bodyDelay = 0.06f;

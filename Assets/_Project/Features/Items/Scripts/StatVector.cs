@@ -49,8 +49,6 @@ namespace CreativeAI.Gameplay
         /// <summary>総パワー = 全ステータス値の和。</summary>
         public float Power => _values.Values.Sum();
 
-        public IReadOnlyDictionary<StatType, float> AsDictionary() => _values;
-
         public static StatVector Of(params (StatType type, float value)[] entries)
         {
             var dict = new Dictionary<StatType, float>();

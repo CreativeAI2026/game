@@ -66,9 +66,6 @@ namespace CreativeAI.Gameplay
         public PlayerController Player { get; private set; }
         public Animator Animator { get; private set; }
 
-        /// <summary>つがえた矢が通る点。</summary>
-        public Transform ArrowRestPoint => _arrowRestPoint;
-
         /// <summary>矢をつがえ終わり、発射できる状態か。</summary>
         public bool IsArrowNocked { get; private set; }
 

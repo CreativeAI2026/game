@@ -4,7 +4,6 @@ using CreativeAI.Gameplay;
 using DG.Tweening;
 using UnityEngine;
 using UnityEngine.EventSystems;
-using UnityEngine.InputSystem;
 using UnityEngine.Scripting.APIUpdating;
 using UnityEngine.UI;
 
@@ -70,7 +69,6 @@ namespace CreativeAI.UI
         private readonly List<ItemSlot> _visibleSlots = new();
         private readonly HashSet<ItemStack> _craftAssignedStacks = new();
         private ItemSlotPool _slotPool;
-        private bool _hasWarnedMissingDetailPanel;
         private bool _hasWarnedMissingItemsProvider;
         private bool _hasWarnedMissingDisplayProvider;
 
@@ -97,8 +95,6 @@ namespace CreativeAI.UI
 
         private void Awake()
         {
-            WarnMissingReferencesOnce();
-
             if (_tabGroup != null)
                 _tabGroup.OnTabDefinitionSelected += OnTabDefinitionSelected;
         }
@@ -136,9 +132,6 @@ namespace CreativeAI.UI
 
         public void RefreshCurrentTab() => RefreshCurrentTab(ScrollRefreshMode.KeepPosition);
 
-        public void SetItems(List<ItemStack> items) =>
-            SetItems(items, ScrollRefreshMode.KeepPosition);
-
         public void SetItems(List<ItemStack> items, ScrollRefreshMode scrollMode) =>
             RefreshSlots(FilterVisibleItems(items), scrollMode);
 
@@ -154,14 +147,6 @@ namespace CreativeAI.UI
 
             WarnMissingDisplayProviderOnce();
             SetItems(null, scrollMode);
-        }
-
-        public void ResetToFirstTab()
-        {
-            if (_tabGroup != null)
-                _tabGroup.ResetToFirstTab();
-            else
-                RefreshCurrentTab(ScrollRefreshMode.ScrollToTop);
         }
 
         private IEnumerator ResetViewNextFrame()
@@ -245,20 +230,6 @@ namespace CreativeAI.UI
                 return items;
 
             return items.FindAll(stack => stack?.Data != null && stack.Data.IsBaseMaterial);
-        }
-
-        private void WarnMissingReferencesOnce() { }
-
-        private void WarnMissingDetailPanelOnce()
-        {
-            if (_hasWarnedMissingDetailPanel)
-                return;
-
-            _hasWarnedMissingDetailPanel = true;
-            Debug.LogWarning(
-                $"{nameof(ItemListView)} '{name}' の必須参照 '{nameof(_detailPanel)}' が未設定です。アイテム詳細表示をスキップします。Inspectorで設定してください。",
-                this
-            );
         }
 
 #if UNITY_EDITOR

@@ -60,13 +60,6 @@ namespace CreativeAI.UI
                 hoverScale.SetBounceHeight(height);
         }
 
-        public void SetBounceEnabled(bool enabled)
-        {
-            var hoverScale = ResolveHoverScale();
-            if (hoverScale != null)
-                hoverScale.SetBounceEnabled(enabled);
-        }
-
         public void SetReleaseLockOnOutsideClick(bool release)
         {
             var hoverScale = ResolveHoverScale();

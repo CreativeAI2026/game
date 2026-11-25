@@ -30,8 +30,6 @@ namespace CreativeAI.UI
         private bool _hasCachedBaseColor;
         private bool _layoutRefreshPending;
 
-        public bool HasRequiredReferences => ResolveImage();
-        public bool IsVisible => _image != null && _image.gameObject.activeSelf;
         public RectTransform FitRect => _fitRect;
         public RectTransform IconRect => _image != null ? _image.rectTransform : null;
 
@@ -54,44 +52,6 @@ namespace CreativeAI.UI
             _emptyAlpha = Mathf.Clamp01(alpha);
             if (ResolveImage())
                 ApplyVisibility(_image.sprite != null);
-        }
-
-        public void PlayAppear(float duration)
-        {
-            if (!ResolveImage() || _image.sprite == null)
-                return;
-
-            KillTween();
-            _image.gameObject.SetActive(true);
-            _image.rectTransform.localScale = Vector3.one * 0.55f;
-            SetAlpha(0f);
-            _image
-                .rectTransform.DOScale(Vector3.one, duration)
-                .SetEase(Ease.OutBack)
-                .SetUpdate(true)
-                .SetLink(gameObject, LinkBehaviour.KillOnDisable);
-            _image
-                .DOFade(1f, duration * 0.65f)
-                .SetUpdate(true)
-                .SetLink(gameObject, LinkBehaviour.KillOnDisable);
-        }
-
-        public bool PlayHide(float duration, Action onComplete)
-        {
-            if (!ResolveImage() || !_image.gameObject.activeSelf)
-                return false;
-
-            KillTween();
-            DOTween
-                .Sequence()
-                .SetUpdate(true)
-                .SetLink(gameObject, LinkBehaviour.KillOnDisable)
-                .Join(
-                    _image.rectTransform.DOScale(Vector3.one * 0.35f, duration).SetEase(Ease.InBack)
-                )
-                .Join(_image.DOFade(0f, duration))
-                .OnComplete(() => onComplete?.Invoke());
-            return true;
         }
 
         public void KillTween()

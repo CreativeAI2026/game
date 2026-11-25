@@ -287,9 +287,6 @@ namespace CreativeAI.Gameplay
         [SerializeField]
         private string _cancelText; // useItem: やめたときのセリフ(省略可)
 
-        public IReadOnlyList<EventBranchCase> Cases => _cases;
-        public int JoinTarget => _joinTarget;
-
         public static EventStep BranchFlag(string flag, EventBranchCase[] cases, int join) =>
             new()
             {

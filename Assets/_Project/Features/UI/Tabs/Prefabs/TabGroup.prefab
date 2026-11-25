@@ -104,18 +104,9 @@ MonoBehaviour:
   m_EditorClassIdentifier: CreativeAI.UI::CreativeAI.UI.TabGroup
   _tabButtonPrefab: {fileID: 5510271927287150368, guid: b32822d6fbda1a44e978805497b93af1, type: 3}
   _tabEntries:
-  - icon: {fileID: 21300000, guid: 3815069e16bce474fb0152313970474c, type: 3}
-    label: "\u30B9\u30C6\u30FC\u30BF\u30B9"
-    view: {fileID: 0}
-    enabled: 1
-  - icon: {fileID: 21300000, guid: e43ee6b1ad59024439cf48a0192150d7, type: 3}
-    label: "\u6B66\u5668"
-    view: {fileID: 0}
-    enabled: 1
-  - icon: {fileID: 21300000, guid: 3024d7bd112ceff4dad3738b751a937c, type: 3}
-    label: "\u6240\u6301\u54C1"
-    view: {fileID: 0}
-    enabled: 1
+  - definition: {fileID: 0}
+  - definition: {fileID: 0}
+  - definition: {fileID: 0}
   _animDuration: 0.2
 --- !u!114 &2234662644577297694
 MonoBehaviour:

@@ -1,4 +1,3 @@
-using System;
 using CreativeAI.Gameplay;
 using UnityEngine;
 
@@ -14,9 +13,6 @@ namespace CreativeAI.UI
         protected virtual SlotCountBadgeView CountBadgeView => null;
         protected virtual SlotHoverView HoverView => null;
         protected virtual SlotFrameView FrameView => null;
-
-        public ItemData Item => _item;
-        public int Count => _count;
 
         protected virtual void Awake()
         {
@@ -82,42 +78,6 @@ namespace CreativeAI.UI
         }
 
         protected virtual void RefreshSelectionVisuals() { }
-
-        private const float ItemTransitionDuration = 0.2f;
-
-        public void SetItemAnimated(ItemData item, int count = 1)
-        {
-            SetItem(item, count);
-            if (IconView != null)
-                IconView.PlayAppear(ItemTransitionDuration);
-            if (CountBadgeView != null)
-                CountBadgeView.AnimateAppear(ItemTransitionDuration);
-        }
-
-        public void ClearAnimated(Action onComplete = null)
-        {
-            KillItemTransition();
-            _item = null;
-            _count = 0;
-
-            if (CountBadgeView != null)
-                CountBadgeView.PlayHide(ItemTransitionDuration);
-            if (
-                IconView == null
-                || !IconView.PlayHide(
-                    ItemTransitionDuration,
-                    () =>
-                    {
-                        Clear();
-                        onComplete?.Invoke();
-                    }
-                )
-            )
-            {
-                Clear();
-                onComplete?.Invoke();
-            }
-        }
 
         private void KillItemTransition()
         {

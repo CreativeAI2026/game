@@ -68,9 +68,6 @@ namespace CreativeAI.Gameplay
         /// <summary>逃避継続時間（秒、背を向けて離れた時間に換算した値）</summary>
         public float Timer => _timer;
 
-        /// <summary>逃避検知が有効か</summary>
-        public bool IsEnabled => _enabled;
-
         public void SetEnabled(bool enabled)
         {
             _enabled = enabled;

@@ -117,9 +117,6 @@ namespace CreativeAI.Gameplay
         /// <summary>今フレームの観測値（交戦相手・距離・ボスが攻撃中かなど）。読み取り専用で使う。</summary>
         public PanicContext Context => _context;
 
-        /// <summary>逃避検知が有効かつ、交戦中の敵がいるか</summary>
-        public bool IsFlightDetectionActive => _flight.IsEnabled && _context.IsInCombat;
-
         /// <summary>全指標（表示順）。</summary>
         public IReadOnlyList<PanicSignal> Signals => _signals;
 
@@ -131,9 +128,6 @@ namespace CreativeAI.Gameplay
         public HitChainSignal HitChain => _hitChain;
         public FreezeSignal Freeze => _freeze;
         public WeaponThrashSignal WeaponThrash => _weaponThrash;
-
-        /// <summary>最後に検知されたシグナル名</summary>
-        public string LastDetectedSignal { get; private set; } = "なし";
 
         /// <summary>
         /// 焦りシグナルを検知したとき発火するイベント。引数は検知した指標の名前。
@@ -236,7 +230,6 @@ namespace CreativeAI.Gameplay
                 OnPanicLevelChanged?.Invoke(PanicLevel.Calm);
             }
             _engagement.Clear();
-            LastDetectedSignal = "なし";
         }
 
         /// <summary>今フレームの交戦状況とプレイヤーの状態を観測値に詰める。</summary>
@@ -354,7 +347,6 @@ namespace CreativeAI.Gameplay
 
         private void OnSignalDetected(PanicSignal signal)
         {
-            LastDetectedSignal = signal.DisplayName;
             OnPanicSignalDetected?.Invoke(signal.DisplayName);
         }
     }

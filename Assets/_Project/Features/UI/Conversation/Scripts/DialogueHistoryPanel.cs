@@ -5,7 +5,6 @@ using CreativeAI.Gameplay;
 using TMPro;
 using UnityEngine;
 using UnityEngine.EventSystems;
-using UnityEngine.InputSystem;
 using UnityEngine.UI;
 
 namespace CreativeAI.UI

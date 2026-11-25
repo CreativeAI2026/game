@@ -1,6 +1,4 @@
-using System.Collections.Generic;
 using UnityEngine;
-using UnityEngine.AI;
 using UnityEngine.Assertions;
 
 namespace CreativeAI.Gameplay
@@ -264,7 +262,6 @@ namespace CreativeAI.Gameplay
         // 外部参照用
         public Transform FlashlightTransform => flashlightTransform;
         public Light FlashlightLight => flashlightLight;
-        public float LostSightDuration => lostSightDuration;
 
         /// <summary>プレイヤーが光から外れてから見失うまでの時間（秒）。焦りへの追い込み（逃げ腰）で長くなる。</summary>
         public float EffectiveLostSightDuration =>
@@ -276,8 +273,6 @@ namespace CreativeAI.Gameplay
         /// これを掛けて体格に合わせる。Prefabのスケール変更で行動が破綻しないようにするため。
         /// </summary>
         public float BodyScale => transform.lossyScale.y;
-
-        public TrailRenderer ScytheTrail => scytheTrail;
 
         public float WalkSpeed => walkSpeed;
         public float RunSpeed => runSpeed;
@@ -299,11 +294,6 @@ namespace CreativeAI.Gameplay
             PanicPressure.IsInCueLead
                 ? 0f
                 : PanicPressure.AdjustDirectAssaultChance(directAssaultChance);
-        public float SpecialAttackChance => specialAttackChance;
-        public float NormalAttack2Chance => normalAttack2Chance;
-        public float NormalAttackCooldown => normalAttackCooldown;
-        public float NormalAttack2Cooldown => normalAttack2Cooldown;
-        public float SpecialAttackCooldown => specialAttackCooldown;
         public Transform WireBone => wireBone;
         public float SpecialAttackAimDuration => specialAttackAimDuration;
         public float SpecialAttackShootDuration => specialAttackShootDuration;
@@ -350,8 +340,6 @@ namespace CreativeAI.Gameplay
         public TBossArmSweepHitbox ArmSweepHitbox => armSweepHitbox;
 
         /// <summary>ワイヤー側の腕の連鎖設定。Awakeが走らないEditモードのデバッグ用途でも参照できるよう公開する。</summary>
-        public TBossLimbChainSettings WireChainSettings => wireChainSettings;
-
         /// <summary>ワイヤー側の腕をしなやかに動かすドライバ。Awakeで生成される。</summary>
         public TBossLimbChainDriver WireChainDriver { get; private set; }
 
