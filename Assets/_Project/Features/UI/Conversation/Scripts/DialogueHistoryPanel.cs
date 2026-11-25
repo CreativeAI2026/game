@@ -65,14 +65,6 @@ namespace CreativeAI.UI
             BindViewEvents();
         }
 
-#if UNITY_EDITOR
-        public void BuildPrefabView(TMP_FontAsset font)
-        {
-            _font = font;
-            EnsureView();
-        }
-#endif
-
         private void Update()
         {
             if (UiInputActionMap.WasPressedThisFrame(UiInputActionMap.DialogueHistory))

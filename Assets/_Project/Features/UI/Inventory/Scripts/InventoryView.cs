@@ -66,7 +66,6 @@ namespace CreativeAI.UI
         private ItemStack _selectedStack;
         private readonly List<ItemSlot> _visibleSlots = new();
         private readonly List<ItemSlot> _pooledSlots = new();
-        private readonly HashSet<ItemData> _craftAssignedItems = new();
         private readonly HashSet<ItemStack> _craftAssignedStacks = new();
         private bool _slotPoolInitialized;
         private bool _hasWarnedMissingDetailPanel;
@@ -554,32 +553,6 @@ namespace CreativeAI.UI
             OnSlotDoubleClicked?.Invoke(slot.Stack);
         }
 
-        public void HighlightEquippedItem(ItemStack stack)
-        {
-            var slot = FindVisibleSlot(stack);
-            if (slot != null)
-                slot.SetEquipped(stack.IsEquipped);
-        }
-
-        public void UpdateItemEquippedState(ItemStack stack, bool isEquipped, bool keepSelected)
-        {
-            if (stack == null)
-                return;
-
-            var slot = FindVisibleSlot(stack);
-            if (slot == null)
-                return;
-
-            slot.SetEquipped(isEquipped);
-
-            if (!keepSelected)
-                return;
-
-            _selectedStack = stack;
-            _currentSelectedSlot = slot;
-            slot.Select();
-        }
-
         public void SelectItem(ItemStack stack)
         {
             if (_currentSelectedSlot != null)
@@ -614,23 +587,8 @@ namespace CreativeAI.UI
                 RefreshCurrentTab(ScrollRefreshMode.ScrollToTop);
         }
 
-        public void SetCraftAssignedItems(IEnumerable<ItemData> items)
-        {
-            _craftAssignedItems.Clear();
-            _craftAssignedStacks.Clear();
-            if (items != null)
-            {
-                foreach (var item in items)
-                    if (item != null)
-                        _craftAssignedItems.Add(item);
-            }
-
-            RefreshCraftAssignedSlots();
-        }
-
         public void SetCraftAssignedStacks(IEnumerable<ItemStack> stacks)
         {
-            _craftAssignedItems.Clear();
             _craftAssignedStacks.Clear();
             if (stacks != null)
             {
@@ -643,30 +601,12 @@ namespace CreativeAI.UI
         }
 
         private bool IsCraftAssigned(ItemStack stack) =>
-            stack != null
-            && (
-                _craftAssignedStacks.Contains(stack)
-                || (stack.Data != null && _craftAssignedItems.Contains(stack.Data))
-            );
+            stack != null && _craftAssignedStacks.Contains(stack);
 
         private void RefreshCraftAssignedSlots()
         {
             foreach (var slot in _visibleSlots)
                 slot.SetCraftAssigned(IsCraftAssigned(slot.Stack));
-        }
-
-        public void ResetToTop()
-        {
-            KillScrollTween();
-            if (_slotsRoot is RectTransform contentRect)
-            {
-                var scroll = contentRect.GetComponentInParent<ScrollRect>();
-                if (scroll != null)
-                    scroll.verticalNormalizedPosition = 1f;
-            }
-
-            if (_visibleSlots.Count > 0)
-                SelectSlot(_visibleSlots[0]);
         }
 
         private void DisableNavigationOnce()

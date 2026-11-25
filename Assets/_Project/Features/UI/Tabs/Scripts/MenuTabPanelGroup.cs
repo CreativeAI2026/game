@@ -41,8 +41,6 @@ namespace CreativeAI.UI
         private bool _initialized;
 
         public int CurrentIndex { get; private set; } = -1;
-        public MenuTabButton CurrentButton => GetBinding(CurrentIndex)?.Button;
-        public GameObject CurrentPanel => GetBinding(CurrentIndex)?.Panel;
 
         private void Awake()
         {

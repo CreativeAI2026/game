@@ -35,7 +35,7 @@ namespace CreativeAI.Tests.EditMode
         [Test]
         public void HoverScaleDisabled_DoesNotCreateScaleTween()
         {
-            _hover.SetHoverScaleEnabled(false);
+            TestReflection.SetField(_hover, "_hoverScaleEnabled", false);
 
             _hover.OnPointerEnter(null);
 
@@ -55,7 +55,7 @@ namespace CreativeAI.Tests.EditMode
         [Test]
         public void DisabledComponent_DoesNotForceScaleWhenHoverScaleIsOff()
         {
-            _hover.SetHoverScaleEnabled(false);
+            TestReflection.SetField(_hover, "_hoverScaleEnabled", false);
             _gameObject.transform.localScale = Vector3.one * 2.5f;
 
             _hover.enabled = false;

@@ -48,7 +48,6 @@ namespace CreativeAI.UI
         private bool _hasWarnedMissingFrame;
         private bool _hasWarnedMissingSprite;
 
-        public SlotFrameRole Role => _role;
         public bool IsSelected => _selected;
         public bool HasVisibleCount => _hasVisibleCount;
         public RectTransform FrameRect => _frame != null ? _frame.rectTransform : null;

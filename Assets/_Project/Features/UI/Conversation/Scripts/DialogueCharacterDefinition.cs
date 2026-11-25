@@ -58,11 +58,6 @@ namespace CreativeAI.UI
         public AudioClip TypingSound => _typingSound;
         public IReadOnlyList<Expression> Expressions => _expressions;
 
-        public bool TryResolvePortrait(string portraitKey, out Sprite sprite)
-        {
-            return TryResolveVisual(portraitKey, out sprite, out _);
-        }
-
         public bool TryResolveVisual(string portraitKey, out Sprite sprite, out Sprite icon)
         {
             sprite = null;

@@ -27,8 +27,6 @@ namespace CreativeAI.UI
         private Tween _tween;
         private float _normalizedValue = 1f;
 
-        public float NormalizedValue => _normalizedValue;
-
         private void Awake()
         {
             ResolveFill();

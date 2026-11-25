@@ -237,44 +237,6 @@ namespace CreativeAI.UI
                 end.rotation = endRotation;
         }
 
-        public float KneeBend
-        {
-            get
-            {
-                float maximum = 0;
-                foreach (
-                    var side in new[]
-                    {
-                        new[]
-                        {
-                            HumanBodyBones.LeftUpperLeg,
-                            HumanBodyBones.LeftLowerLeg,
-                            HumanBodyBones.LeftFoot,
-                        },
-                        new[]
-                        {
-                            HumanBodyBones.RightUpperLeg,
-                            HumanBodyBones.RightLowerLeg,
-                            HumanBodyBones.RightFoot,
-                        },
-                    }
-                )
-                {
-                    var upper = _transforms[_source.Animator.GetBoneTransform(side[0])];
-                    var lower = _transforms[_source.Animator.GetBoneTransform(side[1])];
-                    var foot = _transforms[_source.Animator.GetBoneTransform(side[2])];
-                    maximum = Mathf.Max(
-                        maximum,
-                        Vector3.Angle(
-                            lower.position - upper.position,
-                            foot.position - lower.position
-                        )
-                    );
-                }
-                return maximum;
-            }
-        }
-
         private static void SetMuscle(ref HumanPose pose, string name, float value)
         {
             int index = Array.IndexOf(HumanTrait.MuscleName, name);

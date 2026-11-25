@@ -143,15 +143,6 @@ namespace CreativeAI.UI
             _hoverScale.SetReleaseLockOnOutsideClick(false);
         }
 
-        public void ConfigureHoverEffects(bool enableHoverScale, bool enableBounce)
-        {
-            if (_hoverScale == null)
-                return;
-
-            _hoverScale.SetHoverScaleEnabled(enableHoverScale);
-            _hoverScale.SetBounceEnabled(enableBounce);
-        }
-
         private void SetIcon(Sprite icon)
         {
             if (_icon != null)

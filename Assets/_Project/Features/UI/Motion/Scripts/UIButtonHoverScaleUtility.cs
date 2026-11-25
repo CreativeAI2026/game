@@ -27,15 +27,6 @@ namespace CreativeAI.UI
             hoverScale.SetReleaseLockOnOutsideClick(false);
         }
 
-        public static void ApplyToButtonsIn(Transform root)
-        {
-            if (root == null)
-                return;
-
-            foreach (var button in root.GetComponentsInChildren<Button>(true))
-                ApplyTo(button);
-        }
-
         private static void WarnMissingHoverScaleOnce(Button button)
         {
             if (button == null || !WarnedMissingHoverScaleButtons.Add(button))
