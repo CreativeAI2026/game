@@ -1,30 +1,29 @@
 using System;
 using System.Collections.Generic;
-using CreativeAI.Gameplay;
 using UnityEngine;
 using UnityEngine.Assertions;
 
-namespace CreativeAI.Playtest
+namespace CreativeAI.Gameplay
 {
     /// <summary>
-    /// ボス体験用ビルドの「戦闘ステージ」。再生開始時は敵を隠してフィールドのまま始め(所持品・キャラ画面で装備を整えられる)、
+    /// ボス戦の「戦闘エリア」。再生開始時は敵を隠してフィールドのまま始め、
     /// プレイヤーがこのトリガーの中へ入ったら敵を出して戦闘モードにする。敵を全員倒したらフィールドモードへ戻す。
     /// 入口に立った瞬間ではなく、箱の縁から <see cref="_entryDepth"/> 以上奥へ入ってから始める
-    /// (戦闘開始で閉じる扉・柵(<see cref="PlaytestArenaLock"/>)にプレイヤーが重なり、外へ押し出されないように)。
+    /// (戦闘開始で閉じる扉・柵(<see cref="BattleArenaLock"/>)にプレイヤーが重なり、外へ押し出されないように)。
     ///
-    /// 本来 <see cref="GameModeManager.EnterBattle"/> を叩くのは会話イベントの battle ステップ(EventPlayer)だけだが、
-    /// battle ステップは敵をプレハブから新しく生成するため、シーンに置いて調整済みのボスを使えない。
-    /// そのため体験用ビルドに限り、ここから直接モードを切り替える。
+    /// 会話イベントの battle ステップ(EventPlayer)は敵をプレハブから新しく生成するため、
+    /// シーンに置いて調整済みのボス(周回の基準をシーン内で割り当てるクラゲなど)を使えない。
+    /// そうしたボスはシーンに置いてこの戦闘エリアに登録し、ここから直接モードを切り替える。
     /// </summary>
     // 敵の Awake/Start より先に隠す。Start が走る前に隠せば、表示した時点で初めて動き出す(クラゲは Start で攻撃を始めるため)。
     [DefaultExecutionOrder(-1000)]
     [RequireComponent(typeof(BoxCollider))]
-    public sealed class PlaytestBattleStage : MonoBehaviour
+    public sealed class BattleArena : MonoBehaviour
     {
         private static readonly Color GizmoColor = new Color(1f, 0.35f, 0.2f, 0.25f);
         private static readonly Color EntryGizmoColor = new Color(1f, 0.35f, 0.2f, 0.9f);
 
-        [Tooltip("戦闘ステージに入るまで隠しておき、入ったら出す敵(シーンに置いたボスのルート)")]
+        [Tooltip("戦闘エリアに入るまで隠しておき、入ったら出す敵(シーンに置いたボスのルート)")]
         [SerializeField]
         private GameObject[] _enemies = Array.Empty<GameObject>();
 
@@ -161,7 +160,7 @@ namespace CreativeAI.Playtest
             BattleEnded?.Invoke();
         }
 
-        // 再生しなくても Scene ビューで戦闘ステージの範囲が見えるように、選択していなくても描く。
+        // 再生しなくても Scene ビューで戦闘エリアの範囲が見えるように、選択していなくても描く。
         private void OnDrawGizmos()
         {
             if (!TryGetComponent(out BoxCollider box))

@@ -1,23 +1,22 @@
 using System;
 using System.Collections.Generic;
-using CreativeAI.Gameplay;
 using UnityEngine;
 using UnityEngine.AI;
 using UnityEngine.Assertions;
 
-namespace CreativeAI.Playtest
+namespace CreativeAI.Gameplay
 {
     /// <summary>
-    /// 戦闘が始まったら戦闘ステージを閉じ、プレイヤーも敵もステージの外へ出られないようにする。敵を全員倒したら元に戻す。
+    /// 戦闘が始まったら戦闘エリアを閉じ、プレイヤーも敵も戦闘エリアの外へ出られないようにする。敵を全員倒したら元に戻す。
     /// - 扉: 閉める(扉板の当たり判定でプレイヤーを止める)。戦闘中は DoorInteractor が開閉を受け付けない。
     ///   NavMesh で歩く敵(TBoss)は当たり判定では止まらないので、閉めた扉板の位置で NavMesh を削る。
     /// - 戦闘中だけ出すもの(外した柵など): 再生開始時に隠し、戦闘開始で出す。
-    /// - 戦闘中だけ隠すもの(準備エリアから上がる階段など): 戦闘開始で隠す。
+    /// - 戦闘中だけ隠すもの(戦闘エリアへ上がる階段など): 戦闘開始で隠す。
     /// </summary>
-    [RequireComponent(typeof(PlaytestBattleStage))]
-    public sealed class PlaytestArenaLock : MonoBehaviour
+    [RequireComponent(typeof(BattleArena))]
+    public sealed class BattleArenaLock : MonoBehaviour
     {
-        [Tooltip("戦闘開始で閉める扉(準備エリアとつながる扉)")]
+        [Tooltip("戦闘開始で閉める扉(戦闘エリアの出入口の扉)")]
         [SerializeField]
         private SwingDoor[] _doorsToClose = Array.Empty<SwingDoor>();
 
@@ -25,16 +24,16 @@ namespace CreativeAI.Playtest
         [SerializeField]
         private GameObject[] _showDuringBattle = Array.Empty<GameObject>();
 
-        [Tooltip("戦闘中だけ隠すもの(準備エリアから上がる階段など)")]
+        [Tooltip("戦闘中だけ隠すもの(戦闘エリアへ上がる階段など)")]
         [SerializeField]
         private GameObject[] _hideDuringBattle = Array.Empty<GameObject>();
 
         private readonly List<NavMeshObstacle> _doorObstacles = new();
-        private PlaytestBattleStage _stage;
+        private BattleArena _arena;
 
         private void Awake()
         {
-            _stage = GetComponent<PlaytestBattleStage>();
+            _arena = GetComponent<BattleArena>();
 
             foreach (var door in _doorsToClose)
             {
@@ -55,14 +54,14 @@ namespace CreativeAI.Playtest
 
         private void OnEnable()
         {
-            _stage.BattleStarted += Lock;
-            _stage.BattleEnded += Unlock;
+            _arena.BattleStarted += Lock;
+            _arena.BattleEnded += Unlock;
         }
 
         private void OnDisable()
         {
-            _stage.BattleStarted -= Lock;
-            _stage.BattleEnded -= Unlock;
+            _arena.BattleStarted -= Lock;
+            _arena.BattleEnded -= Unlock;
         }
 
         private void Lock() => SetLocked(true);
