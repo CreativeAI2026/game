@@ -78,7 +78,7 @@ namespace CreativeAI.UI
         private readonly List<LoadoutAssignmentSlotView> _equipmentSlots = new();
         private readonly ItemStack[] _equipmentAssignments = new ItemStack[3];
 
-        private InventoryView _inventory;
+        private ItemListView _inventory;
         private Image _detailIcon;
         private TMP_Text _detailName;
         private TMP_Text _detailDescription;
@@ -227,7 +227,7 @@ namespace CreativeAI.UI
             if (_inventory == null)
             {
                 Debug.LogError(
-                    $"{nameof(LoadoutPanelController)} '{UIHierarchyPathUtility.GetPath(transform)}' に InventoryView がありません。InventoryArea 以下へ配置してください。",
+                    $"{nameof(LoadoutPanelController)} '{UIHierarchyPathUtility.GetPath(transform)}' に ItemListView がありません。InventoryArea 以下へ配置してください。",
                     this
                 );
                 enabled = false;
@@ -284,7 +284,7 @@ namespace CreativeAI.UI
                 Transform scrollViewArea = transform.Find("InventoryArea/ScrollViewArea");
                 _inventory =
                     scrollViewArea != null
-                        ? scrollViewArea.GetComponentInChildren<InventoryView>(true)
+                        ? scrollViewArea.GetComponentInChildren<ItemListView>(true)
                         : null;
             }
             if (_detailIcon == null)
@@ -637,7 +637,7 @@ namespace CreativeAI.UI
         private void SyncAll()
         {
             RefreshTabVisuals();
-            RefreshInventory(InventoryView.ScrollRefreshMode.ScrollToTop);
+            RefreshInventory(ItemListView.ScrollRefreshMode.ScrollToTop);
             RefreshQuickSlots();
             SyncEquipmentAssignments();
             RefreshEquipmentSlots();
@@ -653,7 +653,7 @@ namespace CreativeAI.UI
             _filter = (Filter)index;
             _selectedStack = null;
             RefreshTabVisuals();
-            RefreshInventory(InventoryView.ScrollRefreshMode.ScrollToTop);
+            RefreshInventory(ItemListView.ScrollRefreshMode.ScrollToTop);
             RefreshTargetSelection();
             ShowEmptyDetail();
             FocusInventoryOrSlots();
@@ -781,10 +781,10 @@ namespace CreativeAI.UI
         private void OnInventoryRefreshRequested(
             TabDefinition _definition,
             int _tabIndex,
-            InventoryView.ScrollRefreshMode scrollMode
+            ItemListView.ScrollRefreshMode scrollMode
         ) => RefreshInventory(scrollMode);
 
-        private void RefreshInventory(InventoryView.ScrollRefreshMode scrollMode)
+        private void RefreshInventory(ItemListView.ScrollRefreshMode scrollMode)
         {
             if (_inventory == null)
                 return;
@@ -1195,7 +1195,7 @@ namespace CreativeAI.UI
 
             SyncEquipmentAssignments();
             RefreshEquipmentSlots();
-            RefreshInventory(InventoryView.ScrollRefreshMode.KeepPosition);
+            RefreshInventory(ItemListView.ScrollRefreshMode.KeepPosition);
             ShowDetail(_selectedStack, DetailAction.RemoveEquipment);
         }
 
@@ -1238,7 +1238,7 @@ namespace CreativeAI.UI
             if (_inventory != null)
                 _inventory.ClearSelection();
             RefreshEquipmentSlots();
-            RefreshInventory(InventoryView.ScrollRefreshMode.KeepPosition);
+            RefreshInventory(ItemListView.ScrollRefreshMode.KeepPosition);
             ShowEmptyDetail();
         }
 
@@ -1465,7 +1465,7 @@ namespace CreativeAI.UI
         private void OnInventoryChanged()
         {
             RefreshTabVisuals();
-            RefreshInventory(InventoryView.ScrollRefreshMode.KeepPosition);
+            RefreshInventory(ItemListView.ScrollRefreshMode.KeepPosition);
             RefreshQuickSlots();
             SyncEquipmentAssignments();
             RefreshEquipmentSlots();
@@ -1480,7 +1480,7 @@ namespace CreativeAI.UI
 
             SyncEquipmentAssignments();
             RefreshEquipmentSlots();
-            RefreshInventory(InventoryView.ScrollRefreshMode.KeepPosition);
+            RefreshInventory(ItemListView.ScrollRefreshMode.KeepPosition);
         }
     }
 }

@@ -13,7 +13,7 @@ namespace CreativeAI.UI
     public sealed class InventoryScreenView : MonoBehaviour
     {
         [SerializeField]
-        private InventoryView _inventory;
+        private ItemListView _inventory;
 
         [SerializeField]
         private TabGroup _tabs;

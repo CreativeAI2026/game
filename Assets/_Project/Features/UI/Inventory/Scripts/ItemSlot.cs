@@ -158,7 +158,7 @@ namespace CreativeAI.UI
             IEndDragHandler
     {
         private ItemStack _itemStack;
-        private InventoryView _controller;
+        private ItemListView _controller;
         private bool _showCount = true;
         private CanvasGroup _dragCanvasGroup;
         private float _dragOriginalAlpha = 1f;
@@ -193,7 +193,7 @@ namespace CreativeAI.UI
         {
             ResolveViewReferences();
             base.Awake();
-            _controller = GetComponentInParent<InventoryView>();
+            _controller = GetComponentInParent<ItemListView>();
             ConfigureVisualRootHover();
             RefreshSelectionVisuals();
         }

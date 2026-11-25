@@ -9,10 +9,10 @@ namespace CreativeAI.Tests.EditMode
     /// <summary>
     /// インベントリのキーボード操作による決定(選択スロットの確定)の検証。
     /// </summary>
-    public class InventoryViewKeyboardSubmitTests
+    public class ItemListViewKeyboardSubmitTests
     {
         private GameObject _root;
-        private InventoryView _inventory;
+        private ItemListView _inventory;
         private ItemSlot _slot;
         private ItemData _item;
         private ItemStack _stack;
@@ -21,7 +21,7 @@ namespace CreativeAI.Tests.EditMode
         public void SetUp()
         {
             _root = new GameObject("Inventory");
-            _inventory = _root.AddComponent<InventoryView>();
+            _inventory = _root.AddComponent<ItemListView>();
             var slotObject = new GameObject("ItemSlot");
             slotObject.transform.SetParent(_root.transform);
             _slot = slotObject.AddComponent<ItemSlot>();

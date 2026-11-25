@@ -45,7 +45,7 @@ namespace CreativeAI.UI
 
         [Header("Materials")]
         [SerializeField]
-        private InventoryView _inventory;
+        private ItemListView _inventory;
 
         [SerializeField]
         private MaterialSlot[] _materialSlots = new MaterialSlot[MaterialSlotCount];
@@ -135,7 +135,7 @@ namespace CreativeAI.UI
         private void AutoAssignReferences()
         {
             if (_inventory == null)
-                _inventory = GetComponentInChildren<InventoryView>(true);
+                _inventory = GetComponentInChildren<ItemListView>(true);
             if (_materialSlots.Any(slot => slot == null))
                 _materialSlots = GetComponentsInChildren<MaterialSlot>(true)
                     .OrderBy(slot => slot.transform.GetSiblingIndex())
@@ -310,7 +310,7 @@ namespace CreativeAI.UI
         private void OnInventoryDisplayRefreshRequested(
             TabDefinition definition,
             int tabIndex,
-            InventoryView.ScrollRefreshMode scrollMode
+            ItemListView.ScrollRefreshMode scrollMode
         )
         {
             // The authored quick-item / equipment buttons own category selection.
@@ -340,7 +340,7 @@ namespace CreativeAI.UI
 
         private void OnInventoryItemsRequested(
             ItemCategory category,
-            InventoryView.ScrollRefreshMode scrollMode
+            ItemListView.ScrollRefreshMode scrollMode
         )
         {
             var inventory = InventoryManager.Instance;

@@ -10,13 +10,16 @@ using UnityEngine.UI;
 
 namespace CreativeAI.UI
 {
+    /// <summary>
+    /// 持ち物をタブごとに並べて選ばせる一覧。インベントリ・キャラクター・調合の各画面で使う。
+    /// </summary>
     [MovedFrom(
         true,
         sourceNamespace: "CreativeAI.UI.InventoryUI",
         sourceAssembly: "CreativeAI.UI",
         sourceClassName: "Inventory"
     )]
-    public class InventoryView : MonoBehaviour
+    public sealed class ItemListView : MonoBehaviour
     {
         public enum ScrollRefreshMode
         {
@@ -209,8 +212,8 @@ namespace CreativeAI.UI
             if (!_hasWarnedMissingItemsProvider)
             {
                 Debug.LogWarning(
-                    $"{nameof(InventoryView)} '{name}' has no ItemsRequested subscriber for category '{category}'. "
-                        + $"Connect an Inventory data provider controller to this {nameof(InventoryView)}.",
+                    $"{nameof(ItemListView)} '{name}' has no ItemsRequested subscriber for category '{category}'. "
+                        + $"Connect an Inventory data provider controller to this {nameof(ItemListView)}.",
                     this
                 );
                 _hasWarnedMissingItemsProvider = true;
@@ -226,7 +229,7 @@ namespace CreativeAI.UI
 
             _hasWarnedMissingDisplayProvider = true;
             Debug.LogWarning(
-                $"{nameof(InventoryView)} '{UIHierarchyPathUtility.GetPath(transform)}' has no display provider. Connect a controller that handles {nameof(DisplayRefreshRequested)}.",
+                $"{nameof(ItemListView)} '{UIHierarchyPathUtility.GetPath(transform)}' has no display provider. Connect a controller that handles {nameof(DisplayRefreshRequested)}.",
                 this
             );
         }
@@ -251,7 +254,7 @@ namespace CreativeAI.UI
 
             _hasWarnedMissingDetailPanel = true;
             Debug.LogWarning(
-                $"{nameof(InventoryView)} '{name}' の必須参照 '{nameof(_detailPanel)}' が未設定です。アイテム詳細表示をスキップします。Inspectorで設定してください。",
+                $"{nameof(ItemListView)} '{name}' の必須参照 '{nameof(_detailPanel)}' が未設定です。アイテム詳細表示をスキップします。Inspectorで設定してください。",
                 this
             );
         }
@@ -355,7 +358,7 @@ namespace CreativeAI.UI
             if (!createdObject.TryGetComponent(out ItemSlot createdSlot))
             {
                 Debug.LogError(
-                    $"{nameof(InventoryView)} '{name}' のSlot Prefab '{_slotPrefab.name}'に{nameof(ItemSlot)}がありません。Prefabのルートへ追加してください。",
+                    $"{nameof(ItemListView)} '{name}' のSlot Prefab '{_slotPrefab.name}'に{nameof(ItemSlot)}がありません。Prefabのルートへ追加してください。",
                     _slotPrefab
                 );
                 Destroy(createdObject);

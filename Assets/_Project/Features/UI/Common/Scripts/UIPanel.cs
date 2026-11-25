@@ -7,7 +7,7 @@ namespace CreativeAI.UI
     /// 汎用パネル基底。Open() / Close() で SetActive を切り替える。
     /// 戻るボタン (_closeButton) があれば Awake で自動的に Close に配線する。
     /// </summary>
-    public class UIPanelStub : MonoBehaviour
+    public class UIPanel : MonoBehaviour
     {
         [SerializeField]
         private Button _closeButton;
