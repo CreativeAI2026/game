@@ -68,7 +68,7 @@ namespace CreativeAI.UI
 
         private CanvasGroup _group;
         private bool? _shown;
-        private PlayerUiInput _uiInput;
+        private PlayerUIInput _uiInput;
         private Canvas _rootCanvas; // バナーの位置を、画面の上下のどちらかで決めるのに使う
         private bool _wide; // 縮小表示か
         private float _zoomScale = 1f; // 今の拡大率(なめらかに _wide へ向かう)
@@ -89,7 +89,7 @@ namespace CreativeAI.UI
 
         private void Awake()
         {
-            _group = ResidentUiVisibility.GetOrAddGroup(gameObject);
+            _group = ResidentUIVisibility.GetOrAddGroup(gameObject);
             var canvas = GetComponentInParent<Canvas>();
             _rootCanvas = canvas != null ? canvas.rootCanvas : null;
             _pins = new MapPinIconPool(_pinTemplate);
@@ -173,7 +173,7 @@ namespace CreativeAI.UI
         {
             if (_uiInput != null)
                 _uiInput.MinimapZoomPressed -= OnZoomPressed;
-            _uiInput = player != null ? player.GetComponent<PlayerUiInput>() : null;
+            _uiInput = player != null ? player.GetComponent<PlayerUIInput>() : null;
             if (_uiInput != null)
                 _uiInput.MinimapZoomPressed += OnZoomPressed;
             _player = player != null ? player.transform : null;

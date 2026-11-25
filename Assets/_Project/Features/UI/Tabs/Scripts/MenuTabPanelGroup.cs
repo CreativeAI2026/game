@@ -41,8 +41,6 @@ namespace CreativeAI.UI
         private bool _initialized;
 
         public int CurrentIndex { get; private set; } = -1;
-        public MenuTabButton CurrentButton => GetBinding(CurrentIndex)?.Button;
-        public GameObject CurrentPanel => GetBinding(CurrentIndex)?.Panel;
 
         private void Awake()
         {
@@ -75,9 +73,9 @@ namespace CreativeAI.UI
             if (_tabs.Count <= 1)
                 return;
 
-            if (UiInputActionMap.WasPressedThisFrame(UiInputActionMap.TabPrev))
+            if (UIInputActionMap.WasPressedThisFrame(UIInputActionMap.TabPrev))
                 Select((CurrentIndex - 1 + _tabs.Count) % _tabs.Count);
-            else if (UiInputActionMap.WasPressedThisFrame(UiInputActionMap.TabNext))
+            else if (UIInputActionMap.WasPressedThisFrame(UIInputActionMap.TabNext))
                 Select((CurrentIndex + 1) % _tabs.Count);
         }
 

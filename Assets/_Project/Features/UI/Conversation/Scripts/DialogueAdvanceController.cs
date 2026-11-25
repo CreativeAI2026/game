@@ -59,13 +59,13 @@ namespace CreativeAI.UI
 
         public static bool AdvancePressed()
         {
-            return UiInputActionMap.WasPressedThisFrame(UiInputActionMap.DialogueAdvance)
-                || UiInputActionMap.WasClickPressedThisFrame();
+            return UIInputActionMap.WasPressedThisFrame(UIInputActionMap.DialogueAdvance)
+                || UIInputActionMap.WasClickPressedThisFrame();
         }
 
         private static bool SkipReadHeld(bool wasRead)
         {
-            return wasRead && UiInputActionMap.IsPressed(UiInputActionMap.DialogueSkip);
+            return wasRead && UIInputActionMap.IsPressed(UIInputActionMap.DialogueSkip);
         }
 
         private static float CalculateAutoDelay(TMP_Text body, float baseDelay)

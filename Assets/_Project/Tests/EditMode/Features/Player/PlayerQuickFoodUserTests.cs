@@ -113,7 +113,7 @@ namespace CreativeAI.Tests.EditMode
         public void WhileAPanelIsOpen_DoesNotUse()
         {
             var stack = AddFoodToSlot(0, 2);
-            UiPanelService.SetOpen(true);
+            UIPanelService.SetOpen(true);
 
             _input.QuickFoodInput(0, true);
 

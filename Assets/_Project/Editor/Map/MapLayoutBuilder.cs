@@ -494,36 +494,13 @@ namespace CreativeAI.EditorTools
             public Dictionary<char, StairDir> StairDirs; // 本文で向きを指定した階段(上る向き)
         }
 
-        [MenuItem("Tools/CreativeAI/Map/Build Field_Area01 From MapLayout")]
-        public static void BuildArea01()
-        {
-            var maps = LoadAll();
-            if (maps == null)
-                return;
-
-            var scene = EditorSceneManager.NewScene(NewSceneSetup.EmptyScene, NewSceneMode.Single);
-            CreateSun();
-            BuildInto(maps, scene);
-
-            Directory.CreateDirectory(Path.GetDirectoryName(ScenePath)!);
-            EditorSceneManager.SaveScene(scene, ScenePath);
-            AssetDatabase.Refresh();
-            Debug.Log(
-                $"[MapLayoutBuilder] {ScenePath} を作成しました。Build Settings への登録は手動で行ってください。"
-            );
-            AreaOcclusionBaker.Bake(scene);
-            AreaNavMeshBaker.Bake(scene);
-        }
-
         /// <summary>Field_Area01 を開いて Map ルートだけ作り直し、保存する(Map の外は触らない)。</summary>
         [MenuItem("Tools/CreativeAI/Map/Rebuild Field_Area01")]
         public static void RebuildArea01()
         {
             if (!File.Exists(ScenePath))
             {
-                Debug.LogError(
-                    $"[MapLayoutBuilder] {ScenePath} がありません。先に Build Field_Area01 を実行してください。"
-                );
+                Debug.LogError($"[MapLayoutBuilder] {ScenePath} がありません。");
                 return;
             }
 
@@ -544,24 +521,6 @@ namespace CreativeAI.EditorTools
             AreaOcclusionBaker.Bake(scene);
             // NavMesh も同じく古い壁のままだと敵が壁に向かって歩くので焼き直す
             AreaNavMeshBaker.Bake(scene);
-        }
-
-        /// <summary>いま開いているシーンの Map ルートだけを作り直す(Map の外は触らない)。</summary>
-        [MenuItem("Tools/CreativeAI/Map/Rebuild Map In Current Scene")]
-        public static void RebuildCurrentScene()
-        {
-            var maps = LoadAll();
-            if (maps == null)
-                return;
-            // マップシーンが開いていればそちらへ。無ければアクティブなシーンに作る。
-            var target = FindOpenScene(ScenePath);
-            if (!target.IsValid())
-                target = SceneManager.GetActiveScene();
-            BuildInto(maps, target);
-            EditorSceneManager.MarkSceneDirty(target);
-            Debug.Log(
-                $"[MapLayoutBuilder] {target.name} の Map ルートを作り直しました。保存後に Bake Occlusion Field_Area01 と Bake NavMesh Field_Area01 で焼き直してください。"
-            );
         }
 
         /// <summary>開いているシーンからパスで探す(見つからなければ IsValid() == false)。</summary>
@@ -595,16 +554,6 @@ namespace CreativeAI.EditorTools
 
         /// <summary>天井のグループ名(小物を置くとき Scene ビューで隠す・NavMesh から外すのに使う)。</summary>
         public static string CeilingGroup => CeilingName;
-
-        static void CreateSun()
-        {
-            var go = new GameObject("Directional Light");
-            var light = go.AddComponent<Light>();
-            light.type = LightType.Directional;
-            // 太陽の影を落とすと、下の階の床にカメラ追従の円弧状の光漏れが出る
-            light.shadows = LightShadows.None;
-            go.transform.rotation = Quaternion.Euler(50f, -30f, 0f);
-        }
 
         // ---------------------------------------------------------------- 読み込み
 
@@ -1429,23 +1378,6 @@ namespace CreativeAI.EditorTools
         // 柵は不透明でも隙間から奥が見えるので、遮蔽物にはしない(柵越しの物がカメラの位置で消えたり出たりする)
         const StaticEditorFlags FenceFlags = SolidFlags & ~StaticEditorFlags.OccluderStatic;
 
-        /// <summary>Field_Area01 を作り直さずに、今の Map へ Static 設定だけ当てて保存する。</summary>
-        [MenuItem("Tools/CreativeAI/Map/Apply Static Flags To Field_Area01")]
-        public static void ApplyStaticFlagsToArea01()
-        {
-            var scene = FindOpenScene(ScenePath);
-            if (!scene.IsValid())
-                scene = EditorSceneManager.OpenScene(ScenePath, OpenSceneMode.Single);
-            var root = FindMapRoot(scene);
-            if (root == null)
-            {
-                Debug.LogError($"[MapLayoutBuilder] {ScenePath} に {MapRootName} がありません。");
-                return;
-            }
-            ApplyStaticFlags(root);
-            EditorSceneManager.SaveScene(scene);
-        }
-
         /// <summary>
         /// Map 配下の見た目に Static を付ける。動く扉板は外す(Static だと開閉しても描画が動かない)。
         /// ライトマップ用 UV(UV2)の無いメッシュはライトマップに焼けないので、光はライトプローブから受ける。
@@ -1510,23 +1442,6 @@ namespace CreativeAI.EditorTools
         // 敵の突進や弾の壁判定がこの2つで床と壁を見分ける
         const string GroundLayerName = "Ground";
         const string ObstacleLayerName = "Obstacle";
-
-        /// <summary>Field_Area01 を作り直さずに、今の Map へレイヤーだけ当てて保存する。</summary>
-        [MenuItem("Tools/CreativeAI/Map/Apply Layers To Field_Area01")]
-        public static void ApplyLayersToArea01()
-        {
-            var scene = FindOpenScene(ScenePath);
-            if (!scene.IsValid())
-                scene = EditorSceneManager.OpenScene(ScenePath, OpenSceneMode.Single);
-            var root = FindMapRoot(scene);
-            if (root == null)
-            {
-                Debug.LogError($"[MapLayoutBuilder] {ScenePath} に {MapRootName} がありません。");
-                return;
-            }
-            ApplyLayers(root);
-            EditorSceneManager.SaveScene(scene);
-        }
 
         /// <summary>
         /// Map 配下の当たりにレイヤーを付ける。トリガー(扉の反応範囲)は Default のまま残す

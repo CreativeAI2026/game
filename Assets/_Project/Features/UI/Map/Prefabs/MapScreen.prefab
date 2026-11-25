@@ -74,7 +74,7 @@ MonoBehaviour:
   m_fontMaterials: []
   m_fontColor32:
     serializedVersion: 2
-    rgba: 4294967295
+    rgba: 4289567116
   m_fontColor: {r: 0.55, g: 0.6, b: 0.68, a: 1}
   m_enableVertexGradient: 0
   m_colorMode: 3
@@ -87,7 +87,7 @@ MonoBehaviour:
   m_spriteAsset: {fileID: 0}
   m_tintAllSprites: 0
   m_StyleSheet: {fileID: 0}
-  m_TextStyleHashCode: 0
+  m_TextStyleHashCode: -1183493901
   m_overrideHtmlColors: 0
   m_faceColor:
     serializedVersion: 2
@@ -469,10 +469,10 @@ RectTransform:
   - {fileID: 5889717926173939777}
   m_Father: {fileID: 2208867692808733884}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
-  m_AnchorMin: {x: 0.5, y: 0.5}
-  m_AnchorMax: {x: 0.5, y: 0.5}
+  m_AnchorMin: {x: 0, y: 0}
+  m_AnchorMax: {x: 0, y: 0}
   m_AnchoredPosition: {x: 0, y: 0}
-  m_SizeDelta: {x: 100, y: 100}
+  m_SizeDelta: {x: 0, y: 0}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!222 &8886111188508209829
 CanvasRenderer:
@@ -650,7 +650,7 @@ MonoBehaviour:
   m_fontMaterials: []
   m_fontColor32:
     serializedVersion: 2
-    rgba: 4294967295
+    rgba: 4292262046
   m_fontColor: {r: 0.62, g: 0.72, b: 0.84, a: 1}
   m_enableVertexGradient: 0
   m_colorMode: 3
@@ -663,7 +663,7 @@ MonoBehaviour:
   m_spriteAsset: {fileID: 0}
   m_tintAllSprites: 0
   m_StyleSheet: {fileID: 0}
-  m_TextStyleHashCode: 0
+  m_TextStyleHashCode: -1183493901
   m_overrideHtmlColors: 0
   m_faceColor:
     serializedVersion: 2
@@ -840,7 +840,7 @@ MonoBehaviour:
   m_fontMaterials: []
   m_fontColor32:
     serializedVersion: 2
-    rgba: 4294967295
+    rgba: 4294963947
   m_fontColor: {r: 0.92, g: 0.95, b: 1, a: 1}
   m_enableVertexGradient: 0
   m_colorMode: 3
@@ -853,7 +853,7 @@ MonoBehaviour:
   m_spriteAsset: {fileID: 0}
   m_tintAllSprites: 0
   m_StyleSheet: {fileID: 0}
-  m_TextStyleHashCode: 0
+  m_TextStyleHashCode: -1183493901
   m_overrideHtmlColors: 0
   m_faceColor:
     serializedVersion: 2
@@ -1006,3 +1006,11 @@ MonoBehaviour:
   _otherFloorAlpha: 0.35
   _floorButtonColor: {r: 0.12, g: 0.15, b: 0.2, a: 0.95}
   _floorButtonSelectedColor: {r: 0.2, g: 0.42, b: 0.66, a: 1}
+  _selectedPopOut: 14
+  _cursorColor: {r: 1, g: 0.82, b: 0.25, a: 1}
+  _slideSpeed: 16
+  _buildingGap: 20
+  _maxZoom: 5
+  _zoomStep: 1.25
+  _fadeSeconds: 0.18
+  _fadeStartAlpha: 0.15

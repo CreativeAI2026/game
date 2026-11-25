@@ -9,9 +9,6 @@ namespace CreativeAI.UI
 
         private bool _hasWarnedMissingEmptyObject;
 
-        public RectTransform EmptyRect =>
-            _emptyObject != null ? _emptyObject.transform as RectTransform : null;
-
         public void SetEmpty(bool empty)
         {
             if (!ResolveEmptyObject())

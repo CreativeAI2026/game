@@ -33,7 +33,6 @@ namespace CreativeAI.UI
         private bool _dirty;
         private WeaponData _shownWeapon;
         private CharacterPreviewPose _posedModel;
-        public float PreviewKneeBend => _posedModel != null ? _posedModel.KneeBend : 0f;
         public bool PreviewIsAttacking => _posedModel != null && _posedModel.IsAttacking;
         public bool PreviewIsAnimating => _posedModel != null && _posedModel.IsAnimating;
         public double PreviewAnimationTime => _posedModel != null ? _posedModel.AnimationTime : 0;

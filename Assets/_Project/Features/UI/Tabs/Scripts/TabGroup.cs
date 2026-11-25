@@ -48,7 +48,6 @@ namespace CreativeAI.UI
         private bool _interactionEnabled = true;
         public int CurrentIndex => _currentIndex;
         public TabDefinition CurrentDefinition => GetDefinitionForButtonIndex(_currentIndex);
-        public GameObject CurrentView => GetViewForButtonIndex(_currentIndex);
         public int EntryCount => _tabEntries?.Count ?? 0;
         public int ButtonCount => _buttons.Count;
 

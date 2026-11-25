@@ -12,7 +12,7 @@ namespace CreativeAI.Tests.EditMode
     /// </summary>
     public class ConversationPortraitCompressionTests
     {
-        private const string PortraitRoot = "Assets/_Project/Art/UI/Conversation/Character";
+        private const string PortraitRoot = "Assets/_Project/Art/UI/Portraits";
 
         [Test]
         public void Portraits_AreBlockCompressionCompatible()
@@ -21,7 +21,8 @@ namespace CreativeAI.Tests.EditMode
                 .FindAssets("t:Texture2D", new[] { PortraitRoot })
                 .Select(AssetDatabase.GUIDToAssetPath)
                 .Where(path =>
-                    path.Contains("/Portraits/", StringComparison.Ordinal)
+                    path.Substring(PortraitRoot.Length)
+                        .Contains("/Portraits/", StringComparison.Ordinal)
                     && path.EndsWith(".png", StringComparison.OrdinalIgnoreCase)
                 )
                 .OrderBy(path => path, StringComparer.Ordinal)

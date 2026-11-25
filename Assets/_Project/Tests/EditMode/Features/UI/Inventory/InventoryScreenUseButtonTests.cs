@@ -34,7 +34,7 @@ namespace CreativeAI.Tests.EditMode
                 manager.AddItem(food, 3);
                 var stack = manager.GetAllItems().Find(item => item.Data == food);
                 var screen = root.GetComponent<InventoryScreenView>();
-                var inventory = root.GetComponentInChildren<InventoryView>(true);
+                var inventory = root.GetComponentInChildren<ItemListView>(true);
                 TestReflection.SetField(inventory, "_selectedStack", stack);
                 TestReflection.Invoke(screen, "UseSelected");
                 Assert.AreEqual(2, stack.Count);

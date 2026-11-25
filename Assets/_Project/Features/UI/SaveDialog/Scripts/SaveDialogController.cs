@@ -5,7 +5,7 @@ using UnityEngine.UI;
 
 namespace CreativeAI.UI
 {
-    public class SaveDialogController : UIPanelStub
+    public sealed class SaveDialogController : UIPanel
     {
         [SerializeField]
         private Button _yesButton;

@@ -11,7 +11,7 @@ namespace CreativeAI.Tests.EditMode
     /// 直下は Canvas の入れ物で、中身は機能ごとの Prefab(Canvas を持たない)を入れる。
     /// 常駐UI(アイコンバー・即時食材バー・扉プロンプト・会話UI等)は表示/非表示を各自の CanvasGroup で切り替えるので、
     /// GameObject がオフで保存されると実行時に二度と出ない。
-    /// 開閉を UiRouter が SetActive で行うパネル(キャラ/インベ/セーブ/調合/マップ)だけはオフで保存されていてよい。
+    /// 開閉を UIRouter が SetActive で行うパネル(キャラ/インベ/セーブ/調合/マップ)だけはオフで保存されていてよい。
     /// </summary>
     public class UIRootPrefabTests
     {
@@ -31,8 +31,8 @@ namespace CreativeAI.Tests.EditMode
         {
             var prefab = AssetDatabase.LoadAssetAtPath<GameObject>(PrefabPath);
             Assert.IsNotNull(prefab, PrefabPath);
-            var router = prefab.GetComponent<UiRouter>();
-            Assert.IsNotNull(router, "UIRoot に UiRouter がありません。");
+            var router = prefab.GetComponent<UIRouter>();
+            Assert.IsNotNull(router, "UIRoot に UIRouter がありません。");
 
             var panels = new HashSet<GameObject>();
             foreach (var field in RouterPanelFields)

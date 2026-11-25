@@ -58,7 +58,7 @@ namespace CreativeAI.UI
             bool choices = _state() == ConversationView.ConversationState.ShowingChoices;
 
             if (
-                UiInputActionMap.WasPressedThisFrame(UiInputActionMap.DialogueAuto)
+                UIInputActionMap.WasPressedThisFrame(UIInputActionMap.DialogueAuto)
                 && !historyOpen
                 && !hidden
             )
@@ -68,7 +68,7 @@ namespace CreativeAI.UI
             }
 
             if (
-                UiInputActionMap.WasPressedThisFrame(UiInputActionMap.DialogueSkip)
+                UIInputActionMap.WasPressedThisFrame(UIInputActionMap.DialogueSkip)
                 && !historyOpen
                 && !hidden
                 && !_rewardActive()
@@ -77,7 +77,7 @@ namespace CreativeAI.UI
                 _controls.PlaySkipShortcut();
 
             if (
-                UiInputActionMap.WasPressedThisFrame(UiInputActionMap.DialogueHide)
+                UIInputActionMap.WasPressedThisFrame(UIInputActionMap.DialogueHide)
                 && !choices
                 && !_rewardActive()
                 && !historyOpen
@@ -88,7 +88,7 @@ namespace CreativeAI.UI
             }
 
             if (
-                UiInputActionMap.WasPressedThisFrame(UiInputActionMap.DialogueSpeed)
+                UIInputActionMap.WasPressedThisFrame(UIInputActionMap.DialogueSpeed)
                 && !historyOpen
                 && !hidden
             )

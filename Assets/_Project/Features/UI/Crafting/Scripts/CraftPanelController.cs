@@ -3,7 +3,6 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using CreativeAI.Gameplay;
-using DG.Tweening;
 using TMPro;
 using UnityEngine;
 using UnityEngine.InputSystem;
@@ -17,16 +16,6 @@ namespace CreativeAI.UI
     public class CraftPanelController : MonoBehaviour
     {
         public const int MaterialSlotCount = 2;
-
-        private const float GearRotationSpeed = 180f;
-        private const float WarningShakeDistance = 12f;
-        private const float WarningShakeDuration = 0.6f;
-        private const float WarningShakeFrequency = 5f;
-        private const float WarningFadeDelay = 0.8f;
-        private const float WarningFadeDuration = 0.6f;
-        private const float ResultFadeDuration = 0.16f;
-        private const float ResultAnimationDuration = 0.22f;
-        private const float ResultHiddenScale = 0.9f;
 
         /// <summary>素材を受け付けない理由。警告トーストの文言に対応する。</summary>
         private enum CraftWarning
@@ -45,7 +34,7 @@ namespace CreativeAI.UI
 
         [Header("Materials")]
         [SerializeField]
-        private InventoryView _inventory;
+        private ItemListView _inventory;
 
         [SerializeField]
         private MaterialSlot[] _materialSlots = new MaterialSlot[MaterialSlotCount];
@@ -98,11 +87,8 @@ namespace CreativeAI.UI
         private Coroutine _initialSelectionRoutine;
         private ItemData _previewedCraftedItem;
         private ItemCategory _materialCategory = ItemCategory.Food;
-        private Action _resultClosedAction;
-        private Sequence _resultSequence;
-        private Coroutine _warningRoutine;
-        private Vector2 _warningBasePosition;
-        private bool _hasWarningBasePosition;
+        private CraftResultPresenter _result;
+        private CraftWarningToast _warning;
 
         public bool IsCraftFlowRunning => _isCraftFlowRunning;
         public ItemData PreviewedCraftedItem => _previewedCraftedItem;
@@ -126,7 +112,21 @@ namespace CreativeAI.UI
 
         private bool IsCraftInteractionLocked => _isCrafting || _isCraftFlowRunning;
 
-        private GameObject ResultRoot => _resultCanvasGroup.gameObject;
+        // テストは参照を後から差し込むので、使う直前に作る。
+        private CraftResultPresenter Result =>
+            _result ??= new CraftResultPresenter(
+                _loadingRoot,
+                _loadingGear,
+                _resultCanvasGroup,
+                _resultCloseOnClick,
+                _resultItemImage,
+                _resultItemName,
+                _resultItemParameters,
+                HideResult
+            );
+
+        private CraftWarningToast Warning =>
+            _warning ??= new CraftWarningToast(this, _warningText, _warningCanvasGroup);
 
 #if UNITY_EDITOR
         private void Reset() => AutoAssignReferences();
@@ -135,14 +135,15 @@ namespace CreativeAI.UI
         private void AutoAssignReferences()
         {
             if (_inventory == null)
-                _inventory = GetComponentInChildren<InventoryView>(true);
+                _inventory = GetComponentInChildren<ItemListView>(true);
             if (_materialSlots.Any(slot => slot == null))
                 _materialSlots = GetComponentsInChildren<MaterialSlot>(true)
                     .OrderBy(slot => slot.transform.GetSiblingIndex())
                     .Take(MaterialSlotCount)
                     .ToArray();
             if (_craftButton == null)
-                _craftButton = UIChildFinder.FindButton(transform, "CraftButton");
+                _craftButton = GetComponentsInChildren<Button>(true)
+                    .FirstOrDefault(button => button.name == "CraftButton");
         }
 #endif
 
@@ -194,18 +195,13 @@ namespace CreativeAI.UI
 
         private void OnDestroy()
         {
-            _resultSequence?.Kill();
-            _resultSequence = null;
+            _result?.Dispose();
             Unsubscribe();
-            if (_resultCloseOnClick != null)
-                _resultCloseOnClick.ClearClickAction(HideResult);
-            _resultClosedAction = null;
         }
 
         private void Update()
         {
-            if (_loadingGear != null && _loadingGear.gameObject.activeInHierarchy)
-                _loadingGear.Rotate(0f, 0f, -GearRotationSpeed * Time.unscaledDeltaTime);
+            Result.Tick();
             UpdateMaterialSlotKeyboardNavigation();
         }
 
@@ -233,12 +229,6 @@ namespace CreativeAI.UI
             UIButtonHoverScaleUtility.ApplyTo(_closeButton);
             _closeButton.onClick.RemoveListener(HideResult);
             _closeButton.onClick.AddListener(HideResult);
-
-            if (!_hasWarningBasePosition)
-            {
-                _warningBasePosition = _warningText.rectTransform.anchoredPosition;
-                _hasWarningBasePosition = true;
-            }
 
             if (_craftedItemSlot.TryGetComponent(out SlotFrameView craftedFrame))
                 craftedFrame.SetRole(SlotFrameRole.ItemSet);
@@ -310,7 +300,7 @@ namespace CreativeAI.UI
         private void OnInventoryDisplayRefreshRequested(
             TabDefinition definition,
             int tabIndex,
-            InventoryView.ScrollRefreshMode scrollMode
+            ItemListView.ScrollRefreshMode scrollMode
         )
         {
             // The authored quick-item / equipment buttons own category selection.
@@ -340,7 +330,7 @@ namespace CreativeAI.UI
 
         private void OnInventoryItemsRequested(
             ItemCategory category,
-            InventoryView.ScrollRefreshMode scrollMode
+            ItemListView.ScrollRefreshMode scrollMode
         )
         {
             var inventory = InventoryManager.Instance;
@@ -745,15 +735,11 @@ namespace CreativeAI.UI
 
         private void UpdateMaterialSlotKeyboardNavigation()
         {
-            if (
-                _resultCanvasGroup != null
-                && ResultRoot.activeSelf
-                && _resultCanvasGroup.interactable
-            )
+            if (Result.IsWaitingForClose)
             {
                 if (
-                    UiInputActionMap.WasSubmitPressedThisFrame()
-                    || UiInputActionMap.WasCancelPressedThisFrame()
+                    UIInputActionMap.WasSubmitPressedThisFrame()
+                    || UIInputActionMap.WasCancelPressedThisFrame()
                 )
                 {
                     HideResult();
@@ -765,8 +751,8 @@ namespace CreativeAI.UI
                 return;
 
             if (
-                UiInputActionMap.WasPressedThisFrame(UiInputActionMap.TabPrev)
-                || UiInputActionMap.WasPressedThisFrame(UiInputActionMap.TabNext)
+                UIInputActionMap.WasPressedThisFrame(UIInputActionMap.TabPrev)
+                || UIInputActionMap.WasPressedThisFrame(UIInputActionMap.TabNext)
             )
             {
                 SelectMaterialCategory(
@@ -777,13 +763,13 @@ namespace CreativeAI.UI
                 return;
             }
 
-            if (UiInputActionMap.WasPressedThisFrame(UiInputActionMap.CraftExecute))
+            if (UIInputActionMap.WasPressedThisFrame(UIInputActionMap.CraftExecute))
             {
                 StartCraft();
                 return;
             }
 
-            if (UiInputActionMap.WasPressedThisFrame(UiInputActionMap.AuxAction))
+            if (UIInputActionMap.WasPressedThisFrame(UIInputActionMap.AuxAction))
             {
                 if (SlotKeyboardFocus.IsFocused(this))
                 {
@@ -802,7 +788,7 @@ namespace CreativeAI.UI
             if (_selectedMaterialSlotIndex < 0 || !SlotKeyboardFocus.IsFocused(this))
                 return;
 
-            if (UiInputActionMap.TryReadDiscreteMove(out Vector2Int step))
+            if (UIInputActionMap.TryReadDiscreteMove(out Vector2Int step))
             {
                 if (step.x != 0)
                 {
@@ -818,7 +804,7 @@ namespace CreativeAI.UI
                         _inventory.SelectFirstVisibleSlotAndClaimFocus();
                 }
             }
-            else if (UiInputActionMap.WasSubmitPressedThisFrame())
+            else if (UIInputActionMap.WasSubmitPressedThisFrame())
             {
                 if (_materials[_selectedMaterialSlotIndex] != null)
                     ClearSlotAnimated(_selectedMaterialSlotIndex);
@@ -849,15 +835,15 @@ namespace CreativeAI.UI
             {
                 SetCraftFlowRunning(true);
                 HideWarning();
-                HideResultImmediately();
-                ShowLoading();
+                Result.HideImmediately();
+                Result.ShowLoading();
                 yield return new WaitForSecondsRealtime(Mathf.Max(0f, _craftFlowDurationSeconds));
 
                 ItemStack crafted = craftAction();
-                HideLoading();
+                Result.HideLoading();
                 if (crafted == null)
                 {
-                    HideResultImmediately();
+                    Result.HideImmediately();
                     yield break;
                 }
 
@@ -883,7 +869,7 @@ namespace CreativeAI.UI
             }
             finally
             {
-                HideLoading();
+                Result.HideLoading();
                 if (!awaitingResultClose)
                     SetCraftFlowRunning(false);
             }
@@ -891,8 +877,8 @@ namespace CreativeAI.UI
 
         public void CancelCraftFlow()
         {
-            HideLoading();
-            HideResultImmediately();
+            Result.HideLoading();
+            Result.HideImmediately();
             SetCraftFlowRunning(false);
         }
 
@@ -905,26 +891,6 @@ namespace CreativeAI.UI
             SetCraftInteractionEnabled(!running);
         }
 
-        // --- ローディング ---
-
-        private void ShowLoading()
-        {
-            _loadingRoot.SetActive(true);
-            _loadingGear.localRotation = Quaternion.identity;
-            _loadingGear.gameObject.SetActive(true);
-        }
-
-        private void HideLoading()
-        {
-            if (_loadingGear != null)
-            {
-                _loadingGear.localRotation = Quaternion.identity;
-                _loadingGear.gameObject.SetActive(false);
-            }
-            if (_loadingRoot != null)
-                _loadingRoot.SetActive(false);
-        }
-
         // --- 結果パネル ---
 
         public void ShowResult(ItemStack crafted, Action closeAction)
@@ -933,71 +899,18 @@ namespace CreativeAI.UI
                 return;
 
             HideWarning();
-            _resultClosedAction = closeAction;
-            var item = crafted?.Data;
-            SetResultContent(
-                item != null ? item.icon : null,
-                item != null ? item.itemName : string.Empty,
-                ItemStatTextFormatter.BuildStatsText(crafted)
-            );
+            Result.Show(crafted, closeAction);
             ResultShown?.Invoke(crafted);
-            if (_resultCloseOnClick != null)
-                _resultCloseOnClick.SetClickAction(HideResult);
-            PlayResultIn();
         }
 
         // 閉じるボタン・結果パネルのクリックから呼ばれる。
         private void HideResult()
         {
             HideWarning();
-            if (_resultCanvasGroup == null)
-                return;
-
-            Action closedAction = _resultClosedAction;
-            _resultClosedAction = null;
-            if (_resultCloseOnClick != null)
-                _resultCloseOnClick.ClearClickAction(HideResult);
-            PlayResultOut(() =>
-            {
-                SetResultContent(null, string.Empty, string.Empty);
-                closedAction?.Invoke();
-            });
+            Result.Close();
         }
 
-        private void HideResultImmediately()
-        {
-            if (_resultCanvasGroup == null)
-                return;
-
-            _resultClosedAction = null;
-            if (_resultCloseOnClick != null)
-                _resultCloseOnClick.ClearClickAction(HideResult);
-            ResetResultPanel();
-            SetResultContent(null, string.Empty, string.Empty);
-        }
-
-        private void SetResultContent(Sprite icon, string itemName, string itemParameters)
-        {
-            if (_resultItemImage != null)
-            {
-                _resultItemImage.sprite = icon;
-                _resultItemImage.color = icon != null ? Color.white : Color.clear;
-                _resultItemImage.gameObject.SetActive(icon != null);
-            }
-
-            if (_resultItemName != null)
-                _resultItemName.text = itemName ?? string.Empty;
-
-            if (_resultItemParameters != null)
-            {
-                _resultItemParameters.text = itemParameters ?? string.Empty;
-                _resultItemParameters.gameObject.SetActive(
-                    !string.IsNullOrWhiteSpace(itemParameters)
-                );
-            }
-        }
-
-        // --- 警告トースト(横に揺れてからフェードアウト) ---
+        // --- 警告トースト ---
 
         private void ShowWarning(CraftWarning reason)
         {
@@ -1007,21 +920,10 @@ namespace CreativeAI.UI
             )
                 return;
 
-            StopWarningAnimation();
-            _warningText.text = GetWarningMessage(reason);
-            _warningText.gameObject.SetActive(true);
-            _warningCanvasGroup.alpha = 1f;
-            _warningRoutine = StartCoroutine(PlayWarningRoutine());
+            Warning.Show(GetWarningMessage(reason));
         }
 
-        private void HideWarning()
-        {
-            StopWarningAnimation();
-            if (_warningCanvasGroup != null)
-                _warningCanvasGroup.alpha = 0f;
-            if (_warningText != null)
-                _warningText.gameObject.SetActive(false);
-        }
+        private void HideWarning() => Warning.Hide();
 
         private static string GetWarningMessage(CraftWarning reason)
         {
@@ -1032,136 +934,6 @@ namespace CreativeAI.UI
                 CraftWarning.QuickFoodMaterial => "即時使用にセット中のアイテムは素材にできません",
                 _ => string.Empty,
             };
-        }
-
-        private IEnumerator PlayWarningRoutine()
-        {
-            var rect = _warningText.rectTransform;
-            float elapsed = 0f;
-            while (elapsed < WarningShakeDuration)
-            {
-                float damping = 1f - Mathf.Clamp01(elapsed / WarningShakeDuration);
-                float offsetX =
-                    Mathf.Sin(elapsed * Mathf.PI * 2f * WarningShakeFrequency)
-                    * WarningShakeDistance
-                    * damping;
-                rect.anchoredPosition = _warningBasePosition + new Vector2(offsetX, 0f);
-
-                elapsed += Time.unscaledDeltaTime;
-                yield return null;
-            }
-
-            rect.anchoredPosition = _warningBasePosition;
-            yield return new WaitForSecondsRealtime(WarningFadeDelay);
-
-            elapsed = 0f;
-            while (elapsed < WarningFadeDuration)
-            {
-                _warningCanvasGroup.alpha = 1f - Mathf.Clamp01(elapsed / WarningFadeDuration);
-                elapsed += Time.unscaledDeltaTime;
-                yield return null;
-            }
-
-            _warningRoutine = null;
-            HideWarning();
-        }
-
-        private void StopWarningAnimation()
-        {
-            if (_warningRoutine != null)
-            {
-                StopCoroutine(_warningRoutine);
-                _warningRoutine = null;
-            }
-
-            if (_warningText != null && _hasWarningBasePosition)
-                _warningText.rectTransform.anchoredPosition = _warningBasePosition;
-        }
-
-        // --- 結果パネルの出入りアニメーション ---
-
-        private void PlayResultIn()
-        {
-            var rect = ResultRoot.transform as RectTransform;
-            KillResultTweens(rect);
-
-            if (rect != null)
-                rect.localScale = Vector3.one * ResultHiddenScale;
-            _resultCanvasGroup.alpha = 0f;
-            _resultCanvasGroup.interactable = false;
-            _resultCanvasGroup.blocksRaycasts = true;
-
-            ResultRoot.SetActive(true);
-
-            var sequence = _resultSequence = DOTween
-                .Sequence()
-                .SetTarget(ResultRoot)
-                .SetUpdate(true);
-            if (rect != null)
-                sequence.Join(
-                    rect.DOScale(Vector3.one, ResultAnimationDuration).SetEase(Ease.OutBack)
-                );
-            sequence.Join(_resultCanvasGroup.DOFade(1f, ResultFadeDuration));
-            sequence.OnComplete(() =>
-            {
-                _resultCanvasGroup.interactable = true;
-                _resultCanvasGroup.blocksRaycasts = true;
-            });
-        }
-
-        private void PlayResultOut(Action onComplete)
-        {
-            if (!ResultRoot.activeSelf)
-            {
-                onComplete?.Invoke();
-                return;
-            }
-
-            var rect = ResultRoot.transform as RectTransform;
-            KillResultTweens(rect);
-            _resultCanvasGroup.interactable = false;
-            _resultCanvasGroup.blocksRaycasts = false;
-
-            var sequence = _resultSequence = DOTween
-                .Sequence()
-                .SetTarget(ResultRoot)
-                .SetUpdate(true);
-            if (rect != null)
-            {
-                sequence.Join(
-                    rect.DOScale(Vector3.one * ResultHiddenScale, ResultAnimationDuration)
-                        .SetEase(Ease.InBack)
-                );
-            }
-            sequence.Join(_resultCanvasGroup.DOFade(0f, ResultFadeDuration));
-            sequence.OnComplete(() =>
-            {
-                ResetResultPanel();
-                onComplete?.Invoke();
-            });
-        }
-
-        // アニメーションを止め、結果パネルを非表示の初期状態に戻す。
-        private void ResetResultPanel()
-        {
-            var rect = ResultRoot.transform as RectTransform;
-            KillResultTweens(rect);
-            if (rect != null)
-                rect.localScale = Vector3.one;
-            _resultCanvasGroup.alpha = 1f;
-            _resultCanvasGroup.interactable = true;
-            _resultCanvasGroup.blocksRaycasts = true;
-            ResultRoot.SetActive(false);
-        }
-
-        private void KillResultTweens(RectTransform rect)
-        {
-            _resultSequence?.Kill();
-            _resultSequence = null;
-            DOTween.Kill(ResultRoot);
-            if (rect != null)
-                rect.DOKill();
-            _resultCanvasGroup.DOKill();
         }
 
         // --- 参照チェック ---

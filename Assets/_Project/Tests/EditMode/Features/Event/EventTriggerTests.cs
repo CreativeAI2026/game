@@ -65,7 +65,7 @@ namespace CreativeAI.Tests.EditMode
             EventPlayerService.Current = null;
             ItemGiverService.Current = null;
             EventPlaybackService.SetPlaying(false);
-            UiPanelService.SetOpen(false);
+            UIPanelService.SetOpen(false);
             _residents.Clear();
             UnityEngine.Object.DestroyImmediate(_playerGo);
             UnityEngine.Object.DestroyImmediate(_triggerGo);
@@ -401,11 +401,11 @@ namespace CreativeAI.Tests.EditMode
             Assert.IsFalse(pin.Shown, "会話中は隠す");
 
             EventPlaybackService.SetPlaying(false);
-            UiPanelService.SetOpen(true);
+            UIPanelService.SetOpen(true);
             TestReflection.Invoke(pin, "Update");
             Assert.IsFalse(pin.Shown, "メニューを開いている間は隠す");
 
-            UiPanelService.SetOpen(false);
+            UIPanelService.SetOpen(false);
             TestReflection.Invoke(pin, "Update");
             Assert.IsTrue(pin.Shown);
             Assert.IsTrue(face.activeSelf);

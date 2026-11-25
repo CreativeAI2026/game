@@ -97,7 +97,7 @@ namespace CreativeAI.Tests.EditMode
             var prefab = AssetDatabase.LoadAssetAtPath<GameObject>(
                 "Assets/_Project/Features/UI/Crafting/Prefabs/CraftPanel.prefab"
             );
-            var layout = new SerializedObject(prefab.GetComponent<CraftUiLayout>());
+            var layout = new SerializedObject(prefab.GetComponent<CraftUILayout>());
             foreach (
                 string name in new[]
                 {

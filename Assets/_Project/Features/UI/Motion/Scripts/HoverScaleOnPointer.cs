@@ -98,17 +98,6 @@ namespace CreativeAI.UI
 
         public void SetHoverScale(float scale) => _hoverScale = Mathf.Max(1f, scale);
 
-        public void SetHoverScaleEnabled(bool enabled)
-        {
-            _hoverScaleEnabled = enabled;
-            if (_hoverScaleEnabled)
-                return;
-
-            _currentTween?.Kill();
-            _currentTween = null;
-            RestoreBaseScale();
-        }
-
         public void SetLockEnabled(bool enabled) => _lockEnabled = enabled;
 
         public void SetBounceEnabled(bool enabled)
@@ -432,9 +421,6 @@ namespace CreativeAI.UI
 
         private static readonly Dictionary<string, HoverScaleOnPointer> _lockedInstances = new();
 
-        public static HoverScaleOnPointer GetLockedInstance(string group) =>
-            _lockedInstances.TryGetValue(group, out var instance) ? instance : null;
-
         public bool IsLocked() => _isLocked;
 
         public void AcquireLock()
@@ -487,7 +473,7 @@ namespace CreativeAI.UI
             if (
                 !_releaseLockOnOutsideClick
                 || !_isLocked
-                || !UiInputActionMap.WasClickPressedThisFrame()
+                || !UIInputActionMap.WasClickPressedThisFrame()
                 || IsPointerOverSelf()
             )
                 return;
@@ -523,7 +509,7 @@ namespace CreativeAI.UI
         {
             if (
                 EventSystem.current == null
-                || !UiInputActionMap.TryReadPointerPosition(out Vector2 pointerPosition)
+                || !UIInputActionMap.TryReadPointerPosition(out Vector2 pointerPosition)
             )
                 return false;
 

@@ -3,10 +3,10 @@ using UnityEngine;
 
 namespace CreativeAI.UI
 {
-    public class InventoryPanelController : UIPanelStub
+    public sealed class InventoryPanelController : UIPanel
     {
         [SerializeField]
-        private InventoryView _inventory;
+        private ItemListView _inventory;
 
         [SerializeField]
         private ItemUseDialogPanel _itemUseDialogPanel;
@@ -91,7 +91,7 @@ namespace CreativeAI.UI
         private void OnInventoryDisplayRefreshRequested(
             TabDefinition definition,
             int tabIndex,
-            InventoryView.ScrollRefreshMode scrollMode
+            ItemListView.ScrollRefreshMode scrollMode
         )
         {
             if (_inventory == null)
@@ -116,7 +116,7 @@ namespace CreativeAI.UI
 
         private void OnInventoryItemsRequested(
             ItemCategory category,
-            InventoryView.ScrollRefreshMode scrollMode
+            ItemListView.ScrollRefreshMode scrollMode
         )
         {
             if (_inventory == null)
@@ -187,7 +187,7 @@ namespace CreativeAI.UI
         private void AutoAssignReferences()
         {
             if (_inventory == null)
-                _inventory = GetComponentInChildren<InventoryView>(true);
+                _inventory = GetComponentInChildren<ItemListView>(true);
             if (_itemUseDialogPanel == null)
                 _itemUseDialogPanel = GetComponentInChildren<ItemUseDialogPanel>(true);
         }

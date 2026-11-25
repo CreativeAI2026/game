@@ -9,7 +9,7 @@ namespace CreativeAI.Gameplay
     /// 攻撃入力はConsumeパターン（1回消費）を採用し、
     /// 武器コントローラー側が任意のタイミングで入力を読み取れるようにしている。
     /// 会話イベント中(<see cref="EventPlaybackService.BlocksPlayerControl"/>)と、
-    /// 操作で開くUIの表示中(<see cref="UiPanelService.IsOpen"/>)は入力を捨てて操作不能にする。
+    /// 操作で開くUIの表示中(<see cref="UIPanelService.IsOpen"/>)は入力を捨てて操作不能にする。
     /// UI 表示中はクリックできるようカーソルのロックを外す。
     /// </summary>
     public class PlayerInputHandler : MonoBehaviour
@@ -49,7 +49,7 @@ namespace CreativeAI.Gameplay
         private void OnEnable()
         {
             EventPlaybackService.PlayingChanged += OnPlayingChanged;
-            UiPanelService.OpenChanged += OnUiPanelChanged;
+            UIPanelService.OpenChanged += OnUIPanelChanged;
             _gameMode = GameModeManager.Instance;
             if (_gameMode != null)
                 _gameMode.OnModeChanged += OnModeChanged;
@@ -59,7 +59,7 @@ namespace CreativeAI.Gameplay
         private void OnDisable()
         {
             EventPlaybackService.PlayingChanged -= OnPlayingChanged;
-            UiPanelService.OpenChanged -= OnUiPanelChanged;
+            UIPanelService.OpenChanged -= OnUIPanelChanged;
             if (_gameMode != null)
                 _gameMode.OnModeChanged -= OnModeChanged;
             _gameMode = null;
@@ -69,7 +69,7 @@ namespace CreativeAI.Gameplay
 
         private void OnModeChanged(GameMode _) => OnControlStateChanged();
 
-        private void OnUiPanelChanged(bool _)
+        private void OnUIPanelChanged(bool _)
         {
             OnControlStateChanged();
             ApplyCursorLock();
@@ -94,7 +94,7 @@ namespace CreativeAI.Gameplay
         }
 
         private static bool Blocked =>
-            EventPlaybackService.BlocksPlayerControl || UiPanelService.IsOpen;
+            EventPlaybackService.BlocksPlayerControl || UIPanelService.IsOpen;
 
         /// <summary>
         /// 攻撃入力を消費する。1回の入力に対して1回だけtrueを返す。
@@ -268,7 +268,7 @@ namespace CreativeAI.Gameplay
 
         private void ApplyCursorLock()
         {
-            bool locked = cursorLocked && !UiPanelService.IsOpen;
+            bool locked = cursorLocked && !UIPanelService.IsOpen;
             Cursor.lockState = locked ? CursorLockMode.Locked : CursorLockMode.None;
         }
     }

@@ -17,13 +17,13 @@ namespace CreativeAI.UI
 
         private bool _subscribed;
         private CanvasGroup _group;
-        private UiRouter _router;
+        private UIRouter _router;
         private GameModeManager _gameMode;
 
         private void Awake()
         {
-            _group = ResidentUiVisibility.GetOrAddGroup(gameObject);
-            _router = GetComponentInParent<UiRouter>(true); // 親 UIRoot の排他ルータ
+            _group = ResidentUIVisibility.GetOrAddGroup(gameObject);
+            _router = GetComponentInParent<UIRouter>(true); // 親 UIRoot の排他ルータ
             InitializeSlots();
         }
 
@@ -43,7 +43,7 @@ namespace CreativeAI.UI
             if (_gameMode != null)
                 _gameMode.OnModeChanged += OnModeChanged;
             EventPlaybackService.PlayingChanged += OnPlaybackChanged;
-            UiPanelService.OpenChanged += OnPanelOpenChanged;
+            UIPanelService.OpenChanged += OnPanelOpenChanged;
         }
 
         private void UnsubscribeVisibility()
@@ -51,7 +51,7 @@ namespace CreativeAI.UI
             if (_gameMode != null)
                 _gameMode.OnModeChanged -= OnModeChanged;
             EventPlaybackService.PlayingChanged -= OnPlaybackChanged;
-            UiPanelService.OpenChanged -= OnPanelOpenChanged;
+            UIPanelService.OpenChanged -= OnPanelOpenChanged;
         }
 
         private void OnModeChanged(GameMode mode) => ApplyVisibility();

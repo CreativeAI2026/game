@@ -111,7 +111,7 @@ namespace CreativeAI.Gameplay
         {
             var mode = GameModeManager.Instance;
             return EventPlaybackService.IsPlaying
-                || UiPanelService.IsOpen
+                || UIPanelService.IsOpen
                 || (mode != null && mode.CurrentMode == GameMode.Battle);
         }
 

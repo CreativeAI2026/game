@@ -31,7 +31,6 @@ namespace CreativeAI.UI
         [SerializeField]
         private SlotFrameView _frameView;
 
-        private bool _inputLocked;
         private bool _acceptPointerClick;
         private ItemStack _stack;
         private readonly HashSet<string> _warnedMissingViews = new();
@@ -135,8 +134,7 @@ namespace CreativeAI.UI
 
         public void OnPointerDown(PointerEventData eventData)
         {
-            _acceptPointerClick =
-                !_inputLocked && eventData.button == PointerEventData.InputButton.Left;
+            _acceptPointerClick = eventData.button == PointerEventData.InputButton.Left;
         }
 
         public void OnPointerClick(PointerEventData eventData)
@@ -151,13 +149,6 @@ namespace CreativeAI.UI
                 DoubleClicked?.Invoke(this);
             else
                 Clicked?.Invoke(this);
-        }
-
-        public void SetInputLocked(bool locked)
-        {
-            _inputLocked = locked;
-            if (Button != null)
-                Button.interactable = !locked;
         }
 
         private static int FindInventoryCount(ItemData item)

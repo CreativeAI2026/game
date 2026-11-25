@@ -122,7 +122,7 @@ namespace CreativeAI.Tests.PlayMode
             var prompt = Find<InteractPromptView>();
             var quickFood = Find<QuickFoodBarView>();
             var iconBar = Find<HudIconBarView>();
-            var router = _root.GetComponent<UiRouter>();
+            var router = _root.GetComponent<UIRouter>();
             InteractPromptService.Show(this, "[E] 扉を開ける");
             yield return null;
 
@@ -130,7 +130,7 @@ namespace CreativeAI.Tests.PlayMode
             Assert.IsTrue(IsShown(quickFood), "パネルを開く前に即時食材バーが表示されていません。");
             Assert.IsTrue(IsShown(iconBar), "パネルを開く前にアイコンバーが表示されていません。");
 
-            router.Open(UiRouter.UiId.Inventory);
+            router.Open(UIRouter.UIId.Inventory);
             yield return null;
 
             Assert.IsTrue(router.IsAnyPanelOpen);

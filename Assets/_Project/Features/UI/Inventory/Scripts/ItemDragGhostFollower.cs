@@ -10,8 +10,8 @@ namespace CreativeAI.UI
         private void LateUpdate()
         {
             if (
-                !UiInputActionMap.IsClickPressed()
-                || !UiInputActionMap.TryReadPointerPosition(out Vector2 position)
+                !UIInputActionMap.IsClickPressed()
+                || !UIInputActionMap.TryReadPointerPosition(out Vector2 position)
             )
             {
                 ItemSlotDragContext.Clear();

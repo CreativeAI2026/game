@@ -106,7 +106,7 @@ namespace CreativeAI.Tests.EditMode
             _input.MoveInput(Vector2.up);
             _input.AttackInput();
 
-            UiPanelService.SetOpen(true);
+            UIPanelService.SetOpen(true);
 
             Assert.AreEqual(Vector2.zero, _input.move);
             Assert.IsFalse(_input.HasAttackInput, "閉じた直後に攻撃が暴発しない");
@@ -115,7 +115,7 @@ namespace CreativeAI.Tests.EditMode
         [Test]
         public void WhileUiPanelOpen_IgnoresInputs()
         {
-            UiPanelService.SetOpen(true);
+            UIPanelService.SetOpen(true);
 
             _input.MoveInput(Vector2.up);
             _input.LookInput(Vector2.right);
@@ -129,8 +129,8 @@ namespace CreativeAI.Tests.EditMode
         [Test]
         public void AfterUiPanelClosed_AcceptsInputsAgain()
         {
-            UiPanelService.SetOpen(true);
-            UiPanelService.SetOpen(false);
+            UIPanelService.SetOpen(true);
+            UIPanelService.SetOpen(false);
 
             _input.MoveInput(Vector2.up);
 

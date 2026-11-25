@@ -31,7 +31,7 @@ namespace CreativeAI.Tests
         public static void ResetAll()
         {
             EventStatics.ResetForPlaySession();
-            UiPanelService.ResetState();
+            UIPanelService.ResetState();
             InteractPromptService.Clear();
             PendingSceneLoads.Clear();
             PickedItemRegistry.Clear();

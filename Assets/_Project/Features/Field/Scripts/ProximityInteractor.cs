@@ -80,7 +80,7 @@ namespace CreativeAI.Gameplay
 
         private void OnInteractPressed()
         {
-            if (!UiPanelService.IsOpen)
+            if (!UIPanelService.IsOpen)
                 TryInteract();
         }
 

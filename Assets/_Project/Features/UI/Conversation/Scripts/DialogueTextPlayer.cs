@@ -95,17 +95,17 @@ namespace CreativeAI.UI
 
         private static bool SkipReadHeld(bool wasRead)
         {
-            return wasRead && UiInputActionMap.IsPressed(UiInputActionMap.DialogueSkip);
+            return wasRead && UIInputActionMap.IsPressed(UIInputActionMap.DialogueSkip);
         }
 
         private static bool FastForwardHeld()
         {
-            return UiInputActionMap.IsPressed(UiInputActionMap.DialogueFastForward);
+            return UIInputActionMap.IsPressed(UIInputActionMap.DialogueFastForward);
         }
 
         private static bool AdvancePressed()
         {
-            return UiInputActionMap.WasPressedThisFrame(UiInputActionMap.DialogueAdvance);
+            return UIInputActionMap.WasPressedThisFrame(UIInputActionMap.DialogueAdvance);
         }
     }
 }
