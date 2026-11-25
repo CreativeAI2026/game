@@ -142,7 +142,8 @@ namespace CreativeAI.UI
                     .Take(MaterialSlotCount)
                     .ToArray();
             if (_craftButton == null)
-                _craftButton = UIChildFinder.FindButton(transform, "CraftButton");
+                _craftButton = GetComponentsInChildren<Button>(true)
+                    .FirstOrDefault(button => button.name == "CraftButton");
         }
 #endif
 

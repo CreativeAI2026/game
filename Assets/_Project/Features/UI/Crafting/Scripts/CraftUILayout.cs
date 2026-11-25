@@ -1,5 +1,6 @@
 using System.Collections;
 using System.Globalization;
+using System.Linq;
 using CreativeAI.Gameplay;
 using TMPro;
 using UnityEngine;
@@ -176,5 +177,47 @@ namespace CreativeAI.UI
             foreach (var text in _equipmentButton.GetComponentsInChildren<TMP_Text>(true))
                 text.color = quick ? UIVisualTheme.Ink : UIVisualTheme.Gold;
         }
+    }
+
+    /// <summary>調合画面に出すパラメータの文字(回復量・素材の値・できあがりの見込み)を作る。</summary>
+    public static class CraftParameterTextFormatter
+    {
+        /// <summary>食材の回復量(「20%」)。食材が無ければ「—」。</summary>
+        public static string Recovery(FoodData food) =>
+            food == null ? "—" : $"{Number(food.HealFraction * 100f)}%";
+
+        /// <summary>装備に付いているパラメータの値(「+12.5%」)。装備が無ければ「—」。</summary>
+        public static string Actual(StatType type, ItemStack stack) =>
+            stack?.Data == null ? "—" : $"+{Number(RolledStat.ToVector(stack.RolledStats)[type])}%";
+
+        /// <summary>
+        /// 2つの装備を調合したときに付きうる値の幅。必ず付くなら「+N%」、付くかもしれないなら「0～N%」、
+        /// 付かないなら「+0%」。素材がそろっていなければ「—」。
+        /// </summary>
+        public static string Preview(StatType type, ItemStack first, ItemStack second)
+        {
+            if (first?.Data == null || second?.Data == null)
+                return "—";
+            var a = RolledStat.ToVector(first.RolledStats);
+            var b = RolledStat.ToVector(second.RolledStats);
+            var p = StatRollParameters.Default;
+            var candidates = a
+                .Types.Union(b.Types)
+                .OrderByDescending(t =>
+                    (a[t] + b[t]) * (a[t] > 0f && b[t] > 0f ? 1d + p.Synergy : 1d)
+                )
+                .ThenBy(t => t)
+                .Take(p.MaxStatCount)
+                .ToArray();
+            if (!candidates.Contains(type))
+                return "+0%";
+            float budget = (float)CraftingService.ComputePowerBudget(a.Power, b.Power, p);
+            if (p.Caps.TryGetValue(type, out float cap))
+                budget = Mathf.Min(budget, cap);
+            return candidates.Length == 1 ? $"+{Number(budget)}%" : $"0～{Number(budget)}%";
+        }
+
+        private static string Number(float value) =>
+            value.ToString("0.##", CultureInfo.InvariantCulture);
     }
 }
