@@ -1110,7 +1110,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: CreativeAI.Core::CreativeAI.Core.EventTrigger
   _event: {fileID: 11400000, guid: b4f3edc1b55e88c35ccb427a31e54479, type: 2}
   _playerTag: Player
-  _enemy: {fileID: 0}
+  _enemy: {fileID: 9072946834079532967, guid: 7ebfa4e675c9e394a9cc1c70bfde687f, type: 3}
   _spawnPoint: {fileID: 0}
   _showPin: 0
   _pinPoint: {fileID: 0}
@@ -2046,7 +2046,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: CreativeAI.Core::CreativeAI.Core.EventTrigger
   _event: {fileID: 11400000, guid: 3d66c41a627b44a4d90242b4da75a844, type: 2}
   _playerTag: Player
-  _enemy: {fileID: 0}
+  _enemy: {fileID: 9072946834079532967, guid: 7ebfa4e675c9e394a9cc1c70bfde687f, type: 3}
   _spawnPoint: {fileID: 0}
   _showPin: 0
   _pinPoint: {fileID: 0}

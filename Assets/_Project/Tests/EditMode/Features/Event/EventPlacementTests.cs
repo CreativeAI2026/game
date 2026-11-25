@@ -158,8 +158,9 @@ namespace CreativeAI.Tests.EditMode
         private static readonly HashSet<string> BattleWithoutEnemyYet = new()
         {
             "9_battle_jellyfish",
-            "12_again",
             "13_battle_girl",
+            "9nt_battle_jellyfish",
+            "12nt_end",
             "19_again_jellyfish",
             "20_again_goldfish",
         };
