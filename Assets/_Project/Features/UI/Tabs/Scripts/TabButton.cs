@@ -54,8 +54,8 @@ namespace CreativeAI.UI
         private Vector3 _selectionUnderlineScale = Vector3.one;
         private bool _isSelected;
 
-        private static readonly Color ActiveColor = new Color32(0x61, 0x67, 0x80, 0xff);
-        private static readonly Color InactiveColor = new Color32(0xa9, 0xb2, 0xda, 0xff);
+        private static readonly Color ActiveColor = Color.black;
+        private static readonly Color InactiveColor = Color.white;
 
         private void Awake()
         {

@@ -173,7 +173,10 @@ namespace CreativeAI.UI
                         label.name == "Count" ? count.ToString()
                         : definition != null ? definition.Label ?? string.Empty
                         : string.Empty;
-                    label.color = i == _tabs.CurrentIndex ? Gold : Ink;
+                    if (label.name != "Count")
+                    {
+                        label.color = i == _tabs.CurrentIndex ? Color.black : Color.white;
+                    }
                 }
                 button.SetIconColor(i == _tabs.CurrentIndex ? Gold : Ink);
             }

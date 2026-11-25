@@ -213,7 +213,7 @@ namespace CreativeAI.UI
                     if (label != null)
                         label.color =
                             weapon == selectedWeapon
-                                ? UiVisualTheme.Gold
+                                ? Color.white
                                 : UiVisualTheme.Muted * new Color(.7f, .7f, .7f, 1);
                 }
             }

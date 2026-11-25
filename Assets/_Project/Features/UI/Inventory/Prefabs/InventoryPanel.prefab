@@ -1681,8 +1681,8 @@ MonoBehaviour:
   m_fontMaterials: []
   m_fontColor32:
     serializedVersion: 2
-    rgba: 4279050800
-  m_fontColor: {r: 0.1882353, g: 0.13333334, b: 0.050980393, a: 1}
+    rgba: 4294967295
+  m_fontColor: {r: 1, g: 1, b: 1, a: 1}
   m_enableVertexGradient: 0
   m_colorMode: 3
   m_fontColorGradient:
@@ -3740,7 +3740,7 @@ MonoBehaviour:
   m_HandleRect: {fileID: 6830242949271692302}
   m_Direction: 2
   m_Value: 1
-  m_Size: 0.72017634
+  m_Size: 0.37771484
   m_NumberOfSteps: 0
   m_OnValueChanged:
     m_PersistentCalls:
@@ -5605,6 +5605,10 @@ PrefabInstance:
     - target: {fileID: 2985040385368558547, guid: f9f9d006f4778a249b875539eb4fb7ac, type: 3}
       propertyPath: m_text
       value: "\u4F1A\u5FC3\u30C0\u30E1\u30FC\u30B8"
+      objectReference: {fileID: 0}
+    - target: {fileID: 2985040385368558547, guid: f9f9d006f4778a249b875539eb4fb7ac, type: 3}
+      propertyPath: m_fontSize
+      value: 18
       objectReference: {fileID: 0}
     - target: {fileID: 2985040385368558547, guid: f9f9d006f4778a249b875539eb4fb7ac, type: 3}
       propertyPath: m_fontColor32.rgba
