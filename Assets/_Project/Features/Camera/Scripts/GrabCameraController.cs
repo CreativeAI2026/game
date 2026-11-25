@@ -10,9 +10,6 @@ namespace CreativeAI.Gameplay
     public class GrabCameraController : MonoBehaviour
     {
         [Header("Cinemachine Cameras")]
-        [Tooltip("通常のメインカメラ")]
-        public CinemachineCamera vcamMain;
-
         [Tooltip("引き寄せフェーズ用カメラ")]
         public CinemachineCamera vcamPull;
 

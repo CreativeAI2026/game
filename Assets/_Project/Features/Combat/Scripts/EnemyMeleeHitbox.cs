@@ -54,9 +54,6 @@ namespace CreativeAI.Gameplay
         /// </summary>
         public event Action<Vector3> OnHitLanded;
 
-        /// <summary>判定半径。デバッグ表示で実際の判定範囲を描くために公開する。</summary>
-        public float HitboxRadius => _hitboxRadius;
-
         private void Awake()
         {
             if (_enemyStatus == null)

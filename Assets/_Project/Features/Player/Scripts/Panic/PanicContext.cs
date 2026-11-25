@@ -36,9 +36,6 @@ namespace CreativeAI.Gameplay
         /// <summary>実際の水平移動速度ベクトル（m/s、y は 0）。</summary>
         public Vector3 HorizontalVelocity { get; set; }
 
-        /// <summary>実際の水平移動速度（m/s）。</summary>
-        public float HorizontalSpeed => HorizontalVelocity.magnitude;
-
         /// <summary>入力から決まる、今出そうとしている水平移動速度（m/s）。移動できない時・入力が無い時は 0。</summary>
         public float DesiredSpeed { get; set; }
 

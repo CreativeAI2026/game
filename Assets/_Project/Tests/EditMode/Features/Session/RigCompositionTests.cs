@@ -87,7 +87,6 @@ namespace CreativeAI.Tests.EditMode
                 grabController,
                 "束縛演出用の GrabCameraController が CameraRig に含まれていません"
             );
-            Assert.IsNotNull(grabController.vcamMain);
             Assert.IsNotNull(grabController.vcamPull);
             Assert.IsNotNull(grabController.vcamDamage);
             Assert.IsNotNull(grabController.vcamEscape);

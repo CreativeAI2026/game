@@ -19,7 +19,6 @@ namespace CreativeAI.Gameplay
 
         [Min(0f)]
         public float baseDefense = 10f; //防御力の基準値
-        public float baseMoveSpeed = 5f; // 移動速度の基準値
 
         [Header("怯み（スーパーアーマー）設定")]
         [Tooltip("一度怯んだ後、再度怯むようになるまでの無敵時間（秒）")]
