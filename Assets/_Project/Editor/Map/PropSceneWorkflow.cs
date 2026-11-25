@@ -20,7 +20,9 @@ namespace CreativeAI.EditorTools
         const string SceneDir = "Assets/_Project/Scenes/Field";
         const string Prefix = "Field_Area01_Props_";
 
-        // 小物シーンの区切り(シーン名・ルート名に入るキー)。本棟は作成済みのシーン名を変えないよう建物名を付けない
+        // 小物シーンの区切り(シーン名・ルート名に入るキー)。本棟は作成済みのシーン名を変えないよう建物名を付けない。
+        // 柱は小物・マップとは担当が別なので、階で分けず1枚の区切りにする(同じ .unity を触らないため)。
+        // ここに載せると雛形・Build Settings 登録・実行時の重ね読み・当たり付け・NavMesh ベイクの対象にまとめて入る。
         public static readonly string[] Parts =
         {
             "1F",
@@ -30,6 +32,7 @@ namespace CreativeAI.EditorTools
             "Lab_1F",
             "Lab_2F",
             "Lab_3F",
+            "Pillars",
         };
 
         public static string SceneName(string part) => $"{Prefix}{part}";
@@ -102,6 +105,9 @@ namespace CreativeAI.EditorTools
 
         [MenuItem("Tools/CreativeAI/Map/小物シーン/研究棟/3F を開く")]
         public static void OpenLab3F() => OpenForWork("Lab_3F");
+
+        [MenuItem("Tools/CreativeAI/Map/小物シーン/柱を開く")]
+        public static void OpenPillars() => OpenForWork("Pillars");
 
         /// <summary>
         /// マップ + 指定した区切りの小物シーンを開き、小物シーンをアクティブにする(しないと小物がマップ側に入る)。
