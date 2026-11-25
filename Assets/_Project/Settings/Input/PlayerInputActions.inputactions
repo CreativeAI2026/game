@@ -308,17 +308,6 @@
                 },
                 {
                     "name": "",
-                    "id": "e1d86e42-4c28-4d61-9b02-4638cdbf3321",
-                    "path": "<Gamepad>/buttonSouth",
-                    "interactions": "",
-                    "processors": "",
-                    "groups": "Gamepad",
-                    "action": "Sprint",
-                    "isComposite": false,
-                    "isPartOfComposite": false
-                },
-                {
-                    "name": "",
                     "id": "3277c8a9-cda6-4a74-9c7c-babe53b49f7f",
                     "path": "<Mouse>/rightButton",
                     "interactions": "",
@@ -354,17 +343,6 @@
                     "name": "",
                     "id": "93a1d4e5-f6a7-4901-bcde-f12345678902",
                     "path": "<Gamepad>/rightTrigger",
-                    "interactions": "",
-                    "processors": "",
-                    "groups": "Gamepad",
-                    "action": "Attack",
-                    "isComposite": false,
-                    "isPartOfComposite": false
-                },
-                {
-                    "name": "",
-                    "id": "94a1d4e5-f6a7-4901-bcde-f12345678903",
-                    "path": "<Gamepad>/buttonWest",
                     "interactions": "",
                     "processors": "",
                     "groups": "Gamepad",
@@ -496,7 +474,7 @@
                 {
                     "name": "",
                     "id": "5d840dfc-c7c3-4898-9e8a-3dc84e6cffdf",
-                    "path": "<Gamepad>/select",
+                    "path": "<Gamepad>/buttonWest",
                     "interactions": "",
                     "processors": "",
                     "groups": "Gamepad",
@@ -518,7 +496,7 @@
                 {
                     "name": "",
                     "id": "45b87e88-1cd1-4b79-82d4-b5e9c8664028",
-                    "path": "<Gamepad>/start",
+                    "path": "<Gamepad>/buttonNorth",
                     "interactions": "",
                     "processors": "",
                     "groups": "Gamepad",
@@ -540,7 +518,7 @@
                 {
                     "name": "",
                     "id": "55b87e88-1cd1-4b79-82d4-b5e9c8664029",
-                    "path": "<Gamepad>/dpad/down",
+                    "path": "<Gamepad>/select",
                     "interactions": "",
                     "processors": "",
                     "groups": "Gamepad",
@@ -561,6 +539,17 @@
                 },
                 {
                     "name": "",
+                    "id": "a0fcbb7d-2e5f-4b46-830a-01b0b33ce180",
+                    "path": "<Gamepad>/start",
+                    "interactions": "",
+                    "processors": "",
+                    "groups": ";Gamepad",
+                    "action": "Map",
+                    "isComposite": false,
+                    "isPartOfComposite": false
+                },
+                {
+                    "name": "",
                     "id": "65b87e88-1cd1-4b79-82d4-b5e9c8664030",
                     "path": "<Keyboard>/e",
                     "interactions": "",
@@ -573,18 +562,7 @@
                 {
                     "name": "",
                     "id": "65b87e88-1cd1-4b79-82d4-b5e9c8664031",
-                    "path": "<Gamepad>/buttonEast",
-                    "interactions": "",
-                    "processors": "",
-                    "groups": "Gamepad",
-                    "action": "Interact",
-                    "isComposite": false,
-                    "isPartOfComposite": false
-                },
-                {
-                    "name": "",
-                    "id": "65b87e88-1cd1-4b79-82d4-b5e9c8664032",
-                    "path": "<Gamepad>/buttonNorth",
+                    "path": "<Gamepad>/buttonSouth",
                     "interactions": "",
                     "processors": "",
                     "groups": "Gamepad",
@@ -1235,7 +1213,7 @@
                 {
                     "name": "",
                     "id": "b6549a40-074d-447d-8794-66f5d30ffcfd",
-                    "path": "<Gamepad>/select",
+                    "path": "<Gamepad>/buttonWest",
                     "interactions": "",
                     "processors": "",
                     "groups": "Gamepad",
