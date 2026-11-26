@@ -22,7 +22,7 @@ namespace CreativeAI.Tests.EditMode
                 .Select(AssetDatabase.GUIDToAssetPath)
                 .Where(path =>
                     path.Substring(PortraitRoot.Length)
-                        .Contains("/Portraits/", StringComparison.Ordinal)
+                        .Contains("/Standing/", StringComparison.Ordinal)
                     && path.EndsWith(".png", StringComparison.OrdinalIgnoreCase)
                 )
                 .OrderBy(path => path, StringComparer.Ordinal)

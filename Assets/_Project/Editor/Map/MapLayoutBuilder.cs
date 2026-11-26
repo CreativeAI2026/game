@@ -133,9 +133,9 @@ namespace CreativeAI.EditorTools
         // モデルは元の *-V.glb の枠・扉板の左上の斜めの切り欠きを埋めて四角にしたもの。
         static readonly DoorDef[] Doors =
         {
-            new DoorDef('R', "Structure/LabDoor-Square-V.glb", -0.620f, 0.620f, 2.270f),
-            new DoorDef('C', "Structure/ClassroomDoor-Square-V.glb", -0.740f, 0.740f, 2.320f),
-            new DoorDef('L', "Structure/LibraryDoor-Square-V.glb", -0.790f, 0.790f, 2.360f),
+            new DoorDef('R', "Structure/LabDoor_Square_V.glb", -0.620f, 0.620f, 2.270f),
+            new DoorDef('C', "Structure/ClassroomDoor_Square_V.glb", -0.740f, 0.740f, 2.320f),
+            new DoorDef('L', "Structure/LibraryDoor_Square_V.glb", -0.790f, 0.790f, 2.360f),
         };
 
         readonly struct DoorDef
@@ -261,10 +261,10 @@ namespace CreativeAI.EditorTools
             public StairsModel Stairs;
 
             // 透明なガラス `$`。旧階高ぴったり(9.6u)で作ってある。
-            // GlassWall-V から方立・無目を間引き、格子を縦2・横2に広げたもの
+            // GlassWall_V から方立・無目を間引き、格子を縦2・横2に広げたもの
             static readonly (char, string[], float) GlassPanel = (
                 Glass,
-                new[] { "Structure/GlassWall-Wide.glb" },
+                new[] { "Structure/GlassWall_Wide.glb" },
                 9.6f
             );
 
@@ -289,7 +289,7 @@ namespace CreativeAI.EditorTools
             };
 
             // 研究棟のモデルから切り出した部品。
-            // 色は元のモデルが Unity で付いていた色に合わせる(赤だけは元のシーンが使っている LabRed 1)。
+            // 色は元のモデルが Unity で付いていた色に合わせる(赤は以前の研究棟のシーンで使っていた色)。
             public static readonly Kit Lab = new Kit
             {
                 WallMaterial = "Lab_Wall",
@@ -299,7 +299,7 @@ namespace CreativeAI.EditorTools
                 FloorColors = new[]
                 {
                     ('B', "Lab_FloorBlue", new Color(0.256f, 0.297f, 0.405f)),
-                    ('R', "LabRed 1", new Color(0.547f, 0.194f, 0.246f)),
+                    ('R', "Lab_FloorRed", new Color(0.547f, 0.194f, 0.246f)),
                     ('Y', "Lab_FloorYellow", new Color(0.62f, 0.612f, 0.243f)),
                 },
                 Panels = new[]
