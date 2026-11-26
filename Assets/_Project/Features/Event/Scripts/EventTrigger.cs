@@ -183,13 +183,8 @@ namespace CreativeAI.Gameplay
             if (_event == null || _event.Activation != EventActivation.Auto)
                 return;
 
-            // 別イベントの再生中は発火しない(会話中にトリガーへ入り直したときの二重発火防止)。
-            if (EventPlaybackService.IsPlaying)
-                return;
-
-            // Battle 中は新規イベントを発火しない(多重発火防止)。
-            var mode = GameModeManager.Instance;
-            if (mode != null && mode.CurrentMode == GameMode.Battle)
+            // 別イベントの再生中・戦闘中は発火しない(会話中にトリガーへ入り直したときなどの多重発火防止)。
+            if (!EventPlaybackService.IsFreeRoaming)
                 return;
 
             var progress = ProgressManager.Instance;

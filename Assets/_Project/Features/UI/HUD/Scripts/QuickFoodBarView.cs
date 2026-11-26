@@ -64,11 +64,9 @@ namespace CreativeAI.UI
         {
             // 会話(line/choice)中は使用不可なので隠す。ただし戦闘中は常時表示。
             // battle ステップも EventPlaybackService.IsPlaying の内側で走るため、モードで戦闘を除外する。
-            bool inBattle =
-                GameModeManager.Instance != null
-                && GameModeManager.Instance.CurrentMode == GameMode.Battle;
-            bool inDialogue = EventPlaybackService.IsPlaying && !inBattle;
-            bool hide = (_router != null && _router.IsAnyPanelOpen) || inDialogue;
+            bool hide =
+                (_router != null && _router.IsAnyPanelOpen)
+                || EventPlaybackService.BlocksPlayerControl;
             if (_group != null)
                 _group.SetShown(!hide);
         }

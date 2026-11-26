@@ -55,7 +55,7 @@ namespace CreativeAI.UI
             EventPlaybackService.PlayingChanged += OnPlaybackChanged;
             PlayerRegistry.Changed += BindPlayer;
             BindPlayer(PlayerRegistry.Current);
-            ApplyCurrent();
+            Apply();
         }
 
         private void OnDisable()
@@ -118,24 +118,18 @@ namespace CreativeAI.UI
                 _router.CloseAll();
         }
 
-        private void OnModeChanged(GameMode mode) => ApplyCurrent();
+        private void OnModeChanged(GameMode mode) => Apply();
 
-        private void OnPlaybackChanged(bool playing) => ApplyCurrent();
-
-        private void ApplyCurrent()
-        {
-            var mode = _gameMode != null ? _gameMode.CurrentMode : GameMode.Field;
-            Apply(mode);
-        }
+        private void OnPlaybackChanged(bool playing) => Apply();
 
         /// <summary>
         /// Field かつ会話イベント中でないときだけ表示。Battle・会話中は非表示にしてセーブ等を開けなくする。
         /// GameObject ごと SetActive すると自分が止まって購読を失うため、
         /// CanvasGroup で隠すだけにして自身は生かし続ける。
         /// </summary>
-        private void Apply(GameMode mode)
+        private void Apply()
         {
-            bool show = mode == GameMode.Field && !EventPlaybackService.IsPlaying;
+            bool show = EventPlaybackService.IsFreeRoaming;
             _shown = show;
             if (!show && _router != null && _router.IsAnyPanelOpen)
                 _router.CloseAll();

@@ -104,19 +104,13 @@ namespace CreativeAI.Gameplay
         /// </summary>
         private static bool CanSaveNow(out string blockedReason)
         {
-            var mode = GameModeManager.Instance;
-            if (mode != null && mode.CurrentMode != GameMode.Field)
+            if (EventPlaybackService.IsFreeRoaming)
             {
-                blockedReason = "戦闘モード中";
-                return false;
+                blockedReason = null;
+                return true;
             }
-            if (EventPlaybackService.IsPlaying)
-            {
-                blockedReason = "会話イベント再生中";
-                return false;
-            }
-            blockedReason = null;
-            return true;
+            blockedReason = EventPlaybackService.IsInBattle ? "戦闘モード中" : "会話イベント再生中";
+            return false;
         }
 
         /// <summary>tag=Player のリグ root から座標・向き・現在HP・現在シーンを取り込む。リグ未生成なら hasPlayerState=false。</summary>

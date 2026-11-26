@@ -181,16 +181,7 @@ namespace CreativeAI.UI
 
         private void LateUpdate()
         {
-            var mode =
-                GameModeManager.Instance != null
-                    ? GameModeManager.Instance.CurrentMode
-                    : GameMode.Field;
-            SetShown(
-                _layout != null
-                    && _player != null
-                    && mode == GameMode.Field
-                    && !EventPlaybackService.IsPlaying
-            );
+            SetShown(_layout != null && _player != null && EventPlaybackService.IsFreeRoaming);
             if (_shown != true)
                 return;
             if (_camera == null || !_camera.isActiveAndEnabled)

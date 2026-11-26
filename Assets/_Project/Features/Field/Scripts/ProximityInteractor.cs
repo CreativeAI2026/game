@@ -100,12 +100,7 @@ namespace CreativeAI.Gameplay
         {
             if (!_playerInside || !HasTarget)
                 return false;
-            if (
-                GameModeManager.Instance != null
-                && GameModeManager.Instance.CurrentMode != GameMode.Field
-            )
-                return false;
-            return !EventPlaybackService.IsPlaying;
+            return EventPlaybackService.IsFreeRoaming;
         }
 
         /// <summary>操作を実行する。受け付けられなければ何もせず false。</summary>

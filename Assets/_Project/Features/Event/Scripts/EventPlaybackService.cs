@@ -16,16 +16,18 @@ namespace CreativeAI.Gameplay
         /// プレイヤー操作を止めるべきか。再生中でも battle ステップ(Battle モード)の間は戦うので止めない。
         /// PlayerInputHandler が入力を捨てる判定に使う。
         /// </summary>
-        public static bool BlocksPlayerControl
-        {
-            get
-            {
-                if (!IsPlaying)
-                    return false;
-                var mode = GameModeManager.Instance;
-                return mode == null || mode.CurrentMode != GameMode.Battle;
-            }
-        }
+        public static bool BlocksPlayerControl => IsPlaying && !IsInBattle;
+
+        /// <summary>戦闘モード中か。マネージャ未生成(開発シーン直 Play など)は Field 扱いで false。</summary>
+        public static bool IsInBattle =>
+            GameModeManager.Instance != null
+            && GameModeManager.Instance.CurrentMode == GameMode.Battle;
+
+        /// <summary>
+        /// フィールドを自由に動いているか(戦闘中でも会話イベント再生中でもない)。
+        /// セーブ・拾う・調べる・HUD の出し分けなど、「移動中だけ」の判定はこれを使う。
+        /// </summary>
+        public static bool IsFreeRoaming => !IsPlaying && !IsInBattle;
 
         public static void SetPlaying(bool playing)
         {

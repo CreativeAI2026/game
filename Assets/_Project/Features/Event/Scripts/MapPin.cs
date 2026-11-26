@@ -109,10 +109,7 @@ namespace CreativeAI.Gameplay
         // 会話・戦闘・メニューの最中は、画面の邪魔になるので隠す。
         private static bool IsBusy()
         {
-            var mode = GameModeManager.Instance;
-            return EventPlaybackService.IsPlaying
-                || UIPanelService.IsOpen
-                || (mode != null && mode.CurrentMode == GameMode.Battle);
+            return !EventPlaybackService.IsFreeRoaming || UIPanelService.IsOpen;
         }
 
         /// <summary>指定位置にピンを作る。画像が無ければ null。</summary>
