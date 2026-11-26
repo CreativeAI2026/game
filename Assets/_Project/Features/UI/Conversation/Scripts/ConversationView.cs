@@ -520,10 +520,9 @@ namespace CreativeAI.UI
                 _nameText.color = resolved.ThemeColor;
                 _nameText.gameObject.SetActive(showName);
             }
+            // 地の文も台詞も左揃え(折り返した2行目以降も左端から始める)。
             if (_bodyText != null)
-                _bodyText.alignment = narration
-                    ? TextAlignmentOptions.Center
-                    : TextAlignmentOptions.MidlineLeft;
+                _bodyText.alignment = TextAlignmentOptions.MidlineLeft;
             _chromePresenter.PlayLineTextEntrance(_nameText, _bodyText, showName);
 
             bool portraitObscured =
