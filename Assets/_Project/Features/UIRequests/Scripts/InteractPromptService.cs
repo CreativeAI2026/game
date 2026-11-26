@@ -1,3 +1,5 @@
+using UnityEngine;
+
 namespace CreativeAI.Gameplay
 {
     /// <summary>
@@ -37,14 +39,14 @@ namespace CreativeAI.Gameplay
             LabelChanged?.Invoke(null);
         }
 
-        /// <summary>シーン遷移などで持ち主ごと消えたとき用の強制クリア。</summary>
-        public static void Clear()
+        /// <summary>購読者には通知せずに初期状態へ戻す。</summary>
+        // Domain Reload を切った Editor で Play を繰り返したとき、前回の Play の値や購読を持ち越さないよう、Play 開始時に戻す
+        [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
+        public static void ResetState()
         {
-            if (Owner == null && Label == null)
-                return;
             Owner = null;
             Label = null;
-            LabelChanged?.Invoke(null);
+            LabelChanged = null;
         }
     }
 }

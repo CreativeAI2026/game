@@ -28,7 +28,7 @@ namespace CreativeAI.Tests.EditMode
         public void TearDown()
         {
             CraftUIRequestService.Requested -= CountRequest;
-            InteractPromptService.Clear();
+            InteractPromptService.ResetState();
             EventPlaybackService.SetPlaying(false);
             Object.DestroyImmediate(_go);
         }

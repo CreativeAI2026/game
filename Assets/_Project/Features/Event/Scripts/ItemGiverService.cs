@@ -1,3 +1,5 @@
+using UnityEngine;
+
 namespace CreativeAI.Gameplay
 {
     /// <summary>
@@ -32,5 +34,10 @@ namespace CreativeAI.Gameplay
     public static class ItemGiverService
     {
         public static IItemGiver Current { get; set; }
+
+        /// <summary>登録を外す。</summary>
+        // Domain Reload を切った Editor で Play を繰り返したとき、前回の Play の値や購読を持ち越さないよう、Play 開始時に戻す
+        [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
+        public static void ResetState() => Current = null;
     }
 }

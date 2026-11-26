@@ -1,6 +1,7 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using UnityEngine;
 
 namespace CreativeAI.Gameplay
 {
@@ -45,11 +46,16 @@ namespace CreativeAI.Gameplay
     }
 
     /// <summary>
-    /// 実行時の IDialogueView を登録する seam。Gameplay は UI を参照できず常駐同士で drag 配線もできないため、
-    /// 会話UIが生成時に登録し、EventPlayer は Inspector 未配線時のフォールバックとして見る。
+    /// 実行時の IDialogueView の窓口。Gameplay は UI を参照できず、常駐同士で Inspector からの配線もできないため、
+    /// 会話UIが生成時にここへ登録し、EventPlayer はここから受け取る。
     /// </summary>
     public static class DialogueViewService
     {
         public static IDialogueView Current { get; set; }
+
+        /// <summary>登録を外す。</summary>
+        // Domain Reload を切った Editor で Play を繰り返したとき、前回の Play の値や購読を持ち越さないよう、Play 開始時に戻す
+        [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
+        public static void ResetState() => Current = null;
     }
 }

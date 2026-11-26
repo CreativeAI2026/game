@@ -1,3 +1,5 @@
+using UnityEngine;
+
 namespace CreativeAI.Gameplay
 {
     /// <summary>
@@ -33,8 +35,10 @@ namespace CreativeAI.Gameplay
             PlayingChanged?.Invoke(playing);
         }
 
-        /// <summary>購読者には通知せずに初期状態へ戻す(<see cref="EventStatics"/> 用)。</summary>
-        internal static void ResetState()
+        /// <summary>購読者には通知せずに初期状態へ戻す。</summary>
+        // Domain Reload を切った Editor で Play を繰り返したとき、前回の Play の値や購読を持ち越さないよう、Play 開始時に戻す
+        [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
+        public static void ResetState()
         {
             IsPlaying = false;
             PlayingChanged = null;

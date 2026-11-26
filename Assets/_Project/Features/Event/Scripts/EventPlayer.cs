@@ -495,28 +495,16 @@ namespace CreativeAI.Gameplay
     }
 
     /// <summary>
-    /// 実行時の IEventPlayer を登録する seam。EventPlayer は常駐生成で drag 配線できないため EnsureResident 時に登録し、
-    /// 非常駐の EventTrigger は Inspector 未配線時のフォールバックとして見る。
+    /// 実行時の IEventPlayer の窓口。EventPlayer は常駐生成で Inspector から配線できないため、生成時にここへ登録し、
+    /// シーン側の EventTrigger / EventInteractor はここから受け取る。
     /// </summary>
     public static class EventPlayerService
     {
         public static IEventPlayer Current { get; set; }
-    }
 
-    /// <summary>
-    /// このプロジェクトは Editor の Enter Play Mode で Domain Reload を切っているため、static な値が前回の Play から持ち越される。
-    /// 会話の途中で Play を止めると再生中フラグが立ったまま残り、次の Play で HUD が出ない・動けない・発火しない状態になるので、
-    /// Play 開始時に Event 関連の static(再生中フラグ・各 seam)を初期化する。ビルドでは起動時に1回走るだけで無害。
-    /// </summary>
-    public static class EventStatics
-    {
+        /// <summary>登録を外す。</summary>
+        // Domain Reload を切った Editor で Play を繰り返したとき、前回の Play の値や購読を持ち越さないよう、Play 開始時に戻す
         [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
-        public static void ResetForPlaySession()
-        {
-            EventPlaybackService.ResetState();
-            EventPlayerService.Current = null;
-            DialogueViewService.Current = null;
-            ItemGiverService.Current = null;
-        }
+        public static void ResetState() => Current = null;
     }
 }

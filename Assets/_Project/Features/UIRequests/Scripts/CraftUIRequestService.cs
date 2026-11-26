@@ -1,3 +1,5 @@
+using UnityEngine;
+
 namespace CreativeAI.Gameplay
 {
     /// <summary>
@@ -10,5 +12,10 @@ namespace CreativeAI.Gameplay
         public static event System.Action Requested;
 
         public static void Request() => Requested?.Invoke();
+
+        /// <summary>購読を外す。</summary>
+        // Domain Reload を切った Editor で Play を繰り返したとき、前回の Play の値や購読を持ち越さないよう、Play 開始時に戻す
+        [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
+        public static void ResetState() => Requested = null;
     }
 }
