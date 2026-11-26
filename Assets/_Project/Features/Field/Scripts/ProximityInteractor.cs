@@ -15,16 +15,14 @@ namespace CreativeAI.Gameplay
         [SerializeField]
         private string _playerTag = "Player";
 
-        [Tooltip("操作に使うキー。")]
-        [SerializeField]
-        private Key _key = Key.E;
-
         private PlayerInputHandler _inputHandler;
         private PlayerInput _playerInput;
         private bool _playerInside;
 
-        private bool _cachedIsGamepad;
-        private Key _cachedKey;
+        private InputAction _interactAction;
+
+        // 毎フレーム文字列を作らないよう、入力の種類と文言が同じ間は前回のプロンプトを使う
+        private string _cachedScheme;
         private string _cachedActionLabel;
         private string _cachedLabel;
 
@@ -73,6 +71,9 @@ namespace CreativeAI.Gameplay
 
             _inputHandler = player != null ? player.GetComponent<PlayerInputHandler>() : null;
             _playerInput = player != null ? player.GetComponent<PlayerInput>() : null;
+            _interactAction =
+                _playerInput != null ? _playerInput.actions.FindAction("Interact") : null;
+            _cachedLabel = null;
 
             if (_inputHandler != null)
                 _inputHandler.InteractPressed += OnInteractPressed;
@@ -113,23 +114,33 @@ namespace CreativeAI.Gameplay
             return true;
         }
 
+        // キー表示は入力設定(Interact)から取る。キーを変えても表示がずれないように、ここには書かない。
         private string BuildLabel()
         {
-            bool isGamepad = _playerInput != null && _playerInput.currentControlScheme == "Gamepad";
+            string scheme = _playerInput != null ? _playerInput.currentControlScheme : null;
             string actionLabel = ActionLabel;
             if (
                 _cachedLabel != null
-                && _cachedIsGamepad == isGamepad
-                && _cachedKey == _key
+                && _cachedScheme == scheme
                 && _cachedActionLabel == actionLabel
             )
                 return _cachedLabel;
 
-            _cachedLabel = isGamepad ? $"[A] {actionLabel}" : $"[{_key}] {actionLabel}";
-            _cachedIsGamepad = isGamepad;
-            _cachedKey = _key;
+            _cachedScheme = scheme;
             _cachedActionLabel = actionLabel;
+            _cachedLabel =
+                _interactAction != null ? $"[{KeyName(scheme)}] {actionLabel}" : actionLabel;
             return _cachedLabel;
+        }
+
+        private string KeyName(string scheme)
+        {
+            // Xbox / PS4 の操作方式もゲームパッドの割り当て(Gamepad)を使っている
+            string group =
+                string.IsNullOrEmpty(scheme) || scheme == "KeyboardMouse"
+                    ? "KeyboardMouse"
+                    : "Gamepad";
+            return _interactAction.GetBindingDisplayString(InputBinding.MaskByGroup(group));
         }
     }
 }
