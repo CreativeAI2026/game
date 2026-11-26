@@ -7,23 +7,32 @@ namespace CreativeAI.UI
     /// <summary>履歴内の選択肢候補を、選択結果だけの表示と全候補表示で切り替える。</summary>
     public sealed class DialogueChoiceHistoryToggle : MonoBehaviour
     {
+        [SerializeField]
+        private Button _button;
+
+        [SerializeField]
         private TMP_Text _body;
+
+        [SerializeField]
         private TMP_Text _badge;
+
         private string _fullText;
         private string _selectedText;
         private bool _expanded;
         private bool _searching;
 
-        public void Configure(Button button, TMP_Text body, TMP_Text badge, string fullText)
+        private void Awake() => _button.onClick.AddListener(Toggle);
+
+        /// <summary>候補をすべて並べた文を設定し、選んだものだけの表示にする。</summary>
+        public void SetText(string fullText)
         {
-            _body = body;
-            _badge = badge;
             _fullText = fullText ?? string.Empty;
             _selectedText = ExtractSelected(_fullText);
-            button.onClick.AddListener(Toggle);
+            _expanded = false;
             Refresh();
         }
 
+        /// <summary>検索中は目立たせた全文を出す。null なら検索前の表示に戻す。</summary>
         public void SetSearchText(string highlightedText)
         {
             _searching = highlightedText != null;

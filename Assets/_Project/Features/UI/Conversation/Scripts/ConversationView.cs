@@ -61,7 +61,8 @@ namespace CreativeAI.UI
         internal void HandleChoiceKeys()
         {
             _choices.HandleKeyboardInput();
-            _itemPicker?.HandleKeyboardInput();
+            if (_itemPicker != null)
+                _itemPicker.HandleKeyboardInput();
         }
 
         [Header("部品")]
@@ -73,6 +74,9 @@ namespace CreativeAI.UI
 
         [SerializeField]
         private DialogueRewardView _rewards;
+
+        [SerializeField]
+        private DialogueItemPicker _itemPicker;
 
         [Header("ルート表示")]
         [SerializeField]
@@ -170,7 +174,6 @@ namespace CreativeAI.UI
         [SerializeField]
         private Button _hideControlButton;
 
-        private DialogueItemPickerPresenter _itemPicker;
         private readonly DialogueTextPlayer _textPlayer = new();
         private ConversationChromePresenter _chromePresenter;
         private readonly ConversationControlsPresenter _controlsPresenter = new();
@@ -184,7 +187,6 @@ namespace CreativeAI.UI
         private AudioClip _currentTypingSound;
         private bool _skipMode;
         private bool _rewardPresentationActive;
-        private bool _historyEventsBound;
         private float _advanceBlockedUntil;
 
         private void Awake()
@@ -201,7 +203,11 @@ namespace CreativeAI.UI
             _chromePresenter.SetAutoMode(IsAutoMode);
             _speedPresenter.SetSpeed(_textSpeed, false);
             BindControlButtons();
-            EnsureHistoryPanel();
+            if (_historyPanel != null)
+            {
+                _historyPanel.Initialize();
+                _historyPanel.Closed += HandleHistoryClosed;
+            }
             HideImmediate(); // 会話開始まで隠す(編集時は Awake が走らずプレビューが見える)
         }
 
@@ -302,7 +308,8 @@ namespace CreativeAI.UI
         private void OnDisable()
         {
             _speedPresenter?.Cancel();
-            _itemPicker?.Dismiss();
+            if (_itemPicker != null)
+                _itemPicker.Dismiss();
             _rewardPresentationActive = false;
         }
 
@@ -388,8 +395,8 @@ namespace CreativeAI.UI
             _chromePresenter.SetChoiceGuide(false);
             if (hasPicked)
             {
-                EnsureHistoryPanel();
-                _historyPanel.AddChoiceEntry(options, pickedText);
+                if (_historyPanel != null)
+                    _historyPanel.AddChoiceEntry(options, pickedText);
                 _sessionState.MarkChoiceSelected(picked);
                 BlockAdvanceInput(0.15f);
             }
@@ -410,10 +417,6 @@ namespace CreativeAI.UI
             _chromePresenter.StopBounce();
             yield return ShowAnimated();
 
-            _itemPicker ??= new DialogueItemPickerPresenter(
-                _root != null ? _root.transform : transform,
-                _nameText != null ? _nameText.font : null
-            );
             var inventory = InventoryManager.Instance;
             var entries = ItemPickerEntries.Build(
                 inventory != null ? inventory.GetAllItems() : null
@@ -531,14 +534,14 @@ namespace CreativeAI.UI
             bool portraitObscured =
                 !narration
                 && (_portraits.IsObscured(resolved.Side) || displayName is "？？？" or "???");
-            EnsureHistoryPanel();
-            _historyPanel.AddEntry(
-                displayName,
-                DialogueMarkupParser.Parse(text).Text,
-                resolved.Icon,
-                resolved.Side,
-                portraitObscured
-            );
+            if (_historyPanel != null)
+                _historyPanel.AddEntry(
+                    displayName,
+                    DialogueMarkupParser.Parse(text).Text,
+                    resolved.Icon,
+                    resolved.Side,
+                    portraitObscured
+                );
         }
 
         // 入手表示の登場と同時にメッセージを打ち、送り入力を待ってから一緒に退場させる
@@ -587,8 +590,8 @@ namespace CreativeAI.UI
             _currentTypingSound = _typingSound;
             _sessionState.BeginReward(message);
             _chromePresenter.PlayLineTextEntrance(_nameText, _bodyText, false);
-            EnsureHistoryPanel();
-            _historyPanel.AddRewardEntry(DialogueMarkupParser.Parse(message).Text, weapon);
+            if (_historyPanel != null)
+                _historyPanel.AddRewardEntry(DialogueMarkupParser.Parse(message).Text, weapon);
         }
 
         private IEnumerator TypeBody(string text)
@@ -769,21 +772,6 @@ namespace CreativeAI.UI
             _chromePresenter?.SetChoiceGuide(active);
         }
 
-        private void EnsureHistoryPanel()
-        {
-            if (_historyPanel == null)
-                TryGetComponent(out _historyPanel);
-            if (_historyPanel == null)
-                _historyPanel = gameObject.AddComponent<DialogueHistoryPanel>();
-
-            _historyPanel.Initialize(_nameText != null ? _nameText.font : null);
-            if (!_historyEventsBound)
-            {
-                _historyPanel.Closed += HandleHistoryClosed;
-                _historyEventsBound = true;
-            }
-        }
-
         private void HandleHistoryClosed() => BlockAdvanceInput(0.12f);
 
         private void BlockAdvanceInput(float duration)
@@ -813,7 +801,8 @@ namespace CreativeAI.UI
             _rewards.HideAll();
             _choices.Clear();
             _choices.SetActive(false);
-            _itemPicker?.Dismiss();
+            if (_itemPicker != null)
+                _itemPicker.Dismiss();
             ResetTransientModes();
             State = ConversationState.Hidden;
         }
@@ -823,7 +812,8 @@ namespace CreativeAI.UI
             State = ConversationState.Exiting;
             _rewards.HideAll();
             SetChoicesActive(false);
-            _itemPicker?.Dismiss();
+            if (_itemPicker != null)
+                _itemPicker.Dismiss();
             ResetTransientModes();
             _chromePresenter?.HideImmediate();
             State = ConversationState.Hidden;
