@@ -46,7 +46,7 @@ namespace CreativeAI.Gameplay
             _isHeadingToLastKnown = false;
             boss.BeginCombatTempo();
 
-            SoundEventBus.OnSoundEmitted += OnSoundHeard;
+            NoiseEventBus.OnNoiseEmitted += OnSoundHeard;
         }
 
         public override void Update()
@@ -71,7 +71,7 @@ namespace CreativeAI.Gameplay
         {
             DevLog.Log("[TutorialBoss] 追跡ステート終了");
 
-            SoundEventBus.OnSoundEmitted -= OnSoundHeard;
+            NoiseEventBus.OnNoiseEmitted -= OnSoundHeard;
 
             if (boss.Agent != null && boss.Agent.isOnNavMesh)
             {
@@ -160,7 +160,7 @@ namespace CreativeAI.Gameplay
         /// 見失っている間に、プレイヤーの居場所で鳴る音（足音・ハンマー）を聞いたら、その位置へ向かい直して見失いの猶予も戻す。
         /// 光から外れて走り去るプレイヤーを音で追い続けられる一方、歩けば足音の届く範囲が狭いため振り切れる。
         /// </summary>
-        private void OnSoundHeard(SoundEventData data)
+        private void OnSoundHeard(NoiseEvent data)
         {
             if (boss.CheckPlayerTracked() || !TBossPerception.IsEmittedAtPlayer(data.Type))
             {

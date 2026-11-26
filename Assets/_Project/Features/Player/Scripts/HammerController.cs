@@ -157,8 +157,8 @@ namespace CreativeAI.Gameplay
         {
             Vector3 position = PlayerTransform.position;
             WorldSoundPlayer.Play(_thrustSound, position, this);
-            SoundEventBus.Emit(
-                new SoundEventData(SoundType.HammerThrust, position, _thrustNoiseRadius)
+            NoiseEventBus.Emit(
+                new NoiseEvent(NoiseType.HammerThrust, position, _thrustNoiseRadius)
             );
         }
 
@@ -188,9 +188,7 @@ namespace CreativeAI.Gameplay
             EffectPool.Play(_impactEffectPrefab, impactPoint, PlayerTransform.rotation);
 
             WorldSoundPlayer.Play(_slamSound, impactPoint, this);
-            SoundEventBus.Emit(
-                new SoundEventData(SoundType.HammerSlam, impactPoint, _slamNoiseRadius)
-            );
+            NoiseEventBus.Emit(new NoiseEvent(NoiseType.HammerSlam, impactPoint, _slamNoiseRadius));
 
             _slamHitbox.EnableHitbox();
         }

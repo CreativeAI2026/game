@@ -143,9 +143,9 @@ namespace CreativeAI.Gameplay
         /// <summary>
         /// その音がプレイヤーの居場所で鳴るものか。矢の着弾音は着弾点で鳴る（囮に使える）ため、プレイヤーの位置として扱わない。
         /// </summary>
-        public static bool IsEmittedAtPlayer(SoundType type)
+        public static bool IsEmittedAtPlayer(NoiseType type)
         {
-            return type != SoundType.ArrowHit;
+            return type != NoiseType.ArrowHit;
         }
 
         /// <summary>

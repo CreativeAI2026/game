@@ -3,7 +3,7 @@ using UnityEngine;
 namespace CreativeAI.Gameplay
 {
     /// <summary>
-    /// 足音・着地音の再生と、敵AIへの音イベント発行(SoundEventBus)を担当する。プレイヤーのルートに置く。
+    /// 足音・着地音の再生と、敵AIへの音イベント発行(NoiseEventBus)を担当する。プレイヤーのルートに置く。
     ///
     /// 鳴らすタイミングは移動クリップの AnimationEvent(OnFootstep / OnLand)で決まる。
     /// イベントはモデル層の <see cref="PlayerAnimationEventRelay"/> から中継される。
@@ -73,16 +73,16 @@ namespace CreativeAI.Gameplay
             WorldSoundPlayer.Play(_landingSound, transform.position, this);
         }
 
-        /// <summary>足音を1回再生し、SoundEventBusに発行する。</summary>
+        /// <summary>足音を1回再生し、NoiseEventBusに発行する。</summary>
         private void PlayFootstep(bool isSprinting)
         {
             WorldSoundPlayer.Play(isSprinting ? _runSound : _walkSound, transform.position, this);
 
             // 音が鳴った瞬間のワールド座標を取得して敵AIへ通知
-            SoundType soundType = isSprinting ? SoundType.Run : SoundType.Walk;
+            NoiseType soundType = isSprinting ? NoiseType.Run : NoiseType.Walk;
             float radius = isSprinting ? _runRadius : _walkRadius;
 
-            SoundEventBus.Emit(new SoundEventData(soundType, transform.position, radius));
+            NoiseEventBus.Emit(new NoiseEvent(soundType, transform.position, radius));
         }
     }
 }
