@@ -11,7 +11,7 @@ namespace CreativeAI.Tests.EditMode
 {
     /// <summary>
     /// <c>Field_Area01_Events</c> に置いたイベントの配置ミスの検証。
-    /// 付け忘れ・Is Trigger の入れ忘れ・敵 Prefab の設定漏れは、どれもエラーが出ないまま発火しないだけになる。
+    /// 付け忘れ・Is Trigger の入れ忘れは、どれもエラーが出ないまま発火しないだけになる。
     /// 発火のしかた自体は EventTriggerTests が見る。ここは「シーンに正しく置けているか」だけを見る。
     /// 本物のシーンを開く(作業中のシーンは触らず、このテストが開いたものだけ最後に閉じる)。
     /// </summary>
@@ -60,9 +60,6 @@ namespace CreativeAI.Tests.EditMode
 
         private static EventDefinition EventOf(EventTrigger trigger) =>
             Serialize(trigger).FindProperty("_event").objectReferenceValue as EventDefinition;
-
-        private static GameObject EnemyOf(EventTrigger trigger) =>
-            Serialize(trigger).FindProperty("_enemy").objectReferenceValue as GameObject;
 
         [Test]
         public void EventAssets_AreFound()
@@ -149,46 +146,6 @@ namespace CreativeAI.Tests.EditMode
                 Is.Empty,
                 "Events の外に置かれたトリガー(手順書は Events の子に置く): "
                     + string.Join(", ", stray)
-            );
-        }
-
-        /// <summary>
-        /// 戦闘の敵 Prefab がまだ決まっていないイベントの id。敵を設定したらこの一覧から消す。
-        /// </summary>
-        private static readonly HashSet<string> BattleWithoutEnemyYet = new()
-        {
-            "9_battle_jellyfish",
-            "13_battle_girl",
-            "9nt_battle_jellyfish",
-            "12nt_end",
-            "19_again_jellyfish",
-            "20_again_goldfish",
-        };
-
-        [Test]
-        public void BattleEvents_HaveAnEnemyPrefab()
-        {
-            var noEnemy = new List<string>();
-            foreach (var t in _triggers)
-            {
-                var ev = EventOf(t);
-                if (
-                    ev == null
-                    || BattleWithoutEnemyYet.Contains(ev.Id)
-                    || !ev.Steps.Any(s => s.Kind == StepKind.Battle)
-                )
-                    continue;
-
-                var enemy = EnemyOf(t);
-                if (enemy == null || !PrefabUtility.IsPartOfPrefabAsset(enemy))
-                    noEnemy.Add($"{t.name}(event={ev.Id})");
-            }
-
-            Assert.That(
-                noEnemy,
-                Is.Empty,
-                "battle を含むのに Enemy が空、または Prefab でないトリガー: "
-                    + string.Join(", ", noEnemy)
             );
         }
     }

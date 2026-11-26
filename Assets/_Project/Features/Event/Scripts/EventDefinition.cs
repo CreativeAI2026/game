@@ -249,6 +249,9 @@ namespace CreativeAI.Gameplay
         private string _weaponKey; // giveWeapon(剣/弓/鎌/ハンマー = sword/bow/scythe/hammer)
 
         [SerializeField]
+        private string _arenaId; // battle: 呼ぶ BattleArena の名前
+
+        [SerializeField]
         private string _message; // giveItem / giveWeapon: 入手演出に出す文。省略時は UI 側が既定文を作る
 
         [SerializeField]
@@ -401,9 +404,10 @@ namespace CreativeAI.Gameplay
             };
 
         /// <summary>
-        /// 戦闘ステップ。敵は JSON に書かず、シーンの EventTrigger の Enemy スロットに Prefab を配線する。
+        /// 戦闘ステップ。arenaId はボスシーンの BattleArena の名前。敵と戦闘エリアはそのシーン側に置く。
         /// </summary>
-        public static EventStep Battle() => new() { _kind = StepKind.Battle };
+        public static EventStep Battle(string arenaId) =>
+            new() { _kind = StepKind.Battle, _arenaId = arenaId };
 
         /// <summary>
         /// 会話UIの演出コマンド1つ(window.hide / portrait.left.shake / wait など)。
@@ -428,6 +432,9 @@ namespace CreativeAI.Gameplay
         public IReadOnlyList<ChoiceOption> Options => _options;
         public string ItemKey => _itemKey;
         public string WeaponKey => _weaponKey;
+
+        /// <summary>battle ステップが呼ぶ BattleArena の名前(ボスシーンの BattleArena の arenaId と同じ)。</summary>
+        public string ArenaId => _arenaId;
 
         /// <summary>giveItem / giveWeapon の入手演出に出す文(省略可)。</summary>
         public string Message => _message;

@@ -3,13 +3,6 @@ using UnityEngine;
 
 namespace CreativeAI.Gameplay
 {
-    /// <summary>イベント再生から戦闘モードへの出入りを通知する契約。</summary>
-    public interface IEventGameMode
-    {
-        void EnterBattle();
-        void ExitBattle();
-    }
-
     public enum GameMode
     {
         Field,
@@ -19,10 +12,10 @@ namespace CreativeAI.Gameplay
     /// <summary>
     /// 現在のゲームモード(Field / Battle)を1つだけ保持する常駐 SSOT。状態を持つだけで、
     /// 各システムはこれを読む/購読して自分で自制する。書き込み(EnterBattle/ExitBattle)を
-    /// 叩くのは進行側(EventPlayer)のみ。
+    /// 叩くのは戦闘エリア(BattleArena)のみ。
     /// </summary>
     [DefaultExecutionOrder(-100)]
-    public sealed class GameModeManager : MonoBehaviour, IEventGameMode
+    public sealed class GameModeManager : MonoBehaviour
     {
         public static GameModeManager Instance { get; private set; }
 
@@ -49,10 +42,10 @@ namespace CreativeAI.Gameplay
                 Instance = null;
         }
 
-        /// <summary>進行側(会話の battle ステップ到達)のみ叩く。</summary>
+        /// <summary>戦闘エリア(BattleArena)が戦闘を始めたときだけ叩く。</summary>
         public void EnterBattle() => SetMode(GameMode.Battle);
 
-        /// <summary>進行側(決着)のみ叩く。</summary>
+        /// <summary>戦闘エリア(BattleArena)が決着を迎えたときだけ叩く。</summary>
         public void ExitBattle() => SetMode(GameMode.Field);
 
         private void SetMode(GameMode mode)

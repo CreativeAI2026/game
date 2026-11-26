@@ -119,12 +119,12 @@ namespace CreativeAI.Tests.EditMode
 
         private sealed class FakeBattleRunner : IBattleRunner
         {
-            public readonly List<GameObject> Fought = new();
+            public readonly List<string> Fought = new();
             public Action OnRun; // 戦闘中に起きること(シーン切替など)を差し込む
 
-            public IEnumerator Run(BattleSetup setup)
+            public IEnumerator Run(string arenaId)
             {
-                Fought.Add(setup.EnemyPrefab);
+                Fought.Add(arenaId);
                 OnRun?.Invoke();
                 yield break;
             }
@@ -176,7 +176,7 @@ namespace CreativeAI.Tests.EditMode
                 new[]
                 {
                     EventStep.Line(null, null, "来るわ!"),
-                    EventStep.Battle(),
+                    EventStep.Battle("boss_arena"),
                     EventStep.Line(null, null, "倒した!"),
                 },
                 6
@@ -359,20 +359,13 @@ namespace CreativeAI.Tests.EditMode
             var runner = new FakeBattleRunner();
             runner.OnRun = () => _view.Timeline.Add("battle");
             _player.Inject(_pm, _view, _items, runner);
-            var enemy = new GameObject("enemy");
 
-            Drive(
-                _player.PlayRoutine(
-                    BattleEvent(),
-                    new BattleSetup(enemy, Vector3.zero, Quaternion.identity)
-                )
-            );
+            Drive(_player.PlayRoutine(BattleEvent()));
 
             CollectionAssert.AreEqual(
                 new[] { "来るわ!", "close", "battle", "倒した!", "close" },
                 _view.Timeline
             );
-            UnityEngine.Object.DestroyImmediate(enemy);
         }
 
         [Test]
@@ -388,20 +381,13 @@ namespace CreativeAI.Tests.EditMode
                     default(Scene)
                 );
             _player.Inject(_pm, _view, _items, runner);
-            var enemy = new GameObject("enemy");
 
-            Drive(
-                _player.PlayRoutine(
-                    BattleEvent(),
-                    new BattleSetup(enemy, Vector3.zero, Quaternion.identity)
-                )
-            );
+            Drive(_player.PlayRoutine(BattleEvent()));
 
             CollectionAssert.DoesNotContain(_view.Lines, "倒した!", "戦闘後の台詞は流さない");
             Assert.AreEqual(0, _pm.Progress, "進行度は進めない(再開後にもう一度発火できる)");
             Assert.AreEqual("close", _view.Timeline[^1], "会話ウィンドウは閉じる");
             Assert.IsFalse(EventPlaybackService.IsPlaying, "再生中フラグは戻す");
-            UnityEngine.Object.DestroyImmediate(enemy);
         }
 
         [Test]
@@ -521,18 +507,10 @@ namespace CreativeAI.Tests.EditMode
         }
 
         [Test]
-        public void PlayRoutine_BattleStep_EntersAndExitsBattle_RunsRunner_ThenContinues()
+        public void PlayRoutine_BattleStep_RunsRunnerWithArena_ThenContinues()
         {
-            var gmmGo = new GameObject("GMM");
-            var gmm = gmmGo.AddComponent<GameModeManager>();
-            var modeChanges = new List<GameMode>();
-            gmm.OnModeChanged += m => modeChanges.Add(m);
             var battle = new FakeBattleRunner();
-            _player.Inject(_pm, _view, _items, battle, gmm);
-
-            // 敵はトリガーが配線して BattleSetup で渡す(JSON には書かない)。
-            var enemyPrefab = new GameObject("wolf_boss");
-            var setup = new BattleSetup(enemyPrefab, Vector3.zero, Quaternion.identity);
+            _player.Inject(_pm, _view, _items, battle);
 
             var ev = EventDefinition.Create(
                 "cave_encounter",
@@ -540,23 +518,19 @@ namespace CreativeAI.Tests.EditMode
                 new[]
                 {
                     EventStep.Line("主人公", "hero_surprised", "…誰だ?"),
-                    EventStep.Battle(),
+                    EventStep.Battle("wolf_boss_arena"),
                     EventStep.Line("はかなげ少女", "girl_resolve", "……ありがとう。"),
                 },
                 nextProgress: 6
             );
 
-            Drive(_player.PlayRoutine(ev, setup));
+            Drive(_player.PlayRoutine(ev));
 
-            CollectionAssert.AreEqual(new[] { enemyPrefab }, battle.Fought);
-            // battle ステップ前後で Battle → Field に遷移
-            CollectionAssert.AreEqual(new[] { GameMode.Battle, GameMode.Field }, modeChanges);
+            // events.json の arena で指した名前がそのまま戦闘役に渡る
+            CollectionAssert.AreEqual(new[] { "wolf_boss_arena" }, battle.Fought);
             // 戦闘を挟んで会話が続き、最後まで再生される
             CollectionAssert.AreEqual(new[] { "…誰だ?", "……ありがとう。" }, _view.Lines);
             Assert.AreEqual(6, _pm.Progress);
-
-            UnityEngine.Object.DestroyImmediate(enemyPrefab);
-            UnityEngine.Object.DestroyImmediate(gmmGo);
         }
     }
 }

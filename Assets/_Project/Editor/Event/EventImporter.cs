@@ -134,7 +134,7 @@ namespace CreativeAI.EditorTools
         /// <summary>
         /// itemKey を弾くための有効キー集合。null なら「未提供」= 警告どまり。
         /// エディタ側(EventImporterMenu)が ItemData から構築して渡す。
-        /// (敵は events.json に書かず EventTrigger に配線するため enemyKey の照合は持たない。)
+        /// (敵は events.json に書かずボスシーンの BattleArena に置くため enemyKey の照合は持たない。)
         /// </summary>
         public sealed class ImportCatalog
         {
@@ -1000,16 +1000,25 @@ namespace CreativeAI.EditorTools
                 case "battle":
                 {
                     kind = StepKind.Battle;
-                    // 敵は JSON に書かない。シーンの EventTrigger の Enemy スロットに Prefab を配線する。
+                    // 敵は JSON に書かない。arena で指した名前の BattleArena(ボスシーン)に置く。
                     if (step["enemyKey"] != null)
                     {
                         report.Error(
                             id,
-                            $"{location} battle に enemyKey は書けません(敵は EventTrigger に配線)。"
+                            $"{location} battle に enemyKey は書けません(敵はボスシーンの BattleArena に置く)。"
                         );
                         return null;
                     }
-                    return EventStep.Battle();
+                    string arena = (step["arena"] as JValue)?.Value as string;
+                    if (string.IsNullOrWhiteSpace(arena))
+                    {
+                        report.Error(
+                            id,
+                            $"{location} battle に arena(BattleArena の名前)がありません。"
+                        );
+                        return null;
+                    }
+                    return EventStep.Battle(arena);
                 }
 
                 default:

@@ -8,10 +8,12 @@
             ],
             "steps":[
 
+              {"kind": "command", "command": "background.black" },
               {"kind": "command", "command": "portrait.left.obscure" },
               {"kind":"line","portrait":"hero_confused","text":"「…っ、う……。 い、てて……。」"},
               {"kind":"line","portrait":"hero_confused","text":"「…あれ。 俺、なんでこんな床で……？」"},
               {"kind":"line","text":"痛む頭を押さえながら、ゆっくりと上体を起こす。 周囲を見渡すが、そこは見覚えのない殺風景な部屋だった。"},
+              {"kind": "command", "command": "background.black.clear", "arg": "1.5" },
               {"kind":"line","text":"壁際には用途の分からない物品が並び、床には割れたガラスや書類が無造作に散乱している。"},
               {"kind":"line","portrait":"hero_question","text":"「なんだここ、倉庫…？ いや、なんかの研究施設って感じか。」"},
               {"kind":"line","portrait":"hero_confused","text":"「ここに来る前、何してたっけ…。」"},
@@ -74,11 +76,12 @@
               {"kind":"line","portrait":"hero_confused","text":"「参ったな… あんなんにうろつかれてたら出口も探すに探せない。」"},
               {"kind":"line","portrait":"hero_normal","text":"「どうあってもアイツをなんとかしなきゃいけないってことか…。」"},
               {"kind":"line","portrait":"hero_question","text":"「素手はキツイ。 なんか武器になりそうなもんは…おっ？」"},
+              {"kind":"giveWeapon","weaponKey":"sword","message":"「カッターの剣」を手に入れた。"},
               {"kind":"line","portrait":"hero_surprised","text":"「…カッターの剣？？ マジで何なんだこの施設。」"},
               {"kind":"line","portrait":"hero_normal","text":"「まぁでも、これなら武器として使えそうだな。 よし。」"},
               {"kind":"line","portrait":"hero_confused","text":"「割としっくりくるな。 なんかスポーツでもやってたのか？ 俺。」"},
               {"kind":"line","portrait":"hero_normal","text":"「ま、好都合だ。 ずっと引きこもっててもジリ貧だし… やるしかねーよな。」"},
-              {"kind":"line","portrait":"hero_anger","text":"「待ってろよデカブツ。」"}
+              {"kind":"line","portrait":"hero_anger","text":"「待ってろよ。」"}
 
       ],
       "nextProgress": 3           
@@ -94,6 +97,8 @@
               ],
               "steps": [
 
+                {"kind":"line","portrait":"hero_anger","text":"「来いよデカブツ！」"},
+                {"kind":"battle","arena":"tutorial_3"},
                 {"kind":"line","portrait":"hero_anger","text":"「っしゃ！ これでどうだ！！」"},
                 {"kind":"line","text":"「グギャアアアアッ…！」"},
                 {"kind":"line","portrait":"hero_anger","text":"「くっ…！ 痛ってぇな、この野郎！ まだ動くかよ、次でトドメを——。」"},
@@ -461,7 +466,7 @@
         {"kind":"line","speaker":"？？？","portrait":"girl_fear","text":"「あなたは……？ 助けに来てくれたんですか……？」"},
         {"kind":"line","portrait":"hero_normal","text":"「ああ。 下がってろ。」"},
         {"kind":"line","portrait":"hero_anger","text":"「こいつは、俺が相手する！」"},
-        { "kind": "battle" },
+        { "kind": "battle", "arena": "kurage_9" },
         {"kind":"line","portrait":"robot_normal","text":"「目標沈黙。 おつかれさまー。」"},
         {"kind":"line","portrait":"hero_normal","text":"「ふぅ……。」"},
         {"kind":"line","portrait":"hero_question","text":"「大丈夫か？」"},
@@ -628,7 +633,7 @@
         {"kind":"line","portrait":"hero_normal","text":"「危ないから、離れてろ。」"},
         {"kind":"line","text":"こくこくとうなずいたスミレが距離を取ったのを確認し、倒すべき敵と対峙する。"},
         {"kind":"line","portrait":"hero_normal","text":"「ふう……。 やるか。」"},
-        { "kind": "battle" },
+        { "kind": "battle", "arena": "tutorial_12" },
         {"kind":"line","portrait":"robot_normal","text":"「目標沈黙。 おつかれさまー。」"},
         {"kind":"line","portrait":"hero_normal","text":"「はあー。」"},
         {"kind":"line","portrait":"hero_question","text":"（そうだ、スミレの様子は？）"},
@@ -689,7 +694,7 @@
         {"kind":"line","portrait":"hero_surprised","text":"「アレは…… 金魚……？」"},
         {"kind":"line","portrait":"hero_anger","text":"「スミレ！！！」"},
         {"kind":"line","portrait":"hero_anger","text":"「クソッ！！！」"},
-        { "kind": "battle" },
+        { "kind": "battle", "arena": "girl_13" },
         {"kind":"line","portrait":"hero_normal","text":"「ハァ…… ハァ……。」"},
         {"kind":"line","text":"スミレが変異した金魚の異形にとどめを刺せないまま、こちらの体力が削られていく。"},
         {"kind":"line","text":"その時、それまでこちらに攻撃を繰り出していた金魚の異形が苦しみ始めた。"},
@@ -1224,7 +1229,7 @@
         {"kind":"line","portrait":"gramophone_normal","text":"やはり、邪魔が入りましたね。"},
         {"kind":"line","portrait":"hero_normal","text":"ああ。 ここからは俺の仕事だな。"},
         {"kind":"line","portrait":"hero_anger","text":"コイツらには指一本触れさせねえ！ かかってこい！"},
-        {"kind":"battle"},
+        { "kind": "battle", "arena": "tutorial_18" },
         {"kind":"line","portrait":"hero_normal","text":"ふう……。"},
         {"kind":"line","portrait":"hero_normal","text":"よし、急ぐぞ！"}
       ],
@@ -1245,7 +1250,7 @@
         {"kind":"line","portrait":"girl_surprised","text":"アオイさん！ 上です！"},
         {"kind":"line","text":"頭上を見上げると、予想通りクラゲに似た異形が宙に浮いていた。"},
         {"kind":"line","portrait":"hero_anger","text":"ハッ！ 上等だ！ 撃ち落としてやる！"},
-        {"kind":"battle"},
+        { "kind": "battle", "arena": "kurage_19" },
         {"kind":"line","portrait":"hero_normal","text":"ハァ……。"},
         {"kind":"line","portrait":"hero_question","text":"みんな、怪我はないか？"},
         {"kind":"line","portrait":"gramophone_normal","text":"貴方が攻撃を引き付けてくれたおかげでしょう。 私たちはなんともありません。"},
@@ -1278,7 +1283,7 @@
         {"kind":"line","portrait":"hero_normal","text":"俺たちの未来のために、ここを越えさせてもらう。"},
         {"kind":"line","text":"一つ息を吐いて、彼女と正面から向き合う。"},
         {"kind":"line","portrait":"hero_normal","text":"お別れだ。"},
-        {"kind":"battle"},
+        { "kind": "battle", "arena": "goldfish_20" },
         {"kind":"line","portrait":"hero_normal","text":"……。"},
         {"kind":"line","portrait":"hero_confused","text":"ごめんな。"},
         {"kind":"line","portrait":"robot_normal","text":"なにボーっとしてるのさ！ 早く出口のロックを解除しないと！"},
@@ -1382,7 +1387,7 @@
          {"kind":"line","portrait":"hero_normal","text":"「あいつを助ければ、このふざけた場所の情報が聞けるかもしれないだろ。 何が起きてるのか知るためにも、無視は愚策だろ。」"},
          {"kind":"line","portrait":"hero_anger","text":"「行くぞハリボテ。 サポートしろ！」"},
          {"kind":"line","portrait":"robot_normal","text":"「…相変わらず、合理的な言い訳を見つけるのがお上手ですね。」"},
-         {"kind": "battle" },  
+         { "kind": "battle", "arena": "kurage_9nt" },  
          {"kind":"line","portrait":"hero_normal","text":"「はぁ… なんとかなったな。」"},
          {"kind":"line","portrait":"robot_normal","text":"「無惨な肉塊になるのはキミだと思っていましたが、見事な手際でしたよ。」"},
          {"kind":"line","portrait":"hero_smile","text":"「はーいはい、ありがとな。」"},
@@ -1524,7 +1529,7 @@
         {"kind":"line","text":"「ギ……ィィ、ア……アァアアアアアッ！！」"},
         {"kind":"line","portrait":"hero_anger","text":"「クッソ、その感じで不意打ちとか出来るのかよ。」"},
         {"kind":"line","portrait":"hero_anger","text":"「さっきは逃がしちまったが… ここで完全にぶっ潰してやるよ。」"},
-        {"kind":"battle"}, //TutorialBoss
+        { "kind": "battle", "arena": "tutorial_11nt" }, //TutorialBoss
         {"kind":"line","text":"「ガ……ァ、……ギ、ィィ……ッ……。」"}
       ],
       "nextProgress": 12
@@ -1613,7 +1618,7 @@
         {"kind":"line","portrait":"gramophone_normal","text":"「…貴方がこの悪夢を最後まで足掻き抜けるか、ここで見届けさせていただきますよ。」"},
         {"kind":"line","portrait":"robot_normal","text":"「アオイ。 生き残りたければ、武器を構えてください。」"},
         {"kind":"line","portrait":"hero_anger","text":"「く、そ……っ…！」"},
-        {"kind":"battle"}, //金魚
+        { "kind": "battle", "arena": "goldfish_12nt" }, //金魚
         {"kind":"line","text":"「――ォ……、……ァ、……あ…………。」"},
         {"kind":"line","text":"アオイが振り抜いた刃が異形を深く貫くと、彼女は大きく一度だけ跳ね上がり―― そのままズルズルと床へ沈み込み、動かなくなった。"},
         {"kind":"line","text":"血濡れた真珠のネックレスが、静まり返った床にぽつんと転がっている。"},

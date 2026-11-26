@@ -53,7 +53,6 @@ namespace CreativeAI.Gameplay
         // Inject されたものがあればそれを、無ければ本番の窓口・常駐を毎回見る。
         private readonly IBattleRunner _defaultBattle = new BattleRunner();
         private IEventProgress _progress;
-        private IEventGameMode _gameMode;
         private IDialogueView _view;
         private IItemGiver _items;
         private IWeaponGiver _weapons;
@@ -64,7 +63,6 @@ namespace CreativeAI.Gameplay
         private IWeaponGiver Weapons => _weapons ?? FindPlayerWeapons();
         private IBattleRunner Battle => _battle ?? _defaultBattle;
         private IEventProgress Progress => _progress ?? ProgressManager.Instance;
-        private IEventGameMode GameModes => _gameMode ?? GameModeManager.Instance;
 
         // 武器の届け先は今いるプレイヤーの WeaponManager。プレイヤーは入れ替わるので覚えておかない。
         private static IWeaponGiver FindPlayerWeapons()
@@ -83,7 +81,6 @@ namespace CreativeAI.Gameplay
             IDialogueView view,
             IItemGiver items,
             IBattleRunner battle = null,
-            IEventGameMode gameMode = null,
             IWeaponGiver weapons = null
         )
         {
@@ -91,7 +88,6 @@ namespace CreativeAI.Gameplay
             _view = view;
             _items = items;
             _battle = battle;
-            _gameMode = gameMode;
             _weapons = weapons;
         }
 
@@ -262,19 +258,18 @@ namespace CreativeAI.Gameplay
             return !step.Consume || Items.Consume(itemKey, match.Count);
         }
 
-        public void Play(EventDefinition ev, BattleSetup battle = default)
+        public void Play(EventDefinition ev)
         {
             if (ev == null)
                 return;
-            StartCoroutine(PlayRoutine(ev, battle));
+            StartCoroutine(PlayRoutine(ev));
         }
 
         /// <summary>
         /// 会話ステップを順に再生し、終了時に AdvanceTo する本体。
-        /// battle ステップは <paramref name="battle"/>(トリガーが配線した敵)を使う。
         /// テストは fake を注入し、この IEnumerator を駆動して検証する。
         /// </summary>
-        public IEnumerator PlayRoutine(EventDefinition ev, BattleSetup battle = default)
+        public IEnumerator PlayRoutine(EventDefinition ev)
         {
             if (ev == null)
                 yield break;
@@ -375,16 +370,8 @@ namespace CreativeAI.Gameplay
                             break;
 
                         case StepKind.Battle:
-                            var mode = GameModes;
-                            mode?.EnterBattle();
-                            if (!battle.HasEnemy)
-                                Debug.LogWarning(
-                                    $"[EventPlayer] battle ステップに敵 Prefab が未配線 (event={ev.Id})."
-                                        + " EventTrigger の Enemy スロットにアサインしてください。戦闘をスキップ。"
-                                );
-                            else
-                                yield return Battle.Run(battle);
-                            mode?.ExitBattle();
+                            // 戦闘モードの出入りは BattleArena が行う。
+                            yield return Battle.Run(step.ArenaId);
                             break;
 
                         case StepKind.UseItem:
@@ -443,11 +430,9 @@ namespace CreativeAI.Gameplay
     public interface IEventPlayer
     {
         /// <summary>
-        /// イベントを再生する。battle ステップがあれば <paramref name="battle"/> の Prefab を
-        /// トリガー位置に出して戦う(敵未配線なら警告してスキップ)。battle が無いイベントでは
-        /// <paramref name="battle"/> は使われない(default で可)。
+        /// イベントを再生する。battle ステップは、ボスシーンの BattleArena を名前(arena)で呼んで戦う。
         /// </summary>
-        void Play(EventDefinition ev, BattleSetup battle = default);
+        void Play(EventDefinition ev);
     }
 
     /// <summary>

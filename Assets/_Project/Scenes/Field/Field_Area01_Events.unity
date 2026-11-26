@@ -148,6 +148,7 @@ Transform:
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children:
+  - {fileID: 111559002}
   - {fileID: 111557701}
   - {fileID: 111557711}
   - {fileID: 111557721}
@@ -245,8 +246,6 @@ MonoBehaviour:
   m_EditorClassIdentifier: CreativeAI.Core::CreativeAI.Core.EventTrigger
   _event: {fileID: 11400000, guid: bc063ee2dd724054dbac8b50ca50e84c, type: 2}
   _playerTag: Player
-  _enemy: {fileID: 0}
-  _spawnPoint: {fileID: 0}
   _showPin: 0
   _pinPoint: {fileID: 0}
 --- !u!1 &111557710
@@ -276,7 +275,7 @@ Transform:
   m_GameObject: {fileID: 111557710}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: -482, y: -40.8, z: 15.5}
+  m_LocalPosition: {x: -482, y: -40.8, z: 44}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -317,8 +316,6 @@ MonoBehaviour:
   m_EditorClassIdentifier: CreativeAI.Core::CreativeAI.Core.EventTrigger
   _event: {fileID: 11400000, guid: 7fbd8b7e96768834eab89121efd1eb1e, type: 2}
   _playerTag: Player
-  _enemy: {fileID: 0}
-  _spawnPoint: {fileID: 0}
   _showPin: 0
   _pinPoint: {fileID: 0}
 --- !u!1 &111557720
@@ -373,7 +370,7 @@ BoxCollider:
   m_ProvidesContacts: 0
   m_Enabled: 1
   serializedVersion: 3
-  m_Size: {x: 8, y: 8, z: 1}
+  m_Size: {x: 5, y: 5, z: 5}
   m_Center: {x: 0, y: 0, z: 0}
 --- !u!114 &111557724
 MonoBehaviour:
@@ -389,8 +386,6 @@ MonoBehaviour:
   m_EditorClassIdentifier: CreativeAI.Core::CreativeAI.Core.EventTrigger
   _event: {fileID: 11400000, guid: 573f293f8bdbd4f489738e0a275aed0f, type: 2}
   _playerTag: Player
-  _enemy: {fileID: 0}
-  _spawnPoint: {fileID: 0}
   _showPin: 1
   _pinPoint: {fileID: 0}
 --- !u!1 &111557730
@@ -423,8 +418,7 @@ Transform:
   m_LocalPosition: {x: -481.9, y: -40.8, z: 116}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
-  m_Children:
-  - {fileID: 800000002}
+  m_Children: []
   m_Father: {fileID: 111557608}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!65 &111557733
@@ -462,8 +456,6 @@ MonoBehaviour:
   m_EditorClassIdentifier: CreativeAI.Core::CreativeAI.Core.EventTrigger
   _event: {fileID: 11400000, guid: d4bf9259631b1144faba7f3c58703f85, type: 2}
   _playerTag: Player
-  _enemy: {fileID: 9072946834079532967, guid: 7ebfa4e675c9e394a9cc1c70bfde687f, type: 3}
-  _spawnPoint: {fileID: 800000002}
   _showPin: 0
   _pinPoint: {fileID: 0}
 --- !u!1 &111557740
@@ -493,7 +485,7 @@ Transform:
   m_GameObject: {fileID: 111557740}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: -650, y: -40, z: 38}
+  m_LocalPosition: {x: -650, y: -43, z: 17.5}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -518,7 +510,7 @@ BoxCollider:
   m_ProvidesContacts: 0
   m_Enabled: 1
   serializedVersion: 3
-  m_Size: {x: 55, y: 8, z: 20}
+  m_Size: {x: 5, y: 5, z: 5}
   m_Center: {x: 0, y: 0, z: 0}
 --- !u!114 &111557744
 MonoBehaviour:
@@ -534,8 +526,6 @@ MonoBehaviour:
   m_EditorClassIdentifier: CreativeAI.Core::CreativeAI.Core.EventTrigger
   _event: {fileID: 11400000, guid: 12218a7fb275f1a4991636aab603b97e, type: 2}
   _playerTag: Player
-  _enemy: {fileID: 0}
-  _spawnPoint: {fileID: 0}
   _showPin: 0
   _pinPoint: {fileID: 0}
 --- !u!1 &111557750
@@ -606,8 +596,6 @@ MonoBehaviour:
   m_EditorClassIdentifier: CreativeAI.Core::CreativeAI.Core.EventTrigger
   _event: {fileID: 11400000, guid: 1c6303c9beff8dd4a96ced552fd0ea83, type: 2}
   _playerTag: Player
-  _enemy: {fileID: 0}
-  _spawnPoint: {fileID: 0}
   _showPin: 0
   _pinPoint: {fileID: 0}
 --- !u!1 &111557760
@@ -678,8 +666,6 @@ MonoBehaviour:
   m_EditorClassIdentifier: CreativeAI.Core::CreativeAI.Core.EventTrigger
   _event: {fileID: 11400000, guid: aeb862e96fcec204b9c92442b8887db2, type: 2}
   _playerTag: Player
-  _enemy: {fileID: 0}
-  _spawnPoint: {fileID: 0}
   _showPin: 0
   _pinPoint: {fileID: 0}
 --- !u!1 &111557770
@@ -750,8 +736,6 @@ MonoBehaviour:
   m_EditorClassIdentifier: CreativeAI.Core::CreativeAI.Core.EventTrigger
   _event: {fileID: 11400000, guid: 5daae9770906dba46a2f834c1c29eab9, type: 2}
   _playerTag: Player
-  _enemy: {fileID: 0}
-  _spawnPoint: {fileID: 0}
   _showPin: 0
   _pinPoint: {fileID: 0}
 --- !u!1 &111557780
@@ -781,7 +765,7 @@ Transform:
   m_GameObject: {fileID: 111557780}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: -128, y: -24.8, z: 181.9}
+  m_LocalPosition: {x: -128.22, y: -25.2, z: 122.1}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -806,7 +790,7 @@ BoxCollider:
   m_ProvidesContacts: 0
   m_Enabled: 1
   serializedVersion: 3
-  m_Size: {x: 8, y: 8, z: 10}
+  m_Size: {x: 5, y: 5, z: 5}
   m_Center: {x: 0, y: 0, z: 0}
 --- !u!114 &111557784
 MonoBehaviour:
@@ -822,8 +806,6 @@ MonoBehaviour:
   m_EditorClassIdentifier: CreativeAI.Core::CreativeAI.Core.EventTrigger
   _event: {fileID: 11400000, guid: eae9bf72b0102825467c965202cea66f, type: 2}
   _playerTag: Player
-  _enemy: {fileID: 0}
-  _spawnPoint: {fileID: 0}
   _showPin: 0
   _pinPoint: {fileID: 0}
 --- !u!1 &111557790
@@ -894,8 +876,6 @@ MonoBehaviour:
   m_EditorClassIdentifier: CreativeAI.Core::CreativeAI.Core.EventTrigger
   _event: {fileID: 11400000, guid: 3e721015d4280d163b54794a536d3550, type: 2}
   _playerTag: Player
-  _enemy: {fileID: 0}
-  _spawnPoint: {fileID: 0}
   _showPin: 0
   _pinPoint: {fileID: 0}
 --- !u!1 &111557800
@@ -966,8 +946,6 @@ MonoBehaviour:
   m_EditorClassIdentifier: CreativeAI.Core::CreativeAI.Core.EventTrigger
   _event: {fileID: 11400000, guid: 50f1733458f115f1056279674d09b3f9, type: 2}
   _playerTag: Player
-  _enemy: {fileID: 0}
-  _spawnPoint: {fileID: 0}
   _showPin: 0
   _pinPoint: {fileID: 0}
 --- !u!1 &111557810
@@ -1038,8 +1016,6 @@ MonoBehaviour:
   m_EditorClassIdentifier: CreativeAI.Core::CreativeAI.Core.EventTrigger
   _event: {fileID: 11400000, guid: a245fd8feaf71c1d5447fbb70596f7ef, type: 2}
   _playerTag: Player
-  _enemy: {fileID: 0}
-  _spawnPoint: {fileID: 0}
   _showPin: 0
   _pinPoint: {fileID: 0}
 --- !u!1 &111557820
@@ -1110,8 +1086,6 @@ MonoBehaviour:
   m_EditorClassIdentifier: CreativeAI.Core::CreativeAI.Core.EventTrigger
   _event: {fileID: 11400000, guid: b4f3edc1b55e88c35ccb427a31e54479, type: 2}
   _playerTag: Player
-  _enemy: {fileID: 9072946834079532967, guid: 7ebfa4e675c9e394a9cc1c70bfde687f, type: 3}
-  _spawnPoint: {fileID: 0}
   _showPin: 0
   _pinPoint: {fileID: 0}
 --- !u!1 &111557830
@@ -1182,8 +1156,6 @@ MonoBehaviour:
   m_EditorClassIdentifier: CreativeAI.Core::CreativeAI.Core.EventTrigger
   _event: {fileID: 11400000, guid: 766bb0e2fa4a53bd6db506454ad60e9a, type: 2}
   _playerTag: Player
-  _enemy: {fileID: 0}
-  _spawnPoint: {fileID: 0}
   _showPin: 0
   _pinPoint: {fileID: 0}
 --- !u!1 &111557840
@@ -1254,8 +1226,6 @@ MonoBehaviour:
   m_EditorClassIdentifier: CreativeAI.Core::CreativeAI.Core.EventTrigger
   _event: {fileID: 11400000, guid: 6ea76d4ebe237a410b70efcea9541eb8, type: 2}
   _playerTag: Player
-  _enemy: {fileID: 0}
-  _spawnPoint: {fileID: 0}
   _showPin: 0
   _pinPoint: {fileID: 0}
 --- !u!1 &111557850
@@ -1326,8 +1296,6 @@ MonoBehaviour:
   m_EditorClassIdentifier: CreativeAI.Core::CreativeAI.Core.EventTrigger
   _event: {fileID: 11400000, guid: e821ef674774400cd99b8409fec611b5, type: 2}
   _playerTag: Player
-  _enemy: {fileID: 0}
-  _spawnPoint: {fileID: 0}
   _showPin: 0
   _pinPoint: {fileID: 0}
 --- !u!1 &111557860
@@ -1398,8 +1366,6 @@ MonoBehaviour:
   m_EditorClassIdentifier: CreativeAI.Core::CreativeAI.Core.EventTrigger
   _event: {fileID: 11400000, guid: 786628cdc6ce69d49a6fcc9aa127efaa, type: 2}
   _playerTag: Player
-  _enemy: {fileID: 0}
-  _spawnPoint: {fileID: 0}
   _showPin: 0
   _pinPoint: {fileID: 0}
 --- !u!1 &111557870
@@ -1470,8 +1436,6 @@ MonoBehaviour:
   m_EditorClassIdentifier: CreativeAI.Core::CreativeAI.Core.EventTrigger
   _event: {fileID: 11400000, guid: 7a84fb24728c4c342afca84d6f33b190, type: 2}
   _playerTag: Player
-  _enemy: {fileID: 0}
-  _spawnPoint: {fileID: 0}
   _showPin: 0
   _pinPoint: {fileID: 0}
 --- !u!1 &111557880
@@ -1542,8 +1506,6 @@ MonoBehaviour:
   m_EditorClassIdentifier: CreativeAI.Core::CreativeAI.Core.EventTrigger
   _event: {fileID: 11400000, guid: e869565c81e719844b1d1145fd9911c4, type: 2}
   _playerTag: Player
-  _enemy: {fileID: 9072946834079532967, guid: 7ebfa4e675c9e394a9cc1c70bfde687f, type: 3}
-  _spawnPoint: {fileID: 0}
   _showPin: 0
   _pinPoint: {fileID: 0}
 --- !u!1 &111557890
@@ -1614,8 +1576,6 @@ MonoBehaviour:
   m_EditorClassIdentifier: CreativeAI.Core::CreativeAI.Core.EventTrigger
   _event: {fileID: 11400000, guid: 948f541ecc70145429a154eab715462b, type: 2}
   _playerTag: Player
-  _enemy: {fileID: 0}
-  _spawnPoint: {fileID: 0}
   _showPin: 0
   _pinPoint: {fileID: 0}
 --- !u!1 &111557900
@@ -1686,8 +1646,6 @@ MonoBehaviour:
   m_EditorClassIdentifier: CreativeAI.Core::CreativeAI.Core.EventTrigger
   _event: {fileID: 11400000, guid: 49689129dfed3fe408afe6f1d411135b, type: 2}
   _playerTag: Player
-  _enemy: {fileID: 0}
-  _spawnPoint: {fileID: 0}
   _showPin: 0
   _pinPoint: {fileID: 0}
 --- !u!1 &111557910
@@ -1758,8 +1716,6 @@ MonoBehaviour:
   m_EditorClassIdentifier: CreativeAI.Core::CreativeAI.Core.EventTrigger
   _event: {fileID: 11400000, guid: 88757027336331f4e8800461ccdc539a, type: 2}
   _playerTag: Player
-  _enemy: {fileID: 0}
-  _spawnPoint: {fileID: 0}
   _showPin: 0
   _pinPoint: {fileID: 0}
 --- !u!1 &111558000
@@ -1830,8 +1786,6 @@ MonoBehaviour:
   m_EditorClassIdentifier: CreativeAI.Core::CreativeAI.Core.EventTrigger
   _event: {fileID: 11400000, guid: da3ebbd9b771f4142b9c83667d86ab71, type: 2}
   _playerTag: Player
-  _enemy: {fileID: 0}
-  _spawnPoint: {fileID: 0}
   _showPin: 0
   _pinPoint: {fileID: 0}
 --- !u!1 &111558010
@@ -1861,7 +1815,7 @@ Transform:
   m_GameObject: {fileID: 111558010}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: -158, y: -8.8, z: 14.3}
+  m_LocalPosition: {x: -160, y: -8.8, z: 40.5}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -1886,7 +1840,7 @@ BoxCollider:
   m_ProvidesContacts: 0
   m_Enabled: 1
   serializedVersion: 3
-  m_Size: {x: 10, y: 8, z: 10}
+  m_Size: {x: 16, y: 8, z: 16}
   m_Center: {x: 0, y: 0, z: 0}
 --- !u!114 &111558014
 MonoBehaviour:
@@ -1902,8 +1856,6 @@ MonoBehaviour:
   m_EditorClassIdentifier: CreativeAI.Core::CreativeAI.Core.EventTrigger
   _event: {fileID: 11400000, guid: 427d9f56640088149bf53d95eb743ecb, type: 2}
   _playerTag: Player
-  _enemy: {fileID: 0}
-  _spawnPoint: {fileID: 0}
   _showPin: 0
   _pinPoint: {fileID: 0}
 --- !u!1 &111558020
@@ -1974,8 +1926,6 @@ MonoBehaviour:
   m_EditorClassIdentifier: CreativeAI.Core::CreativeAI.Core.EventTrigger
   _event: {fileID: 11400000, guid: 35538c9c7e5c0054db6ba844a8e63dd9, type: 2}
   _playerTag: Player
-  _enemy: {fileID: 0}
-  _spawnPoint: {fileID: 0}
   _showPin: 0
   _pinPoint: {fileID: 0}
 --- !u!1 &111558030
@@ -2046,8 +1996,6 @@ MonoBehaviour:
   m_EditorClassIdentifier: CreativeAI.Core::CreativeAI.Core.EventTrigger
   _event: {fileID: 11400000, guid: 3d66c41a627b44a4d90242b4da75a844, type: 2}
   _playerTag: Player
-  _enemy: {fileID: 9072946834079532967, guid: 7ebfa4e675c9e394a9cc1c70bfde687f, type: 3}
-  _spawnPoint: {fileID: 0}
   _showPin: 0
   _pinPoint: {fileID: 0}
 --- !u!1 &111558040
@@ -2118,11 +2066,9 @@ MonoBehaviour:
   m_EditorClassIdentifier: CreativeAI.Core::CreativeAI.Core.EventTrigger
   _event: {fileID: 11400000, guid: 409d39749a20b9347aa53c79a78ed03c, type: 2}
   _playerTag: Player
-  _enemy: {fileID: 0}
-  _spawnPoint: {fileID: 0}
   _showPin: 0
   _pinPoint: {fileID: 0}
---- !u!1 &800000001
+--- !u!1 &111559001
 GameObject:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -2130,29 +2076,43 @@ GameObject:
   m_PrefabAsset: {fileID: 0}
   serializedVersion: 6
   m_Component:
-  - component: {fileID: 800000002}
+  - component: {fileID: 111559002}
+  - component: {fileID: 111559003}
   m_Layer: 0
-  m_Name: EnemySpawn
+  m_Name: NewGameStart
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
   m_IsActive: 1
---- !u!4 &800000002
+--- !u!4 &111559002
 Transform:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 800000001}
+  m_GameObject: {fileID: 111559001}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 0, y: -4, z: 62}
+  m_LocalPosition: {x: -592, y: -58, z: -30.5}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
-  m_Father: {fileID: 111557731}
+  m_Father: {fileID: 111557608}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &111559003
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 111559001}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 88416b95fcef6481bafd60db67693fda, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: CreativeAI.Core::CreativeAI.Core.SceneManagement.SpawnPoint
+  _id: new_game
 --- !u!1660057539 &9223372036854775807
 SceneRoots:
   m_ObjectHideFlags: 0

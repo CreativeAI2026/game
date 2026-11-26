@@ -19,16 +19,6 @@ namespace CreativeAI.Gameplay
         private string _playerTag = "Player";
 
         [Tooltip(
-            "battle ステップを含むイベント用。トリガー位置に出す敵 Prefab(Project の Prefab)。"
-        )]
-        [SerializeField]
-        private GameObject _enemy;
-
-        [Tooltip("敵の出現位置(任意)。未設定ならこのトリガーの位置・向きに出す。")]
-        [SerializeField]
-        private Transform _spawnPoint;
-
-        [Tooltip(
             "オンにすると、発火できる間だけマップピン(横に回って浮く2D画像)を出し、発火したら消す。"
         )]
         [SerializeField]
@@ -209,9 +199,8 @@ namespace CreativeAI.Gameplay
                 return;
             }
 
-            var spawn = _spawnPoint != null ? _spawnPoint : transform;
             HidePin();
-            player.Play(_event, new BattleSetup(_enemy, spawn.position, spawn.rotation));
+            player.Play(_event);
         }
     }
 }
