@@ -831,7 +831,7 @@ namespace CreativeAI.EditorTools
                         return null;
                     }
                     // 選択肢UIは3択ぶんの高さを基準に中央寄せするレイアウトなので、4つ以上は
-                    // 会話ウィンドウに被る(DialogueChoicePresenter.UpdateLayout)。
+                    // 会話ウィンドウに被る(DialogueChoiceView.UpdateLayout)。
                     // 1つだけの choice は選ばせる意味が無く、書き間違いの方が多いので弾く。
                     if (
                         step["options"] is not JArray options

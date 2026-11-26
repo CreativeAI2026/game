@@ -6,96 +6,122 @@ using UnityEngine.UI;
 
 namespace CreativeAI.UI
 {
-    /// <summary>アイテム画像と3D武器モデルの獲得表示、および一時リソースの解放を担当する。</summary>
-    internal sealed class DialogueRewardPresenter
+    /// <summary>
+    /// 会話中の入手表示。アイテム画像か3D武器モデル(RenderTexture に1回だけ撮る)を出し、登場・退場の演出を行う。
+    /// 武器の撮影用リグはシーンから離れた場所に組み、片付けるときに破棄する。
+    /// </summary>
+    public sealed class DialogueRewardView : MonoBehaviour
     {
         // 武器モデルだけを撮るためのレイヤー(キャラタブのプレビューと同じ)
         private const int RewardLayer = 31;
 
-        private GameObject _itemObject;
-        private GameObject _itemBackdrop;
+        [Header("アイテム")]
+        [SerializeField]
+        private Image _itemImage;
+
+        [SerializeField]
+        private Image _itemBackdrop;
+
+        [SerializeField]
+        private Sprite _defaultItemSprite; // アイテムの画像が引けなかったときの画像
+
+        [SerializeField]
+        private Vector2 _itemSize = new(256f, 256f);
+
+        [SerializeField]
+        private Vector2 _position = new(0f, 220f); // Canvas 中央からのオフセット(ウィンドウの上あたり)
+
+        [Header("武器")]
+        [SerializeField]
+        private RawImage _weaponImage;
+
+        [SerializeField]
+        private Image _weaponBackdrop;
+
+        [SerializeField]
+        private Vector3 _weaponModelEuler = new(10f, -20f, 0f); // 静止表示するモデルの傾き(見栄えの3/4アングル)
+
+        [SerializeField]
+        private int _weaponTextureSize = 512; // RenderTexture の解像度
+
+        [SerializeField]
+        private Vector2 _weaponImageSize = new(640f, 360f); // 武器表示枠(横長。刀に合わせた比率)
+
+        [SerializeField]
+        private float _weaponFrameFill = 1.3f; // 投影サイズへの余白率(1.0でぴったり。小さいほど大きく写る)
+
+        [SerializeField]
+        private Color _weaponBackdropColor = new(0f, 0f, 0f, 0.4f); // 武器背後の枠(a=0で既定の色)
+
         private GameObject _weaponRig;
-        private GameObject _weaponImage;
-        private GameObject _weaponBackdrop;
         private RenderTexture _renderTexture;
 
-        public DialogueRewardPresenter(
-            Image itemImage,
-            Image itemBackdrop,
-            RawImage weaponImage,
-            Image weaponBackdrop
-        )
-        {
-            _itemObject = itemImage != null ? itemImage.gameObject : null;
-            _itemBackdrop = itemBackdrop != null ? itemBackdrop.gameObject : null;
-            _weaponImage = weaponImage != null ? weaponImage.gameObject : null;
-            _weaponBackdrop = weaponBackdrop != null ? weaponBackdrop.gameObject : null;
-        }
+        private void OnDisable() => HideAll();
 
-        public void ShowItem(Sprite icon, Vector2 position, Vector2 size)
+        private void OnDestroy() => HideAll();
+
+        /// <summary>アイテム画像を登場前の状態で出す。<paramref name="icon"/> が null なら既定の画像を使う。</summary>
+        public void ShowItem(Sprite icon)
         {
             HideItem();
             if (icon == null)
+                icon = _defaultItemSprite;
+            if (icon == null)
             {
-                Debug.LogWarning("[ConversationView] 受け取りアイテムの Sprite が未設定です。");
+                Debug.LogWarning("[DialogueRewardView] 受け取りアイテムの Sprite が未設定です。");
                 return;
             }
-            if (_itemObject == null || _itemBackdrop == null)
+            if (_itemImage == null || _itemBackdrop == null)
             {
-                Debug.LogWarning("[ConversationView] Prefab のアイテム表示枠が未設定です。");
+                Debug.LogWarning("[DialogueRewardView] Prefab のアイテム表示枠が未設定です。");
                 return;
             }
-            var image = _itemObject.GetComponent<Image>();
-            image.sprite = icon;
-            SetRect(image.rectTransform, position, size);
-            SetRect(
-                _itemBackdrop.transform as RectTransform,
-                position,
-                size + new Vector2(150f, 110f)
-            );
-            _itemBackdrop.SetActive(true);
-            _itemObject.SetActive(true);
-            PrepareEntrance(_itemBackdrop);
-            PrepareEntrance(_itemObject);
+            _itemImage.sprite = icon;
+            SetRect(_itemImage.rectTransform, _position, _itemSize);
+            SetRect(_itemBackdrop.rectTransform, _position, _itemSize + new Vector2(150f, 110f));
+            _itemBackdrop.gameObject.SetActive(true);
+            _itemImage.gameObject.SetActive(true);
+            PrepareEntrance(_itemBackdrop.gameObject);
+            PrepareEntrance(_itemImage.gameObject);
         }
 
-        public GameObject ShowWeapon(
-            GameObject prefab,
-            Vector3 modelEuler,
-            int textureSize,
-            Vector2 imageSize,
-            Vector2 position,
-            float frameFill,
-            Color backdropColor
-        )
+        /// <summary>武器モデルを撮って登場前の状態で出す。出せなければ false。</summary>
+        public bool ShowWeapon(GameObject prefab)
         {
             HideWeapon();
             if (prefab == null)
             {
-                Debug.LogWarning("[ConversationView] 武器モデルが未設定です。");
-                return null;
+                Debug.LogWarning("[DialogueRewardView] 武器モデルが未設定です。");
+                return false;
             }
             if (_weaponImage == null || _weaponBackdrop == null)
             {
-                Debug.LogWarning("[ConversationView] Prefab の武器表示枠が未設定です。");
-                return null;
+                Debug.LogWarning("[DialogueRewardView] Prefab の武器表示枠が未設定です。");
+                return false;
             }
 
             _weaponRig = new GameObject("WeaponGetRig");
             _weaponRig.transform.position = new Vector3(0f, -10000f, 0f);
-            var model = Object.Instantiate(prefab, _weaponRig.transform);
-            model.transform.SetLocalPositionAndRotation(Vector3.zero, Quaternion.Euler(modelEuler));
+            var model = Instantiate(prefab, _weaponRig.transform);
+            model.transform.SetLocalPositionAndRotation(
+                Vector3.zero,
+                Quaternion.Euler(_weaponModelEuler)
+            );
             foreach (var child in model.GetComponentsInChildren<Transform>(true))
                 child.gameObject.layer = RewardLayer;
             if (!TryComputeBounds(model, out var bounds))
             {
-                Debug.LogWarning("[ConversationView] 武器モデルに Renderer がなく表示できません。");
+                Debug.LogWarning(
+                    "[DialogueRewardView] 武器モデルに Renderer がなく表示できません。"
+                );
                 HideWeapon();
-                return null;
+                return false;
             }
 
             Vector2 boxSize =
-                imageSize.x > 1f && imageSize.y > 1f ? imageSize : new Vector2(640f, 360f);
+                _weaponImageSize.x > 1f && _weaponImageSize.y > 1f
+                    ? _weaponImageSize
+                    : new Vector2(640f, 360f);
             float aspect = boxSize.x / Mathf.Max(1f, boxSize.y);
             float radius = Mathf.Max(0.01f, bounds.extents.magnitude);
             float distance = radius * 2f + 1f;
@@ -116,7 +142,7 @@ namespace CreativeAI.UI
             );
             camera.orthographicSize =
                 Mathf.Max(0.01f, neededSize)
-                * Mathf.Clamp(frameFill > 0.01f ? frameFill : 1.3f, 0.6f, 3f);
+                * Mathf.Clamp(_weaponFrameFill > 0.01f ? _weaponFrameFill : 1.3f, 0.6f, 3f);
             camera.nearClipPlane = 0.01f;
             camera.farClipPlane = distance + radius * 2f + 1f;
             camera.clearFlags = CameraClearFlags.SolidColor;
@@ -139,83 +165,96 @@ namespace CreativeAI.UI
                 1.5f
             );
 
-            int height = Mathf.Clamp(textureSize, 64, 2048);
+            int height = Mathf.Clamp(_weaponTextureSize, 64, 2048);
             int width = Mathf.Clamp(Mathf.RoundToInt(height * aspect), 64, 2048);
             _renderTexture = new RenderTexture(width, height, 16, RenderTextureFormat.ARGB32);
             _renderTexture.Create();
             camera.targetTexture = _renderTexture;
             RenderOnce(camera, _renderTexture);
 
-            var background = _weaponBackdrop.GetComponent<Image>();
-            background.color =
-                backdropColor.a > 0.001f ? backdropColor : new Color(0f, 0f, 0f, 0.35f);
-            SetRect(background.rectTransform, position, boxSize);
-
-            var rawImage = _weaponImage.GetComponent<RawImage>();
-            rawImage.texture = _renderTexture;
-            SetRect(rawImage.rectTransform, position, boxSize);
-            _weaponBackdrop.SetActive(true);
-            _weaponImage.SetActive(true);
-            PrepareEntrance(_weaponBackdrop);
-            PrepareEntrance(_weaponImage);
-            return model;
+            _weaponBackdrop.color =
+                _weaponBackdropColor.a > 0.001f
+                    ? _weaponBackdropColor
+                    : new Color(0f, 0f, 0f, 0.35f);
+            SetRect(_weaponBackdrop.rectTransform, _position, boxSize);
+            _weaponImage.texture = _renderTexture;
+            SetRect(_weaponImage.rectTransform, _position, boxSize);
+            _weaponBackdrop.gameObject.SetActive(true);
+            _weaponImage.gameObject.SetActive(true);
+            PrepareEntrance(_weaponBackdrop.gameObject);
+            PrepareEntrance(_weaponImage.gameObject);
+            return true;
         }
 
-        public IEnumerator AnimateItemIn() => AnimateIn(_itemBackdrop, _itemObject);
+        /// <summary>アイテム画像の登場演出。</summary>
+        public IEnumerator AnimateItemIn() => AnimateIn(Targets(_itemBackdrop, _itemImage));
 
-        public IEnumerator AnimateItemOut() => AnimateOut(_itemBackdrop, _itemObject);
+        /// <summary>アイテム画像の退場演出。</summary>
+        public IEnumerator AnimateItemOut() => AnimateOut(Targets(_itemBackdrop, _itemImage));
 
-        public IEnumerator AnimateWeaponIn() => AnimateIn(_weaponBackdrop, _weaponImage);
+        /// <summary>武器の登場演出。</summary>
+        public IEnumerator AnimateWeaponIn() => AnimateIn(Targets(_weaponBackdrop, _weaponImage));
 
-        public IEnumerator AnimateWeaponOut() => AnimateOut(_weaponBackdrop, _weaponImage);
+        /// <summary>武器の退場演出。</summary>
+        public IEnumerator AnimateWeaponOut() => AnimateOut(Targets(_weaponBackdrop, _weaponImage));
 
+        /// <summary>出ている入手表示をすべて片付ける。</summary>
         public void HideAll()
         {
             HideItem();
             HideWeapon();
         }
 
+        /// <summary>アイテム画像を片付ける。</summary>
         public void HideItem()
         {
-            if (_itemObject != null)
-                _itemObject.SetActive(false);
-            if (_itemBackdrop != null)
-                _itemBackdrop.SetActive(false);
+            SetActive(_itemImage, false);
+            SetActive(_itemBackdrop, false);
         }
 
+        /// <summary>武器の表示を片付け、撮影用のリグと RenderTexture を破棄する。</summary>
         public void HideWeapon()
         {
-            if (_weaponImage != null)
-                _weaponImage.SetActive(false);
-            if (_weaponBackdrop != null)
-                _weaponBackdrop.SetActive(false);
-            Destroy(ref _weaponRig);
+            SetActive(_weaponImage, false);
+            SetActive(_weaponBackdrop, false);
+            if (_weaponRig != null)
+                Destroy(_weaponRig);
+            _weaponRig = null;
             if (_renderTexture == null)
                 return;
             _renderTexture.Release();
-            Object.Destroy(_renderTexture);
+            Destroy(_renderTexture);
             _renderTexture = null;
+        }
+
+        private static GameObject[] Targets(Graphic backdrop, Graphic image) =>
+            new[]
+            {
+                backdrop != null ? backdrop.gameObject : null,
+                image != null ? image.gameObject : null,
+            };
+
+        private static void SetActive(Graphic graphic, bool active)
+        {
+            if (graphic != null)
+                graphic.gameObject.SetActive(active);
         }
 
         private static void SetRect(RectTransform rect, Vector2 position, Vector2 size)
         {
-            if (rect == null)
-                return;
             rect.anchoredPosition = position;
             rect.sizeDelta = size;
         }
 
         private static void PrepareEntrance(GameObject target)
         {
-            if (target == null)
-                return;
             if (!target.TryGetComponent(out CanvasGroup group))
                 group = target.AddComponent<CanvasGroup>();
             group.alpha = 0f;
             target.transform.localScale = Vector3.one * 0.86f;
         }
 
-        private static IEnumerator AnimateIn(params GameObject[] targets)
+        private static IEnumerator AnimateIn(GameObject[] targets)
         {
             const float duration = 0.28f;
             for (float elapsed = 0f; elapsed < duration; elapsed += FrameDelta())
@@ -228,7 +267,7 @@ namespace CreativeAI.UI
             ApplyVisual(targets, 1f, 1f);
         }
 
-        private static IEnumerator AnimateOut(params GameObject[] targets)
+        private static IEnumerator AnimateOut(GameObject[] targets)
         {
             const float duration = 0.18f;
             for (float elapsed = 0f; elapsed < duration; elapsed += FrameDelta())
@@ -289,13 +328,6 @@ namespace CreativeAI.UI
             for (int i = 1; i < renderers.Length; i++)
                 bounds.Encapsulate(renderers[i].bounds);
             return true;
-        }
-
-        private static void Destroy(ref GameObject target)
-        {
-            if (target != null)
-                Object.Destroy(target);
-            target = null;
         }
     }
 }

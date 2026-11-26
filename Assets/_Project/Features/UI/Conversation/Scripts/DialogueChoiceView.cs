@@ -10,18 +10,36 @@ using UIEventTrigger = UnityEngine.EventSystems.EventTrigger;
 
 namespace CreativeAI.UI
 {
-    /// <summary>選択肢の生成、配置、フォーカス、表示演出と後片付けを担当する。</summary>
-    internal sealed class DialogueChoicePresenter
+    /// <summary>会話の選択肢。ボタンの生成・配置・フォーカス・登場と確定の演出を行い、選ばれるまで待つ。</summary>
+    public sealed class DialogueChoiceView : MonoBehaviour
     {
-        private readonly RectTransform _container;
-        private readonly Button _template;
-        private readonly float _containerWidth;
-        private readonly float _buttonHeight;
-        private readonly float _spacing;
-        private readonly float _bottomMargin;
-        private readonly float _staggerDelay;
-        private readonly float _enterDuration;
-        private readonly float _confirmDuration;
+        [SerializeField]
+        private RectTransform _container; // 選択肢ボタンの親(通常は非表示)
+
+        [SerializeField]
+        private Button _buttonTemplate; // 選択肢ボタンの雛形(非active。実行時に複製)
+
+        [SerializeField]
+        private float _containerWidth = 565f; // 正式な選択肢画像の横幅
+
+        [SerializeField]
+        private float _buttonHeight = 70f; // 正式な選択肢画像の高さ
+
+        [SerializeField]
+        private float _spacing = 38f; // 選択肢同士の間隔
+
+        [SerializeField]
+        private float _bottomMargin = 70f; // 3択時の会話ウィンドウ上端から選択肢までの余白
+
+        [SerializeField]
+        private float _staggerDelay = 0.06f;
+
+        [SerializeField]
+        private float _enterDuration = 0.16f;
+
+        [SerializeField]
+        private float _confirmDuration = 0.2f;
+
         private readonly List<GameObject> _spawned = new();
         private readonly List<float> _spawnedHeights = new();
         private readonly Dictionary<Button, Color> _baseColors = new();
@@ -30,43 +48,63 @@ namespace CreativeAI.UI
         private const float FocusScale = 1.055f;
         private static readonly Color FocusTint = new(0.82f, 0.92f, 1f, 1f);
 
-        public DialogueChoicePresenter(
-            RectTransform container,
-            Button template,
-            float containerWidth,
-            float buttonHeight,
-            float spacing,
-            float bottomMargin,
-            float staggerDelay,
-            float enterDuration,
-            float confirmDuration
+        private void OnDisable() => Clear();
+
+        /// <summary>
+        /// 選択肢を出して、選ばれるまで待つ。選ばれたら確定演出のあと片付けて、値と表示文を <paramref name="onPicked"/> で返す。
+        /// 出せる選択肢が1つもなければ、<paramref name="onPicked"/> を呼ばずに終わる。
+        /// </summary>
+        /// <param name="selectedValues">以前に選んだ値。該当する選択肢は暗く表示する。</param>
+        public IEnumerator Choose(
+            IReadOnlyList<ChoiceOption> options,
+            ISet<string> selectedValues,
+            Action<string, string> onPicked
         )
         {
-            _container = container;
-            _template = template;
-            _containerWidth = containerWidth;
-            _buttonHeight = buttonHeight;
-            _spacing = spacing;
-            _bottomMargin = bottomMargin;
-            _staggerDelay = staggerDelay;
-            _enterDuration = enterDuration;
-            _confirmDuration = confirmDuration;
+            bool hasPicked = false;
+            string pickedValue = null;
+            string pickedText = null;
+            Button pickedButton = null;
+            int count = Spawn(
+                options,
+                selectedValues,
+                (value, text, button) =>
+                {
+                    hasPicked = true;
+                    pickedValue = value;
+                    pickedText = text;
+                    pickedButton = button;
+                }
+            );
+            if (count == 0)
+            {
+                Debug.LogWarning("[DialogueChoiceView] 表示できる選択肢がありません。");
+                SetActive(false);
+                yield break;
+            }
+
+            yield return AnimateIn();
+            SelectFirst();
+            while (!hasPicked)
+                yield return null;
+
+            yield return AnimateSelection(pickedButton);
+            Clear();
+            SetActive(false);
+            onPicked?.Invoke(pickedValue, pickedText);
         }
 
-        public bool Uses(RectTransform container, Button template) =>
-            _container == container && _template == template;
-
-        public int Spawn(
+        private int Spawn(
             IReadOnlyList<ChoiceOption> options,
             ISet<string> selectedValues,
             Action<string, string, Button> picked
         )
         {
             Clear();
-            if (options == null || _template == null || _container == null)
+            if (options == null || _buttonTemplate == null || _container == null)
                 return 0;
             // The template must never become visible when its parent container is opened.
-            _template.gameObject.SetActive(false);
+            _buttonTemplate.gameObject.SetActive(false);
             SetActive(true);
 
             foreach (var option in options)
@@ -74,7 +112,7 @@ namespace CreativeAI.UI
                 if (option == null)
                     continue;
 
-                var button = UnityEngine.Object.Instantiate(_template, _container);
+                var button = Instantiate(_buttonTemplate, _container);
                 button.gameObject.SetActive(true);
                 button.navigation = new Navigation { mode = Navigation.Mode.None };
                 if (!button.TryGetComponent(out CanvasGroup group))
@@ -111,19 +149,21 @@ namespace CreativeAI.UI
             return _spawned.Count;
         }
 
+        /// <summary>選択肢の置き場ごと表示・非表示を切り替える。</summary>
         public void SetActive(bool active)
         {
             if (_container != null)
                 _container.gameObject.SetActive(active);
         }
 
+        /// <summary>出している選択肢ボタンを片付ける。</summary>
         public void Clear()
         {
             foreach (var choice in _spawned)
                 if (choice != null)
                 {
                     choice.SetActive(false);
-                    UnityEngine.Object.Destroy(choice);
+                    Destroy(choice);
                 }
             _spawned.Clear();
             _spawnedHeights.Clear();
@@ -131,7 +171,7 @@ namespace CreativeAI.UI
             _selectedIndex = -1;
         }
 
-        public void SelectFirst()
+        private void SelectFirst()
         {
             if (_spawned.Count == 0 || EventSystem.current == null)
                 return;
@@ -140,6 +180,7 @@ namespace CreativeAI.UI
                 Select(0);
         }
 
+        /// <summary>キー・パッドでの選択肢の移動と決定を受け付ける。毎フレーム呼ぶ。</summary>
         public void HandleKeyboardInput()
         {
             if (_spawned.Count == 0)
@@ -289,7 +330,7 @@ namespace CreativeAI.UI
 
         private static float FrameDelta() => Mathf.Max(Time.unscaledDeltaTime, 1f / 60f);
 
-        public IEnumerator AnimateIn()
+        private IEnumerator AnimateIn()
         {
             foreach (var choice in _spawned)
             {
@@ -318,7 +359,7 @@ namespace CreativeAI.UI
             }
         }
 
-        public IEnumerator AnimateSelection(Button selected)
+        private IEnumerator AnimateSelection(Button selected)
         {
             foreach (var choice in _spawned)
             {

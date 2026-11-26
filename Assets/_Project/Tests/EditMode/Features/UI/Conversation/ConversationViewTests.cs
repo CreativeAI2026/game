@@ -19,6 +19,8 @@ namespace CreativeAI.Tests.EditMode
     {
         private GameObject _viewGo;
         private ConversationView _view;
+        private DialoguePortraitView _portraits;
+        private DialogueChoiceView _choices;
         private TMP_Text _nameText;
         private TMP_Text _bodyText;
         private Image _portrait;
@@ -56,12 +58,15 @@ namespace CreativeAI.Tests.EditMode
             labelGo.AddComponent<TextMeshProUGUI>();
             templateGo.SetActive(false);
 
+            _portraits = _viewGo.AddComponent<DialoguePortraitView>();
+            TestReflection.SetField(_portraits, "_left", _portrait);
+            _choices = _viewGo.AddComponent<DialogueChoiceView>();
+            TestReflection.SetField(_choices, "_buttonTemplate", _choiceTemplate);
+            TestReflection.SetField(_choices, "_container", _choiceContainer);
+
             _view = _viewGo.AddComponent<ConversationView>();
             TestReflection.SetField(_view, "_nameText", _nameText);
             TestReflection.SetField(_view, "_bodyText", _bodyText);
-            TestReflection.SetField(_view, "_portrait", _portrait);
-            TestReflection.SetField(_view, "_choiceButtonTemplate", _choiceTemplate);
-            TestReflection.SetField(_view, "_choiceContainer", _choiceContainer);
             TestReflection.SetField(_view, "_charInterval", 0f); // タイプ演出を待たない
         }
 
@@ -94,16 +99,8 @@ namespace CreativeAI.Tests.EditMode
             }
         }
 
-        private List<GameObject> SpawnedChoices
-        {
-            get
-            {
-                var presenter = TestReflection.GetField<object>(_view, "_choicePresenter");
-                return presenter == null
-                    ? null
-                    : TestReflection.GetField<List<GameObject>>(presenter, "_spawned");
-            }
-        }
+        private List<GameObject> SpawnedChoices =>
+            TestReflection.GetField<List<GameObject>>(_choices, "_spawned");
 
         private void DriveUntilChoicesSpawn(IEnumerator routine)
         {
@@ -151,7 +148,7 @@ namespace CreativeAI.Tests.EditMode
                 );
             TestReflection.SetField(definition, "_side", side);
             TestReflection.SetField(definition, "_expressions", expressions.ToArray());
-            TestReflection.SetField(_view, "_characters", new[] { definition });
+            TestReflection.SetField(_portraits, "_characters", new[] { definition });
             _assets.Add(definition);
         }
 
@@ -213,16 +210,16 @@ namespace CreativeAI.Tests.EditMode
             var otherCharacter = MakeSprite();
             SetPortraitCatalog(DialoguePortraitSide.Left, ("protagonist", protagonist));
             var protagonistDefinition = TestReflection.GetField<DialogueCharacterDefinition[]>(
-                _view,
+                _portraits,
                 "_characters"
             )[0];
             SetPortraitCatalog(DialoguePortraitSide.Right, ("other", otherCharacter));
             var otherDefinition = TestReflection.GetField<DialogueCharacterDefinition[]>(
-                _view,
+                _portraits,
                 "_characters"
             )[0];
             TestReflection.SetField(
-                _view,
+                _portraits,
                 "_characters",
                 new[] { protagonistDefinition, otherDefinition }
             );
@@ -233,7 +230,7 @@ namespace CreativeAI.Tests.EditMode
             Assert.AreEqual(1.03f, _portrait.rectTransform.localScale.x, 0.001f);
 
             Drive(_view.ShowLine("相手", "other", "右側"));
-            var rightPortrait = TestReflection.GetField<Image>(_view, "_rightPortrait");
+            var rightPortrait = TestReflection.GetField<Image>(_portraits, "_right");
             Assert.AreEqual(0.88f, rightPortrait.rectTransform.anchorMin.x, 0.001f);
             Assert.AreEqual(0.88f, rightPortrait.rectTransform.anchorMax.x, 0.001f);
             Assert.AreEqual(-1.03f, rightPortrait.rectTransform.localScale.x, 0.001f);
@@ -284,7 +281,7 @@ namespace CreativeAI.Tests.EditMode
 
             LogAssert.Expect(
                 LogType.Warning,
-                "[DialogueChoiceFlow] 表示できる選択肢がありません。"
+                "[DialogueChoiceView] 表示できる選択肢がありません。"
             );
             Drive(routine);
             Assert.IsNull(picked);

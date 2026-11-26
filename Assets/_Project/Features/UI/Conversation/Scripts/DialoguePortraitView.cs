@@ -1,11 +1,15 @@
+using System;
 using System.Collections;
 using UnityEngine;
 using UnityEngine.UI;
 
 namespace CreativeAI.UI
 {
-    /// <summary>立ち絵の解決、左右スロット、話者フォーカスと立ち絵演出を担当する。</summary>
-    internal sealed class DialoguePortraitPresenter
+    /// <summary>
+    /// 会話の立ち絵。キャラクター定義から立ち絵を引き、左右のスロットへの配置、話者のフォーカス、立ち絵の演出を担う。
+    /// 右スロットが未設定なら、左スロットを複製して作る。
+    /// </summary>
+    public sealed class DialoguePortraitView : MonoBehaviour
     {
         internal readonly struct ResolvedPortrait
         {
@@ -37,65 +41,96 @@ namespace CreativeAI.UI
             public Vector2 Offset { get; }
         }
 
-        private Image _left;
-        private Image _right;
+        // 地の文(立ち絵キーなし)の名前の色
+        private static readonly Color NarrationColor = new(0.78f, 0.82f, 0.9f, 1f);
+
+        [SerializeField]
+        private Image _left; // 左側の立ち絵
+
+        [SerializeField]
+        private Image _right; // 右側の立ち絵。空なら実行時に _left から作る
+
+        [SerializeField]
+        private float _leftAnchorX = 0.12f; // 主人公など画面左側に立つキャラクター
+
+        [SerializeField]
+        private float _rightAnchorX = 0.88f; // 会話相手など画面右側に立つキャラクター
+
+        [SerializeField]
+        private float _activeScale = 1.03f;
+
+        [SerializeField]
+        private float _inactiveScale = 0.92f;
+
+        [SerializeField]
+        [Range(0f, 1f)]
+        private float _inactiveBrightness = 0.45f;
+
+        [SerializeField]
+        private float _fadeDuration = 0.3f;
+
+        [SerializeField]
+        private float _focusDuration = 0.2f;
+
+        [SerializeField]
+        private Sprite _defaultPortrait; // portrait キー未登録時の立ち絵
+
+        [SerializeField]
+        private DialoguePortraitSide _defaultSide = DialoguePortraitSide.Left;
+
+        [SerializeField]
+        private DialogueCharacterDefinition[] _characters =
+            Array.Empty<DialogueCharacterDefinition>();
+
         private Image _baseLeft;
         private Image _baseRight;
-        private float _leftAnchorX;
-        private float _rightAnchorX;
         private float _leftBaseTopY;
         private float _rightBaseTopY;
         private Vector2 _leftOffset;
         private Vector2 _rightOffset;
-        private float _activeScale;
-        private float _inactiveScale;
-        private float _inactiveBrightness;
-        private float _fadeDuration;
-        private float _focusDuration;
         private bool _leftShown;
         private bool _rightShown;
         private bool _leftObscured;
         private bool _rightObscured;
         private DialoguePortraitSide _activeSide;
 
-        public Image RightPortrait => _right;
-
-        public void Configure(
-            Image left,
-            Image right,
-            float leftAnchorX,
-            float rightAnchorX,
-            float activeScale,
-            float inactiveScale,
-            float inactiveBrightness,
-            float fadeDuration,
-            float focusDuration
-        )
+        private void Awake()
         {
-            bool leftChanged = left != _baseLeft;
-            bool rightChanged = right != _baseRight;
-            _left = left;
-            _right = right;
-            _leftAnchorX = leftAnchorX;
-            _rightAnchorX = rightAnchorX;
-            if (leftChanged)
-            {
-                _baseLeft = left;
-                _leftBaseTopY = ResolveTopY(left);
-            }
-            if (rightChanged)
-            {
-                _baseRight = right;
-                _rightBaseTopY = right != null ? ResolveTopY(right) : _leftBaseTopY;
-            }
-            _activeScale = activeScale;
-            _inactiveScale = inactiveScale;
-            _inactiveBrightness = inactiveBrightness;
-            _fadeDuration = fadeDuration;
-            _focusDuration = focusDuration;
+            EnsureSlots();
+            HideImmediate();
         }
 
-        public IEnumerator Set(ResolvedPortrait resolved)
+        /// <summary>
+        /// 立ち絵キーから表示内容を引く。キーが空なら地の文(立ち絵なし)として扱う。
+        /// </summary>
+        internal ResolvedPortrait Resolve(string portraitKey) =>
+            string.IsNullOrEmpty(portraitKey)
+                ? new ResolvedPortrait(
+                    null,
+                    null,
+                    DialoguePortraitSide.Left,
+                    string.Empty,
+                    NarrationColor,
+                    null,
+                    Vector2.zero
+                )
+                : DialoguePortraitResolver.Resolve(
+                    portraitKey,
+                    _characters,
+                    _defaultPortrait,
+                    _defaultSide
+                );
+
+        /// <summary>セリフなしで、キーの立ち絵をその人の立ち位置に出す。</summary>
+        public IEnumerator ShowByKey(string portraitKey)
+        {
+            if (string.IsNullOrEmpty(portraitKey))
+                yield break;
+            yield return Set(Resolve(portraitKey));
+        }
+
+        /// <summary>解決した立ち絵を出し、話している側を明るく・大きくする。</summary>
+        internal IEnumerator Set(ResolvedPortrait resolved)
         {
             if (_left == null)
                 yield break;
@@ -163,6 +198,7 @@ namespace CreativeAI.UI
             }
         }
 
+        /// <summary>立ち絵の表示・非表示を切り替える。画像が無い側は出さない。</summary>
         public void SetVisible(DialoguePortraitSide side, bool visible)
         {
             var portrait = side == DialoguePortraitSide.Left ? _left : _right;
@@ -170,7 +206,7 @@ namespace CreativeAI.UI
                 portrait.enabled = visible && portrait.sprite != null;
         }
 
-        public void HideImmediate()
+        private void HideImmediate()
         {
             if (_left != null)
             {
@@ -184,9 +220,11 @@ namespace CreativeAI.UI
             }
         }
 
+        /// <summary>その側の立ち絵が影(正体を隠した状態)になっているか。</summary>
         public bool IsObscured(DialoguePortraitSide side) =>
             side == DialoguePortraitSide.Left ? _leftObscured : _rightObscured;
 
+        /// <summary>その側の立ち絵を影にする・戻す。表示中なら色をなめらかに変える。</summary>
         public IEnumerator SetObscured(
             DialoguePortraitSide side,
             bool obscured,
@@ -219,6 +257,7 @@ namespace CreativeAI.UI
             portrait.color = target;
         }
 
+        /// <summary>その側の立ち絵に揺れ・跳ね・点滅の演出をかける。</summary>
         public IEnumerator PlayEffect(
             DialoguePortraitSide side,
             ConversationView.PortraitEffect effect,
@@ -258,6 +297,7 @@ namespace CreativeAI.UI
             portrait.color = baseColor;
         }
 
+        /// <summary>出ている立ち絵をすべて消していく(会話を閉じるとき用)。</summary>
         public IEnumerator FadeOutAll(float duration)
         {
             Color leftStart = _left != null ? _left.color : Color.clear;
@@ -288,14 +328,17 @@ namespace CreativeAI.UI
                 _right.color = new Color(rightStart.r, rightStart.g, rightStart.b, 0f);
         }
 
-        public void EnsureSlots()
+        private void EnsureSlots()
         {
             if (_left == null)
                 return;
+            SyncBasePositions();
             if (_right == null)
             {
                 ApplySide(_left, DialoguePortraitSide.Left);
-                _right = Object.Instantiate(_left, _left.transform.parent);
+                _right = Instantiate(_left, _left.transform.parent);
+                _baseRight = _right;
+                _rightBaseTopY = _leftBaseTopY;
                 _right.name = "PortraitRight";
                 _right.transform.SetSiblingIndex(_left.transform.GetSiblingIndex() + 1);
                 _right.enabled = false;
@@ -346,6 +389,21 @@ namespace CreativeAI.UI
                 _right.enabled = false;
             _leftShown = false;
             _rightShown = false;
+        }
+
+        // 立ち絵の上端の基準位置を、差し替えられた Image から取り直す
+        private void SyncBasePositions()
+        {
+            if (_left != _baseLeft)
+            {
+                _baseLeft = _left;
+                _leftBaseTopY = ResolveTopY(_left);
+            }
+            if (_right != _baseRight)
+            {
+                _baseRight = _right;
+                _rightBaseTopY = _right != null ? ResolveTopY(_right) : _leftBaseTopY;
+            }
         }
 
         private void ApplySide(Image portrait, DialoguePortraitSide side)

@@ -18,6 +18,7 @@ namespace CreativeAI.Tests.PlayMode
     {
         private GameObject _viewGo;
         private ConversationView _view;
+        private DialogueChoiceView _choices;
         private RectTransform _choiceContainer;
 
         [SetUp]
@@ -51,13 +52,15 @@ namespace CreativeAI.Tests.PlayMode
             labelGo.AddComponent<TextMeshProUGUI>();
             templateGo.SetActive(false);
 
+            _choices = _viewGo.AddComponent<DialogueChoiceView>();
+            TestReflection.SetField(_choices, "_buttonTemplate", template);
+            TestReflection.SetField(_choices, "_container", _choiceContainer);
+
             _view = _viewGo.AddComponent<ConversationView>();
             TestReflection.SetField(_view, "_root", _viewGo.GetComponent<CanvasGroup>());
             TestReflection.SetField(_view, "_windowRoot", _viewGo.GetComponent<RectTransform>());
             TestReflection.SetField(_view, "_nameText", nameText);
             TestReflection.SetField(_view, "_bodyText", bodyText);
-            TestReflection.SetField(_view, "_choiceButtonTemplate", template);
-            TestReflection.SetField(_view, "_choiceContainer", _choiceContainer);
             TestReflection.SetField(_view, "_charInterval", 0f);
             _viewGo.SetActive(true);
             _viewGo.GetComponent<CanvasGroup>().alpha = 1f;
@@ -73,10 +76,7 @@ namespace CreativeAI.Tests.PlayMode
         }
 
         private List<GameObject> Spawned =>
-            TestReflection.GetField<List<GameObject>>(
-                TestReflection.GetField<object>(_view, "_choicePresenter"),
-                "_spawned"
-            );
+            TestReflection.GetField<List<GameObject>>(_choices, "_spawned");
 
         private void AdvanceUntilChoicesSpawned(NestedCoroutineDriver routine)
         {

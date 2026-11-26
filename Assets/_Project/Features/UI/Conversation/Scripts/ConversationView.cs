@@ -45,6 +45,16 @@ namespace CreativeAI.UI
         public ConversationState State { get; private set; } = ConversationState.Hidden;
         public bool IsAutoMode { get; private set; }
 
+        [Header("部品")]
+        [SerializeField]
+        private DialoguePortraitView _portraits;
+
+        [SerializeField]
+        private DialogueChoiceView _choices;
+
+        [SerializeField]
+        private DialogueRewardView _rewards;
+
         [Header("ルート表示")]
         [SerializeField]
         private CanvasGroup _root; // ウィンドウ全体の表示/非表示。非会話時は alpha=0
@@ -54,34 +64,6 @@ namespace CreativeAI.UI
 
         [Header("表示要素")]
         [SerializeField]
-        private Image _portrait; // 立ち絵
-
-        [SerializeField]
-        private Image _rightPortrait; // 実行時に _portrait から生成する右側スロット
-
-        [SerializeField]
-        private float _portraitLeftAnchorX = 0.12f; // 主人公など画面左側に立つキャラクター
-
-        [SerializeField]
-        private float _portraitRightAnchorX = 0.88f; // 会話相手など画面右側に立つキャラクター
-
-        [SerializeField]
-        private float _portraitActiveScale = 1.03f;
-
-        [SerializeField]
-        private float _portraitInactiveScale = 0.92f;
-
-        [SerializeField]
-        [Range(0f, 1f)]
-        private float _portraitInactiveBrightness = 0.45f;
-
-        [SerializeField]
-        private float _portraitFadeDuration = 0.3f;
-
-        [SerializeField]
-        private float _portraitFocusDuration = 0.2f;
-
-        [SerializeField]
         private TMP_Text _nameText; // 名前プレート
 
         [SerializeField]
@@ -89,34 +71,6 @@ namespace CreativeAI.UI
 
         [SerializeField]
         private GameObject _nextIndicator; // 送り待ちに小さくバウンドするインジケーター
-
-        [Header("選択肢")]
-        [SerializeField]
-        private RectTransform _choiceContainer; // 選択肢ボタンの親(通常は非表示)
-
-        [SerializeField]
-        private Button _choiceButtonTemplate; // 選択肢ボタンの雛形(非active。実行時に複製)
-
-        [SerializeField]
-        private float _choiceContainerWidth = 565f; // 正式な選択肢画像の横幅
-
-        [SerializeField]
-        private float _choiceButtonHeight = 70f; // 正式な選択肢画像の高さ
-
-        [SerializeField]
-        private float _choiceSpacing = 38f; // 選択肢同士の間隔
-
-        [SerializeField]
-        private float _choiceBottomMargin = 70f; // 3択時の会話ウィンドウ上端から選択肢までの余白
-
-        [SerializeField]
-        private float _choiceStaggerDelay = 0.06f;
-
-        [SerializeField]
-        private float _choiceEnterDuration = 0.16f;
-
-        [SerializeField]
-        private float _choiceConfirmDuration = 0.2f;
 
         [Header("演出")]
         [SerializeField]
@@ -169,16 +123,6 @@ namespace CreativeAI.UI
         [SerializeField]
         private float _indicatorBounceDuration = 0.6f; // 上昇して基準位置へ戻るまでの時間(秒)
 
-        [SerializeField]
-        private Sprite _defaultPortrait; // portrait キー未指定/未登録時の立ち絵
-
-        [SerializeField]
-        private DialoguePortraitSide _defaultPortraitSide = DialoguePortraitSide.Left;
-
-        [SerializeField]
-        private DialogueCharacterDefinition[] _characters =
-            Array.Empty<DialogueCharacterDefinition>();
-
         [Header("演出コマンドの素材(events.json にはキーだけ書く)")]
         [SerializeField]
         [Tooltip("sound.se / sound.bgm のキーと SoundCue(Audio/SoundCue に置いたものを割り当てる)")]
@@ -188,44 +132,7 @@ namespace CreativeAI.UI
         [Tooltip("background.image のキーと背景画像")]
         private DialogueBackgroundEntry[] _backgrounds = Array.Empty<DialogueBackgroundEntry>();
 
-        [Header("アイテム受け取り表示")]
-        [SerializeField]
-        private Sprite _itemGetSprite; // 受け取ったアイテムのダミー画像(将来は giveItem の itemKey から解決)
-
-        [SerializeField]
-        private Vector2 _itemGetSize = new(256f, 256f); // 表示サイズ
-
-        [SerializeField]
-        private Vector2 _itemGetPosition = new(0f, 220f); // Canvas 中央からのオフセット(ウィンドウの上あたり)
-
-        [Header("武器モデル受け取り表示")]
-        [SerializeField]
-        private Vector3 _weaponModelEuler = new(10f, -20f, 0f); // 静止表示するモデルの傾き(見栄えの3/4アングル)
-
-        [SerializeField]
-        private int _weaponTextureSize = 512; // RenderTexture の解像度
-
-        [SerializeField]
-        private Vector2 _weaponImageSize = new(640f, 360f); // 武器表示枠(横長。刀に合わせた比率。0なら _itemGetSize)
-
-        [SerializeField]
-        private float _weaponFrameFill = 1.3f; // 投影サイズへの余白率(1.0でぴったり。小さいほど大きく写る)
-
-        [SerializeField]
-        private Color _weaponBackdropColor = new(0f, 0f, 0f, 0.4f); // 武器背後の枠(横長。枠サイズに連動。a=0で消せる)
-
-        [SerializeField]
-        private Image _itemRewardImage;
-
-        [SerializeField]
-        private Image _itemRewardBackdrop;
-
-        [SerializeField]
-        private RawImage _weaponRewardImage;
-
-        [SerializeField]
-        private Image _weaponRewardBackdrop;
-
+        [Header("操作ボタン")]
         [SerializeField]
         private Button _autoControlButton;
 
@@ -244,20 +151,14 @@ namespace CreativeAI.UI
         [SerializeField]
         private Button _hideControlButton;
 
-        private DialogueChoicePresenter _choicePresenter;
         private DialogueItemPickerPresenter _itemPicker;
         private readonly DialogueTextPlayer _textPlayer = new();
-        private readonly DialoguePortraitPresenter _portraitPresenter = new();
         private ConversationChromePresenter _chromePresenter;
         private readonly ConversationControlsPresenter _controlsPresenter = new();
         private ConversationSpeedPresenter _speedPresenter;
         private DialoguePresentationCommandRouter _presentationCommandRouter;
         private DialogueBackdropPresenter _backdropPresenter;
         private readonly DialogueAdvanceController _advanceController = new();
-        private DialogueRewardPresenter _rewardPresenter;
-        private DialogueRewardFlow _rewardFlow;
-        private DialogueLineFlow _lineFlow;
-        private DialogueChoiceFlow _choiceFlow;
         private ConversationInputController _inputController;
         private bool _windowManuallyHidden;
         private readonly DialogueSessionState _sessionState = new();
@@ -278,9 +179,6 @@ namespace CreativeAI.UI
 
             DialogueViewService.Current = this; // EventPlayer が参照する seam へ自身を登録
             InitializePresenters();
-            _portraitPresenter.EnsureSlots();
-            _rightPortrait = _portraitPresenter.RightPortrait;
-            _portraitPresenter.HideImmediate();
             _chromePresenter.SetAutoMode(IsAutoMode);
             _speedPresenter.SetSpeed(_textSpeed, false);
             BindControlButtons();
@@ -290,6 +188,7 @@ namespace CreativeAI.UI
 
         private void InitializePresenters()
         {
+            ResolveParts();
             _chromePresenter ??= new ConversationChromePresenter(this);
             _speedPresenter ??= new ConversationSpeedPresenter(this);
             _speedPresenter.Configure(_speedControlLabel, _speedToast);
@@ -313,73 +212,6 @@ namespace CreativeAI.UI
                 _windowEnterOffsetY,
                 _autoModeLabel
             );
-            if (
-                _choicePresenter == null
-                || !_choicePresenter.Uses(_choiceContainer, _choiceButtonTemplate)
-            )
-            {
-                _choicePresenter?.Clear();
-                _choicePresenter = new DialogueChoicePresenter(
-                    _choiceContainer,
-                    _choiceButtonTemplate,
-                    _choiceContainerWidth,
-                    _choiceButtonHeight,
-                    _choiceSpacing,
-                    _choiceBottomMargin,
-                    _choiceStaggerDelay,
-                    _choiceEnterDuration,
-                    _choiceConfirmDuration
-                );
-            }
-            _rewardPresenter ??= new DialogueRewardPresenter(
-                _itemRewardImage,
-                _itemRewardBackdrop,
-                _weaponRewardImage,
-                _weaponRewardBackdrop
-            );
-            _rewardFlow ??= new DialogueRewardFlow(
-                this,
-                _chromePresenter,
-                _nameText,
-                _bodyText,
-                _typingSound,
-                _sessionState,
-                () =>
-                {
-                    EnsureHistoryPanel();
-                    return _historyPanel;
-                },
-                TypeBody,
-                clip => _currentTypingSound = clip
-            );
-            _lineFlow ??= new DialogueLineFlow(
-                _portraitPresenter,
-                _chromePresenter,
-                _nameText,
-                _bodyText,
-                _characters,
-                _defaultPortrait,
-                _defaultPortraitSide,
-                _typingSound,
-                _sessionState,
-                () =>
-                {
-                    EnsureHistoryPanel();
-                    return _historyPanel;
-                }
-            );
-            _choiceFlow ??= new DialogueChoiceFlow(
-                _choicePresenter,
-                _chromePresenter,
-                _sessionState,
-                () =>
-                {
-                    EnsureHistoryPanel();
-                    return _historyPanel;
-                },
-                SetChoicesActive,
-                BlockAdvanceInput
-            );
             _inputController ??= new ConversationInputController(
                 _controlsPresenter,
                 _chromePresenter,
@@ -395,7 +227,7 @@ namespace CreativeAI.UI
                 SetTextSpeed,
                 () =>
                 {
-                    _choicePresenter?.HandleKeyboardInput();
+                    _choices.HandleKeyboardInput();
                     _itemPicker?.HandleKeyboardInput();
                 }
             );
@@ -408,25 +240,30 @@ namespace CreativeAI.UI
                 SetPortraitObscured,
                 PlayPortraitEffect,
                 () => HideAnimated(),
-                ShowPortraitByKey,
+                key => _portraits.ShowByKey(key),
                 new DialogueStageCommands(_backdropPresenter, FindSound, FindBackground)
-            );
-            _portraitPresenter.Configure(
-                _portrait,
-                _rightPortrait,
-                _portraitLeftAnchorX,
-                _portraitRightAnchorX,
-                _portraitActiveScale,
-                _portraitInactiveScale,
-                _portraitInactiveBrightness,
-                _portraitFadeDuration,
-                _portraitFocusDuration
             );
             _chromePresenter.EnsureView();
             ConfigureTextOverflow();
             _autoModeIndicator = _chromePresenter.AutoIndicator;
             _controlGuide = _chromePresenter.ControlGuide;
             _autoProgressFill = _chromePresenter.AutoProgress;
+        }
+
+        // 部品が未設定なら同じ GameObject から探し、無ければ足す(テストや組み立て途中でも落ちないように)
+        private void ResolveParts()
+        {
+            _portraits = GetOrAdd(_portraits);
+            _choices = GetOrAdd(_choices);
+            _rewards = GetOrAdd(_rewards);
+        }
+
+        private T GetOrAdd<T>(T current)
+            where T : Component
+        {
+            if (current != null)
+                return current;
+            return TryGetComponent(out T found) ? found : gameObject.AddComponent<T>();
         }
 
         private void ConfigureTextOverflow()
@@ -454,7 +291,6 @@ namespace CreativeAI.UI
 
         private void OnDestroy()
         {
-            _rewardPresenter?.HideAll();
             if (Instance == this)
                 Instance = null;
             if (ReferenceEquals(DialogueViewService.Current, this))
@@ -464,8 +300,6 @@ namespace CreativeAI.UI
         private void OnDisable()
         {
             _speedPresenter?.Cancel();
-            _rewardPresenter?.HideAll();
-            _choicePresenter?.Clear();
             _itemPicker?.Dismiss();
             _rewardPresentationActive = false;
         }
@@ -479,9 +313,7 @@ namespace CreativeAI.UI
             _chromePresenter.PrepareLineText(_nameText, _bodyText);
             yield return ShowAnimated();
             SetChoicesActive(false);
-            yield return _lineFlow.Prepare(speaker, portrait, text);
-            _rightPortrait = _lineFlow.RightPortrait;
-            _currentTypingSound = _lineFlow.TypingSound;
+            yield return PrepareLine(speaker, portrait, text);
 
             yield return TypeBody(text ?? string.Empty);
             var parsed = DialogueMarkupParser.Parse(text);
@@ -537,7 +369,29 @@ namespace CreativeAI.UI
             _chromePresenter.StopBounce();
             yield return ShowAnimated();
 
-            yield return _choiceFlow.Execute(options, onSelected);
+            _chromePresenter.SetChoiceGuide(true);
+            bool hasPicked = false;
+            string picked = null;
+            string pickedText = null;
+            yield return _choices.Choose(
+                options,
+                _sessionState.SelectedChoiceValues,
+                (value, text) =>
+                {
+                    hasPicked = true;
+                    picked = value;
+                    pickedText = text;
+                }
+            );
+            _chromePresenter.SetChoiceGuide(false);
+            if (hasPicked)
+            {
+                EnsureHistoryPanel();
+                _historyPanel.AddChoiceEntry(options, pickedText);
+                _sessionState.MarkChoiceSelected(picked);
+                BlockAdvanceInput(0.15f);
+            }
+            onSelected?.Invoke(picked);
             State = ConversationState.Entering;
         }
 
@@ -592,8 +446,7 @@ namespace CreativeAI.UI
         }
 
         /// <summary>
-        /// 受け取ったアイテムの画像を表示し、送り入力まで待って片付ける。<paramref name="sprite"/> 未指定なら <see cref="_itemGetSprite"/>(ダミー)。
-        /// 画像は実行時に Canvas 直下へ生成する(将来は giveItem ステップから解決した Sprite を渡す想定)。
+        /// 受け取ったアイテムの画像を表示し、送り入力まで待って片付ける。<paramref name="sprite"/> 未指定なら既定の画像を出す。
         /// </summary>
         public IEnumerator ShowItemGet(Sprite sprite = null, string acquiredMessage = null)
         {
@@ -603,27 +456,19 @@ namespace CreativeAI.UI
             State = ConversationState.Entering;
             yield return ShowAnimated();
             SetChoicesActive(false);
-            _rewardPresenter.ShowItem(
-                sprite != null ? sprite : _itemGetSprite,
-                _itemGetPosition,
-                _itemGetSize
-            );
-            yield return _rewardFlow.Enter(
-                _rewardPresenter.AnimateItemIn(),
+            _rewards.ShowItem(sprite);
+            yield return PlayReward(
+                _rewards.AnimateItemIn(),
+                _rewards.AnimateItemOut(),
                 acquiredMessage,
                 false
             );
-            yield return WaitForAdvance();
-            yield return _rewardFlow.Exit(_rewardPresenter.AnimateItemOut(), acquiredMessage);
-            _rewardPresenter.HideItem();
-            if (!string.IsNullOrWhiteSpace(acquiredMessage))
-                _sessionState.MarkCurrentLineRead();
+            _rewards.HideItem();
             _rewardPresentationActive = false;
         }
 
         /// <summary>
-        /// 受け取った武器の3Dモデルを RenderTexture 経由で <see cref="ShowItemGet"/> と同じ位置に表示し、送り入力まで回転させて待つ。
-        /// リグはシーンから離れた場所に実行時に組み、終了時に破棄する。
+        /// 受け取った武器の3Dモデルを <see cref="ShowItemGet"/> と同じ位置に表示し、送り入力まで待って片付ける。
         /// </summary>
         public IEnumerator ShowWeaponGet(
             GameObject modelPrefab = null,
@@ -637,35 +482,112 @@ namespace CreativeAI.UI
             yield return ShowAnimated();
             SetChoicesActive(false);
 
-            var model = _rewardPresenter.ShowWeapon(
-                modelPrefab,
-                _weaponModelEuler,
-                _weaponTextureSize,
-                _weaponImageSize,
-                _itemGetPosition,
-                _weaponFrameFill,
-                _weaponBackdropColor
-            );
-            if (model == null)
+            if (!_rewards.ShowWeapon(modelPrefab))
             {
                 _rewardPresentationActive = false;
                 yield break;
             }
 
-            yield return _rewardFlow.Enter(
-                _rewardPresenter.AnimateWeaponIn(),
+            yield return PlayReward(
+                _rewards.AnimateWeaponIn(),
+                _rewards.AnimateWeaponOut(),
                 acquiredMessage,
                 true
             );
-            yield return WaitForAdvance(); // AUTO中も表示時間を確保してから次へ進む
-            yield return _rewardFlow.Exit(_rewardPresenter.AnimateWeaponOut(), acquiredMessage);
-            _rewardPresenter.HideWeapon();
-            if (!string.IsNullOrWhiteSpace(acquiredMessage))
-                _sessionState.MarkCurrentLineRead();
+            _rewards.HideWeapon();
             _rewardPresentationActive = false;
         }
 
         // ---- 内部 ----
+
+        // 立ち絵・名前・本文の見た目を1行分そろえ、既読判定と履歴への記録をする
+        private IEnumerator PrepareLine(string speaker, string portrait, string text)
+        {
+            bool narration = string.IsNullOrEmpty(portrait);
+            var resolved = _portraits.Resolve(portrait);
+            yield return _portraits.Set(resolved);
+            _currentTypingSound =
+                resolved.TypingSound != null ? resolved.TypingSound : _typingSound;
+
+            string displayName = !string.IsNullOrWhiteSpace(speaker)
+                ? speaker
+                : resolved.DisplayName;
+            bool showName = !narration && !string.IsNullOrEmpty(displayName);
+            _sessionState.BeginLine(displayName, portrait, text);
+            if (_nameText != null)
+            {
+                _nameText.text = displayName;
+                _nameText.color = resolved.ThemeColor;
+                _nameText.gameObject.SetActive(showName);
+            }
+            if (_bodyText != null)
+                _bodyText.alignment = narration
+                    ? TextAlignmentOptions.Center
+                    : TextAlignmentOptions.MidlineLeft;
+            _chromePresenter.PlayLineTextEntrance(_nameText, _bodyText, showName);
+
+            bool portraitObscured =
+                !narration
+                && (_portraits.IsObscured(resolved.Side) || displayName is "？？？" or "???");
+            EnsureHistoryPanel();
+            _historyPanel.AddEntry(
+                displayName,
+                DialogueMarkupParser.Parse(text).Text,
+                resolved.Icon,
+                resolved.Side,
+                portraitObscured
+            );
+        }
+
+        // 入手表示の登場と同時にメッセージを打ち、送り入力を待ってから一緒に退場させる
+        private IEnumerator PlayReward(
+            IEnumerator animateIn,
+            IEnumerator animateOut,
+            string message,
+            bool weapon
+        )
+        {
+            bool hasMessage = !string.IsNullOrWhiteSpace(message);
+            PrepareRewardText(hasMessage ? message : null, weapon);
+            Coroutine entrance = StartCoroutine(animateIn);
+            if (hasMessage)
+                yield return TypeBody(message);
+            yield return entrance;
+
+            yield return WaitForAdvance(); // AUTO中も表示時間を確保してから次へ進む
+
+            Coroutine textExit = hasMessage
+                ? StartCoroutine(_chromePresenter.HideLineText(0.18f))
+                : null;
+            yield return animateOut;
+            if (textExit != null)
+                yield return textExit;
+            if (hasMessage)
+                _sessionState.MarkCurrentLineRead();
+        }
+
+        // 入手メッセージは名前なし・中央寄せで出し、履歴にも入手として残す
+        private void PrepareRewardText(string message, bool weapon)
+        {
+            _chromePresenter.PrepareLineText(_nameText, _bodyText);
+            if (_nameText != null)
+            {
+                _nameText.text = string.Empty;
+                _nameText.gameObject.SetActive(false);
+            }
+            if (_bodyText != null)
+            {
+                _bodyText.text = string.Empty;
+                _bodyText.alignment = TextAlignmentOptions.Center;
+            }
+            if (message == null)
+                return;
+            _currentTypingSound = _typingSound;
+            _sessionState.BeginReward(message);
+            _chromePresenter.PlayLineTextEntrance(_nameText, _bodyText, false);
+            EnsureHistoryPanel();
+            _historyPanel.AddRewardEntry(DialogueMarkupParser.Parse(message).Text, weapon);
+        }
 
         private IEnumerator TypeBody(string text)
         {
@@ -756,7 +678,7 @@ namespace CreativeAI.UI
         public void SetPortraitVisible(DialoguePortraitSide side, bool visible)
         {
             InitializePresenters();
-            _portraitPresenter.SetVisible(side, visible);
+            _portraits.SetVisible(side, visible);
         }
 
         public IEnumerator PlayPortraitEffect(
@@ -766,7 +688,7 @@ namespace CreativeAI.UI
         )
         {
             InitializePresenters();
-            yield return _portraitPresenter.PlayEffect(side, effect, duration);
+            yield return _portraits.PlayEffect(side, effect, duration);
         }
 
         public IEnumerator SetPortraitObscured(
@@ -776,7 +698,7 @@ namespace CreativeAI.UI
         )
         {
             InitializePresenters();
-            yield return _portraitPresenter.SetObscured(side, obscured, duration);
+            yield return _portraits.SetObscured(side, obscured, duration);
         }
 
         // 登録した素材からキーで引く。同じキーが複数あれば先に登録したほうを使う。
@@ -794,20 +716,6 @@ namespace CreativeAI.UI
                 if (entry.Key == key)
                     return entry.Sprite;
             return null;
-        }
-
-        /// <summary>portrait.show: セリフなしで、キーの立ち絵をその人の立ち位置に出す。</summary>
-        private IEnumerator ShowPortraitByKey(string portraitKey)
-        {
-            if (string.IsNullOrEmpty(portraitKey))
-                yield break;
-            var resolved = DialoguePortraitResolver.Resolve(
-                portraitKey,
-                _characters,
-                _defaultPortrait,
-                _defaultPortraitSide
-            );
-            yield return _portraitPresenter.Set(resolved);
         }
 
         public IEnumerator RunPresentationCommand(string command, string argument = null)
@@ -855,7 +763,7 @@ namespace CreativeAI.UI
 
         private void SetChoicesActive(bool active)
         {
-            _choicePresenter?.SetActive(active);
+            _choices.SetActive(active);
             _chromePresenter?.SetChoiceGuide(active);
         }
 
@@ -898,11 +806,11 @@ namespace CreativeAI.UI
             float portraitDuration = Mathf.Max(0.06f, duration * 0.4f);
             float windowDuration = Mathf.Max(0.07f, duration * 0.45f);
             yield return _chromePresenter.HideLineText(textDuration);
-            yield return _portraitPresenter.FadeOutAll(portraitDuration);
+            yield return _portraits.FadeOutAll(portraitDuration);
             yield return _chromePresenter.Hide(windowDuration);
-            _rewardPresenter.HideAll();
-            _choicePresenter.Clear();
-            _choicePresenter.SetActive(false);
+            _rewards.HideAll();
+            _choices.Clear();
+            _choices.SetActive(false);
             _itemPicker?.Dismiss();
             ResetTransientModes();
             State = ConversationState.Hidden;
@@ -911,7 +819,7 @@ namespace CreativeAI.UI
         private void HideImmediate()
         {
             State = ConversationState.Exiting;
-            _rewardPresenter?.HideAll();
+            _rewards.HideAll();
             SetChoicesActive(false);
             _itemPicker?.Dismiss();
             ResetTransientModes();
@@ -934,7 +842,7 @@ namespace CreativeAI.UI
 
         private void CancelRewardPresentation()
         {
-            _rewardPresenter?.HideAll();
+            _rewards.HideAll();
             _rewardPresentationActive = false;
         }
     }
