@@ -95,7 +95,7 @@ namespace CreativeAI.UI
 
         private void Update()
         {
-            bool interactable = !_controller.IsCraftFlowRunning;
+            bool interactable = !_controller.IsCrafting;
             _quickButton.interactable = interactable;
             _equipmentButton.interactable = interactable;
         }

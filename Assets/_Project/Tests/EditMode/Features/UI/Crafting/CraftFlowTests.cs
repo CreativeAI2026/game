@@ -69,8 +69,14 @@ namespace CreativeAI.Tests.EditMode
             TestReflection.SetField(_controller, "_warningCanvasGroup", warningCanvasGroup);
             TestReflection.SetField(_controller, "_craftFlowDurationSeconds", 0f);
 
-            _controller.CancelCraftFlow();
+            CancelCraft();
         }
+
+        // 調合ボタンから先の流れ(ローディング → 作る → 結果 → 閉じる)を、作る処理を差し替えて直接動かす
+        private IEnumerator CraftRoutine(System.Func<ItemStack> craft) =>
+            (IEnumerator)TestReflection.Invoke(_controller, "CraftRoutine", craft);
+
+        private void CancelCraft() => TestReflection.Invoke(_controller, "CancelCraft");
 
         private static TMP_Text CreateText(string name, Transform parent)
         {
@@ -82,7 +88,7 @@ namespace CreativeAI.Tests.EditMode
         [TearDown]
         public void TearDown()
         {
-            _controller.CancelCraftFlow();
+            CancelCraft();
             Object.DestroyImmediate(_root);
         }
 
@@ -140,61 +146,49 @@ namespace CreativeAI.Tests.EditMode
         }
 
         [Test]
-        public void RunCraftFlow_Success_RunsAfterLoadingAndWaitsForResultClose()
+        public void CraftRoutine_Success_RunsAfterLoadingAndWaitsForResultClose()
         {
             bool crafted = false;
-            var routine = _controller.RunCraftFlow(
-                () =>
-                {
-                    crafted = true;
-                    return new ItemStack(null);
-                },
-                null
-            );
+            var routine = CraftRoutine(() =>
+            {
+                crafted = true;
+                return new ItemStack(null);
+            });
 
             Assert.IsTrue(routine.MoveNext(), "最初にローディング待機へ入る");
             Assert.IsTrue(_loadingRoot.activeSelf);
             Assert.IsFalse(crafted, "待機が終わるまではクラフト処理を実行しない");
 
-            Assert.IsFalse(routine.MoveNext());
+            Assert.IsTrue(routine.MoveNext(), "結果を出したら閉じるまで待つ");
             Assert.IsTrue(crafted);
-            Assert.IsTrue(_controller.IsCraftFlowRunning, "結果を閉じるまでは操作をロックする");
+            Assert.IsTrue(_controller.IsCrafting, "結果を閉じるまでは操作をロックする");
 
-            _controller.CancelCraftFlow();
-            Assert.IsFalse(_controller.IsCraftFlowRunning);
+            CancelCraft();
+            Assert.IsFalse(_controller.IsCrafting);
         }
 
         [Test]
-        public void RunCraftFlow_Failure_HidesFlowAndUnlocksInteraction()
+        public void CraftRoutine_Failure_HidesFlowAndUnlocksInteraction()
         {
-            var routine = _controller.RunCraftFlow(() => null, null);
+            var routine = CraftRoutine(() => null);
 
             Assert.IsTrue(routine.MoveNext());
             Assert.IsFalse(routine.MoveNext());
 
             Assert.IsFalse(_loadingRoot.activeSelf);
-            Assert.IsFalse(_controller.IsCraftFlowRunning);
+            Assert.IsFalse(_controller.IsCrafting);
         }
 
         [Test]
-        public void RunCraftFlow_WhileRunning_RejectsSecondFlow()
+        public void CraftRoutine_WhileCrafting_RejectsSecondCraft()
         {
-            IEnumerator first = _controller.RunCraftFlow(() => new ItemStack(null), null);
-            IEnumerator second = _controller.RunCraftFlow(() => new ItemStack(null), null);
+            IEnumerator first = CraftRoutine(() => new ItemStack(null));
+            IEnumerator second = CraftRoutine(() => new ItemStack(null));
 
             Assert.IsTrue(first.MoveNext());
             Assert.IsFalse(second.MoveNext());
 
-            _controller.CancelCraftFlow();
-        }
-
-        [Test]
-        public void RunCraftFlow_NullAction_DoesNotStart()
-        {
-            IEnumerator routine = _controller.RunCraftFlow(null, null);
-
-            Assert.IsFalse(routine.MoveNext());
-            Assert.IsFalse(_controller.IsCraftFlowRunning);
+            CancelCraft();
         }
 
         [Test]
