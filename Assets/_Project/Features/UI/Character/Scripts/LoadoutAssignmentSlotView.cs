@@ -52,7 +52,6 @@ namespace CreativeAI.UI
         [SerializeField, Range(0f, 1f)]
         private float _draggingAlpha = 0.45f;
 
-        private Button _button;
         private ItemSlotDragOrigin _dragOrigin;
         private int _slotIndex = -1;
         private CanvasGroup _canvasGroup;
@@ -73,7 +72,6 @@ namespace CreativeAI.UI
 
         private void Awake()
         {
-            ResolveReferences();
             Refresh();
         }
 
@@ -97,7 +95,6 @@ namespace CreativeAI.UI
         {
             _dragOrigin = origin;
             _slotIndex = slotIndex;
-            ResolveReferences();
             if (_slotNumber != null)
                 _slotNumber.SetText("{0}", slotIndex + 1);
             if (_emptyLabel != null)
@@ -209,7 +206,6 @@ namespace CreativeAI.UI
 
         private void Refresh()
         {
-            ResolveReferences();
             ItemStack displayedStack = _hasPreview ? _previewStack : Stack;
             ItemData displayedData = displayedStack?.Data;
             Sprite sprite = displayedData != null ? displayedData.icon : null;
@@ -226,45 +222,6 @@ namespace CreativeAI.UI
                 _icon.color = hasItem ? Color.white : Color.clear;
                 _icon.preserveAspect = true;
             }
-        }
-
-        private void ResolveReferences()
-        {
-            if (_button == null)
-                _button = GetComponent<Button>();
-            if (_background == null)
-                _background = GetComponent<Image>();
-            if (_filledPattern == null)
-                _filledPattern = FindGameObject(transform, "FillPattern");
-            if (_emptyPattern == null)
-            {
-                _emptyPattern = FindGameObject(transform, "EmptyPattern");
-                if (_emptyPattern == null)
-                    _emptyPattern = FindGameObject(transform, "EnptyPattern");
-            }
-            if (_icon == null)
-                _icon = FindComponent<Image>(transform, "FillPattern/Icon");
-            if (_slotNumber == null)
-                _slotNumber = FindComponent<TMP_Text>(transform, "Superscript/Number");
-            if (_emptyLabel == null)
-            {
-                _emptyLabel = FindComponent<TMP_Text>(transform, "EmptyPattern/label");
-                if (_emptyLabel == null)
-                    _emptyLabel = FindComponent<TMP_Text>(transform, "EnptyPattern/label");
-            }
-        }
-
-        private static GameObject FindGameObject(Transform root, string path)
-        {
-            Transform t = root != null ? root.Find(path) : null;
-            return t != null ? t.gameObject : null;
-        }
-
-        private static T FindComponent<T>(Transform root, string path)
-            where T : Component
-        {
-            Transform t = root != null ? root.Find(path) : null;
-            return t != null ? t.GetComponent<T>() : null;
         }
 
         private bool CanAccept(ItemSlotDragPayload payload)
@@ -285,7 +242,6 @@ namespace CreativeAI.UI
 
         private void RefreshBackground()
         {
-            ResolveReferences();
             if (_background != null)
             {
                 Sprite backgroundSprite =

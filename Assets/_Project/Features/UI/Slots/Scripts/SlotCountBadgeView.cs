@@ -236,28 +236,9 @@ namespace CreativeAI.UI
             return valid;
         }
 
-        private bool ResolveFrameRect()
-        {
-            if (_frameRect != null)
-                return true;
-
-            _frameRect = FindFrameRectInChildren();
-            return _frameRect != null;
-        }
-
-        private RectTransform FindFrameRectInChildren()
-        {
-            var frameView = GetComponentInChildren<SlotFrameView>(true);
-            return frameView != null ? frameView.FrameRect : null;
-        }
-
-        private RectTransform ResolvePositionRect()
-        {
-            if (_positionRect != null)
-                return _positionRect;
-
-            return ResolveFrameRect() ? _frameRect : null;
-        }
+        // 位置合わせの基準。個別に指定がなければ枠に合わせる
+        private RectTransform ResolvePositionRect() =>
+            _positionRect != null ? _positionRect : _frameRect;
 
 #if UNITY_EDITOR
         private void Reset() => AutoAssignReferences();
@@ -282,7 +263,10 @@ namespace CreativeAI.UI
                     _countTextCanvasGroup = _countText.GetComponent<CanvasGroup>();
 
             if (_frameRect == null)
-                _frameRect = FindFrameRectInChildren();
+            {
+                var frameView = GetComponentInChildren<SlotFrameView>(true);
+                _frameRect = frameView != null ? frameView.FrameRect : null;
+            }
         }
 
         private RectTransform FindContainer()

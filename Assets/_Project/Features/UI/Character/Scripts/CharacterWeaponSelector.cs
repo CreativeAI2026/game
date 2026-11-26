@@ -101,7 +101,6 @@ namespace CreativeAI.UI
         private void Awake()
         {
             _typewriter = new TmpTypewriterPlayer(this);
-            ResolveReferences();
             Initialize();
         }
 
@@ -206,10 +205,7 @@ namespace CreativeAI.UI
                     if (icon != null)
                         icon.color =
                             weapon == selectedWeapon ? Color.white : new Color(.62f, .65f, .7f, 1);
-                    var label =
-                        weapon.Button != null
-                            ? weapon.Button.GetComponentInChildren<TMP_Text>(true)
-                            : null;
+                    var label = weapon.Button != null ? weapon.Button.Label : null;
                     if (label != null)
                         label.color =
                             weapon == selectedWeapon
@@ -256,30 +252,6 @@ namespace CreativeAI.UI
                 _characterInterval,
                 _animateText
             );
-        }
-
-        private void ResolveReferences()
-        {
-            if (_weaponName == null)
-                _weaponName = FindComponent<TMP_Text>(transform, "ViewArea/Name");
-            if (_weaponDescription == null)
-                _weaponDescription = FindComponent<TMP_Text>(transform, "ViewArea/Description");
-            if (_attackValue == null)
-                _attackValue = FindStatusValue("ATK");
-            if (_criticalRateValue == null)
-                _criticalRateValue = FindStatusValue("CRTR");
-            if (_criticalDamageValue == null)
-                _criticalDamageValue = FindStatusValue("CRTD");
-        }
-
-        private TMP_Text FindStatusValue(string rowName) =>
-            FindComponent<TMP_Text>(transform, $"WeaponStatusArea/{rowName}/TextArea/ValueText");
-
-        private static T FindComponent<T>(Transform root, string path)
-            where T : Component
-        {
-            Transform t = root != null ? root.Find(path) : null;
-            return t != null ? t.GetComponent<T>() : null;
         }
 
         private CharacterWeaponSelection GetWeapon(int index) =>

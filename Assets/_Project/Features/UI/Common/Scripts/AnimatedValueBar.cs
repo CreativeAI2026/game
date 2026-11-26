@@ -29,7 +29,6 @@ namespace CreativeAI.UI
 
         private void Awake()
         {
-            ResolveFill();
             EnsureLeftPivot();
         }
 
@@ -46,7 +45,6 @@ namespace CreativeAI.UI
 
         public void PlayOpenAnimation()
         {
-            ResolveFill();
             if (_fill == null)
                 return;
 
@@ -62,7 +60,6 @@ namespace CreativeAI.UI
 
         private void AnimateTo(float target, float duration, Ease ease)
         {
-            ResolveFill();
             if (_fill == null)
                 return;
 
@@ -86,12 +83,6 @@ namespace CreativeAI.UI
             Vector3 scale = _fill.localScale;
             scale.x = value;
             _fill.localScale = scale;
-        }
-
-        private void ResolveFill()
-        {
-            if (_fill == null)
-                _fill = transform.Find("Background/Fill") as RectTransform;
         }
 
         private void EnsureLeftPivot()
