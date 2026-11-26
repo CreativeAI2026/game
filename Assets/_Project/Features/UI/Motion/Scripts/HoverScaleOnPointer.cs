@@ -6,8 +6,12 @@ using UnityEngine.UI;
 
 namespace CreativeAI.UI
 {
+    /// <summary>
+    /// ポインタを乗せると対象を拡大し、クリックすると拡大したまま固定する(同じグループで固定できるのは1つ)。
+    /// 固定中は対象を上下に揺らせる。
+    /// </summary>
     [RequireComponent(typeof(RectTransform))]
-    public class HoverScaleOnPointer
+    public sealed class HoverScaleOnPointer
         : MonoBehaviour,
             IPointerEnterHandler,
             IPointerExitHandler,
@@ -42,17 +46,12 @@ namespace CreativeAI.UI
         private float _bounceDuration = 0.8f;
 
         [SerializeField]
-        private RectTransform _targetRect;
-        private RectTransform _bounceTarget;
-        private readonly List<RectTransform> _linkedTargets = new();
-        private readonly List<Vector3> _linkedTargetBaseLocalPositions = new();
-        private readonly List<Vector3> _linkedTargetBaseLocalScales = new();
-        private readonly Dictionary<RectTransform, Vector3> _cachedBaseLocalScales = new();
+        private RectTransform _targetRect; // 拡大・揺れの対象
+
         private Tween _currentTween;
         private Tween _bounceTween;
         private Vector3 _baseLocalPosition;
         private Vector3 _baseLocalScale = Vector3.one;
-        private Vector2 _bounceTargetBaseAnchoredPosition;
         private bool _isLocked;
         private bool _bounceAllowed = true;
 
@@ -60,15 +59,10 @@ namespace CreativeAI.UI
         private static readonly Vector3[] s_targetCorners = new Vector3[4];
         private static readonly Vector3[] s_maskCorners = new Vector3[4];
 
-        public bool HoverScaleEnabled => _hoverScaleEnabled;
-        public bool BounceEnabled => _bounceEnabled;
-
         private void Awake()
         {
-            if (_targetRect == null)
-                _targetRect = GetComponent<RectTransform>();
-            CacheBaseScale();
-            CacheBasePosition();
+            _baseLocalScale = _targetRect.localScale;
+            _baseLocalPosition = _targetRect.localPosition;
         }
 
         private void OnDestroy()
@@ -77,34 +71,10 @@ namespace CreativeAI.UI
             _bounceTween?.Kill();
         }
 
-        public void SetTarget(RectTransform target)
-        {
-            if (_targetRect == target)
-            {
-                CacheBaseScale(true);
-                CacheBasePosition();
-                return;
-            }
-
-            StopBounce();
-            _targetRect = target;
-            CacheBaseScale();
-            CacheBasePosition();
-        }
-
+        /// <summary>固定のグループを変える。同じグループで同時に固定できるのは1つ。</summary>
         public void SetGroup(string group) => _group = group;
 
-        public void SetHoverScale(float scale) => _hoverScale = Mathf.Max(1f, scale);
-
-        public void SetLockEnabled(bool enabled) => _lockEnabled = enabled;
-
-        public void SetBounceEnabled(bool enabled)
-        {
-            _bounceEnabled = enabled;
-            if (!_bounceEnabled)
-                StopBounce();
-        }
-
+        /// <summary>固定中に揺らしてよいかを切り替える。</summary>
         public void SetBounceAllowed(bool allowed)
         {
             _bounceAllowed = allowed;
@@ -112,41 +82,7 @@ namespace CreativeAI.UI
                 StopBounce();
         }
 
-        public void SetBounceHeight(float height)
-        {
-            _bounceHeight = Mathf.Max(0f, height);
-            if (_bounceHeight <= 0f)
-                StopBounce();
-        }
-
-        public void SetBounceTarget(RectTransform target)
-        {
-            StopBounce();
-            _bounceTarget = target;
-            CacheBasePosition();
-        }
-
-        public void SetLinkedTargets(params RectTransform[] targets)
-        {
-            StopBounce();
-            _linkedTargets.Clear();
-
-            if (targets != null)
-            {
-                foreach (var target in targets)
-                {
-                    if (target == null || target == _targetRect)
-                        continue;
-
-                    if (!_linkedTargets.Contains(target))
-                        _linkedTargets.Add(target);
-                }
-            }
-
-            CacheLinkedTargetBaseScales();
-            CacheBasePosition();
-        }
-
+        /// <summary>外側をクリックしたら固定を外すかを切り替える。</summary>
         public void SetReleaseLockOnOutsideClick(bool release) =>
             _releaseLockOnOutsideClick = release;
 
@@ -156,98 +92,19 @@ namespace CreativeAI.UI
                 return;
 
             _currentTween?.Kill();
-            var sequence = DOTween.Sequence().SetUpdate(true);
-            sequence.Join(
-                _targetRect
-                    .DOScale(_baseLocalScale * scaleMultiplier, _animationDuration)
-                    .SetEase(Ease.OutQuad)
-            );
-
-            for (int i = 0; i < _linkedTargets.Count; i++)
-            {
-                var linkedTarget = _linkedTargets[i];
-                if (linkedTarget == null)
-                    continue;
-
-                var baseScale =
-                    i < _linkedTargetBaseLocalScales.Count
-                        ? _linkedTargetBaseLocalScales[i]
-                        : linkedTarget.localScale;
-
-                sequence.Join(
-                    linkedTarget
-                        .DOScale(baseScale * scaleMultiplier, _animationDuration)
+            // 対象の DOKill で止まらないよう、Sequence に包んで持つ
+            _currentTween = DOTween
+                .Sequence()
+                .SetUpdate(true)
+                .Join(
+                    _targetRect
+                        .DOScale(_baseLocalScale * scaleMultiplier, _animationDuration)
                         .SetEase(Ease.OutQuad)
-                );
-            }
-
-            _currentTween = sequence.OnComplete(() => _currentTween = null);
+                )
+                .OnComplete(() => _currentTween = null);
         }
 
-        private void RestoreBaseScale()
-        {
-            if (_targetRect != null)
-                _targetRect.localScale = _baseLocalScale;
-
-            for (int i = 0; i < _linkedTargets.Count; i++)
-            {
-                var linkedTarget = _linkedTargets[i];
-                if (linkedTarget == null)
-                    continue;
-
-                linkedTarget.localScale =
-                    i < _linkedTargetBaseLocalScales.Count
-                        ? _linkedTargetBaseLocalScales[i]
-                        : linkedTarget.localScale;
-            }
-        }
-
-        private void CacheBasePosition()
-        {
-            if (_targetRect != null)
-                _baseLocalPosition = _targetRect.localPosition;
-            if (_bounceTarget != null)
-                _bounceTargetBaseAnchoredPosition = _bounceTarget.anchoredPosition;
-
-            _linkedTargetBaseLocalPositions.Clear();
-            foreach (var linkedTarget in _linkedTargets)
-                _linkedTargetBaseLocalPositions.Add(
-                    linkedTarget != null ? linkedTarget.localPosition : Vector3.zero
-                );
-        }
-
-        private void CacheBaseScale(bool force = false)
-        {
-            if (_targetRect == null)
-                return;
-
-            if (force || !_cachedBaseLocalScales.TryGetValue(_targetRect, out _baseLocalScale))
-            {
-                _baseLocalScale = _targetRect.localScale;
-                _cachedBaseLocalScales[_targetRect] = _baseLocalScale;
-            }
-        }
-
-        private void CacheLinkedTargetBaseScales()
-        {
-            _linkedTargetBaseLocalScales.Clear();
-            foreach (var linkedTarget in _linkedTargets)
-            {
-                if (linkedTarget == null)
-                {
-                    _linkedTargetBaseLocalScales.Add(Vector3.one);
-                    continue;
-                }
-
-                if (!_cachedBaseLocalScales.TryGetValue(linkedTarget, out var baseScale))
-                {
-                    baseScale = linkedTarget.localScale;
-                    _cachedBaseLocalScales[linkedTarget] = baseScale;
-                }
-
-                _linkedTargetBaseLocalScales.Add(baseScale);
-            }
-        }
+        private void RestoreBaseScale() => _targetRect.localScale = _baseLocalScale;
 
         private void StartBounce()
         {
@@ -262,12 +119,11 @@ namespace CreativeAI.UI
 
             StopBounce();
             RebuildOwningGridLayout();
-            CacheBasePosition();
+            _baseLocalPosition = _targetRect.localPosition;
             float direction = GetBounceDirection();
 
-            var sequence = DOTween.Sequence();
-            sequence.Append(
-                DOTween.To(
+            _bounceTween = DOTween
+                .To(
                     () => _targetRect.localPosition.y,
                     y =>
                     {
@@ -278,52 +134,6 @@ namespace CreativeAI.UI
                     _baseLocalPosition.y + _bounceHeight * direction,
                     _bounceDuration
                 )
-            );
-
-            if (_bounceTarget != null)
-            {
-                sequence.Join(
-                    DOTween.To(
-                        () => _bounceTarget.anchoredPosition.y,
-                        y =>
-                        {
-                            var position = _bounceTarget.anchoredPosition;
-                            position.y = y;
-                            _bounceTarget.anchoredPosition = position;
-                        },
-                        _bounceTargetBaseAnchoredPosition.y + _bounceHeight * direction,
-                        _bounceDuration
-                    )
-                );
-            }
-
-            for (int i = 0; i < _linkedTargets.Count; i++)
-            {
-                var linkedTarget = _linkedTargets[i];
-                if (linkedTarget == null)
-                    continue;
-
-                var basePosition =
-                    i < _linkedTargetBaseLocalPositions.Count
-                        ? _linkedTargetBaseLocalPositions[i]
-                        : linkedTarget.localPosition;
-
-                sequence.Join(
-                    DOTween.To(
-                        () => linkedTarget.localPosition.y,
-                        y =>
-                        {
-                            var position = linkedTarget.localPosition;
-                            position.y = y;
-                            linkedTarget.localPosition = position;
-                        },
-                        basePosition.y + _bounceHeight * direction,
-                        _bounceDuration
-                    )
-                );
-            }
-
-            _bounceTween = sequence
                 .SetEase(Ease.InOutSine)
                 .SetLoops(-1, LoopType.Yoyo)
                 .SetUpdate(true);
@@ -338,19 +148,8 @@ namespace CreativeAI.UI
             if (!wasBouncing || _targetRect == null)
                 return;
 
-            bool layoutRebuilt = RebuildOwningGridLayout();
-            if (!layoutRebuilt)
+            if (!RebuildOwningGridLayout())
                 _targetRect.localPosition = _baseLocalPosition;
-            if (_bounceTarget != null)
-                _bounceTarget.anchoredPosition = _bounceTargetBaseAnchoredPosition;
-
-            for (int i = 0; i < _linkedTargets.Count; i++)
-            {
-                if (_linkedTargets[i] == null || i >= _linkedTargetBaseLocalPositions.Count)
-                    continue;
-
-                _linkedTargets[i].localPosition = _linkedTargetBaseLocalPositions[i];
-            }
         }
 
         private bool RebuildOwningGridLayout()
@@ -419,8 +218,10 @@ namespace CreativeAI.UI
 
         private static readonly Dictionary<string, HoverScaleOnPointer> _lockedInstances = new();
 
+        /// <summary>拡大したまま固定しているか。</summary>
         public bool IsLocked() => _isLocked;
 
+        /// <summary>コードから固定する(選択中の表示)。固定できない設定なら何もしない。</summary>
         public void AcquireLock()
         {
             if (!_lockEnabled)
@@ -429,6 +230,7 @@ namespace CreativeAI.UI
             LockSelection();
         }
 
+        /// <summary>固定を外して元の大きさへ戻す。</summary>
         public void ReleaseLock() => ReleaseLockedState();
 
         private void OnDisable()

@@ -43,7 +43,6 @@ namespace CreativeAI.UI
 
         private void OnEnable()
         {
-            _inventory.SetReleaseSelectionOnOutsideClick(false);
             _inventory.OnSlotSubmitted += OnSlotSubmitted;
             _tabs.OnTabDefinitionSelected += OnTabSelected;
             _useButton.onClick.AddListener(UseSelected);

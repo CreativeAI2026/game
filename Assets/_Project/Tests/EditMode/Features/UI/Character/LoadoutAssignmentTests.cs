@@ -25,11 +25,7 @@ namespace CreativeAI.Tests.EditMode
 
             _root = new GameObject("Loadout", typeof(RectTransform));
             _created.Add(_root);
-            CreateSlots("QuickItemArea/SlotArea");
-            CreateSlots("EquipArea/SlotArea");
-
-            _slots = new LoadoutAssignment(() => _inventory);
-            _slots.Resolve(_root.transform);
+            _slots = new LoadoutAssignment(CreateSlots(), CreateSlots(), () => _inventory);
         }
 
         [TearDown]
@@ -131,21 +127,16 @@ namespace CreativeAI.Tests.EditMode
             Assert.AreEqual(2, _slots.SelectedEquipment);
         }
 
-        private void CreateSlots(string path)
+        private LoadoutAssignmentSlotView[] CreateSlots()
         {
-            Transform parent = _root.transform;
-            foreach (var name in path.Split('/'))
-            {
-                var child = new GameObject(name, typeof(RectTransform));
-                child.transform.SetParent(parent, false);
-                parent = child.transform;
-            }
-            for (int i = 0; i < 3; i++)
+            var slots = new LoadoutAssignmentSlotView[3];
+            for (int i = 0; i < slots.Length; i++)
             {
                 var slot = new GameObject($"Slot{i}", typeof(RectTransform));
-                slot.transform.SetParent(parent, false);
-                slot.AddComponent<LoadoutAssignmentSlotView>();
+                slot.transform.SetParent(_root.transform, false);
+                slots[i] = slot.AddComponent<LoadoutAssignmentSlotView>();
             }
+            return slots;
         }
 
         private ItemStack AddEquipment(int id)

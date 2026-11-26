@@ -79,8 +79,7 @@ namespace CreativeAI.UI
         private InventoryManager _subscribedInventoryManager;
         private int _selectedMaterialSlotIndex = -1;
         private bool _isSubscribed;
-        private bool _isCrafting;
-        private bool _isCraftFlowRunning;
+        private bool _isCrafting; // 調合ボタンを押してから結果を閉じるまで
         private bool _craftedPending; // 合成したが、まだ合成画面を閉じていない
         private Coroutine _craftRoutine;
         private Coroutine _initialSelectionRoutine;
@@ -89,7 +88,8 @@ namespace CreativeAI.UI
         private CraftResultPresenter _result;
         private CraftWarningToast _warning;
 
-        public bool IsCraftFlowRunning => _isCraftFlowRunning;
+        /// <summary>調合ボタンを押してから結果を閉じるまでの間か。この間は素材やタブを操作できない。</summary>
+        public bool IsCrafting => _isCrafting;
         public ItemData PreviewedCraftedItem => _previewedCraftedItem;
         public ItemCategory MaterialCategory => _materialCategory;
         public ItemStack FirstMaterial => _materials[0];
@@ -100,16 +100,13 @@ namespace CreativeAI.UI
         public void SelectMaterialCategory(ItemCategory category)
         {
             if (
-                IsCraftInteractionLocked
-                || (category != ItemCategory.Food && category != ItemCategory.Equipment)
+                _isCrafting || (category != ItemCategory.Food && category != ItemCategory.Equipment)
             )
                 return;
             _materialCategory = category;
             ResetSlots(resetInventoryView: true);
             SelectFirstSlotIfNeeded();
         }
-
-        private bool IsCraftInteractionLocked => _isCrafting || _isCraftFlowRunning;
 
         // テストは参照を後から差し込むので、使う直前に作る。
         private CraftResultPresenter Result =>
@@ -164,8 +161,7 @@ namespace CreativeAI.UI
             ResetSlots(resetInventoryView: true);
             SelectFirstSlotIfNeeded();
             RestartInitialSelectionRoutine();
-            StopCraftRoutine();
-            CancelCraftFlow();
+            CancelCraft();
             HideWarning();
             UpdateCraftButton();
         }
@@ -173,10 +169,9 @@ namespace CreativeAI.UI
         private void OnDisable()
         {
             Unsubscribe();
-            StopCraftRoutine();
+            CancelCraft();
             StopInitialSelectionRoutine();
             ResetMaterialAssignments(resetSelection: true);
-            CancelCraftFlow();
             HideWarning();
             MarkCraftedIfPending();
         }
@@ -225,15 +220,12 @@ namespace CreativeAI.UI
                 return false;
             }
 
-            UIButtonHoverScaleUtility.ApplyTo(_closeButton);
             _closeButton.onClick.RemoveListener(HideResult);
             _closeButton.onClick.AddListener(HideResult);
 
             if (_craftedItemSlot.TryGetComponent(out SlotFrameView craftedFrame))
                 craftedFrame.SetRole(SlotFrameRole.ItemSet);
             _inventory.SetSelectFirstSlotOnRefresh(false);
-            _inventory.SetReleaseSelectionOnOutsideClick(false);
-            UIButtonHoverScaleUtility.ApplyTo(_craftButton);
             _craftButton.onClick.RemoveListener(StartCraft);
             _craftButton.onClick.AddListener(StartCraft);
             return true;
@@ -254,7 +246,7 @@ namespace CreativeAI.UI
                 slot.DoubleClicked += OnMaterialSlotDoubleClicked;
                 slot.NormalizeVisualState();
             }
-            SetCraftInteractionEnabled(!_isCraftFlowRunning);
+            SetCraftInteractionEnabled(!_isCrafting);
             _subscribedInventoryManager = InventoryManager.Instance;
             if (_subscribedInventoryManager != null)
                 _subscribedInventoryManager.InventoryChanged += OnInventoryChanged;
@@ -415,7 +407,7 @@ namespace CreativeAI.UI
         private void OnMaterialSlotClicked(MaterialSlot slot)
         {
             int index = Array.IndexOf(_materialSlots, slot);
-            if (IsCraftInteractionLocked)
+            if (_isCrafting)
                 return;
 
             SlotKeyboardFocus.Claim(this);
@@ -425,7 +417,7 @@ namespace CreativeAI.UI
         private void OnMaterialSlotDoubleClicked(MaterialSlot slot)
         {
             int index = Array.IndexOf(_materialSlots, slot);
-            if (IsCraftInteractionLocked || index < 0)
+            if (_isCrafting || index < 0)
                 return;
 
             SlotKeyboardFocus.Claim(this);
@@ -460,7 +452,7 @@ namespace CreativeAI.UI
 
         private void OnInventorySlotDoubleClicked(ItemStack stack)
         {
-            if (IsCraftInteractionLocked || _selectedMaterialSlotIndex < 0 || !IsValidStack(stack))
+            if (_isCrafting || _selectedMaterialSlotIndex < 0 || !IsValidStack(stack))
                 return;
 
             if (ShowWarningIfUnusable(stack))
@@ -486,7 +478,7 @@ namespace CreativeAI.UI
 
         private void OnInventorySlotSubmitted(ItemStack stack)
         {
-            if (IsCraftInteractionLocked || !IsValidStack(stack))
+            if (_isCrafting || !IsValidStack(stack))
                 return;
 
             int assignedIndex = FindAssignedIndex(stack.Data);
@@ -622,9 +614,9 @@ namespace CreativeAI.UI
             RefreshCraftedItemSlot(recipe);
 
             if (_craftButton != null)
-                _craftButton.interactable = !IsCraftInteractionLocked && canCraft;
+                _craftButton.interactable = !_isCrafting && canCraft;
 
-            if (IsCraftInteractionLocked || canCraft)
+            if (_isCrafting || canCraft)
                 HideWarning();
             else if (HasEquippedMaterial())
                 ShowWarning(CraftWarning.EquippedMaterial);
@@ -651,7 +643,7 @@ namespace CreativeAI.UI
 
         private void StartCraft()
         {
-            if (IsCraftInteractionLocked)
+            if (_isCrafting)
                 return;
 
             var recipe = FindAssignedRecipe();
@@ -665,39 +657,46 @@ namespace CreativeAI.UI
                 return;
             }
 
-            StopCraftRoutine();
-            _craftRoutine = StartCoroutine(CraftRoutine(recipe, _materials[0], _materials[1]));
+            if (!HasCraftFlowReferences())
+                return;
+
+            var first = _materials[0];
+            var second = _materials[1];
+            _craftRoutine = StartCoroutine(CraftRoutine(() => Craft(recipe, first, second)));
         }
 
-        private IEnumerator CraftRoutine(
-            CraftRecipe recipe,
-            ItemStack firstMaterial,
-            ItemStack secondMaterial
-        )
+        // ローディング → 調合 → 結果パネル → 閉じるまでを1本で進める。craft は作られた1個分を返し、失敗なら null。
+        private IEnumerator CraftRoutine(Func<ItemStack> craft)
         {
-            _isCrafting = true;
-            ItemStack crafted = null;
-            try
-            {
-                UpdateCraftButton();
-                yield return RunCraftFlow(
-                    () => crafted = Craft(recipe, firstMaterial, secondMaterial),
-                    OnResultClosed
-                );
+            if (_isCrafting)
+                yield break;
 
-                if (crafted != null)
-                {
-                    yield return null;
-                    ResetMaterialAssignments(resetSelection: false);
-                    _inventory.RefreshCurrentTab();
-                }
-            }
-            finally
+            SetCrafting(true);
+            HideWarning();
+            Result.HideImmediately();
+            Result.ShowLoading();
+            yield return new WaitForSecondsRealtime(Mathf.Max(0f, _craftFlowDurationSeconds));
+
+            ItemStack crafted = craft();
+            Result.HideLoading();
+            if (crafted == null)
             {
-                _craftRoutine = null;
-                _isCrafting = false;
-                UpdateCraftButton();
+                Result.HideImmediately();
+                FinishCraft();
+                yield break;
             }
+
+            bool closed = false;
+            ShowResult(crafted, () => closed = true);
+            yield return null;
+            ResetMaterialAssignments(resetSelection: false);
+            if (_inventory != null)
+                _inventory.RefreshCurrentTab();
+
+            while (!closed)
+                yield return null;
+            OnResultClosed();
+            FinishCraft();
         }
 
         private static ItemStack Craft(
@@ -721,15 +720,28 @@ namespace CreativeAI.UI
             SelectFirstSlotIfNeeded();
         }
 
-        private void StopCraftRoutine()
+        // 調合を途中でやめる(画面を閉じたとき)。結果パネルも隠す。
+        private void CancelCraft()
         {
             if (_craftRoutine != null)
-            {
                 StopCoroutine(_craftRoutine);
-                _craftRoutine = null;
-            }
+            Result.HideLoading();
+            Result.HideImmediately();
+            FinishCraft();
+        }
 
-            _isCrafting = false;
+        private void FinishCraft()
+        {
+            _craftRoutine = null;
+            SetCrafting(false);
+        }
+
+        private void SetCrafting(bool crafting)
+        {
+            if (_isCrafting == crafting)
+                return;
+            _isCrafting = crafting;
+            SetCraftInteractionEnabled(!crafting);
         }
 
         private void UpdateMaterialSlotKeyboardNavigation()
@@ -746,7 +758,7 @@ namespace CreativeAI.UI
                 return;
             }
 
-            if (IsCraftInteractionLocked)
+            if (_isCrafting)
                 return;
 
             if (
@@ -817,77 +829,6 @@ namespace CreativeAI.UI
             if (_inventory != null)
                 _inventory.SetInteractionEnabled(enabled);
             UpdateCraftButton();
-        }
-
-        // --- 実行フロー ---
-
-        /// <summary>
-        /// ローディング → 調合 → 結果パネルの流れ。craftAction は作られた1個分を返し、失敗なら null。
-        /// </summary>
-        public IEnumerator RunCraftFlow(Func<ItemStack> craftAction, Action onResultClosed)
-        {
-            if (craftAction == null || _isCraftFlowRunning || !HasCraftFlowReferences())
-                yield break;
-
-            bool awaitingResultClose = false;
-            try
-            {
-                SetCraftFlowRunning(true);
-                HideWarning();
-                Result.HideImmediately();
-                Result.ShowLoading();
-                yield return new WaitForSecondsRealtime(Mathf.Max(0f, _craftFlowDurationSeconds));
-
-                ItemStack crafted = craftAction();
-                Result.HideLoading();
-                if (crafted == null)
-                {
-                    Result.HideImmediately();
-                    yield break;
-                }
-
-                bool resultClosed = false;
-                void CompleteResult()
-                {
-                    if (resultClosed)
-                        return;
-
-                    resultClosed = true;
-                    try
-                    {
-                        onResultClosed?.Invoke();
-                    }
-                    finally
-                    {
-                        SetCraftFlowRunning(false);
-                    }
-                }
-
-                ShowResult(crafted, CompleteResult);
-                awaitingResultClose = true;
-            }
-            finally
-            {
-                Result.HideLoading();
-                if (!awaitingResultClose)
-                    SetCraftFlowRunning(false);
-            }
-        }
-
-        public void CancelCraftFlow()
-        {
-            Result.HideLoading();
-            Result.HideImmediately();
-            SetCraftFlowRunning(false);
-        }
-
-        private void SetCraftFlowRunning(bool running)
-        {
-            if (_isCraftFlowRunning == running)
-                return;
-
-            _isCraftFlowRunning = running;
-            SetCraftInteractionEnabled(!running);
         }
 
         // --- 結果パネル ---

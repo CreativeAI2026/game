@@ -61,13 +61,9 @@ namespace CreativeAI.UI
 
         private void Apply()
         {
-            bool inBattle =
-                GameModeManager.Instance != null
-                && GameModeManager.Instance.CurrentMode == GameMode.Battle;
             bool blocked =
                 string.IsNullOrEmpty(_current)
-                || inBattle
-                || EventPlaybackService.IsPlaying
+                || !EventPlaybackService.IsFreeRoaming
                 || (_router != null && _router.IsAnyPanelOpen);
 
             if (_group != null)

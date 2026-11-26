@@ -89,10 +89,7 @@ namespace CreativeAI.Gameplay
             }
 
             // 移動中(Field)のみ。マネージャ未生成(開発シーン直 Play)は Field 扱いで許可する。
-            var mode = GameModeManager.Instance;
-            if (mode != null && mode.CurrentMode != GameMode.Field)
-                return false;
-            if (EventPlaybackService.IsPlaying)
+            if (!EventPlaybackService.IsFreeRoaming)
                 return false;
 
             var inventory = InventoryManager.Instance;

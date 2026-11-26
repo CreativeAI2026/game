@@ -586,6 +586,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: CreativeAI.UI::CreativeAI.UI.InventoryUI.Inventory
   _selectFirstSlotOnRefresh: 1
   _showItemCounts: 1
+  _releaseSelectionOnOutsideClick: 1
   _tabGroup: {fileID: 4378624457368349205}
   _slotsRoot: {fileID: 5159119507101400855}
   _slotPrefab: {fileID: 1216446043623954188, guid: d7323666996b6284eb6795e2847b1f44, type: 3}

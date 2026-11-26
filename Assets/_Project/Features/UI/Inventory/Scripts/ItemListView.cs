@@ -32,6 +32,8 @@ namespace CreativeAI.UI
         [SerializeField]
         private bool _showItemCounts = true;
 
+        [SerializeField]
+        [Tooltip("選んでいるスロットを、一覧の外をクリックしたら選択解除するか")]
         private bool _releaseSelectionOnOutsideClick = true;
 
         [Header("Tab")]
@@ -247,14 +249,6 @@ namespace CreativeAI.UI
 
         private const float InitialSlotScale = 0f;
         private Tween _scrollTween;
-
-        public void SetReleaseSelectionOnOutsideClick(bool release)
-        {
-            _releaseSelectionOnOutsideClick = release;
-
-            foreach (var slot in _visibleSlots)
-                slot.SetReleaseSelectionOnOutsideClick(release);
-        }
 
         private void RefreshSlots(List<ItemStack> items, ScrollRefreshMode scrollMode)
         {

@@ -1,60 +1,32 @@
-using System;
-
 namespace CreativeAI.UI
 {
     /// <summary>会話UIのキーボードショートカットと操作可否更新を担当する。</summary>
     internal sealed class ConversationInputController
     {
+        private readonly ConversationView _view;
         private readonly ConversationControlsPresenter _controls;
         private readonly ConversationChromePresenter _chrome;
         private readonly DialogueAdvanceController _advance;
-        private readonly Func<ConversationView.ConversationState> _state;
-        private readonly Func<bool> _historyOpen;
-        private readonly Func<bool> _windowHidden;
-        private readonly Func<bool> _rewardActive;
-        private readonly Func<bool> _autoMode;
-        private readonly Func<ConversationView.TextSpeed> _textSpeed;
-        private readonly Action<bool> _setAutoMode;
-        private readonly Action<bool> _setWindowHidden;
-        private readonly Action<ConversationView.TextSpeed> _setTextSpeed;
-        private readonly Action _handleChoiceInput;
 
         public ConversationInputController(
+            ConversationView view,
             ConversationControlsPresenter controls,
             ConversationChromePresenter chrome,
-            DialogueAdvanceController advance,
-            Func<ConversationView.ConversationState> state,
-            Func<bool> historyOpen,
-            Func<bool> windowHidden,
-            Func<bool> rewardActive,
-            Func<bool> autoMode,
-            Func<ConversationView.TextSpeed> textSpeed,
-            Action<bool> setAutoMode,
-            Action<bool> setWindowHidden,
-            Action<ConversationView.TextSpeed> setTextSpeed,
-            Action handleChoiceInput
+            DialogueAdvanceController advance
         )
         {
+            _view = view;
             _controls = controls;
             _chrome = chrome;
             _advance = advance;
-            _state = state;
-            _historyOpen = historyOpen;
-            _windowHidden = windowHidden;
-            _rewardActive = rewardActive;
-            _autoMode = autoMode;
-            _textSpeed = textSpeed;
-            _setAutoMode = setAutoMode;
-            _setWindowHidden = setWindowHidden;
-            _setTextSpeed = setTextSpeed;
-            _handleChoiceInput = handleChoiceInput;
         }
 
         public void Tick()
         {
-            bool historyOpen = _historyOpen();
-            bool hidden = _windowHidden() || _state() == ConversationView.ConversationState.Hidden;
-            bool choices = _state() == ConversationView.ConversationState.ShowingChoices;
+            bool historyOpen = _view.IsHistoryOpen;
+            bool hidden =
+                _view.IsWindowHidden || _view.State == ConversationView.ConversationState.Hidden;
+            bool choices = _view.State == ConversationView.ConversationState.ShowingChoices;
 
             if (
                 UIInputActionMap.WasPressedThisFrame(UIInputActionMap.DialogueAuto)
@@ -63,14 +35,14 @@ namespace CreativeAI.UI
             )
             {
                 _controls.PlayAutoShortcut();
-                _setAutoMode(!_autoMode());
+                _view.SetAutoMode(!_view.IsAutoMode);
             }
 
             if (
                 UIInputActionMap.WasPressedThisFrame(UIInputActionMap.DialogueSkip)
                 && !historyOpen
                 && !hidden
-                && !_rewardActive()
+                && !_view.IsRewardShowing
                 && !choices
             )
                 _controls.PlaySkipShortcut();
@@ -78,12 +50,12 @@ namespace CreativeAI.UI
             if (
                 UIInputActionMap.WasPressedThisFrame(UIInputActionMap.DialogueHide)
                 && !choices
-                && !_rewardActive()
+                && !_view.IsRewardShowing
                 && !historyOpen
             )
             {
                 _controls.PlayHideShortcut();
-                _setWindowHidden(!_windowHidden());
+                _view.SetWindowHidden(!_view.IsWindowHidden);
             }
 
             if (
@@ -93,22 +65,24 @@ namespace CreativeAI.UI
             )
             {
                 _controls.PlaySpeedShortcut();
-                _setTextSpeed((ConversationView.TextSpeed)(((int)_textSpeed() + 1) % 4));
+                _view.SetTextSpeed(
+                    (ConversationView.TextSpeed)(((int)_view.CurrentTextSpeed + 1) % 4)
+                );
             }
 
             if (choices && !historyOpen)
-                _handleChoiceInput();
+                _view.HandleChoiceKeys();
 
             // 会話していない間は表示が見えないので、AUTO 表示やボタンの状態を更新しない
-            if (_state() == ConversationView.ConversationState.Hidden)
+            if (_view.State == ConversationView.ConversationState.Hidden)
                 return;
 
             bool autoProgressVisible =
-                _state() == ConversationView.ConversationState.WaitingForAdvance
-                && !_windowHidden()
+                _view.State == ConversationView.ConversationState.WaitingForAdvance
+                && !_view.IsWindowHidden
                 && !historyOpen;
-            _chrome.Tick(_autoMode(), autoProgressVisible, _advance.Progress);
-            _controls.SetAvailability(historyOpen, hidden, _rewardActive(), choices);
+            _chrome.Tick(_view.IsAutoMode, autoProgressVisible, _advance.Progress);
+            _controls.SetAvailability(historyOpen, hidden, _view.IsRewardShowing, choices);
         }
     }
 }

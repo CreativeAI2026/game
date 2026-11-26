@@ -11,9 +11,6 @@ namespace CreativeAI.UI
         private Image _icon;
 
         [SerializeField]
-        private RectTransform _visualTarget;
-
-        [SerializeField]
         private Image _selectedBackground;
 
         [SerializeField]
@@ -47,8 +44,6 @@ namespace CreativeAI.UI
         }
         public Image Icon => _icon;
         private HoverScaleOnPointer _hoverScale;
-        private bool _hasVisualHoverTarget;
-        private bool _hasWarnedMissingVisualHoverTarget;
         private Image _selectedUnderlineImage;
         private Vector3 _selectionBackgroundScale = Vector3.one;
         private Vector3 _selectionUnderlineScale = Vector3.one;
@@ -69,7 +64,6 @@ namespace CreativeAI.UI
                 _selectionUnderlineScale = _selectedUnderline.localScale;
             }
             InitializeSelectionVisuals();
-            ConfigureHoverScaleTarget();
         }
 
         private void OnDisable()
@@ -86,61 +80,12 @@ namespace CreativeAI.UI
                 _selectedUnderline.DOKill();
         }
 
-        private void ConfigureHoverScaleTarget()
-        {
-            if (_hoverScale == null)
-                return;
-
-            var target = ResolveVisualHoverTarget();
-            if (target != null)
-            {
-                _hoverScale.SetTarget(target);
-                _hasVisualHoverTarget = true;
-                _hoverScale.SetBounceAllowed(true);
-            }
-            else
-            {
-                _hasVisualHoverTarget = false;
-                _hoverScale.SetBounceAllowed(false);
-                _hoverScale.enabled = false;
-                WarnMissingVisualHoverTargetOnce();
-                return;
-            }
-
-            _hoverScale.SetBounceTarget(null);
-            _hoverScale.SetLinkedTargets();
-        }
-
-        private RectTransform ResolveVisualHoverTarget()
-        {
-            if (_visualTarget != null && _visualTarget != transform)
-                return _visualTarget;
-
-            if (_icon != null && _icon.rectTransform != transform)
-                return _icon.rectTransform;
-
-            return null;
-        }
-
-        private void WarnMissingVisualHoverTargetOnce()
-        {
-            if (_hasWarnedMissingVisualHoverTarget)
-                return;
-
-            _hasWarnedMissingVisualHoverTarget = true;
-            Debug.LogWarning(
-                $"{nameof(TabButton)} '{name}' にRoot以外のVisualTargetまたはIconが設定されていないため、Hover演出を無効化しました。Prefab上で参照を設定してください。",
-                this
-            );
-        }
-
         public void SetSelectionGroup(string group)
         {
             if (_hoverScale == null)
                 return;
 
             _hoverScale.SetGroup(group);
-            _hoverScale.SetReleaseLockOnOutsideClick(false);
         }
 
         private void SetIcon(Sprite icon)
@@ -220,12 +165,10 @@ namespace CreativeAI.UI
                     _icon.DOColor(targetColor, duration).SetEase(Ease.OutQuad);
             }
 
-            if (_hoverScale != null)
-                _hoverScale.SetBounceAllowed(_hasVisualHoverTarget && allowSelectedBounce);
-
-            if (_hoverScale == null || !_hasVisualHoverTarget)
+            if (_hoverScale == null)
                 return;
 
+            _hoverScale.SetBounceAllowed(allowSelectedBounce);
             if (isActive)
                 _hoverScale.AcquireLock();
             else if (_hoverScale.IsLocked())

@@ -28,7 +28,7 @@ namespace CreativeAI.Tests.EditMode
         public void TearDown()
         {
             CraftUIRequestService.Requested -= CountRequest;
-            InteractPromptService.Clear();
+            InteractPromptService.ResetState();
             EventPlaybackService.SetPlaying(false);
             Object.DestroyImmediate(_go);
         }
@@ -50,7 +50,8 @@ namespace CreativeAI.Tests.EditMode
             Assert.IsTrue(_interactor.TryInteract());
 
             Assert.AreEqual(1, _requests);
-            Assert.AreEqual("[E] 合成する", InteractPromptService.Label);
+            // キー表示はプレイヤーの入力設定から付く(このテストにはプレイヤーがいないので文言だけ)
+            Assert.AreEqual("合成する", InteractPromptService.Label);
         }
 
         [Test]

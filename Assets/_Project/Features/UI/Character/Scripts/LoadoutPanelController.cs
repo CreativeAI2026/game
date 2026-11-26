@@ -1,3 +1,4 @@
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Globalization;
@@ -24,6 +25,39 @@ namespace CreativeAI.UI
             Equipment,
         }
 
+        /// <summary>持ち物の絞り込みタブ1つ分。</summary>
+        [Serializable]
+        private struct FilterTab
+        {
+            public Button button;
+            public TMP_Text label;
+
+            [Tooltip("そのカテゴリの所持数")]
+            public TMP_Text count;
+        }
+
+        [Header("部品")]
+        [SerializeField]
+        private ItemListView _inventory;
+
+        [SerializeField]
+        [Tooltip("並び順 = 食材、装備")]
+        private FilterTab[] _filterTabs = Array.Empty<FilterTab>();
+
+        [SerializeField]
+        private LoadoutAssignmentSlotView[] _quickSlots = Array.Empty<LoadoutAssignmentSlotView>();
+
+        [SerializeField]
+        private LoadoutAssignmentSlotView[] _equipmentSlots =
+            Array.Empty<LoadoutAssignmentSlotView>();
+
+        [SerializeField]
+        private LoadoutDetailPanel _detail;
+
+        [SerializeField]
+        private LoadoutDropErrorFeedback _dropErrorFeedback;
+
+        [Header("見た目")]
         [SerializeField]
         private Color _tabNormalColor = new(0f, 0f, 0f, 0.39f);
 
@@ -43,19 +77,6 @@ namespace CreativeAI.UI
         private bool _seedPreviewInventoryWhenEmpty = true;
 #pragma warning restore CS0414
 
-        [Header("詳細テキストアニメーション")]
-        [SerializeField]
-        private bool _animateDetailText = true;
-
-        [SerializeField, Min(0f)]
-        private float _detailTextStartDelay = 0.05f;
-
-        [SerializeField, Min(0.001f)]
-        private float _detailCharacterInterval = 0.035f;
-
-        [SerializeField, Min(0f)]
-        private float _detailSectionDelay = 0.06f;
-
         [Header("Slot Appearance")]
         [SerializeField, Min(0f)]
         private float _slotAppearDuration = 0.2f;
@@ -63,15 +84,8 @@ namespace CreativeAI.UI
         [SerializeField, Min(0f)]
         private float _slotAppearStagger = 0.05f;
 
-        private readonly List<Button> _filterButtons = new();
-        private readonly List<TMP_Text> _filterLabels = new();
-        private readonly List<TMP_Text> _filterCountLabels = new();
         private readonly List<UnityAction> _filterActions = new();
 
-        private ItemListView _inventory;
-        private TMP_Text _equipmentTitle;
-        private LoadoutDropErrorFeedback _dropErrorFeedback;
-        private LoadoutDetailPanel _detail;
         private LoadoutAssignment _slots;
         private LoadoutDragDrop _dragDrop;
 
@@ -89,17 +103,11 @@ namespace CreativeAI.UI
 
         private void Awake()
         {
-            _detail = new LoadoutDetailPanel(
-                this,
-                new LoadoutDetailPanel.TextTiming(
-                    _animateDetailText,
-                    _detailTextStartDelay,
-                    _detailCharacterInterval,
-                    _detailSectionDelay
-                )
+            _slots = new LoadoutAssignment(
+                _quickSlots,
+                _equipmentSlots,
+                () => ActiveInventoryManager
             );
-            _slots = new LoadoutAssignment(() => ActiveInventoryManager);
-            ResolveReferences();
             _dragDrop = new LoadoutDragDrop(
                 _slots,
                 _dropErrorFeedback,
@@ -112,13 +120,10 @@ namespace CreativeAI.UI
 
         private void OnEnable()
         {
-            ResolveReferences();
-            if (!Initialize())
-                return;
+            Initialize();
 
             _selectedStack = null;
-            if (_inventory != null)
-                _inventory.ClearSelection();
+            _inventory.ClearSelection();
             ShowEmptyDetail(replayText: true);
             _slots.PlayAppearance(_slotAppearDuration, _slotAppearStagger, this);
             BindDataEvents();
@@ -140,24 +145,15 @@ namespace CreativeAI.UI
             UnbindDataEvents();
         }
 
-        private bool Initialize()
+        private void Initialize()
         {
             if (_initialized)
-                return true;
-
-            ResolveFilterButtons();
-            _slots.Resolve(transform);
-            if (!ValidateRequiredReferences())
-                return false;
+                return;
 
             BindUIEvents();
 
-            if (_inventory != null)
-                _inventory.SetSelectFirstSlotOnRefresh(false);
-            if (_inventory != null)
-                _inventory.SetShowItemCounts(true);
-            if (_equipmentTitle != null)
-                _equipmentTitle.text = "装備";
+            _inventory.SetSelectFirstSlotOnRefresh(false);
+            _inventory.SetShowItemCounts(true);
 
             _slots.SelectedQuick = 0;
             _slots.SelectedEquipment = 0;
@@ -166,62 +162,6 @@ namespace CreativeAI.UI
 
             RefreshTabVisuals();
             ShowEmptyDetail();
-            return true;
-        }
-
-        private bool ValidateRequiredReferences()
-        {
-            if (_inventory == null)
-            {
-                Debug.LogError(
-                    $"{nameof(LoadoutPanelController)} '{UIHierarchyPathUtility.GetPath(transform)}' に ItemListView がありません。InventoryArea 以下へ配置してください。",
-                    this
-                );
-                enabled = false;
-                return false;
-            }
-
-            var warnings = new List<string>();
-            if (_filterButtons.Count != 2)
-                warnings.Add($"カテゴリボタン2個（現在 {_filterButtons.Count} 個）");
-            _slots.CollectMissing(warnings);
-            _detail.CollectMissing(warnings);
-
-            if (warnings.Count > 0)
-                Debug.LogWarning(
-                    $"{nameof(LoadoutPanelController)} '{UIHierarchyPathUtility.GetPath(transform)}' の補助UIが一部不足しています。一覧表示は続行します: {string.Join(", ", warnings)}",
-                    this
-                );
-
-            return true;
-        }
-
-        // 部品は画面の決まった場所から探す。見つかっていないものだけ探し直す。
-        private void ResolveReferences()
-        {
-            _detail.Resolve();
-            if (_inventory == null)
-            {
-                Transform scrollViewArea = transform.Find("InventoryArea/ScrollViewArea");
-                _inventory =
-                    scrollViewArea != null
-                        ? scrollViewArea.GetComponentInChildren<ItemListView>(true)
-                        : null;
-            }
-            if (_equipmentTitle == null)
-                _equipmentTitle = FindComponent<TMP_Text>(transform, "EquipArea/TitleArea/Title");
-            if (_dropErrorFeedback == null)
-                _dropErrorFeedback = FindComponent<LoadoutDropErrorFeedback>(
-                    transform,
-                    "DropErrorMessage"
-                );
-        }
-
-        private static T FindComponent<T>(Transform root, string path)
-            where T : Component
-        {
-            Transform t = root != null ? root.Find(path) : null;
-            return t != null ? t.GetComponent<T>() : null;
         }
 
         private static ItemCategory? GetCategory(ItemStack stack)
@@ -230,38 +170,17 @@ namespace CreativeAI.UI
             return data != null ? data.category : null;
         }
 
-        private void ResolveFilterButtons()
-        {
-            if (_filterButtons.Count > 0)
-                return;
-
-            Transform root = transform.Find("InventoryArea/TabArea");
-            if (root == null)
-                return;
-
-            for (int i = 0; i < root.childCount; i++)
-            {
-                Button button = root.GetChild(i).GetComponentInChildren<Button>(true);
-                if (button == null)
-                    continue;
-
-                _filterButtons.Add(button);
-                _filterLabels.Add(FindComponent<TMP_Text>(button.transform, "Label"));
-                _filterCountLabels.Add(FindComponent<TMP_Text>(button.transform, "Image/Number"));
-            }
-        }
-
         private void BindUIEvents()
         {
             if (_eventsBound)
                 return;
 
-            for (int i = 0; i < _filterButtons.Count; i++)
+            for (int i = 0; i < _filterTabs.Length; i++)
             {
                 int index = i;
                 UnityAction action = () => SelectFilter(index);
                 _filterActions.Add(action);
-                _filterButtons[i].onClick.AddListener(action);
+                _filterTabs[i].button.onClick.AddListener(action);
             }
 
             foreach (LoadoutAssignmentSlotView slot in _slots.QuickSlots)
@@ -276,13 +195,10 @@ namespace CreativeAI.UI
             }
             _dragDrop.Bind();
 
-            if (_inventory != null)
-            {
-                _inventory.OnSlotClicked += OnInventorySlotClicked;
-                _inventory.OnSlotDoubleClicked += OnInventorySlotDoubleClicked;
-                _inventory.OnSlotSubmitted += OnInventorySlotSubmitted;
-                _inventory.DisplayRefreshRequested += OnInventoryRefreshRequested;
-            }
+            _inventory.OnSlotClicked += OnInventorySlotClicked;
+            _inventory.OnSlotDoubleClicked += OnInventorySlotDoubleClicked;
+            _inventory.OnSlotSubmitted += OnInventorySlotSubmitted;
+            _inventory.DisplayRefreshRequested += OnInventoryRefreshRequested;
 
             _detail.AddActionListener(ExecuteDetailAction);
             _eventsBound = true;
@@ -293,9 +209,8 @@ namespace CreativeAI.UI
             if (!_eventsBound)
                 return;
 
-            for (int i = 0; i < _filterButtons.Count && i < _filterActions.Count; i++)
-                if (_filterButtons[i] != null)
-                    _filterButtons[i].onClick.RemoveListener(_filterActions[i]);
+            for (int i = 0; i < _filterTabs.Length && i < _filterActions.Count; i++)
+                _filterTabs[i].button.onClick.RemoveListener(_filterActions[i]);
             _filterActions.Clear();
             foreach (LoadoutAssignmentSlotView slot in _slots.QuickSlots)
             {
@@ -313,13 +228,10 @@ namespace CreativeAI.UI
             }
             _dragDrop.Unbind();
 
-            if (_inventory != null)
-            {
-                _inventory.OnSlotClicked -= OnInventorySlotClicked;
-                _inventory.OnSlotDoubleClicked -= OnInventorySlotDoubleClicked;
-                _inventory.OnSlotSubmitted -= OnInventorySlotSubmitted;
-                _inventory.DisplayRefreshRequested -= OnInventoryRefreshRequested;
-            }
+            _inventory.OnSlotClicked -= OnInventorySlotClicked;
+            _inventory.OnSlotDoubleClicked -= OnInventorySlotDoubleClicked;
+            _inventory.OnSlotSubmitted -= OnInventorySlotSubmitted;
+            _inventory.DisplayRefreshRequested -= OnInventoryRefreshRequested;
 
             _detail.RemoveActionListener(ExecuteDetailAction);
             _eventsBound = false;
@@ -327,8 +239,7 @@ namespace CreativeAI.UI
 
         private void OnItemDragStarted(ItemSlotDragPayload payload)
         {
-            if (_inventory != null)
-                _inventory.ClearSelection();
+            _inventory.ClearSelection();
             RefreshSlotAvailability(payload.Stack?.Data);
         }
 
@@ -437,7 +348,7 @@ namespace CreativeAI.UI
 
         private void FocusInventoryOrSlots()
         {
-            if (_inventory != null && _inventory.SelectFirstVisibleSlotAndClaimFocus())
+            if (_inventory.SelectFirstVisibleSlotAndClaimFocus())
                 return;
 
             SlotKeyboardFocus.Claim(this);
@@ -462,7 +373,7 @@ namespace CreativeAI.UI
             {
                 if (SlotKeyboardFocus.IsFocused(this))
                 {
-                    if (_inventory == null || !_inventory.SelectFirstVisibleSlotAndClaimFocus())
+                    if (!_inventory.SelectFirstVisibleSlotAndClaimFocus())
                         SelectFocusedAssignmentSlot(1);
                 }
                 else
@@ -509,16 +420,13 @@ namespace CreativeAI.UI
 
         private void RefreshTabVisuals()
         {
-            for (int i = 0; i < _filterButtons.Count; i++)
+            for (int i = 0; i < _filterTabs.Length; i++)
             {
-                Button button = _filterButtons[i];
+                FilterTab tab = _filterTabs[i];
                 bool selected = i == (int)_filter;
-                if (button.targetGraphic is Image background)
+                if (tab.button.targetGraphic is Image background)
                     background.color = selected ? _tabSelectedColor : _tabNormalColor;
-
-                TMP_Text label = i < _filterLabels.Count ? _filterLabels[i] : null;
-                if (label != null)
-                    label.color = selected ? _tabSelectedTextColor : _tabNormalTextColor;
+                tab.label.color = selected ? _tabSelectedTextColor : _tabNormalTextColor;
             }
 
             RefreshFilterCounts();
@@ -549,11 +457,8 @@ namespace CreativeAI.UI
             }
 
             int[] counts = { quickCount, equipmentCount };
-            for (int i = 0; i < _filterCountLabels.Count && i < counts.Length; i++)
-            {
-                if (_filterCountLabels[i] != null)
-                    _filterCountLabels[i].text = counts[i].ToString(CultureInfo.InvariantCulture);
-            }
+            for (int i = 0; i < _filterTabs.Length && i < counts.Length; i++)
+                _filterTabs[i].count.text = counts[i].ToString(CultureInfo.InvariantCulture);
         }
 
         private void OnInventoryRefreshRequested(
@@ -564,9 +469,6 @@ namespace CreativeAI.UI
 
         private void RefreshInventory(ItemListView.ScrollRefreshMode scrollMode)
         {
-            if (_inventory == null)
-                return;
-
             InventoryManager inventoryManager = ActiveInventoryManager;
             List<ItemStack> items =
                 inventoryManager != null ? inventoryManager.GetAllItems() : null;
@@ -726,8 +628,7 @@ namespace CreativeAI.UI
 
             _selectedStack = payload.Stack;
             AssignQuickItem();
-            if (_inventory != null)
-                _inventory.SelectItem(payload.Stack);
+            _inventory.SelectItem(payload.Stack);
         }
 
         private void DropIntoEquipmentSlot(int targetIndex, ItemSlotDragPayload payload)
@@ -750,16 +651,14 @@ namespace CreativeAI.UI
 
             _selectedStack = payload.Stack;
             AssignEquipment();
-            if (_inventory != null)
-                _inventory.SelectItem(payload.Stack);
+            _inventory.SelectItem(payload.Stack);
         }
 
         // アイテムを選んだことにして、一覧でも選び、詳細を出す。
         private void SelectStack(ItemStack stack, LoadoutDetailPanel.ButtonAction action)
         {
             _selectedStack = stack;
-            if (_inventory != null)
-                _inventory.SelectItem(stack);
+            _inventory.SelectItem(stack);
             ShowDetail(stack, action);
         }
 
@@ -834,8 +733,7 @@ namespace CreativeAI.UI
         private void ClearSelectedStack()
         {
             _selectedStack = null;
-            if (_inventory != null)
-                _inventory.ClearSelection();
+            _inventory.ClearSelection();
         }
 
         private void ShowDetail(ItemStack stack, LoadoutDetailPanel.ButtonAction action)

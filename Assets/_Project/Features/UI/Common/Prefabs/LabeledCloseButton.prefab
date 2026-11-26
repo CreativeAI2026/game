@@ -276,5 +276,8 @@ MonoBehaviour:
   _releaseLockOnOutsideClick: 1
   _hoverScale: 1.2
   _animationDuration: 0.2
+  _hoverScaleEnabled: 1
+  _bounceEnabled: 1
   _bounceHeight: 8
   _bounceDuration: 0.8
+  _targetRect: {fileID: 7223767839461728619}

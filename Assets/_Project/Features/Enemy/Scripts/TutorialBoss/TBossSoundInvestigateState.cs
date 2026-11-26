@@ -86,7 +86,7 @@ namespace CreativeAI.Gameplay
             }
 
             // 音イベント購読（別の音が鳴ったら確信度を更新）
-            SoundEventBus.OnSoundEmitted += OnSoundHeard;
+            NoiseEventBus.OnNoiseEmitted += OnSoundHeard;
         }
 
         public override void Update()
@@ -184,7 +184,7 @@ namespace CreativeAI.Gameplay
         {
             DevLog.Log("[TutorialBoss] 音調査ステート終了");
 
-            SoundEventBus.OnSoundEmitted -= OnSoundHeard;
+            NoiseEventBus.OnNoiseEmitted -= OnSoundHeard;
 
             if (boss.Agent != null && boss.Agent.isOnNavMesh)
             {
@@ -244,7 +244,7 @@ namespace CreativeAI.Gameplay
             }
         }
 
-        private void OnSoundHeard(SoundEventData data)
+        private void OnSoundHeard(NoiseEvent data)
         {
             // 音よりもスポットライトでの視認を最優先する
             if (boss.CheckInFlashlight())

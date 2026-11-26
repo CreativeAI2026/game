@@ -4,7 +4,7 @@ using UnityEngine.AI;
 namespace CreativeAI.Gameplay
 {
     /// <summary>
-    /// 未発見時の徘徊。SoundEventBus で音を検知したら SoundInvestigateState へ。光に入っても即発見せず、発見度（Awareness）が上限に達して ChaseState へ遷移する。
+    /// 未発見時の徘徊。NoiseEventBus で音を検知したら SoundInvestigateState へ。光に入っても即発見せず、発見度（Awareness）が上限に達して ChaseState へ遷移する。
     /// ちらっと見えた程度（Suspicious）の間は立ち止まってプレイヤー方向を向くだけに留める。
     /// </summary>
     public class TBossPatrolState : TBossBaseState
@@ -48,7 +48,7 @@ namespace CreativeAI.Gameplay
             _isStaringAtGlimpse = false;
 
             // 音イベント購読
-            SoundEventBus.OnSoundEmitted += OnSoundHeard;
+            NoiseEventBus.OnNoiseEmitted += OnSoundHeard;
         }
 
         public override void Update()
@@ -110,7 +110,7 @@ namespace CreativeAI.Gameplay
             DevLog.Log("[TutorialBoss] パトロールステート終了");
 
             // 音イベント解除
-            SoundEventBus.OnSoundEmitted -= OnSoundHeard;
+            NoiseEventBus.OnNoiseEmitted -= OnSoundHeard;
         }
 
         private void SetRandomWanderTarget()
@@ -194,7 +194,7 @@ namespace CreativeAI.Gameplay
             );
         }
 
-        private void OnSoundHeard(SoundEventData data)
+        private void OnSoundHeard(NoiseEvent data)
         {
             // 音よりもスポットライトでの視認を最優先する（完全発見のみ即座に切り替える）
             if (boss.IsFullyAware)

@@ -10,7 +10,6 @@ namespace CreativeAI.UI
     [RequireComponent(typeof(Button), typeof(Image))]
     public class EquipmentSlot : BaseItemSlot, IPointerDownHandler, IPointerClickHandler
     {
-        private const float SelectedIconScale = 1.08f;
         private const float EmptyIconAlpha = 0f;
 
         [SerializeField]
@@ -26,7 +25,7 @@ namespace CreativeAI.UI
         private SlotEmptyView _emptyView;
 
         [SerializeField]
-        private SlotHoverView _hoverView;
+        private HoverScaleOnPointer _hover;
 
         [SerializeField]
         private SlotFrameView _frameView;
@@ -37,7 +36,7 @@ namespace CreativeAI.UI
 
         protected override SlotIconView IconView => _iconView;
         protected override SlotCountBadgeView CountBadgeView => _countBadgeView;
-        protected override SlotHoverView HoverView => _hoverView;
+        protected override HoverScaleOnPointer Hover => _hover;
         protected override SlotFrameView FrameView => _frameView;
 
         public event Action<EquipmentSlot> Clicked;
@@ -57,7 +56,6 @@ namespace CreativeAI.UI
                         _iconView.FitRect != null ? _iconView.FitRect : _iconView.IconRect;
                 _countBadgeView.SetPositionReference(positionReference);
             }
-            ConfigureHover();
             Refresh();
         }
 
@@ -81,7 +79,6 @@ namespace CreativeAI.UI
             base.Refresh();
             if (_emptyView != null)
                 _emptyView.SetEmpty(_item == null || _item.icon == null);
-            ConfigureHover();
         }
 
         public override void Clear()
@@ -127,19 +124,6 @@ namespace CreativeAI.UI
             return stack?.Count ?? 1;
         }
 
-        private void ConfigureHover()
-        {
-            ResolveViewReferences(false);
-            if (_hoverView == null)
-                return;
-
-            _hoverView.Bind();
-            _hoverView.SetGroup("equipment-slots");
-            _hoverView.SetHoverScale(SelectedIconScale);
-            _hoverView.SetBounceHeight(0f);
-            _hoverView.SetReleaseLockOnOutsideClick(false);
-        }
-
         private void ResolveViewReferences(bool warn = true)
         {
             if (!warn)
@@ -149,7 +133,7 @@ namespace CreativeAI.UI
             WarnIfMissing(_iconView, nameof(SlotIconView));
             WarnIfMissing(_countBadgeView, nameof(SlotCountBadgeView));
             WarnIfMissing(_emptyView, nameof(SlotEmptyView));
-            WarnIfMissing(_hoverView, nameof(SlotHoverView));
+            WarnIfMissing(_hover, nameof(HoverScaleOnPointer));
             WarnIfMissing(_frameView, nameof(SlotFrameView));
         }
 
@@ -167,8 +151,8 @@ namespace CreativeAI.UI
                 _countBadgeView = GetComponentInChildren<SlotCountBadgeView>(true);
             if (_emptyView == null)
                 _emptyView = GetComponentInChildren<SlotEmptyView>(true);
-            if (_hoverView == null)
-                _hoverView = GetComponentInChildren<SlotHoverView>(true);
+            if (_hover == null)
+                _hover = GetComponentInChildren<HoverScaleOnPointer>(true);
             if (_frameView == null)
                 _frameView = GetComponentInChildren<SlotFrameView>(true);
         }

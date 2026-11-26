@@ -11,7 +11,7 @@ namespace CreativeAI.UI
 
         protected virtual SlotIconView IconView => null;
         protected virtual SlotCountBadgeView CountBadgeView => null;
-        protected virtual SlotHoverView HoverView => null;
+        protected virtual HoverScaleOnPointer Hover => null;
         protected virtual SlotFrameView FrameView => null;
 
         protected virtual void Awake()
@@ -63,8 +63,8 @@ namespace CreativeAI.UI
             if (FrameView != null)
                 FrameView.SetSelected(true);
             RefreshSelectionVisuals();
-            if (HoverView != null)
-                HoverView.AcquireLock();
+            if (Hover != null)
+                Hover.AcquireLock();
         }
 
         public virtual void Deselect()
@@ -73,8 +73,8 @@ namespace CreativeAI.UI
             if (FrameView != null)
                 FrameView.SetSelected(false);
             RefreshSelectionVisuals();
-            if (HoverView != null)
-                HoverView.ReleaseLock();
+            if (Hover != null && Hover.IsLocked())
+                Hover.ReleaseLock();
         }
 
         protected virtual void RefreshSelectionVisuals() { }

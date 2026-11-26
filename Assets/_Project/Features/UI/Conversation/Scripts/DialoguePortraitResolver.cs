@@ -5,7 +5,7 @@ namespace CreativeAI.UI
     /// <summary>キャラクター定義から表示情報を解決する。</summary>
     internal static class DialoguePortraitResolver
     {
-        public static DialoguePortraitPresenter.ResolvedPortrait Resolve(
+        public static DialoguePortraitView.ResolvedPortrait Resolve(
             string key,
             DialogueCharacterDefinition[] characters,
             Sprite defaultPortrait,
@@ -19,7 +19,7 @@ namespace CreativeAI.UI
                         character != null
                         && character.TryResolveVisual(key, out var portrait, out var icon)
                     )
-                        return new DialoguePortraitPresenter.ResolvedPortrait(
+                        return new DialoguePortraitView.ResolvedPortrait(
                             portrait,
                             icon,
                             character.Side,
@@ -29,7 +29,7 @@ namespace CreativeAI.UI
                             character.PortraitOffset
                         );
             }
-            return new DialoguePortraitPresenter.ResolvedPortrait(
+            return new DialoguePortraitView.ResolvedPortrait(
                 defaultPortrait,
                 defaultPortrait,
                 defaultSide,

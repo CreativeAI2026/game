@@ -256,7 +256,7 @@ namespace CreativeAI.Tests.EditMode
         [Test]
         public void PlayRoutine_PlayerMoveTo_PlacesPlayerAtSpawnPoint()
         {
-            var player = new GameObject("TestPlayer") { tag = "Player" };
+            var player = TestPlayer.Create();
             var point = CreateSpawnPoint("test_pull_back", new Vector3(3f, 0f, 4f));
             try
             {
@@ -266,7 +266,7 @@ namespace CreativeAI.Tests.EditMode
             }
             finally
             {
-                UnityEngine.Object.DestroyImmediate(player);
+                TestPlayer.Destroy(player);
                 UnityEngine.Object.DestroyImmediate(point);
             }
         }
@@ -274,7 +274,7 @@ namespace CreativeAI.Tests.EditMode
         [Test]
         public void PlayRoutine_PlayerMoveTo_MissingSpawnPoint_WarnsAndDoesNotMove()
         {
-            var player = new GameObject("TestPlayer") { tag = "Player" };
+            var player = TestPlayer.Create();
             player.transform.position = new Vector3(1f, 2f, 3f);
             try
             {
@@ -291,7 +291,7 @@ namespace CreativeAI.Tests.EditMode
             }
             finally
             {
-                UnityEngine.Object.DestroyImmediate(player);
+                TestPlayer.Destroy(player);
             }
         }
 

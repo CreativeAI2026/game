@@ -36,9 +36,9 @@ namespace CreativeAI.Session
         /// 常駐とカメラリグの後に呼ぶ(プレイヤーは GameModeManager を購読し、Start で Inventory を読み、
         /// Awake で MainCamera を探すため)。
         /// </summary>
-        public static GameObject EnsurePlayerRig(GameObject prefab, string playerTag = "Player")
+        public static GameObject EnsurePlayerRig(GameObject prefab)
         {
-            var existing = GameObject.FindWithTag(playerTag);
+            var existing = GameObject.FindWithTag("Player");
             if (existing != null)
                 return existing;
 

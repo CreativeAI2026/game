@@ -6,7 +6,7 @@ namespace CreativeAI.Gameplay
     /// <summary>
     /// チュートリアルボス専用のAIコントローラ。
     /// 子オブジェクトの懐中電灯（Spotlight）による視界判定と、
-    /// SoundEventBusを通じた音への反応を主軸とした行動制御を行う。
+    /// NoiseEventBusを通じた音への反応を主軸とした行動制御を行う。
     /// </summary>
     public class TutorialBossController : EnemyBaseController
     {
@@ -304,7 +304,7 @@ namespace CreativeAI.Gameplay
         /// 音源がその半径の端なら確信度0、すぐそばなら1。大きな音ほど遠くから聞こえ、遠くでも確信度が残る。
         /// 以前はボス側の聴覚半径でも上限を掛けていたため、音の半径を広げても一定距離より遠いと聞こえなかった。
         /// </summary>
-        public bool TryHearSound(SoundEventData data, out float confidence)
+        public bool TryHearSound(NoiseEvent data, out float confidence)
         {
             confidence = 0f;
             if (data.Radius <= 0f)

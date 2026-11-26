@@ -68,7 +68,7 @@ namespace CreativeAI.Tests.EditMode
             _playerData.baseCriticalChance = 0f;
             _playerData.baseCriticalDamageRatio = 0f;
 
-            _playerGo = new GameObject("Player") { tag = "Player" };
+            _playerGo = TestPlayer.Create("Player");
             var status = _playerGo.AddComponent<PlayerStatus>();
             TestReflection.SetField(status, "_playerData", _playerData);
             _weapons = _playerGo.AddComponent<WeaponManager>();
@@ -78,7 +78,7 @@ namespace CreativeAI.Tests.EditMode
         public void TearDown()
         {
             _residents.Clear();
-            Object.DestroyImmediate(_playerGo);
+            TestPlayer.Destroy(_playerGo);
             foreach (var a in _assets)
                 Object.DestroyImmediate(a);
             _assets.Clear();

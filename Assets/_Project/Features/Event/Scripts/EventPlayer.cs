@@ -50,7 +50,8 @@ namespace CreativeAI.Gameplay
 
         private void OnActiveSceneChanged(Scene previous, Scene next) => _sceneGeneration++;
 
-        // Inject されたものを優先し、無ければ各 seam / Instance にフォールバックする。
+        // Inject されたものがあればそれを、無ければ本番の窓口・常駐を毎回見る。
+        private readonly IBattleRunner _defaultBattle = new BattleRunner();
         private IEventProgress _progress;
         private IEventGameMode _gameMode;
         private IDialogueView _view;
@@ -58,18 +59,12 @@ namespace CreativeAI.Gameplay
         private IWeaponGiver _weapons;
         private IBattleRunner _battle;
 
-        private IDialogueView View => _view ??= DialogueViewService.Current;
-        private IItemGiver Items => _items ??= ItemGiverService.Current;
+        private IDialogueView View => _view ?? DialogueViewService.Current;
+        private IItemGiver Items => _items ?? ItemGiverService.Current;
         private IWeaponGiver Weapons => _weapons ?? FindPlayerWeapons();
-        private IBattleRunner Battle => _battle ??= new BattleRunner();
-        private IEventProgress Progress =>
-            _progress is UnityEngine.Object obj && obj == null
-                ? ProgressManager.Instance
-                : _progress ?? ProgressManager.Instance;
-        private IEventGameMode GameModes =>
-            _gameMode is UnityEngine.Object obj && obj == null
-                ? GameModeManager.Instance
-                : _gameMode ?? GameModeManager.Instance;
+        private IBattleRunner Battle => _battle ?? _defaultBattle;
+        private IEventProgress Progress => _progress ?? ProgressManager.Instance;
+        private IEventGameMode GameModes => _gameMode ?? GameModeManager.Instance;
 
         // 武器の届け先は今いるプレイヤーの WeaponManager。プレイヤーは入れ替わるので覚えておかない。
         private static IWeaponGiver FindPlayerWeapons()
@@ -80,7 +75,9 @@ namespace CreativeAI.Gameplay
                 : null;
         }
 
-        /// <summary>seam の代わりに依存を注入する(プレビュー / テスト用)。</summary>
+        /// <summary>
+        /// 本番の窓口の代わりに依存を差し込む(プレビュー / テスト用)。null を渡した依存は本番のものに戻る。
+        /// </summary>
         public void Inject(
             IEventProgress progress,
             IDialogueView view,
@@ -98,56 +95,22 @@ namespace CreativeAI.Gameplay
             _weapons = weapons;
         }
 
-        /// <summary>一時的に依存を差し替え、破棄時に元の注入状態へ戻す。</summary>
-        public IDisposable InjectScoped(
-            IEventProgress progress,
-            IDialogueView view,
-            IItemGiver items,
-            IBattleRunner battle = null,
-            IEventGameMode gameMode = null,
-            IWeaponGiver weapons = null
-        )
-        {
-            var previous = (_progress, _view, _items, _battle, _gameMode, _weapons);
-            Inject(progress, view, items, battle, gameMode, weapons);
-            return new DependencyScope(() =>
-            {
-                (_progress, _view, _items, _battle, _gameMode, _weapons) = previous;
-            });
-        }
-
-        private sealed class DependencyScope : IDisposable
-        {
-            private Action _restore;
-
-            public DependencyScope(Action restore) => _restore = restore;
-
-            public void Dispose()
-            {
-                var restore = _restore;
-                _restore = null;
-                restore?.Invoke();
-            }
-        }
-
         /// <summary>
         /// プレイヤーを <see cref="SpawnPoint"/>(arg が ID)へ移す command 名。会話UIではなくここで実行する。
         /// 引き戻しに使う。画面を隠したいときは前後に background.black.fill / clear を並べる。
         /// </summary>
         public const string PlayerMoveCommand = "player.moveTo";
 
-        private const string PlayerTag = "Player";
-
         // 動かす相手(プレイヤー)と、目的地の目印を探す。見つからなければ、動かさずに警告して false。
         // 目印が無いとき SpawnPoint.Place は原点へ置いてしまうので、先に確かめる。
         private static bool TryFindPlayerAndPoint(
             string command,
             string spawnPointId,
-            out GameObject player,
+            out PlayerController player,
             out SpawnPoint point
         )
         {
-            player = GameObject.FindWithTag(PlayerTag);
+            player = PlayerRegistry.Current;
             point = SpawnPoint.Find(spawnPointId);
             if (player != null && point != null)
                 return true;
@@ -162,7 +125,7 @@ namespace CreativeAI.Gameplay
         private static void MovePlayer(string spawnPointId)
         {
             if (TryFindPlayerAndPoint(PlayerMoveCommand, spawnPointId, out var player, out _))
-                SpawnPoint.Place(player, spawnPointId);
+                SpawnPoint.Place(player.gameObject, spawnPointId);
         }
 
         /// <summary>
@@ -178,9 +141,9 @@ namespace CreativeAI.Gameplay
         private const float WalkTimeoutPadding = 2f;
 
         // 歩かせている最中のプレイヤー。イベントを途中で打ち切ったとき、歩く指示を残さないための後始末に使う。
-        private IPlayerWalker _walking;
+        private PlayerController _walking;
 
-        // 歩いて着くまで待つ。プレイヤーに歩かせる口(IPlayerWalker)が無いときは、動かさずに警告する。
+        // 歩いて着くまで待つ。
         // 時間内に着かない(壁に引っかかる等)ときは、止まって瞬間移動で置き、操作が戻れなくなるのを防ぐ。
         private IEnumerator WalkPlayer(string spawnPointId)
         {
@@ -193,37 +156,29 @@ namespace CreativeAI.Gameplay
                 )
             )
                 yield break;
-            if (!player.TryGetComponent(out IPlayerWalker walker))
-            {
-                Debug.LogWarning(
-                    $"[EventPlayer] {PlayerWalkCommand} を実行できません(player='{player.name}' に IPlayerWalker がありません)。"
-                );
-                yield break;
-            }
-
             var target = point.transform.position;
             var flat = target - player.transform.position;
             flat.y = 0f;
             var timeout =
-                flat.magnitude / Mathf.Max(walker.WalkSpeed, 0.01f) * WalkTimeoutScale
+                flat.magnitude / Mathf.Max(player.WalkSpeed, 0.01f) * WalkTimeoutScale
                 + WalkTimeoutPadding;
 
-            _walking = walker;
-            walker.WalkTo(target);
+            _walking = player;
+            player.WalkTo(target);
             var elapsed = 0f;
-            while (walker.IsWalking && elapsed < timeout)
+            while (player.IsWalking && elapsed < timeout)
             {
                 elapsed += Time.deltaTime;
                 yield return null;
             }
 
-            if (walker.IsWalking)
+            if (player.IsWalking)
             {
                 Debug.LogWarning(
                     $"[EventPlayer] {PlayerWalkCommand} が {timeout:F1} 秒で着かなかったため、'{spawnPointId}' へ直接置きました。"
                 );
                 StopWalking();
-                SpawnPoint.Place(player, spawnPointId);
+                SpawnPoint.Place(player.gameObject, spawnPointId);
             }
             _walking = null;
         }
@@ -231,7 +186,8 @@ namespace CreativeAI.Gameplay
         // 歩かせている最中なら止める。イベントを打ち切っても、あとで勝手に歩き出さないようにする。
         private void StopWalking()
         {
-            _walking?.StopWalking();
+            if (_walking != null)
+                _walking.StopWalking();
             _walking = null;
         }
 
@@ -495,28 +451,16 @@ namespace CreativeAI.Gameplay
     }
 
     /// <summary>
-    /// 実行時の IEventPlayer を登録する seam。EventPlayer は常駐生成で drag 配線できないため EnsureResident 時に登録し、
-    /// 非常駐の EventTrigger は Inspector 未配線時のフォールバックとして見る。
+    /// 実行時の IEventPlayer の窓口。EventPlayer は常駐生成で Inspector から配線できないため、生成時にここへ登録し、
+    /// シーン側の EventTrigger / EventInteractor はここから受け取る。
     /// </summary>
     public static class EventPlayerService
     {
         public static IEventPlayer Current { get; set; }
-    }
 
-    /// <summary>
-    /// このプロジェクトは Editor の Enter Play Mode で Domain Reload を切っているため、static な値が前回の Play から持ち越される。
-    /// 会話の途中で Play を止めると再生中フラグが立ったまま残り、次の Play で HUD が出ない・動けない・発火しない状態になるので、
-    /// Play 開始時に Event 関連の static(再生中フラグ・各 seam)を初期化する。ビルドでは起動時に1回走るだけで無害。
-    /// </summary>
-    public static class EventStatics
-    {
+        /// <summary>登録を外す。</summary>
+        // Domain Reload を切った Editor で Play を繰り返したとき、前回の Play の値や購読を持ち越さないよう、Play 開始時に戻す
         [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
-        public static void ResetForPlaySession()
-        {
-            EventPlaybackService.ResetState();
-            EventPlayerService.Current = null;
-            DialogueViewService.Current = null;
-            ItemGiverService.Current = null;
-        }
+        public static void ResetState() => Current = null;
     }
 }

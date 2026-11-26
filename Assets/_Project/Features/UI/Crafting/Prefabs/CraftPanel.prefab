@@ -2694,15 +2694,15 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: CreativeAI.UI::CreativeAI.UI.InventoryUI.HoverScaleOnPointer
   _group: default
-  _lockEnabled: 1
-  _releaseLockOnOutsideClick: 1
-  _hoverScale: 1.2
+  _lockEnabled: 0
+  _releaseLockOnOutsideClick: 0
+  _hoverScale: 1.1
   _animationDuration: 0.2
   _hoverScaleEnabled: 1
   _bounceEnabled: 1
-  _bounceHeight: 8
+  _bounceHeight: 0
   _bounceDuration: 0.8
-  _targetRect: {fileID: 0}
+  _targetRect: {fileID: 2707132515218642656}
 --- !u!114 &8974697424981517010
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -4554,6 +4554,10 @@ PrefabInstance:
       propertyPath: _showOnlyBaseItems
       value: 1
       objectReference: {fileID: 0}
+    - target: {fileID: 5317380575716178114, guid: 853b20c2a69656e4ea515365b53e5f31, type: 3}
+      propertyPath: _releaseSelectionOnOutsideClick
+      value: 0
+      objectReference: {fileID: 0}
     - target: {fileID: 5728153888824458638, guid: 853b20c2a69656e4ea515365b53e5f31, type: 3}
       propertyPath: m_Name
       value: Inventory
@@ -4795,15 +4799,15 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: CreativeAI.UI::CreativeAI.UI.HoverScaleOnPointer
   _group: default
-  _lockEnabled: 1
-  _releaseLockOnOutsideClick: 1
-  _hoverScale: 1.2
+  _lockEnabled: 0
+  _releaseLockOnOutsideClick: 0
+  _hoverScale: 1.1
   _animationDuration: 0.2
   _hoverScaleEnabled: 1
   _bounceEnabled: 1
-  _bounceHeight: 8
+  _bounceHeight: 0
   _bounceDuration: 0.8
-  _targetRect: {fileID: 0}
+  _targetRect: {fileID: 5953775391746159419}
 --- !u!1001 &1124137302314661290
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -5580,6 +5584,22 @@ PrefabInstance:
       propertyPath: m_LocalEulerAnglesHint.z
       value: 0
       objectReference: {fileID: 0}
+    - target: {fileID: 846149459370376320, guid: d7323666996b6284eb6795e2847b1f44, type: 3}
+      propertyPath: _group
+      value: craft-slots
+      objectReference: {fileID: 0}
+    - target: {fileID: 846149459370376320, guid: d7323666996b6284eb6795e2847b1f44, type: 3}
+      propertyPath: _hoverScale
+      value: 1.08
+      objectReference: {fileID: 0}
+    - target: {fileID: 846149459370376320, guid: d7323666996b6284eb6795e2847b1f44, type: 3}
+      propertyPath: _bounceHeight
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 846149459370376320, guid: d7323666996b6284eb6795e2847b1f44, type: 3}
+      propertyPath: _releaseLockOnOutsideClick
+      value: 0
+      objectReference: {fileID: 0}
     - target: {fileID: 978815406877775117, guid: d7323666996b6284eb6795e2847b1f44, type: 3}
       propertyPath: m_Sprite
       value: 
@@ -5675,17 +5695,17 @@ RectTransform:
   m_CorrespondingSourceObject: {fileID: 567093039207048889, guid: d7323666996b6284eb6795e2847b1f44, type: 3}
   m_PrefabInstance: {fileID: 2487640553286322037}
   m_PrefabAsset: {fileID: 0}
---- !u!114 &2711366736400127122 stripped
+--- !u!114 &2971249392244505589 stripped
 MonoBehaviour:
-  m_CorrespondingSourceObject: {fileID: 514934595671315431, guid: d7323666996b6284eb6795e2847b1f44, type: 3}
+  m_CorrespondingSourceObject: {fileID: 846149459370376320, guid: d7323666996b6284eb6795e2847b1f44, type: 3}
   m_PrefabInstance: {fileID: 2487640553286322037}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 3631151291874300025}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 506b0f0d9219431f824c8b56f81b1b02, type: 3}
+  m_Script: {fileID: 11500000, guid: 0fed04f0ec157104f93a96edb9a0c946, type: 3}
   m_Name: 
-  m_EditorClassIdentifier: CreativeAI.UI::CreativeAI.UI.SlotHoverView
+  m_EditorClassIdentifier: CreativeAI.UI::CreativeAI.UI.InventoryUI.HoverScaleOnPointer
 --- !u!224 &3142249265524356139 stripped
 RectTransform:
   m_CorrespondingSourceObject: {fileID: 657064747953517406, guid: d7323666996b6284eb6795e2847b1f44, type: 3}
@@ -5711,7 +5731,7 @@ MonoBehaviour:
   _visualRootRect: {fileID: 2691859527467573708}
   _iconView: {fileID: 1699353786712514810}
   _emptyView: {fileID: 7678516779304832362}
-  _hoverView: {fileID: 2711366736400127122}
+  _hover: {fileID: 2971249392244505589}
   _frameView: {fileID: 8139443579854401269}
   _materialHint: {fileID: 0}
 --- !u!114 &7678516779304832362
@@ -7672,6 +7692,22 @@ PrefabInstance:
       propertyPath: m_LocalEulerAnglesHint.z
       value: 0
       objectReference: {fileID: 0}
+    - target: {fileID: 846149459370376320, guid: d7323666996b6284eb6795e2847b1f44, type: 3}
+      propertyPath: _group
+      value: craft-slots
+      objectReference: {fileID: 0}
+    - target: {fileID: 846149459370376320, guid: d7323666996b6284eb6795e2847b1f44, type: 3}
+      propertyPath: _hoverScale
+      value: 1.08
+      objectReference: {fileID: 0}
+    - target: {fileID: 846149459370376320, guid: d7323666996b6284eb6795e2847b1f44, type: 3}
+      propertyPath: _bounceHeight
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 846149459370376320, guid: d7323666996b6284eb6795e2847b1f44, type: 3}
+      propertyPath: _releaseLockOnOutsideClick
+      value: 0
+      objectReference: {fileID: 0}
     - target: {fileID: 978815406877775117, guid: d7323666996b6284eb6795e2847b1f44, type: 3}
       propertyPath: m_Sprite
       value: 
@@ -7793,7 +7829,7 @@ MonoBehaviour:
   _visualRootRect: {fileID: 8585049059648968303}
   _iconView: {fileID: 5037854645665388377}
   _emptyView: {fileID: 1012787624137730798}
-  _hoverView: {fileID: 8637880954056713009}
+  _hover: {fileID: 8882401164449877078}
   _frameView: {fileID: 2488876062358313302}
   _materialHint: {fileID: 0}
 --- !u!114 &1012787624137730798
@@ -7814,22 +7850,22 @@ RectTransform:
   m_CorrespondingSourceObject: {fileID: 567093039207048889, guid: d7323666996b6284eb6795e2847b1f44, type: 3}
   m_PrefabInstance: {fileID: 8140960834506846422}
   m_PrefabAsset: {fileID: 0}
---- !u!114 &8637880954056713009 stripped
-MonoBehaviour:
-  m_CorrespondingSourceObject: {fileID: 514934595671315431, guid: d7323666996b6284eb6795e2847b1f44, type: 3}
-  m_PrefabInstance: {fileID: 8140960834506846422}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 6925181097093851098}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 506b0f0d9219431f824c8b56f81b1b02, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: CreativeAI.UI::CreativeAI.UI.SlotHoverView
 --- !u!224 &8783387440558015368 stripped
 RectTransform:
   m_CorrespondingSourceObject: {fileID: 657064747953517406, guid: d7323666996b6284eb6795e2847b1f44, type: 3}
   m_PrefabInstance: {fileID: 8140960834506846422}
   m_PrefabAsset: {fileID: 0}
+--- !u!114 &8882401164449877078 stripped
+MonoBehaviour:
+  m_CorrespondingSourceObject: {fileID: 846149459370376320, guid: d7323666996b6284eb6795e2847b1f44, type: 3}
+  m_PrefabInstance: {fileID: 8140960834506846422}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 6925181097093851098}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 0fed04f0ec157104f93a96edb9a0c946, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: CreativeAI.UI::CreativeAI.UI.InventoryUI.HoverScaleOnPointer
 --- !u!1001 &8389594220006925481
 PrefabInstance:
   m_ObjectHideFlags: 0

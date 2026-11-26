@@ -30,9 +30,14 @@ namespace CreativeAI.Tests
         /// <summary>静的な状態を増やしたら、ここにも戻す処理を足す。</summary>
         public static void ResetAll()
         {
-            EventStatics.ResetForPlaySession();
+            EventPlaybackService.ResetState();
+            EventPlayerService.ResetState();
+            DialogueViewService.ResetState();
+            ItemGiverService.ResetState();
             UIPanelService.ResetState();
-            InteractPromptService.Clear();
+            InteractPromptService.ResetState();
+            CraftUIRequestService.ResetState();
+            NoiseEventBus.ResetState();
             PendingSceneLoads.Clear();
             PickedItemRegistry.Clear();
             ItemCatalog.InjectForTests(null);

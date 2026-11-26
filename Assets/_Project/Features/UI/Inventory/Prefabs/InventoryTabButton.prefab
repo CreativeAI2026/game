@@ -139,7 +139,6 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: CreativeAI.UI::CreativeAI.UI.TabButton
   _icon: {fileID: 800000000000001013}
-  _visualTarget: {fileID: 800000000000001002}
   _selectedBackground: {fileID: 800000000000001009}
   _selectedUnderline: {fileID: 0}
   _showSelectedUnderline: 0

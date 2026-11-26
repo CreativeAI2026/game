@@ -59,9 +59,9 @@ namespace CreativeAI.Session
                 onSceneActivated: () =>
                 {
                     var player = SpawnRigs(config);
-                    SaveService.RestorePlayerState(data);
                     if (!sceneLoadable)
                         SpawnPoint.Place(player, SpawnPoint.StartId);
+                    SaveService.RestorePlayerState(data, restorePosition: sceneLoadable);
                 }
             );
             return true;

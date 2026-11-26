@@ -14,23 +14,21 @@ game/                          ← リポジトリルート
 ├── Assets/
 │   ├── _Project/              本プロジェクトのアセット（基本ここに置く）
 │   │   ├── Features/          ゲーム機能。機能ごとに Scripts / Prefabs / Data（設定アセット・JSON）を置く
-│   │   │   ├── GameState/     進行度・ゲームモード・メニューが開いているか
+│   │   │   ├── GameState/     進行度・ゲームモード
 │   │   │   ├── SceneFlow/     シーン遷移・到着位置・シーンの重ね読み
-│   │   │   ├── UiRequests/    ゲーム側から UI への依頼（会話・暗転・調合画面・操作表示）
-│   │   │   ├── Event/         会話イベントの定義・再生、他機能との窓口。Data/events.json が台本
-│   │   │   ├── MapPin/        マップピン（目的地の小さいマーク）
+│   │   │   ├── UIRequests/    ゲーム側と UI の窓口（会話・暗転・調合画面・操作表示・メニューが開いているか）
+│   │   │   ├── Event/         会話イベントの定義・再生、他機能との窓口、目的地のマップピン。Data/events.json が台本
 │   │   │   ├── Player/        プレイヤー・武器・焦り度の判定（Panic）
 │   │   │   ├── Enemy/         敵・ボス（TutorialBoss / KurageBoss / HakanageBoss）
-│   │   │   ├── Combat/        当たり判定・ダメージ計算・各キャラの能力値
+│   │   │   ├── Combat/        当たり判定・ダメージ計算・各キャラの能力値・敵に聞こえる物音・ヒット演出の使い回し
+│   │   │   ├── Battle/        戦闘の始まりと終わり（シーンに置く戦闘エリア・会話イベントの戦闘）
 │   │   │   ├── Items/         アイテムの定義・一覧（ItemCatalog）・能力値と抽選。Data/items.json が元データ
 │   │   │   ├── Inventory/     所持品（持ち物の出し入れ・即時食材の枠）
 │   │   │   ├── Crafting/      調合（レシピ・調合処理・合成装置）
 │   │   │   ├── Field/         扉・調べる・拾えるアイテムと拾い済みの記録
 │   │   │   ├── SaveSystem/    セーブ・ロード
 │   │   │   ├── Camera/        カメラリグ・ズーム・揺れ
-│   │   │   ├── Audio/         プレイヤーの立てた物音を敵が聞きつける仕組み
 │   │   │   ├── Sound/         音を鳴らす部品（効果音・BGM・UI 音・音量設定）。使い方は Sound/README.md
-│   │   │   ├── Effects/       エフェクトの使い回し（ObjectPool）
 │   │   │   ├── Session/       ゲームの開始（タイトルから）と常駐一式の生成。UI より上の独自のアセンブリ
 │   │   │   ├── UI/            各機能の画面
 │   │   │   │   ├── Root/          UIRoot・画面切り替え・EventSystem

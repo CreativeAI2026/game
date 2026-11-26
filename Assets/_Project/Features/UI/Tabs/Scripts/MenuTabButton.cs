@@ -32,27 +32,24 @@ namespace CreativeAI.UI
 
         public bool IsSelected { get; private set; }
 
+        /// <summary>タブの文字。</summary>
+        public TMP_Text Label => _label;
+
         public event Action<MenuTabButton> Clicked;
 
         private void Awake()
         {
-            ResolveReferences();
+            ResolveUnderline();
         }
 
         private void OnEnable()
         {
-            ResolveReferences();
-            if (_button != null)
-            {
-                _button.onClick.RemoveListener(NotifyClicked);
-                _button.onClick.AddListener(NotifyClicked);
-            }
+            _button.onClick.AddListener(NotifyClicked);
         }
 
         private void OnDisable()
         {
-            if (_button != null)
-                _button.onClick.RemoveListener(NotifyClicked);
+            _button.onClick.RemoveListener(NotifyClicked);
 
             KillUnderlineTween();
             ApplyUnderlineImmediately(IsSelected);
@@ -60,7 +57,7 @@ namespace CreativeAI.UI
 
         public void SetSelected(bool selected)
         {
-            ResolveReferences();
+            ResolveUnderline();
 
             if (_selectionInitialized && IsSelected == selected)
                 return;
@@ -90,29 +87,14 @@ namespace CreativeAI.UI
             Clicked?.Invoke(this);
         }
 
-        private void ResolveReferences()
+        // 下線の元の大きさを覚えておく(表示時はここまで伸ばす)
+        private void ResolveUnderline()
         {
-            if (_button == null)
-                _button = GetComponent<Button>();
-
-            if (_selectedUnderline == null)
-            {
-                Transform underline = transform.Find("Underline");
-                if (underline == null)
-                    underline = transform.Find("UnderBar");
-                if (underline != null)
-                    _selectedUnderline = underline.gameObject;
-            }
-
-            if (_selectedUnderlineTransform == null && _selectedUnderline != null)
-            {
-                _selectedUnderlineTransform = _selectedUnderline.transform as RectTransform;
-                if (_selectedUnderlineTransform != null)
-                    _selectedUnderlineScale = _selectedUnderlineTransform.localScale;
-            }
-
-            if (_label == null)
-                _label = GetComponentInChildren<TMP_Text>(true);
+            if (_selectedUnderlineTransform != null || _selectedUnderline == null)
+                return;
+            _selectedUnderlineTransform = _selectedUnderline.transform as RectTransform;
+            if (_selectedUnderlineTransform != null)
+                _selectedUnderlineScale = _selectedUnderlineTransform.localScale;
         }
 
         private void ShowUnderline()

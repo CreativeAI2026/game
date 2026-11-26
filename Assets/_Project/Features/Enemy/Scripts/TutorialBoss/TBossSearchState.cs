@@ -4,7 +4,7 @@ namespace CreativeAI.Gameplay
 {
     /// <summary>
     /// 把握していたプレイヤーを見失った際の捜索。最後の把握位置（被弾時は推定位置）へ向かい、数回見回してからパトロールへ戻る。
-    /// Chase/Watch で見失った場合と光の外からの被弾（ForceAlert）から遷移し、捜索中も SoundEventBus で目標地点を更新する。
+    /// Chase/Watch で見失った場合と光の外からの被弾（ForceAlert）から遷移し、捜索中も NoiseEventBus で目標地点を更新する。
     /// </summary>
     public class TBossSearchState : TBossBaseState
     {
@@ -69,7 +69,7 @@ namespace CreativeAI.Gameplay
                 _stuckDetector = new TBossStuckDetector(boss.Agent);
             }
 
-            SoundEventBus.OnSoundEmitted += OnSoundHeard;
+            NoiseEventBus.OnNoiseEmitted += OnSoundHeard;
         }
 
         public override void Update()
@@ -96,7 +96,7 @@ namespace CreativeAI.Gameplay
         {
             DevLog.Log("[TutorialBoss] 捜索ステート終了");
 
-            SoundEventBus.OnSoundEmitted -= OnSoundHeard;
+            NoiseEventBus.OnNoiseEmitted -= OnSoundHeard;
 
             if (boss.Agent != null && boss.Agent.isOnNavMesh)
             {
@@ -185,7 +185,7 @@ namespace CreativeAI.Gameplay
             boss.ChangeState(new TBossPatrolState(boss));
         }
 
-        private void OnSoundHeard(SoundEventData data)
+        private void OnSoundHeard(NoiseEvent data)
         {
             if (!boss.TryHearSound(data, out float confidence))
             {

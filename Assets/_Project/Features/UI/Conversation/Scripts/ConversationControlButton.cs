@@ -21,6 +21,10 @@ namespace CreativeAI.UI
         [SerializeField]
         private Image _activeAccent;
 
+        [SerializeField]
+        [Tooltip("マウスを乗せたときに出す説明")]
+        private string _description;
+
         private readonly Color _normalColor = new(0.035f, 0.045f, 0.07f, 0.86f);
         private readonly Color _hoverColor = new(0.075f, 0.13f, 0.2f, 0.94f);
         private readonly Color _activeColor = new(0.16f, 0.42f, 0.62f, 0.96f);
@@ -30,28 +34,12 @@ namespace CreativeAI.UI
         private bool _hovered;
         private bool _pressed;
         private bool _active;
-        private string _description;
         private ConversationControlBar _controlBar;
         private Graphic[] _contentGraphics;
         private Color[] _contentBaseColors;
         private bool _idleDimmed;
         private bool _colorsCached;
         private bool _available = true;
-
-        public void Configure(
-            Image background,
-            RectTransform keycap,
-            Image activeAccent,
-            string description
-        )
-        {
-            _background = background;
-            _keycap = keycap;
-            _activeAccent = activeAccent;
-            _description = description;
-            CacheBases();
-            ApplyImmediate();
-        }
 
         private void Awake()
         {

@@ -15,20 +15,25 @@ namespace CreativeAI.UI
         [SerializeField]
         private int _maxEntries = 200;
 
+        [Header("行の雛形(種類ごと)")]
         [SerializeField]
-        [Range(0f, 1f)]
-        private float _backdropAlpha = 0.78f;
-
-        private readonly List<DialogueHistoryEntry> _entries = new();
-        private readonly DialogueHistoryScrollController _scrollController = new();
-        private DialogueHistoryPanelAnimator _panelAnimator;
-        private DialogueHistoryViewFactory _viewFactory;
+        private DialogueHistoryRow _dialogueRow;
 
         [SerializeField]
-        private TMP_FontAsset _font;
+        private DialogueHistoryRow _choiceRow;
 
+        [SerializeField]
+        private DialogueHistoryRow _narrationRow;
+
+        [SerializeField]
+        private DialogueHistoryRow _rewardRow;
+
+        [Header("パネル")]
         [SerializeField]
         private GameObject _panel;
+
+        [SerializeField]
+        private Button _closeButton;
 
         [SerializeField]
         private GameObject _openButton;
@@ -52,14 +57,18 @@ namespace CreativeAI.UI
         [SerializeField]
         private Image _scrollIndicator;
 
+        private readonly List<DialogueHistoryEntry> _entries = new();
+        private readonly List<DialogueHistoryRow> _rows = new(); // _entries と同じ並び
+        private readonly DialogueHistoryScrollController _scrollController = new();
+        private DialogueHistoryPanelAnimator _panelAnimator;
+
         public bool IsOpen => _isOpen;
         public int EntryCount => _entries.Count;
         public event Action Closed;
 
-        public void Initialize(TMP_FontAsset font)
+        /// <summary>ボタンやスクロールの通知をつなぐ。会話UIの起動時に1回呼ぶ。</summary>
+        public void Initialize()
         {
-            if (_font == null)
-                _font = font;
             EnsureView();
             BindViewEvents();
         }
@@ -137,7 +146,9 @@ namespace CreativeAI.UI
             bool followLatest = _scrollController.ShouldFollowLatest();
             EnsureView();
             _entries.Add(entry);
-            _viewFactory.CreateEntry(_content, entry);
+            var row = Instantiate(RowTemplate(entry.Kind), _content);
+            row.Set(entry);
+            _rows.Add(row);
             TrimOldEntries();
             RefreshCurrentMarker();
             // 閉じている間はスクロールしない(全 Canvas の強制更新が重い)。開くときに SetOpen が最新へ送る
@@ -202,71 +213,19 @@ namespace CreativeAI.UI
             _panelAnimator.Play(open);
         }
 
+        private DialogueHistoryRow RowTemplate(DialogueHistoryEntryKind kind) =>
+            kind switch
+            {
+                DialogueHistoryEntryKind.Dialogue => _dialogueRow,
+                DialogueHistoryEntryKind.Choice => _choiceRow,
+                DialogueHistoryEntryKind.Narration => _narrationRow,
+                _ => _rewardRow,
+            };
+
         private void EnsureView()
         {
-            _viewFactory ??= new DialogueHistoryViewFactory(_font);
-            if (_panel != null)
-            {
-                ConfigurePanelAnimator();
-                ConfigureScrollController();
-                ApplyLayoutPolish();
-                return;
-            }
-            if (transform is not RectTransform root)
-                return;
-
-            var view = _viewFactory.Build(
-                root,
-                _backdropAlpha,
-                () => SetOpen(true),
-                () => SetOpen(false),
-                _scrollController.ScrollToLatest,
-                ApplyFilter,
-                _ => _scrollController.RefreshLatestButton()
-            );
-            _panel = view.Panel;
-            _openButton = view.OpenButton;
-            _content = view.Content;
-            _scrollRect = view.ScrollRect;
-            _panelGroup = view.PanelGroup;
-            _latestButton = view.LatestButton;
-            _searchField = view.SearchField;
-            _scrollIndicator = view.ScrollIndicator;
             ConfigurePanelAnimator();
             ConfigureScrollController();
-            ApplyLayoutPolish();
-        }
-
-        private void ApplyLayoutPolish()
-        {
-            if (_searchField != null)
-            {
-                AlignSearchText(_searchField.textComponent);
-                AlignSearchText(_searchField.placeholder as TMP_Text);
-            }
-
-            var closeButton =
-                _panel != null ? _panel.transform.Find("ArchiveHeader/CloseButton") : null;
-            CenterButtonLabel(closeButton != null ? closeButton.gameObject : null);
-            CenterButtonLabel(_latestButton);
-        }
-
-        private static void AlignSearchText(TMP_Text text)
-        {
-            if (text == null)
-                return;
-            text.alignment = TextAlignmentOptions.MidlineLeft;
-            text.margin = new Vector4(14f, 0f, 14f, 0f);
-        }
-
-        private static void CenterButtonLabel(GameObject button)
-        {
-            var label = button != null ? button.GetComponentInChildren<TMP_Text>(true) : null;
-            if (label == null)
-                return;
-            label.alignment = TextAlignmentOptions.Center;
-            label.rectTransform.offsetMin = Vector2.zero;
-            label.rectTransform.offsetMax = Vector2.zero;
         }
 
         private void BindViewEvents()
@@ -284,16 +243,8 @@ namespace CreativeAI.UI
                 latestButton.onClick.RemoveAllListeners();
                 latestButton.onClick.AddListener(_scrollController.ScrollToLatest);
             }
-            var closeTransform =
-                _panel != null ? _panel.transform.Find("ArchiveHeader/CloseButton") : null;
-            if (
-                closeTransform != null
-                && closeTransform.TryGetComponent<Button>(out var closeButton)
-            )
-            {
-                closeButton.onClick.RemoveAllListeners();
-                closeButton.onClick.AddListener(() => SetOpen(false));
-            }
+            _closeButton.onClick.RemoveAllListeners();
+            _closeButton.onClick.AddListener(() => SetOpen(false));
             if (_scrollRect != null)
             {
                 _scrollRect.onValueChanged.RemoveAllListeners();
@@ -312,52 +263,20 @@ namespace CreativeAI.UI
         public void ApplyFilter(string query)
         {
             query = query?.Trim() ?? string.Empty;
-            for (int i = 0; i < _entries.Count && i < _content.childCount; i++)
+            for (int i = 0; i < _entries.Count; i++)
             {
                 var entry = _entries[i];
-                bool visible = DialogueHistorySearch.Matches(entry, query);
-                _content.GetChild(i).gameObject.SetActive(visible);
-                ApplyEntryHighlight(_content.GetChild(i), entry, query);
+                _rows[i].gameObject.SetActive(DialogueHistorySearch.Matches(entry, query));
+                _rows[i].ApplySearch(entry, query);
             }
             LayoutRebuilder.ForceRebuildLayoutImmediate(_content);
             _scrollController.Refresh();
         }
 
-        private static void ApplyEntryHighlight(
-            Transform container,
-            DialogueHistoryEntry entry,
-            string query
-        )
-        {
-            var choiceToggle = container.GetComponentInChildren<DialogueChoiceHistoryToggle>(true);
-            if (choiceToggle != null)
-            {
-                choiceToggle.SetSearchText(
-                    string.IsNullOrEmpty(query)
-                        ? null
-                        : DialogueHistorySearch.Highlight(entry.Body, query)
-                );
-                return;
-            }
-            foreach (var text in container.GetComponentsInChildren<TMP_Text>(true))
-            {
-                if (text.name == "Name")
-                    text.text = DialogueHistorySearch.Highlight(entry.Speaker, query);
-                else if (text.name is "Body" or "ChoiceText")
-                    text.text = DialogueHistorySearch.Highlight(entry.Body, query);
-            }
-        }
-
         private void RefreshCurrentMarker()
         {
-            if (_content == null)
-                return;
-            for (int i = 0; i < _content.childCount; i++)
-            {
-                var marker = _content.GetChild(i).Find("CurrentMarker");
-                if (marker != null)
-                    marker.gameObject.SetActive(i == _content.childCount - 1);
-            }
+            for (int i = 0; i < _rows.Count; i++)
+                _rows[i].SetCurrent(i == _rows.Count - 1);
         }
 
         private void TrimOldEntries()
@@ -365,14 +284,12 @@ namespace CreativeAI.UI
             while (_entries.Count > Mathf.Max(1, _maxEntries))
             {
                 _entries.RemoveAt(0);
-                if (_content != null && _content.childCount > 0)
-                {
-                    var oldest = _content.GetChild(0).gameObject;
-                    if (Application.isPlaying)
-                        Destroy(oldest);
-                    else
-                        DestroyImmediate(oldest);
-                }
+                var oldest = _rows[0].gameObject;
+                _rows.RemoveAt(0);
+                if (Application.isPlaying)
+                    Destroy(oldest);
+                else
+                    DestroyImmediate(oldest);
             }
         }
 

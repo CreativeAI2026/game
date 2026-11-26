@@ -1,4 +1,3 @@
-using System;
 using System.Collections;
 using System.Globalization;
 using UnityEngine;
@@ -8,40 +7,18 @@ namespace CreativeAI.UI
     /// <summary>スクリプトエンジン由来の演出コマンドを会話UI操作へ変換する。</summary>
     internal sealed class DialoguePresentationCommandRouter
     {
-        private readonly Action<bool> _setWindowHidden;
-        private readonly Action<DialoguePortraitSide, bool> _setPortraitVisible;
-        private readonly Func<DialoguePortraitSide, bool, float, IEnumerator> _setObscured;
-        private readonly Func<
-            DialoguePortraitSide,
-            ConversationView.PortraitEffect,
-            float,
-            IEnumerator
-        > _playEffect;
-        private readonly Func<IEnumerator> _close;
-        private readonly Func<string, IEnumerator> _showPortrait;
+        private readonly ConversationView _view;
+        private readonly DialoguePortraitView _portraits;
         private readonly DialogueStageCommands _stage;
 
         public DialoguePresentationCommandRouter(
-            Action<bool> setWindowHidden,
-            Action<DialoguePortraitSide, bool> setPortraitVisible,
-            Func<DialoguePortraitSide, bool, float, IEnumerator> setObscured,
-            Func<
-                DialoguePortraitSide,
-                ConversationView.PortraitEffect,
-                float,
-                IEnumerator
-            > playEffect,
-            Func<IEnumerator> close,
-            Func<string, IEnumerator> showPortrait,
+            ConversationView view,
+            DialoguePortraitView portraits,
             DialogueStageCommands stage
         )
         {
-            _setWindowHidden = setWindowHidden;
-            _setPortraitVisible = setPortraitVisible;
-            _setObscured = setObscured;
-            _playEffect = playEffect;
-            _close = close;
-            _showPortrait = showPortrait;
+            _view = view;
+            _portraits = portraits;
             _stage = stage;
         }
 
@@ -50,52 +27,52 @@ namespace CreativeAI.UI
             switch (command?.Trim().ToLowerInvariant())
             {
                 case "window.hide":
-                    _setWindowHidden(true);
+                    _view.SetWindowHidden(true);
                     break;
                 case "window.show":
-                    _setWindowHidden(false);
+                    _view.SetWindowHidden(false);
                     break;
                 case "portrait.left.hide":
-                    _setPortraitVisible(DialoguePortraitSide.Left, false);
+                    _portraits.SetVisible(DialoguePortraitSide.Left, false);
                     break;
                 case "portrait.right.hide":
-                    _setPortraitVisible(DialoguePortraitSide.Right, false);
+                    _portraits.SetVisible(DialoguePortraitSide.Right, false);
                     break;
                 case "portrait.left.obscure":
-                    yield return _setObscured(DialoguePortraitSide.Left, true, 0.5f);
+                    yield return _portraits.SetObscured(DialoguePortraitSide.Left, true, 0.5f);
                     break;
                 case "portrait.right.obscure":
-                    yield return _setObscured(DialoguePortraitSide.Right, true, 0.5f);
+                    yield return _portraits.SetObscured(DialoguePortraitSide.Right, true, 0.5f);
                     break;
                 case "portrait.left.reveal":
-                    yield return _setObscured(DialoguePortraitSide.Left, false, 0.5f);
+                    yield return _portraits.SetObscured(DialoguePortraitSide.Left, false, 0.5f);
                     break;
                 case "portrait.right.reveal":
-                    yield return _setObscured(DialoguePortraitSide.Right, false, 0.5f);
+                    yield return _portraits.SetObscured(DialoguePortraitSide.Right, false, 0.5f);
                     break;
                 case "portrait.left.shake":
-                    yield return _playEffect(
+                    yield return _portraits.PlayEffect(
                         DialoguePortraitSide.Left,
                         ConversationView.PortraitEffect.Shake,
                         0.28f
                     );
                     break;
                 case "portrait.right.shake":
-                    yield return _playEffect(
+                    yield return _portraits.PlayEffect(
                         DialoguePortraitSide.Right,
                         ConversationView.PortraitEffect.Shake,
                         0.28f
                     );
                     break;
                 case "portrait.left.jump":
-                    yield return _playEffect(
+                    yield return _portraits.PlayEffect(
                         DialoguePortraitSide.Left,
                         ConversationView.PortraitEffect.Jump,
                         0.28f
                     );
                     break;
                 case "portrait.right.jump":
-                    yield return _playEffect(
+                    yield return _portraits.PlayEffect(
                         DialoguePortraitSide.Right,
                         ConversationView.PortraitEffect.Jump,
                         0.28f
@@ -113,10 +90,10 @@ namespace CreativeAI.UI
                         yield return new WaitForSecondsRealtime(Mathf.Clamp(seconds, 0f, 10f));
                     break;
                 case "portrait.show":
-                    yield return _showPortrait(argument?.Trim());
+                    yield return _portraits.ShowByKey(argument?.Trim());
                     break;
                 case "conversation.close":
-                    yield return _close();
+                    yield return _view.HideAnimated();
                     break;
                 default:
                     IEnumerator stage = _stage.Create(command, argument);

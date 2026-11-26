@@ -70,12 +70,6 @@ namespace CreativeAI.Gameplay
             {
                 HitEnemy(collision);
             }
-            else if (collision.gameObject.TryGetComponent(out IArrowHittable hittable))
-            {
-                // IArrowHittable を実装したオブジェクト（スポーンボタン等のギミック）に命中した場合の処理
-                hittable.OnArrowHit();
-                _projectile.ReturnToPool();
-            }
             else if (
                 layer == _obstacleLayer
                 || (
@@ -131,8 +125,8 @@ namespace CreativeAI.Gameplay
             SpawnEffect(_stickEffect, impactPoint, contact.normal);
             WorldSoundPlayer.Play(_stickSound, impactPoint, this);
 
-            // 着弾位置をSoundEventBusで敵AIに通知する
-            SoundEventBus.Emit(new SoundEventData(SoundType.ArrowHit, impactPoint, _impactRadius));
+            // 着弾位置をNoiseEventBusで敵AIに通知する
+            NoiseEventBus.Emit(new NoiseEvent(NoiseType.ArrowHit, impactPoint, _impactRadius));
         }
 
         /// <summary>エフェクトの前方(+Z)を、当たった面の外向きに合わせて再生する。</summary>

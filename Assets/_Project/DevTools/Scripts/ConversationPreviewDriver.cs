@@ -124,8 +124,15 @@ namespace CreativeAI.DevTools
             var state = new PreviewState(_initialFlags);
             var inventory = new PreviewInventory(_importantItemKeys);
             var player = EventPlayer.EnsureResident();
-            using (player.InjectScoped(state, view, inventory, state, state, inventory))
+            player.Inject(state, view, inventory, state, state, inventory);
+            try
+            {
                 yield return player.PlayRoutine(ev);
+            }
+            finally
+            {
+                player.Inject(null, null, null); // 本番の窓口に戻す
+            }
         }
 
         /// <summary>プレビュー用の保存先と戦闘通知先。本番の状態には書き込まない。</summary>

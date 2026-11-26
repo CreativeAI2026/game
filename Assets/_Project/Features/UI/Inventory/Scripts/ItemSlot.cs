@@ -176,7 +176,7 @@ namespace CreativeAI.UI
         private SlotFrameView _frameView;
 
         [SerializeField]
-        private SlotHoverView _hoverView;
+        private HoverScaleOnPointer _hover;
 
         [SerializeField]
         private SlotMarkerView _markerView;
@@ -185,7 +185,7 @@ namespace CreativeAI.UI
 
         protected override SlotIconView IconView => _iconView;
         protected override SlotCountBadgeView CountBadgeView => _showCount ? _countBadgeView : null;
-        protected override SlotHoverView HoverView => _hoverView;
+        protected override HoverScaleOnPointer Hover => _hover;
         protected override SlotFrameView FrameView => _frameView;
 
         protected override void Awake()
@@ -193,7 +193,6 @@ namespace CreativeAI.UI
             ResolveViewReferences();
             base.Awake();
             _controller = GetComponentInParent<ItemListView>();
-            ConfigureVisualRootHover();
             RefreshSelectionVisuals();
         }
 
@@ -201,7 +200,6 @@ namespace CreativeAI.UI
         {
             ItemSlotDragContext.Ended += OnDragEnded;
             ResolveViewReferences();
-            ConfigureVisualRootHover();
             RefreshSelectionVisuals();
         }
 
@@ -240,8 +238,8 @@ namespace CreativeAI.UI
         public void SetReleaseSelectionOnOutsideClick(bool release)
         {
             ResolveViewReferences();
-            if (_hoverView != null)
-                _hoverView.SetReleaseLockOnOutsideClick(release);
+            if (_hover != null)
+                _hover.SetReleaseLockOnOutsideClick(release);
         }
 
         public void OnPointerClick(PointerEventData eventData)
@@ -319,20 +317,13 @@ namespace CreativeAI.UI
             _dragging = false;
         }
 
-        private void ConfigureVisualRootHover()
-        {
-            ResolveViewReferences();
-            if (_hoverView != null)
-                _hoverView.Bind();
-        }
-
         private void ResolveViewReferences()
         {
             WarnIfMissing(_visualRootRect, "VisualRoot");
             WarnIfMissing(_iconView, nameof(SlotIconView));
             WarnIfMissing(_countBadgeView, nameof(SlotCountBadgeView));
             WarnIfMissing(_frameView, nameof(SlotFrameView));
-            WarnIfMissing(_hoverView, nameof(SlotHoverView));
+            WarnIfMissing(_hover, nameof(HoverScaleOnPointer));
             WarnIfMissing(_markerView, nameof(SlotMarkerView));
         }
 
@@ -350,8 +341,8 @@ namespace CreativeAI.UI
                 _countBadgeView = GetComponentInChildren<SlotCountBadgeView>(true);
             if (_frameView == null)
                 _frameView = GetComponentInChildren<SlotFrameView>(true);
-            if (_hoverView == null)
-                _hoverView = GetComponentInChildren<SlotHoverView>(true);
+            if (_hover == null)
+                _hover = GetComponentInChildren<HoverScaleOnPointer>(true);
             if (_markerView == null)
                 _markerView = GetComponentInChildren<SlotMarkerView>(true);
         }

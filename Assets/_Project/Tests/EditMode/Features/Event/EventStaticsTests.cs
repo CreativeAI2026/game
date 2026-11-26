@@ -60,7 +60,7 @@ namespace CreativeAI.Tests.EditMode
             bool notified = false;
             EventPlaybackService.PlayingChanged += _ => notified = true;
 
-            EventStatics.ResetForPlaySession();
+            EventPlaybackService.ResetState();
 
             Assert.IsFalse(EventPlaybackService.IsPlaying);
             Assert.IsFalse(notified, "前回の Play の購読者(破棄済み)には通知しない");
@@ -72,7 +72,7 @@ namespace CreativeAI.Tests.EditMode
             bool called = false;
             EventPlaybackService.PlayingChanged += _ => called = true;
 
-            EventStatics.ResetForPlaySession();
+            EventPlaybackService.ResetState();
             EventPlaybackService.SetPlaying(true);
 
             Assert.IsFalse(called, "前回の Play の購読が残らない");
@@ -83,7 +83,9 @@ namespace CreativeAI.Tests.EditMode
         {
             DialogueViewService.Current = new FakeDialogueView();
 
-            EventStatics.ResetForPlaySession();
+            EventPlayerService.ResetState();
+            DialogueViewService.ResetState();
+            ItemGiverService.ResetState();
 
             Assert.IsNull(DialogueViewService.Current);
             Assert.IsNull(EventPlayerService.Current);
