@@ -11,6 +11,19 @@ namespace CreativeAI.Session
     public static class GameSession
     {
         /// <summary>
+        /// タイトルの「はじめから / 続きから」で始めたセッションか。開発用の直接 Play の初期化(FieldDevBootstrap)が、
+        /// タイトル経由のセッションでセーブの復元を上書きしないよう、これを見て何もしない。
+        /// </summary>
+        public static bool StartedFromTitle { get; private set; }
+
+        // エディタで再生を繰り返しても、前回の値を持ち越さない。
+        [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
+        private static void ResetStartedFromTitle() => StartedFromTitle = false;
+
+        /// <summary>タイトルからの開始であることを記録する(<see cref="GameStarter"/> が呼ぶ)。</summary>
+        public static void MarkStartedFromTitle() => StartedFromTitle = true;
+
+        /// <summary>
         /// 常駐を生成順どおりに作る。既に在るものはそのまま使う。
         /// 順番: マネージャ → 所持品 → UI
         /// (UI は GameModeManager / InventoryManager を購読し、会話UIは生成時に DialogueViewService へ自己登録するため)。

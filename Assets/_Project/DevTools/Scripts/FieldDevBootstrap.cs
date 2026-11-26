@@ -31,13 +31,20 @@ namespace CreativeAI.DevTools
         private bool _previewOnlyPlayer;
 
         [SerializeField]
-        [Tooltip("リグを出す位置の SpawnPoint ID。本番の「はじめる」と同じ開始位置が既定。")]
+        [Tooltip(
+            "リグを出す位置の SpawnPoint ID。既定は start(「はじめから」は new_game を使うので、直接再生とは別の位置)。"
+        )]
         private string _spawnPointId = SpawnPoint.StartId;
 
         private DevState _devState;
 
         private void Awake()
         {
+            // タイトルから始めたときは、セーブの復元や「はじめから」の初期状態を上書きしないよう何もしない。
+            // (下の判定は「プレイヤーが居る」も見るが、プレイヤーはシーンの Awake より後に作られるので通り抜けてしまう)
+            if (GameSession.StartedFromTitle)
+                return;
+
             // Title 経由で既に常駐が生成済みなら何もしない(UIRoot の有無で判定)。
             if (
                 UIRoot.Instance != null

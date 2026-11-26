@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using UnityEngine;
 
 namespace CreativeAI.UI
@@ -12,6 +13,9 @@ namespace CreativeAI.UI
     public sealed class UIRoot : MonoBehaviour
     {
         public static UIRoot Instance { get; private set; }
+
+        // SetVisible(false) で消した Canvas。戻すときはこれだけ戻し、元から消えていたものは触らない。
+        private readonly List<Canvas> _hiddenCanvases = new();
 
         /// <summary>
         /// UI レイヤーを Prefab から1回だけ生成する(既に在ればそれを返す。Prefab 未割当なら警告して null)。
@@ -33,6 +37,32 @@ namespace CreativeAI.UI
             var go = Instantiate(uiRootPrefab);
             go.name = uiRootPrefab.name; // "(Clone)" を避ける
             return go.GetComponent<UIRoot>();
+        }
+
+        /// <summary>
+        /// UI 全体の表示を切り替える。タイトルの暗転が降りる前に HUD が見えないよう、生成した直後に隠し、
+        /// 読み込みが終わって暗転が明ける前に戻す。
+        /// </summary>
+        public void SetVisible(bool visible)
+        {
+            if (visible)
+            {
+                foreach (var canvas in _hiddenCanvases)
+                {
+                    if (canvas != null)
+                        canvas.enabled = true;
+                }
+                _hiddenCanvases.Clear();
+                return;
+            }
+
+            foreach (var canvas in GetComponentsInChildren<Canvas>())
+            {
+                if (!canvas.enabled)
+                    continue;
+                canvas.enabled = false;
+                _hiddenCanvases.Add(canvas);
+            }
         }
 
         private void Awake()
