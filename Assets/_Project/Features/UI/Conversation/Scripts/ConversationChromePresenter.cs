@@ -11,7 +11,6 @@ namespace CreativeAI.UI
         private readonly MonoBehaviour _owner;
         private CanvasGroup _root;
         private RectTransform _window;
-        private TMP_Text _fontSource;
         private GameObject _nextIndicator;
         private TMP_Text _autoIndicator;
         private TMP_Text _controlGuide;
@@ -45,14 +44,9 @@ namespace CreativeAI.UI
 
         public ConversationChromePresenter(MonoBehaviour owner) => _owner = owner;
 
-        public TMP_Text AutoIndicator => _autoIndicator;
-        public TMP_Text ControlGuide => _controlGuide;
-        public Image AutoProgress => _autoProgress;
-
         public void Configure(
             CanvasGroup root,
             RectTransform window,
-            TMP_Text fontSource,
             GameObject nextIndicator,
             TMP_Text autoIndicator,
             TMP_Text controlGuide,
@@ -66,7 +60,6 @@ namespace CreativeAI.UI
         {
             _root = root;
             _window = window;
-            _fontSource = fontSource;
             _nextIndicator = nextIndicator;
             _autoIndicator = autoIndicator;
             _controlGuide = controlGuide;
@@ -77,13 +70,6 @@ namespace CreativeAI.UI
             _enterDuration = enterDuration;
             _enterOffsetY = enterOffsetY;
             _autoLabel = autoLabel;
-        }
-
-        public void EnsureView()
-        {
-            EnsureAutoIndicator();
-            EnsureAutoProgress();
-            EnsureControlGuide();
         }
 
         public void Tick(bool autoMode, bool progressVisible, float progress)
@@ -104,7 +90,6 @@ namespace CreativeAI.UI
 
         public void SetAutoMode(bool enabled)
         {
-            EnsureView();
             if (_autoIndicator == null)
                 return;
             if (enabled && !_autoIndicator.gameObject.activeSelf)
@@ -211,70 +196,6 @@ namespace CreativeAI.UI
             _hasIndicatorBasePosition = false;
             if (_nextIndicator != null)
                 _nextIndicator.SetActive(false);
-        }
-
-        private void EnsureAutoIndicator()
-        {
-            if (_autoIndicator != null || _root == null)
-                return;
-            var target = new GameObject("AutoModeIndicator", typeof(RectTransform));
-            target.transform.SetParent(_root.transform, false);
-            target.transform.SetAsLastSibling();
-            var rect = target.GetComponent<RectTransform>();
-            rect.anchorMin = rect.anchorMax = rect.pivot = Vector2.one;
-            rect.anchoredPosition = new Vector2(-36f, -28f);
-            rect.sizeDelta = new Vector2(180f, 52f);
-            _autoIndicator = target.AddComponent<TextMeshProUGUI>();
-            _autoIndicator.alignment = TextAlignmentOptions.Center;
-            _autoIndicator.fontSize = 28f;
-            _autoIndicator.fontStyle = FontStyles.Bold;
-            _autoIndicator.color = new Color(0.75f, 0.9f, 1f, 1f);
-            _autoIndicator.raycastTarget = false;
-            _autoIndicator.font = _fontSource != null ? _fontSource.font : null;
-        }
-
-        private void EnsureControlGuide()
-        {
-            if (_controlGuide != null || _root == null)
-                return;
-            var target = new GameObject("ControlGuide", typeof(RectTransform));
-            target.transform.SetParent(_root.transform, false);
-            var rect = target.GetComponent<RectTransform>();
-            rect.anchorMin = rect.anchorMax = rect.pivot = Vector2.zero;
-            rect.anchoredPosition = new Vector2(26f, 20f);
-            rect.sizeDelta = new Vector2(520f, 38f);
-            _controlGuide = target.AddComponent<TextMeshProUGUI>();
-            _controlGuide.text = DefaultGuide;
-            _controlGuide.fontSize = 20f;
-            _controlGuide.color = new Color(1f, 1f, 1f, 0.62f);
-            _controlGuide.alignment = TextAlignmentOptions.BottomLeft;
-            _controlGuide.raycastTarget = false;
-            _controlGuide.font = _fontSource != null ? _fontSource.font : null;
-        }
-
-        private void EnsureAutoProgress()
-        {
-            if (_autoProgress != null || _autoIndicator == null)
-                return;
-            var progress = new GameObject("AutoProgress", typeof(RectTransform));
-            progress.transform.SetParent(_autoIndicator.transform, false);
-            var background = progress.AddComponent<Image>();
-            background.color = new Color(1f, 1f, 1f, 0.3f);
-            background.raycastTarget = false;
-            var rect = progress.GetComponent<RectTransform>();
-            rect.anchorMin = new Vector2(0.1f, 0f);
-            rect.anchorMax = new Vector2(0.9f, 0f);
-            rect.pivot = new Vector2(0f, 0.5f);
-            rect.anchoredPosition = new Vector2(0f, -4f);
-            rect.sizeDelta = new Vector2(0f, 6f);
-            var fill = new GameObject("Fill", typeof(RectTransform));
-            fill.transform.SetParent(progress.transform, false);
-            _autoProgress = fill.AddComponent<Image>();
-            _autoProgress.color = new Color(0.5f, 0.85f, 1f, 1f);
-            _autoProgress.type = Image.Type.Simple;
-            _autoProgress.raycastTarget = false;
-            _autoProgressRect = fill.GetComponent<RectTransform>();
-            SetAutoProgress(0f);
         }
 
         private void SetAutoProgress(float progress)

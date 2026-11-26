@@ -70,12 +70,6 @@ namespace CreativeAI.Gameplay
             {
                 HitEnemy(collision);
             }
-            else if (collision.gameObject.TryGetComponent(out IArrowHittable hittable))
-            {
-                // IArrowHittable を実装したオブジェクト（スポーンボタン等のギミック）に命中した場合の処理
-                hittable.OnArrowHit();
-                _projectile.ReturnToPool();
-            }
             else if (
                 layer == _obstacleLayer
                 || (

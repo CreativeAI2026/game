@@ -226,7 +226,6 @@ namespace CreativeAI.UI
             _chromePresenter.Configure(
                 _root,
                 _windowRoot,
-                _nameText,
                 _nextIndicator,
                 _autoModeIndicator,
                 _controlGuide,
@@ -251,11 +250,7 @@ namespace CreativeAI.UI
                 _portraits,
                 new DialogueStageCommands(_backdropPresenter, FindSound, FindBackground)
             );
-            _chromePresenter.EnsureView();
             ConfigureTextOverflow();
-            _autoModeIndicator = _chromePresenter.AutoIndicator;
-            _controlGuide = _chromePresenter.ControlGuide;
-            _autoProgressFill = _chromePresenter.AutoProgress;
         }
 
         // 部品が未設定なら同じ GameObject から探し、無ければ足す(テストや組み立て途中でも落ちないように)
