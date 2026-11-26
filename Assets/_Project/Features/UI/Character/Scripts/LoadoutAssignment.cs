@@ -16,17 +16,25 @@ namespace CreativeAI.UI
     {
         private const int EquipmentSlotCount = 3;
 
-        private readonly List<LoadoutAssignmentSlotView> _quickSlots = new();
-        private readonly List<LoadoutAssignmentSlotView> _equipmentSlots = new();
+        private readonly LoadoutAssignmentSlotView[] _quickSlots;
+        private readonly LoadoutAssignmentSlotView[] _equipmentSlots;
         private readonly ItemStack[] _equipment = new ItemStack[EquipmentSlotCount];
         private readonly Dictionary<Transform, Vector3> _restScales = new();
         private readonly Func<InventoryManager> _inventoryManager;
         private Sequence _appearSequence;
 
         /// <param name="inventoryManager">今使う InventoryManager を返す(無ければ null)</param>
-        public LoadoutAssignment(Func<InventoryManager> inventoryManager)
+        public LoadoutAssignment(
+            LoadoutAssignmentSlotView[] quickSlots,
+            LoadoutAssignmentSlotView[] equipmentSlots,
+            Func<InventoryManager> inventoryManager
+        )
         {
+            _quickSlots = quickSlots;
+            _equipmentSlots = equipmentSlots;
             _inventoryManager = inventoryManager;
+            ConfigureDragSources(_quickSlots, ItemSlotDragOrigin.Quick);
+            ConfigureDragSources(_equipmentSlots, ItemSlotDragOrigin.Equipment);
         }
 
         public IReadOnlyList<LoadoutAssignmentSlotView> QuickSlots => _quickSlots;
@@ -40,27 +48,6 @@ namespace CreativeAI.UI
 
         /// <summary>この画面から装備を付け外ししている最中か(その間の装備変更の通知は無視する)。</summary>
         public bool IsChangingEquipment { get; private set; }
-
-        /// <summary>枠を画面の決まった場所から集める。集めていない側だけ探し直す。</summary>
-        public void Resolve(Transform root)
-        {
-            if (_quickSlots.Count == 0)
-                CollectSlots(root.Find("QuickItemArea/SlotArea"), _quickSlots);
-            if (_equipmentSlots.Count == 0)
-                CollectSlots(root.Find("EquipArea/SlotArea"), _equipmentSlots);
-
-            ConfigureDragSources(_quickSlots, ItemSlotDragOrigin.Quick);
-            ConfigureDragSources(_equipmentSlots, ItemSlotDragOrigin.Equipment);
-        }
-
-        /// <summary>枠の数が足りないときの名前を足す(警告用)。</summary>
-        public void CollectMissing(List<string> missing)
-        {
-            if (_quickSlots.Count != 3)
-                missing.Add($"QuickItemArea のスロット3個（現在 {_quickSlots.Count} 個）");
-            if (_equipmentSlots.Count != EquipmentSlotCount)
-                missing.Add($"EquipArea のスロット3個（現在 {_equipmentSlots.Count} 個）");
-        }
 
         /// <summary>枠を1つずつ、0 から元の大きさへ弾ませて出す。</summary>
         public void PlayAppearance(float duration, float stagger, object target)
@@ -145,7 +132,7 @@ namespace CreativeAI.UI
         /// <summary>選んでいる食材の枠に入れる。入れられたら true。</summary>
         public bool AssignQuick(ItemStack stack)
         {
-            if (SelectedQuick < 0 || SelectedQuick >= _quickSlots.Count)
+            if (SelectedQuick < 0 || SelectedQuick >= _quickSlots.Length)
                 return false;
 
             var manager = _inventoryManager();
@@ -200,7 +187,7 @@ namespace CreativeAI.UI
         /// <summary>選んでいる食材の枠を空ける。空けられたら true。</summary>
         public bool RemoveQuick()
         {
-            if (SelectedQuick < 0 || SelectedQuick >= _quickSlots.Count)
+            if (SelectedQuick < 0 || SelectedQuick >= _quickSlots.Length)
                 return false;
 
             var manager = _inventoryManager();
@@ -262,7 +249,7 @@ namespace CreativeAI.UI
             var manager = _inventoryManager();
             IReadOnlyList<ItemStack> assigned =
                 manager != null ? manager.GetQuickFoodSlots() : null;
-            for (int i = 0; i < _quickSlots.Count; i++)
+            for (int i = 0; i < _quickSlots.Length; i++)
             {
                 ItemStack stack = assigned != null && i < assigned.Count ? assigned[i] : null;
                 _quickSlots[i].SetStack(stack);
@@ -308,7 +295,7 @@ namespace CreativeAI.UI
         /// <summary>装備の枠を、覚えている割り振りに合わせて描き直す。</summary>
         public void RefreshEquipment()
         {
-            for (int i = 0; i < _equipmentSlots.Count; i++)
+            for (int i = 0; i < _equipmentSlots.Length; i++)
             {
                 ItemStack stack = i < _equipment.Length ? _equipment[i] : null;
                 _equipmentSlots[i].SetStack(stack);
@@ -343,21 +330,6 @@ namespace CreativeAI.UI
         {
             for (int i = 0; i < slots.Count; i++)
                 slots[i].ConfigureDragSource(origin, i);
-        }
-
-        private static void CollectSlots(
-            Transform root,
-            List<LoadoutAssignmentSlotView> destination
-        )
-        {
-            if (root == null)
-                return;
-
-            for (int i = 0; i < root.childCount; i++)
-            {
-                if (root.GetChild(i).TryGetComponent(out LoadoutAssignmentSlotView slot))
-                    destination.Add(slot);
-            }
         }
     }
 }

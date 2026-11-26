@@ -70,12 +70,13 @@ namespace CreativeAI.UI
         private void Awake()
         {
             _typewriter = new TmpTypewriterPlayer(this);
-            ResolveReferences();
         }
 
         private void OnEnable()
         {
-            ResolveReferences();
+            // 画面はプレイヤーが出たあとに開くので、開くたびに今のプレイヤーを見る
+            var player = PlayerRegistry.Current;
+            _playerStatus = player != null ? player.GetComponent<PlayerStatus>() : null;
             _typewriter ??= new TmpTypewriterPlayer(this);
             if (!_useTestValues)
                 Subscribe();
@@ -107,7 +108,6 @@ namespace CreativeAI.UI
         [ContextMenu("テスト値を反映してHPバーを再生")]
         private void ReplayTestStatus()
         {
-            ResolveReferences();
             _typewriter ??= new TmpTypewriterPlayer(this);
             RefreshAll(false, _animateTextOnOpen);
             if (_hpBar != null)
@@ -213,34 +213,6 @@ namespace CreativeAI.UI
 
             _playerStatus.OnHpChanged -= OnHpChanged;
             _playerStatus.OnStatsChanged -= OnStatsChanged;
-        }
-
-        private void ResolveReferences()
-        {
-            if (_playerStatus == null)
-                _playerStatus = FindAnyObjectByType<PlayerStatus>();
-
-            if (_hpValue == null)
-                _hpValue = FindValueText("HP");
-            if (_attackValue == null)
-                _attackValue = FindValueText("ATK");
-            if (_defenseValue == null)
-                _defenseValue = FindValueText("DEF");
-            if (_criticalRateValue == null)
-                _criticalRateValue = FindValueText("CRIR");
-            if (_criticalDamageValue == null)
-                _criticalDamageValue = FindValueText("CRID");
-            if (_hpBar == null)
-            {
-                Transform hpBar = transform.Find("StatusArea/HP/Bar");
-                _hpBar = hpBar != null ? hpBar.GetComponent<AnimatedValueBar>() : null;
-            }
-        }
-
-        private TMP_Text FindValueText(string rowName)
-        {
-            Transform valueText = transform.Find($"StatusArea/{rowName}/TextArea/ValueText");
-            return valueText != null ? valueText.GetComponent<TMP_Text>() : null;
         }
     }
 }
