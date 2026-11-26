@@ -24120,7 +24120,7 @@ MonoBehaviour:
   - weapon: {fileID: 7698239273175219019}
     stats: {fileID: 11400000, guid: 556ca783faa8ad84bbb25da497a86dce, type: 2}
     animatorController: {fileID: 22100000, guid: 10027f82a78aee84f9ce25e2f1d58769, type: 2}
-  _startWithAllWeapons: 1
+  _startWithAllWeapons: 0
 --- !u!114 &4200084836634315996
 MonoBehaviour:
   m_ObjectHideFlags: 0
