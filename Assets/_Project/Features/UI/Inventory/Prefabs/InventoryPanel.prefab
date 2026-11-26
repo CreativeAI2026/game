@@ -760,11 +760,8 @@ MonoBehaviour:
   _underlineAlignmentTarget: {fileID: 0}
   _tabEntries:
   - definition: {fileID: 11400000, guid: 4485649022a2f32478dab41989873421, type: 2}
-    view: {fileID: 0}
   - definition: {fileID: 11400000, guid: 72b479d96be07754aa3f194c7870d097, type: 2}
-    view: {fileID: 0}
   - definition: {fileID: 11400000, guid: a66c97c6c72648c4aa18580995ab5eee, type: 2}
-    view: {fileID: 0}
   _animDuration: 0.15
   _autoSelectFirstTabOnStart: 1
   _resetToFirstTabOnEnable: 1
@@ -951,15 +948,15 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: CreativeAI.UI::CreativeAI.UI.HoverScaleOnPointer
   _group: default
-  _lockEnabled: 1
-  _releaseLockOnOutsideClick: 1
-  _hoverScale: 1.2
+  _lockEnabled: 0
+  _releaseLockOnOutsideClick: 0
+  _hoverScale: 1.1
   _animationDuration: 0.2
   _hoverScaleEnabled: 1
   _bounceEnabled: 1
-  _bounceHeight: 8
+  _bounceHeight: 0
   _bounceDuration: 0.8
-  _targetRect: {fileID: 0}
+  _targetRect: {fileID: 800000000000001047}
 --- !u!1 &800000000000001063
 GameObject:
   m_ObjectHideFlags: 0
@@ -1592,7 +1589,7 @@ MonoBehaviour:
   _bounceEnabled: 0
   _bounceHeight: 8
   _bounceDuration: 0.8
-  _targetRect: {fileID: 0}
+  _targetRect: {fileID: 800000000000001080}
 --- !u!114 &4823335500822751386
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -2977,7 +2974,7 @@ MonoBehaviour:
   _bounceEnabled: 1
   _bounceHeight: 8
   _bounceDuration: 0.8
-  _targetRect: {fileID: 0}
+  _targetRect: {fileID: 9189475616592277573}
 --- !u!114 &7114303051653676564
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -6129,6 +6126,10 @@ PrefabInstance:
       objectReference: {fileID: 7238017163383183095}
     - target: {fileID: 5317380575716178114, guid: 853b20c2a69656e4ea515365b53e5f31, type: 3}
       propertyPath: _showOnlyBaseItems
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 5317380575716178114, guid: 853b20c2a69656e4ea515365b53e5f31, type: 3}
+      propertyPath: _releaseSelectionOnOutsideClick
       value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 5728153888824458638, guid: 853b20c2a69656e4ea515365b53e5f31, type: 3}

@@ -225,15 +225,12 @@ namespace CreativeAI.UI
                 return false;
             }
 
-            UIButtonHoverScaleUtility.ApplyTo(_closeButton);
             _closeButton.onClick.RemoveListener(HideResult);
             _closeButton.onClick.AddListener(HideResult);
 
             if (_craftedItemSlot.TryGetComponent(out SlotFrameView craftedFrame))
                 craftedFrame.SetRole(SlotFrameRole.ItemSet);
             _inventory.SetSelectFirstSlotOnRefresh(false);
-            _inventory.SetReleaseSelectionOnOutsideClick(false);
-            UIButtonHoverScaleUtility.ApplyTo(_craftButton);
             _craftButton.onClick.RemoveListener(StartCraft);
             _craftButton.onClick.AddListener(StartCraft);
             return true;

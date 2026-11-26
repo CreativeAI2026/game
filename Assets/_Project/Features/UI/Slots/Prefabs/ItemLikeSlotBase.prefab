@@ -25,7 +25,7 @@ RectTransform:
   m_GameObject: {fileID: 786438849729399410}
   m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
   m_LocalPosition: {x: 0, y: 0, z: 0}
-  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_LocalScale: {x: 1.05, y: 1.05, z: 1.05}
   m_ConstrainProportionsScale: 0
   m_Children:
   - {fileID: 900000000000000002}
@@ -126,7 +126,6 @@ GameObject:
   - component: {fileID: 9051803583963783315}
   - component: {fileID: 744820331672496521}
   - component: {fileID: 3816955658388976262}
-  - component: {fileID: 490162417409935086}
   - component: {fileID: 6023777252402658441}
   m_Layer: 0
   m_Name: ItemLikeSlotBase
@@ -275,21 +274,6 @@ MonoBehaviour:
   _fitRect: {fileID: 447750045042963376}
   _fillRatio: 0.9
   _emptyAlpha: 0
---- !u!114 &490162417409935086
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1227703057984881157}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 506b0f0d9219431f824c8b56f81b1b02, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: CreativeAI.UI::CreativeAI.UI.SlotHoverView
-  _hoverScale: {fileID: 744820331672496521}
-  _animationTarget: {fileID: 447750045042963376}
-  _restScale: 1.05
 --- !u!114 &6023777252402658441
 MonoBehaviour:
   m_ObjectHideFlags: 0

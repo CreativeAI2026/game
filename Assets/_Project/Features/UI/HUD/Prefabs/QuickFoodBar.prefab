@@ -91,7 +91,6 @@ GameObject:
   - component: {fileID: 4727599329475108949}
   - component: {fileID: 8242714837329203167}
   - component: {fileID: 1740991107383036648}
-  - component: {fileID: 8220098794612172391}
   - component: {fileID: 7994108168212412794}
   - component: {fileID: 5865920083399750121}
   m_Layer: 0
@@ -219,7 +218,7 @@ MonoBehaviour:
   _iconView: {fileID: 8242714837329203167}
   _countBadgeView: {fileID: 5865920083399750121}
   _emptyView: {fileID: 1740991107383036648}
-  _hoverView: {fileID: 8220098794612172391}
+  _hover: {fileID: 4727599329475108949}
   _frameView: {fileID: 7994108168212412794}
 --- !u!114 &4727599329475108949
 MonoBehaviour:
@@ -233,14 +232,14 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 0fed04f0ec157104f93a96edb9a0c946, type: 3}
   m_Name: 
   m_EditorClassIdentifier: CreativeAI.UI::CreativeAI.UI.InventoryUI.HoverScaleOnPointer
-  _group: default
+  _group: equipment-slots
   _lockEnabled: 1
-  _releaseLockOnOutsideClick: 1
-  _hoverScale: 1.2
+  _releaseLockOnOutsideClick: 0
+  _hoverScale: 1.08
   _animationDuration: 0.2
   _hoverScaleEnabled: 1
   _bounceEnabled: 1
-  _bounceHeight: 8
+  _bounceHeight: 0
   _bounceDuration: 0.8
   _targetRect: {fileID: 5339642035684729355}
 --- !u!114 &8242714837329203167
@@ -272,21 +271,6 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: CreativeAI.UI::CreativeAI.UI.SlotEmptyView
   _emptyObject: {fileID: 8042454766642898134}
---- !u!114 &8220098794612172391
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 573249694049819551}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 506b0f0d9219431f824c8b56f81b1b02, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: CreativeAI.UI::CreativeAI.UI.SlotHoverView
-  _hoverScale: {fileID: 4727599329475108949}
-  _animationTarget: {fileID: 5339642035684729355}
-  _restScale: 1.08
 --- !u!114 &7994108168212412794
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -426,7 +410,6 @@ GameObject:
   - component: {fileID: 8826367850676233048}
   - component: {fileID: 4078483840452768434}
   - component: {fileID: 2469794643585132759}
-  - component: {fileID: 8834440004525477795}
   - component: {fileID: 153979705258152058}
   - component: {fileID: 5321646688176686904}
   m_Layer: 0
@@ -554,7 +537,7 @@ MonoBehaviour:
   _iconView: {fileID: 4078483840452768434}
   _countBadgeView: {fileID: 5321646688176686904}
   _emptyView: {fileID: 2469794643585132759}
-  _hoverView: {fileID: 8834440004525477795}
+  _hover: {fileID: 8826367850676233048}
   _frameView: {fileID: 153979705258152058}
 --- !u!114 &8826367850676233048
 MonoBehaviour:
@@ -568,14 +551,14 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 0fed04f0ec157104f93a96edb9a0c946, type: 3}
   m_Name: 
   m_EditorClassIdentifier: CreativeAI.UI::CreativeAI.UI.InventoryUI.HoverScaleOnPointer
-  _group: default
+  _group: equipment-slots
   _lockEnabled: 1
-  _releaseLockOnOutsideClick: 1
-  _hoverScale: 1.2
+  _releaseLockOnOutsideClick: 0
+  _hoverScale: 1.08
   _animationDuration: 0.2
   _hoverScaleEnabled: 1
   _bounceEnabled: 1
-  _bounceHeight: 8
+  _bounceHeight: 0
   _bounceDuration: 0.8
   _targetRect: {fileID: 2722153172890211389}
 --- !u!114 &4078483840452768434
@@ -607,21 +590,6 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: CreativeAI.UI::CreativeAI.UI.SlotEmptyView
   _emptyObject: {fileID: 2947929794480017960}
---- !u!114 &8834440004525477795
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1732809445941887118}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 506b0f0d9219431f824c8b56f81b1b02, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: CreativeAI.UI::CreativeAI.UI.SlotHoverView
-  _hoverScale: {fileID: 8826367850676233048}
-  _animationTarget: {fileID: 2722153172890211389}
-  _restScale: 1.08
 --- !u!114 &153979705258152058
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -845,7 +813,7 @@ RectTransform:
   m_GameObject: {fileID: 2159702749407513462}
   m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
   m_LocalPosition: {x: 0, y: 0, z: 0}
-  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_LocalScale: {x: 1.08, y: 1.08, z: 1.08}
   m_ConstrainProportionsScale: 1
   m_Children:
   - {fileID: 461312162914793738}
@@ -1633,7 +1601,7 @@ RectTransform:
   m_GameObject: {fileID: 6223719603448273826}
   m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
   m_LocalPosition: {x: 0, y: 0, z: 0}
-  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_LocalScale: {x: 1.08, y: 1.08, z: 1.08}
   m_ConstrainProportionsScale: 1
   m_Children:
   - {fileID: 439953636246739010}
@@ -1747,7 +1715,7 @@ RectTransform:
   m_GameObject: {fileID: 6311966059289270172}
   m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
   m_LocalPosition: {x: 0, y: 0, z: 0}
-  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_LocalScale: {x: 1.08, y: 1.08, z: 1.08}
   m_ConstrainProportionsScale: 1
   m_Children:
   - {fileID: 4795797235493468411}
@@ -2465,7 +2433,6 @@ GameObject:
   - component: {fileID: 3423820208052180683}
   - component: {fileID: 618371011844982774}
   - component: {fileID: 399529848453682035}
-  - component: {fileID: 7578805254487538973}
   - component: {fileID: 6417742696781714016}
   - component: {fileID: 7367644296938805180}
   m_Layer: 0
@@ -2593,7 +2560,7 @@ MonoBehaviour:
   _iconView: {fileID: 618371011844982774}
   _countBadgeView: {fileID: 7367644296938805180}
   _emptyView: {fileID: 399529848453682035}
-  _hoverView: {fileID: 7578805254487538973}
+  _hover: {fileID: 3423820208052180683}
   _frameView: {fileID: 6417742696781714016}
 --- !u!114 &3423820208052180683
 MonoBehaviour:
@@ -2607,14 +2574,14 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 0fed04f0ec157104f93a96edb9a0c946, type: 3}
   m_Name: 
   m_EditorClassIdentifier: CreativeAI.UI::CreativeAI.UI.InventoryUI.HoverScaleOnPointer
-  _group: default
+  _group: equipment-slots
   _lockEnabled: 1
-  _releaseLockOnOutsideClick: 1
-  _hoverScale: 1.2
+  _releaseLockOnOutsideClick: 0
+  _hoverScale: 1.08
   _animationDuration: 0.2
   _hoverScaleEnabled: 1
   _bounceEnabled: 1
-  _bounceHeight: 8
+  _bounceHeight: 0
   _bounceDuration: 0.8
   _targetRect: {fileID: 4798786755507297276}
 --- !u!114 &618371011844982774
@@ -2646,21 +2613,6 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: CreativeAI.UI::CreativeAI.UI.SlotEmptyView
   _emptyObject: {fileID: 4516035767401375059}
---- !u!114 &7578805254487538973
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 8465106753310949592}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 506b0f0d9219431f824c8b56f81b1b02, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: CreativeAI.UI::CreativeAI.UI.SlotHoverView
-  _hoverScale: {fileID: 3423820208052180683}
-  _animationTarget: {fileID: 4798786755507297276}
-  _restScale: 1.08
 --- !u!114 &6417742696781714016
 MonoBehaviour:
   m_ObjectHideFlags: 0

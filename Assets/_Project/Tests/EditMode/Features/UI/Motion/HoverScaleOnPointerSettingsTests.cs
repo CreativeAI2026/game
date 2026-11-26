@@ -28,8 +28,8 @@ namespace CreativeAI.Tests.EditMode
         [Test]
         public void Defaults_KeepExistingScaleAndBounceEffectsEnabled()
         {
-            Assert.IsTrue(_hover.HoverScaleEnabled);
-            Assert.IsTrue(_hover.BounceEnabled);
+            Assert.IsTrue(TestReflection.GetField<bool>(_hover, "_hoverScaleEnabled"));
+            Assert.IsTrue(TestReflection.GetField<bool>(_hover, "_bounceEnabled"));
         }
 
         [Test]
@@ -45,7 +45,7 @@ namespace CreativeAI.Tests.EditMode
         [Test]
         public void BounceDisabled_DoesNotCreateBounceTween()
         {
-            _hover.SetBounceEnabled(false);
+            TestReflection.SetField(_hover, "_bounceEnabled", false);
 
             _hover.AcquireLock();
 

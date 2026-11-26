@@ -145,7 +145,6 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: CreativeAI.UI::CreativeAI.UI.TabButton
   _icon: {fileID: 7274215644108975227}
-  _visualTarget: {fileID: 8277293098971955685}
   _selectedBackground: {fileID: 5196584237673690257}
   _selectedUnderline: {fileID: 7158160504706545378}
   _showSelectedUnderline: 1
@@ -186,14 +185,14 @@ MonoBehaviour:
   m_EditorClassIdentifier: CreativeAI.UI::CreativeAI.UI.InventoryUI.HoverScaleOnPointer
   _group: tab
   _lockEnabled: 1
-  _releaseLockOnOutsideClick: 1
+  _releaseLockOnOutsideClick: 0
   _hoverScale: 1.2
   _animationDuration: 0.2
   _hoverScaleEnabled: 1
   _bounceEnabled: 1
   _bounceHeight: 8
   _bounceDuration: 0.8
-  _targetRect: {fileID: 0}
+  _targetRect: {fileID: 8277293098971955685}
 --- !u!114 &1659674524485578055
 MonoBehaviour:
   m_ObjectHideFlags: 0

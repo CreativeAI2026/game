@@ -11,7 +11,6 @@ namespace CreativeAI.UI
     [RequireComponent(typeof(Button), typeof(Image))]
     public class MaterialSlot : BaseItemSlot, IPointerClickHandler
     {
-        private const float SelectedSlotScale = 1.08f;
         private const float EmptyIconAlpha = 0f;
 
         [SerializeField]
@@ -24,7 +23,7 @@ namespace CreativeAI.UI
         private SlotEmptyView _emptyView;
 
         [SerializeField]
-        private SlotHoverView _hoverView;
+        private HoverScaleOnPointer _hover;
 
         [SerializeField]
         private SlotFrameView _frameView;
@@ -37,7 +36,7 @@ namespace CreativeAI.UI
         private readonly HashSet<string> _warnedMissingViews = new();
 
         protected override SlotIconView IconView => _iconView;
-        protected override SlotHoverView HoverView => _hoverView;
+        protected override HoverScaleOnPointer Hover => _hover;
         protected override SlotFrameView FrameView => _frameView;
 
         public event Action<MaterialSlot> Clicked;
@@ -49,7 +48,6 @@ namespace CreativeAI.UI
             if (_iconView != null)
                 _iconView.SetEmptyAlpha(EmptyIconAlpha);
             base.Awake();
-            ConfigureHover();
             Clear();
             SetSelected(false);
         }
@@ -57,7 +55,6 @@ namespace CreativeAI.UI
         public void SetMaterial(ItemStack stack)
         {
             SetItem(stack?.Data, stack == null ? 0 : 1);
-            ConfigureHover();
         }
 
         public void SetMaterialAnimated(ItemStack stack)
@@ -81,7 +78,6 @@ namespace CreativeAI.UI
             Refresh();
             if (_frameView != null)
                 _frameView.SetSelected(_isSelected);
-            ConfigureHover();
         }
 
         public void OnPointerClick(PointerEventData eventData)
@@ -120,18 +116,6 @@ namespace CreativeAI.UI
         {
             StopMaterialAnimation();
             _materialAnimationRoutine = StartCoroutine(PlayMaterialClearedRoutine(onCleared));
-        }
-
-        private void ConfigureHover()
-        {
-            if (_hoverView == null)
-                return;
-
-            _hoverView.Bind();
-            _hoverView.SetGroup("craft-slots");
-            _hoverView.SetHoverScale(SelectedSlotScale);
-            _hoverView.SetBounceHeight(0f);
-            _hoverView.SetReleaseLockOnOutsideClick(false);
         }
 
         private void PlayMaterialChangedAnimation()
@@ -218,7 +202,7 @@ namespace CreativeAI.UI
             WarnIfMissing(_visualRootRect, "VisualRoot");
             WarnIfMissing(_iconView, nameof(SlotIconView));
             WarnIfMissing(_emptyView, nameof(SlotEmptyView));
-            WarnIfMissing(_hoverView, nameof(SlotHoverView));
+            WarnIfMissing(_hover, nameof(HoverScaleOnPointer));
             WarnIfMissing(_frameView, nameof(SlotFrameView));
         }
 
@@ -234,8 +218,8 @@ namespace CreativeAI.UI
                 _iconView = GetComponentInChildren<SlotIconView>(true);
             if (_emptyView == null)
                 _emptyView = GetComponentInChildren<SlotEmptyView>(true);
-            if (_hoverView == null)
-                _hoverView = GetComponentInChildren<SlotHoverView>(true);
+            if (_hover == null)
+                _hover = GetComponentInChildren<HoverScaleOnPointer>(true);
             if (_frameView == null)
                 _frameView = GetComponentInChildren<SlotFrameView>(true);
         }

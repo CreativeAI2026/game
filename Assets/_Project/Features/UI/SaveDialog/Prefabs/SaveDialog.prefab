@@ -1205,6 +1205,18 @@ PrefabInstance:
       propertyPath: m_Colors.m_HighlightedColor.r
       value: 0.9607843
       objectReference: {fileID: 0}
+    - target: {fileID: 4443073888485214325, guid: 9db2efcd6826fdd458ab171bff32a46b, type: 3}
+      propertyPath: _hoverScale
+      value: 1.1
+      objectReference: {fileID: 0}
+    - target: {fileID: 4443073888485214325, guid: 9db2efcd6826fdd458ab171bff32a46b, type: 3}
+      propertyPath: _bounceHeight
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 4443073888485214325, guid: 9db2efcd6826fdd458ab171bff32a46b, type: 3}
+      propertyPath: _releaseLockOnOutsideClick
+      value: 0
+      objectReference: {fileID: 0}
     - target: {fileID: 4508796070087414307, guid: 9db2efcd6826fdd458ab171bff32a46b, type: 3}
       propertyPath: m_Type
       value: 1
