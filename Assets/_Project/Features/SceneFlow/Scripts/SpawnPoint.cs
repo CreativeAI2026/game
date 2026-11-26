@@ -56,17 +56,27 @@ namespace CreativeAI.Gameplay
                         + "シーンに SpawnPoint を置いて ID を合わせてください。"
                 );
 
-            var position = point != null ? point.transform.position : Vector3.zero;
-            var rotation = point != null ? point.transform.rotation : Quaternion.identity;
+            PlaceAt(
+                target,
+                point != null ? point.transform.position : Vector3.zero,
+                point != null ? point.transform.rotation : Quaternion.identity
+            );
+            return point != null;
+        }
 
+        /// <summary>
+        /// 指定の位置・向きへ置く。プレイヤーを動かすときは必ずこれを通す。
+        /// CharacterController は自前で位置を保持していて、そのまま書き換えると次の Move で元の位置へ戻ることがあるので、
+        /// 一旦切ってから動かす。
+        /// </summary>
+        public static void PlaceAt(GameObject target, Vector3 position, Quaternion rotation)
+        {
             bool hasController = target.TryGetComponent(out CharacterController controller);
             if (hasController)
                 controller.enabled = false;
             target.transform.SetPositionAndRotation(position, rotation);
             if (hasController)
                 controller.enabled = true;
-
-            return point != null;
         }
     }
 }

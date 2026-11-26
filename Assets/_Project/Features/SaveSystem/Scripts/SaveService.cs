@@ -202,10 +202,11 @@ namespace CreativeAI.Gameplay
         }
 
         /// <summary>
-        /// 対象シーンのロード完了後に、tag=Player のリグを保存座標・向きへ移し、現在HPを復元する。
+        /// 対象シーンのロード完了後に、今のプレイヤーを保存座標・向きへ移し、武器と現在HPを復元する。
         /// 所持品(装備)の復元が済んだ後に呼ぶこと(最大HPが確定してから HP をクランプするため)。
         /// </summary>
-        public static void RestorePlayerState(SaveData data)
+        /// <param name="restorePosition">保存したシーンとは別のシーンで再開するときは false(座標はそのシーンのものではない)。</param>
+        public static void RestorePlayerState(SaveData data, bool restorePosition = true)
         {
             if (data == null || !data.hasPlayerState)
                 return;
@@ -214,10 +215,12 @@ namespace CreativeAI.Gameplay
             if (player == null)
                 return;
 
-            player.transform.SetPositionAndRotation(
-                new Vector3(data.posX, data.posY, data.posZ),
-                Quaternion.Euler(0f, data.rotationY, 0f)
-            );
+            if (restorePosition)
+                SpawnPoint.PlaceAt(
+                    player.gameObject,
+                    new Vector3(data.posX, data.posY, data.posZ),
+                    Quaternion.Euler(0f, data.rotationY, 0f)
+                );
 
             // 武器を先に復元して最終ステータス(最大HP等)を確定させてから HP をクランプする。
             var weapon = player.GetComponentInChildren<WeaponManager>();
