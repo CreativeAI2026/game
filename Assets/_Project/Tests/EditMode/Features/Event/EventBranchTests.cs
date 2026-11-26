@@ -402,33 +402,5 @@ namespace CreativeAI.Tests.EditMode
                 EventPlaybackService.SetPlaying(false);
             }
         }
-
-        [Test]
-        public void ScopedInjection_RestoresOriginalDependenciesOnException()
-        {
-            var ev = Import(@"{""kind"":""line"",""text"":""再開""}");
-            var go = new GameObject("依存の復元テスト");
-            try
-            {
-                var player = go.AddComponent<EventPlayer>();
-                var original = new MemoryProgress();
-                var view = new View();
-                player.Inject(original, view, new Items());
-                Assert.Throws<InvalidOperationException>(() =>
-                {
-                    using (player.InjectScoped(new MemoryProgress(), new View(), new Items()))
-                        throw new InvalidOperationException("中断を再現");
-                });
-                Drive(player.PlayRoutine(ev));
-                Assert.AreEqual(1, original.Progress);
-                CollectionAssert.AreEqual(new[] { "再開" }, view.Lines);
-            }
-            finally
-            {
-                UnityEngine.Object.DestroyImmediate(ev);
-                UnityEngine.Object.DestroyImmediate(go);
-                EventPlaybackService.SetPlaying(false);
-            }
-        }
     }
 }
