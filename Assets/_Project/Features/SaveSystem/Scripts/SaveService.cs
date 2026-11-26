@@ -11,8 +11,6 @@ namespace CreativeAI.Gameplay
     /// </summary>
     public static class SaveService
     {
-        private const string PlayerTag = "Player";
-
         private static string _directoryOverride;
 
         private static string FilePath =>
@@ -113,10 +111,10 @@ namespace CreativeAI.Gameplay
             return false;
         }
 
-        /// <summary>tag=Player のリグ root から座標・向き・現在HP・現在シーンを取り込む。リグ未生成なら hasPlayerState=false。</summary>
+        /// <summary>今のプレイヤーから座標・向き・現在HP・現在シーンを取り込む。リグ未生成なら hasPlayerState=false。</summary>
         private static void CapturePlayer(SaveData data)
         {
-            var player = GameObject.FindWithTag(PlayerTag);
+            var player = PlayerRegistry.Current;
             if (player == null)
                 return;
 
@@ -205,7 +203,7 @@ namespace CreativeAI.Gameplay
             if (data == null || !data.hasPlayerState)
                 return;
 
-            var player = GameObject.FindWithTag(PlayerTag);
+            var player = PlayerRegistry.Current;
             if (player == null)
                 return;
 

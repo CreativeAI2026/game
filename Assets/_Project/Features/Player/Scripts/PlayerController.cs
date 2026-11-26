@@ -10,7 +10,7 @@ namespace CreativeAI.Gameplay
     /// </summary>
     [RequireComponent(typeof(CharacterController))]
     [RequireComponent(typeof(PlayerInputHandler))]
-    public class PlayerController : MonoBehaviour, IPlayerWalker
+    public class PlayerController : MonoBehaviour
     {
         [Header("プレイヤー")]
         [Tooltip("キャラクターの移動速度 (m/s)")]
