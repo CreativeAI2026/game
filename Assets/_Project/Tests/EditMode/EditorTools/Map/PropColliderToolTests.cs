@@ -65,7 +65,7 @@ namespace CreativeAI.Tests.EditMode
         [Test]
         public void 除外リストのモデルには付けない()
         {
-            var pen = AddMesh("Pen_red_02");
+            var pen = AddMesh("Pen_Red_02");
 
             var r = PropColliderTool.AddColliders(_root, _obstacle);
 
@@ -77,7 +77,7 @@ namespace CreativeAI.Tests.EditMode
         [Test]
         public void 手で付けた当たりがある小物は触らない()
         {
-            var gate = AddMesh("Security gate");
+            var gate = AddMesh("SecurityGate");
             var manual = gate.AddComponent<SphereCollider>();
 
             var r = PropColliderTool.AddColliders(_root, _obstacle);
@@ -182,7 +182,7 @@ namespace CreativeAI.Tests.EditMode
         [TestCase("Chair_03", "Chair")]
         [TestCase("Chair (2)", "Chair")]
         [TestCase("Spoon holder", "Spoon holder")]
-        [TestCase("Bookshelf_2 tiers", "Bookshelf_2 tiers")]
+        [TestCase("Bookshelf_2Tier", "Bookshelf_2Tier")]
         public void Prefabでない小物のモデル名は連番を除いた名前(string name, string expected)
         {
             var go = new GameObject(name);
