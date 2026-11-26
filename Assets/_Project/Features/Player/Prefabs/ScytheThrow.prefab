@@ -5107,7 +5107,7 @@ GameObject:
   - component: {fileID: 3039772435587888657}
   - component: {fileID: 3005109670742047642}
   m_Layer: 8
-  m_Name: SytheThrow
+  m_Name: ScytheThrow
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0

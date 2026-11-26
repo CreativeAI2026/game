@@ -6,6 +6,6 @@ AnimatorOverrideController:
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_Name: SytheAnimationController
+  m_Name: HammerAnimationController
   m_Controller: {fileID: 9100000, guid: f7c5710510bd07b47a8f480a9656c659, type: 2}
   m_Clips: []

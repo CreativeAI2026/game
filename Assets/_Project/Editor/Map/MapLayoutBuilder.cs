@@ -289,7 +289,7 @@ namespace CreativeAI.EditorTools
             };
 
             // 研究棟のモデルから切り出した部品。
-            // 色は元のモデルが Unity で付いていた色に合わせる(赤だけは元のシーンが使っている LabRed 1)。
+            // 色は元のモデルが Unity で付いていた色に合わせる(赤は以前の研究棟のシーンで使っていた色)。
             public static readonly Kit Lab = new Kit
             {
                 WallMaterial = "Lab_Wall",
@@ -299,7 +299,7 @@ namespace CreativeAI.EditorTools
                 FloorColors = new[]
                 {
                     ('B', "Lab_FloorBlue", new Color(0.256f, 0.297f, 0.405f)),
-                    ('R', "LabRed 1", new Color(0.547f, 0.194f, 0.246f)),
+                    ('R', "Lab_FloorRed", new Color(0.547f, 0.194f, 0.246f)),
                     ('Y', "Lab_FloorYellow", new Color(0.62f, 0.612f, 0.243f)),
                 },
                 Panels = new[]
