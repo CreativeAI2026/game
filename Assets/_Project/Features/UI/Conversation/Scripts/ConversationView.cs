@@ -45,6 +45,25 @@ namespace CreativeAI.UI
         public ConversationState State { get; private set; } = ConversationState.Hidden;
         public bool IsAutoMode { get; private set; }
 
+        /// <summary>会話ログを開いているか。</summary>
+        internal bool IsHistoryOpen => _historyPanel != null && _historyPanel.IsOpen;
+
+        /// <summary>プレイヤーの操作でウィンドウを隠しているか。</summary>
+        internal bool IsWindowHidden => _windowManuallyHidden;
+
+        /// <summary>入手表示を出しているか。</summary>
+        internal bool IsRewardShowing => _rewardPresentationActive;
+
+        /// <summary>今の文字送りの速さ。</summary>
+        internal TextSpeed CurrentTextSpeed => _textSpeed;
+
+        /// <summary>選択肢・持ち物ピッカーへキー入力を渡す。</summary>
+        internal void HandleChoiceKeys()
+        {
+            _choices.HandleKeyboardInput();
+            _itemPicker?.HandleKeyboardInput();
+        }
+
         [Header("部品")]
         [SerializeField]
         private DialoguePortraitView _portraits;
@@ -213,34 +232,17 @@ namespace CreativeAI.UI
                 _autoModeLabel
             );
             _inputController ??= new ConversationInputController(
+                this,
                 _controlsPresenter,
                 _chromePresenter,
-                _advanceController,
-                () => State,
-                () => _historyPanel != null && _historyPanel.IsOpen,
-                () => _windowManuallyHidden,
-                () => _rewardPresentationActive,
-                () => IsAutoMode,
-                () => _textSpeed,
-                SetAutoMode,
-                SetWindowHidden,
-                SetTextSpeed,
-                () =>
-                {
-                    _choices.HandleKeyboardInput();
-                    _itemPicker?.HandleKeyboardInput();
-                }
+                _advanceController
             );
             _backdropPresenter ??= new DialogueBackdropPresenter(
                 _root != null ? _root.transform : transform
             );
             _presentationCommandRouter ??= new DialoguePresentationCommandRouter(
-                SetWindowHidden,
-                SetPortraitVisible,
-                SetPortraitObscured,
-                PlayPortraitEffect,
-                () => HideAnimated(),
-                key => _portraits.ShowByKey(key),
+                this,
+                _portraits,
                 new DialogueStageCommands(_backdropPresenter, FindSound, FindBackground)
             );
             _chromePresenter.EnsureView();
@@ -339,7 +341,7 @@ namespace CreativeAI.UI
             {
                 bool blocked =
                     _windowManuallyHidden
-                    || (_historyPanel != null && _historyPanel.IsOpen)
+                    || IsHistoryOpen
                     || Time.unscaledTime < _advanceBlockedUntil;
                 if (!blocked)
                 {
@@ -619,7 +621,7 @@ namespace CreativeAI.UI
                 () => allowAuto && IsAutoMode && !_windowManuallyHidden,
                 () => _skipMode || DialogueDebugSkip.Active,
                 () => _windowManuallyHidden || Time.unscaledTime < _advanceBlockedUntil,
-                () => _historyPanel != null && _historyPanel.IsOpen,
+                () => IsHistoryOpen,
                 _autoAdvanceDelay
             );
             _chromePresenter.StopBounce();
