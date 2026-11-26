@@ -8,7 +8,7 @@ namespace CreativeAI.Gameplay
     /// 掴んでいた敵が <see cref="TriggerEscape"/> を呼ぶ。
     /// 敵にはじき返された時も同じモーションと後退を使う(<see cref="TriggerRepelled"/>)。
     ///
-    /// 脱出クリップ(Escaped_InPlace)は水平移動を切ってあるため、後退はここで CharacterController を動かして行う。
+    /// 脱出クリップ(Armature_Escape_InPlace)は水平移動を切ってあるため、後退はここで CharacterController を動かして行う。
     /// 足の運びと移動がずれないよう、距離と時間は元クリップのルート移動に合わせてある。
     /// 後退中は全操作を制限する。重力は PlayerController が制限中もかけ続けるので、ここでは水平移動だけを扱う。
     /// </summary>
