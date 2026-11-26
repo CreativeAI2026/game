@@ -8,7 +8,7 @@ namespace CreativeAI.Gameplay
     /// 通常の被弾で怯む時は TBossFlinchState(Flinch モーション)を使う。
     /// 崩れている間は顔向けも切れるため（IsHeadAimActive が false）、プレイヤーは反撃するか視界から抜けるかを選べる。
     ///
-    /// Parried のクリップ(TBoss_Escaped_InPlace)は腰の後退移動を切ってあるため、後退はここで NavMeshAgent を動かして行う。
+    /// Parried のクリップ(TBoss_Parried)は腰の後退移動を切ってあるため、後退はここで NavMeshAgent を動かして行う。
     /// 距離と区間は元クリップの腰の移動に合わせてある(足の運びと移動がずれないように)。
     /// </summary>
     public class TBossParriedState : TBossBaseState

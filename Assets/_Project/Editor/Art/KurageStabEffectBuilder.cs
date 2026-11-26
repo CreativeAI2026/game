@@ -31,9 +31,9 @@ namespace CreativeAI.EditorTools
         private const string LogPrefix = "[KurageStabEffectBuilder]";
 
         private const string ShaderName = "CreativeAI/KurageHolyGlow";
-        private const string MaterialFolder = "Assets/_Project/Art/Materials/Particles";
-        private const string PrefabParentFolder = "Assets/_Project/Art/VFX";
-        private const string PrefabFolderName = "KurageBoss";
+        private const string MaterialFolder = "Assets/_Project/Art/Characters/KurageBoss/Materials";
+        private const string PrefabParentFolder = "Assets/_Project/Art/Characters/KurageBoss";
+        private const string PrefabFolderName = "VFX";
         private const string PrefabFolder = PrefabParentFolder + "/" + PrefabFolderName;
         private const string GatherPath = PrefabFolder + "/KurageStabGather.prefab";
         private const string GlintPath = PrefabFolder + "/KurageStabGlint.prefab";

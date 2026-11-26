@@ -24,8 +24,8 @@ namespace CreativeAI.EditorTools
         const float FloorSlabThickness = 0.4f;
 
         const string ScenePath = "Assets/_Project/Scenes/Field/Field_Area01.unity";
-        const string EnvDir = "Assets/_Project/Art/Models/Environment";
-        const string MaterialDir = "Assets/_Project/Art/Materials";
+        const string EnvDir = "Assets/_Project/Art/Environment/Models";
+        const string MaterialDir = "Assets/_Project/Art/Environment/Materials";
         const string MapRootName = "Map";
         const string CeilingName = "Ceiling";
 
@@ -125,7 +125,7 @@ namespace CreativeAI.EditorTools
         // 扉の周りは**壁ではなくガラス**で埋める(袖・垂れ壁)。厚みは `$` の当たりと同じにして
         // 隣のガラス板と面が揃うようにする。見た目は `$` のモデルを開口の外だけ切り出して重ねる。
         const float DoorGlassThickness = GlassColliderThickness;
-        const string GlassMaterialPath = "Assets/_Project/Art/Materials/Glass.mat";
+        const string GlassMaterialPath = "Assets/_Project/Art/Environment/Materials/Glass.mat";
 
         // 扉 `R` `C` `L`。実寸は glb を Scale 1 で置いたときの枠の外形(原点は開口の中心・床面)。
         // 制御パネルは枠の外へ少しはみ出すが外形に含めない。含めると、パネルの無い高さで

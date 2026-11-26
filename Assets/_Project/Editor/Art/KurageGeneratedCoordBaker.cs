@@ -5,13 +5,13 @@ using UnityEngine;
 namespace CreativeAI.EditorTools
 {
     /// <summary>
-    /// クラゲボス(Boss02)のFBXを読み込むとき、Blender の「テクスチャ座標 > 生成」に当たる座標を UV3 に書き込む AssetPostprocessor。
+    /// クラゲボスのFBXを読み込むとき、Blender の「テクスチャ座標 > 生成」に当たる座標を UV3 に書き込む AssetPostprocessor。
     /// 生成座標は変形前のメッシュの範囲を 0〜1 に収めたもので、KurageNoiseGradient.shadergraph がノイズの入力に使う。
     /// シェーダーの Object 座標を使わないのは、スキンメッシュでは骨の動きで座標が変わり、模様が体の上を流れてしまうため。
     /// </summary>
     public sealed class KurageGeneratedCoordBaker : AssetPostprocessor
     {
-        private const string TargetFolder = "Assets/_Project/Art/Models/Characters/Enemies/Boss02/";
+        private const string TargetFolder = "Assets/_Project/Art/Characters/KurageBoss/Models/";
 
         // KurageNoiseGradient.shadergraph の UV ノードと揃える。UV1/UV2 はライトマップ用に空けておく。
         private const int GeneratedCoordUvChannel = 3;
