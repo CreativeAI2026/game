@@ -17,7 +17,7 @@ namespace CreativeAI.Tests.EditMode
         {
             // 例(station_awakening)がそのまま取り込めることを担保する。
             // 地の文(portrait 省略) / ？？？ + obscure・reveal / 演出タグ / battle / giveWeapon + message /
-            // choice まで一通り含む。battle は敵を書かず { "kind": "battle" } のみ(敵は EventTrigger に配線)。
+            // choice まで一通り含む。battle は敵を書かず arena(ボスシーンの BattleArena の名前)だけを書く。
             const string json =
                 @"{ ""events"": [ {
                     ""id"": ""station_awakening"",
@@ -29,7 +29,7 @@ namespace CreativeAI.Tests.EditMode
                         { ""kind"": ""line"", ""speaker"": ""？？？"", ""portrait"": ""girl_fear"",
                           ""text"": ""<whisper>あの……倒れていたあなたを運んだのは、その子です。</whisper>"" },
                         { ""kind"": ""command"", ""command"": ""portrait.right.reveal"" },
-                        { ""kind"": ""battle"" },
+                        { ""kind"": ""battle"", ""arena"": ""boss_arena"" },
                         { ""kind"": ""command"", ""command"": ""portrait.left.jump"" },
                         { ""kind"": ""line"", ""portrait"": ""hero_surprised"",
                           ""text"": ""<wait=0.25><shake><shout>蓄音機までしゃべるのか……。</shout></shake>"" },
@@ -55,6 +55,7 @@ namespace CreativeAI.Tests.EditMode
             Assert.IsTrue(string.IsNullOrEmpty(def.Steps[0].Portrait));
             Assert.AreEqual("portrait.right.obscure", def.Steps[2].CommandName);
             Assert.AreEqual(StepKind.Battle, def.Steps[5].Kind);
+            Assert.AreEqual("boss_arena", def.Steps[5].ArenaId);
             Assert.AreEqual("錆びた鎌を手に入れた。", def.Steps[8].Message);
             Assert.AreEqual("girl_choice", def.Steps[9].FlagKey);
             Assert.AreEqual(2, def.Steps[9].Options.Count);
@@ -358,7 +359,7 @@ namespace CreativeAI.Tests.EditMode
                     ""conditions"": [ { ""type"": ""progress"", ""value"": 0 } ],
                     ""steps"": [
                         { ""kind"": ""line"", ""portrait"": ""hero_normal"", ""text"": ""a"" },
-                        { ""kind"": ""battle"" },
+                        { ""kind"": ""battle"", ""arena"": ""boss_arena"" },
                         { ""kind"": ""line"", ""portrait"": ""hero_normal"", ""text"": ""b"" } ] } ] }";
 
             var report = EventImporter.Parse(json);
@@ -614,6 +615,28 @@ namespace CreativeAI.Tests.EditMode
         }
 
         [Test]
+        public void Parse_BattleWithoutArena_IsError()
+        {
+            const string json =
+                @"{ ""events"": [ {
+                    ""id"": ""no_arena"",
+                    ""conditions"": [ { ""type"": ""progress"", ""value"": 1 } ],
+                    ""steps"": [
+                        { ""kind"": ""line"", ""portrait"": ""hero_normal"", ""text"": ""来い"" },
+                        { ""kind"": ""battle"" },
+                        { ""kind"": ""line"", ""portrait"": ""hero_normal"", ""text"": ""終わり"" }
+                    ],
+                    ""nextProgress"": 2
+                } ] }";
+
+            var report = EventImporter.Parse(json);
+
+            Assert.IsTrue(report.HasErrors);
+            Assert.AreEqual(0, report.Events.Count);
+            Assert.IsTrue(report.Diagnostics.Any(d => d.Message.Contains("arena")));
+        }
+
+        [Test]
         public void Parse_MultipleBattles_IsError()
         {
             // battle は1イベントにつき最大1つ。
@@ -623,9 +646,9 @@ namespace CreativeAI.Tests.EditMode
                     ""conditions"": [ { ""type"": ""progress"", ""value"": 1 } ],
                     ""steps"": [
                         { ""kind"": ""line"", ""portrait"": ""hero_normal"", ""text"": ""a"" },
-                        { ""kind"": ""battle"" },
+                        { ""kind"": ""battle"", ""arena"": ""boss_arena"" },
                         { ""kind"": ""line"", ""portrait"": ""hero_normal"", ""text"": ""b"" },
-                        { ""kind"": ""battle"" },
+                        { ""kind"": ""battle"", ""arena"": ""boss_arena"" },
                         { ""kind"": ""line"", ""portrait"": ""hero_normal"", ""text"": ""c"" }
                     ],
                     ""nextProgress"": 2
@@ -664,7 +687,7 @@ namespace CreativeAI.Tests.EditMode
                     ""id"": ""bad_battle"",
                     ""conditions"": [ { ""type"": ""progress"", ""value"": 0 } ],
                     ""steps"": [
-                        { ""kind"": ""battle"" },
+                        { ""kind"": ""battle"", ""arena"": ""boss_arena"" },
                         { ""kind"": ""line"", ""portrait"": ""hero_normal"", ""text"": ""終わり"" }
                     ],
                     ""nextProgress"": 1

@@ -11,15 +11,17 @@ namespace CreativeAI.Gameplay
     /// 入口に立った瞬間ではなく、箱の縁から <see cref="_entryDepth"/> 以上奥へ入ってから始める
     /// (戦闘開始で閉じる扉・柵(<see cref="BattleArenaLock"/>)にプレイヤーが重なり、外へ押し出されないように)。
     ///
-    /// 会話イベントの battle ステップ(EventPlayer)は敵をプレハブから新しく生成するため、
-    /// シーンに置いて調整済みのボス(周回の基準をシーン内で割り当てるクラゲなど)を使えない。
-    /// そうしたボスはシーンに置いてこの戦闘エリアに登録し、ここから直接モードを切り替える。
+    /// 会話イベントの battle ステップから始めるときは <see cref="_arenaId"/> に名前を付ける。
+    /// 名前付きのエリアは入口に立っても始まらず、イベントが <see cref="StartFromEvent"/> を呼んだときだけ始まる
+    /// (入口の判定との二重開始を避けるため)。
+    /// 倒した後に再戦できるよう、同じボスを使い回さず、戦闘ごとに敵とエリアを置く。
     /// </summary>
     // 敵の Awake/Start より先に隠す。Start が走る前に隠せば、表示した時点で初めて動き出す(クラゲは Start で攻撃を始めるため)。
     [DefaultExecutionOrder(-1000)]
     [RequireComponent(typeof(BoxCollider))]
     public sealed class BattleArena : MonoBehaviour
     {
+        private static readonly List<BattleArena> Registered = new();
         private static readonly Color GizmoColor = new Color(1f, 0.35f, 0.2f, 0.25f);
         private static readonly Color EntryGizmoColor = new Color(1f, 0.35f, 0.2f, 0.9f);
 
@@ -29,6 +31,12 @@ namespace CreativeAI.Gameplay
 
         [SerializeField]
         private string _playerTag = "Player";
+
+        [Tooltip(
+            "会話イベントの battle ステップ(events.json の arena)が呼ぶ名前。空なら入口に入ると始まる通常の戦闘エリア。名前を付けるとイベントからだけ始まり、入口の判定では始まらない"
+        )]
+        [SerializeField]
+        private string _arenaId = "";
 
         [Tooltip(
             "箱の縁(水平方向)からこの距離(m)以上奥へ入ったら戦闘を始める。Scene ビューの濃い線の内側が始まる範囲"
@@ -43,6 +51,8 @@ namespace CreativeAI.Gameplay
 
         /// <summary>戦闘を始めた(敵を出した)か。決着後も true のまま。</summary>
         public bool HasStarted { get; private set; }
+
+        private bool IsEventDriven => !string.IsNullOrEmpty(_arenaId);
 
         /// <summary>戦闘を始めた瞬間(敵を出して戦闘モードにした直後)。</summary>
         public event Action BattleStarted;
@@ -59,6 +69,8 @@ namespace CreativeAI.Gameplay
         private void Awake()
         {
             _box = GetComponent<BoxCollider>();
+            if (IsEventDriven)
+                Registered.Add(this);
             Assert.IsTrue(_enemies.Length > 0, $"{name}: 出す敵が1体も設定されていません");
             Assert.IsTrue(_box.isTrigger, $"{name}: BoxCollider の Is Trigger がオフです");
 
@@ -96,8 +108,28 @@ namespace CreativeAI.Gameplay
 
         private void Update()
         {
-            if (!HasStarted && _playerInside != null && IsDeepEnough(_playerInside.position))
+            if (
+                !IsEventDriven
+                && !HasStarted
+                && _playerInside != null
+                && IsDeepEnough(_playerInside.position)
+            )
                 StartBattle();
+        }
+
+        /// <summary>名前(events.json の arena)で戦闘エリアを探す。無ければ null。</summary>
+        public static BattleArena Find(string arenaId) =>
+            Registered.Find(arena => arena._arenaId == arenaId);
+
+        /// <summary>
+        /// 会話イベントから戦闘を始める。すでに始めていれば何もせず false を返す。
+        /// </summary>
+        public bool StartFromEvent()
+        {
+            if (HasStarted)
+                return false;
+            StartBattle();
+            return true;
         }
 
         private bool IsDeepEnough(Vector3 worldPosition)
@@ -111,6 +143,7 @@ namespace CreativeAI.Gameplay
 
         private void OnDestroy()
         {
+            Registered.Remove(this);
             foreach (var status in _aliveEnemies)
             {
                 if (status != null)

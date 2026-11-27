@@ -90,6 +90,27 @@ namespace CreativeAI.Tests.PlayMode
         }
 
         [UnityTest]
+        public IEnumerator ReturnToTitle_LoadsTitle_AndRemovesThePlayerAndCamera()
+        {
+            Assert.IsTrue(GameStarter.EnsureSession(out var config));
+            var cameraRig = GameSession.EnsureCameraRig(config.cameraRigPrefab);
+            var player = GameSession.EnsurePlayerRig(config.playerRigPrefab);
+            yield return null;
+
+            TitleReturnService.Current.ReturnToTitle();
+            yield return PlayModeWait.Until(
+                () => player == null && cameraRig == null,
+                "倒れたプレイヤーとカメラを次の開始へ持ち越さない"
+            );
+
+            Assert.AreEqual(
+                "Title",
+                UnityEngine.SceneManagement.SceneManager.GetActiveScene().name
+            );
+            Assert.IsNull(PlayerRegistry.Current);
+        }
+
+        [UnityTest]
         public IEnumerator Residents_SurviveASceneLoad()
         {
             // セッション常駐はフィールド間のエリア遷移をまたぐ(DontDestroyOnLoad)。

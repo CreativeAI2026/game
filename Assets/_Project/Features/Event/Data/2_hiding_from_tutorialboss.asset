@@ -33,6 +33,7 @@ MonoBehaviour:
     _options: []
     _itemKey: 
     _weaponKey: 
+    _arenaId: 
     _message: 
     _command: 
     _arg: 
@@ -55,6 +56,7 @@ MonoBehaviour:
     _options: []
     _itemKey: 
     _weaponKey: 
+    _arenaId: 
     _message: 
     _command: 
     _arg: 
@@ -77,6 +79,7 @@ MonoBehaviour:
     _options: []
     _itemKey: 
     _weaponKey: 
+    _arenaId: 
     _message: 
     _command: 
     _arg: 
@@ -100,6 +103,7 @@ MonoBehaviour:
     _options: []
     _itemKey: 
     _weaponKey: 
+    _arenaId: 
     _message: 
     _command: 
     _arg: 
@@ -122,6 +126,7 @@ MonoBehaviour:
     _options: []
     _itemKey: 
     _weaponKey: 
+    _arenaId: 
     _message: 
     _command: 
     _arg: 
@@ -144,6 +149,7 @@ MonoBehaviour:
     _options: []
     _itemKey: 
     _weaponKey: 
+    _arenaId: 
     _message: 
     _command: 
     _arg: 
@@ -166,7 +172,31 @@ MonoBehaviour:
     _options: []
     _itemKey: 
     _weaponKey: 
+    _arenaId: 
     _message: 
+    _command: 
+    _arg: 
+    _cases: []
+    _thenTarget: 0
+    _elseTarget: 0
+    _joinTarget: 0
+    _accept: []
+    _consume: 0
+    _prompt: 
+    _endOnWrong: 0
+    _usedText: 
+    _cancelText: 
+  - _kind: 3
+    _speaker: 
+    _portrait: 
+    _text: 
+    _flagKey: 
+    _flagValue: 
+    _options: []
+    _itemKey: 
+    _weaponKey: sword
+    _arenaId: 
+    _message: "\u300C\u30AB\u30C3\u30BF\u30FC\u306E\u5263\u300D\u3092\u624B\u306B\u5165\u308C\u305F\u3002"
     _command: 
     _arg: 
     _cases: []
@@ -188,6 +218,7 @@ MonoBehaviour:
     _options: []
     _itemKey: 
     _weaponKey: 
+    _arenaId: 
     _message: 
     _command: 
     _arg: 
@@ -211,6 +242,7 @@ MonoBehaviour:
     _options: []
     _itemKey: 
     _weaponKey: 
+    _arenaId: 
     _message: 
     _command: 
     _arg: 
@@ -234,6 +266,7 @@ MonoBehaviour:
     _options: []
     _itemKey: 
     _weaponKey: 
+    _arenaId: 
     _message: 
     _command: 
     _arg: 
@@ -257,6 +290,7 @@ MonoBehaviour:
     _options: []
     _itemKey: 
     _weaponKey: 
+    _arenaId: 
     _message: 
     _command: 
     _arg: 
@@ -273,12 +307,13 @@ MonoBehaviour:
   - _kind: 0
     _speaker: 
     _portrait: hero_anger
-    _text: "\u300C\u5F85\u3063\u3066\u308D\u3088\u30C7\u30AB\u30D6\u30C4\u3002\u300D"
+    _text: "\u300C\u5F85\u3063\u3066\u308D\u3088\u3002\u300D"
     _flagKey: 
     _flagValue: 
     _options: []
     _itemKey: 
     _weaponKey: 
+    _arenaId: 
     _message: 
     _command: 
     _arg: 

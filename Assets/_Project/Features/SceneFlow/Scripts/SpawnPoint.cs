@@ -8,11 +8,16 @@ namespace CreativeAI.Gameplay
     /// </summary>
     public sealed class SpawnPoint : MonoBehaviour
     {
-        /// <summary>「はじめる」で置く開始位置の ID。</summary>
+        /// <summary>開発用の直接再生と「続きから」の再開で置く開始位置の ID。</summary>
         public const string StartId = "start";
 
+        /// <summary>「はじめから」だけで使う開始位置の ID。無いシーンでは <see cref="StartId"/> を使う。</summary>
+        public const string NewGameId = "new_game";
+
         [SerializeField]
-        [Tooltip("到着位置の ID。そのシーン内で一意。「はじめる」の開始位置は start")]
+        [Tooltip(
+            "到着位置の ID。そのシーン内で一意。「はじめから」の開始位置は new_game(無いシーンは start)"
+        )]
         private string _id = StartId;
 
         /// <summary>ロード済みのシーンから ID で探す。無ければ null。</summary>

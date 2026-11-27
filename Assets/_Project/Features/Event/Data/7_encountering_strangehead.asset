@@ -33,6 +33,7 @@ MonoBehaviour:
     _options: []
     _itemKey: 
     _weaponKey: 
+    _arenaId: 
     _message: 
     _command: 
     _arg: 
@@ -55,6 +56,7 @@ MonoBehaviour:
     _options: []
     _itemKey: 
     _weaponKey: 
+    _arenaId: 
     _message: 
     _command: 
     _arg: 
@@ -77,6 +79,7 @@ MonoBehaviour:
     _options: []
     _itemKey: 
     _weaponKey: 
+    _arenaId: 
     _message: 
     _command: 
     _arg: 
@@ -99,6 +102,7 @@ MonoBehaviour:
     _options: []
     _itemKey: 
     _weaponKey: 
+    _arenaId: 
     _message: 
     _command: 
     _arg: 
@@ -121,6 +125,7 @@ MonoBehaviour:
     _options: []
     _itemKey: 
     _weaponKey: 
+    _arenaId: 
     _message: 
     _command: 
     _arg: 
@@ -143,6 +148,7 @@ MonoBehaviour:
     _options: []
     _itemKey: 
     _weaponKey: 
+    _arenaId: 
     _message: 
     _command: 
     _arg: 
@@ -165,6 +171,7 @@ MonoBehaviour:
     _options: []
     _itemKey: 
     _weaponKey: 
+    _arenaId: 
     _message: 
     _command: 
     _arg: 
@@ -187,6 +194,7 @@ MonoBehaviour:
     _options: []
     _itemKey: 
     _weaponKey: 
+    _arenaId: 
     _message: 
     _command: 
     _arg: 
@@ -209,6 +217,7 @@ MonoBehaviour:
     _options: []
     _itemKey: 
     _weaponKey: 
+    _arenaId: 
     _message: 
     _command: 
     _arg: 
@@ -232,6 +241,7 @@ MonoBehaviour:
     _options: []
     _itemKey: 
     _weaponKey: 
+    _arenaId: 
     _message: 
     _command: 
     _arg: 
@@ -254,6 +264,7 @@ MonoBehaviour:
     _options: []
     _itemKey: 
     _weaponKey: 
+    _arenaId: 
     _message: 
     _command: 
     _arg: 
@@ -276,6 +287,7 @@ MonoBehaviour:
     _options: []
     _itemKey: 
     _weaponKey: 
+    _arenaId: 
     _message: 
     _command: 
     _arg: 
@@ -298,6 +310,7 @@ MonoBehaviour:
     _options: []
     _itemKey: 
     _weaponKey: 
+    _arenaId: 
     _message: 
     _command: 
     _arg: 
@@ -320,6 +333,7 @@ MonoBehaviour:
     _options: []
     _itemKey: 
     _weaponKey: 
+    _arenaId: 
     _message: 
     _command: 
     _arg: 
@@ -342,6 +356,7 @@ MonoBehaviour:
     _options: []
     _itemKey: 
     _weaponKey: 
+    _arenaId: 
     _message: 
     _command: 
     _arg: 
@@ -364,6 +379,7 @@ MonoBehaviour:
     _options: []
     _itemKey: 
     _weaponKey: 
+    _arenaId: 
     _message: 
     _command: 
     _arg: 
@@ -386,6 +402,7 @@ MonoBehaviour:
     _options: []
     _itemKey: 
     _weaponKey: 
+    _arenaId: 
     _message: 
     _command: 
     _arg: 
@@ -409,6 +426,7 @@ MonoBehaviour:
     _options: []
     _itemKey: 
     _weaponKey: 
+    _arenaId: 
     _message: 
     _command: 
     _arg: 
@@ -431,6 +449,7 @@ MonoBehaviour:
     _options: []
     _itemKey: 
     _weaponKey: 
+    _arenaId: 
     _message: 
     _command: 
     _arg: 
@@ -454,6 +473,7 @@ MonoBehaviour:
     _options: []
     _itemKey: 
     _weaponKey: 
+    _arenaId: 
     _message: 
     _command: 
     _arg: 
@@ -476,6 +496,7 @@ MonoBehaviour:
     _options: []
     _itemKey: 
     _weaponKey: 
+    _arenaId: 
     _message: 
     _command: 
     _arg: 
@@ -499,6 +520,7 @@ MonoBehaviour:
     _options: []
     _itemKey: 
     _weaponKey: 
+    _arenaId: 
     _message: 
     _command: 
     _arg: 
@@ -522,6 +544,7 @@ MonoBehaviour:
     _options: []
     _itemKey: 
     _weaponKey: 
+    _arenaId: 
     _message: 
     _command: 
     _arg: 
@@ -544,6 +567,7 @@ MonoBehaviour:
     _options: []
     _itemKey: 
     _weaponKey: 
+    _arenaId: 
     _message: 
     _command: 
     _arg: 
@@ -567,6 +591,7 @@ MonoBehaviour:
     _options: []
     _itemKey: 
     _weaponKey: 
+    _arenaId: 
     _message: 
     _command: 
     _arg: 
@@ -593,6 +618,7 @@ MonoBehaviour:
       _value: notknow
     _itemKey: 
     _weaponKey: 
+    _arenaId: 
     _message: 
     _command: 
     _arg: 
@@ -615,6 +641,7 @@ MonoBehaviour:
     _options: []
     _itemKey: 
     _weaponKey: 
+    _arenaId: 
     _message: 
     _command: 
     _arg: 
@@ -641,6 +668,7 @@ MonoBehaviour:
     _options: []
     _itemKey: 
     _weaponKey: 
+    _arenaId: 
     _message: 
     _command: 
     _arg: 
@@ -663,6 +691,7 @@ MonoBehaviour:
     _options: []
     _itemKey: 
     _weaponKey: 
+    _arenaId: 
     _message: 
     _command: 
     _arg: 
@@ -685,6 +714,7 @@ MonoBehaviour:
     _options: []
     _itemKey: 
     _weaponKey: 
+    _arenaId: 
     _message: 
     _command: 
     _arg: 
@@ -707,6 +737,7 @@ MonoBehaviour:
     _options: []
     _itemKey: 
     _weaponKey: 
+    _arenaId: 
     _message: 
     _command: 
     _arg: 
@@ -730,6 +761,7 @@ MonoBehaviour:
     _options: []
     _itemKey: 
     _weaponKey: 
+    _arenaId: 
     _message: 
     _command: 
     _arg: 
@@ -752,6 +784,7 @@ MonoBehaviour:
     _options: []
     _itemKey: 
     _weaponKey: 
+    _arenaId: 
     _message: 
     _command: 
     _arg: 
@@ -774,6 +807,7 @@ MonoBehaviour:
     _options: []
     _itemKey: 
     _weaponKey: 
+    _arenaId: 
     _message: 
     _command: 
     _arg: 
@@ -797,6 +831,7 @@ MonoBehaviour:
     _options: []
     _itemKey: 
     _weaponKey: 
+    _arenaId: 
     _message: 
     _command: 
     _arg: 
@@ -819,6 +854,7 @@ MonoBehaviour:
     _options: []
     _itemKey: 
     _weaponKey: 
+    _arenaId: 
     _message: 
     _command: 
     _arg: 
@@ -841,6 +877,7 @@ MonoBehaviour:
     _options: []
     _itemKey: 
     _weaponKey: 
+    _arenaId: 
     _message: 
     _command: 
     _arg: 
@@ -865,6 +902,7 @@ MonoBehaviour:
     _options: []
     _itemKey: 
     _weaponKey: 
+    _arenaId: 
     _message: 
     _command: 
     _arg: 
@@ -887,6 +925,7 @@ MonoBehaviour:
     _options: []
     _itemKey: 
     _weaponKey: 
+    _arenaId: 
     _message: 
     _command: 
     _arg: 
@@ -909,6 +948,7 @@ MonoBehaviour:
     _options: []
     _itemKey: 
     _weaponKey: 
+    _arenaId: 
     _message: 
     _command: 
     _arg: 
@@ -935,6 +975,7 @@ MonoBehaviour:
       _value: notsame
     _itemKey: 
     _weaponKey: 
+    _arenaId: 
     _message: 
     _command: 
     _arg: 
@@ -957,6 +998,7 @@ MonoBehaviour:
     _options: []
     _itemKey: 
     _weaponKey: 
+    _arenaId: 
     _message: 
     _command: 
     _arg: 
@@ -983,6 +1025,7 @@ MonoBehaviour:
     _options: []
     _itemKey: 
     _weaponKey: 
+    _arenaId: 
     _message: 
     _command: 
     _arg: 
@@ -1005,6 +1048,7 @@ MonoBehaviour:
     _options: []
     _itemKey: 
     _weaponKey: 
+    _arenaId: 
     _message: 
     _command: 
     _arg: 
@@ -1027,6 +1071,7 @@ MonoBehaviour:
     _options: []
     _itemKey: 
     _weaponKey: 
+    _arenaId: 
     _message: 
     _command: 
     _arg: 
@@ -1049,6 +1094,7 @@ MonoBehaviour:
     _options: []
     _itemKey: 
     _weaponKey: 
+    _arenaId: 
     _message: 
     _command: 
     _arg: 
@@ -1071,6 +1117,7 @@ MonoBehaviour:
     _options: []
     _itemKey: 
     _weaponKey: 
+    _arenaId: 
     _message: 
     _command: 
     _arg: 
@@ -1094,6 +1141,7 @@ MonoBehaviour:
     _options: []
     _itemKey: 
     _weaponKey: 
+    _arenaId: 
     _message: 
     _command: 
     _arg: 
@@ -1116,6 +1164,7 @@ MonoBehaviour:
     _options: []
     _itemKey: 
     _weaponKey: 
+    _arenaId: 
     _message: 
     _command: 
     _arg: 
@@ -1138,6 +1187,7 @@ MonoBehaviour:
     _options: []
     _itemKey: 
     _weaponKey: 
+    _arenaId: 
     _message: 
     _command: 
     _arg: 
@@ -1161,6 +1211,7 @@ MonoBehaviour:
     _options: []
     _itemKey: 
     _weaponKey: 
+    _arenaId: 
     _message: 
     _command: 
     _arg: 
@@ -1183,6 +1234,7 @@ MonoBehaviour:
     _options: []
     _itemKey: 
     _weaponKey: 
+    _arenaId: 
     _message: 
     _command: 
     _arg: 
@@ -1205,6 +1257,7 @@ MonoBehaviour:
     _options: []
     _itemKey: 
     _weaponKey: 
+    _arenaId: 
     _message: 
     _command: 
     _arg: 
@@ -1227,6 +1280,7 @@ MonoBehaviour:
     _options: []
     _itemKey: 
     _weaponKey: 
+    _arenaId: 
     _message: 
     _command: 
     _arg: 
@@ -1249,6 +1303,7 @@ MonoBehaviour:
     _options: []
     _itemKey: 
     _weaponKey: 
+    _arenaId: 
     _message: 
     _command: 
     _arg: 
@@ -1272,6 +1327,7 @@ MonoBehaviour:
     _options: []
     _itemKey: 
     _weaponKey: 
+    _arenaId: 
     _message: 
     _command: 
     _arg: 
@@ -1295,6 +1351,7 @@ MonoBehaviour:
     _options: []
     _itemKey: 
     _weaponKey: 
+    _arenaId: 
     _message: 
     _command: 
     _arg: 
@@ -1317,6 +1374,7 @@ MonoBehaviour:
     _options: []
     _itemKey: 
     _weaponKey: 
+    _arenaId: 
     _message: 
     _command: 
     _arg: 
@@ -1340,6 +1398,7 @@ MonoBehaviour:
     _options: []
     _itemKey: 
     _weaponKey: 
+    _arenaId: 
     _message: 
     _command: 
     _arg: 
@@ -1362,6 +1421,7 @@ MonoBehaviour:
     _options: []
     _itemKey: 
     _weaponKey: 
+    _arenaId: 
     _message: 
     _command: 
     _arg: 
@@ -1384,6 +1444,7 @@ MonoBehaviour:
     _options: []
     _itemKey: 
     _weaponKey: 
+    _arenaId: 
     _message: 
     _command: 
     _arg: 
@@ -1406,6 +1467,7 @@ MonoBehaviour:
     _options: []
     _itemKey: 
     _weaponKey: 
+    _arenaId: 
     _message: 
     _command: 
     _arg: 
@@ -1428,6 +1490,7 @@ MonoBehaviour:
     _options: []
     _itemKey: 
     _weaponKey: 
+    _arenaId: 
     _message: 
     _command: 
     _arg: 
@@ -1450,6 +1513,7 @@ MonoBehaviour:
     _options: []
     _itemKey: 
     _weaponKey: 
+    _arenaId: 
     _message: 
     _command: 
     _arg: 
@@ -1472,6 +1536,7 @@ MonoBehaviour:
     _options: []
     _itemKey: 
     _weaponKey: 
+    _arenaId: 
     _message: 
     _command: 
     _arg: 
@@ -1494,6 +1559,7 @@ MonoBehaviour:
     _options: []
     _itemKey: 
     _weaponKey: 
+    _arenaId: 
     _message: 
     _command: 
     _arg: 
@@ -1516,6 +1582,7 @@ MonoBehaviour:
     _options: []
     _itemKey: 
     _weaponKey: 
+    _arenaId: 
     _message: 
     _command: 
     _arg: 
@@ -1538,6 +1605,7 @@ MonoBehaviour:
     _options: []
     _itemKey: 
     _weaponKey: 
+    _arenaId: 
     _message: 
     _command: 
     _arg: 
@@ -1560,6 +1628,7 @@ MonoBehaviour:
     _options: []
     _itemKey: 
     _weaponKey: 
+    _arenaId: 
     _message: 
     _command: 
     _arg: 
@@ -1582,6 +1651,7 @@ MonoBehaviour:
     _options: []
     _itemKey: 
     _weaponKey: 
+    _arenaId: 
     _message: 
     _command: 
     _arg: 
@@ -1604,6 +1674,7 @@ MonoBehaviour:
     _options: []
     _itemKey: 
     _weaponKey: 
+    _arenaId: 
     _message: 
     _command: 
     _arg: 
@@ -1626,6 +1697,7 @@ MonoBehaviour:
     _options: []
     _itemKey: 
     _weaponKey: 
+    _arenaId: 
     _message: 
     _command: 
     _arg: 
@@ -1648,6 +1720,7 @@ MonoBehaviour:
     _options: []
     _itemKey: 
     _weaponKey: 
+    _arenaId: 
     _message: 
     _command: 
     _arg: 
@@ -1670,6 +1743,7 @@ MonoBehaviour:
     _options: []
     _itemKey: 
     _weaponKey: bow
+    _arenaId: 
     _message: "\u300C\u5F13\u300D\u3092\u624B\u306B\u5165\u308C\u305F"
     _command: 
     _arg: 
@@ -1692,6 +1766,7 @@ MonoBehaviour:
     _options: []
     _itemKey: 
     _weaponKey: scythe
+    _arenaId: 
     _message: "\u300C\u938C\u300D\u3092\u624B\u306B\u5165\u308C\u305F"
     _command: 
     _arg: 
@@ -1714,6 +1789,7 @@ MonoBehaviour:
     _options: []
     _itemKey: 
     _weaponKey: hammer
+    _arenaId: 
     _message: "\u300C\u30CF\u30F3\u30DE\u30FC\u300D\u3092\u624B\u306B\u5165\u308C\u305F"
     _command: 
     _arg: 
@@ -1736,6 +1812,7 @@ MonoBehaviour:
     _options: []
     _itemKey: 
     _weaponKey: 
+    _arenaId: 
     _message: 
     _command: 
     _arg: 
@@ -1759,6 +1836,7 @@ MonoBehaviour:
     _options: []
     _itemKey: 
     _weaponKey: 
+    _arenaId: 
     _message: 
     _command: 
     _arg: 
@@ -1782,6 +1860,7 @@ MonoBehaviour:
     _options: []
     _itemKey: 
     _weaponKey: 
+    _arenaId: 
     _message: 
     _command: 
     _arg: 
@@ -1804,6 +1883,7 @@ MonoBehaviour:
     _options: []
     _itemKey: 
     _weaponKey: 
+    _arenaId: 
     _message: 
     _command: 
     _arg: 
@@ -1826,6 +1906,7 @@ MonoBehaviour:
     _options: []
     _itemKey: 
     _weaponKey: 
+    _arenaId: 
     _message: 
     _command: 
     _arg: 
@@ -1848,6 +1929,7 @@ MonoBehaviour:
     _options: []
     _itemKey: 
     _weaponKey: 
+    _arenaId: 
     _message: 
     _command: 
     _arg: 
@@ -1870,6 +1952,7 @@ MonoBehaviour:
     _options: []
     _itemKey: 
     _weaponKey: 
+    _arenaId: 
     _message: 
     _command: 
     _arg: 
@@ -1892,6 +1975,7 @@ MonoBehaviour:
     _options: []
     _itemKey: 
     _weaponKey: 
+    _arenaId: 
     _message: 
     _command: 
     _arg: 
@@ -1914,6 +1998,7 @@ MonoBehaviour:
     _options: []
     _itemKey: 
     _weaponKey: 
+    _arenaId: 
     _message: 
     _command: 
     _arg: 
@@ -1936,6 +2021,7 @@ MonoBehaviour:
     _options: []
     _itemKey: 
     _weaponKey: 
+    _arenaId: 
     _message: 
     _command: 
     _arg: 
@@ -1958,6 +2044,7 @@ MonoBehaviour:
     _options: []
     _itemKey: 
     _weaponKey: 
+    _arenaId: 
     _message: 
     _command: 
     _arg: 
@@ -1980,6 +2067,7 @@ MonoBehaviour:
     _options: []
     _itemKey: 
     _weaponKey: 
+    _arenaId: 
     _message: 
     _command: 
     _arg: 
@@ -2002,6 +2090,7 @@ MonoBehaviour:
     _options: []
     _itemKey: 
     _weaponKey: 
+    _arenaId: 
     _message: 
     _command: 
     _arg: 
@@ -2024,6 +2113,7 @@ MonoBehaviour:
     _options: []
     _itemKey: 
     _weaponKey: 
+    _arenaId: 
     _message: 
     _command: 
     _arg: 
@@ -2046,6 +2136,7 @@ MonoBehaviour:
     _options: []
     _itemKey: 
     _weaponKey: 
+    _arenaId: 
     _message: 
     _command: 
     _arg: 
@@ -2068,6 +2159,7 @@ MonoBehaviour:
     _options: []
     _itemKey: 
     _weaponKey: 
+    _arenaId: 
     _message: 
     _command: 
     _arg: 
@@ -2090,6 +2182,7 @@ MonoBehaviour:
     _options: []
     _itemKey: 
     _weaponKey: 
+    _arenaId: 
     _message: 
     _command: 
     _arg: 
@@ -2113,6 +2206,7 @@ MonoBehaviour:
     _options: []
     _itemKey: 
     _weaponKey: 
+    _arenaId: 
     _message: 
     _command: 
     _arg: 
@@ -2135,6 +2229,7 @@ MonoBehaviour:
     _options: []
     _itemKey: 
     _weaponKey: 
+    _arenaId: 
     _message: 
     _command: 
     _arg: 
@@ -2157,6 +2252,7 @@ MonoBehaviour:
     _options: []
     _itemKey: 
     _weaponKey: 
+    _arenaId: 
     _message: 
     _command: 
     _arg: 
@@ -2179,6 +2275,7 @@ MonoBehaviour:
     _options: []
     _itemKey: 
     _weaponKey: 
+    _arenaId: 
     _message: 
     _command: 
     _arg: 
@@ -2201,6 +2298,7 @@ MonoBehaviour:
     _options: []
     _itemKey: 
     _weaponKey: 
+    _arenaId: 
     _message: 
     _command: 
     _arg: 
@@ -2223,6 +2321,7 @@ MonoBehaviour:
     _options: []
     _itemKey: 
     _weaponKey: 
+    _arenaId: 
     _message: 
     _command: 
     _arg: 
@@ -2245,6 +2344,7 @@ MonoBehaviour:
     _options: []
     _itemKey: 
     _weaponKey: 
+    _arenaId: 
     _message: 
     _command: 
     _arg: 
@@ -2267,6 +2367,7 @@ MonoBehaviour:
     _options: []
     _itemKey: 
     _weaponKey: 
+    _arenaId: 
     _message: 
     _command: 
     _arg: 
@@ -2289,6 +2390,7 @@ MonoBehaviour:
     _options: []
     _itemKey: 
     _weaponKey: 
+    _arenaId: 
     _message: 
     _command: 
     _arg: 
@@ -2312,6 +2414,7 @@ MonoBehaviour:
     _options: []
     _itemKey: 
     _weaponKey: 
+    _arenaId: 
     _message: 
     _command: 
     _arg: 
@@ -2334,6 +2437,7 @@ MonoBehaviour:
     _options: []
     _itemKey: 
     _weaponKey: 
+    _arenaId: 
     _message: 
     _command: 
     _arg: 
@@ -2356,6 +2460,7 @@ MonoBehaviour:
     _options: []
     _itemKey: 
     _weaponKey: 
+    _arenaId: 
     _message: 
     _command: 
     _arg: 
@@ -2378,6 +2483,7 @@ MonoBehaviour:
     _options: []
     _itemKey: 
     _weaponKey: 
+    _arenaId: 
     _message: 
     _command: 
     _arg: 
@@ -2400,6 +2506,7 @@ MonoBehaviour:
     _options: []
     _itemKey: 
     _weaponKey: 
+    _arenaId: 
     _message: 
     _command: 
     _arg: 
@@ -2422,6 +2529,7 @@ MonoBehaviour:
     _options: []
     _itemKey: 
     _weaponKey: 
+    _arenaId: 
     _message: 
     _command: 
     _arg: 
@@ -2444,6 +2552,7 @@ MonoBehaviour:
     _options: []
     _itemKey: 
     _weaponKey: 
+    _arenaId: 
     _message: 
     _command: 
     _arg: 
@@ -2467,6 +2576,7 @@ MonoBehaviour:
     _options: []
     _itemKey: 
     _weaponKey: 
+    _arenaId: 
     _message: 
     _command: 
     _arg: 
@@ -2489,6 +2599,7 @@ MonoBehaviour:
     _options: []
     _itemKey: 
     _weaponKey: 
+    _arenaId: 
     _message: 
     _command: 
     _arg: 
@@ -2511,6 +2622,7 @@ MonoBehaviour:
     _options: []
     _itemKey: 
     _weaponKey: 
+    _arenaId: 
     _message: 
     _command: 
     _arg: 
@@ -2533,6 +2645,7 @@ MonoBehaviour:
     _options: []
     _itemKey: 
     _weaponKey: 
+    _arenaId: 
     _message: 
     _command: 
     _arg: 
@@ -2555,6 +2668,7 @@ MonoBehaviour:
     _options: []
     _itemKey: 
     _weaponKey: 
+    _arenaId: 
     _message: 
     _command: 
     _arg: 
@@ -2577,6 +2691,7 @@ MonoBehaviour:
     _options: []
     _itemKey: 
     _weaponKey: 
+    _arenaId: 
     _message: 
     _command: 
     _arg: 
@@ -2599,6 +2714,7 @@ MonoBehaviour:
     _options: []
     _itemKey: 
     _weaponKey: 
+    _arenaId: 
     _message: 
     _command: 
     _arg: 
@@ -2621,6 +2737,7 @@ MonoBehaviour:
     _options: []
     _itemKey: 
     _weaponKey: 
+    _arenaId: 
     _message: 
     _command: 
     _arg: 
@@ -2644,6 +2761,7 @@ MonoBehaviour:
     _options: []
     _itemKey: 
     _weaponKey: 
+    _arenaId: 
     _message: 
     _command: 
     _arg: 
@@ -2667,6 +2785,7 @@ MonoBehaviour:
     _options: []
     _itemKey: 
     _weaponKey: 
+    _arenaId: 
     _message: 
     _command: 
     _arg: 
@@ -2689,6 +2808,7 @@ MonoBehaviour:
     _options: []
     _itemKey: 
     _weaponKey: 
+    _arenaId: 
     _message: 
     _command: 
     _arg: 
@@ -2712,6 +2832,7 @@ MonoBehaviour:
     _options: []
     _itemKey: 
     _weaponKey: 
+    _arenaId: 
     _message: 
     _command: 
     _arg: 
@@ -2735,6 +2856,7 @@ MonoBehaviour:
     _options: []
     _itemKey: 
     _weaponKey: 
+    _arenaId: 
     _message: 
     _command: 
     _arg: 
@@ -2757,6 +2879,7 @@ MonoBehaviour:
     _options: []
     _itemKey: 
     _weaponKey: 
+    _arenaId: 
     _message: 
     _command: 
     _arg: 
@@ -2779,6 +2902,7 @@ MonoBehaviour:
     _options: []
     _itemKey: 
     _weaponKey: 
+    _arenaId: 
     _message: 
     _command: 
     _arg: 
@@ -2802,6 +2926,7 @@ MonoBehaviour:
     _options: []
     _itemKey: 
     _weaponKey: 
+    _arenaId: 
     _message: 
     _command: 
     _arg: 
@@ -2825,6 +2950,7 @@ MonoBehaviour:
     _options: []
     _itemKey: 
     _weaponKey: 
+    _arenaId: 
     _message: 
     _command: 
     _arg: 
@@ -2848,6 +2974,7 @@ MonoBehaviour:
     _options: []
     _itemKey: 
     _weaponKey: 
+    _arenaId: 
     _message: 
     _command: 
     _arg: 
@@ -2871,6 +2998,7 @@ MonoBehaviour:
     _options: []
     _itemKey: 
     _weaponKey: 
+    _arenaId: 
     _message: 
     _command: 
     _arg: 
@@ -2893,6 +3021,7 @@ MonoBehaviour:
     _options: []
     _itemKey: 
     _weaponKey: 
+    _arenaId: 
     _message: 
     _command: 
     _arg: 
@@ -2916,6 +3045,7 @@ MonoBehaviour:
     _options: []
     _itemKey: 
     _weaponKey: 
+    _arenaId: 
     _message: 
     _command: 
     _arg: 
@@ -2938,6 +3068,7 @@ MonoBehaviour:
     _options: []
     _itemKey: 
     _weaponKey: 
+    _arenaId: 
     _message: 
     _command: 
     _arg: 
@@ -2961,6 +3092,7 @@ MonoBehaviour:
     _options: []
     _itemKey: 
     _weaponKey: 
+    _arenaId: 
     _message: 
     _command: 
     _arg: 
@@ -2984,6 +3116,7 @@ MonoBehaviour:
     _options: []
     _itemKey: 
     _weaponKey: 
+    _arenaId: 
     _message: 
     _command: 
     _arg: 
@@ -3007,6 +3140,7 @@ MonoBehaviour:
     _options: []
     _itemKey: 
     _weaponKey: 
+    _arenaId: 
     _message: 
     _command: 
     _arg: 
@@ -3029,6 +3163,7 @@ MonoBehaviour:
     _options: []
     _itemKey: 
     _weaponKey: 
+    _arenaId: 
     _message: 
     _command: 
     _arg: 
@@ -3051,6 +3186,7 @@ MonoBehaviour:
     _options: []
     _itemKey: 
     _weaponKey: 
+    _arenaId: 
     _message: 
     _command: 
     _arg: 
@@ -3073,6 +3209,7 @@ MonoBehaviour:
     _options: []
     _itemKey: 
     _weaponKey: 
+    _arenaId: 
     _message: 
     _command: 
     _arg: 
@@ -3095,6 +3232,7 @@ MonoBehaviour:
     _options: []
     _itemKey: 
     _weaponKey: 
+    _arenaId: 
     _message: 
     _command: 
     _arg: 
@@ -3118,6 +3256,7 @@ MonoBehaviour:
     _options: []
     _itemKey: 
     _weaponKey: 
+    _arenaId: 
     _message: 
     _command: 
     _arg: 
@@ -3141,6 +3280,7 @@ MonoBehaviour:
     _options: []
     _itemKey: 
     _weaponKey: 
+    _arenaId: 
     _message: 
     _command: 
     _arg: 
@@ -3163,6 +3303,7 @@ MonoBehaviour:
     _options: []
     _itemKey: 
     _weaponKey: bow
+    _arenaId: 
     _message: "\u300C\u5F13\u300D\u3092\u624B\u306B\u5165\u308C\u305F"
     _command: 
     _arg: 
@@ -3185,6 +3326,7 @@ MonoBehaviour:
     _options: []
     _itemKey: 
     _weaponKey: scythe
+    _arenaId: 
     _message: "\u300C\u938C\u300D\u3092\u624B\u306B\u5165\u308C\u305F"
     _command: 
     _arg: 
@@ -3207,6 +3349,7 @@ MonoBehaviour:
     _options: []
     _itemKey: 
     _weaponKey: hammer
+    _arenaId: 
     _message: "\u300C\u30CF\u30F3\u30DE\u30FC\u300D\u3092\u624B\u306B\u5165\u308C\u305F"
     _command: 
     _arg: 
@@ -3229,6 +3372,7 @@ MonoBehaviour:
     _options: []
     _itemKey: 
     _weaponKey: 
+    _arenaId: 
     _message: 
     _command: 
     _arg: 
@@ -3251,6 +3395,7 @@ MonoBehaviour:
     _options: []
     _itemKey: 
     _weaponKey: 
+    _arenaId: 
     _message: 
     _command: 
     _arg: 
@@ -3273,6 +3418,7 @@ MonoBehaviour:
     _options: []
     _itemKey: 
     _weaponKey: 
+    _arenaId: 
     _message: 
     _command: 
     _arg: 
@@ -3295,6 +3441,7 @@ MonoBehaviour:
     _options: []
     _itemKey: 
     _weaponKey: 
+    _arenaId: 
     _message: 
     _command: 
     _arg: 
@@ -3318,6 +3465,7 @@ MonoBehaviour:
     _options: []
     _itemKey: 
     _weaponKey: 
+    _arenaId: 
     _message: 
     _command: 
     _arg: 
@@ -3340,6 +3488,7 @@ MonoBehaviour:
     _options: []
     _itemKey: 
     _weaponKey: 
+    _arenaId: 
     _message: 
     _command: 
     _arg: 
@@ -3362,6 +3511,7 @@ MonoBehaviour:
     _options: []
     _itemKey: 
     _weaponKey: 
+    _arenaId: 
     _message: 
     _command: 
     _arg: 
@@ -3384,6 +3534,7 @@ MonoBehaviour:
     _options: []
     _itemKey: 
     _weaponKey: 
+    _arenaId: 
     _message: 
     _command: 
     _arg: 
@@ -3406,6 +3557,7 @@ MonoBehaviour:
     _options: []
     _itemKey: 
     _weaponKey: 
+    _arenaId: 
     _message: 
     _command: 
     _arg: 
@@ -3428,6 +3580,7 @@ MonoBehaviour:
     _options: []
     _itemKey: 
     _weaponKey: 
+    _arenaId: 
     _message: 
     _command: 
     _arg: 
@@ -3451,6 +3604,7 @@ MonoBehaviour:
     _options: []
     _itemKey: 
     _weaponKey: 
+    _arenaId: 
     _message: 
     _command: 
     _arg: 
@@ -3473,6 +3627,7 @@ MonoBehaviour:
     _options: []
     _itemKey: 
     _weaponKey: 
+    _arenaId: 
     _message: 
     _command: 
     _arg: 
@@ -3495,6 +3650,7 @@ MonoBehaviour:
     _options: []
     _itemKey: 
     _weaponKey: 
+    _arenaId: 
     _message: 
     _command: 
     _arg: 
@@ -3518,6 +3674,7 @@ MonoBehaviour:
     _options: []
     _itemKey: 
     _weaponKey: 
+    _arenaId: 
     _message: 
     _command: 
     _arg: 
@@ -3541,6 +3698,7 @@ MonoBehaviour:
     _options: []
     _itemKey: 
     _weaponKey: 
+    _arenaId: 
     _message: 
     _command: 
     _arg: 
@@ -3563,6 +3721,7 @@ MonoBehaviour:
     _options: []
     _itemKey: 
     _weaponKey: 
+    _arenaId: 
     _message: 
     _command: 
     _arg: 
@@ -3585,6 +3744,7 @@ MonoBehaviour:
     _options: []
     _itemKey: 
     _weaponKey: 
+    _arenaId: 
     _message: 
     _command: 
     _arg: 
@@ -3607,6 +3767,7 @@ MonoBehaviour:
     _options: []
     _itemKey: 
     _weaponKey: 
+    _arenaId: 
     _message: 
     _command: 
     _arg: 
@@ -3629,6 +3790,7 @@ MonoBehaviour:
     _options: []
     _itemKey: 
     _weaponKey: 
+    _arenaId: 
     _message: 
     _command: 
     _arg: 
@@ -3652,6 +3814,7 @@ MonoBehaviour:
     _options: []
     _itemKey: 
     _weaponKey: 
+    _arenaId: 
     _message: 
     _command: 
     _arg: 
@@ -3674,6 +3837,7 @@ MonoBehaviour:
     _options: []
     _itemKey: 
     _weaponKey: 
+    _arenaId: 
     _message: 
     _command: 
     _arg: 
@@ -3696,6 +3860,7 @@ MonoBehaviour:
     _options: []
     _itemKey: 
     _weaponKey: 
+    _arenaId: 
     _message: 
     _command: 
     _arg: 
@@ -3718,6 +3883,7 @@ MonoBehaviour:
     _options: []
     _itemKey: 
     _weaponKey: 
+    _arenaId: 
     _message: 
     _command: 
     _arg: 
@@ -3740,6 +3906,7 @@ MonoBehaviour:
     _options: []
     _itemKey: 
     _weaponKey: 
+    _arenaId: 
     _message: 
     _command: 
     _arg: 
@@ -3762,6 +3929,7 @@ MonoBehaviour:
     _options: []
     _itemKey: 
     _weaponKey: 
+    _arenaId: 
     _message: 
     _command: 
     _arg: 
@@ -3784,6 +3952,7 @@ MonoBehaviour:
     _options: []
     _itemKey: 
     _weaponKey: 
+    _arenaId: 
     _message: 
     _command: 
     _arg: 

@@ -125,6 +125,9 @@ namespace CreativeAI.Gameplay
 
     public static class SceneNames
     {
+        /// <summary>タイトル画面。</summary>
+        public const string Title = "Title";
+
         /// <summary>Title の遷移先の初期値。</summary>
         public const string FieldArea01 = "Field_Area01";
     }

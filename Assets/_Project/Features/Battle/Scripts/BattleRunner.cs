@@ -4,42 +4,72 @@ using UnityEngine;
 namespace CreativeAI.Gameplay
 {
     /// <summary>
-    /// battle ステップの実体(IBattleRunner)。EventTrigger.Enemy に配線された敵 Prefab(events.json ではなくこのスロットで解決)を1体トリガー位置に出し、倒されるまで待って EventPlayer に制御を返す。
+    /// battle ステップの実体(IBattleRunner)。events.json の arena で指された BattleArena を探して戦闘を始めさせ、
+    /// 敵を全員倒す(BattleEnded)まで待って EventPlayer に制御を返す。
+    /// 敵・戦闘モードの出入り・入口の扉はすべて BattleArena の側が受け持つ。
     /// 状態もコルーチンも持たないので MonoBehaviour にしない。EventPlayer が1つ作って使う。
-    /// 戦闘はその場で行い、カメラも普段のまま(専用のアリーナやカメラへの切り替えはしない)。
     /// </summary>
     public sealed class BattleRunner : IBattleRunner
     {
-        public IEnumerator Run(BattleSetup setup)
+        // 倒れる動きを見せてから、タイトルへ戻し始めるまでの秒数
+        private const float DefeatDelaySeconds = 3f;
+
+        public IEnumerator Run(string arenaId)
         {
-            if (!setup.HasEnemy)
-            {
-                Debug.LogWarning("[BattleRunner] 敵 Prefab が未配線のため戦闘をスキップします。");
-                yield break;
-            }
-
-            var enemy = Object.Instantiate(setup.EnemyPrefab, setup.Position, setup.Rotation);
-
-            var status = enemy.GetComponentInChildren<EnemyStatus>();
-            if (status == null)
+            var arena = BattleArena.Find(arenaId);
+            if (arena == null)
             {
                 Debug.LogWarning(
-                    $"[BattleRunner] '{setup.EnemyPrefab.name}' の Prefab に EnemyStatus が無く決着を検知できません。即時終了。"
+                    $"[BattleRunner] arena '{arenaId}' の BattleArena がシーンに無いため戦闘をスキップします。"
                 );
                 yield break;
             }
 
-            bool defeated = false;
-            void OnDeath() => defeated = true;
-            status.OnDeathTriggered += OnDeath;
+            bool ended = false;
+            void OnEnded() => ended = true;
+            arena.BattleEnded += OnEnded;
+            try
+            {
+                if (!arena.StartFromEvent())
+                {
+                    Debug.LogWarning(
+                        $"[BattleRunner] arena '{arenaId}' はすでに戦闘を始めているためスキップします。"
+                    );
+                    yield break;
+                }
 
-            // 倒される(= OnDeathTriggered)まで待つ。敗北時はセーブ再開でシーンごと作り直されるため
-            // このコルーチンは完了しない想定。
-            while (!defeated && enemy != null)
-                yield return null;
+                var player = PlayerRegistry.Current;
+                var status = player != null ? player.GetComponent<PlayerStatus>() : null;
 
-            status.OnDeathTriggered -= OnDeath;
-            // 死亡演出後の破棄は EnemyStatus.Die() 側が担う(Destroy(gameObject, 5f))。
+                // arena が破棄された場合も(シーン切替)待ちを抜ける。
+                while (!ended && arena != null && !IsDefeated(status))
+                    yield return null;
+
+                if (IsDefeated(status))
+                {
+                    yield return new WaitForSeconds(DefeatDelaySeconds);
+                    ReturnToTitle();
+                    // タイトルの読み込みで arena が破棄されるまで待つ(負けたイベントを先へ進めない)。
+                    while (arena != null)
+                        yield return null;
+                }
+            }
+            finally
+            {
+                if (arena != null)
+                    arena.BattleEnded -= OnEnded;
+            }
+        }
+
+        private static bool IsDefeated(PlayerStatus status) => status != null && status.IsDead;
+
+        // タイトルの「続きから」でセーブした所から再開できるので、敗北はタイトルへ戻して扱う。
+        private static void ReturnToTitle()
+        {
+            if (TitleReturnService.Current != null)
+                TitleReturnService.Current.ReturnToTitle();
+            else
+                Debug.LogError("[BattleRunner] タイトルへ戻す処理が登録されていません。");
         }
     }
 }

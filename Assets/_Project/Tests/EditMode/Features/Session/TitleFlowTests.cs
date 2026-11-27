@@ -48,6 +48,37 @@ namespace CreativeAI.Tests.EditMode
             Object.FindObjectsByType<T>(FindObjectsInactive.Exclude).Length;
 
         [Test]
+        public void ResetForNewGame_ClearsProgressAndFlagsFromThePreviousPlay()
+        {
+            Assert.IsTrue(EnsureSession());
+            // EditMode では Awake が走らず Instance が入らないので、生成された進行度管理を直接入れる。
+            TestReflection.SetStaticProperty(
+                "Instance",
+                Object.FindAnyObjectByType<ProgressManager>()
+            );
+            ProgressManager.Instance.LoadState(
+                5,
+                new System.Collections.Generic.Dictionary<string, string>
+                {
+                    ["hero_choice"] = "same",
+                }
+            );
+
+            GameStarter.ResetForNewGame();
+
+            Assert.AreEqual(0, ProgressManager.Instance.Progress);
+            Assert.AreEqual(string.Empty, ProgressManager.Instance.GetFlag("hero_choice"));
+        }
+
+        [Test]
+        public void EnsureSession_MarksTheSessionAsStartedFromTitle()
+        {
+            Assert.IsTrue(EnsureSession());
+
+            Assert.IsTrue(GameSession.StartedFromTitle);
+        }
+
+        [Test]
         public void EnsureSession_CreatesEveryResidentSystem()
         {
             Assert.IsTrue(EnsureSession());

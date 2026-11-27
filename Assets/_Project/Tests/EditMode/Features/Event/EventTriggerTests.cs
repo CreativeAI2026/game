@@ -15,7 +15,7 @@ namespace CreativeAI.Tests.EditMode
         {
             public readonly List<string> Played = new();
 
-            public void Play(EventDefinition ev, BattleSetup battle = default) => Played.Add(ev.Id);
+            public void Play(EventDefinition ev) => Played.Add(ev.Id);
         }
 
         private sealed class FakeItemGiver : IItemGiver

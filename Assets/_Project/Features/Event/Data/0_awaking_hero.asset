@@ -33,6 +33,30 @@ MonoBehaviour:
     _options: []
     _itemKey: 
     _weaponKey: 
+    _arenaId: 
+    _message: 
+    _command: background.black
+    _arg: 
+    _cases: []
+    _thenTarget: 0
+    _elseTarget: 0
+    _joinTarget: 0
+    _accept: []
+    _consume: 0
+    _prompt: 
+    _endOnWrong: 0
+    _usedText: 
+    _cancelText: 
+  - _kind: 5
+    _speaker: 
+    _portrait: 
+    _text: 
+    _flagKey: 
+    _flagValue: 
+    _options: []
+    _itemKey: 
+    _weaponKey: 
+    _arenaId: 
     _message: 
     _command: portrait.left.obscure
     _arg: 
@@ -55,6 +79,7 @@ MonoBehaviour:
     _options: []
     _itemKey: 
     _weaponKey: 
+    _arenaId: 
     _message: 
     _command: 
     _arg: 
@@ -77,6 +102,7 @@ MonoBehaviour:
     _options: []
     _itemKey: 
     _weaponKey: 
+    _arenaId: 
     _message: 
     _command: 
     _arg: 
@@ -100,138 +126,7 @@ MonoBehaviour:
     _options: []
     _itemKey: 
     _weaponKey: 
-    _message: 
-    _command: 
-    _arg: 
-    _cases: []
-    _thenTarget: 0
-    _elseTarget: 0
-    _joinTarget: 0
-    _accept: []
-    _consume: 0
-    _prompt: 
-    _endOnWrong: 0
-    _usedText: 
-    _cancelText: 
-  - _kind: 0
-    _speaker: 
-    _portrait: 
-    _text: "\u58C1\u969B\u306B\u306F\u7528\u9014\u306E\u5206\u304B\u3089\u306A\u3044\u7269\u54C1\u304C\u4E26\u3073\u3001\u5E8A\u306B\u306F\u5272\u308C\u305F\u30AC\u30E9\u30B9\u3084\u66F8\u985E\u304C\u7121\u9020\u4F5C\u306B\u6563\u4E71\u3057\u3066\u3044\u308B\u3002"
-    _flagKey: 
-    _flagValue: 
-    _options: []
-    _itemKey: 
-    _weaponKey: 
-    _message: 
-    _command: 
-    _arg: 
-    _cases: []
-    _thenTarget: 0
-    _elseTarget: 0
-    _joinTarget: 0
-    _accept: []
-    _consume: 0
-    _prompt: 
-    _endOnWrong: 0
-    _usedText: 
-    _cancelText: 
-  - _kind: 0
-    _speaker: 
-    _portrait: hero_question
-    _text: "\u300C\u306A\u3093\u3060\u3053\u3053\u3001\u5009\u5EAB\u2026\uFF1F \u3044\u3084\u3001\u306A\u3093\u304B\u306E\u7814\u7A76\u65BD\u8A2D\u3063\u3066\u611F\u3058\u304B\u3002\u300D"
-    _flagKey: 
-    _flagValue: 
-    _options: []
-    _itemKey: 
-    _weaponKey: 
-    _message: 
-    _command: 
-    _arg: 
-    _cases: []
-    _thenTarget: 0
-    _elseTarget: 0
-    _joinTarget: 0
-    _accept: []
-    _consume: 0
-    _prompt: 
-    _endOnWrong: 0
-    _usedText: 
-    _cancelText: 
-  - _kind: 0
-    _speaker: 
-    _portrait: hero_confused
-    _text: "\u300C\u3053\u3053\u306B\u6765\u308B\u524D\u3001\u4F55\u3057\u3066\u305F\u3063\u3051\u2026\u3002\u300D"
-    _flagKey: 
-    _flagValue: 
-    _options: []
-    _itemKey: 
-    _weaponKey: 
-    _message: 
-    _command: 
-    _arg: 
-    _cases: []
-    _thenTarget: 0
-    _elseTarget: 0
-    _joinTarget: 0
-    _accept: []
-    _consume: 0
-    _prompt: 
-    _endOnWrong: 0
-    _usedText: 
-    _cancelText: 
-  - _kind: 0
-    _speaker: 
-    _portrait: hero_normal
-    _text: "\u300C\u2026\u2026\u2026\u2026\u3002\u300D"
-    _flagKey: 
-    _flagValue: 
-    _options: []
-    _itemKey: 
-    _weaponKey: 
-    _message: 
-    _command: 
-    _arg: 
-    _cases: []
-    _thenTarget: 0
-    _elseTarget: 0
-    _joinTarget: 0
-    _accept: []
-    _consume: 0
-    _prompt: 
-    _endOnWrong: 0
-    _usedText: 
-    _cancelText: 
-  - _kind: 0
-    _speaker: 
-    _portrait: hero_surprised
-    _text: "\u300C\u2026\u3042\u308C\u3001 \u30DE\u30B8\uFF1F  \u306A\u3093\u3082\u601D\u3044\u51FA\u305B\u306D\u30FC\u3002\u300D"
-    _flagKey: 
-    _flagValue: 
-    _options: []
-    _itemKey: 
-    _weaponKey: 
-    _message: 
-    _command: 
-    _arg: 
-    _cases: []
-    _thenTarget: 0
-    _elseTarget: 0
-    _joinTarget: 0
-    _accept: []
-    _consume: 0
-    _prompt: 
-    _endOnWrong: 0
-    _usedText: 
-    _cancelText: 
-  - _kind: 0
-    _speaker: 
-    _portrait: 
-    _text: "\u5468\u56F2\u306B\u6563\u3089\u3070\u308B\u4F55\u304B\u306E\u7834\u7247\u306B\u3001\u81EA\u5206\u306E\u59FF\u304C\u53CD\u5C04\u3059\u308B\u3002"
-    _flagKey: 
-    _flagValue: 
-    _options: []
-    _itemKey: 
-    _weaponKey: 
+    _arenaId: 
     _message: 
     _command: 
     _arg: 
@@ -254,6 +149,168 @@ MonoBehaviour:
     _options: []
     _itemKey: 
     _weaponKey: 
+    _arenaId: 
+    _message: 
+    _command: background.black.clear
+    _arg: 1.5
+    _cases: []
+    _thenTarget: 0
+    _elseTarget: 0
+    _joinTarget: 0
+    _accept: []
+    _consume: 0
+    _prompt: 
+    _endOnWrong: 0
+    _usedText: 
+    _cancelText: 
+  - _kind: 0
+    _speaker: 
+    _portrait: 
+    _text: "\u58C1\u969B\u306B\u306F\u7528\u9014\u306E\u5206\u304B\u3089\u306A\u3044\u7269\u54C1\u304C\u4E26\u3073\u3001\u5E8A\u306B\u306F\u5272\u308C\u305F\u30AC\u30E9\u30B9\u3084\u66F8\u985E\u304C\u7121\u9020\u4F5C\u306B\u6563\u4E71\u3057\u3066\u3044\u308B\u3002"
+    _flagKey: 
+    _flagValue: 
+    _options: []
+    _itemKey: 
+    _weaponKey: 
+    _arenaId: 
+    _message: 
+    _command: 
+    _arg: 
+    _cases: []
+    _thenTarget: 0
+    _elseTarget: 0
+    _joinTarget: 0
+    _accept: []
+    _consume: 0
+    _prompt: 
+    _endOnWrong: 0
+    _usedText: 
+    _cancelText: 
+  - _kind: 0
+    _speaker: 
+    _portrait: hero_question
+    _text: "\u300C\u306A\u3093\u3060\u3053\u3053\u3001\u5009\u5EAB\u2026\uFF1F \u3044\u3084\u3001\u306A\u3093\u304B\u306E\u7814\u7A76\u65BD\u8A2D\u3063\u3066\u611F\u3058\u304B\u3002\u300D"
+    _flagKey: 
+    _flagValue: 
+    _options: []
+    _itemKey: 
+    _weaponKey: 
+    _arenaId: 
+    _message: 
+    _command: 
+    _arg: 
+    _cases: []
+    _thenTarget: 0
+    _elseTarget: 0
+    _joinTarget: 0
+    _accept: []
+    _consume: 0
+    _prompt: 
+    _endOnWrong: 0
+    _usedText: 
+    _cancelText: 
+  - _kind: 0
+    _speaker: 
+    _portrait: hero_confused
+    _text: "\u300C\u3053\u3053\u306B\u6765\u308B\u524D\u3001\u4F55\u3057\u3066\u305F\u3063\u3051\u2026\u3002\u300D"
+    _flagKey: 
+    _flagValue: 
+    _options: []
+    _itemKey: 
+    _weaponKey: 
+    _arenaId: 
+    _message: 
+    _command: 
+    _arg: 
+    _cases: []
+    _thenTarget: 0
+    _elseTarget: 0
+    _joinTarget: 0
+    _accept: []
+    _consume: 0
+    _prompt: 
+    _endOnWrong: 0
+    _usedText: 
+    _cancelText: 
+  - _kind: 0
+    _speaker: 
+    _portrait: hero_normal
+    _text: "\u300C\u2026\u2026\u2026\u2026\u3002\u300D"
+    _flagKey: 
+    _flagValue: 
+    _options: []
+    _itemKey: 
+    _weaponKey: 
+    _arenaId: 
+    _message: 
+    _command: 
+    _arg: 
+    _cases: []
+    _thenTarget: 0
+    _elseTarget: 0
+    _joinTarget: 0
+    _accept: []
+    _consume: 0
+    _prompt: 
+    _endOnWrong: 0
+    _usedText: 
+    _cancelText: 
+  - _kind: 0
+    _speaker: 
+    _portrait: hero_surprised
+    _text: "\u300C\u2026\u3042\u308C\u3001 \u30DE\u30B8\uFF1F  \u306A\u3093\u3082\u601D\u3044\u51FA\u305B\u306D\u30FC\u3002\u300D"
+    _flagKey: 
+    _flagValue: 
+    _options: []
+    _itemKey: 
+    _weaponKey: 
+    _arenaId: 
+    _message: 
+    _command: 
+    _arg: 
+    _cases: []
+    _thenTarget: 0
+    _elseTarget: 0
+    _joinTarget: 0
+    _accept: []
+    _consume: 0
+    _prompt: 
+    _endOnWrong: 0
+    _usedText: 
+    _cancelText: 
+  - _kind: 0
+    _speaker: 
+    _portrait: 
+    _text: "\u5468\u56F2\u306B\u6563\u3089\u3070\u308B\u4F55\u304B\u306E\u7834\u7247\u306B\u3001\u81EA\u5206\u306E\u59FF\u304C\u53CD\u5C04\u3059\u308B\u3002"
+    _flagKey: 
+    _flagValue: 
+    _options: []
+    _itemKey: 
+    _weaponKey: 
+    _arenaId: 
+    _message: 
+    _command: 
+    _arg: 
+    _cases: []
+    _thenTarget: 0
+    _elseTarget: 0
+    _joinTarget: 0
+    _accept: []
+    _consume: 0
+    _prompt: 
+    _endOnWrong: 0
+    _usedText: 
+    _cancelText: 
+  - _kind: 5
+    _speaker: 
+    _portrait: 
+    _text: 
+    _flagKey: 
+    _flagValue: 
+    _options: []
+    _itemKey: 
+    _weaponKey: 
+    _arenaId: 
     _message: 
     _command: portrait.left.reveal
     _arg: 
@@ -276,6 +333,7 @@ MonoBehaviour:
     _options: []
     _itemKey: 
     _weaponKey: 
+    _arenaId: 
     _message: 
     _command: 
     _arg: 
@@ -298,6 +356,7 @@ MonoBehaviour:
     _options: []
     _itemKey: 
     _weaponKey: 
+    _arenaId: 
     _message: 
     _command: 
     _arg: 
@@ -320,6 +379,7 @@ MonoBehaviour:
     _options: []
     _itemKey: 
     _weaponKey: 
+    _arenaId: 
     _message: 
     _command: 
     _arg: 
@@ -343,6 +403,7 @@ MonoBehaviour:
     _options: []
     _itemKey: 
     _weaponKey: 
+    _arenaId: 
     _message: 
     _command: 
     _arg: 
@@ -365,6 +426,7 @@ MonoBehaviour:
     _options: []
     _itemKey: 
     _weaponKey: 
+    _arenaId: 
     _message: 
     _command: 
     _arg: 
@@ -388,6 +450,7 @@ MonoBehaviour:
     _options: []
     _itemKey: 
     _weaponKey: 
+    _arenaId: 
     _message: 
     _command: 
     _arg: 
@@ -410,6 +473,7 @@ MonoBehaviour:
     _options: []
     _itemKey: 
     _weaponKey: 
+    _arenaId: 
     _message: 
     _command: 
     _arg: 

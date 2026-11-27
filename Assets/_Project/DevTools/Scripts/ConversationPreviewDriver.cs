@@ -124,7 +124,7 @@ namespace CreativeAI.DevTools
             var state = new PreviewState(_initialFlags);
             var inventory = new PreviewInventory(_importantItemKeys);
             var player = EventPlayer.EnsureResident();
-            player.Inject(state, view, inventory, state, state, inventory);
+            player.Inject(state, view, inventory, state, inventory);
             try
             {
                 yield return player.PlayRoutine(ev);
@@ -136,7 +136,7 @@ namespace CreativeAI.DevTools
         }
 
         /// <summary>プレビュー用の保存先と戦闘通知先。本番の状態には書き込まない。</summary>
-        private sealed class PreviewState : IEventProgress, IEventGameMode, IBattleRunner
+        private sealed class PreviewState : IEventProgress, IBattleRunner
         {
             private readonly Dictionary<string, string> _flags = new();
 
@@ -158,11 +158,7 @@ namespace CreativeAI.DevTools
 
             public void AdvanceTo(int progress) { }
 
-            public void EnterBattle() { }
-
-            public void ExitBattle() { }
-
-            public IEnumerator Run(BattleSetup setup)
+            public IEnumerator Run(string arenaId)
             {
                 yield break;
             }

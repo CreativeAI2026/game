@@ -235,10 +235,10 @@ namespace CreativeAI.Tests.EditMode
         }
 
         [TestCase(
-            @"{""kind"":""branch"",""hasItem"":""card_key"",""then"":[{""kind"":""line"",""text"":""前""},{""kind"":""battle""}],""else"":[{""kind"":""line"",""text"":""別""}]}"
+            @"{""kind"":""branch"",""hasItem"":""card_key"",""then"":[{""kind"":""line"",""text"":""前""},{""kind"":""battle"",""arena"":""preview""}],""else"":[{""kind"":""line"",""text"":""別""}]}"
         )]
         [TestCase(
-            @"{""kind"":""branch"",""flag"":""x"",""cases"":{""yes"":[{""kind"":""battle""}]}}"
+            @"{""kind"":""branch"",""flag"":""x"",""cases"":{""yes"":[{""kind"":""battle"",""arena"":""preview""}]}}"
         )]
         public void BattleInsideBranch_IsRejected(string branch)
         {
@@ -256,7 +256,7 @@ namespace CreativeAI.Tests.EditMode
         {
             var report = EventImporter.Parse(
                 Document(
-                    @"{""kind"":""line"",""text"":""開始""},{""kind"":""battle""},{""kind"":""branch"",""flag"":""x"",""cases"":{""yes"":[{""kind"":""line"",""text"":""終了""}]}}"
+                    @"{""kind"":""line"",""text"":""開始""},{""kind"":""battle"",""arena"":""preview""},{""kind"":""branch"",""flag"":""x"",""cases"":{""yes"":[{""kind"":""line"",""text"":""終了""}]}}"
                 ),
                 Catalog
             );
@@ -372,7 +372,7 @@ namespace CreativeAI.Tests.EditMode
         public void PreviewDriver_BattleDoesNotChangeProductionMode()
         {
             var ev = Import(
-                @"{""kind"":""line"",""text"":""戦闘前""},{""kind"":""battle""},{""kind"":""line"",""text"":""戦闘後""}"
+                @"{""kind"":""line"",""text"":""戦闘前""},{""kind"":""battle"",""arena"":""preview""},{""kind"":""line"",""text"":""戦闘後""}"
             );
             var go = new GameObject("戦闘プレビューのテスト");
             try
@@ -385,10 +385,6 @@ namespace CreativeAI.Tests.EditMode
                 go.AddComponent<EventPlayer>();
                 var driver = go.AddComponent<ConversationPreviewDriver>();
                 var view = new View();
-                LogAssert.Expect(
-                    LogType.Warning,
-                    new System.Text.RegularExpressions.Regex("battle ステップに敵 Prefab が未配線")
-                );
                 Drive(driver.PlayEventPreview(ev, view));
                 CollectionAssert.AreEqual(new[] { "戦闘前", "戦闘後" }, view.Lines);
                 Assert.AreEqual(GameMode.Battle, mode.CurrentMode);

@@ -11,7 +11,7 @@ namespace CreativeAI.Tests.EditMode
 {
     /// <summary>
     /// <c>Field_Area01_Events</c> に置いたイベントの配置ミスの検証。
-    /// 付け忘れ・Is Trigger の入れ忘れ・敵 Prefab の設定漏れは、どれもエラーが出ないまま発火しないだけになる。
+    /// 付け忘れ・Is Trigger の入れ忘れは、どれもエラーが出ないまま発火しないだけになる。
     /// 発火のしかた自体は EventTriggerTests が見る。ここは「シーンに正しく置けているか」だけを見る。
     /// 本物のシーンを開く(作業中のシーンは触らず、このテストが開いたものだけ最後に閉じる)。
     /// </summary>
@@ -61,58 +61,22 @@ namespace CreativeAI.Tests.EditMode
         private static EventDefinition EventOf(EventTrigger trigger) =>
             Serialize(trigger).FindProperty("_event").objectReferenceValue as EventDefinition;
 
-        private static GameObject EnemyOf(EventTrigger trigger) =>
-            Serialize(trigger).FindProperty("_enemy").objectReferenceValue as GameObject;
-
         [Test]
         public void EventAssets_AreFound()
         {
             Assert.That(_events, Is.Not.Empty, $"{DataDir} にイベントの .asset がありません。");
         }
 
-        /// <summary>
-        /// まだシーンに置いていないイベントの id。置いたらこの一覧から消す
-        /// (置いたのに残っていると <see cref="NotPlacedYetList_HasNoPlacedEvent"/> が落ちる)。
-        /// </summary>
-        private static readonly HashSet<string> NotPlacedYet = new()
-        {
-            // 後藤ルートは ID8〜12 と同じ場所のため、まだ置いていない
-            "8nt_screem_girl",
-            "9nt_battle_jellyfish",
-            "10nt_go_floor1",
-            "11nt_again",
-            "12nt_end",
-        };
-
         [Test]
         public void EveryEventAsset_HasATriggerInTheScene()
         {
             var placed = new HashSet<EventDefinition>(_triggers.Select(EventOf));
-            var missing = _events
-                .Where(e => !placed.Contains(e) && !NotPlacedYet.Contains(e.Id))
-                .Select(e => e.Id)
-                .ToList();
+            var missing = _events.Where(e => !placed.Contains(e)).Select(e => e.Id).ToList();
 
             Assert.That(
                 missing,
                 Is.Empty,
-                "シーンに置かれていないイベント(未配置なら NotPlacedYet に足す): "
-                    + string.Join(", ", missing)
-            );
-        }
-
-        [Test]
-        public void NotPlacedYetList_HasNoPlacedEvent()
-        {
-            var placedIds = new HashSet<string>(
-                _triggers.Select(EventOf).Where(e => e != null).Select(e => e.Id)
-            );
-            var stale = NotPlacedYet.Where(placedIds.Contains).ToList();
-
-            Assert.That(
-                stale,
-                Is.Empty,
-                "置いたのに NotPlacedYet に残っているイベント: " + string.Join(", ", stale)
+                "シーンに置かれていないイベント: " + string.Join(", ", missing)
             );
         }
 
@@ -182,46 +146,6 @@ namespace CreativeAI.Tests.EditMode
                 Is.Empty,
                 "Events の外に置かれたトリガー(手順書は Events の子に置く): "
                     + string.Join(", ", stray)
-            );
-        }
-
-        /// <summary>
-        /// 戦闘の敵 Prefab がまだ決まっていないイベントの id。敵を設定したらこの一覧から消す。
-        /// </summary>
-        private static readonly HashSet<string> BattleWithoutEnemyYet = new()
-        {
-            "9_battle_jellyfish",
-            "12_again",
-            "13_battle_girl",
-            "18_againagain_tutorial",
-            "19_again_jellyfish",
-            "20_again_goldfish",
-        };
-
-        [Test]
-        public void BattleEvents_HaveAnEnemyPrefab()
-        {
-            var noEnemy = new List<string>();
-            foreach (var t in _triggers)
-            {
-                var ev = EventOf(t);
-                if (
-                    ev == null
-                    || BattleWithoutEnemyYet.Contains(ev.Id)
-                    || !ev.Steps.Any(s => s.Kind == StepKind.Battle)
-                )
-                    continue;
-
-                var enemy = EnemyOf(t);
-                if (enemy == null || !PrefabUtility.IsPartOfPrefabAsset(enemy))
-                    noEnemy.Add($"{t.name}(event={ev.Id})");
-            }
-
-            Assert.That(
-                noEnemy,
-                Is.Empty,
-                "battle を含むのに Enemy が空、または Prefab でないトリガー: "
-                    + string.Join(", ", noEnemy)
             );
         }
     }
