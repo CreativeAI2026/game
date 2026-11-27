@@ -15,7 +15,7 @@ namespace CreativeAI.Gameplay
     ///
     /// 弦: モデルの弦は根本ボーンに付いている。つがえてから発射までは、根本ボーンを引き手(ArrowHold ソケット)に合わせて動かし、
     /// 発射したら元の位置へ戻す(<see cref="BowStringPull"/>)。つがえた矢は尾を弦に掛け、弓の矢の通り道へ向ける。
-    /// 照準の表示はシーン側の CrosshairView が PlayerController.IsAiming を見て行う。
+    /// 構えているかは PlayerController.IsAiming に書き、照準の表示は UI の CrosshairView がその変化を受けて行う。
     /// </summary>
     public class BowController : MonoBehaviour, IResettableWeapon, IWeaponAnimationEventHandler
     {
@@ -49,7 +49,7 @@ namespace CreativeAI.Gameplay
         [SerializeField]
         private SoundCue _shootSound;
 
-        private WeaponManager _weaponManager;
+        private PlayerWeapons _playerWeapons;
         private PlayerStatus _owner;
         private Transform _arrowHandHoldPoint;
         private Camera _mainCamera;
@@ -70,28 +70,26 @@ namespace CreativeAI.Gameplay
         public bool IsArrowNocked { get; private set; }
 
         /// <summary>構えている(引いている)最中か。</summary>
-        public bool IsAiming => _currentState is BowStateAim;
-
         /// <summary>
         /// 矢が発射された瞬間に発火する静的イベント。
         /// BowZoomController などが購読して発射演出を行う。
         /// </summary>
-        public static event Action OnFired;
+        public static event Action Fired;
 
         /// <summary>
         /// プレイヤーが自分でボタンを離し、撃たずに構えを解いた瞬間に発火する。
         /// 怯み・掴み・武器切替などによる強制解除では発火しない(PanicDetector が「迷い」として数えるため区別する)。
         /// </summary>
-        public event Action OnAimCancelled;
+        public event Action AimCancelled;
 
         /// <summary>構えステートから、プレイヤー自身による構え解除を通知する。</summary>
-        public void NotifyAimCancelled() => OnAimCancelled?.Invoke();
+        public void NotifyAimCancelled() => AimCancelled?.Invoke();
 
         private void Awake()
         {
             Input = GetComponentInParent<PlayerInputHandler>();
             Player = GetComponentInParent<PlayerController>();
-            _weaponManager = GetComponentInParent<WeaponManager>();
+            _playerWeapons = GetComponentInParent<PlayerWeapons>();
             _owner = GetComponentInParent<PlayerStatus>();
 
             PlayerModel model = PlayerModel.Of(this);
@@ -135,7 +133,7 @@ namespace CreativeAI.Gameplay
             // 武器をしまったら現在の行動を強制終了し、プレイヤーのロックを解除する
             _currentState.Exit();
             Player.IsAiming = false;
-            Player.Locks.Release(this);
+            Player.Conditions.Release(this);
 
             // 弓のトリガーが残ったまま別武器に切り替わると誤発動するためリセット
             Animator.ResetTrigger(PlayerAnimatorParams.Fire);
@@ -146,10 +144,9 @@ namespace CreativeAI.Gameplay
         private void Update()
         {
             bool canAct =
-                !Player.IsFlinching
-                && !Player.IsGrabbed
+                Player.Conditions.CanAttack
                 // 番号ではなく「選択中の武器オブジェクトが自分か」で判定する(Inspector で番号を合わせる必要はない)
-                && _weaponManager.CurrentWeaponObject == gameObject;
+                && _playerWeapons.CurrentWeaponObject == gameObject;
 
             if (!canAct)
             {
@@ -195,14 +192,7 @@ namespace CreativeAI.Gameplay
         /// </summary>
         public bool TryGetUpperBodyState(int stateHash, out AnimatorStateInfo info)
         {
-            if (Animator.IsInTransition(_upperBodyLayer))
-            {
-                info = Animator.GetNextAnimatorStateInfo(_upperBodyLayer);
-                return info.shortNameHash == stateHash;
-            }
-
-            info = Animator.GetCurrentAnimatorStateInfo(_upperBodyLayer);
-            return info.shortNameHash == stateHash;
+            return Animator.IsHeadingTo(_upperBodyLayer, stateHash, out info);
         }
 
         /// <summary>矢を持っているか(手元・つがえ済みのどちらでも)。</summary>
@@ -261,7 +251,7 @@ namespace CreativeAI.Gameplay
             _nockedArrow = null;
             IsArrowNocked = false;
 
-            OnFired?.Invoke();
+            Fired?.Invoke();
 
             Animator.SetTrigger(PlayerAnimatorParams.Fire);
             WorldSoundPlayer.Play(_shootSound, transform.position, this);
@@ -304,7 +294,7 @@ namespace CreativeAI.Gameplay
         }
 
         /// <summary>
-        /// 怯み・死亡時(WeaponManager.ResetEquippedWeapon 経由)に、弓のステートを待機へ戻す。
+        /// 怯み・死亡などで武器の行動の制限が掛かった時(PlayerWeapons 経由)に、弓のステートを待機へ戻す。
         /// 行動制限は owner ごとに管理されるので、待機の Enter で弓の分を外しても怯み側の制限は残る。
         /// </summary>
         public void ForceReset()

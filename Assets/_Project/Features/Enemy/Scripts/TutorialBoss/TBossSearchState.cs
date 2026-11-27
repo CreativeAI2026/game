@@ -50,8 +50,10 @@ namespace CreativeAI.Gameplay
             : base(controller)
         {
             _target = target;
-            _moveSpeed = cautious ? controller.WalkSpeed : controller.RunSpeed;
+            _moveSpeed = cautious ? controller.Movement.WalkSpeed : controller.Movement.RunSpeed;
         }
+
+        public override bool AllowsLookAround => true;
 
         public override void Enter()
         {
@@ -75,9 +77,9 @@ namespace CreativeAI.Gameplay
         public override void Update()
         {
             // 移動中・見回し中を問わず、視界に入ったら即座に追跡へ切り替える
-            if (boss.CheckInFlashlight())
+            if (boss.Perception.IsPlayerVisible())
             {
-                boss.IsAlerted = true;
+                boss.SetAlerted(true);
                 boss.ChangeState(new TBossChaseState(boss));
                 return;
             }
@@ -181,7 +183,7 @@ namespace CreativeAI.Gameplay
         private void GiveUpSearch()
         {
             DevLog.Log("[TutorialBoss] 捜索を打ち切り、パトロールへ復帰");
-            boss.IsAlerted = false;
+            boss.SetAlerted(false);
             boss.ChangeState(new TBossPatrolState(boss));
         }
 
@@ -192,7 +194,7 @@ namespace CreativeAI.Gameplay
                 return;
             }
 
-            boss.NotifySoundHeard(confidence);
+            boss.Perception.NotifySoundHeard(confidence);
 
             // 捜索中に新しい音を聞いたら、そちらへ目標を更新して移動を再開する
             _target = data.Position;

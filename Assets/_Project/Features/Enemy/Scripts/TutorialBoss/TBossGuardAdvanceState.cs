@@ -14,7 +14,7 @@ namespace CreativeAI.Gameplay
         private const float RotateSpeed = 8f;
 
         // 見えなくなってから追跡へ戻るまでの猶予（秒）。遠くから撃つ相手は光の外に出やすく、
-        // 一瞬見えないだけで戻すと構えた直後に追跡へ戻ってしまう。撃たれるたびに猶予はやり直す（コントローラー側）
+        // 一瞬見えないだけで戻すと構えた直後に追跡へ戻ってしまう。撃たれるたびに猶予はやり直す（OnPlayerRangedAttack）
         private const float LostSightGraceBeforeChase = 2f;
 
         private static readonly int IsGuardAdvancingHash = Animator.StringToHash(
@@ -29,6 +29,16 @@ namespace CreativeAI.Gameplay
 
         public TBossGuardAdvanceState(TutorialBossController controller)
             : base(controller) { }
+
+        public override bool AimsHeadAtPlayer => true;
+        public override bool CanRepel => true;
+        public override bool IsCommitted => true;
+
+        /// <summary>撃たれた・投げられたことで相手の位置は分かるので、見失いの猶予をやり直す。</summary>
+        public override void OnPlayerRangedAttack()
+        {
+            boss.LostSightTimer = 0f;
+        }
 
         public override void Enter()
         {
@@ -57,7 +67,7 @@ namespace CreativeAI.Gameplay
                 return;
             }
 
-            if (boss.CheckPlayerTracked())
+            if (boss.Perception.IsPlayerTracked())
             {
                 boss.LostSightTimer = 0f;
             }
@@ -72,7 +82,7 @@ namespace CreativeAI.Gameplay
             }
 
             Vector3 playerPosition = boss.Player.transform.position;
-            FacePlayer(playerPosition);
+            FaceTowards(playerPosition, RotateSpeed);
             if (boss.Agent != null && boss.Agent.isOnNavMesh)
             {
                 boss.Agent.SetDestination(playerPosition);
@@ -81,7 +91,7 @@ namespace CreativeAI.Gameplay
 
             // プレイヤーが攻撃の間合いへ入ってきたら攻撃する（クールダウン中なら構えたまま寄り続ける）
             float distance = Vector3.Distance(boss.transform.position, playerPosition);
-            if (distance <= boss.AttackRange && boss.TryStartAttack())
+            if (distance <= boss.NormalAttack.Range && boss.TryStartAttack())
             {
                 return;
             }
@@ -117,22 +127,6 @@ namespace CreativeAI.Gameplay
             boss.Animator.SetFloat(
                 GuardAdvanceSpeedHash,
                 velocity.magnitude / boss.Guard.Settings.GuardAdvanceClipSpeed
-            );
-        }
-
-        private void FacePlayer(Vector3 playerPosition)
-        {
-            Vector3 toPlayer = playerPosition - boss.transform.position;
-            toPlayer.y = 0f;
-            if (toPlayer.sqrMagnitude < 0.0001f)
-            {
-                return;
-            }
-
-            boss.transform.rotation = Quaternion.Slerp(
-                boss.transform.rotation,
-                Quaternion.LookRotation(toPlayer),
-                Time.deltaTime * RotateSpeed
             );
         }
     }

@@ -111,7 +111,9 @@ namespace CreativeAI.Gameplay
             _model.SetVisualHeightOffset(0f);
         }
 
-        public override MeleeWeaponState CreateNeutralState() => new HammerStateFree(this);
+        /// <summary>待機ステートを作る。subAction の押下で叩きつけへ。</summary>
+        public override MeleeWeaponState CreateNeutralState() =>
+            new MeleeStateFree(this, () => new HammerStateSlam(this));
 
         /// <summary>叩きつけで跳びかかる敵を <see cref="_slamSearchRadius"/> 内の最寄りの敵から探す。</summary>
         public Transform FindSlamTarget() => FindNearestEnemy(_slamSearchRadius);

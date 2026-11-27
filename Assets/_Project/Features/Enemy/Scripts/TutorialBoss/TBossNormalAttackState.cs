@@ -41,10 +41,14 @@ namespace CreativeAI.Gameplay
         public TBossNormalAttackState(TutorialBossController controller)
             : base(controller) { }
 
+        public override bool IsAttack => true;
+        public override bool IsCommitted => true;
+        public override bool TriggersPostAttackGuard => true;
+
         public override void Enter()
         {
             _attackTimer = 0f;
-            _approach = new TBossMeleeApproach(boss, boss.AttackRange);
+            _approach = new TBossMeleeApproach(boss, boss.NormalAttack.Range);
 
             if (boss.Player != null && !_approach.CanStrikeNow())
             {
@@ -128,7 +132,7 @@ namespace CreativeAI.Gameplay
 
             if (normalizedTime < HomingEndTime && boss.Player != null)
             {
-                FacePlayer();
+                FaceTowards(boss.Player.transform.position, HomingSpeed);
             }
 
             // ステートの Update は Animator がこのフレームの姿勢を進める前に走るため、
@@ -147,22 +151,6 @@ namespace CreativeAI.Gameplay
             {
                 boss.ChangeState(new TBossWatchState(boss));
             }
-        }
-
-        private void FacePlayer()
-        {
-            Vector3 dirToPlayer = boss.Player.transform.position - boss.transform.position;
-            dirToPlayer.y = 0f;
-            if (dirToPlayer.sqrMagnitude < 0.0001f)
-            {
-                return;
-            }
-
-            boss.transform.rotation = Quaternion.Slerp(
-                boss.transform.rotation,
-                Quaternion.LookRotation(dirToPlayer.normalized),
-                Time.deltaTime * HomingSpeed
-            );
         }
 
         /// <summary>
@@ -209,9 +197,9 @@ namespace CreativeAI.Gameplay
             toPlayer.y = 0f;
             float distance = toPlayer.magnitude;
 
-            float toStrike = distance - boss.Attack1StrikeDistance;
+            float toStrike = distance - boss.NormalAttack.StrikeDistance;
             float toContact = distance - (boss.BodyContactDistance + StepInContactMargin);
-            return Mathf.Clamp(Mathf.Min(toStrike, toContact), 0f, boss.Attack1MaxStepIn);
+            return Mathf.Clamp(Mathf.Min(toStrike, toContact), 0f, boss.NormalAttack.MaxStepIn);
         }
 
         public override void Exit()
@@ -224,8 +212,45 @@ namespace CreativeAI.Gameplay
                 boss.SetAgentStopped(false);
             }
 
-            // 怯み・パリィなどで振りの途中に抜けた場合でも、攻撃判定と軌跡を残さない
-            boss.StopSwingEffects();
+            // 怯み・パリィなどで振りの途中に抜けた場合、振り終わりのAnimationEventは来ないため、攻撃判定と軌跡をここで止める
+            SetMeleeHitboxEnabled(false);
+            boss.SetScytheTrailVisible(false);
+        }
+
+        public override void OnAnimationEvent(TBossAnimationEvent animationEvent)
+        {
+            switch (animationEvent)
+            {
+                case TBossAnimationEvent.MeleeHitStart:
+                    SetMeleeHitboxEnabled(true);
+                    break;
+                case TBossAnimationEvent.MeleeHitEnd:
+                    SetMeleeHitboxEnabled(false);
+                    break;
+                case TBossAnimationEvent.ScytheTrailShow:
+                    boss.SetScytheTrailVisible(true);
+                    break;
+                case TBossAnimationEvent.ScytheTrailHide:
+                    boss.SetScytheTrailVisible(false);
+                    break;
+            }
+        }
+
+        private void SetMeleeHitboxEnabled(bool enabled)
+        {
+            if (boss.MeleeHitbox == null)
+            {
+                return;
+            }
+
+            if (enabled)
+            {
+                boss.MeleeHitbox.EnableHitbox();
+            }
+            else
+            {
+                boss.MeleeHitbox.DisableHitbox();
+            }
         }
     }
 }

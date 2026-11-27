@@ -96,8 +96,7 @@ namespace CreativeAI.Gameplay
         // Trigger を送ったのにパリィステートへ入れない(遷移の設定漏れ等)ときに打ち切るまでの猶予
         private const float EnterParryTimeout = 1.0f;
 
-        private float _requestTime;
-        private bool _hasStarted;
+        private AnimationStateWatch _parryWatch;
         private bool _isActionEnded;
 
         public SwordStateParry(SwordController context)
@@ -109,8 +108,7 @@ namespace CreativeAI.Gameplay
 
             sword.StartAnimatorAction(PlayerAnimatorParams.Parry);
 
-            _requestTime = Time.time;
-            _hasStarted = false;
+            _parryWatch.Begin();
             _isActionEnded = false;
         }
 
@@ -142,20 +140,12 @@ namespace CreativeAI.Gameplay
                 return;
             }
 
-            bool isInParry =
-                sword.Animator.GetCurrentAnimatorStateInfo(0).shortNameHash
-                    == PlayerAnimatorStates.Parry
-                || (
-                    sword.Animator.IsInTransition(0)
-                    && sword.Animator.GetNextAnimatorStateInfo(0).shortNameHash
-                        == PlayerAnimatorStates.Parry
-                );
+            AnimationStateWatch.Progress progress = _parryWatch.Update(
+                sword.Animator.IsPlayingOrEntering(0, PlayerAnimatorStates.Parry),
+                EnterParryTimeout
+            );
 
-            if (isInParry)
-            {
-                _hasStarted = true;
-            }
-            else if (_hasStarted)
+            if (progress == AnimationStateWatch.Progress.Left)
             {
                 Debug.LogWarning(
                     $"[{sword.name}] パリィクリップの ActionEnd イベントを受信しないままパリィステートを抜けました。"
@@ -163,7 +153,7 @@ namespace CreativeAI.Gameplay
                 );
                 Finish();
             }
-            else if (Time.time - _requestTime > EnterParryTimeout)
+            else if (progress == AnimationStateWatch.Progress.TimedOut)
             {
                 Debug.LogWarning(
                     $"[{sword.name}] Parry ステートへ遷移できませんでした。Animator の遷移設定を確認してください。"

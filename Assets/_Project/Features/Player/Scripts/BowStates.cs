@@ -40,7 +40,7 @@ namespace CreativeAI.Gameplay
         public override void Enter()
         {
             bow.Player.IsAiming = false;
-            bow.Player.Locks.Release(bow);
+            bow.Player.Conditions.Release(bow);
             bow.DestroyArrow();
         }
 
@@ -62,8 +62,7 @@ namespace CreativeAI.Gameplay
     /// </summary>
     public class BowStateAim : BowState
     {
-        private float _enterTime;
-        private bool _hasEntered;
+        private AnimationStateWatch _aimWatch;
 
         public BowStateAim(BowController context)
             : base(context) { }
@@ -72,9 +71,8 @@ namespace CreativeAI.Gameplay
         {
             bow.Player.IsAiming = true;
             // 構えたまま移動はできる。武器の持ち替えだけ禁止する
-            bow.Player.Locks.Set(bow, PlayerLock.ChangeWeapon);
-            _enterTime = Time.time;
-            _hasEntered = false;
+            bow.Player.Conditions.Set(bow, PlayerLock.ChangeWeapon);
+            _aimWatch.Begin();
         }
 
         public override void OnAnimationEvent(
@@ -136,10 +134,12 @@ namespace CreativeAI.Gameplay
                 PlayerAnimatorStates.Aim,
                 out AnimatorStateInfo aimState
             );
-            if (isInAim)
-                _hasEntered = true;
+            AnimationStateWatch.Progress progress = _aimWatch.Update(isInAim, EnterStateTimeout);
 
-            if ((isInAim && aimState.normalizedTime >= 1f) || (!isInAim && _hasEntered))
+            if (
+                (isInAim && aimState.normalizedTime >= 1f)
+                || progress == AnimationStateWatch.Progress.Left
+            )
             {
                 Debug.LogWarning(
                     $"[{bow.name}] 構えクリップの DrawComplete イベントを受信しないまま最後まで再生されました。"
@@ -147,7 +147,7 @@ namespace CreativeAI.Gameplay
                 );
                 NockWithArrow();
             }
-            else if (!_hasEntered && Time.time - _enterTime > EnterStateTimeout)
+            else if (progress == AnimationStateWatch.Progress.TimedOut)
             {
                 Debug.LogWarning(
                     $"[{bow.name}] UpperBody の Aim ステートへ遷移できませんでした。Animator の遷移設定を確認してください。"
@@ -176,8 +176,7 @@ namespace CreativeAI.Gameplay
     /// </summary>
     public class BowStateRelease : BowState
     {
-        private float _enterTime;
-        private bool _hasEntered;
+        private AnimationStateWatch _fireWatch;
         private bool _isReleaseEnded;
 
         public BowStateRelease(BowController context)
@@ -187,8 +186,7 @@ namespace CreativeAI.Gameplay
         {
             // 戻りの最中に攻撃入力が残っていると、次の構えで暴発するため消費する
             bow.Input.ConsumeAttack();
-            _enterTime = Time.time;
-            _hasEntered = false;
+            _fireWatch.Begin();
             _isReleaseEnded = false;
         }
 
@@ -216,11 +214,12 @@ namespace CreativeAI.Gameplay
                 return;
             }
 
-            if (bow.TryGetUpperBodyState(PlayerAnimatorStates.Fire, out _))
-            {
-                _hasEntered = true;
-            }
-            else if (_hasEntered)
+            AnimationStateWatch.Progress progress = _fireWatch.Update(
+                bow.TryGetUpperBodyState(PlayerAnimatorStates.Fire, out _),
+                EnterStateTimeout
+            );
+
+            if (progress == AnimationStateWatch.Progress.Left)
             {
                 Debug.LogWarning(
                     $"[{bow.name}] 発射クリップの ReleaseEnd イベントを受信しないまま Fire ステートを抜けました。"
@@ -228,7 +227,7 @@ namespace CreativeAI.Gameplay
                 );
                 Finish();
             }
-            else if (Time.time - _enterTime > EnterStateTimeout)
+            else if (progress == AnimationStateWatch.Progress.TimedOut)
             {
                 Debug.LogWarning(
                     $"[{bow.name}] UpperBody の Fire ステートへ遷移できませんでした。Animator の遷移設定を確認してください。"

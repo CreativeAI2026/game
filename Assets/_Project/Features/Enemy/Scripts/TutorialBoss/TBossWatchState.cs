@@ -41,6 +41,11 @@ namespace CreativeAI.Gameplay
         public TBossWatchState(TutorialBossController controller)
             : base(controller) { }
 
+        public override bool AimsHeadAtPlayer => true;
+        public override bool IsEngaging => true;
+        public override bool ReactsToAttackInput => true;
+        public override bool CanRepel => true;
+
         public override void Enter()
         {
             DevLog.Log("[TutorialBoss] 様子見ステート開始");
@@ -55,7 +60,7 @@ namespace CreativeAI.Gameplay
 
             if (boss.Agent != null)
             {
-                boss.Agent.speed = boss.StrafeSpeed;
+                boss.Agent.speed = boss.Movement.StrafeSpeed;
                 boss.SetAgentStopped(false);
                 // NavMeshAgentの自動回転を切ることで、自前でプレイヤー方向を向きながら移動できる
                 boss.Agent.updateRotation = false;
@@ -70,7 +75,7 @@ namespace CreativeAI.Gameplay
                 return;
             }
 
-            bool tracked = boss.CheckPlayerTracked();
+            bool tracked = boss.Perception.IsPlayerTracked();
 
             // 見えている相手にだけ構える（見えていないのに構えても受け止める攻撃が来ない）
             if (!_hasCheckedOpeningGuard)
@@ -111,7 +116,7 @@ namespace CreativeAI.Gameplay
                 boss.transform.position,
                 boss.Player.transform.position
             );
-            if (distance > boss.WatchDistanceMax * BreakAwayDistanceScale)
+            if (distance > boss.Engagement.WatchDistanceMax * BreakAwayDistanceScale)
             {
                 boss.ChangeState(new TBossChaseState(boss));
                 return;
@@ -188,14 +193,15 @@ namespace CreativeAI.Gameplay
             if (boss.PanicPressure.ClosesIn)
             {
                 // 迷い・硬直で焦っている相手には、弓を構えられても下がらず、間合いの内側よりさらに詰めて考える時間を与えない
-                tooCloseDistance = boss.WatchDistanceMin * CloseInMinDistanceScale;
-                tooFarDistance = boss.WatchDistanceMin;
+                tooCloseDistance = boss.Engagement.WatchDistanceMin * CloseInMinDistanceScale;
+                tooFarDistance = boss.Engagement.WatchDistanceMin;
             }
             else
             {
-                tooCloseDistance = boss.WatchDistanceMin;
+                tooCloseDistance = boss.Engagement.WatchDistanceMin;
                 tooFarDistance =
-                    boss.WatchDistanceMax * (playerAiming ? WatchDistanceMaxScaleWhileAiming : 1f);
+                    boss.Engagement.WatchDistanceMax
+                    * (playerAiming ? WatchDistanceMaxScaleWhileAiming : 1f);
             }
 
             // 1回の移動目標までの距離と壁チェック。スケール1の体格で調整した値なので体格に合わせる

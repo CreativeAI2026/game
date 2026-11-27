@@ -15,8 +15,8 @@ namespace CreativeAI.Gameplay
     /// </summary>
     public class ScytheController : MeleeWeaponController
     {
-        /// <summary>鎌を投げた瞬間に発火する静的イベント(弓の <see cref="BowController.OnFired"/> と同じ扱い)。敵が遠距離攻撃を読むのに使う。</summary>
-        public static event Action OnThrown;
+        /// <summary>鎌を投げた瞬間に発火する静的イベント(弓の <see cref="BowController.Fired"/> と同じ扱い)。敵が遠距離攻撃を読むのに使う。</summary>
+        public static event Action Thrown;
 
         [Header("投擲")]
         [Tooltip(
@@ -86,7 +86,11 @@ namespace CreativeAI.Gameplay
 
         /// <summary>鎌が飛んでいる間は「帰還待ち」が中立状態(怯みが明けても移動・再投擲させない)。</summary>
         public override MeleeWeaponState CreateNeutralState() =>
-            _boomerang.IsFlying ? new ScytheStateWaitReturn(this) : new ScytheStateFree(this);
+            _boomerang.IsFlying ? new ScytheStateWaitReturn(this) : CreateFreeState();
+
+        /// <summary>待機ステートを作る。subAction の押下で投擲へ。</summary>
+        public MeleeWeaponState CreateFreeState() =>
+            new MeleeStateFree(this, () => new ScytheStateThrow(this));
 
         /// <summary>投擲で狙う敵を <see cref="_throwSearchRadius"/> 内の最寄りの敵から探す。</summary>
         public Transform FindThrowTarget() => FindNearestEnemy(_throwSearchRadius);
@@ -120,7 +124,7 @@ namespace CreativeAI.Gameplay
             _heldModel.SetActive(false);
             _boomerang.Launch(bodyPoint, origin, ResolveThrowDirection(target, origin), transform);
             WorldSoundPlayer.Play(_throwSound, origin, this);
-            OnThrown?.Invoke();
+            Thrown?.Invoke();
         }
 
         /// <summary>
@@ -137,10 +141,7 @@ namespace CreativeAI.Gameplay
         /// </summary>
         public bool IsThrowAnimationPlaying()
         {
-            AnimatorStateInfo state = Animator.IsInTransition(0)
-                ? Animator.GetNextAnimatorStateInfo(0)
-                : Animator.GetCurrentAnimatorStateInfo(0);
-            return state.shortNameHash == PlayerAnimatorStates.Throw;
+            return Animator.IsHeadingTo(0, PlayerAnimatorStates.Throw, out _);
         }
 
         private void OnBoomerangCaught()

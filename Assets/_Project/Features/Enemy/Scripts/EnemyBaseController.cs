@@ -1,3 +1,4 @@
+using System;
 using UnityEngine;
 using UnityEngine.AI;
 
@@ -17,7 +18,21 @@ namespace CreativeAI.Gameplay
         public Collider PlayerCollider { get; private set; }
 
         protected IEnemyState currentState;
-        public bool IsAlerted { get; set; }
+
+        /// <summary>プレイヤーを見つけて警戒しているか。書き換えは <see cref="SetAlerted"/> から。</summary>
+        public bool IsAlerted { get; private set; }
+
+        /// <summary>警戒し始めた(true)・警戒が解けた(false)時に通知する。</summary>
+        public event Action<bool> AlertedChanged;
+
+        /// <summary>警戒しているかを切り替える。変わった時だけ <see cref="AlertedChanged"/> を通知する。</summary>
+        public void SetAlerted(bool alerted)
+        {
+            if (IsAlerted == alerted)
+                return;
+            IsAlerted = alerted;
+            AlertedChanged?.Invoke(alerted);
+        }
 
         /// <summary>
         /// 攻撃ステートの最中か。プレイヤー側（焦り度の検知など）が「いま攻撃が来ているか」を知るために使う。

@@ -10,7 +10,7 @@ namespace CreativeAI.Gameplay
     /// - 見つかった瞬間(IsAlerted が false → true): 発見音(画面全体に鳴る演出音)を鳴らし、戦闘曲へフェードする
     /// - 見失って警戒が解けた瞬間(true → false): 通常時の BGM へフェードで戻す
     ///
-    /// IsAlerted は複数のステートから直接書き換えられるため、ステート側に通知を足さずにここで毎フレーム変化を見る。
+    /// 変化は <see cref="EnemyBaseController.AlertedChanged"/> で受け取る。
     /// フェード時間はどちらも試しながら調整できるようインスペクタに出している。
     /// </summary>
     [RequireComponent(typeof(TutorialBossController))]
@@ -41,7 +41,6 @@ namespace CreativeAI.Gameplay
         private float _toAmbientFadeDuration = 3f;
 
         private TutorialBossController _boss;
-        private bool _wasAlerted;
 
         private void Awake()
         {
@@ -50,17 +49,19 @@ namespace CreativeAI.Gameplay
 
         private void Start()
         {
-            _wasAlerted = _boss.IsAlerted;
-            BgmPlayer.Play(_wasAlerted ? _battleBgm : _ambientBgm);
+            BgmPlayer.Play(_boss.IsAlerted ? _battleBgm : _ambientBgm);
+            // 開始時の曲を決めてから変化を受け取る(それまでの変化は開始時の曲に含まれる)
+            _boss.AlertedChanged += OnAlertedChanged;
         }
 
-        private void Update()
+        private void OnDestroy()
         {
-            bool isAlerted = _boss.IsAlerted;
-            if (isAlerted == _wasAlerted)
-                return;
+            // Start 前に破棄された場合は購読していないが、外すだけなので問題ない
+            _boss.AlertedChanged -= OnAlertedChanged;
+        }
 
-            _wasAlerted = isAlerted;
+        private void OnAlertedChanged(bool isAlerted)
+        {
             if (isAlerted)
             {
                 SoundEffectPlayer.Play(_discoverySound, this);

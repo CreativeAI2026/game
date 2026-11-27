@@ -74,13 +74,13 @@ namespace CreativeAI.Gameplay
         private void OnEnable()
         {
             if (_playerStatus != null)
-                _playerStatus.OnHpChanged += PreventLethalDamage;
+                _playerStatus.HpChanged += PreventLethalDamage;
         }
 
         private void OnDisable()
         {
             if (_playerStatus != null)
-                _playerStatus.OnHpChanged -= PreventLethalDamage;
+                _playerStatus.HpChanged -= PreventLethalDamage;
             // 速さを落としたまま止めると、次に再生した時まで残らないよう戻す
             if (_timeScaleIndex != 0)
                 Time.timeScale = 1f;

@@ -146,14 +146,14 @@ namespace CreativeAI.Gameplay
 
             Vector3 chestOffset = GetPlayerChestOffset();
 
-            if (boss.CheckPlayerTracked())
+            if (boss.Perception.IsPlayerTracked())
             {
                 return boss.Player.transform.position + chestOffset;
             }
 
-            if (boss.HasKnownPlayerPosition)
+            if (boss.Perception.HasKnownPlayerPosition)
             {
-                return boss.LastKnownPlayerPosition + chestOffset;
+                return boss.Perception.LastKnownPlayerPosition + chestOffset;
             }
 
             return GetForwardPoint();

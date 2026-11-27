@@ -68,7 +68,7 @@ namespace CreativeAI.Gameplay
         /// <summary>3段コンボの現在の段(0 = 攻撃していない)。ステートが更新する。</summary>
         public int ComboStep { get; set; }
 
-        protected WeaponManager weaponManager;
+        protected PlayerWeapons playerWeapons;
         private PlayerTargetManager _targetManager;
 
         private MeleeWeaponState _currentState;
@@ -94,11 +94,11 @@ namespace CreativeAI.Gameplay
             Animator = PlayerModel.Of(this).Animator;
             CharacterController = root.GetComponent<CharacterController>();
             Player = root;
-            weaponManager = root.GetComponent<WeaponManager>();
+            playerWeapons = root.GetComponent<PlayerWeapons>();
             _targetManager = root.GetComponent<PlayerTargetManager>();
 
             Assert.IsNotNull(Input, $"{name}: PlayerInputHandler が見つかりません");
-            Assert.IsNotNull(weaponManager, $"{name}: WeaponManager が見つかりません");
+            Assert.IsNotNull(playerWeapons, $"{name}: PlayerWeapons が見つかりません");
             Assert.IsNotNull(_targetManager, $"{name}: PlayerTargetManager が見つかりません");
             Assert.IsNotNull(_hitbox, $"{name}: 攻撃判定(PlayerMeleeHitbox)が未設定です");
         }
@@ -118,13 +118,13 @@ namespace CreativeAI.Gameplay
             _currentState.Exit();
             SetHitboxActive(false);
 
-            Player.Locks.Release(this);
+            Player.Conditions.Release(this);
         }
 
         protected virtual void Update()
         {
-            // 怯み中、または掴まれ中は武器ステートマシンを完全停止し、入力を一切処理しない
-            if (Player.IsFlinching || Player.IsGrabbed)
+            // 武器の行動が制限されている間(怯み・掴まれ中など)は武器ステートマシンを完全停止し、入力を一切処理しない
+            if (!Player.Conditions.CanAttack)
             {
                 ReturnToNeutral();
                 return;
@@ -132,7 +132,7 @@ namespace CreativeAI.Gameplay
 
             // 非装備時に裏で入力を消費するのを防ぐ。
             // 番号ではなく「選択中の武器オブジェクトが自分か」で判定するので、Inspector で番号を合わせる必要はない
-            if (weaponManager.CurrentWeaponObject != gameObject)
+            if (playerWeapons.CurrentWeaponObject != gameObject)
             {
                 ReturnToNeutral();
                 return;
@@ -262,14 +262,14 @@ namespace CreativeAI.Gameplay
         /// </summary>
         public void ReleaseControlLocks()
         {
-            Player.Locks.Release(this);
+            Player.Conditions.Release(this);
             ComboStep = 0;
         }
 
-        /// <summary>攻撃・投擲などの行動中に、移動・ジャンプ・武器切替を禁止する。</summary>
+        /// <summary>攻撃・投擲などの行動中に、移動・武器切替を禁止する。</summary>
         public void LockControls()
         {
-            Player.Locks.Set(this, PlayerLock.All);
+            Player.Conditions.Set(this, PlayerLock.Move | PlayerLock.ChangeWeapon);
         }
 
         /// <summary>
@@ -301,7 +301,7 @@ namespace CreativeAI.Gameplay
         public Transform FindNearestEnemy(float radius) => _targetManager.FindNearest(radius);
 
         /// <summary>
-        /// 怯み・死亡時(WeaponManager.ResetEquippedWeapon 経由)に、現在のステートを終了して中立状態へ戻す。
+        /// 怯み・死亡などで武器の行動の制限が掛かった時(PlayerWeapons 経由)に、現在のステートを終了して中立状態へ戻す。
         /// 行動制限は owner ごとに管理されるので、中立状態の Enter で自分の分を戻しても怯み側の制限は残る。
         /// </summary>
         public virtual void ForceReset()

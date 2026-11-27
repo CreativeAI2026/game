@@ -40,6 +40,10 @@ namespace CreativeAI.Gameplay
         public TBossCapturedState(TutorialBossController controller)
             : base(controller) { }
 
+        public override bool IsCommitted => true;
+        public override bool IsCapturingPlayer => true;
+        public override bool TriggersPostAttackGuard => true;
+
         public override void Enter()
         {
             DevLog.Log("[TutorialBoss] 捕獲ステート開始: WaitBeforePull フェーズ");
@@ -79,9 +83,9 @@ namespace CreativeAI.Gameplay
 
             if (_playerController != null)
             {
-                _playerController.IsGrabbed = true;
+                _playerController.Conditions.SetGrabbed(this, true);
                 // 掴んでいる間の制限はこのステートが owner として持つ(解除は Exit で自分の分だけ)
-                _playerController.Locks.Set(this, PlayerLock.All);
+                _playerController.Conditions.Set(this, PlayerLock.All);
             }
             if (_playerInput != null)
             {
@@ -105,7 +109,7 @@ namespace CreativeAI.Gameplay
 
             _timer = 0f;
             _damageTimer = 0f;
-            _escapeGauge.Reset(boss.GrabEscapeThreshold, boss.GrabEscapePerInput);
+            _escapeGauge.Reset(boss.Grab.EscapeThreshold, boss.Grab.EscapePerInput);
 
             _phase = Phase.WaitBeforePull;
 
@@ -149,7 +153,7 @@ namespace CreativeAI.Gameplay
                         _timer = 0f;
 
                         SpawnElectricEffect();
-                        GrabEscapeEvents.OnShowGauge?.Invoke(0f, boss.GrabEscapeThreshold);
+                        GrabEscapeEvents.OnShowGauge?.Invoke(0f, boss.Grab.EscapeThreshold);
 
                         // 電撃フェーズのカメラへ切り替える。
                         // 毎フレーム呼ぶと引き寄せカメラ(vcamPull)を即座に上書きしてしまうため、
@@ -179,7 +183,7 @@ namespace CreativeAI.Gameplay
             else
             {
                 // Escape中のボーンリトラクト処理
-                float t = Mathf.Clamp01(_timer / boss.GrabRetractDuration);
+                float t = Mathf.Clamp01(_timer / boss.Grab.RetractDuration);
                 if (boss.WireBone != null)
                 {
                     boss.WireBone.SetLocalPositionAndRotation(
@@ -204,8 +208,8 @@ namespace CreativeAI.Gameplay
 
             if (_playerController != null)
             {
-                _playerController.IsGrabbed = false;
-                _playerController.Locks.Release(this);
+                _playerController.Conditions.SetGrabbed(this, false);
+                _playerController.Conditions.Release(this);
             }
             if (_playerInput != null)
             {
@@ -236,13 +240,13 @@ namespace CreativeAI.Gameplay
             {
                 Vector3 targetPos =
                     boss.transform.position
-                    + boss.transform.forward * boss.GrabPullDistance
-                    + boss.transform.right * boss.GrabPullLateralOffset;
+                    + boss.transform.forward * boss.Grab.PullDistance
+                    + boss.transform.right * boss.Grab.PullLateralOffset;
                 targetPos.y = boss.Player.transform.position.y;
 
                 float dist = Vector3.Distance(boss.Player.transform.position, targetPos);
 
-                if (dist < 0.1f || _timer >= boss.GrabPullDuration)
+                if (dist < 0.1f || _timer >= boss.Grab.PullDuration)
                 {
                     _phase = Phase.WaitBeforeDamage;
                     _timer = 0f;
@@ -252,14 +256,14 @@ namespace CreativeAI.Gameplay
 
                 if (_playerRb != null)
                 {
-                    float speed = dist / Mathf.Max(0.01f, boss.GrabPullDuration - _timer);
+                    float speed = dist / Mathf.Max(0.01f, boss.Grab.PullDuration - _timer);
                     Vector3 moveDir = (targetPos - boss.Player.transform.position).normalized;
                     _playerRb.MovePosition(_playerRb.position + moveDir * (speed * Time.deltaTime));
                 }
                 else if (_playerCC != null && _playerCC.enabled)
                 {
                     Vector3 moveDir = (targetPos - boss.Player.transform.position).normalized;
-                    float speed = dist / Mathf.Max(0.01f, boss.GrabPullDuration - _timer);
+                    float speed = dist / Mathf.Max(0.01f, boss.Grab.PullDuration - _timer);
                     _playerCC.Move(moveDir * (speed * Time.deltaTime));
                 }
             }
@@ -281,9 +285,9 @@ namespace CreativeAI.Gameplay
             }
 
             _damageTimer += Time.deltaTime;
-            if (_damageTimer >= boss.GrabDamageInterval)
+            if (_damageTimer >= boss.Grab.DamageInterval)
             {
-                _damageTimer -= boss.GrabDamageInterval;
+                _damageTimer -= boss.Grab.DamageInterval;
                 ApplyElectricDamage();
             }
 
@@ -305,7 +309,7 @@ namespace CreativeAI.Gameplay
             _timer = 0f;
 
             // 脱出後は崩れ(Parried)を経由して交戦に戻る。警戒を落とすと目の前のプレイヤーを見失って徘徊に戻ってしまう
-            boss.IsAlerted = true;
+            boss.SetAlerted(true);
 
             GrabEscapeEvents.OnCameraEscape?.Invoke();
             StopElectricEffect();
@@ -335,7 +339,7 @@ namespace CreativeAI.Gameplay
         {
             _timer += Time.deltaTime;
 
-            float t = Mathf.Clamp01(_timer / boss.GrabRetractDuration);
+            float t = Mathf.Clamp01(_timer / boss.Grab.RetractDuration);
             if (t >= 1f)
             {
                 // レバガチャで振りほどかれたら、パリィされた時と同じく大きく崩れる
@@ -359,8 +363,9 @@ namespace CreativeAI.Gameplay
         {
             if (_playerStatus == null)
                 return;
-            _playerStatus.TakeDamage(boss.GrabDamagePerTick, false);
-            DevLog.Log($"[TutorialBoss] 電撃ダメージ {boss.GrabDamagePerTick} を付与");
+            float damage = boss.Status.CurrentAttackPower * boss.Grab.DamageMultiplier;
+            _playerStatus.TakeDamage(damage, false);
+            DevLog.Log($"[TutorialBoss] 電撃ダメージ {damage} を付与");
         }
 
         private void SpawnElectricEffect()

@@ -3,7 +3,7 @@ namespace CreativeAI.Gameplay
     /// <summary>
     /// 怯み・死亡などで行動を強制的に打ち切るときに、武器の状態を中立へ戻す窓口。
     /// WeaponManager に登録された武器のルートに付くコンポーネントが実装する。
-    /// 呼び出し側(<see cref="WeaponManager.ResetEquippedWeapon"/>)は武器の種類を知らなくてよい。
+    /// 呼び出し側(武器の行動の制限が掛かった時の <see cref="WeaponManager"/>)は武器の種類を知らなくてよい。
     /// </summary>
     public interface IResettableWeapon
     {

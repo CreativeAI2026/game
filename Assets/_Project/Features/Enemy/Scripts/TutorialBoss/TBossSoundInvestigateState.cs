@@ -51,6 +51,8 @@ namespace CreativeAI.Gameplay
             _confidence = confidence;
         }
 
+        public override bool AllowsLookAround => true;
+
         public override void Enter()
         {
             DevLog.Log($"[TutorialBoss] 音調査ステート開始 確信度:{_confidence:F2}");
@@ -92,17 +94,18 @@ namespace CreativeAI.Gameplay
         public override void Update()
         {
             // 視認できたら即追跡
-            if (boss.CheckInFlashlight())
+            if (boss.Perception.IsPlayerVisible())
             {
-                boss.IsAlerted = true;
+                boss.SetAlerted(true);
                 boss.ChangeState(new TBossChaseState(boss));
                 return;
             }
 
             if (_mode == Mode.LookOnly)
             {
-                // 音源方向に振り返るだけ
-                RotateTowardSound();
+                // 音源方向に振り返るだけ。懐中電灯はボス本体の向きに固定されているため、
+                // 体を音源へ向けるだけで懐中電灯も追従する（別途懐中電灯だけを回す処理は不要）
+                FaceTowards(boss.LastHeardSoundPosition, 3f, minSqrDistance: 0.001f);
 
                 // 向きが概ね一致したら Look トリガーを引く
                 Vector3 dir = (boss.LastHeardSoundPosition - boss.transform.position);
@@ -140,16 +143,7 @@ namespace CreativeAI.Gameplay
             }
 
             // Walk モード：ボス本体を音源方向に向けながら歩く（懐中電灯は体の向きに追従する）
-            Vector3 dirToSound = (boss.LastHeardSoundPosition - boss.transform.position);
-            dirToSound.y = 0f;
-            if (dirToSound.sqrMagnitude > 0.001f)
-            {
-                boss.transform.rotation = Quaternion.Slerp(
-                    boss.transform.rotation,
-                    Quaternion.LookRotation(dirToSound.normalized),
-                    Time.deltaTime * 2f
-                );
-            }
+            FaceTowards(boss.LastHeardSoundPosition, 2f, minSqrDistance: 0.001f);
 
             _timeoutTimer += Time.deltaTime;
 
@@ -194,26 +188,7 @@ namespace CreativeAI.Gameplay
 
         private float SpeedForConfidence()
         {
-            return _confidence >= RunThreshold ? boss.RunSpeed : boss.WalkSpeed;
-        }
-
-        private void RotateTowardSound()
-        {
-            Vector3 dir = (boss.LastHeardSoundPosition - boss.transform.position);
-            dir.y = 0f;
-            if (dir.sqrMagnitude < 0.001f)
-            {
-                return;
-            }
-
-            // 懐中電灯はボス本体の向きに固定されているため、体を音源へ向けるだけで
-            // 懐中電灯も追従する（別途懐中電灯だけを回す処理は不要）。
-            Quaternion targetRot = Quaternion.LookRotation(dir.normalized);
-            boss.transform.rotation = Quaternion.Slerp(
-                boss.transform.rotation,
-                targetRot,
-                Time.deltaTime * 3f
-            );
+            return _confidence >= RunThreshold ? boss.Movement.RunSpeed : boss.Movement.WalkSpeed;
         }
 
         private void OnArrived()
@@ -221,9 +196,9 @@ namespace CreativeAI.Gameplay
             // 音源に到達。光の中にいれば既にUpdateで追跡へ移っている。
             // 光の外でも、すぐ近くで遮蔽物なく見通せる位置にいれば気づいて交戦に入る。
             // 以前は距離だけで攻撃していたため、壁の向こうや背後の見えていないプレイヤーにも攻撃していた
-            if (boss.CheckPlayerTracked())
+            if (boss.Perception.IsPlayerTracked())
             {
-                boss.IsAlerted = true;
+                boss.SetAlerted(true);
                 boss.ChangeState(new TBossChaseState(boss));
                 return;
             }
@@ -247,9 +222,9 @@ namespace CreativeAI.Gameplay
         private void OnSoundHeard(NoiseEvent data)
         {
             // 音よりもスポットライトでの視認を最優先する
-            if (boss.CheckInFlashlight())
+            if (boss.Perception.IsPlayerVisible())
             {
-                boss.IsAlerted = true;
+                boss.SetAlerted(true);
                 boss.ChangeState(new TBossChaseState(boss));
                 return;
             }
@@ -260,7 +235,7 @@ namespace CreativeAI.Gameplay
             }
 
             // 新しい音の確信度が今より高ければ目標を更新
-            boss.NotifySoundHeard(newConfidence);
+            boss.Perception.NotifySoundHeard(newConfidence);
             if (newConfidence > _confidence)
             {
                 _confidence = newConfidence;

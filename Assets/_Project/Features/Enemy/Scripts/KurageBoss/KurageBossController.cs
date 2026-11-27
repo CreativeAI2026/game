@@ -23,29 +23,8 @@ namespace CreativeAI.Gameplay
     public class KurageBossController : EnemyBaseController
     {
         [Header("周回")]
-        [Tooltip("周回の速さ（m/秒）")]
         [SerializeField]
-        private float _orbitSpeed = 6f;
-
-        [Tooltip("スピードアップ時の周回の速さ（m/秒）")]
-        [SerializeField]
-        private float _highOrbitSpeed = 10f;
-
-        [Tooltip(
-            "スピードアップする長さ。その周回の時間に対する割合（0〜1）。段階で周回時間が短くなっても、普通の速さと混ざるよう秒ではなく割合で決める"
-        )]
-        [SerializeField, Range(0f, 1f)]
-        private float _speedUpDurationRatio = 0.4f;
-
-        [Tooltip(
-            "周回の速さを変える時の加速度（m/秒²）。スピードアップや切り返しで一瞬で切り替わってカクッと見えないよう、少しずつ変える"
-        )]
-        [SerializeField]
-        private float _orbitAcceleration = 20f;
-
-        [Tooltip("周回する時にプレイヤーの方へ回り込む確率。外れると逆へ回る")]
-        [SerializeField, Range(0f, 1f)]
-        private float _orbitTowardPlayerChance = 0.7f;
+        private KurageOrbitSettings _orbit = new();
 
         [Tooltip("正面をステージへ向け直す速さ（度/秒）。突きで向きを変えた後に戻る速さ")]
         [SerializeField]
@@ -96,29 +75,8 @@ namespace CreativeAI.Gameplay
         private float _repeatWeightScale = 0.4f;
 
         [Header("触手の突き")]
-        [Tooltip("突く前にプレイヤーを追いかける時間（秒）")]
         [SerializeField]
-        private float _stabChaseDuration = 2.5f;
-
-        [Tooltip("追いかける速さ（m/秒）")]
-        [SerializeField]
-        private float _stabChaseSpeed = 10f;
-
-        [Tooltip("立ち止まってから突くまでの溜め（秒）。プレイヤーへの予兆")]
-        [SerializeField]
-        private float _stabWindupDuration = 0.5f;
-
-        [Tooltip("溜めの間に、体を狙った場所へ向ける速さ（度/秒）")]
-        [SerializeField]
-        private float _stabTurnSpeed = 240f;
-
-        [Tooltip("伸び始めてから伸び切るまで（秒）")]
-        [SerializeField]
-        private float _stabExtendDuration = 0.1f;
-
-        [Tooltip("戻り始めてから縮み切るまで（秒）")]
-        [SerializeField]
-        private float _stabRetractDuration = 0.15f;
+        private KurageStabSettings _stab = new();
 
         [Tooltip("突きの触手の先端に付けた当たり判定")]
         [SerializeField]
@@ -169,23 +127,18 @@ namespace CreativeAI.Gameplay
         public KurageHaloRing Halo { get; private set; }
         public KurageRingRestraint Restraint { get; private set; }
 
-        public float OrbitSpeed => _orbitSpeed;
-        public float HighOrbitSpeed => _highOrbitSpeed;
-        public float OrbitAcceleration => _orbitAcceleration;
-        public float SpeedUpDurationRatio => _speedUpDurationRatio;
+        /// <summary>周回の速さと向きの設定。</summary>
+        public KurageOrbitSettings Orbit => _orbit;
+
+        /// <summary>触手の突きの設定。</summary>
+        public KurageStabSettings Stab => _stab;
+
         public float SpeedUpProbability => CurrentPhase.SpeedUpProbability;
         public Vector2 OrbitDurationRange => CurrentPhase.OrbitDurationRange;
         public float TurnProbability => CurrentPhase.TurnProbability;
         public float DoubleAttackProbability => CurrentPhase.DoubleAttackProbability;
-        public float OrbitTowardPlayerChance => _orbitTowardPlayerChance;
         public float TurnSpeed => _turnSpeed;
-        public float StabChaseDuration => _stabChaseDuration;
-        public float StabChaseSpeed => _stabChaseSpeed;
-        public float StabWindupDuration => _stabWindupDuration;
         public EnemyMeleeHitbox StabHitbox => _stabHitbox;
-        public float StabTurnSpeed => _stabTurnSpeed;
-        public float StabExtendDuration => _stabExtendDuration;
-        public float StabRetractDuration => _stabRetractDuration;
         public KurageStabReach StabReach { get; private set; }
         public KurageStabEffects StabEffects { get; private set; }
 

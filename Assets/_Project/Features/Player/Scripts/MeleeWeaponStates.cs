@@ -1,3 +1,4 @@
+using System;
 using UnityEngine;
 
 namespace CreativeAI.Gameplay
@@ -31,6 +32,50 @@ namespace CreativeAI.Gameplay
             WeaponAnimationEventType type,
             AnimatorStateInfo sourceState
         ) { }
+    }
+
+    /// <summary>
+    /// subAction で武器ごとの技(鎌の投擲・ハンマーの叩きつけ)を出す武器の待機ステート。
+    /// 攻撃入力で接近/コンボ、subAction の押下で技のステートへ。
+    /// </summary>
+    public sealed class MeleeStateFree : MeleeWeaponState
+    {
+        private readonly Func<MeleeWeaponState> _createSubActionState;
+
+        /// <param name="createSubActionState">subAction を押したときに移るステートを作る</param>
+        public MeleeStateFree(
+            MeleeWeaponController context,
+            Func<MeleeWeaponState> createSubActionState
+        )
+            : base(context)
+        {
+            _createSubActionState = createSubActionState;
+        }
+
+        public override bool IsNeutral => true;
+
+        public override void Enter()
+        {
+            ctx.ReleaseControlLocks();
+        }
+
+        public override void Update()
+        {
+            // 技・攻撃は地上でのみ始める(空中の攻撃入力は消費せず先行入力として残す)
+            if (!ctx.CanStartGroundAction)
+                return;
+
+            if (ctx.SubActionPressedThisFrame)
+            {
+                ctx.ChangeState(_createSubActionState());
+                return;
+            }
+
+            if (ctx.Input.ConsumeAttack())
+            {
+                ctx.BeginAttack();
+            }
+        }
     }
 
     /// <summary>
@@ -130,8 +175,7 @@ namespace CreativeAI.Gameplay
 
         private int _expectedStateHash;
         private float _lastTriggerTime;
-        private float _attackRequestTime;
-        private bool _hasStartedAction;
+        private AnimationStateWatch _attackWatch;
         private bool _isComboQueued;
         private bool _isComboWindowOpen;
         private bool _isRecoveryStarted;
@@ -189,31 +233,23 @@ namespace CreativeAI.Gameplay
 
         public override void Update()
         {
-            AnimatorStateInfo state = ctx.Animator.GetCurrentAnimatorStateInfo(0);
-            bool isTransitioningToAttack =
-                ctx.Animator.IsInTransition(0)
-                && ctx.Animator.GetNextAnimatorStateInfo(0).shortNameHash == _expectedStateHash;
-            bool isPlayingAttack = state.shortNameHash == _expectedStateHash;
+            AnimationStateWatch.Progress progress = _attackWatch.Update(
+                ctx.Animator.IsPlayingOrEntering(0, _expectedStateHash),
+                EnterAttackTimeout
+            );
 
-            if (!_hasStartedAction)
+            if (progress == AnimationStateWatch.Progress.Waiting)
+                return;
+
+            if (progress == AnimationStateWatch.Progress.TimedOut)
             {
-                if (isPlayingAttack || isTransitioningToAttack)
-                {
-                    _hasStartedAction = true;
-                }
-                else
-                {
-                    if (Time.time - _attackRequestTime > EnterAttackTimeout)
-                    {
-                        Debug.LogWarning(
-                            $"[{ctx.name}] {PlayerAnimatorStates.AttackName(ctx.ComboStep)} ステートへ遷移できませんでした。"
-                                + "Animator の遷移設定を確認してください。"
-                        );
-                        ctx.Animator.ResetTrigger(PlayerAnimatorParams.Attacks[ctx.ComboStep - 1]);
-                        ctx.ChangeState(ctx.CreateNeutralState());
-                    }
-                    return;
-                }
+                Debug.LogWarning(
+                    $"[{ctx.name}] {PlayerAnimatorStates.AttackName(ctx.ComboStep)} ステートへ遷移できませんでした。"
+                        + "Animator の遷移設定を確認してください。"
+                );
+                ctx.Animator.ResetTrigger(PlayerAnimatorParams.Attacks[ctx.ComboStep - 1]);
+                ctx.ChangeState(ctx.CreateNeutralState());
+                return;
             }
 
             if (ctx.Input.ConsumeAttack() && Time.time - _lastTriggerTime > MinComboInputInterval)
@@ -245,7 +281,7 @@ namespace CreativeAI.Gameplay
             }
 
             // ActionEnd を受け取らないまま攻撃ステートを抜けた(遷移の割り込み・イベントの付け忘れ)
-            if (!isPlayingAttack && !isTransitioningToAttack && !ctx.Animator.IsInTransition(0))
+            if (progress == AnimationStateWatch.Progress.Left && !ctx.Animator.IsInTransition(0))
             {
                 Debug.LogWarning(
                     $"[{ctx.name}] {PlayerAnimatorStates.AttackName(ctx.ComboStep)} で ActionEnd イベントを受信しないまま攻撃が終了しました。"
@@ -298,8 +334,7 @@ namespace CreativeAI.Gameplay
             ctx.StartAnimatorAction(PlayerAnimatorParams.Attacks[index]);
 
             _lastTriggerTime = Time.time;
-            _attackRequestTime = Time.time;
-            _hasStartedAction = false;
+            _attackWatch.Begin();
             _isComboQueued = false;
             _isComboWindowOpen = false;
             _isRecoveryStarted = false;

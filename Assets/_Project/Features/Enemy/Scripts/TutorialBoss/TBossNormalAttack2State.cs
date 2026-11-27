@@ -6,7 +6,7 @@ namespace CreativeAI.Gameplay
     /// 腕を鞭のように伸ばす二段攻撃のステート（左から右への払い → 振り下ろして地面に刺し、火花を散らして引きずり戻す）。
     /// 腕の伸びと動きはクリップ側に焼いてあり、進行は Animator に任せる。ここは AnimationEvent を受けて、向きの固定・地面の火花・ヒット時の引き寄せだけを行う。
     ///   OnAttack2ReachExtend: 振りに入る（向きを固定） / OnAttack2ReachRetract: 腕を戻し終えた（向き直りを再開）
-    /// 判定・ダメージ・ガードは腕全体を掃く TBossArmSweepHitbox に委譲する。
+    /// 判定・ダメージ・ガードは腕全体を掃く BoneChainHitbox に委譲する。
     /// </summary>
     public class TBossNormalAttack2State : TBossBaseState
     {
@@ -42,6 +42,10 @@ namespace CreativeAI.Gameplay
         public TBossNormalAttack2State(TutorialBossController controller)
             : base(controller) { }
 
+        public override bool IsAttack => true;
+        public override bool IsCommitted => true;
+        public override bool TriggersPostAttackGuard => true;
+
         public override void Enter()
         {
             DevLog.Log("[TutorialBoss] 通常攻撃2ステート開始");
@@ -60,7 +64,7 @@ namespace CreativeAI.Gameplay
             }
 
             // 様子見の間合いの外から選ばれた場合は、振れる間合いまで走り込んでから振る
-            _approach = new TBossMeleeApproach(boss, boss.NormalAttack2Range);
+            _approach = new TBossMeleeApproach(boss, boss.NormalAttack2.Range);
             if (boss.Player != null && !_approach.CanStrikeNow())
             {
                 _isApproaching = true;
@@ -173,8 +177,10 @@ namespace CreativeAI.Gameplay
                 boss.ArmSweepHitbox.OnHitLanded -= HandlePlayerHitLanded;
             }
 
-            // 怯み・パリィなどで振りの途中に抜けた場合でも、攻撃判定・軌跡・火花を残さない
-            boss.StopSwingEffects();
+            // 怯み・パリィなどで振りの途中に抜けた場合、振り終わりのAnimationEventは来ないため、攻撃判定・軌跡・火花をここで止める
+            boss.ArmSweepHitbox.DisableHitbox();
+            boss.GroundDragSparks.EndDrag();
+            boss.SetScytheTrailVisible(false);
             EndPull();
 
             if (boss.Agent != null)
@@ -183,22 +189,42 @@ namespace CreativeAI.Gameplay
             }
         }
 
-        /// <summary>
-        /// AnimationEvent(OnAttack2ReachExtend) から呼ばれる。腕を伸ばして振りに入るので、向きを固定する（振りの回数だけ呼ばれる）。
-        /// </summary>
-        public void OnReachExtend()
+        public override void OnAnimationEvent(TBossAnimationEvent animationEvent)
         {
-            _isAimLocked = true;
-            boss.Sounds.PlayAttack2ReachExtend();
-        }
-
-        /// <summary>
-        /// AnimationEvent(OnAttack2ReachRetract) から呼ばれる。腕を戻し終えたので、次の振りへ向けて向き直りを再開する。
-        /// </summary>
-        public void OnReachRetract()
-        {
-            _isAimLocked = false;
-            boss.Sounds.PlayAttack2ReachRetract();
+            switch (animationEvent)
+            {
+                case TBossAnimationEvent.Attack2ReachExtend:
+                    // 腕を伸ばして振りに入るので、向きを固定する（振りの回数だけ来る）
+                    _isAimLocked = true;
+                    boss.Sounds.PlayAttack2ReachExtend();
+                    break;
+                case TBossAnimationEvent.Attack2ReachRetract:
+                    // 腕を戻し終えたので、次の振りへ向けて向き直りを再開する
+                    _isAimLocked = false;
+                    boss.Sounds.PlayAttack2ReachRetract();
+                    break;
+                case TBossAnimationEvent.Attack2ArmSweepStart:
+                    boss.ArmSweepHitbox.EnableHitbox();
+                    break;
+                case TBossAnimationEvent.Attack2ArmSweepEnd:
+                    boss.ArmSweepHitbox.DisableHitbox();
+                    break;
+                case TBossAnimationEvent.Attack2GroundImpact:
+                    boss.GroundDragSparks.PlayImpact();
+                    break;
+                case TBossAnimationEvent.Attack2GroundDragStart:
+                    boss.GroundDragSparks.BeginDrag();
+                    break;
+                case TBossAnimationEvent.Attack2GroundDragEnd:
+                    boss.GroundDragSparks.EndDrag();
+                    break;
+                case TBossAnimationEvent.ScytheTrailShow:
+                    boss.SetScytheTrailVisible(true);
+                    break;
+                case TBossAnimationEvent.ScytheTrailHide:
+                    boss.SetScytheTrailVisible(false);
+                    break;
+            }
         }
 
         /// <summary>
@@ -207,7 +233,7 @@ namespace CreativeAI.Gameplay
         /// </summary>
         private void UpdateHoming()
         {
-            if (boss.Player == null || boss.Attack2HomingRotateSpeed <= 0f)
+            if (boss.Player == null || boss.NormalAttack2.HomingRotateSpeed <= 0f)
             {
                 return;
             }
@@ -217,22 +243,11 @@ namespace CreativeAI.Gameplay
                 return;
             }
 
-            Vector3 dirToPlayer = boss.Player.transform.position - boss.transform.position;
-            dirToPlayer.y = 0f;
-            if (dirToPlayer.sqrMagnitude < 0.0001f)
-            {
-                return;
-            }
-
-            boss.transform.rotation = Quaternion.Slerp(
-                boss.transform.rotation,
-                Quaternion.LookRotation(dirToPlayer.normalized),
-                Time.deltaTime * boss.Attack2HomingRotateSpeed
-            );
+            FaceTowards(boss.Player.transform.position, boss.NormalAttack2.HomingRotateSpeed);
         }
 
         /// <summary>
-        /// 腕が実際にプレイヤーへ触れた瞬間（TBossArmSweepHitbox.OnHitLanded）に呼ばれる。
+        /// 腕が実際にプレイヤーへ触れた瞬間（BoneChainHitbox.OnHitLanded）に呼ばれる。
         /// ガードされていてもここは発火するため、「防御されても少しだけ引き寄せられる」演出になる。
         /// </summary>
         private void HandlePlayerHitLanded(Vector3 hitPoint)
@@ -261,7 +276,7 @@ namespace CreativeAI.Gameplay
 
             // 密着・すり抜けを避けるため、体が触れる距離より内側へは詰めない
             float pullAmount = Mathf.Min(
-                boss.Attack2PullDistance,
+                boss.NormalAttack2.PullDistance,
                 Mathf.Max(0f, currentDistance - (boss.BodyContactDistance + PullContactMargin))
             );
             Vector3 pullDir =
@@ -270,7 +285,7 @@ namespace CreativeAI.Gameplay
 
             if (_playerController != null)
             {
-                _playerController.Locks.Set(this, PlayerLock.Move);
+                _playerController.Conditions.Set(this, PlayerLock.Move);
                 _movementSuppressed = true;
             }
 
@@ -294,13 +309,13 @@ namespace CreativeAI.Gameplay
             float t = Mathf.SmoothStep(
                 0f,
                 1f,
-                Mathf.Clamp01(_pullTimer / boss.Attack2PullDuration)
+                Mathf.Clamp01(_pullTimer / boss.NormalAttack2.PullDuration)
             );
 
             Vector3 target = Vector3.Lerp(_pullStart, _pullEnd, t);
             _playerCC.Move(target - _playerCC.transform.position);
 
-            if (_pullTimer >= boss.Attack2PullDuration)
+            if (_pullTimer >= boss.NormalAttack2.PullDuration)
             {
                 EndPull();
             }
@@ -315,7 +330,7 @@ namespace CreativeAI.Gameplay
                 _movementSuppressed = false;
 
                 // 自分が掛けた分だけを外す。怯み・掴みが同時に成立していても、そちらの制限は残る
-                _playerController.Locks.Release(this);
+                _playerController.Conditions.Release(this);
             }
 
             if (_collisionIgnored)

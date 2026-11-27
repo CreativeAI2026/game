@@ -1,5 +1,4 @@
 using System;
-using System.Collections.Generic;
 using UnityEngine;
 
 namespace CreativeAI.Gameplay
@@ -39,13 +38,10 @@ namespace CreativeAI.Gameplay
         [SerializeField]
         private LayerMask _targetLayer = ~0;
 
-        private bool _isHitboxActive = false;
-        private Vector3 _previousPosition;
-        private HashSet<Collider> _alreadyHitTargets = new HashSet<Collider>();
+        private readonly MeleeSweep _sweep = new MeleeSweep();
 
-        // 物理クエリ結果の再利用バッファ(_targetLayer が広い場合も取りこぼさないよう大きめ)
-        private readonly RaycastHit[] _castHits = new RaycastHit[64];
-        private readonly Collider[] _overlapHits = new Collider[64];
+        // 毎フレームの割り当てを避けるため、当たったときの処理を一度だけデリゲートにしておく
+        private MeleeSweep.HitHandler _onHit;
 
         /// <summary>
         /// プレイヤーに武器が接触した瞬間に発火する（ガード成立・ダメージ無効時も発火する）。
@@ -56,6 +52,7 @@ namespace CreativeAI.Gameplay
 
         private void Awake()
         {
+            _onHit = ProcessHit;
             if (_enemyStatus == null)
             {
                 _enemyStatus = GetComponentInParent<EnemyStatus>();
@@ -64,68 +61,15 @@ namespace CreativeAI.Gameplay
 
         private void Update()
         {
-            if (!_isHitboxActive)
-                return;
-
-            Vector3 currentPosition = transform.position;
-            Vector3 direction = currentPosition - _previousPosition;
-            float distance = direction.magnitude;
-
-            // 高速スイング時に武器がターゲットをすり抜けないよう、
-            // 前フレームから現フレームまでの軌跡全体を太いRayで判定する
-            if (distance > 0)
-            {
-                int hitCount = Physics.SphereCastNonAlloc(
-                    _previousPosition,
-                    _hitboxRadius,
-                    direction.normalized,
-                    _castHits,
-                    distance,
-                    _targetLayer
-                );
-                for (int i = 0; i < hitCount; i++)
-                {
-                    RaycastHit hit = _castHits[i];
-                    // SphereCastAll は始点でコライダーと既に重なっている場合
-                    // hit.point に Vector3.zero を返す仕様上の問題があるため、
-                    // その場合はClosestPointで代替する
-                    Vector3 resolvedPoint =
-                        (hit.point == Vector3.zero)
-                            ? hit.collider.ClosestPoint(currentPosition)
-                            : hit.point;
-                    ProcessHit(hit.collider, resolvedPoint, hit.normal);
-                }
-            }
-
-            // SphereCastは始点内部の重なりを検出できないため、
-            // 密着・めり込み状態をOverlapSphereで補完する
-            int overlapCount = Physics.OverlapSphereNonAlloc(
-                currentPosition,
-                _hitboxRadius,
-                _overlapHits,
-                _targetLayer
-            );
-            for (int i = 0; i < overlapCount; i++)
-            {
-                Collider col = _overlapHits[i];
-                // OverlapSphereは接触点を返さないため、エフェクト表示用にClosestPointで近似する
-                Vector3 hitPoint = col.ClosestPoint(currentPosition);
-                Vector3 hitNormal = (currentPosition - hitPoint).normalized;
-                ProcessHit(col, hitPoint, hitNormal);
-            }
-
-            _previousPosition = currentPosition;
+            _sweep.Sweep(transform.position, _hitboxRadius, _targetLayer, _onHit);
         }
 
         private void ProcessHit(Collider other, Vector3 hitPoint, Vector3 hitNormal)
         {
-            if (_alreadyHitTargets.Contains(other))
-                return;
-
             if (other.CompareTag("Player"))
             {
                 // 1スイングにつき同一対象へは1回だけヒットさせる
-                _alreadyHitTargets.Add(other);
+                _sweep.MarkHit(other);
 
                 // ガード成立でダメージが無効化される場合も、武器が触れたこと自体は変わらないため
                 // ダメージ判定より前に発火する
@@ -150,16 +94,12 @@ namespace CreativeAI.Gameplay
 
         public void EnableHitbox()
         {
-            _alreadyHitTargets.Clear();
-            // 軌跡判定の起点を記録し、最初のフレームで正しくSphereCastできるようにする
-            _previousPosition = transform.position;
-            _isHitboxActive = true;
+            _sweep.Begin(transform.position);
         }
 
         public void DisableHitbox()
         {
-            _isHitboxActive = false;
-            _alreadyHitTargets.Clear();
+            _sweep.End();
         }
 
         private void SpawnHitEffect(Vector3 position, Vector3 normal)
@@ -173,8 +113,7 @@ namespace CreativeAI.Gameplay
 
         private void OnDrawGizmosSelected()
         {
-            Gizmos.color = new Color(1f, 0f, 0f, 0.5f);
-            Gizmos.DrawSphere(transform.position, _hitboxRadius);
+            MeleeSweep.DrawGizmo(transform.position, _hitboxRadius);
         }
     }
 }

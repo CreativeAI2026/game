@@ -116,7 +116,7 @@ namespace CreativeAI.Gameplay
                         CameraShakeManager.Instance.Shake(0.2f);
 
                     // この一撃までは防ぐが、メーターが尽きたら防御が割れて怯む。
-                    // 怯みの開始で武器は中立状態へ戻る(PlayerFlinchHandler → ForceReset)
+                    // 怯みの開始で武器は中立状態へ戻る(怯みの制限 → PlayerWeapons → ForceReset)
                     if (GuardGauge.Absorb(damage, Time.time))
                     {
                         _flinchHandler.TriggerFlinch();

@@ -70,9 +70,9 @@ namespace CreativeAI.Gameplay
             Assert.IsNotNull(_playerStatus, $"{player.name}: PlayerStatus がありません");
             Assert.IsNotNull(_playerEscape, $"{player.name}: PlayerEscapeHandler がありません");
 
-            // 掴まれている扱いにして、武器の攻撃や焦り度の判定を掴みと同じに止める
-            _playerController.IsGrabbed = true;
-            _playerController.Locks.Set(this, PlayerLock.All);
+            // 掴まれている扱いにして焦り度の判定などを掴みと同じにし、武器を含む行動をすべて止める
+            _playerController.Conditions.SetGrabbed(this, true);
+            _playerController.Conditions.Set(this, PlayerLock.All);
 
             PlayerModel playerModel = player.GetComponentInChildren<PlayerModel>();
             if (playerModel != null)
@@ -142,8 +142,8 @@ namespace CreativeAI.Gameplay
             IsRestraining = false;
             GrabEscapeEvents.OnHideGauge?.Invoke();
             KurageRestraintCameraEvents.OnEnd?.Invoke(escaped);
-            _playerController.IsGrabbed = false;
-            _playerController.Locks.Release(this);
+            _playerController.Conditions.SetGrabbed(this, false);
+            _playerController.Conditions.Release(this);
         }
 
         private void OnDisable() => Cancel();

@@ -31,6 +31,11 @@ namespace CreativeAI.Gameplay
             _attackWhenDone = attackWhenDone;
         }
 
+        public override bool AimsHeadAtPlayer => true;
+        public override bool CanRepel => true;
+        public override bool IsCommitted => true;
+        public override bool BlocksOpeningGuardAfter => true;
+
         public override void Enter()
         {
             DevLog.Log(
@@ -58,7 +63,7 @@ namespace CreativeAI.Gameplay
                 return;
             }
 
-            FacePlayer();
+            FaceTowards(boss.Player.transform.position, RotateSpeed);
 
             _timer += Time.deltaTime;
             if (_timer < _duration)
@@ -89,22 +94,6 @@ namespace CreativeAI.Gameplay
                 }
                 boss.Agent.updateRotation = true;
             }
-        }
-
-        private void FacePlayer()
-        {
-            Vector3 toPlayer = boss.Player.transform.position - boss.transform.position;
-            toPlayer.y = 0f;
-            if (toPlayer.sqrMagnitude < 0.0001f)
-            {
-                return;
-            }
-
-            boss.transform.rotation = Quaternion.Slerp(
-                boss.transform.rotation,
-                Quaternion.LookRotation(toPlayer),
-                Time.deltaTime * RotateSpeed
-            );
         }
     }
 }
