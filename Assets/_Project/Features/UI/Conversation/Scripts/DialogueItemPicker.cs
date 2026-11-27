@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using CreativeAI.Gameplay;
 using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
@@ -43,12 +44,12 @@ namespace CreativeAI.UI
         private RectTransform Content => (RectTransform)_grid.transform;
 
         /// <summary>
-        /// 一覧を出す。選ぶと選んだ itemKey(キーを持たないアイテムは空文字)、やめるなら null で <paramref name="onPicked"/> を呼ぶ。
+        /// 一覧を出す。選ぶと選んだ itemKey、やめるなら null で <paramref name="onPicked"/> を呼ぶ。
         /// 持ち物が無くても「やめる」だけは出す。
         /// </summary>
         internal void Show(
             string prompt,
-            IReadOnlyList<ItemPickerEntries.Entry> entries,
+            IReadOnlyList<(ItemData Data, int Count)> entries,
             Action<string> onPicked
         )
         {
@@ -70,14 +71,14 @@ namespace CreativeAI.UI
                 onPicked?.Invoke(value);
             }
 
-            foreach (var entry in entries ?? Array.Empty<ItemPickerEntries.Entry>())
+            foreach (var (data, count) in entries ?? Array.Empty<(ItemData, int)>())
             {
                 var cell = Instantiate(_cellTemplate, Content);
                 cell.gameObject.SetActive(true);
-                cell.Set(entry);
-                string key = entry.ItemKey;
+                cell.Set(data, count);
+                string key = data.key;
                 Add(cell, () => Pick(key));
-                _names.Add($"{entry.Name}  ×{entry.Count}");
+                _names.Add($"{data.itemName}  ×{count}");
             }
             Add(_cancel, () => Pick(null));
 
@@ -139,13 +140,13 @@ namespace CreativeAI.UI
         }
 
         // 開いたときにカーソルを置く位置。さっき選んだ物があればそこ、なければ先頭。
-        private int StartIndex(IReadOnlyList<ItemPickerEntries.Entry> entries)
+        private int StartIndex(IReadOnlyList<(ItemData Data, int Count)> entries)
         {
             if (_rememberedKey == null || entries == null)
                 return 0;
             for (int i = 0; i < entries.Count; i++)
             {
-                if (entries[i].ItemKey == _rememberedKey)
+                if (entries[i].Data.key == _rememberedKey)
                     return i;
             }
             return 0;

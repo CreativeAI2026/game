@@ -25,7 +25,6 @@ namespace CreativeAI.UI
         [SerializeField, Range(0f, 1f)]
         private float _emptyAlpha;
 
-        private bool _hasWarnedMissingImage;
         private Color _baseColor = Color.white;
         private bool _hasCachedBaseColor;
         private bool _layoutRefreshPending;
@@ -37,9 +36,7 @@ namespace CreativeAI.UI
 
         public void SetIcon(Sprite sprite)
         {
-            if (!ResolveImage())
-                return;
-
+            CacheBaseColor();
             _image.sprite = sprite;
             RefreshLayout();
             ApplyVisibility(sprite != null);
@@ -50,24 +47,19 @@ namespace CreativeAI.UI
         public void SetEmptyAlpha(float alpha)
         {
             _emptyAlpha = Mathf.Clamp01(alpha);
-            if (ResolveImage())
-                ApplyVisibility(_image.sprite != null);
+            CacheBaseColor();
+            ApplyVisibility(_image.sprite != null);
         }
 
         public void KillTween()
         {
-            if (_image == null)
-                return;
-
             _image.DOKill();
             _image.rectTransform.DOKill();
         }
 
         public void ResetVisual()
         {
-            if (!ResolveImage())
-                return;
-
+            CacheBaseColor();
             KillTween();
             _image.rectTransform.localScale = Vector3.one;
             ApplyVisibility(_image.sprite != null);
@@ -75,9 +67,7 @@ namespace CreativeAI.UI
 
         public void RefreshLayout()
         {
-            if (!ResolveImage())
-                return;
-
+            CacheBaseColor();
             if (_fitRect == null)
                 return;
 
@@ -191,9 +181,7 @@ namespace CreativeAI.UI
 
         private void OnEnable()
         {
-            if (!ResolveImage())
-                return;
-
+            CacheBaseColor();
             RefreshLayout();
             ApplyVisibility(_image.sprite != null);
         }
@@ -212,21 +200,13 @@ namespace CreativeAI.UI
                 RefreshLayout();
         }
 
-        private bool ResolveImage()
+        // 元の色を一度だけ覚える(透明度だけを変えて戻すため)
+        private void CacheBaseColor()
         {
-            if (_image == null)
-            {
-                WarnMissingImageOnce();
-                return false;
-            }
-
-            if (!_hasCachedBaseColor)
-            {
-                _baseColor = _image.color;
-                _hasCachedBaseColor = true;
-            }
-
-            return true;
+            if (_hasCachedBaseColor)
+                return;
+            _baseColor = _image.color;
+            _hasCachedBaseColor = true;
         }
 
 #if UNITY_EDITOR
@@ -259,18 +239,6 @@ namespace CreativeAI.UI
             var color = _baseColor;
             color.a = alpha;
             _image.color = color;
-        }
-
-        private void WarnMissingImageOnce()
-        {
-            if (_hasWarnedMissingImage)
-                return;
-
-            _hasWarnedMissingImage = true;
-            Debug.LogWarning(
-                $"{nameof(SlotIconView)} '{name}' にIcon Imageがないため、Icon表示をスキップします。Prefab上で設定してください。",
-                this
-            );
         }
     }
 }

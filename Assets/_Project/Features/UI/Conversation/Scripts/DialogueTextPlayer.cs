@@ -11,7 +11,7 @@ namespace CreativeAI.UI
         public IEnumerator Play(
             TMP_Text body,
             string source,
-            ConversationView.TextSpeed speed,
+            ConversationPanel.TextSpeed speed,
             float characterInterval,
             float punctuationDelay,
             float fastForwardMultiplier,
@@ -38,10 +38,10 @@ namespace CreativeAI.UI
                 while (paused())
                     yield return null;
                 if (
-                    AdvancePressed()
-                    || SkipReadHeld(wasRead)
+                    ConversationPanel.AdvancePressed()
+                    || ConversationPanel.SkipReadHeld(wasRead)
                     || (wasRead && skipMode())
-                    || speed == ConversationView.TextSpeed.Instant
+                    || speed == ConversationPanel.TextSpeed.Instant
                 )
                 {
                     body.maxVisibleCharacters = total;
@@ -80,31 +80,21 @@ namespace CreativeAI.UI
             body.maxVisibleCharacters = total;
         }
 
-        private static float SpeedMultiplier(ConversationView.TextSpeed speed) =>
+        private static float SpeedMultiplier(ConversationPanel.TextSpeed speed) =>
             speed switch
             {
-                ConversationView.TextSpeed.Slow => 1.6f,
-                ConversationView.TextSpeed.Fast => 0.45f,
-                ConversationView.TextSpeed.Instant => 0f,
+                ConversationPanel.TextSpeed.Slow => 1.6f,
+                ConversationPanel.TextSpeed.Fast => 0.45f,
+                ConversationPanel.TextSpeed.Instant => 0f,
                 _ => 1f,
             };
 
         private static bool IsPunctuation(char character) =>
             character is '。' or '、' or '！' or '？' or '!' or '?' or '…' or '・' or ',';
 
-        private static bool SkipReadHeld(bool wasRead)
-        {
-            return wasRead && UIInputActionMap.IsPressed(UIInputActionMap.DialogueSkip);
-        }
-
         private static bool FastForwardHeld()
         {
             return UIInputActionMap.IsPressed(UIInputActionMap.DialogueFastForward);
-        }
-
-        private static bool AdvancePressed()
-        {
-            return UIInputActionMap.WasPressedThisFrame(UIInputActionMap.DialogueAdvance);
         }
     }
 }

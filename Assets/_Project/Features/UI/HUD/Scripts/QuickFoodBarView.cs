@@ -5,9 +5,9 @@ using UnityEngine;
 namespace CreativeAI.UI
 {
     /// <summary>
-    /// 即時食材使用UI(常駐)。キャラUIのロードアウト(<see cref="LoadoutPanelController"/>)でセットした
-    /// 最大3枠(<see cref="InventoryManager.GetQuickFoodSlots"/>)を常時表示し、タップで即時使用(HP回復+消費)する。
-    /// モードや所持で出し分けない。UIRoot Prefab の子として同梱され、常駐は <see cref="UIRoot"/> が担う。状態は持たない。
+    /// 即時食材使用UI(常駐)。キャラUIのロードアウト(<see cref="LoadoutPanel"/>)でセットした
+    /// 最大3枠(<see cref="QuickFoodSlots"/>)を常時表示し、タップで即時使用(HP回復+消費)する。
+    /// モードや所持で出し分けない。UIRoot Prefab の子として同梱され、常駐は <see cref="UIManager"/> が担う。状態は持たない。
     /// </summary>
     public sealed class QuickFoodBarView : MonoBehaviour
     {
@@ -17,13 +17,11 @@ namespace CreativeAI.UI
 
         private bool _subscribed;
         private CanvasGroup _group;
-        private UIRouter _router;
         private GameModeManager _gameMode;
 
         private void Awake()
         {
             _group = ResidentUIVisibility.GetOrAddGroup(gameObject);
-            _router = GetComponentInParent<UIRouter>(true); // 親 UIRoot の排他ルータ
             InitializeSlots();
         }
 
@@ -41,32 +39,21 @@ namespace CreativeAI.UI
         {
             _gameMode = GameModeManager.Instance;
             if (_gameMode != null)
-                _gameMode.OnModeChanged += OnModeChanged;
-            EventPlaybackService.PlayingChanged += OnPlaybackChanged;
-            UIPanelService.OpenChanged += OnPanelOpenChanged;
+                _gameMode.Changed += OnModeChanged;
         }
 
         private void UnsubscribeVisibility()
         {
             if (_gameMode != null)
-                _gameMode.OnModeChanged -= OnModeChanged;
-            EventPlaybackService.PlayingChanged -= OnPlaybackChanged;
-            UIPanelService.OpenChanged -= OnPanelOpenChanged;
+                _gameMode.Changed -= OnModeChanged;
         }
 
-        private void OnModeChanged(GameMode mode) => ApplyVisibility();
-
-        private void OnPlaybackChanged(bool playing) => ApplyVisibility();
-
-        private void OnPanelOpenChanged(bool open) => ApplyVisibility();
+        private void OnModeChanged() => ApplyVisibility();
 
         private void ApplyVisibility()
         {
-            // 会話(line/choice)中は使用不可なので隠す。ただし戦闘中は常時表示。
-            // battle ステップも EventPlaybackService.IsPlaying の内側で走るため、モードで戦闘を除外する。
-            bool hide =
-                (_router != null && _router.IsAnyPanelOpen)
-                || EventPlaybackService.BlocksPlayerControl;
+            // 会話中は使用不可なので隠す。戦闘中(会話の battle ステップも含む)は常時表示。
+            bool hide = GameModeManager.MenuOpen || GameModeManager.Current == GameMode.Dialogue;
             if (_group != null)
                 _group.SetShown(!hide);
         }
@@ -103,30 +90,30 @@ namespace CreativeAI.UI
                     slot.Clicked -= OnSlotClicked;
         }
 
-        /// <summary>枠タップで即時使用。TryUse が HP回復+在庫1消費+通知まで行う(消費で空いた枠は QuickFoodChanged 経由で反映)。</summary>
+        /// <summary>枠タップで即時使用。FoodUse.TryEat が HP回復+在庫1消費まで行う(使い切って空いた枠は QuickFoodSlots.Changed 経由で反映)。</summary>
         private void OnSlotClicked(EquipmentSlot slot)
         {
             int index = _slots.IndexOf(slot);
             var stack = QuickFoodStackAt(index);
-            if (stack != null)
-                if (InventoryManager.Instance != null)
-                    InventoryManager.Instance.TryUse(stack);
+            var player = PlayerRegistry.Current;
+            if (stack != null && player != null && player.TryGetComponent(out PlayerStatus status))
+                FoodUse.TryEat(status, stack);
         }
 
         private static ItemStack QuickFoodStackAt(int index)
         {
             if (index < 0)
                 return null;
-            var inventory = InventoryManager.Instance;
-            var data = inventory != null ? inventory.GetQuickFoodSlots() : null;
+            var quickFood = InventoryManager.CurrentQuickFood;
+            var data = quickFood != null ? quickFood.GetSlots() : null;
             return data != null && index < data.Count ? data[index] : null;
         }
 
         /// <summary>データ側(最大3)の内容を各枠へ反映。単一ソースはデータ側。</summary>
         private void RefreshSlots()
         {
-            var inventory = InventoryManager.Instance;
-            var data = inventory != null ? inventory.GetQuickFoodSlots() : null;
+            var quickFood = InventoryManager.CurrentQuickFood;
+            var data = quickFood != null ? quickFood.GetSlots() : null;
             for (int i = 0; i < _slots.Count; i++)
             {
                 if (_slots[i] == null)
@@ -141,12 +128,16 @@ namespace CreativeAI.UI
 
         private void TryBind()
         {
-            if (_subscribed || InventoryManager.Instance == null)
+            if (
+                _subscribed
+                || InventoryManager.Instance == null
+                || InventoryManager.CurrentQuickFood == null
+            )
                 return;
-            InventoryManager.Instance.QuickFoodChanged -= OnQuickFoodChanged;
-            InventoryManager.Instance.QuickFoodChanged += OnQuickFoodChanged;
-            InventoryManager.Instance.InventoryChanged -= OnInventoryChanged;
-            InventoryManager.Instance.InventoryChanged += OnInventoryChanged;
+            InventoryManager.CurrentQuickFood.Changed -= OnQuickFoodChanged;
+            InventoryManager.CurrentQuickFood.Changed += OnQuickFoodChanged;
+            InventoryManager.Instance.Changed -= OnInventoryChanged;
+            InventoryManager.Instance.Changed += OnInventoryChanged;
             _subscribed = true;
         }
 
@@ -154,11 +145,10 @@ namespace CreativeAI.UI
         {
             if (!_subscribed)
                 return;
+            if (InventoryManager.CurrentQuickFood != null)
+                InventoryManager.CurrentQuickFood.Changed -= OnQuickFoodChanged;
             if (InventoryManager.Instance != null)
-            {
-                InventoryManager.Instance.QuickFoodChanged -= OnQuickFoodChanged;
-                InventoryManager.Instance.InventoryChanged -= OnInventoryChanged;
-            }
+                InventoryManager.Instance.Changed -= OnInventoryChanged;
             _subscribed = false;
         }
 
@@ -166,7 +156,7 @@ namespace CreativeAI.UI
 
         private void OnInventoryChanged()
         {
-            // 使用で在庫数が変わった枠の数量表示を更新(空になった枠は QuickFoodChanged 側で Clear)。
+            // 使用で在庫数が変わった枠の数量表示を更新(空になった枠は所持品から消すときに外れ、QuickFoodSlots.Changed で届く)。
             foreach (var slot in _slots)
                 if (slot != null && slot.Stack != null)
                     slot.UpdateCount();

@@ -25,8 +25,8 @@ namespace CreativeAI.Tests.PlayMode
 
         private GameObject _player;
         private WeaponManager _manager;
-        private UIRouter _router;
-        private CharacterPreviewController _controller;
+        private UIManager _router;
+        private CharacterPreviewView _controller;
         private ModelPreview _character;
         private ModelPreview _weapon;
         private CharacterWeaponSelector _selector;
@@ -53,12 +53,12 @@ namespace CreativeAI.Tests.PlayMode
                 "UI_Sandbox を直接再生すると、テスト側で生成しなくてもプレイヤーが立つ"
             );
             _player = PlayerRegistry.Current.gameObject;
-            _manager = _player.GetComponent<WeaponManager>();
-            _router = UIRoot.Instance.GetComponentInChildren<UIRouter>(true);
+            _manager = WeaponManager.Instance;
+            _router = UIManager.Instance;
             Assert.NotNull(_router);
-            _router.Open(UIRouter.UIId.Character);
+            _router.Open(UIManager.UIId.Character);
             yield return null;
-            _controller = UIRoot.Instance.GetComponentInChildren<CharacterPreviewController>(true);
+            _controller = UIManager.Instance.GetComponentInChildren<CharacterPreviewView>(true);
             Assert.NotNull(_controller, "CharacterPanel Prefab にプレビューの参照が入っている");
             var previews = _controller.GetComponentsInChildren<ModelPreview>(true);
             _character = previews.Single(p => p.name == "Character3DPreview");
@@ -106,7 +106,7 @@ namespace CreativeAI.Tests.PlayMode
             {
                 Assert.False(stage.enabled, "プレビュー用カメラは要求したときだけ描画する");
                 Assert.AreEqual(
-                    UIRoot.Instance.gameObject.scene,
+                    UIManager.Instance.gameObject.scene,
                     stage.gameObject.scene,
                     "プレビュー用の資源は常駐 UI と一緒にシーン遷移をまたぐ"
                 );
@@ -364,7 +364,7 @@ namespace CreativeAI.Tests.PlayMode
             yield return PlayModeWait.Frames();
 
             // Update 全体ではなく、プレビューの LateUpdate だけを測る(他の UI の確保を混ぜない)。
-            var controllerUpdate = LateUpdateOf<CharacterPreviewController>(_controller);
+            var controllerUpdate = LateUpdateOf<CharacterPreviewView>(_controller);
             var previewUpdate = LateUpdateOf<ModelPreview>(_character);
             for (int i = 0; i < 10; i++)
             {
@@ -531,7 +531,7 @@ namespace CreativeAI.Tests.PlayMode
             Assert.False(oldTexture.IsCreated());
 
             yield return null;
-            _router.Open(UIRouter.UIId.Character);
+            _router.Open(UIManager.UIId.Character);
             yield return PlayModeWait.Until(
                 () => _character.Texture != null && _character.MeshCount > 0,
                 "開き直したプレビュー"

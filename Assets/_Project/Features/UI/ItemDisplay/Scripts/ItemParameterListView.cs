@@ -1,5 +1,4 @@
 using System;
-using System.Globalization;
 using CreativeAI.Gameplay;
 using TMPro;
 using UnityEngine;
@@ -21,14 +20,6 @@ namespace CreativeAI.UI
 
         [SerializeField]
         private Row _recoveryRow;
-        private static readonly string[] Labels =
-        {
-            "攻撃",
-            "防御",
-            "会心率",
-            "会心ダメージ",
-            "最大HP",
-        };
 
         public void SetItem(ItemStack stack)
         {
@@ -36,25 +27,21 @@ namespace CreativeAI.UI
                 stack != null
                 && stack.Data != null
                 && stack.Data.category == ItemCategory.Equipment;
-            var bonus = new EquipmentBonus();
-            if (equipment && stack.IsInstance)
-                bonus.Add(stack.RolledStats);
-            float[] values =
-            {
-                bonus.attackPct,
-                bonus.defensePct,
-                bonus.criticalChance,
-                bonus.criticalDamage,
-                bonus.maxHpPct,
-            };
+            var bonus = equipment ? ItemStatTextFormatter.BonusOf(stack) : new EquipmentBonus();
+            var stats = ItemStatTextFormatter.EquipmentStats;
             if (_equipmentRows != null)
-                for (int i = 0; i < _equipmentRows.Length && i < Labels.Length; i++)
-                    SetRow(_equipmentRows[i], equipment, Labels[i], values[i]);
+                for (int i = 0; i < _equipmentRows.Length && i < stats.Count; i++)
+                    SetRow(
+                        _equipmentRows[i],
+                        equipment,
+                        ItemStatTextFormatter.Label(stats[i]),
+                        bonus.Get(stats[i])
+                    );
             var food = stack?.Data as FoodData;
             SetRow(
                 _recoveryRow,
                 food != null,
-                "回復量",
+                ItemStatTextFormatter.Label(StatType.HealAmount),
                 food != null ? food.HealFraction * 100 : 0
             );
             gameObject.SetActive(equipment || food != null);
@@ -66,8 +53,7 @@ namespace CreativeAI.UI
                 return;
             row.root.SetActive(visible);
             row.label.text = label;
-            row.value.text =
-                (value > 0 ? "+" : "") + value.ToString("0.##", CultureInfo.InvariantCulture) + "%";
+            row.value.text = ItemStatTextFormatter.SignedPercent(value);
         }
     }
 }

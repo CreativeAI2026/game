@@ -1,5 +1,4 @@
 using System;
-using System.Collections.Generic;
 using CreativeAI.Gameplay;
 using UnityEngine;
 using UnityEngine.EventSystems;
@@ -13,31 +12,11 @@ namespace CreativeAI.UI
         private const float EmptyIconAlpha = 0f;
 
         [SerializeField]
-        private RectTransform _visualRootRect;
-
-        [SerializeField]
-        private SlotIconView _iconView;
-
-        [SerializeField]
-        private SlotCountBadgeView _countBadgeView;
-
-        [SerializeField]
-        private SlotEmptyView _emptyView;
-
-        [SerializeField]
-        private HoverScaleOnPointer _hover;
-
-        [SerializeField]
-        private SlotFrameView _frameView;
+        [Tooltip("空のときに出すもの")]
+        private GameObject _emptyObject;
 
         private bool _acceptPointerClick;
         private ItemStack _stack;
-        private readonly HashSet<string> _warnedMissingViews = new();
-
-        protected override SlotIconView IconView => _iconView;
-        protected override SlotCountBadgeView CountBadgeView => _countBadgeView;
-        protected override HoverScaleOnPointer Hover => _hover;
-        protected override SlotFrameView FrameView => _frameView;
 
         public event Action<EquipmentSlot> Clicked;
 
@@ -45,16 +24,15 @@ namespace CreativeAI.UI
 
         public void Init()
         {
-            ResolveViewReferences();
-            if (_iconView != null)
-                _iconView.SetEmptyAlpha(EmptyIconAlpha);
-            if (_countBadgeView != null)
+            if (IconView != null)
+                IconView.SetEmptyAlpha(EmptyIconAlpha);
+            if (CountBadgeView != null)
             {
                 RectTransform positionReference = null;
-                if (_iconView != null)
+                if (IconView != null)
                     positionReference =
-                        _iconView.FitRect != null ? _iconView.FitRect : _iconView.IconRect;
-                _countBadgeView.SetPositionReference(positionReference);
+                        IconView.FitRect != null ? IconView.FitRect : IconView.IconRect;
+                CountBadgeView.SetPositionReference(positionReference);
             }
             Refresh();
         }
@@ -73,20 +51,19 @@ namespace CreativeAI.UI
 
         protected override void Refresh()
         {
-            ResolveViewReferences();
-            if (_iconView != null)
-                _iconView.SetEmptyAlpha(EmptyIconAlpha);
+            if (IconView != null)
+                IconView.SetEmptyAlpha(EmptyIconAlpha);
             base.Refresh();
-            if (_emptyView != null)
-                _emptyView.SetEmpty(_item == null || _item.icon == null);
+            if (_emptyObject != null)
+                _emptyObject.SetActive(_item == null || _item.icon == null);
         }
 
         public override void Clear()
         {
             _stack = null;
             base.Clear();
-            if (_emptyView != null)
-                _emptyView.SetEmpty(true);
+            if (_emptyObject != null)
+                _emptyObject.SetActive(true);
         }
 
         public void UpdateCount()
@@ -124,49 +101,19 @@ namespace CreativeAI.UI
             return stack?.Count ?? 1;
         }
 
-        private void ResolveViewReferences(bool warn = true)
-        {
-            if (!warn)
-                return;
-
-            WarnIfMissing(_visualRootRect, "VisualRoot");
-            WarnIfMissing(_iconView, nameof(SlotIconView));
-            WarnIfMissing(_countBadgeView, nameof(SlotCountBadgeView));
-            WarnIfMissing(_emptyView, nameof(SlotEmptyView));
-            WarnIfMissing(_hover, nameof(HoverScaleOnPointer));
-            WarnIfMissing(_frameView, nameof(SlotFrameView));
-        }
-
 #if UNITY_EDITOR
         private void Reset() => AutoAssignReferences();
 
         [ContextMenu("Auto Assign References")]
         private void AutoAssignReferences()
         {
-            if (_visualRootRect == null)
-                _visualRootRect = transform.Find("VisualRoot") as RectTransform;
-            if (_iconView == null)
-                _iconView = GetComponentInChildren<SlotIconView>(true);
-            if (_countBadgeView == null)
-                _countBadgeView = GetComponentInChildren<SlotCountBadgeView>(true);
-            if (_emptyView == null)
-                _emptyView = GetComponentInChildren<SlotEmptyView>(true);
-            if (_hover == null)
-                _hover = GetComponentInChildren<HoverScaleOnPointer>(true);
-            if (_frameView == null)
-                _frameView = GetComponentInChildren<SlotFrameView>(true);
+            AutoAssignSlotViews();
+            if (_emptyObject == null)
+            {
+                var empty = transform.Find("VisualRoot/EmptyText");
+                _emptyObject = empty != null ? empty.gameObject : null;
+            }
         }
 #endif
-
-        private void WarnIfMissing(UnityEngine.Object reference, string referenceName)
-        {
-            if (reference != null || !_warnedMissingViews.Add(referenceName))
-                return;
-
-            Debug.LogWarning(
-                $"{nameof(EquipmentSlot)} '{name}' に {referenceName} がないため、該当表示をスキップします。PrefabまたはScene上で設定してください。",
-                this
-            );
-        }
     }
 }

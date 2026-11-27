@@ -5,27 +5,39 @@ using UnityEngine.UI;
 namespace CreativeAI.UI
 {
     /// <summary>
-    /// 弓を構えている間だけクロスヘアーを表示する。**クロスヘアーの Image と同じ GameObject に置く**(シーン側)。
-    ///
-    /// 以前は弓(プレイヤー Prefab)がシーンの Image を直接参照していたが、Prefab からシーンは参照できないため、
-    /// UI 側が PlayerRegistry からプレイヤーを受け取って状態を見る形にした。
+    /// 弓を構えている間だけクロスヘアーを表示する。クロスヘアーの Image と同じ GameObject に置く。
+    /// プレイヤーは入れ替わるので PlayerRegistry から受け取り、構えの変化を購読する。
     /// </summary>
     [RequireComponent(typeof(Image))]
-    public class CrosshairView : MonoBehaviour
+    public sealed class CrosshairView : MonoBehaviour
     {
         private Image _image;
+        private PlayerController _player;
 
-        private void Awake()
+        private void Awake() => _image = GetComponent<Image>();
+
+        private void OnEnable()
         {
-            _image = GetComponent<Image>();
-            _image.enabled = false;
+            PlayerRegistry.Changed += Bind;
+            Bind(PlayerRegistry.Current);
         }
 
-        private void Update()
+        private void OnDisable()
         {
-            // プレイヤーがまだ生成されていない間は null
-            PlayerController player = PlayerRegistry.Current;
-            _image.enabled = player != null && player.IsAiming;
+            PlayerRegistry.Changed -= Bind;
+            Bind(null);
         }
+
+        private void Bind(PlayerController player)
+        {
+            if (_player != null)
+                _player.AimingChanged -= Show;
+            _player = player;
+            if (_player != null)
+                _player.AimingChanged += Show;
+            Show(_player != null && _player.IsAiming);
+        }
+
+        private void Show(bool aiming) => _image.enabled = aiming;
     }
 }

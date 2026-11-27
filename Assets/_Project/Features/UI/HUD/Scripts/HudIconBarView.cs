@@ -6,7 +6,7 @@ namespace CreativeAI.UI
 {
     /// <summary>
     /// 画面右上の円形ナビ(キャラ / インベ / セーブ)。HP の HUD とは別 Canvas(HP は入力を受けず頻繁に更新されるため)。
-    /// ボタンで <see cref="UIRouter.Toggle"/> を呼び、<see cref="GameModeManager.OnModeChanged"/> を購読して Field=表示 / Battle=非表示 を自分で切り替える。
+    /// ボタンで <see cref="UIManager.Toggle"/> を呼び、<see cref="GameModeManager.Changed"/> を購読して Field=表示 / 会話・戦闘=非表示 を自分で切り替える。
     /// 表示中はキーでも開ける(C=キャラ / I=インベ / M=全画面マップ、UI マップの Cancel で閉じる)。キー入力は PlayerInputActions のアクションで、
     /// プレイヤーの <see cref="PlayerUIInput"/> から受け取る(プレイヤーは実行時生成なので <see cref="PlayerRegistry"/> 経由)。
     /// 隠れるとき(戦闘・会話の開始)は開いているパネルも閉じる。
@@ -14,7 +14,7 @@ namespace CreativeAI.UI
     public sealed class HudIconBarView : MonoBehaviour
     {
         [SerializeField]
-        private UIRouter _router;
+        private UIManager _ui;
 
         [SerializeField]
         private Button _characterButton;
@@ -37,12 +37,12 @@ namespace CreativeAI.UI
         {
             if (_group == null)
                 _group = ResidentUIVisibility.GetOrAddGroup(gameObject);
-            if (_router == null)
-                _router = GetComponentInParent<UIRouter>(true); // 親 UIRoot の排他ルータ
+            if (_ui == null)
+                _ui = GetComponentInParent<UIManager>(true); // 親 UIRoot Prefab の UIManager
 
-            Bind(_characterButton, UIRouter.UIId.Character);
-            Bind(_inventoryButton, UIRouter.UIId.Inventory);
-            Bind(_saveButton, UIRouter.UIId.Save);
+            Bind(_characterButton, UIManager.UIId.Character);
+            Bind(_inventoryButton, UIManager.UIId.Inventory);
+            Bind(_saveButton, UIManager.UIId.Save);
         }
 
         private void OnEnable()
@@ -50,9 +50,7 @@ namespace CreativeAI.UI
             // 常駐生成順ではマネージャが先に居るので Instance を取れる。無ければ Field 既定で表示。
             _gameMode = GameModeManager.Instance;
             if (_gameMode != null)
-                _gameMode.OnModeChanged += OnModeChanged;
-            // 会話イベント中も隠す(セーブ/インベを開けなくする)。
-            EventPlaybackService.PlayingChanged += OnPlaybackChanged;
+                _gameMode.Changed += OnModeChanged;
             PlayerRegistry.Changed += BindPlayer;
             BindPlayer(PlayerRegistry.Current);
             Apply();
@@ -61,8 +59,7 @@ namespace CreativeAI.UI
         private void OnDisable()
         {
             if (_gameMode != null)
-                _gameMode.OnModeChanged -= OnModeChanged;
-            EventPlaybackService.PlayingChanged -= OnPlaybackChanged;
+                _gameMode.Changed -= OnModeChanged;
             PlayerRegistry.Changed -= BindPlayer;
             BindPlayer(null);
         }
@@ -91,48 +88,45 @@ namespace CreativeAI.UI
             }
         }
 
-        private void Bind(Button button, UIRouter.UIId id)
+        private void Bind(Button button, UIManager.UIId id)
         {
-            if (button == null || _router == null)
+            if (button == null || _ui == null)
                 return;
-            button.onClick.AddListener(() => _router.Toggle(id));
+            button.onClick.AddListener(() => _ui.Toggle(id));
         }
 
-        private void OnCharacterPressed() => ToggleByKey(UIRouter.UIId.Character);
+        private void OnCharacterPressed() => ToggleByKey(UIManager.UIId.Character);
 
-        private void OnInventoryPressed() => ToggleByKey(UIRouter.UIId.Inventory);
+        private void OnInventoryPressed() => ToggleByKey(UIManager.UIId.Inventory);
 
-        private void OnSavePressed() => ToggleByKey(UIRouter.UIId.Save);
+        private void OnSavePressed() => ToggleByKey(UIManager.UIId.Save);
 
-        private void OnMapPressed() => ToggleByKey(UIRouter.UIId.Map);
+        private void OnMapPressed() => ToggleByKey(UIManager.UIId.Map);
 
-        private void ToggleByKey(UIRouter.UIId id)
+        private void ToggleByKey(UIManager.UIId id)
         {
-            if (_shown && _router != null)
-                _router.Toggle(id);
+            if (_shown && _ui != null)
+                _ui.Toggle(id);
         }
 
         private void OnCancelPressed()
         {
-            if (_shown && _router != null && _router.IsAnyPanelOpen)
-                _router.CloseAll();
+            if (_shown && _ui != null && _ui.IsAnyPanelOpen)
+                _ui.CloseAll();
         }
 
-        private void OnModeChanged(GameMode mode) => Apply();
-
-        private void OnPlaybackChanged(bool playing) => Apply();
+        private void OnModeChanged() => Apply();
 
         /// <summary>
-        /// Field かつ会話イベント中でないときだけ表示。Battle・会話中は非表示にしてセーブ等を開けなくする。
+        /// Field のときだけ表示。会話・戦闘中は非表示にしてセーブ等を開けなくする。
         /// GameObject ごと SetActive すると自分が止まって購読を失うため、
         /// CanvasGroup で隠すだけにして自身は生かし続ける。
         /// </summary>
         private void Apply()
         {
-            bool show = EventPlaybackService.IsFreeRoaming;
+            // 探索中はパネルを開いたままでも切り替えられるように出しておく(メニューは探索中にしか開かない)。
+            bool show = GameModeManager.Current == GameMode.Field;
             _shown = show;
-            if (!show && _router != null && _router.IsAnyPanelOpen)
-                _router.CloseAll();
             if (_group != null)
                 _group.SetShown(show);
         }

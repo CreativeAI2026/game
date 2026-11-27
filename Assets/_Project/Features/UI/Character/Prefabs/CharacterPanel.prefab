@@ -1020,7 +1020,6 @@ MonoBehaviour:
   _tabSelectedColor: {r: 0.9, g: 0.9, b: 0.9, a: 1}
   _tabNormalTextColor: {r: 0.85882354, g: 0.88235295, b: 0.95686275, a: 1}
   _tabSelectedTextColor: {r: 0.078431375, g: 0.14117648, b: 0.18431373, a: 1}
-  _seedPreviewInventoryWhenEmpty: 1
   _slotAppearDuration: 0.2
   _slotAppearStagger: 0.05
 --- !u!1 &1571887798786952206

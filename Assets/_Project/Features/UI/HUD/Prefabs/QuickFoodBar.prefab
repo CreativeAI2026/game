@@ -90,7 +90,6 @@ GameObject:
   - component: {fileID: 248843509712259314}
   - component: {fileID: 4727599329475108949}
   - component: {fileID: 8242714837329203167}
-  - component: {fileID: 1740991107383036648}
   - component: {fileID: 7994108168212412794}
   - component: {fileID: 5865920083399750121}
   m_Layer: 0
@@ -214,10 +213,9 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: de97a092d0767164a8dea3eeb7ec6ad3, type: 3}
   m_Name: 
   m_EditorClassIdentifier: CreativeAI.UI::CreativeAI.UI.EquipmentSlot
-  _visualRootRect: {fileID: 5339642035684729355}
   _iconView: {fileID: 8242714837329203167}
   _countBadgeView: {fileID: 5865920083399750121}
-  _emptyView: {fileID: 1740991107383036648}
+  _emptyObject: {fileID: 8042454766642898134}
   _hover: {fileID: 4727599329475108949}
   _frameView: {fileID: 7994108168212412794}
 --- !u!114 &4727599329475108949
@@ -258,19 +256,6 @@ MonoBehaviour:
   _fitRect: {fileID: 0}
   _fillRatio: 0.9
   _emptyAlpha: 0
---- !u!114 &1740991107383036648
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 573249694049819551}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 4938ea52570d4bd192bd395052a4966d, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: CreativeAI.UI::CreativeAI.UI.SlotEmptyView
-  _emptyObject: {fileID: 8042454766642898134}
 --- !u!114 &7994108168212412794
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -409,7 +394,6 @@ GameObject:
   - component: {fileID: 6067497286138487828}
   - component: {fileID: 8826367850676233048}
   - component: {fileID: 4078483840452768434}
-  - component: {fileID: 2469794643585132759}
   - component: {fileID: 153979705258152058}
   - component: {fileID: 5321646688176686904}
   m_Layer: 0
@@ -533,10 +517,9 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: de97a092d0767164a8dea3eeb7ec6ad3, type: 3}
   m_Name: 
   m_EditorClassIdentifier: CreativeAI.UI::CreativeAI.UI.EquipmentSlot
-  _visualRootRect: {fileID: 2722153172890211389}
   _iconView: {fileID: 4078483840452768434}
   _countBadgeView: {fileID: 5321646688176686904}
-  _emptyView: {fileID: 2469794643585132759}
+  _emptyObject: {fileID: 2947929794480017960}
   _hover: {fileID: 8826367850676233048}
   _frameView: {fileID: 153979705258152058}
 --- !u!114 &8826367850676233048
@@ -577,19 +560,6 @@ MonoBehaviour:
   _fitRect: {fileID: 0}
   _fillRatio: 0.9
   _emptyAlpha: 0
---- !u!114 &2469794643585132759
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1732809445941887118}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 4938ea52570d4bd192bd395052a4966d, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: CreativeAI.UI::CreativeAI.UI.SlotEmptyView
-  _emptyObject: {fileID: 2947929794480017960}
 --- !u!114 &153979705258152058
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -2432,7 +2402,6 @@ GameObject:
   - component: {fileID: 5310101197397590060}
   - component: {fileID: 3423820208052180683}
   - component: {fileID: 618371011844982774}
-  - component: {fileID: 399529848453682035}
   - component: {fileID: 6417742696781714016}
   - component: {fileID: 7367644296938805180}
   m_Layer: 0
@@ -2556,10 +2525,9 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: de97a092d0767164a8dea3eeb7ec6ad3, type: 3}
   m_Name: 
   m_EditorClassIdentifier: CreativeAI.UI::CreativeAI.UI.EquipmentSlot
-  _visualRootRect: {fileID: 4798786755507297276}
   _iconView: {fileID: 618371011844982774}
   _countBadgeView: {fileID: 7367644296938805180}
-  _emptyView: {fileID: 399529848453682035}
+  _emptyObject: {fileID: 4516035767401375059}
   _hover: {fileID: 3423820208052180683}
   _frameView: {fileID: 6417742696781714016}
 --- !u!114 &3423820208052180683
@@ -2600,19 +2568,6 @@ MonoBehaviour:
   _fitRect: {fileID: 0}
   _fillRatio: 0.9
   _emptyAlpha: 0
---- !u!114 &399529848453682035
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 8465106753310949592}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 4938ea52570d4bd192bd395052a4966d, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: CreativeAI.UI::CreativeAI.UI.SlotEmptyView
-  _emptyObject: {fileID: 4516035767401375059}
 --- !u!114 &6417742696781714016
 MonoBehaviour:
   m_ObjectHideFlags: 0

@@ -1,8 +1,6 @@
-using System.Collections.Generic;
 using CreativeAI.Gameplay;
 using CreativeAI.UI;
 using NUnit.Framework;
-using UnityEditor;
 using UnityEngine;
 
 namespace CreativeAI.Tests.EditMode
@@ -15,39 +13,21 @@ namespace CreativeAI.Tests.EditMode
     public class WeaponHudViewTests
     {
         private GameObject _go;
+        private readonly TestResidents _residents = new();
         private WeaponManager _weapons;
         private WeaponHudView _hud;
         private CanvasGroup _group;
-        private readonly List<Object> _created = new();
-
-        private WeaponData MakeWeaponData(int attack)
-        {
-            var d = ScriptableObject.CreateInstance<WeaponData>();
-            d.attack = attack;
-            _created.Add(d);
-            return d;
-        }
 
         [SetUp]
         public void SetUp()
         {
             _go = new GameObject("WeaponSwitchUI");
             _group = _go.AddComponent<CanvasGroup>();
-            _weapons = _go.AddComponent<WeaponManager>();
+            _weapons = _residents.Add<WeaponManager>();
             _hud = _go.AddComponent<WeaponHudView>();
-
-            var stats = new[] { MakeWeaponData(25), MakeWeaponData(25), MakeWeaponData(0) };
-            var so = new SerializedObject(_weapons);
-            var prop = so.FindProperty("_slots");
-            prop.arraySize = stats.Length;
-            for (int i = 0; i < stats.Length; i++)
-                prop.GetArrayElementAtIndex(i).FindPropertyRelative("stats").objectReferenceValue =
-                    stats[i];
-            so.ApplyModifiedPropertiesWithoutUndo();
 
             // EditMode では Awake/OnEnable が走らないので、Awake が解決する参照を入れて OnEnable を叩く。
             TestReflection.SetField(_hud, "_group", _group);
-            TestReflection.SetField(_hud, "_weaponManager", _weapons);
             TestReflection.Invoke(_hud, "OnEnable");
         }
 
@@ -56,9 +36,7 @@ namespace CreativeAI.Tests.EditMode
         {
             TestReflection.Invoke(_hud, "OnDisable");
             Object.DestroyImmediate(_go);
-            foreach (var o in _created)
-                Object.DestroyImmediate(o);
-            _created.Clear();
+            _residents.Clear();
         }
 
         private bool IsShown => _group.IsShown() && _group.blocksRaycasts;

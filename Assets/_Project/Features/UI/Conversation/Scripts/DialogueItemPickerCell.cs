@@ -1,4 +1,5 @@
 using System;
+using CreativeAI.Gameplay;
 using TMPro;
 using UnityEngine;
 using UnityEngine.EventSystems;
@@ -34,15 +35,15 @@ namespace CreativeAI.UI
         private Action _onHover;
 
         /// <summary>持ち物を出す。</summary>
-        internal void Set(ItemPickerEntries.Entry entry)
+        internal void Set(ItemData data, int count)
         {
-            bool hasIcon = entry.Icon != null;
+            bool hasIcon = data.icon != null;
             _icon.gameObject.SetActive(hasIcon);
-            _icon.sprite = entry.Icon;
+            _icon.sprite = data.icon;
             _nameFallback.gameObject.SetActive(!hasIcon);
-            _nameFallback.text = entry.Name;
-            _count.gameObject.SetActive(entry.Count > 1);
-            _count.SetText("×{0}", entry.Count);
+            _nameFallback.text = data.itemName;
+            _count.gameObject.SetActive(count > 1);
+            _count.SetText("×{0}", count);
         }
 
         /// <summary>押したとき・マウスが乗ったときの処理を設定する。</summary>

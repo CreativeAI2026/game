@@ -1,4 +1,5 @@
 using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Text;
 using CreativeAI.Gameplay;
@@ -59,8 +60,7 @@ namespace CreativeAI.UI
 
         private readonly List<DialogueHistoryEntry> _entries = new();
         private readonly List<DialogueHistoryRow> _rows = new(); // _entries と同じ並び
-        private readonly DialogueHistoryScrollController _scrollController = new();
-        private DialogueHistoryPanelAnimator _panelAnimator;
+        private Coroutine _fade;
 
         public bool IsOpen => _isOpen;
         public int EntryCount => _entries.Count;
@@ -69,7 +69,6 @@ namespace CreativeAI.UI
         /// <summary>ボタンやスクロールの通知をつなぐ。会話UIの起動時に1回呼ぶ。</summary>
         public void Initialize()
         {
-            EnsureView();
             BindViewEvents();
         }
 
@@ -143,8 +142,8 @@ namespace CreativeAI.UI
 
         private void AppendEntry(DialogueHistoryEntry entry)
         {
-            bool followLatest = _scrollController.ShouldFollowLatest();
-            EnsureView();
+            // 最新の行を見ている(か閉じている)なら、足した行へ送る
+            bool followLatest = !_isOpen || _scrollRect == null || !IsScrolledUp();
             _entries.Add(entry);
             var row = Instantiate(RowTemplate(entry.Kind), _content);
             row.Set(entry);
@@ -155,9 +154,9 @@ namespace CreativeAI.UI
             if (!_isOpen)
                 return;
             if (followLatest)
-                _scrollController.ScrollToLatest();
+                ScrollToLatest();
             else
-                _scrollController.RefreshLatestButton();
+                RefreshLatestButton();
         }
 
         public void AddChoiceEntry(IReadOnlyList<ChoiceOption> options, string selectedText)
@@ -182,7 +181,6 @@ namespace CreativeAI.UI
 
         public void SetOpen(bool open)
         {
-            EnsureView();
             if (_panel == null)
                 return;
 
@@ -197,7 +195,7 @@ namespace CreativeAI.UI
                 if (!wasActive && _panelGroup != null)
                     _panelGroup.alpha = 0f;
                 _panel.transform.SetAsLastSibling();
-                _scrollController.ScrollToLatest();
+                ScrollToLatest();
                 if (EventSystem.current != null)
                     EventSystem.current.SetSelectedGameObject(null);
             }
@@ -210,7 +208,37 @@ namespace CreativeAI.UI
                 return;
             }
 
-            _panelAnimator.Play(open);
+            if (_fade != null)
+                StopCoroutine(_fade);
+            _fade = StartCoroutine(Fade(open));
+        }
+
+        // 開閉のフェード。閉じ終えたらパネルを隠して Closed を出す
+        private IEnumerator Fade(bool opening)
+        {
+            float start = _panelGroup != null ? _panelGroup.alpha : (opening ? 0f : 1f);
+            float target = opening ? 1f : 0f;
+            const float duration = 0.18f;
+            for (float elapsed = 0f; elapsed < duration; )
+            {
+                if (_panelGroup != null)
+                    _panelGroup.alpha = Mathf.Lerp(
+                        start,
+                        target,
+                        Mathf.SmoothStep(0f, 1f, elapsed / duration)
+                    );
+                elapsed += Mathf.Max(Time.unscaledDeltaTime, 1f / 60f);
+                yield return null;
+            }
+
+            if (_panelGroup != null)
+                _panelGroup.alpha = target;
+            if (!opening)
+            {
+                _panel.SetActive(false);
+                Closed?.Invoke();
+            }
+            _fade = null;
         }
 
         private DialogueHistoryRow RowTemplate(DialogueHistoryEntryKind kind) =>
@@ -221,12 +249,6 @@ namespace CreativeAI.UI
                 DialogueHistoryEntryKind.Narration => _narrationRow,
                 _ => _rewardRow,
             };
-
-        private void EnsureView()
-        {
-            ConfigurePanelAnimator();
-            ConfigureScrollController();
-        }
 
         private void BindViewEvents()
         {
@@ -241,17 +263,14 @@ namespace CreativeAI.UI
             )
             {
                 latestButton.onClick.RemoveAllListeners();
-                latestButton.onClick.AddListener(_scrollController.ScrollToLatest);
+                latestButton.onClick.AddListener(ScrollToLatest);
             }
             _closeButton.onClick.RemoveAllListeners();
             _closeButton.onClick.AddListener(() => SetOpen(false));
             if (_scrollRect != null)
             {
                 _scrollRect.onValueChanged.RemoveAllListeners();
-                _scrollRect.onValueChanged.AddListener(_ =>
-                {
-                    _scrollController.Refresh();
-                });
+                _scrollRect.onValueChanged.AddListener(_ => RefreshScrollMarkers());
             }
             if (_searchField != null)
             {
@@ -270,7 +289,7 @@ namespace CreativeAI.UI
                 _rows[i].ApplySearch(entry, query);
             }
             LayoutRebuilder.ForceRebuildLayoutImmediate(_content);
-            _scrollController.Refresh();
+            RefreshScrollMarkers();
         }
 
         private void RefreshCurrentMarker()
@@ -293,21 +312,48 @@ namespace CreativeAI.UI
             }
         }
 
-        private void ConfigureScrollController()
+        // --- スクロール(最新へ送る・「最新へ」ボタン・スクロール位置の目印) ---
+
+        private bool IsScrolledUp() => _scrollRect.verticalNormalizedPosition > 0.03f;
+
+        private void ScrollToLatest()
         {
-            _scrollController.Configure(
-                _scrollRect,
-                _content,
-                _latestButton,
-                _scrollIndicator,
-                () => IsOpen
-            );
+            if (_scrollRect == null || _content == null)
+                return;
+            Canvas.ForceUpdateCanvases();
+            LayoutRebuilder.ForceRebuildLayoutImmediate(_content);
+            _scrollRect.verticalNormalizedPosition = 0f;
+            RefreshScrollMarkers();
         }
 
-        private void ConfigurePanelAnimator()
+        private void RefreshScrollMarkers()
         {
-            _panelAnimator ??= new DialogueHistoryPanelAnimator(this);
-            _panelAnimator.Configure(_panel, _panelGroup, () => Closed?.Invoke());
+            RefreshLatestButton();
+            RefreshScrollIndicator();
+        }
+
+        // 上へ遡っている間だけ「最新へ」ボタンを出す
+        private void RefreshLatestButton()
+        {
+            if (_latestButton == null || _scrollRect == null)
+                return;
+            _latestButton.SetActive(_isOpen && IsScrolledUp());
+        }
+
+        // 右端の目印を、見えている範囲の位置と大きさに合わせる
+        private void RefreshScrollIndicator()
+        {
+            if (_scrollIndicator == null || _scrollRect == null || _content == null)
+                return;
+            float viewportHeight = Mathf.Max(1f, _scrollRect.viewport.rect.height);
+            float contentHeight = Mathf.Max(viewportHeight, _content.rect.height);
+            float size = Mathf.Clamp(viewportHeight / contentHeight, 0.08f, 1f);
+            float start = (1f - size) * _scrollRect.verticalNormalizedPosition;
+            var rect = _scrollIndicator.rectTransform;
+            rect.anchorMin = new Vector2(0f, start);
+            rect.anchorMax = new Vector2(1f, start + size);
+            rect.offsetMin = rect.offsetMax = Vector2.zero;
+            _scrollIndicator.gameObject.SetActive(size < 0.995f);
         }
     }
 

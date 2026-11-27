@@ -5,10 +5,12 @@ using UnityEngine.UI;
 
 namespace CreativeAI.UI
 {
-    public class GrabEscapeGaugeView : MonoBehaviour
+    /// <summary>
+    /// 掴み・拘束から抜け出すゲージ(レバガチャの振りほどき度)の表示。
+    /// 敵から <see cref="GrabEscapeEvents"/> で届く表示・更新・非表示を受けて切り替える。
+    /// </summary>
+    public sealed class GrabEscapeGaugeView : MonoBehaviour
     {
-        public static GrabEscapeGaugeView Instance { get; private set; }
-
         [Header("アイコン")]
         [SerializeField]
         private Image _iconImage;
@@ -45,13 +47,6 @@ namespace CreativeAI.UI
 
         private void Awake()
         {
-            if (Instance != null && Instance != this)
-            {
-                Destroy(gameObject);
-                return;
-            }
-            Instance = this;
-
             if (_iconImage == null || _normalSprite == null || _pressedSprite == null)
             {
                 Debug.LogError(
@@ -75,11 +70,6 @@ namespace CreativeAI.UI
 
         private void OnDestroy()
         {
-            if (Instance == this)
-            {
-                Instance = null;
-            }
-
             // イベントの購読解除
             GrabEscapeEvents.OnShowGauge -= Show;
             GrabEscapeEvents.OnUpdateGauge -= UpdateValue;
@@ -102,7 +92,7 @@ namespace CreativeAI.UI
             UpdatePressedIcon();
         }
 
-        public void Show(float current, float max)
+        private void Show(float current, float max)
         {
             _currentValue = current;
             _maxValue = max;
@@ -112,12 +102,12 @@ namespace CreativeAI.UI
             RefreshLabel();
         }
 
-        public void Hide()
+        private void Hide()
         {
             SetVisible(false);
         }
 
-        public void UpdateValue(float current, float max)
+        private void UpdateValue(float current, float max)
         {
             bool increased = current > _currentValue;
             _currentValue = current;

@@ -7,8 +7,9 @@ using UnityEngine;
 namespace CreativeAI.UI
 {
     /// <summary>
-    /// 演出コマンドのうち、背景(暗転・フラッシュ・画像)・音(SE/BGM)・カメラ揺れを担当する。
-    /// 音と背景画像は、events.json にはキーだけを書き、キーと素材の対応は ConversationView に登録したものから引く
+    /// events.json の command ステップ(演出コマンド)を実行する。ウィンドウ・立ち絵・待ち・会話を閉じる操作と、
+    /// 背景(暗転・フラッシュ・画像)・音(SE/BGM)・カメラ揺れを受け持つ。
+    /// 音と背景画像は、events.json にはキーだけを書き、キーと素材の対応は ConversationPanel に登録したものから引く
     /// (キャラの portrait キーと同じ作り)。素材が登録されていなければ警告だけ出して続行する。
     /// </summary>
     internal sealed class DialogueStageCommands
@@ -18,29 +19,107 @@ namespace CreativeAI.UI
         public const float DefaultPictureFadeSeconds = 0.5f;
         public const float DefaultShakeAmplitude = 0.5f;
 
-        private readonly DialogueBackdropPresenter _backdrop;
+        private const float PortraitFadeSeconds = 0.5f;
+        private const float PortraitEffectSeconds = 0.28f;
+        private const float MaxWaitSeconds = 10f;
+
+        private readonly DialogueBackdrop _backdrop;
+        private readonly DialoguePortraitView _portraits;
+        private readonly Action<bool> _setWindowHidden;
+        private readonly Func<IEnumerator> _close;
         private readonly Func<string, SoundCue> _findSound;
         private readonly Func<string, Sprite> _findBackground;
 
+        /// <param name="portraits">portrait.* の対象</param>
+        /// <param name="setWindowHidden">window.hide / window.show で呼ぶ</param>
+        /// <param name="close">conversation.close で呼ぶ</param>
         /// <param name="findSound">sound.se / sound.bgm のキーから SoundCue を引く。無ければ null。</param>
         /// <param name="findBackground">background.image のキーから背景画像を引く。無ければ null。</param>
         public DialogueStageCommands(
-            DialogueBackdropPresenter backdrop,
+            DialogueBackdrop backdrop,
+            DialoguePortraitView portraits = null,
+            Action<bool> setWindowHidden = null,
+            Func<IEnumerator> close = null,
             Func<string, SoundCue> findSound = null,
             Func<string, Sprite> findBackground = null
         )
         {
             _backdrop = backdrop;
+            _portraits = portraits;
+            _setWindowHidden = setWindowHidden;
+            _close = close;
             _findSound = findSound;
             _findBackground = findBackground;
         }
 
-        /// <summary>このクラスが受け持つコマンドなら実行コルーチンを返す。そうでなければ null。</summary>
+        /// <summary>コマンドの実行コルーチンを返す。知らないコマンドなら null。</summary>
         public IEnumerator Create(string command, string argument)
         {
             string[] args = SplitArguments(argument);
             switch (command?.Trim().ToLowerInvariant())
             {
+                case "window.hide":
+                    return Run(() => _setWindowHidden(true));
+                case "window.show":
+                    return Run(() => _setWindowHidden(false));
+                case "conversation.close":
+                    return _close();
+                case "wait":
+                    return Wait(ParseNumber(Arg(args, 0), 0f));
+                case "portrait.show":
+                    return _portraits.ShowByKey(argument?.Trim());
+                case "portrait.left.hide":
+                    return Run(() => _portraits.SetVisible(DialoguePortraitSide.Left, false));
+                case "portrait.right.hide":
+                    return Run(() => _portraits.SetVisible(DialoguePortraitSide.Right, false));
+                case "portrait.left.obscure":
+                    return _portraits.SetObscured(
+                        DialoguePortraitSide.Left,
+                        true,
+                        PortraitFadeSeconds
+                    );
+                case "portrait.right.obscure":
+                    return _portraits.SetObscured(
+                        DialoguePortraitSide.Right,
+                        true,
+                        PortraitFadeSeconds
+                    );
+                case "portrait.left.reveal":
+                    return _portraits.SetObscured(
+                        DialoguePortraitSide.Left,
+                        false,
+                        PortraitFadeSeconds
+                    );
+                case "portrait.right.reveal":
+                    return _portraits.SetObscured(
+                        DialoguePortraitSide.Right,
+                        false,
+                        PortraitFadeSeconds
+                    );
+                case "portrait.left.shake":
+                    return _portraits.PlayEffect(
+                        DialoguePortraitSide.Left,
+                        ConversationPanel.PortraitEffect.Shake,
+                        PortraitEffectSeconds
+                    );
+                case "portrait.right.shake":
+                    return _portraits.PlayEffect(
+                        DialoguePortraitSide.Right,
+                        ConversationPanel.PortraitEffect.Shake,
+                        PortraitEffectSeconds
+                    );
+                case "portrait.left.jump":
+                    return _portraits.PlayEffect(
+                        DialoguePortraitSide.Left,
+                        ConversationPanel.PortraitEffect.Jump,
+                        PortraitEffectSeconds
+                    );
+                case "portrait.right.jump":
+                    return _portraits.PlayEffect(
+                        DialoguePortraitSide.Right,
+                        ConversationPanel.PortraitEffect.Jump,
+                        PortraitEffectSeconds
+                    );
                 case "background.black":
                     return Run(() => _backdrop.SetColor(Color.black));
                 case "background.color":
@@ -101,8 +180,8 @@ namespace CreativeAI.UI
             if (sprite == null)
             {
                 Debug.LogWarning(
-                    $"[ConversationView] 背景画像 '{key}' が登録されていません"
-                        + "(ConversationView の Backgrounds にキーと画像を登録してください)。"
+                    $"[ConversationPanel] 背景画像 '{key}' が登録されていません"
+                        + "(ConversationPanel の Backgrounds にキーと画像を登録してください)。"
                 );
                 yield break;
             }
@@ -115,7 +194,7 @@ namespace CreativeAI.UI
             if (shake == null)
             {
                 Debug.LogWarning(
-                    "[ConversationView] CameraShakeManager がシーンに無いため揺らせません。"
+                    "[ConversationPanel] CameraShakeManager がシーンに無いため揺らせません。"
                 );
                 return;
             }
@@ -141,8 +220,8 @@ namespace CreativeAI.UI
             var cue = string.IsNullOrEmpty(key) ? null : _findSound?.Invoke(key);
             if (cue == null)
                 Debug.LogWarning(
-                    $"[ConversationView] 音 '{key}' が登録されていません"
-                        + "(ConversationView の Sounds にキーと SoundCue を登録してください)。"
+                    $"[ConversationPanel] 音 '{key}' が登録されていません"
+                        + "(ConversationPanel の Sounds にキーと SoundCue を登録してください)。"
                 );
             return cue;
         }
@@ -151,6 +230,11 @@ namespace CreativeAI.UI
         {
             action();
             yield break;
+        }
+
+        private static IEnumerator Wait(float seconds)
+        {
+            yield return new WaitForSecondsRealtime(Mathf.Clamp(seconds, 0f, MaxWaitSeconds));
         }
 
         private static string[] SplitArguments(string argument)
@@ -172,7 +256,7 @@ namespace CreativeAI.UI
                 : fallback;
 
         private static float ParseSeconds(string text, float fallback) =>
-            Mathf.Clamp(ParseNumber(text, fallback), 0f, DialogueBackdropPresenter.MaxFadeSeconds);
+            Mathf.Clamp(ParseNumber(text, fallback), 0f, DialogueBackdrop.MaxFadeSeconds);
 
         private static Color ParseColor(string text, Color fallback) =>
             !string.IsNullOrEmpty(text) && ColorUtility.TryParseHtmlString(text, out Color color)

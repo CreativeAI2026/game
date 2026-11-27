@@ -163,34 +163,23 @@ namespace CreativeAI.UI
         private float _dragOriginalAlpha = 1f;
         private bool _dragging;
 
+        [Header("印(調合の完成品スロットのように、印を持たない置き方もある)")]
         [SerializeField]
-        private RectTransform _visualRootRect;
-
-        [SerializeField]
-        private SlotIconView _iconView;
+        private GameObject _equippedMarker;
 
         [SerializeField]
-        private SlotCountBadgeView _countBadgeView;
+        private GameObject _craftAssignedMarker;
 
         [SerializeField]
-        private SlotFrameView _frameView;
+        private GameObject _equippedDimOverlay;
 
-        [SerializeField]
-        private HoverScaleOnPointer _hover;
+        private bool _isEquipped;
+        private bool _isCraftAssigned;
 
-        [SerializeField]
-        private SlotMarkerView _markerView;
-
-        private readonly HashSet<string> _warnedMissingViews = new();
-
-        protected override SlotIconView IconView => _iconView;
-        protected override SlotCountBadgeView CountBadgeView => _showCount ? _countBadgeView : null;
-        protected override HoverScaleOnPointer Hover => _hover;
-        protected override SlotFrameView FrameView => _frameView;
+        protected override bool ShowsCount => _showCount;
 
         protected override void Awake()
         {
-            ResolveViewReferences();
             base.Awake();
             _controller = GetComponentInParent<ItemListView>();
             RefreshSelectionVisuals();
@@ -199,7 +188,6 @@ namespace CreativeAI.UI
         private void OnEnable()
         {
             ItemSlotDragContext.Ended += OnDragEnded;
-            ResolveViewReferences();
             RefreshSelectionVisuals();
         }
 
@@ -213,7 +201,8 @@ namespace CreativeAI.UI
         {
             _itemStack = stack;
             base.SetItem(stack?.Data, stack?.Count ?? 0);
-            SetEquipped(stack?.IsEquipped ?? false);
+            var equipment = InventoryManager.CurrentEquipment;
+            SetEquipped(stack != null && equipment != null && equipment.Contains(stack));
         }
 
         public ItemStack Stack => _itemStack;
@@ -221,25 +210,24 @@ namespace CreativeAI.UI
         public void SetShowCount(bool show)
         {
             _showCount = show;
-            if (_countBadgeView == null)
+            if (CountBadge == null)
                 return;
             if (show)
-                _countBadgeView.SetCount(_item, _count);
+                CountBadge.SetCount(_item, _count);
             else
-                _countBadgeView.Hide();
+                CountBadge.Hide();
         }
 
         public void RefreshCountLayout()
         {
-            if (_countBadgeView != null)
-                _countBadgeView.RefreshLayout();
+            if (CountBadge != null)
+                CountBadge.RefreshLayout();
         }
 
         public void SetReleaseSelectionOnOutsideClick(bool release)
         {
-            ResolveViewReferences();
-            if (_hover != null)
-                _hover.SetReleaseLockOnOutsideClick(release);
+            if (Hover != null)
+                Hover.SetReleaseLockOnOutsideClick(release);
         }
 
         public void OnPointerClick(PointerEventData eventData)
@@ -317,67 +305,55 @@ namespace CreativeAI.UI
             _dragging = false;
         }
 
-        private void ResolveViewReferences()
-        {
-            WarnIfMissing(_visualRootRect, "VisualRoot");
-            WarnIfMissing(_iconView, nameof(SlotIconView));
-            WarnIfMissing(_countBadgeView, nameof(SlotCountBadgeView));
-            WarnIfMissing(_frameView, nameof(SlotFrameView));
-            WarnIfMissing(_hover, nameof(HoverScaleOnPointer));
-            WarnIfMissing(_markerView, nameof(SlotMarkerView));
-        }
-
 #if UNITY_EDITOR
         private void Reset() => AutoAssignReferences();
 
         [ContextMenu("Auto Assign References")]
         private void AutoAssignReferences()
         {
-            if (_visualRootRect == null)
-                _visualRootRect = transform.Find("VisualRoot") as RectTransform;
-            if (_iconView == null)
-                _iconView = GetComponentInChildren<SlotIconView>(true);
-            if (_countBadgeView == null)
-                _countBadgeView = GetComponentInChildren<SlotCountBadgeView>(true);
-            if (_frameView == null)
-                _frameView = GetComponentInChildren<SlotFrameView>(true);
-            if (_hover == null)
-                _hover = GetComponentInChildren<HoverScaleOnPointer>(true);
-            if (_markerView == null)
-                _markerView = GetComponentInChildren<SlotMarkerView>(true);
+            AutoAssignSlotViews();
+            if (_equippedMarker == null)
+                _equippedMarker = FindChild("VisualRoot/EquippedMarker");
+            if (_craftAssignedMarker == null)
+                _craftAssignedMarker = FindChild("VisualRoot/CraftAssignedMarker");
+            if (_equippedDimOverlay == null)
+                _equippedDimOverlay = FindChild("VisualRoot/EquippedDimOverlay");
+        }
+
+        private GameObject FindChild(string path)
+        {
+            var child = transform.Find(path);
+            return child != null ? child.gameObject : null;
         }
 #endif
 
-        private void WarnIfMissing(UnityEngine.Object reference, string referenceName)
-        {
-            if (reference != null || !_warnedMissingViews.Add(referenceName))
-                return;
-
-            Debug.LogWarning(
-                $"{nameof(ItemSlot)} '{name}' に {referenceName} がないため、該当表示をスキップします。Prefab上で設定してください。",
-                this
-            );
-        }
-
         protected override void RefreshSelectionVisuals()
         {
-            ResolveViewReferences();
-            if (_frameView != null)
-                _frameView.SetSelected(_isSlotSelected);
+            if (FrameView != null)
+                FrameView.SetSelected(_isSlotSelected);
         }
 
         public void SetEquipped(bool isEquipped)
         {
-            ResolveViewReferences();
-            if (_markerView != null)
-                _markerView.SetEquipped(isEquipped);
+            _isEquipped = isEquipped;
+            ApplyMarkers();
         }
 
         public void SetCraftAssigned(bool isAssigned)
         {
-            ResolveViewReferences();
-            if (_markerView != null)
-                _markerView.SetCraftAssigned(isAssigned);
+            _isCraftAssigned = isAssigned;
+            ApplyMarkers();
+        }
+
+        // 装備中は印と暗幕を出す。調合に割り当てた印は、装備中でないときだけ出す
+        private void ApplyMarkers()
+        {
+            if (_equippedMarker != null)
+                _equippedMarker.SetActive(_isEquipped);
+            if (_equippedDimOverlay != null)
+                _equippedDimOverlay.SetActive(_isEquipped);
+            if (_craftAssignedMarker != null)
+                _craftAssignedMarker.SetActive(_isCraftAssigned && !_isEquipped);
         }
     }
 }

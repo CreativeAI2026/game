@@ -7,25 +7,28 @@ using UnityEngine;
 namespace CreativeAI.Tests.EditMode
 {
     /// <summary>
-    /// キャラクター画面の装備枠の割り振り(装備中のものを空き枠へ入れる・付け替え・入れ替え・入れる先の選び方)の検証。
+    /// キャラクター画面の装備枠(装備の枠を映す・付け替え・入れ替え・入れる先の選び方)の検証。
     /// </summary>
     public class LoadoutAssignmentTests
     {
         private readonly List<Object> _created = new();
         private GameObject _root;
         private InventoryManager _inventory;
+        private readonly TestResidents _residents = new();
+        private EquipmentSlots _equipment;
+        private QuickFoodSlots _quickFood;
         private LoadoutAssignment _slots;
 
         [SetUp]
         public void SetUp()
         {
-            var inventoryObject = new GameObject(nameof(InventoryManager));
-            _created.Add(inventoryObject);
-            _inventory = inventoryObject.AddComponent<InventoryManager>();
+            _inventory = _residents.Add<InventoryManager>();
+            _equipment = _inventory.Equipment;
+            _quickFood = _inventory.QuickFood;
 
             _root = new GameObject("Loadout", typeof(RectTransform));
             _created.Add(_root);
-            _slots = new LoadoutAssignment(CreateSlots(), CreateSlots(), () => _inventory);
+            _slots = new LoadoutAssignment(CreateSlots(), CreateSlots());
         }
 
         [TearDown]
@@ -35,35 +38,34 @@ namespace CreativeAI.Tests.EditMode
                 if (created != null)
                     Object.DestroyImmediate(created);
             _created.Clear();
+            _residents.Clear();
         }
 
         [Test]
-        public void SyncEquipment_PutsEquippedItemsIntoEmptySlotsInOrder()
+        public void RefreshEquipment_ShowsEquipmentSlots()
         {
             var first = AddEquipment(1);
             var second = AddEquipment(2);
-            _inventory.SetEquipped(first, true);
-            _inventory.SetEquipped(second, true);
+            _equipment.Set(0, first);
+            _equipment.Set(2, second);
 
-            _slots.SyncEquipment();
             _slots.RefreshEquipment();
 
             Assert.AreSame(first, _slots.EquipmentSlots[0].Stack);
-            Assert.AreSame(second, _slots.EquipmentSlots[1].Stack);
-            Assert.IsNull(_slots.EquipmentSlots[2].Stack);
+            Assert.IsNull(_slots.EquipmentSlots[1].Stack);
+            Assert.AreSame(second, _slots.EquipmentSlots[2].Stack);
         }
 
         [Test]
-        public void SyncEquipment_RemovesItemsNoLongerEquipped()
+        public void RemoveEquipment_ClearsSelectedSlot()
         {
             var gear = AddEquipment(1);
-            _inventory.SetEquipped(gear, true);
-            _slots.SyncEquipment();
+            _slots.SelectedEquipment = 0;
+            _slots.AssignEquipment(gear);
 
-            _inventory.SetEquipped(gear, false);
-            _slots.SyncEquipment();
-            _slots.RefreshEquipment();
+            Assert.IsTrue(_slots.RemoveEquipment());
 
+            Assert.IsFalse(_inventory.Equipment.Contains(gear));
             Assert.IsNull(_slots.EquipmentSlots[0].Stack);
         }
 
@@ -78,8 +80,8 @@ namespace CreativeAI.Tests.EditMode
             bool assigned = _slots.AssignEquipment(after);
 
             Assert.IsTrue(assigned);
-            Assert.IsFalse(before.IsEquipped, "前に入っていた装備は外れる");
-            Assert.IsTrue(after.IsEquipped);
+            Assert.IsFalse(_inventory.Equipment.Contains(before), "前に入っていた装備は外れる");
+            Assert.IsTrue(_inventory.Equipment.Contains(after));
             Assert.AreSame(after, _slots.EquipmentSlots[0].Stack);
         }
 
@@ -88,16 +90,18 @@ namespace CreativeAI.Tests.EditMode
         {
             var first = AddEquipment(1);
             var second = AddEquipment(2);
-            _inventory.SetEquipped(first, true);
-            _inventory.SetEquipped(second, true);
-            _slots.SyncEquipment();
+            _equipment.Set(0, first);
+            _equipment.Set(1, second);
 
             bool swapped = _slots.SwapEquipment(0, 1);
 
             Assert.IsTrue(swapped);
             Assert.AreSame(second, _slots.EquipmentSlots[0].Stack);
             Assert.AreSame(first, _slots.EquipmentSlots[1].Stack);
-            Assert.IsTrue(first.IsEquipped && second.IsEquipped);
+            Assert.AreSame(second, _equipment.GetSlots()[0], "並びは装備側に残る");
+            Assert.IsTrue(
+                _inventory.Equipment.Contains(first) && _inventory.Equipment.Contains(second)
+            );
         }
 
         [Test]

@@ -91,7 +91,13 @@ namespace CreativeAI.UI
         }
 
         private bool IsOwned(WeaponData data) =>
-            data != null && (_ownership == null || _ownership.IsOwned(data.id - 1001));
+            data != null
+            && (
+                _ownership == null
+                || _ownership.IsOwned(
+                    WeaponCatalog.Instance != null ? WeaponCatalog.Instance.IndexOf(data.id) : -1
+                )
+            );
 
         private bool _initialized;
         private TmpTypewriterPlayer _typewriter;

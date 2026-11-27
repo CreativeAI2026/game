@@ -181,7 +181,9 @@ namespace CreativeAI.UI
 
         private void LateUpdate()
         {
-            SetShown(_layout != null && _player != null && EventPlaybackService.IsFreeRoaming);
+            SetShown(
+                _layout != null && _player != null && GameModeManager.Current == GameMode.Field
+            );
             if (_shown != true)
                 return;
             if (_camera == null || !_camera.isActiveAndEnabled)

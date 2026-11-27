@@ -8,14 +8,13 @@ namespace CreativeAI.Tests.EditMode
     /// <summary>
     /// 即時食材使用UIの出し分けの検証(会話中とパネル表示中だけ隠し、戦闘中も出したままにする)。
     /// パネルは インベ/キャラ/セーブ/調合。
-    /// battle ステップも EventPlaybackService.IsPlaying の内側で走るので、モードで戦闘を除外する必要がある。
     /// </summary>
     public class QuickFoodBarViewTests
     {
         private readonly TestResidents _residents = new();
         private GameModeManager _gmm;
         private GameObject _rootGo;
-        private UIRouter _router;
+        private UIManager _router;
         private GameObject _panel;
         private GameObject _barGo;
         private QuickFoodBarView _bar;
@@ -27,7 +26,7 @@ namespace CreativeAI.Tests.EditMode
             _gmm = _residents.Add<GameModeManager>();
 
             _rootGo = new GameObject("UIRoot");
-            _router = _rootGo.AddComponent<UIRouter>();
+            _router = _rootGo.AddComponent<UIManager>();
             _panel = new GameObject("InventoryUI");
             TestReflection.SetField(_router, "_inventoryUI", _panel);
             TestReflection.Invoke(_router, "Awake"); // パネル登録 + 全閉じ
@@ -39,7 +38,6 @@ namespace CreativeAI.Tests.EditMode
 
             // EditMode では Awake が走らないので、Awake が解決する参照を直接入れる。
             TestReflection.SetField(_bar, "_group", _group);
-            TestReflection.SetField(_bar, "_router", _router);
         }
 
         [TearDown]
@@ -67,7 +65,7 @@ namespace CreativeAI.Tests.EditMode
         [Test]
         public void BattleMode_IsStillShown()
         {
-            _gmm.EnterBattle();
+            _gmm.TryStartBattle();
 
             Assert.IsTrue(Visible(), "戦闘中も常時表示(右上アイコンバーと違いモードで消さない)");
         }
@@ -75,7 +73,7 @@ namespace CreativeAI.Tests.EditMode
         [Test]
         public void DuringDialogue_IsHidden()
         {
-            EventPlaybackService.SetPlaying(true);
+            _gmm.TryStartDialogue();
 
             Assert.IsFalse(Visible(), "会話(line/choice)中は使用不可なので隠す");
         }
@@ -83,9 +81,9 @@ namespace CreativeAI.Tests.EditMode
         [Test]
         public void DuringBattleStepOfAnEvent_IsShown()
         {
-            // battle ステップはイベント再生中(IsPlaying=true)かつ Battle モード。ここは戦闘なので表示する。
-            EventPlaybackService.SetPlaying(true);
-            _gmm.EnterBattle();
+            // battle ステップは会話から Battle モードへ移る。ここは戦闘なので表示する。
+            _gmm.TryStartDialogue();
+            _gmm.TryStartBattle();
 
             Assert.IsTrue(Visible(), "イベント中の戦闘は「戦闘中」扱いで表示する");
         }
@@ -93,11 +91,11 @@ namespace CreativeAI.Tests.EditMode
         [Test]
         public void AfterBattleReturnsToDialogue_IsHiddenAgain()
         {
-            EventPlaybackService.SetPlaying(true);
-            _gmm.EnterBattle();
+            _gmm.TryStartDialogue();
+            _gmm.TryStartBattle();
             Assert.IsTrue(Visible());
 
-            _gmm.ExitBattle(); // 戦闘が終わって会話に戻る
+            _gmm.EndBattle(); // 戦闘が終わって会話に戻る
 
             Assert.IsFalse(Visible());
         }
@@ -105,7 +103,7 @@ namespace CreativeAI.Tests.EditMode
         [Test]
         public void WhenAPanelIsOpen_IsHidden()
         {
-            _router.Open(UIRouter.UIId.Inventory);
+            _router.Open(UIManager.UIId.Inventory);
 
             Assert.IsFalse(Visible(), "インベ等を開いている間は隠す");
         }
@@ -113,7 +111,7 @@ namespace CreativeAI.Tests.EditMode
         [Test]
         public void AfterClosingPanels_IsShownAgain()
         {
-            _router.Open(UIRouter.UIId.Inventory);
+            _router.Open(UIManager.UIId.Inventory);
             Assert.IsFalse(Visible());
 
             _router.CloseAll();

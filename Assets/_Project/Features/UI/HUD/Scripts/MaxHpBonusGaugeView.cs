@@ -55,13 +55,13 @@ namespace CreativeAI.UI
         private void Bind(PlayerController player)
         {
             if (_playerStatus != null)
-                _playerStatus.OnHpChanged -= OnHpChanged;
+                _playerStatus.HpChanged -= OnHpChanged;
 
             _playerStatus = player != null ? player.GetComponent<PlayerStatus>() : null;
 
             if (_playerStatus != null)
             {
-                _playerStatus.OnHpChanged += OnHpChanged;
+                _playerStatus.HpChanged += OnHpChanged;
                 // 後から生成されたプレイヤーでも、購読した時点の値で表示を合わせる
                 OnHpChanged(_playerStatus.CurrentHp, _playerStatus.CurrentMaxHp);
             }
@@ -71,7 +71,7 @@ namespace CreativeAI.UI
             }
         }
 
-        // 装備変更(SetEquipment)でも OnHpChanged が来るので、バフの付け外しもここで拾える
+        // 装備や武器の変更でも HpChanged が来るので、バフの付け外しもここで拾える
         private void OnHpChanged(float currentHp, float maxHp)
         {
             HpGaugeSplit split = HpGaugeSplit.Calculate(

@@ -1,6 +1,5 @@
 using System;
 using System.Collections;
-using System.Collections.Generic;
 using CreativeAI.Gameplay;
 using UnityEngine;
 using UnityEngine.EventSystems;
@@ -17,36 +16,22 @@ namespace CreativeAI.UI
         private RectTransform _visualRootRect;
 
         [SerializeField]
-        private SlotIconView _iconView;
-
-        [SerializeField]
-        private SlotEmptyView _emptyView;
-
-        [SerializeField]
-        private HoverScaleOnPointer _hover;
-
-        [SerializeField]
-        private SlotFrameView _frameView;
+        [Tooltip("空のときに出すもの")]
+        private GameObject _emptyObject;
 
         [SerializeField]
         private GameObject _materialHint;
 
         private Coroutine _materialAnimationRoutine;
         private bool _isSelected;
-        private readonly HashSet<string> _warnedMissingViews = new();
-
-        protected override SlotIconView IconView => _iconView;
-        protected override HoverScaleOnPointer Hover => _hover;
-        protected override SlotFrameView FrameView => _frameView;
 
         public event Action<MaterialSlot> Clicked;
         public event Action<MaterialSlot> DoubleClicked;
 
         protected override void Awake()
         {
-            WarnMissingViews();
-            if (_iconView != null)
-                _iconView.SetEmptyAlpha(EmptyIconAlpha);
+            if (IconView != null)
+                IconView.SetEmptyAlpha(EmptyIconAlpha);
             base.Awake();
             Clear();
             SetSelected(false);
@@ -65,7 +50,6 @@ namespace CreativeAI.UI
 
         public void SetSelected(bool selected)
         {
-            WarnMissingViews();
             _isSelected = selected;
             if (selected)
                 Select();
@@ -76,8 +60,8 @@ namespace CreativeAI.UI
         public void NormalizeVisualState()
         {
             Refresh();
-            if (_frameView != null)
-                _frameView.SetSelected(_isSelected);
+            if (FrameView != null)
+                FrameView.SetSelected(_isSelected);
         }
 
         public void OnPointerClick(PointerEventData eventData)
@@ -93,12 +77,11 @@ namespace CreativeAI.UI
 
         protected override void Refresh()
         {
-            WarnMissingViews();
-            if (_iconView != null)
-                _iconView.SetEmptyAlpha(EmptyIconAlpha);
+            if (IconView != null)
+                IconView.SetEmptyAlpha(EmptyIconAlpha);
             base.Refresh();
-            if (_emptyView != null)
-                _emptyView.SetEmpty(_item == null);
+            if (_emptyObject != null)
+                _emptyObject.SetActive(_item == null);
             if (_materialHint != null)
                 _materialHint.SetActive(_item == null);
         }
@@ -106,8 +89,8 @@ namespace CreativeAI.UI
         public override void Clear()
         {
             base.Clear();
-            if (_emptyView != null)
-                _emptyView.SetEmpty(true);
+            if (_emptyObject != null)
+                _emptyObject.SetActive(true);
             if (_materialHint != null)
                 _materialHint.SetActive(true);
         }
@@ -145,8 +128,8 @@ namespace CreativeAI.UI
 
             if (animatedRect != null)
                 animatedRect.localScale = Vector3.one;
-            if (_frameView != null)
-                _frameView.SetSelected(_isSelected);
+            if (FrameView != null)
+                FrameView.SetSelected(_isSelected);
             _materialAnimationRoutine = null;
         }
 
@@ -197,43 +180,21 @@ namespace CreativeAI.UI
             return 1f + c3 * Mathf.Pow(t - 1f, 3f) + c1 * Mathf.Pow(t - 1f, 2f);
         }
 
-        private void WarnMissingViews()
-        {
-            WarnIfMissing(_visualRootRect, "VisualRoot");
-            WarnIfMissing(_iconView, nameof(SlotIconView));
-            WarnIfMissing(_emptyView, nameof(SlotEmptyView));
-            WarnIfMissing(_hover, nameof(HoverScaleOnPointer));
-            WarnIfMissing(_frameView, nameof(SlotFrameView));
-        }
-
 #if UNITY_EDITOR
         private void Reset() => AutoAssignReferences();
 
         [ContextMenu("Auto Assign References")]
         private void AutoAssignReferences()
         {
+            AutoAssignSlotViews();
             if (_visualRootRect == null)
                 _visualRootRect = transform.Find("VisualRoot") as RectTransform;
-            if (_iconView == null)
-                _iconView = GetComponentInChildren<SlotIconView>(true);
-            if (_emptyView == null)
-                _emptyView = GetComponentInChildren<SlotEmptyView>(true);
-            if (_hover == null)
-                _hover = GetComponentInChildren<HoverScaleOnPointer>(true);
-            if (_frameView == null)
-                _frameView = GetComponentInChildren<SlotFrameView>(true);
+            if (_emptyObject == null)
+            {
+                var empty = transform.Find("VisualRoot/EmptyText");
+                _emptyObject = empty != null ? empty.gameObject : null;
+            }
         }
 #endif
-
-        private void WarnIfMissing(UnityEngine.Object reference, string referenceName)
-        {
-            if (reference != null || !_warnedMissingViews.Add(referenceName))
-                return;
-
-            Debug.LogWarning(
-                $"{nameof(MaterialSlot)} '{name}' に {referenceName} がないため、該当表示をスキップします。Prefab上で設定してください。",
-                this
-            );
-        }
     }
 }

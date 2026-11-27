@@ -17,7 +17,7 @@ namespace CreativeAI.Tests.EditMode
     {
         private GameObject _canvas;
         private RectTransform _conversationRoot;
-        private DialogueBackdropPresenter _backdrop;
+        private DialogueBackdrop _backdrop;
         private DialogueStageCommands _stage;
 
         [SetUp]
@@ -27,7 +27,7 @@ namespace CreativeAI.Tests.EditMode
             var rootObject = new GameObject("ConversationRoot", typeof(RectTransform));
             _conversationRoot = (RectTransform)rootObject.transform;
             _conversationRoot.SetParent(_canvas.transform, false);
-            _backdrop = new DialogueBackdropPresenter(_conversationRoot);
+            _backdrop = new DialogueBackdrop(_conversationRoot);
             _stage = new DialogueStageCommands(_backdrop);
         }
 
@@ -130,13 +130,25 @@ namespace CreativeAI.Tests.EditMode
             Assert.IsFalse(Find("BackdropFill").gameObject.activeSelf);
         }
 
-        [TestCase("wait")]
-        [TestCase("window.hide")]
-        [TestCase("portrait.show")]
         [TestCase("camera.pan")]
-        public void Create_ReturnsNull_ForCommandsItDoesNotOwn(string command)
+        [TestCase("portrait.center.hide")]
+        [TestCase("")]
+        public void Create_ReturnsNull_ForUnknownCommands(string command)
         {
             Assert.IsNull(_stage.Create(command, "x"));
+        }
+
+        [Test]
+        public void WindowCommands_HideAndShowTheWindow()
+        {
+            bool? hidden = null;
+            var stage = new DialogueStageCommands(_backdrop, setWindowHidden: h => hidden = h);
+
+            Drive(stage.Create("window.hide", null));
+            Assert.AreEqual(true, hidden);
+
+            Drive(stage.Create("window.show", null));
+            Assert.AreEqual(false, hidden);
         }
 
         [TestCase("background.black")]
