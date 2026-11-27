@@ -43,7 +43,7 @@ MonoBehaviour:
   material2: {fileID: -3828202121546107835}
   _maxStack: 1
   _craftedResult: 1
---- !u!114 &-7875201064841803251
+--- !u!114 &-8385492833385993457
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -53,16 +53,16 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: f6220288b2fd34b40bb3d8432012533a, type: 3}
-  m_Name: ClockFluorescentLight
+  m_Name: ChargerGlasses
   m_EditorClassIdentifier: CreativeAI.Gameplay::CreativeAI.Gameplay.ItemData
-  icon: {fileID: 21300000, guid: ea8669df40db5b441b35f067151e0afe, type: 3}
-  id: 2110
-  key: clock_fluorescent_light
-  itemName: "\u771F\u7A7A\u7BA1\u30AF\u30ED\u30C3\u30AF"
+  icon: {fileID: 21300000, guid: d24556a9c07745e418112620ae4475e5, type: 3}
+  id: 2102
+  key: charger_glasses
+  itemName: "\u5145\u96FB\u53EF\u80FD\u30B0\u30E9\u30B9"
   category: 1
-  description: "\u61D0\u4E2D\u6642\u8A08\u3068\u86CD\u5149\u706F\u3067\u5408\u6210\u3055\u308C\u305F\u88C5\u5099\u3002"
-  material1: {fileID: 957348972317786013}
-  material2: {fileID: -263205480878404495}
+  description: "\u5145\u96FB\u5668\u3068\u30B0\u30E9\u30B9\u3092\u5408\u6210\u3057\u305F\u88C5\u5099\u3002"
+  material1: {fileID: -7822687782585050773}
+  material2: {fileID: 6717797442590564354}
   _maxStack: 1
 --- !u!114 &-7822687782585050773
 MonoBehaviour:
@@ -74,37 +74,16 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: f6220288b2fd34b40bb3d8432012533a, type: 3}
-  m_Name: Magnet
+  m_Name: Charger
   m_EditorClassIdentifier: CreativeAI.Gameplay::CreativeAI.Gameplay.ItemData
-  icon: {fileID: 21300000, guid: 456742bbc8e04736ab774c12b3431a46, type: 3}
-  id: 2010
-  key: magnet
-  itemName: "\u78C1\u77F3"
+  icon: {fileID: 21300000, guid: 35669021d77739f4aaaaac13393a9e9d, type: 3}
+  id: 2013
+  key: charger
+  itemName: "\u5145\u96FB\u5668"
   category: 1
-  description: "\u9244\u3092\u3074\u305F\u308A\u3068\u5F15\u304D\u5BC4\u305B\u308B\u78C1\u77F3\u3002"
+  description: "\u6A5F\u68B0\u3092\u5145\u96FB\u3059\u308B\u3082\u306E"
   material1: {fileID: 0}
   material2: {fileID: 0}
-  _maxStack: 1
---- !u!114 &-7696928682053945725
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 0}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: f6220288b2fd34b40bb3d8432012533a, type: 3}
-  m_Name: BalloonMagnet
-  m_EditorClassIdentifier: CreativeAI.Gameplay::CreativeAI.Gameplay.ItemData
-  icon: {fileID: 21300000, guid: f0c9c16245c84624286f4921f82ad42e, type: 3}
-  id: 2106
-  key: balloon_magnet
-  itemName: "\u53CC\u6975\u30AA\u30FC\u30D6"
-  category: 1
-  description: "\u98A8\u8239\u3068\u78C1\u77F3\u3067\u5408\u6210\u3055\u308C\u305F\u88C5\u5099\u3002"
-  material1: {fileID: -7287126184965246600}
-  material2: {fileID: -7822687782585050773}
   _maxStack: 1
 --- !u!114 &-7556588895893103871
 MonoBehaviour:
@@ -128,48 +107,6 @@ MonoBehaviour:
   material2: {fileID: -1353312657710663384}
   _maxStack: 1
   _craftedResult: 1
---- !u!114 &-7287126184965246600
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 0}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: f6220288b2fd34b40bb3d8432012533a, type: 3}
-  m_Name: Balloon
-  m_EditorClassIdentifier: CreativeAI.Gameplay::CreativeAI.Gameplay.ItemData
-  icon: {fileID: 21300000, guid: 121961bb968baf847899a17e54ffff29, type: 3}
-  id: 2001
-  key: balloon
-  itemName: "\u98A8\u8239"
-  category: 1
-  description: "\u3075\u308F\u3075\u308F\u6D6E\u304B\u3076\u3001\u8EFD\u3044\u98A8\u8239\u3002"
-  material1: {fileID: 0}
-  material2: {fileID: 0}
-  _maxStack: 1
---- !u!114 &-7219981475053901071
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 0}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: f6220288b2fd34b40bb3d8432012533a, type: 3}
-  m_Name: ClockMagnet
-  m_EditorClassIdentifier: CreativeAI.Gameplay::CreativeAI.Gameplay.ItemData
-  icon: {fileID: 21300000, guid: 3166d165ef2895f4a8137163b4c77b5d, type: 3}
-  id: 2114
-  key: clock_magnet
-  itemName: "\u7F85\u91DD\u61D0\u4E2D\u6642\u8A08"
-  category: 1
-  description: "\u61D0\u4E2D\u6642\u8A08\u3068\u78C1\u77F3\u3067\u5408\u6210\u3055\u308C\u305F\u88C5\u5099\u3002"
-  material1: {fileID: 957348972317786013}
-  material2: {fileID: -7822687782585050773}
-  _maxStack: 1
 --- !u!114 &-7209103825163294352
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -192,27 +129,6 @@ MonoBehaviour:
   material2: {fileID: 0}
   _maxStack: 99
   _craftedResult: 0
---- !u!114 &-7209048631323264530
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 0}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: f6220288b2fd34b40bb3d8432012533a, type: 3}
-  m_Name: MagnetNote
-  m_EditorClassIdentifier: CreativeAI.Gameplay::CreativeAI.Gameplay.ItemData
-  icon: {fileID: 21300000, guid: 156c75b21e7ddc44fb6644e3c69e0665, type: 3}
-  id: 2141
-  key: magnet_note
-  itemName: "\u78C1\u77F3\u7559\u3081\u306E\u661F\u56F3\u5E33"
-  category: 1
-  description: "\u78C1\u77F3\u3068\u30CE\u30FC\u30C8\u3067\u5408\u6210\u3055\u308C\u305F\u88C5\u5099\u3002"
-  material1: {fileID: -7822687782585050773}
-  material2: {fileID: 1491394875471116521}
-  _maxStack: 1
 --- !u!114 &-7151258950564331069
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -235,27 +151,6 @@ MonoBehaviour:
   material2: {fileID: 2510756971122629955}
   _maxStack: 1
   _craftedResult: 1
---- !u!114 &-7144490374526594860
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 0}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: f6220288b2fd34b40bb3d8432012533a, type: 3}
-  m_Name: ClockGlasses
-  m_EditorClassIdentifier: CreativeAI.Gameplay::CreativeAI.Gameplay.ItemData
-  icon: {fileID: 21300000, guid: 5e7c3b807262eea43afa60485545bd48, type: 3}
-  id: 2112
-  key: clock_glasses
-  itemName: "\u6642\u666F\u30B4\u30FC\u30B0\u30EB"
-  category: 1
-  description: "\u61D0\u4E2D\u6642\u8A08\u3068\u30E1\u30AC\u30CD\u3067\u5408\u6210\u3055\u308C\u305F\u88C5\u5099\u3002"
-  material1: {fileID: 957348972317786013}
-  material2: {fileID: 6717797442590564354}
-  _maxStack: 1
 --- !u!114 &-6822521455514549771
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -300,27 +195,6 @@ MonoBehaviour:
   material2: {fileID: -6523541574003027713}
   _maxStack: 1
   _craftedResult: 1
---- !u!114 &-6593431625258734413
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 0}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: f6220288b2fd34b40bb3d8432012533a, type: 3}
-  m_Name: GlassesMagnet
-  m_EditorClassIdentifier: CreativeAI.Gameplay::CreativeAI.Gameplay.ItemData
-  icon: {fileID: 21300000, guid: 6bce25c0827433944a37dcbaf2dcc749, type: 3}
-  id: 2132
-  key: glasses_magnet
-  itemName: "\u78C1\u754C\u30B9\u30AD\u30E3\u30F3\u30D0\u30A4\u30B6\u30FC"
-  category: 1
-  description: "\u30E1\u30AC\u30CD\u3068\u78C1\u77F3\u3067\u5408\u6210\u3055\u308C\u305F\u88C5\u5099\u3002"
-  material1: {fileID: 6717797442590564354}
-  material2: {fileID: -7822687782585050773}
-  _maxStack: 1
 --- !u!114 &-6523541574003027713
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -343,6 +217,27 @@ MonoBehaviour:
   material2: {fileID: 0}
   _maxStack: 99
   _craftedResult: 0
+--- !u!114 &-6520879013935287259
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: f6220288b2fd34b40bb3d8432012533a, type: 3}
+  m_Name: ChargerPen
+  m_EditorClassIdentifier: CreativeAI.Gameplay::CreativeAI.Gameplay.ItemData
+  icon: {fileID: 21300000, guid: b9ae9f8e33f6022489f02da461c4e6a8, type: 3}
+  id: 2103
+  key: charger_pen
+  itemName: "\u5145\u96FB\u53EF\u80FD\u30DA\u30F3"
+  category: 1
+  description: "\u5145\u96FB\u5668\u3068\u30DA\u30F3\u3092\u5408\u6210\u3057\u305F\u88C5\u5099\u3002"
+  material1: {fileID: -7822687782585050773}
+  material2: {fileID: 944395461657406363}
+  _maxStack: 1
 --- !u!114 &-6167850202062327220
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -365,6 +260,48 @@ MonoBehaviour:
   material2: {fileID: -7209103825163294352}
   _maxStack: 1
   _craftedResult: 1
+--- !u!114 &-6062194249186611418
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: f6220288b2fd34b40bb3d8432012533a, type: 3}
+  m_Name: EarphonesGlasses
+  m_EditorClassIdentifier: CreativeAI.Gameplay::CreativeAI.Gameplay.ItemData
+  icon: {fileID: 21300000, guid: 786c3f8a510429a43a0cd9730d2b9e80, type: 3}
+  id: 2105
+  key: earphones_glasses
+  itemName: "\u30A8\u30A4\u30EA\u30A2\u30F3\u306E\u8033"
+  category: 1
+  description: "\u30A4\u30E4\u30DB\u30F3\u3068\u30B0\u30E9\u30B9\u3092\u5408\u6210\u3057\u305F\u88C5\u5099\u3002"
+  material1: {fileID: -2838425787076211639}
+  material2: {fileID: 6717797442590564354}
+  _maxStack: 1
+--- !u!114 &-5578264174076268404
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: f6220288b2fd34b40bb3d8432012533a, type: 3}
+  m_Name: PenWatch
+  m_EditorClassIdentifier: CreativeAI.Gameplay::CreativeAI.Gameplay.ItemData
+  icon: {fileID: 21300000, guid: f5671fa4759da2e468465b5769ff339d, type: 3}
+  id: 2110
+  key: pen_watch
+  itemName: "\u6642\u8A08\u3067\u62BC\u3059\u30DA\u30F3"
+  category: 1
+  description: "\u30DA\u30F3\u3068\u8155\u6642\u8A08\u3092\u5408\u6210\u3057\u305F\u88C5\u5099\u3002"
+  material1: {fileID: 944395461657406363}
+  material2: {fileID: 2109560086670367448}
+  _maxStack: 1
 --- !u!114 &-5554650038091774464
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -404,30 +341,9 @@ MonoBehaviour:
   key: classified_document_3
   itemName: "\u6A5F\u5BC6\u66F8\u985E\uFF13"
   category: 3
-  description: "\u91D1\u8272\u306E\u5E7E\u4F55\u5B66\u6A21\u69D8\u304C\u63CF\u304B\u308C\u305F\u66F8\u985E\u5165\u308C\u3002"
+  description: "\u4F55\u304B\u304C\u66F8\u304B\u308C\u3066\u3044\u308B\u66F8\u985E\u3060\u3002"
   material1: {fileID: 0}
   material2: {fileID: 0}
-  _maxStack: 1
---- !u!114 &-5527330494723496056
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 0}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: f6220288b2fd34b40bb3d8432012533a, type: 3}
-  m_Name: ClockUmbrella
-  m_EditorClassIdentifier: CreativeAI.Gameplay::CreativeAI.Gameplay.ItemData
-  icon: {fileID: 21300000, guid: c4b271788a60f3b4f9d37dcd62d222e3, type: 3}
-  id: 2117
-  key: clock_umbrella
-  itemName: "\u6587\u5B57\u76E4\u30A2\u30F3\u30D6\u30EC\u30E9"
-  category: 1
-  description: "\u61D0\u4E2D\u6642\u8A08\u3068\u5098\u3067\u5408\u6210\u3055\u308C\u305F\u88C5\u5099\u3002"
-  material1: {fileID: 957348972317786013}
-  material2: {fileID: -181082550691912316}
   _maxStack: 1
 --- !u!114 &-5488544371302167384
 MonoBehaviour:
@@ -451,69 +367,6 @@ MonoBehaviour:
   material2: {fileID: -1353312657710663384}
   _maxStack: 1
   _craftedResult: 1
---- !u!114 &-5452963127977007407
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 0}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: f6220288b2fd34b40bb3d8432012533a, type: 3}
-  m_Name: BalloonGlasses
-  m_EditorClassIdentifier: CreativeAI.Gameplay::CreativeAI.Gameplay.ItemData
-  icon: {fileID: 21300000, guid: 84dbe8dd151226d4197da800b2ecd1e0, type: 3}
-  id: 2104
-  key: balloon_glasses
-  itemName: "\u8679\u8272\u30D0\u30D6\u30EB\u30B0\u30E9\u30B9"
-  category: 1
-  description: "\u98A8\u8239\u3068\u30E1\u30AC\u30CD\u3067\u5408\u6210\u3055\u308C\u305F\u88C5\u5099\u3002"
-  material1: {fileID: -7287126184965246600}
-  material2: {fileID: 6717797442590564354}
-  _maxStack: 1
---- !u!114 &-5232592737924120389
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 0}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: f6220288b2fd34b40bb3d8432012533a, type: 3}
-  m_Name: BalloonHat
-  m_EditorClassIdentifier: CreativeAI.Gameplay::CreativeAI.Gameplay.ItemData
-  icon: {fileID: 21300000, guid: 053309fcab2e4ee4d9bdb86ffdd83341, type: 3}
-  id: 2105
-  key: balloon_hat
-  itemName: "\u3075\u304F\u3089\u307F\u30B7\u30EB\u30AF\u30CF\u30C3\u30C8"
-  category: 1
-  description: "\u98A8\u8239\u3068\u5E3D\u5B50\u3067\u5408\u6210\u3055\u308C\u305F\u88C5\u5099\u3002"
-  material1: {fileID: -7287126184965246600}
-  material2: {fileID: 5905387601538661209}
-  _maxStack: 1
---- !u!114 &-4957436143111774418
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 0}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: f6220288b2fd34b40bb3d8432012533a, type: 3}
-  m_Name: GlassesNote
-  m_EditorClassIdentifier: CreativeAI.Gameplay::CreativeAI.Gameplay.ItemData
-  icon: {fileID: 21300000, guid: 139a2e7365e8bf84a9b8115a1f0b0394, type: 3}
-  id: 2134
-  key: glasses_note
-  itemName: "\u661F\u56F3\u306E\u30EB\u30FC\u30DA"
-  category: 1
-  description: "\u30E1\u30AC\u30CD\u3068\u30CE\u30FC\u30C8\u3067\u5408\u6210\u3055\u308C\u305F\u88C5\u5099\u3002"
-  material1: {fileID: 6717797442590564354}
-  material2: {fileID: 1491394875471116521}
-  _maxStack: 1
 --- !u!114 &-4854567179277690954
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -624,27 +477,6 @@ MonoBehaviour:
   material2: {fileID: -1353312657710663384}
   _maxStack: 1
   _craftedResult: 1
---- !u!114 &-4026701072460703379
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 0}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: f6220288b2fd34b40bb3d8432012533a, type: 3}
-  m_Name: BalloonFullBodyTights
-  m_EditorClassIdentifier: CreativeAI.Gameplay::CreativeAI.Gameplay.ItemData
-  icon: {fileID: 21300000, guid: 2d7318dc5a11aa443a1b3ba2e3a40f6c, type: 3}
-  id: 2103
-  key: balloon_full_body_tights
-  itemName: "\u3082\u304F\u3082\u304F\u30AF\u30E9\u30A6\u30C9\u30B9\u30FC\u30C4"
-  category: 1
-  description: "\u98A8\u8239\u3068\u5168\u8EAB\u30BF\u30A4\u30C4\u3067\u5408\u6210\u3055\u308C\u305F\u88C5\u5099\u3002"
-  material1: {fileID: -7287126184965246600}
-  material2: {fileID: 8829090763925122756}
-  _maxStack: 1
 --- !u!114 &-3828202121546107835
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -667,27 +499,6 @@ MonoBehaviour:
   material2: {fileID: 0}
   _maxStack: 99
   _craftedResult: 0
---- !u!114 &-3703795954772151344
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 0}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: f6220288b2fd34b40bb3d8432012533a, type: 3}
-  m_Name: BalloonUmbrella
-  m_EditorClassIdentifier: CreativeAI.Gameplay::CreativeAI.Gameplay.ItemData
-  icon: {fileID: 21300000, guid: 85fe6ecdf0138fb4b8d915a3f246a7d2, type: 3}
-  id: 2109
-  key: balloon_umbrella
-  itemName: "\u30D1\u30E9\u30B7\u30E5\u30FC\u30C8\u30A2\u30F3\u30D6\u30EC\u30E9"
-  category: 1
-  description: "\u98A8\u8239\u3068\u5098\u3067\u5408\u6210\u3055\u308C\u305F\u88C5\u5099\u3002"
-  material1: {fileID: -7287126184965246600}
-  material2: {fileID: -181082550691912316}
-  _maxStack: 1
 --- !u!114 &-3655791590440459113
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -710,27 +521,6 @@ MonoBehaviour:
   material2: {fileID: -3828202121546107835}
   _maxStack: 1
   _craftedResult: 1
---- !u!114 &-3461154329600486292
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 0}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: f6220288b2fd34b40bb3d8432012533a, type: 3}
-  m_Name: BalloonFluorescentLight
-  m_EditorClassIdentifier: CreativeAI.Gameplay::CreativeAI.Gameplay.ItemData
-  icon: {fileID: 21300000, guid: 91124f52fcb89414ba90893b9cd371b0, type: 3}
-  id: 2102
-  key: balloon_fluorescent_light
-  itemName: "\u30D0\u30EB\u30FC\u30F3\u30E9\u30A4\u30C8"
-  category: 1
-  description: "\u98A8\u8239\u3068\u86CD\u5149\u706F\u3067\u5408\u6210\u3055\u308C\u305F\u88C5\u5099\u3002"
-  material1: {fileID: -7287126184965246600}
-  material2: {fileID: -263205480878404495}
-  _maxStack: 1
 --- !u!114 &-3295083415862882537
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -770,7 +560,7 @@ MonoBehaviour:
   key: card_key
   itemName: "\u30AB\u30FC\u30C9\u30AD\u30FC"
   category: 3
-  description: "\u91D1\u8272\u306E\u30C1\u30C3\u30D7\u3068\u9752\u304F\u5149\u308B\u30E9\u30A4\u30F3\u304C\u4ED8\u3044\u305F\u3001\u50B7\u3060\u3089\u3051\u306E\u30AB\u30FC\u30C9\u30AD\u30FC\u3002"
+  description: "\u8840\u306B\u6C5A\u308C\u305F\u30AB\u30FC\u30C9\u30AD\u30FC\u3002\u3069\u3053\u304B\u3092\u958B\u3051\u308B\u30AB\u30AE\u3060\u308D\u3046\u304B\u3002"
   material1: {fileID: 0}
   material2: {fileID: 0}
   _maxStack: 1
@@ -813,11 +603,11 @@ MonoBehaviour:
   key: classified_document_2
   itemName: "\u6A5F\u5BC6\u66F8\u985E\uFF12"
   category: 3
-  description: "\u8D64\u3044\u7D0B\u7AE0\u304C\u63CF\u304B\u308C\u305F\u3001\u5206\u539A\u3044\u66F8\u985E\u5165\u308C\u3002"
+  description: "\u4F55\u304B\u304C\u66F8\u304B\u308C\u3066\u3044\u308B\u66F8\u985E\u3060\u3002"
   material1: {fileID: 0}
   material2: {fileID: 0}
   _maxStack: 1
---- !u!114 &-2911360948050043520
+--- !u!114 &-2997242369986452459
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -827,16 +617,16 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: f6220288b2fd34b40bb3d8432012533a, type: 3}
-  m_Name: GlassesUmbrella
+  m_Name: EarphonesWatch
   m_EditorClassIdentifier: CreativeAI.Gameplay::CreativeAI.Gameplay.ItemData
-  icon: {fileID: 21300000, guid: 9a61d75a56b2bef4699f0b369c71151f, type: 3}
-  id: 2135
-  key: glasses_umbrella
-  itemName: "\u96E8\u3088\u3051\u30E1\u30AC\u30CD"
+  icon: {fileID: 21300000, guid: 89aa579c4fb7a7f46a12468899b1134d, type: 3}
+  id: 2107
+  key: earphones_watch
+  itemName: "\u30A4\u30E4\u30DB\u30F3\u4ED8\u5C5E\u8155\u6642\u8A08"
   category: 1
-  description: "\u30E1\u30AC\u30CD\u3068\u5098\u3067\u5408\u6210\u3055\u308C\u305F\u88C5\u5099\u3002"
-  material1: {fileID: 6717797442590564354}
-  material2: {fileID: -181082550691912316}
+  description: "\u30A4\u30E4\u30DB\u30F3\u3068\u8155\u6642\u8A08\u3092\u5408\u6210\u3057\u305F\u88C5\u5099\u3002"
+  material1: {fileID: -2838425787076211639}
+  material2: {fileID: 2109560086670367448}
   _maxStack: 1
 --- !u!114 &-2890090790332908615
 MonoBehaviour:
@@ -860,7 +650,7 @@ MonoBehaviour:
   material2: {fileID: -1353312657710663384}
   _maxStack: 1
   _craftedResult: 1
---- !u!114 &-2265525630596043812
+--- !u!114 &-2838425787076211639
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -870,18 +660,18 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: f6220288b2fd34b40bb3d8432012533a, type: 3}
-  m_Name: ClockNote
+  m_Name: Earphones
   m_EditorClassIdentifier: CreativeAI.Gameplay::CreativeAI.Gameplay.ItemData
-  icon: {fileID: 21300000, guid: b069a202b23556647aacbbff62531772, type: 3}
-  id: 2116
-  key: clock_note
-  itemName: "\u6642\u74B0\u306E\u624B\u5E33"
+  icon: {fileID: 21300000, guid: 688796905f8f9de49b9376f289f4da4e, type: 3}
+  id: 2014
+  key: earphones
+  itemName: "\u30A4\u30E4\u30DB\u30F3"
   category: 1
-  description: "\u61D0\u4E2D\u6642\u8A08\u3068\u30CE\u30FC\u30C8\u3067\u5408\u6210\u3055\u308C\u305F\u88C5\u5099\u3002"
-  material1: {fileID: 957348972317786013}
-  material2: {fileID: 1491394875471116521}
+  description: "\u4F55\u304B\u3092\u8074\u304F\u3082\u306E"
+  material1: {fileID: 0}
+  material2: {fileID: 0}
   _maxStack: 1
---- !u!114 &-1770416292459581724
+--- !u!114 &-2756939608915336677
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -891,16 +681,16 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: f6220288b2fd34b40bb3d8432012533a, type: 3}
-  m_Name: MicrophoneUmbrella
+  m_Name: ChargerWatch
   m_EditorClassIdentifier: CreativeAI.Gameplay::CreativeAI.Gameplay.ItemData
-  icon: {fileID: 21300000, guid: f98314a56ad3934489c3311a1b49dff5, type: 3}
-  id: 2144
-  key: microphone_umbrella
-  itemName: "\u84C4\u97F3\u30A2\u30F3\u30D6\u30EC\u30E9"
+  icon: {fileID: 21300000, guid: 70751d5ade7a2484d8d3d946ec67fef6, type: 3}
+  id: 2104
+  key: charger_watch
+  itemName: "\u5145\u96FB\u53EF\u80FD\u8155\u6642\u8A08"
   category: 1
-  description: "\u30DE\u30A4\u30AF\u3068\u5098\u3067\u5408\u6210\u3055\u308C\u305F\u88C5\u5099\u3002"
-  material1: {fileID: 7372939191468712669}
-  material2: {fileID: -181082550691912316}
+  description: "\u5145\u96FB\u5668\u3068\u8155\u6642\u8A08\u3092\u5408\u6210\u3057\u305F\u88C5\u5099\u3002"
+  material1: {fileID: -7822687782585050773}
+  material2: {fileID: 2109560086670367448}
   _maxStack: 1
 --- !u!114 &-1602635520431383242
 MonoBehaviour:
@@ -946,27 +736,6 @@ MonoBehaviour:
   material2: {fileID: -1353312657710663384}
   _maxStack: 1
   _craftedResult: 1
---- !u!114 &-1545988724839918456
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 0}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: f6220288b2fd34b40bb3d8432012533a, type: 3}
-  m_Name: FluorescentLightNote
-  m_EditorClassIdentifier: CreativeAI.Gameplay::CreativeAI.Gameplay.ItemData
-  icon: {fileID: 21300000, guid: 71a9286b4f9ffad4d9ec2868b55c0155, type: 3}
-  id: 2123
-  key: fluorescent_light_note
-  itemName: "\u5149\u7D0B\u30B9\u30AF\u30ED\u30FC\u30EB"
-  category: 1
-  description: "\u86CD\u5149\u706F\u3068\u30CE\u30FC\u30C8\u3067\u5408\u6210\u3055\u308C\u305F\u88C5\u5099\u3002"
-  material1: {fileID: -263205480878404495}
-  material2: {fileID: 1491394875471116521}
-  _maxStack: 1
 --- !u!114 &-1529064083422081683
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -984,7 +753,7 @@ MonoBehaviour:
   key: mysterious_key
   itemName: "\u8B0E\u306E\u9375"
   category: 3
-  description: "\u8F2A\u306E\u4E2D\u592E\u306B\u9752\u7DD1\u8272\u306E\u77F3\u3092\u5099\u3048\u305F\u53E4\u3044\u9375\u3002"
+  description: "\u3069\u3053\u304B\u3092\u958B\u3051\u308B\u30AB\u30AE\u3060\u308D\u3046\u304B\u3002"
   material1: {fileID: 0}
   material2: {fileID: 0}
   _maxStack: 1
@@ -1053,27 +822,6 @@ MonoBehaviour:
   material2: {fileID: 0}
   _maxStack: 99
   _craftedResult: 0
---- !u!114 &-1000033901142307350
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 0}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: f6220288b2fd34b40bb3d8432012533a, type: 3}
-  m_Name: FluorescentLightHat
-  m_EditorClassIdentifier: CreativeAI.Gameplay::CreativeAI.Gameplay.ItemData
-  icon: {fileID: 21300000, guid: cca8535d8f4ed1c4693bf19e463176b4, type: 3}
-  id: 2120
-  key: fluorescent_light_hat
-  itemName: "\u30E9\u30F3\u30BF\u30F3\u30CF\u30C3\u30C8"
-  category: 1
-  description: "\u86CD\u5149\u706F\u3068\u5E3D\u5B50\u3067\u5408\u6210\u3055\u308C\u305F\u88C5\u5099\u3002"
-  material1: {fileID: -263205480878404495}
-  material2: {fileID: 5905387601538661209}
-  _maxStack: 1
 --- !u!114 &-872518988535113340
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -1096,27 +844,6 @@ MonoBehaviour:
   material2: {fileID: -7209103825163294352}
   _maxStack: 1
   _craftedResult: 1
---- !u!114 &-854547161951043308
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 0}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: f6220288b2fd34b40bb3d8432012533a, type: 3}
-  m_Name: BalloonNote
-  m_EditorClassIdentifier: CreativeAI.Gameplay::CreativeAI.Gameplay.ItemData
-  icon: {fileID: 21300000, guid: 813235865f8134d498e2a208348d6a94, type: 3}
-  id: 2108
-  key: balloon_note
-  itemName: "\u3053\u3068\u3070\u306E\u30D0\u30EB\u30FC\u30F3"
-  category: 1
-  description: "\u98A8\u8239\u3068\u30CE\u30FC\u30C8\u3067\u5408\u6210\u3055\u308C\u305F\u88C5\u5099\u3002"
-  material1: {fileID: -7287126184965246600}
-  material2: {fileID: 1491394875471116521}
-  _maxStack: 1
 --- !u!114 &-792122127041355525
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -1183,27 +910,6 @@ MonoBehaviour:
   material2: {fileID: -7209103825163294352}
   _maxStack: 1
   _craftedResult: 1
---- !u!114 &-398929416112840376
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 0}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: f6220288b2fd34b40bb3d8432012533a, type: 3}
-  m_Name: FluorescentLightMicrophone
-  m_EditorClassIdentifier: CreativeAI.Gameplay::CreativeAI.Gameplay.ItemData
-  icon: {fileID: 21300000, guid: 0b1c4371ca9134d4cb8008b9bf7b6c54, type: 3}
-  id: 2122
-  key: fluorescent_light_microphone
-  itemName: "\u5149\u6CE2\u30E1\u30AC\u30DB\u30F3"
-  category: 1
-  description: "\u86CD\u5149\u706F\u3068\u30DE\u30A4\u30AF\u3067\u5408\u6210\u3055\u308C\u305F\u88C5\u5099\u3002"
-  material1: {fileID: -263205480878404495}
-  material2: {fileID: 7372939191468712669}
-  _maxStack: 1
 --- !u!114 &-328907665192182098
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -1226,7 +932,7 @@ MonoBehaviour:
   material2: {fileID: -5554650038091774464}
   _maxStack: 1
   _craftedResult: 1
---- !u!114 &-263205480878404495
+--- !u!114 &-4527723065171057
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -1236,58 +942,16 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: f6220288b2fd34b40bb3d8432012533a, type: 3}
-  m_Name: FluorescentLight
+  m_Name: ChargerEarphones
   m_EditorClassIdentifier: CreativeAI.Gameplay::CreativeAI.Gameplay.ItemData
-  icon: {fileID: 21300000, guid: 6bd72ab147b34fbc99b47a51807e4c40, type: 3}
-  id: 2006
-  key: fluorescent_light
-  itemName: "\u86CD\u5149\u706F"
+  icon: {fileID: 21300000, guid: 8ff10671e2c909f4fb17a206a32a42e9, type: 3}
+  id: 2101
+  key: charger_earphones
+  itemName: "\u30A4\u30E4\u30DB\u30F3\u5145\u96FB\u5668"
   category: 1
-  description: "\u3042\u305F\u308A\u3092\u7167\u3089\u3059\u7D30\u9577\u3044\u706F\u308A\u3002"
-  material1: {fileID: 0}
-  material2: {fileID: 0}
-  _maxStack: 1
---- !u!114 &-181082550691912316
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 0}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: f6220288b2fd34b40bb3d8432012533a, type: 3}
-  m_Name: Umbrella
-  m_EditorClassIdentifier: CreativeAI.Gameplay::CreativeAI.Gameplay.ItemData
-  icon: {fileID: 21300000, guid: c1d17e0aa74f4d0c8cea80d7893e8c68, type: 3}
-  id: 2011
-  key: umbrella
-  itemName: "\u5098"
-  category: 1
-  description: "\u96E8\u304B\u3089\u8EAB\u3092\u5B88\u308B\u5098\u3002"
-  material1: {fileID: 0}
-  material2: {fileID: 0}
-  _maxStack: 1
---- !u!114 &-8376776186227395
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 0}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: f6220288b2fd34b40bb3d8432012533a, type: 3}
-  m_Name: ClockHat
-  m_EditorClassIdentifier: CreativeAI.Gameplay::CreativeAI.Gameplay.ItemData
-  icon: {fileID: 21300000, guid: 1e34ed5e5a6ac2541aa41afeeeea6cb4, type: 3}
-  id: 2113
-  key: clock_hat
-  itemName: "\u6642\u8A08\u4ED5\u639B\u3051\u306E\u7FBD\u6839\u5E3D\u5B50"
-  category: 1
-  description: "\u61D0\u4E2D\u6642\u8A08\u3068\u5E3D\u5B50\u3067\u5408\u6210\u3055\u308C\u305F\u88C5\u5099\u3002"
-  material1: {fileID: 957348972317786013}
-  material2: {fileID: 5905387601538661209}
+  description: "\u5145\u96FB\u5668\u3068\u30A4\u30E4\u30DB\u30F3\u3092\u5408\u6210\u3057\u305F\u88C5\u5099\u3002"
+  material1: {fileID: -7822687782585050773}
+  material2: {fileID: -2838425787076211639}
   _maxStack: 1
 --- !u!114 &11400000
 MonoBehaviour:
@@ -1302,61 +966,21 @@ MonoBehaviour:
   m_Name: ItemCatalog
   m_EditorClassIdentifier: CreativeAI.Gameplay::CreativeAI.Gameplay.ItemCatalog
   items:
-  - {fileID: -7287126184965246600}
-  - {fileID: 957348972317786013}
-  - {fileID: 7372939191468712669}
-  - {fileID: 1491394875471116521}
-  - {fileID: -263205480878404495}
-  - {fileID: 8829090763925122756}
   - {fileID: 6717797442590564354}
-  - {fileID: 5905387601538661209}
+  - {fileID: 2109560086670367448}
   - {fileID: -7822687782585050773}
-  - {fileID: -181082550691912316}
-  - {fileID: 4510121819378496928}
-  - {fileID: -3461154329600486292}
-  - {fileID: -4026701072460703379}
-  - {fileID: -5452963127977007407}
-  - {fileID: -5232592737924120389}
-  - {fileID: -7696928682053945725}
-  - {fileID: 8715171132194124482}
-  - {fileID: -854547161951043308}
-  - {fileID: -3703795954772151344}
-  - {fileID: -7875201064841803251}
-  - {fileID: 1462835544985513793}
-  - {fileID: -7144490374526594860}
-  - {fileID: -8376776186227395}
-  - {fileID: -7219981475053901071}
-  - {fileID: 8303234618874048848}
-  - {fileID: -2265525630596043812}
-  - {fileID: -5527330494723496056}
-  - {fileID: 2849707181064893915}
-  - {fileID: 6401494734126284406}
-  - {fileID: -1000033901142307350}
-  - {fileID: 786327939311382931}
-  - {fileID: -398929416112840376}
-  - {fileID: -1545988724839918456}
-  - {fileID: 3179674092597059597}
-  - {fileID: 2218734045144225878}
-  - {fileID: 8910818099885315786}
-  - {fileID: 4956952278493378832}
-  - {fileID: 8434162520786934589}
-  - {fileID: 5867754658087610546}
-  - {fileID: 1604084481843028439}
-  - {fileID: 628760387340086612}
-  - {fileID: -6593431625258734413}
-  - {fileID: 7081302860122723695}
-  - {fileID: -4957436143111774418}
-  - {fileID: -2911360948050043520}
-  - {fileID: 1570920018496406432}
-  - {fileID: 6347792515565171776}
-  - {fileID: 3964869848126844184}
-  - {fileID: 5664360273888621444}
-  - {fileID: 156014011059072131}
-  - {fileID: -7209048631323264530}
-  - {fileID: 4244876691802142716}
-  - {fileID: 7014479008903250010}
-  - {fileID: -1770416292459581724}
-  - {fileID: 4146657232508585527}
+  - {fileID: -2838425787076211639}
+  - {fileID: 944395461657406363}
+  - {fileID: -4527723065171057}
+  - {fileID: -8385492833385993457}
+  - {fileID: -6520879013935287259}
+  - {fileID: -2756939608915336677}
+  - {fileID: -6062194249186611418}
+  - {fileID: 2522279621682548180}
+  - {fileID: -2997242369986452459}
+  - {fileID: 4607494867312909827}
+  - {fileID: 6708798026663589604}
+  - {fileID: -5578264174076268404}
   - {fileID: 8561165396911074249}
   - {fileID: -725015441715178452}
   - {fileID: -5554650038091774464}
@@ -1444,27 +1068,6 @@ MonoBehaviour:
   material1: {fileID: 0}
   material2: {fileID: 0}
   _maxStack: 1
---- !u!114 &156014011059072131
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 0}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: f6220288b2fd34b40bb3d8432012533a, type: 3}
-  m_Name: MagnetMicrophone
-  m_EditorClassIdentifier: CreativeAI.Gameplay::CreativeAI.Gameplay.ItemData
-  icon: {fileID: 21300000, guid: 8014ac725fa9cca449112e8b39a1243e, type: 3}
-  id: 2140
-  key: magnet_microphone
-  itemName: "\u53CC\u6975\u30E9\u30B8\u30AB\u30BB"
-  category: 1
-  description: "\u78C1\u77F3\u3068\u30DE\u30A4\u30AF\u3067\u5408\u6210\u3055\u308C\u305F\u88C5\u5099\u3002"
-  material1: {fileID: -7822687782585050773}
-  material2: {fileID: 7372939191468712669}
-  _maxStack: 1
 --- !u!114 &160536297539091246
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -1482,7 +1085,7 @@ MonoBehaviour:
   key: classified_document_1
   itemName: "\u6A5F\u5BC6\u66F8\u985E\uFF11"
   category: 3
-  description: "\u8D64\u3044\u5370\u304C\u62BC\u3055\u308C\u305F\u53E4\u3044\u66F8\u985E\u306E\u675F\u3002"
+  description: "\u4F55\u304B\u304C\u66F8\u304B\u308C\u3066\u3044\u308B\u66F8\u985E\u3060\u3002"
   material1: {fileID: 0}
   material2: {fileID: 0}
   _maxStack: 1
@@ -1498,12 +1101,12 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: f6220288b2fd34b40bb3d8432012533a, type: 3}
   m_Name: BrokenRobot
   m_EditorClassIdentifier: CreativeAI.Gameplay::CreativeAI.Gameplay.ItemData
-  icon: {fileID: 21300000, guid: 8104966acaa7e314eaf6b29c5b145f40, type: 3}
+  icon: {fileID: 21300000, guid: a161f67a48bedea4eac0b62a07c62536, type: 3}
   id: 4001
   key: broken_robot
   itemName: "\u58CA\u308C\u305F\u30ED\u30DC\u30C3\u30C8"
   category: 3
-  description: "\u88C5\u7532\u304C\u5272\u308C\u3001\u914D\u7DDA\u304C\u3080\u304D\u51FA\u3057\u306B\u306A\u3063\u305F\u30ED\u30DC\u30C3\u30C8\u3002\u7247\u76EE\u306B\u306F\u9752\u3044\u5149\u304C\u6B8B\u3063\u3066\u3044\u308B\u3002"
+  description: "\u88C5\u7532\u304C\u5272\u308C\u3001\u914D\u7DDA\u304C\u3080\u304D\u51FA\u3057\u306B\u306A\u3063\u305F\u30ED\u30DC\u30C3\u30C8\u3002"
   material1: {fileID: 0}
   material2: {fileID: 0}
   _maxStack: 1
@@ -1572,7 +1175,7 @@ MonoBehaviour:
   material1: {fileID: 0}
   material2: {fileID: 0}
   _maxStack: 1
---- !u!114 &628760387340086612
+--- !u!114 &944395461657406363
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -1582,56 +1185,14 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: f6220288b2fd34b40bb3d8432012533a, type: 3}
-  m_Name: GlassesHat
+  m_Name: Pen
   m_EditorClassIdentifier: CreativeAI.Gameplay::CreativeAI.Gameplay.ItemData
-  icon: {fileID: 21300000, guid: b6bad8ac63a849e44a7547be4348c0cb, type: 3}
-  id: 2131
-  key: glasses_hat
-  itemName: "\u8986\u9762\u63A2\u5075\u30BB\u30C3\u30C8"
+  icon: {fileID: 21300000, guid: e19ad6e971dba4f499ba69592800a875, type: 3}
+  id: 2015
+  key: pen
+  itemName: "\u30DA\u30F3"
   category: 1
-  description: "\u30E1\u30AC\u30CD\u3068\u5E3D\u5B50\u3067\u5408\u6210\u3055\u308C\u305F\u88C5\u5099\u3002"
-  material1: {fileID: 6717797442590564354}
-  material2: {fileID: 5905387601538661209}
-  _maxStack: 1
---- !u!114 &786327939311382931
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 0}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: f6220288b2fd34b40bb3d8432012533a, type: 3}
-  m_Name: FluorescentLightMagnet
-  m_EditorClassIdentifier: CreativeAI.Gameplay::CreativeAI.Gameplay.ItemData
-  icon: {fileID: 21300000, guid: b255a66ed4dfd6743b497ee64633ecb5, type: 3}
-  id: 2121
-  key: fluorescent_light_magnet
-  itemName: "\u5149\u8DEF\u306E\u30B3\u30F3\u30D1\u30B9"
-  category: 1
-  description: "\u86CD\u5149\u706F\u3068\u78C1\u77F3\u3067\u5408\u6210\u3055\u308C\u305F\u88C5\u5099\u3002"
-  material1: {fileID: -263205480878404495}
-  material2: {fileID: -7822687782585050773}
-  _maxStack: 1
---- !u!114 &957348972317786013
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 0}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: f6220288b2fd34b40bb3d8432012533a, type: 3}
-  m_Name: Clock
-  m_EditorClassIdentifier: CreativeAI.Gameplay::CreativeAI.Gameplay.ItemData
-  icon: {fileID: 21300000, guid: 5fdccfaa7a48b4c718541844851a1cf1, type: 3}
-  id: 2002
-  key: clock
-  itemName: "\u61D0\u4E2D\u6642\u8A08"
-  category: 1
-  description: "\u898F\u5247\u6B63\u3057\u304F\u6642\u3092\u523B\u3080\u61D0\u4E2D\u6642\u8A08\u3002"
+  description: "\u4F55\u304B\u3092\u66F8\u304F\u305F\u3081\u306E\u3082\u306E"
   material1: {fileID: 0}
   material2: {fileID: 0}
   _maxStack: 1
@@ -1701,69 +1262,6 @@ MonoBehaviour:
   material2: {fileID: -6523541574003027713}
   _maxStack: 1
   _craftedResult: 1
---- !u!114 &1462835544985513793
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 0}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: f6220288b2fd34b40bb3d8432012533a, type: 3}
-  m_Name: ClockFullBodyTights
-  m_EditorClassIdentifier: CreativeAI.Gameplay::CreativeAI.Gameplay.ItemData
-  icon: {fileID: 21300000, guid: 169ad041d1fca1a45a52b62f6467d341, type: 3}
-  id: 2111
-  key: clock_full_body_tights
-  itemName: "\u6642\u91DD\u306E\u793C\u88C5"
-  category: 1
-  description: "\u61D0\u4E2D\u6642\u8A08\u3068\u5168\u8EAB\u30BF\u30A4\u30C4\u3067\u5408\u6210\u3055\u308C\u305F\u88C5\u5099\u3002"
-  material1: {fileID: 957348972317786013}
-  material2: {fileID: 8829090763925122756}
-  _maxStack: 1
---- !u!114 &1491394875471116521
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 0}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: f6220288b2fd34b40bb3d8432012533a, type: 3}
-  m_Name: Note
-  m_EditorClassIdentifier: CreativeAI.Gameplay::CreativeAI.Gameplay.ItemData
-  icon: {fileID: 21300000, guid: 226eb0cae467f4e439069b63d7c66953, type: 3}
-  id: 2004
-  key: note
-  itemName: "\u30CE\u30FC\u30C8"
-  category: 1
-  description: "\u601D\u3044\u3064\u304D\u3092\u66F8\u304D\u7559\u3081\u308B\u30CE\u30FC\u30C8\u3002"
-  material1: {fileID: 0}
-  material2: {fileID: 0}
-  _maxStack: 1
---- !u!114 &1570920018496406432
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 0}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: f6220288b2fd34b40bb3d8432012533a, type: 3}
-  m_Name: HatMagnet
-  m_EditorClassIdentifier: CreativeAI.Gameplay::CreativeAI.Gameplay.ItemData
-  icon: {fileID: 21300000, guid: b6e167a73a0e3e74c8da1f1e28187432, type: 3}
-  id: 2136
-  key: hat_magnet
-  itemName: "\u53CC\u74B0\u30DE\u30B0\u30CD\u30C3\u30C8\u30D8\u30EB\u30E0"
-  category: 1
-  description: "\u5E3D\u5B50\u3068\u78C1\u77F3\u3067\u5408\u6210\u3055\u308C\u305F\u88C5\u5099\u3002"
-  material1: {fileID: 5905387601538661209}
-  material2: {fileID: -7822687782585050773}
-  _maxStack: 1
 --- !u!114 &1580048203237951825
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -1808,27 +1306,6 @@ MonoBehaviour:
   material2: {fileID: -7209103825163294352}
   _maxStack: 1
   _craftedResult: 1
---- !u!114 &1604084481843028439
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 0}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: f6220288b2fd34b40bb3d8432012533a, type: 3}
-  m_Name: FullBodyTightsUmbrella
-  m_EditorClassIdentifier: CreativeAI.Gameplay::CreativeAI.Gameplay.ItemData
-  icon: {fileID: 21300000, guid: fd8dea77e5e178d44a2adc6ba1c01c15, type: 3}
-  id: 2130
-  key: full_body_tights_umbrella
-  itemName: "\u30B3\u30A6\u30E2\u30EA\u30DE\u30F3\u30C8\u30B9\u30FC\u30C4"
-  category: 1
-  description: "\u5168\u8EAB\u30BF\u30A4\u30C4\u3068\u5098\u3067\u5408\u6210\u3055\u308C\u305F\u88C5\u5099\u3002"
-  material1: {fileID: 8829090763925122756}
-  material2: {fileID: -181082550691912316}
-  _maxStack: 1
 --- !u!114 &1653491227728720833
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -1895,7 +1372,7 @@ MonoBehaviour:
   material2: {fileID: -7209103825163294352}
   _maxStack: 1
   _craftedResult: 1
---- !u!114 &2218734045144225878
+--- !u!114 &2109560086670367448
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -1905,16 +1382,16 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: f6220288b2fd34b40bb3d8432012533a, type: 3}
-  m_Name: FullBodyTightsGlasses
+  m_Name: Watch
   m_EditorClassIdentifier: CreativeAI.Gameplay::CreativeAI.Gameplay.ItemData
-  icon: {fileID: 21300000, guid: 3614bbc5d8794b949832e5adcfc24c40, type: 3}
-  id: 2125
-  key: full_body_tights_glasses
-  itemName: "\u9ED2\u91D1\u306E\u30B4\u30FC\u30B0\u30EB\u30B9\u30FC\u30C4"
+  icon: {fileID: 21300000, guid: a273cd1e0834a0b448e728f02949f55c, type: 3}
+  id: 2012
+  key: watch
+  itemName: "\u8155\u6642\u8A08"
   category: 1
-  description: "\u5168\u8EAB\u30BF\u30A4\u30C4\u3068\u30E1\u30AC\u30CD\u3067\u5408\u6210\u3055\u308C\u305F\u88C5\u5099\u3002"
-  material1: {fileID: 8829090763925122756}
-  material2: {fileID: 6717797442590564354}
+  description: "\u6642\u9593\u3092\u78BA\u8A8D\u3059\u308B\u3082\u306E"
+  material1: {fileID: 0}
+  material2: {fileID: 0}
   _maxStack: 1
 --- !u!114 &2331040594814541805
 MonoBehaviour:
@@ -1960,6 +1437,27 @@ MonoBehaviour:
   material2: {fileID: 0}
   _maxStack: 99
   _craftedResult: 0
+--- !u!114 &2522279621682548180
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: f6220288b2fd34b40bb3d8432012533a, type: 3}
+  m_Name: EarphonesPen
+  m_EditorClassIdentifier: CreativeAI.Gameplay::CreativeAI.Gameplay.ItemData
+  icon: {fileID: 21300000, guid: a19c2439a7726654fade4fef9074fea0, type: 3}
+  id: 2106
+  key: earphones_pen
+  itemName: "\u30A4\u30E4\u30DB\u30F3\u4ED8\u5C5E\u30DA\u30F3"
+  category: 1
+  description: "\u30A4\u30E4\u30DB\u30F3\u3068\u30DA\u30F3\u3092\u5408\u6210\u3057\u305F\u88C5\u5099\u3002"
+  material1: {fileID: -2838425787076211639}
+  material2: {fileID: 944395461657406363}
+  _maxStack: 1
 --- !u!114 &2553268808699322262
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -2004,27 +1502,6 @@ MonoBehaviour:
   material2: {fileID: -3201117879322543463}
   _maxStack: 1
   _craftedResult: 1
---- !u!114 &2849707181064893915
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 0}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: f6220288b2fd34b40bb3d8432012533a, type: 3}
-  m_Name: FluorescentLightFullBodyTights
-  m_EditorClassIdentifier: CreativeAI.Gameplay::CreativeAI.Gameplay.ItemData
-  icon: {fileID: 21300000, guid: 5616a2fafa7fad848a06dd1f625e57af, type: 3}
-  id: 2118
-  key: fluorescent_light_full_body_tights
-  itemName: "\u767D\u5149\u306E\u30ED\u30FC\u30D6"
-  category: 1
-  description: "\u86CD\u5149\u706F\u3068\u5168\u8EAB\u30BF\u30A4\u30C4\u3067\u5408\u6210\u3055\u308C\u305F\u88C5\u5099\u3002"
-  material1: {fileID: -263205480878404495}
-  material2: {fileID: 8829090763925122756}
-  _maxStack: 1
 --- !u!114 &2959819209918370784
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -2047,27 +1524,6 @@ MonoBehaviour:
   material2: {fileID: -792122127041355525}
   _maxStack: 1
   _craftedResult: 1
---- !u!114 &3179674092597059597
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 0}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: f6220288b2fd34b40bb3d8432012533a, type: 3}
-  m_Name: FluorescentLightUmbrella
-  m_EditorClassIdentifier: CreativeAI.Gameplay::CreativeAI.Gameplay.ItemData
-  icon: {fileID: 21300000, guid: 9465750aa2017354a8885a997351b2ba, type: 3}
-  id: 2124
-  key: fluorescent_light_umbrella
-  itemName: "\u5149\u683C\u5B50\u30A2\u30F3\u30D6\u30EC\u30E9"
-  category: 1
-  description: "\u86CD\u5149\u706F\u3068\u5098\u3067\u5408\u6210\u3055\u308C\u305F\u88C5\u5099\u3002"
-  material1: {fileID: -263205480878404495}
-  material2: {fileID: -181082550691912316}
-  _maxStack: 1
 --- !u!114 &3212865929743539824
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -2111,48 +1567,6 @@ MonoBehaviour:
   material2: {fileID: -5554650038091774464}
   _maxStack: 1
   _craftedResult: 1
---- !u!114 &3964869848126844184
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 0}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: f6220288b2fd34b40bb3d8432012533a, type: 3}
-  m_Name: HatNote
-  m_EditorClassIdentifier: CreativeAI.Gameplay::CreativeAI.Gameplay.ItemData
-  icon: {fileID: 21300000, guid: 9a1a7ed9e6e18f241896ec29fe50bd9d, type: 3}
-  id: 2138
-  key: hat_note
-  itemName: "\u3057\u304A\u308A\u306E\u51A0"
-  category: 1
-  description: "\u5E3D\u5B50\u3068\u30CE\u30FC\u30C8\u3067\u5408\u6210\u3055\u308C\u305F\u88C5\u5099\u3002"
-  material1: {fileID: 5905387601538661209}
-  material2: {fileID: 1491394875471116521}
-  _maxStack: 1
---- !u!114 &4146657232508585527
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 0}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: f6220288b2fd34b40bb3d8432012533a, type: 3}
-  m_Name: NoteUmbrella
-  m_EditorClassIdentifier: CreativeAI.Gameplay::CreativeAI.Gameplay.ItemData
-  icon: {fileID: 21300000, guid: c3678bb490de6b5489b2eed346c32e8a, type: 3}
-  id: 2145
-  key: note_umbrella
-  itemName: "\u661F\u56F3\u306E\u30D6\u30C3\u30AF\u30A2\u30F3\u30D6\u30EC\u30E9"
-  category: 1
-  description: "\u30CE\u30FC\u30C8\u3068\u5098\u3067\u5408\u6210\u3055\u308C\u305F\u88C5\u5099\u3002"
-  material1: {fileID: 1491394875471116521}
-  material2: {fileID: -181082550691912316}
-  _maxStack: 1
 --- !u!114 &4242431949249164510
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -2175,7 +1589,7 @@ MonoBehaviour:
   material2: {fileID: -5554650038091774464}
   _maxStack: 1
   _craftedResult: 1
---- !u!114 &4244876691802142716
+--- !u!114 &4607494867312909827
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -2185,58 +1599,16 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: f6220288b2fd34b40bb3d8432012533a, type: 3}
-  m_Name: MagnetUmbrella
+  m_Name: GlassesPen
   m_EditorClassIdentifier: CreativeAI.Gameplay::CreativeAI.Gameplay.ItemData
-  icon: {fileID: 21300000, guid: 96dabfa3bb01bc04cb034028ccd3aa8b, type: 3}
-  id: 2142
-  key: magnet_umbrella
-  itemName: "\u78C1\u74B0\u30A2\u30F3\u30D6\u30EC\u30E9"
+  icon: {fileID: 21300000, guid: 5db1c5fc543cf994b97f24f5fac925fd, type: 3}
+  id: 2108
+  key: glasses_pen
+  itemName: "\u30DA\u30F3\u4ED8\u5C5E\u30B0\u30E9\u30B9"
   category: 1
-  description: "\u78C1\u77F3\u3068\u5098\u3067\u5408\u6210\u3055\u308C\u305F\u88C5\u5099\u3002"
-  material1: {fileID: -7822687782585050773}
-  material2: {fileID: -181082550691912316}
-  _maxStack: 1
---- !u!114 &4510121819378496928
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 0}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: f6220288b2fd34b40bb3d8432012533a, type: 3}
-  m_Name: BalloonClock
-  m_EditorClassIdentifier: CreativeAI.Gameplay::CreativeAI.Gameplay.ItemData
-  icon: {fileID: 21300000, guid: 4d4bf3916baa98242a4d5f8992f7bb31, type: 3}
-  id: 2101
-  key: balloon_clock
-  itemName: "\u6642\u9650\u30D0\u30EB\u30FC\u30F3"
-  category: 1
-  description: "\u98A8\u8239\u3068\u61D0\u4E2D\u6642\u8A08\u3067\u5408\u6210\u3055\u308C\u305F\u88C5\u5099\u3002"
-  material1: {fileID: -7287126184965246600}
-  material2: {fileID: 957348972317786013}
-  _maxStack: 1
---- !u!114 &4956952278493378832
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 0}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: f6220288b2fd34b40bb3d8432012533a, type: 3}
-  m_Name: FullBodyTightsMagnet
-  m_EditorClassIdentifier: CreativeAI.Gameplay::CreativeAI.Gameplay.ItemData
-  icon: {fileID: 21300000, guid: 6d83690e729ea5648ad0e53471ea0165, type: 3}
-  id: 2127
-  key: full_body_tights_magnet
-  itemName: "\u53CC\u6975\u30DE\u30B0\u30CD\u30C3\u30C8\u30B9\u30FC\u30C4"
-  category: 1
-  description: "\u5168\u8EAB\u30BF\u30A4\u30C4\u3068\u78C1\u77F3\u3067\u5408\u6210\u3055\u308C\u305F\u88C5\u5099\u3002"
-  material1: {fileID: 8829090763925122756}
-  material2: {fileID: -7822687782585050773}
+  description: "\u30B0\u30E9\u30B9\u3068\u30DA\u30F3\u3092\u5408\u6210\u3057\u305F\u88C5\u5099\u3002"
+  material1: {fileID: 6717797442590564354}
+  material2: {fileID: 944395461657406363}
   _maxStack: 1
 --- !u!114 &4967486941914372216
 MonoBehaviour:
@@ -2282,111 +1654,6 @@ MonoBehaviour:
   material2: {fileID: -3828202121546107835}
   _maxStack: 1
   _craftedResult: 1
---- !u!114 &5664360273888621444
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 0}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: f6220288b2fd34b40bb3d8432012533a, type: 3}
-  m_Name: HatUmbrella
-  m_EditorClassIdentifier: CreativeAI.Gameplay::CreativeAI.Gameplay.ItemData
-  icon: {fileID: 21300000, guid: b8edee5965208b942b70962551ebbe87, type: 3}
-  id: 2139
-  key: hat_umbrella
-  itemName: "\u304A\u672D\u306E\u96E8\u7B20"
-  category: 1
-  description: "\u5E3D\u5B50\u3068\u5098\u3067\u5408\u6210\u3055\u308C\u305F\u88C5\u5099\u3002"
-  material1: {fileID: 5905387601538661209}
-  material2: {fileID: -181082550691912316}
-  _maxStack: 1
---- !u!114 &5867754658087610546
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 0}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: f6220288b2fd34b40bb3d8432012533a, type: 3}
-  m_Name: FullBodyTightsNote
-  m_EditorClassIdentifier: CreativeAI.Gameplay::CreativeAI.Gameplay.ItemData
-  icon: {fileID: 21300000, guid: f76eeb7fca94004499aae54a99b965e1, type: 3}
-  id: 2129
-  key: full_body_tights_note
-  itemName: "\u30DA\u30FC\u30B8\u30A2\u30FC\u30DE\u30FC"
-  category: 1
-  description: "\u5168\u8EAB\u30BF\u30A4\u30C4\u3068\u30CE\u30FC\u30C8\u3067\u5408\u6210\u3055\u308C\u305F\u88C5\u5099\u3002"
-  material1: {fileID: 8829090763925122756}
-  material2: {fileID: 1491394875471116521}
-  _maxStack: 1
---- !u!114 &5905387601538661209
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 0}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: f6220288b2fd34b40bb3d8432012533a, type: 3}
-  m_Name: Hat
-  m_EditorClassIdentifier: CreativeAI.Gameplay::CreativeAI.Gameplay.ItemData
-  icon: {fileID: 21300000, guid: a54db78ba8a14d32841ee8a6759869cd, type: 3}
-  id: 2009
-  key: hat
-  itemName: "\u5E3D\u5B50"
-  category: 1
-  description: "\u982D\u306B\u3061\u3087\u3053\u3093\u3068\u304B\u3076\u308B\u5E3D\u5B50\u3002"
-  material1: {fileID: 0}
-  material2: {fileID: 0}
-  _maxStack: 1
---- !u!114 &6347792515565171776
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 0}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: f6220288b2fd34b40bb3d8432012533a, type: 3}
-  m_Name: HatMicrophone
-  m_EditorClassIdentifier: CreativeAI.Gameplay::CreativeAI.Gameplay.ItemData
-  icon: {fileID: 21300000, guid: 5c58f9cdb14fcce4aab80f5ee358ee58, type: 3}
-  id: 2137
-  key: hat_microphone
-  itemName: "\u84C4\u97F3\u6A5F\u30CF\u30C3\u30C8"
-  category: 1
-  description: "\u5E3D\u5B50\u3068\u30DE\u30A4\u30AF\u3067\u5408\u6210\u3055\u308C\u305F\u88C5\u5099\u3002"
-  material1: {fileID: 5905387601538661209}
-  material2: {fileID: 7372939191468712669}
-  _maxStack: 1
---- !u!114 &6401494734126284406
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 0}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: f6220288b2fd34b40bb3d8432012533a, type: 3}
-  m_Name: FluorescentLightGlasses
-  m_EditorClassIdentifier: CreativeAI.Gameplay::CreativeAI.Gameplay.ItemData
-  icon: {fileID: 21300000, guid: decd566e634b1484a99fad45e084124e, type: 3}
-  id: 2119
-  key: fluorescent_light_glasses
-  itemName: "\u86CD\u5149\u7BA1\u30B4\u30FC\u30B0\u30EB"
-  category: 1
-  description: "\u86CD\u5149\u706F\u3068\u30E1\u30AC\u30CD\u3067\u5408\u6210\u3055\u308C\u305F\u88C5\u5099\u3002"
-  material1: {fileID: -263205480878404495}
-  material2: {fileID: 6717797442590564354}
-  _maxStack: 1
 --- !u!114 &6557672020862040975
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -2409,6 +1676,27 @@ MonoBehaviour:
   material2: {fileID: -6523541574003027713}
   _maxStack: 1
   _craftedResult: 1
+--- !u!114 &6708798026663589604
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: f6220288b2fd34b40bb3d8432012533a, type: 3}
+  m_Name: GlassesWatch
+  m_EditorClassIdentifier: CreativeAI.Gameplay::CreativeAI.Gameplay.ItemData
+  icon: {fileID: 21300000, guid: 141a1cf02fe33bf44a0200b2e9481a8a, type: 3}
+  id: 2109
+  key: glasses_watch
+  itemName: "\u30BF\u30A4\u30E0\u30B9\u30AF\u30EA\u30FC\u30F3\u30B0\u30E9\u30B9"
+  category: 1
+  description: "\u30B0\u30E9\u30B9\u3068\u8155\u6642\u8A08\u3092\u5408\u6210\u3057\u305F\u88C5\u5099\u3002"
+  material1: {fileID: 6717797442590564354}
+  material2: {fileID: 2109560086670367448}
+  _maxStack: 1
 --- !u!114 &6717797442590564354
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -2426,7 +1714,7 @@ MonoBehaviour:
   key: glasses
   itemName: "\u30E1\u30AC\u30CD"
   category: 1
-  description: "\u8996\u754C\u3092\u6574\u3048\u308B\u30E1\u30AC\u30CD\u3002"
+  description: "\u8996\u754C\u3092\u6574\u3048\u308B\u3082\u306E\u3002"
   material1: {fileID: 0}
   material2: {fileID: 0}
   _maxStack: 1
@@ -2474,69 +1762,6 @@ MonoBehaviour:
   material2: {fileID: 2510756971122629955}
   _maxStack: 1
   _craftedResult: 1
---- !u!114 &7014479008903250010
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 0}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: f6220288b2fd34b40bb3d8432012533a, type: 3}
-  m_Name: MicrophoneNote
-  m_EditorClassIdentifier: CreativeAI.Gameplay::CreativeAI.Gameplay.ItemData
-  icon: {fileID: 21300000, guid: f947692dd0d00a14a9d515c9ec6ab62a, type: 3}
-  id: 2143
-  key: microphone_note
-  itemName: "\u30DA\u30FC\u30B8\u5F0F\u84C4\u97F3\u6A5F"
-  category: 1
-  description: "\u30DE\u30A4\u30AF\u3068\u30CE\u30FC\u30C8\u3067\u5408\u6210\u3055\u308C\u305F\u88C5\u5099\u3002"
-  material1: {fileID: 7372939191468712669}
-  material2: {fileID: 1491394875471116521}
-  _maxStack: 1
---- !u!114 &7081302860122723695
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 0}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: f6220288b2fd34b40bb3d8432012533a, type: 3}
-  m_Name: GlassesMicrophone
-  m_EditorClassIdentifier: CreativeAI.Gameplay::CreativeAI.Gameplay.ItemData
-  icon: {fileID: 21300000, guid: 91ea41c5cf064b84185bf9d3f2549e4d, type: 3}
-  id: 2133
-  key: glasses_microphone
-  itemName: "\u8776\u30CD\u30AF\u30BF\u30A4\u306E\u4F1D\u58F0\u30BB\u30C3\u30C8"
-  category: 1
-  description: "\u30E1\u30AC\u30CD\u3068\u30DE\u30A4\u30AF\u3067\u5408\u6210\u3055\u308C\u305F\u88C5\u5099\u3002"
-  material1: {fileID: 6717797442590564354}
-  material2: {fileID: 7372939191468712669}
-  _maxStack: 1
---- !u!114 &7372939191468712669
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 0}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: f6220288b2fd34b40bb3d8432012533a, type: 3}
-  m_Name: Microphone
-  m_EditorClassIdentifier: CreativeAI.Gameplay::CreativeAI.Gameplay.ItemData
-  icon: {fileID: 21300000, guid: e246387537dcfa140becd430188a93ac, type: 3}
-  id: 2003
-  key: microphone
-  itemName: "\u30DE\u30A4\u30AF"
-  category: 1
-  description: "\u5C0F\u3055\u306A\u58F0\u3092\u5927\u304D\u304F\u5C4A\u3051\u308B\u30DE\u30A4\u30AF\u3002"
-  material1: {fileID: 0}
-  material2: {fileID: 0}
-  _maxStack: 1
 --- !u!114 &7823367950198849727
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -2581,48 +1806,6 @@ MonoBehaviour:
   material2: {fileID: -1353312657710663384}
   _maxStack: 1
   _craftedResult: 1
---- !u!114 &8303234618874048848
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 0}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: f6220288b2fd34b40bb3d8432012533a, type: 3}
-  m_Name: ClockMicrophone
-  m_EditorClassIdentifier: CreativeAI.Gameplay::CreativeAI.Gameplay.ItemData
-  icon: {fileID: 21300000, guid: fe74b3c8ef032ad4a97cf623d1b095a0, type: 3}
-  id: 2115
-  key: clock_microphone
-  itemName: "\u6642\u5831\u30C6\u30EC\u30D5\u30A9\u30F3"
-  category: 1
-  description: "\u61D0\u4E2D\u6642\u8A08\u3068\u30DE\u30A4\u30AF\u3067\u5408\u6210\u3055\u308C\u305F\u88C5\u5099\u3002"
-  material1: {fileID: 957348972317786013}
-  material2: {fileID: 7372939191468712669}
-  _maxStack: 1
---- !u!114 &8434162520786934589
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 0}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: f6220288b2fd34b40bb3d8432012533a, type: 3}
-  m_Name: FullBodyTightsMicrophone
-  m_EditorClassIdentifier: CreativeAI.Gameplay::CreativeAI.Gameplay.ItemData
-  icon: {fileID: 21300000, guid: 1be2496c3832dc44786de7d56e233f86, type: 3}
-  id: 2128
-  key: full_body_tights_microphone
-  itemName: "\u9EC4\u91D1\u306E\u5171\u9CF4\u30B9\u30FC\u30C4"
-  category: 1
-  description: "\u5168\u8EAB\u30BF\u30A4\u30C4\u3068\u30DE\u30A4\u30AF\u3067\u5408\u6210\u3055\u308C\u305F\u88C5\u5099\u3002"
-  material1: {fileID: 8829090763925122756}
-  material2: {fileID: 7372939191468712669}
-  _maxStack: 1
 --- !u!114 &8561165396911074249
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -2667,66 +1850,3 @@ MonoBehaviour:
   material2: {fileID: -3828202121546107835}
   _maxStack: 1
   _craftedResult: 1
---- !u!114 &8715171132194124482
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 0}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: f6220288b2fd34b40bb3d8432012533a, type: 3}
-  m_Name: BalloonMicrophone
-  m_EditorClassIdentifier: CreativeAI.Gameplay::CreativeAI.Gameplay.ItemData
-  icon: {fileID: 21300000, guid: dd4b4fe83fc5b094dbe9cba0ed5190bc, type: 3}
-  id: 2107
-  key: balloon_microphone
-  itemName: "\u3075\u304D\u3060\u3057\u30D0\u30EB\u30FC\u30F3"
-  category: 1
-  description: "\u98A8\u8239\u3068\u30DE\u30A4\u30AF\u3067\u5408\u6210\u3055\u308C\u305F\u88C5\u5099\u3002"
-  material1: {fileID: -7287126184965246600}
-  material2: {fileID: 7372939191468712669}
-  _maxStack: 1
---- !u!114 &8829090763925122756
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 0}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: f6220288b2fd34b40bb3d8432012533a, type: 3}
-  m_Name: FullBodyTights
-  m_EditorClassIdentifier: CreativeAI.Gameplay::CreativeAI.Gameplay.ItemData
-  icon: {fileID: 21300000, guid: 639226a8151a48ba8f96f209699ed646, type: 3}
-  id: 2007
-  key: full_body_tights
-  itemName: "\u5168\u8EAB\u30BF\u30A4\u30C4"
-  category: 1
-  description: "\u982D\u304B\u3089\u8DB3\u5148\u307E\u3067\u5305\u3080\u3001\u4F38\u3073\u306E\u3088\u3044\u670D\u3002"
-  material1: {fileID: 0}
-  material2: {fileID: 0}
-  _maxStack: 1
---- !u!114 &8910818099885315786
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 0}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: f6220288b2fd34b40bb3d8432012533a, type: 3}
-  m_Name: FullBodyTightsHat
-  m_EditorClassIdentifier: CreativeAI.Gameplay::CreativeAI.Gameplay.ItemData
-  icon: {fileID: 21300000, guid: 3ca6ebec373b2ab4e92c8613b6a9ff9a, type: 3}
-  id: 2126
-  key: full_body_tights_hat
-  itemName: "\u661F\u591C\u306E\u30DE\u30B8\u30B7\u30E3\u30F3\u30B9\u30FC\u30C4"
-  category: 1
-  description: "\u5168\u8EAB\u30BF\u30A4\u30C4\u3068\u5E3D\u5B50\u3067\u5408\u6210\u3055\u308C\u305F\u88C5\u5099\u3002"
-  material1: {fileID: 8829090763925122756}
-  material2: {fileID: 5905387601538661209}
-  _maxStack: 1

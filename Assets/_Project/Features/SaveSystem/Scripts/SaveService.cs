@@ -66,6 +66,7 @@ namespace CreativeAI.Gameplay
                         new ItemEntry
                         {
                             itemId = stack.Data.id,
+                            itemKey = stack.Data.key,
                             count = stack.Count,
                             equipped = stack.IsEquipped,
                             rolledStats =
@@ -249,11 +250,11 @@ namespace CreativeAI.Gameplay
         {
             foreach (var e in entries)
             {
-                var itemData = catalog.GetItemById(e.itemId);
+                var itemData = ResolveSavedItem(catalog, e);
                 if (itemData == null)
                 {
                     Debug.LogWarning(
-                        $"[SaveService] itemId {e.itemId} は ItemCatalog に無し。スキップ。"
+                        $"[SaveService] itemKey '{e.itemKey}' / itemId {e.itemId} は ItemCatalog に無し。スキップ。"
                     );
                     continue;
                 }
@@ -278,6 +279,79 @@ namespace CreativeAI.Gameplay
                     inv.SetQuickFood(e.quickFoodSlot, stack);
             }
         }
+
+        // キーを持たない旧セーブは旧装備の意味で解決し、同じ番号の新装備へ置き換えない。
+        private static ItemData ResolveSavedItem(ItemCatalog catalog, ItemEntry entry)
+        {
+            string key = entry.itemKey;
+            if (string.IsNullOrEmpty(key))
+                key = LegacyEquipmentKey(entry.itemId);
+            return string.IsNullOrEmpty(key)
+                ? catalog.GetItemById(entry.itemId)
+                : catalog.GetItemByKey(key);
+        }
+
+        // 装備素材が10種類だった時点のID。削除済みのキーは復元先なしとして扱う。
+        private static string LegacyEquipmentKey(int id) =>
+            id switch
+            {
+                2001 => "balloon",
+                2002 => "clock",
+                2003 => "microphone",
+                2004 => "note",
+                2006 => "fluorescent_light",
+                2007 => "full_body_tights",
+                2008 => "glasses",
+                2009 => "hat",
+                2010 => "magnet",
+                2011 => "umbrella",
+                2101 => "balloon_clock",
+                2102 => "balloon_fluorescent_light",
+                2103 => "balloon_full_body_tights",
+                2104 => "balloon_glasses",
+                2105 => "balloon_hat",
+                2106 => "balloon_magnet",
+                2107 => "balloon_microphone",
+                2108 => "balloon_note",
+                2109 => "balloon_umbrella",
+                2110 => "clock_fluorescent_light",
+                2111 => "clock_full_body_tights",
+                2112 => "clock_glasses",
+                2113 => "clock_hat",
+                2114 => "clock_magnet",
+                2115 => "clock_microphone",
+                2116 => "clock_note",
+                2117 => "clock_umbrella",
+                2118 => "fluorescent_light_full_body_tights",
+                2119 => "fluorescent_light_glasses",
+                2120 => "fluorescent_light_hat",
+                2121 => "fluorescent_light_magnet",
+                2122 => "fluorescent_light_microphone",
+                2123 => "fluorescent_light_note",
+                2124 => "fluorescent_light_umbrella",
+                2125 => "full_body_tights_glasses",
+                2126 => "full_body_tights_hat",
+                2127 => "full_body_tights_magnet",
+                2128 => "full_body_tights_microphone",
+                2129 => "full_body_tights_note",
+                2130 => "full_body_tights_umbrella",
+                2131 => "glasses_hat",
+                2132 => "glasses_magnet",
+                2133 => "glasses_microphone",
+                2134 => "glasses_note",
+                2135 => "glasses_umbrella",
+                2136 => "hat_magnet",
+                2137 => "hat_microphone",
+                2138 => "hat_note",
+                2139 => "hat_umbrella",
+                2140 => "magnet_microphone",
+                2141 => "magnet_note",
+                2142 => "magnet_umbrella",
+                2143 => "microphone_note",
+                2144 => "microphone_umbrella",
+                2145 => "note_umbrella",
+                _ => null,
+            };
 
         /// <summary>stack が入っている即時使用食材スロット番号を返す。未セットは -1。</summary>
         private static int IndexOfQuickFoodSlot(IReadOnlyList<ItemStack> slots, ItemStack stack)
@@ -348,6 +422,9 @@ namespace CreativeAI.Gameplay
     public sealed class ItemEntry
     {
         public int itemId;
+
+        /// <summary>保存時のアイテムキー。復元時は数値IDより優先し、番号の再利用による取り違えを防ぐ。</summary>
+        public string itemKey;
         public int count;
         public bool equipped;
         public List<RolledStat> rolledStats;
