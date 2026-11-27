@@ -24,6 +24,7 @@ namespace CreativeAI.Tests.EditMode
         {
             _gmm = _residents.Add<GameModeManager>();
             _inventory = _residents.Add<InventoryManager>();
+            _residents.Add<FieldItemManager>();
 
             _pickupGo = new GameObject("FieldItem", typeof(BoxCollider));
             _pickup = _pickupGo.AddComponent<FieldItemPickup>();
@@ -130,7 +131,7 @@ namespace CreativeAI.Tests.EditMode
         {
             var apple = MakeItem<FoodData>(3003);
             PlaceItem(apple);
-            _gmm.EnterBattle();
+            _gmm.TryStartBattle();
 
             Assert.IsFalse(_pickup.TryPickup(), "戦闘モード中は拾わない");
 
@@ -143,10 +144,10 @@ namespace CreativeAI.Tests.EditMode
         {
             var apple = MakeItem<FoodData>(3004);
             PlaceItem(apple);
-            _gmm.EnterBattle();
+            _gmm.TryStartBattle();
             Assert.IsFalse(_pickup.TryPickup());
 
-            _gmm.ExitBattle();
+            _gmm.ResetToField();
 
             Assert.IsTrue(_pickup.TryPickup());
             Assert.AreEqual(1, _inventory.GetItemCount(apple));
@@ -157,7 +158,7 @@ namespace CreativeAI.Tests.EditMode
         {
             var apple = MakeItem<FoodData>(3005);
             PlaceItem(apple);
-            EventPlaybackService.SetPlaying(true);
+            _gmm.TryStartDialogue();
 
             Assert.IsFalse(_pickup.TryPickup(), "会話イベント中は拾わない");
 

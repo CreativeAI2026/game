@@ -57,10 +57,8 @@ namespace CreativeAI.Gameplay
         public int Count
         {
             get => IsInstance ? 1 : _count;
-            set => _count = IsInstance ? 1 : value;
+            internal set => _count = IsInstance ? 1 : value;
         }
-
-        public bool IsEquipped { get; set; }
 
         /// <summary>
         /// 調合でロールされた個体ステータス(装備品/武器の個体差)。

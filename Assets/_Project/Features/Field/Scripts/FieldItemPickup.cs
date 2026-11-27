@@ -6,7 +6,7 @@ namespace CreativeAI.Gameplay
     /// フィールドに置かれた取得可能アイテム。プレイヤーが触れると在庫へ入れて自分を消す。拾えるのは移動中(Field)だけ。
     /// 装備品は拾った瞬間に付与ステータスをロールするので1個ずつ別スタックで持つ(食材・大事なものは数量ぶん積む)。
     /// 配置は ItemPickup Prefab を置いて Item と Count を選ぶだけ(識別子はエディタが自動で振る)。
-    /// 拾ったことは <see cref="PickedItemRegistry"/> に記録されてセーブされ、拾い済みのものはフィールドに入ったとき出さない。
+    /// 拾ったことは <see cref="FieldItemManager"/> に記録されてセーブされ、拾い済みのものはフィールドに入ったとき出さない。
     /// </summary>
     [RequireComponent(typeof(Collider))]
     public sealed class FieldItemPickup : MonoBehaviour
@@ -54,7 +54,8 @@ namespace CreativeAI.Gameplay
         /// <summary>前に拾い済み(セーブから復元された記録を含む)なら出さない。在庫は触らず記録だけを見る。</summary>
         public void HideIfAlreadyPicked()
         {
-            if (!PickedItemRegistry.IsPicked(_pickupId))
+            var fieldItems = FieldItemManager.Instance;
+            if (fieldItems == null || !fieldItems.IsPicked(_pickupId))
                 return;
 
             if (Application.isPlaying)
@@ -72,7 +73,7 @@ namespace CreativeAI.Gameplay
 
         /// <summary>
         /// 在庫へ入れて自分を片付ける。拾えたら true。
-        /// 拾えない条件(既に拾われた / 未設定 / 戦闘中 / 会話イベント中 / 在庫が無い)では
+        /// 拾えない条件(既に拾われた / 未設定 / 戦闘中 / 会話イベント中 / 在庫・拾い済みの記録先が無い)では
         /// <b>何も消費・変更しない</b>。
         /// </summary>
         public bool TryPickup()
@@ -88,8 +89,8 @@ namespace CreativeAI.Gameplay
                 return false;
             }
 
-            // 移動中(Field)のみ。マネージャ未生成(開発シーン直 Play)は Field 扱いで許可する。
-            if (!EventPlaybackService.IsFreeRoaming)
+            // 探索中でメニューも開いていないときだけ。マネージャ未生成(開発シーン直 Play)は許可する。
+            if (!GameModeManager.PlayerCanAct)
                 return false;
 
             var inventory = InventoryManager.Instance;
@@ -101,11 +102,20 @@ namespace CreativeAI.Gameplay
                 return false;
             }
 
+            var fieldItems = FieldItemManager.Instance;
+            if (fieldItems == null)
+            {
+                Debug.LogWarning(
+                    $"[FieldItemPickup] '{name}': FieldItemManager が無く拾い済みを記録できないため拾得をスキップしました。"
+                );
+                return false;
+            }
+
             // 装備品は拾った瞬間にロールし、1個ずつ別スタックになる。
             inventory.AddAcquired(_item, _count);
 
             _picked = true;
-            PickedItemRegistry.MarkPicked(_pickupId);
+            fieldItems.MarkPicked(_pickupId);
             if (_sparkle != null)
                 _sparkle.SetActive(false);
 

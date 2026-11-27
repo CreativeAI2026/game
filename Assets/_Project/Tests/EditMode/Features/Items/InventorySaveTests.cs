@@ -11,19 +11,22 @@ namespace CreativeAI.Tests.EditMode
     /// </summary>
     public class InventorySaveTests
     {
-        private GameObject _go;
         private InventoryManager _inv;
+        private readonly TestResidents _residents = new();
+        private EquipmentSlots _equipment;
+        private QuickFoodSlots _quickFood;
 
         [SetUp]
         public void SetUp()
         {
-            _go = new GameObject(nameof(InventoryManager));
-            _inv = _go.AddComponent<InventoryManager>();
+            _inv = _residents.Add<InventoryManager>();
+            _equipment = _inv.Equipment;
+            _quickFood = _inv.QuickFood;
             // Awake は EditMode で走らないためテスト品は入らない(_items は空から始まる)。
         }
 
         [TearDown]
-        public void TearDown() => Object.DestroyImmediate(_go);
+        public void TearDown() => _residents.Clear();
 
         private static ItemData MakeItem(int id, ItemCategory category = ItemCategory.Food)
         {
@@ -120,10 +123,10 @@ namespace CreativeAI.Tests.EditMode
                 new[] { new RolledStat(nameof(StatType.AttackPct), 999f) }
             );
             var stacks = _inv.GetAllItems();
-            _inv.SetEquipped(stacks.Find(s => s.Data == gear), true);
+            _equipment.Set(0, stacks.Find(s => s.Data == gear));
             // unequipped は装備しない
 
-            var b = _inv.GetEquippedBonus();
+            var b = _equipment.GetBonus();
 
             Assert.AreEqual(10f, b.attackPct); // gear のみ(unequipped999 は除外)
             Assert.AreEqual(5f, b.defensePct);
@@ -142,11 +145,11 @@ namespace CreativeAI.Tests.EditMode
             var appleStack = _inv.GetAllItems().Find(s => s.Data == apple);
             var gearStack = _inv.GetAllItems().Find(s => s.Data == gear);
 
-            Assert.IsTrue(_inv.SetQuickFood(0, appleStack));
-            Assert.IsFalse(_inv.SetQuickFood(1, gearStack)); // 食材以外は不可
-            Assert.IsFalse(_inv.SetQuickFood(9, appleStack)); // 範囲外は不可
+            Assert.IsTrue(_quickFood.Set(0, appleStack));
+            Assert.IsFalse(_quickFood.Set(1, gearStack)); // 食材以外は不可
+            Assert.IsFalse(_quickFood.Set(9, appleStack)); // 範囲外は不可
 
-            var slots = _inv.GetQuickFoodSlots();
+            var slots = _quickFood.GetSlots();
             Assert.AreEqual(3, slots.Count);
             Assert.AreSame(appleStack, slots[0]);
             Assert.IsNull(slots[1]);
@@ -159,10 +162,10 @@ namespace CreativeAI.Tests.EditMode
             _inv.AddItem(apple, 5);
             var appleStack = _inv.GetAllItems().Find(s => s.Data == apple);
 
-            _inv.SetQuickFood(0, appleStack);
-            _inv.SetQuickFood(2, appleStack); // 別スロットへ移動(重複しない)
+            _quickFood.Set(0, appleStack);
+            _quickFood.Set(2, appleStack); // 別スロットへ移動(重複しない)
 
-            var slots = _inv.GetQuickFoodSlots();
+            var slots = _quickFood.GetSlots();
             Assert.IsNull(slots[0]);
             Assert.AreSame(appleStack, slots[2]);
         }
@@ -173,11 +176,11 @@ namespace CreativeAI.Tests.EditMode
             var apple = MakeFood(1);
             _inv.AddItem(apple, 1);
             var appleStack = _inv.GetAllItems().Find(s => s.Data == apple);
-            _inv.SetQuickFood(0, appleStack);
+            _quickFood.Set(0, appleStack);
 
             _inv.RemoveItem(apple, 1); // 使い切り → スタックが在庫から消える
 
-            Assert.IsNull(_inv.GetQuickFoodSlots()[0]); // スロットも自動でクリア
+            Assert.IsNull(_quickFood.GetSlots()[0]); // スロットも自動でクリア
         }
 
         [Test]
@@ -185,11 +188,11 @@ namespace CreativeAI.Tests.EditMode
         {
             var apple = MakeFood(1);
             _inv.AddItem(apple, 1);
-            _inv.SetQuickFood(0, _inv.GetAllItems().Find(s => s.Data == apple));
+            _quickFood.Set(0, _inv.GetAllItems().Find(s => s.Data == apple));
 
             _inv.Clear();
 
-            Assert.IsNull(_inv.GetQuickFoodSlots()[0]);
+            Assert.IsNull(_quickFood.GetSlots()[0]);
         }
 
         [Test]
@@ -256,7 +259,6 @@ namespace CreativeAI.Tests.EditMode
             var data = new SaveData
             {
                 hasPlayerState = true,
-                sceneName = "Field_Area03",
                 posX = 1.5f,
                 posY = 2.5f,
                 posZ = -3.5f,
@@ -267,7 +269,6 @@ namespace CreativeAI.Tests.EditMode
             var back = JsonUtility.FromJson<SaveData>(JsonUtility.ToJson(data));
 
             Assert.IsTrue(back.hasPlayerState);
-            Assert.AreEqual("Field_Area03", back.sceneName);
             Assert.AreEqual(1.5f, back.posX);
             Assert.AreEqual(2.5f, back.posY);
             Assert.AreEqual(-3.5f, back.posZ);
@@ -283,7 +284,6 @@ namespace CreativeAI.Tests.EditMode
 
             Assert.AreEqual(3, back.progress);
             Assert.IsFalse(back.hasPlayerState);
-            Assert.AreEqual(string.Empty, back.sceneName ?? string.Empty);
         }
 
         [Test]

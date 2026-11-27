@@ -2,89 +2,49 @@ using System.Collections.Generic;
 using System.Linq;
 using CreativeAI.Gameplay;
 using NUnit.Framework;
-using UnityEditor;
 using UnityEngine;
 using UnityEngine.TestTools;
 
 namespace CreativeAI.Tests.EditMode
 {
     /// <summary>
-    /// 武器の所持と選択の検証(初期0本 → 入手 → 入手ずみだけ切替 → 選択中の1本だけ補正が乗る)。
+    /// 武器の持ち物の検証(初期0本 → 入手 → 入手ずみだけ切替 → 選択中の1本の補正 → セーブの往復)。
     /// 入手はイベントの giveWeapon から。
     /// </summary>
     public class WeaponManagerTests
     {
         private GameObject _go;
         private WeaponManager _weapons;
-        private readonly List<Object> _created = new();
-
-        private WeaponData MakeWeaponData(int attack, float critRate, float critDamage)
-        {
-            var d = ScriptableObject.CreateInstance<WeaponData>();
-            d.attack = attack;
-            d.criticalRate = critRate;
-            d.criticalDamage = critDamage;
-            _created.Add(d);
-            return d;
-        }
 
         [SetUp]
         public void SetUp()
         {
             _go = new GameObject(nameof(WeaponManager));
             _weapons = _go.AddComponent<WeaponManager>();
-
-            // 剣(攻撃%+25/会心ダメ+50) / 弓(攻撃%+25/会心率+50) / 鎌(会心率+50/会心ダメ+50)
-            var stats = new[]
-            {
-                MakeWeaponData(25, 0f, 50f),
-                MakeWeaponData(25, 50f, 0f),
-                MakeWeaponData(0, 50f, 50f),
-            };
-            var so = new SerializedObject(_weapons);
-            var prop = so.FindProperty("_slots");
-            prop.arraySize = stats.Length;
-            for (int i = 0; i < stats.Length; i++)
-                prop.GetArrayElementAtIndex(i).FindPropertyRelative("stats").objectReferenceValue =
-                    stats[i];
-            so.ApplyModifiedPropertiesWithoutUndo();
         }
 
         [TearDown]
         public void TearDown()
         {
             Object.DestroyImmediate(_go);
-            foreach (var o in _created)
-                Object.DestroyImmediate(o);
-            _created.Clear();
         }
 
         [Test]
-        public void Initially_NoWeaponOwned_AndBonusIsZero()
+        public void Initially_NoWeaponOwned()
         {
-            // 主人公は最初1本も持たない。武器を1本も持っていなければ補正 0。
+            // 主人公は最初1本も持たない。
             Assert.AreEqual(0, _weapons.OwnedCount);
             Assert.AreEqual(WeaponManager.NoWeapon, _weapons.CurrentWeaponIndex);
-
-            var b = _weapons.GetSelectedBonus();
-            Assert.AreEqual(0f, b.attackPct);
-            Assert.AreEqual(0f, b.criticalChance);
-            Assert.AreEqual(0f, b.criticalDamage);
         }
 
         [Test]
-        public void GiveWeapon_FirstOne_IsOwnedAutoSelected_AndAppliesItsBonus()
+        public void GiveWeapon_FirstOne_IsOwnedAndAutoSelected()
         {
             _weapons.GiveWeapon("scythe");
 
             Assert.AreEqual(1, _weapons.OwnedCount);
             Assert.IsTrue(_weapons.IsOwned("scythe"));
             Assert.AreEqual(2, _weapons.CurrentWeaponIndex, "最初の1本は自動で選択される");
-
-            var b = _weapons.GetSelectedBonus();
-            Assert.AreEqual(0f, b.attackPct);
-            Assert.AreEqual(50f, b.criticalChance);
-            Assert.AreEqual(50f, b.criticalDamage);
         }
 
         [Test]
@@ -107,10 +67,10 @@ namespace CreativeAI.Tests.EditMode
         }
 
         [Test]
-        public void GiveWeapon_RaisesOwnedCountChanged_ForUIVisibility()
+        public void GiveWeapon_RaisesOwnedChanged_ForUIVisibility()
         {
             var counts = new List<int>();
-            _weapons.OnOwnedCountChanged += counts.Add;
+            _weapons.OwnedChanged += () => counts.Add(_weapons.OwnedCount);
 
             _weapons.GiveWeapon("sword");
             _weapons.GiveWeapon("sword"); // 重複は通知しない
@@ -177,24 +137,6 @@ namespace CreativeAI.Tests.EditMode
             Assert.AreEqual(1, _weapons.CurrentWeaponIndex);
         }
 
-        [Test]
-        public void Select_SwitchesWhichBonusApplies()
-        {
-            _weapons.GiveWeapon("sword");
-            _weapons.GiveWeapon("bow");
-
-            var sword = _weapons.GetSelectedBonus();
-            Assert.AreEqual(25f, sword.attackPct);
-            Assert.AreEqual(50f, sword.criticalDamage);
-            Assert.AreEqual(0f, sword.criticalChance);
-
-            _weapons.SelectNext();
-            var bow = _weapons.GetSelectedBonus();
-            Assert.AreEqual(25f, bow.attackPct);
-            Assert.AreEqual(0f, bow.criticalDamage);
-            Assert.AreEqual(50f, bow.criticalChance, "選択中の1本の補正だけが乗る(合算しない)");
-        }
-
         // --- セーブ復元 ---
 
         [Test]
@@ -205,7 +147,7 @@ namespace CreativeAI.Tests.EditMode
             _weapons.SelectNext(); // 鎌を選択
 
             var ownedKeys = _weapons.CaptureOwnedWeaponKeys().ToList();
-            int selected = _weapons.CaptureSelectedWeaponIndex();
+            int selected = _weapons.CurrentWeaponIndex;
             CollectionAssert.AreEqual(new[] { "sword", "scythe" }, ownedKeys);
             Assert.AreEqual(2, selected);
 
@@ -246,6 +188,17 @@ namespace CreativeAI.Tests.EditMode
         }
 
         [Test]
+        public void Clear_DropsAllWeapons()
+        {
+            _weapons.GiveWeapon("sword");
+
+            _weapons.Clear();
+
+            Assert.AreEqual(0, _weapons.OwnedCount);
+            Assert.AreEqual(WeaponManager.NoWeapon, _weapons.CurrentWeaponIndex);
+        }
+
+        [Test]
         public void RestoreWeapons_UnknownKeysAreDropped()
         {
             _weapons.RestoreWeapons(new List<string> { "axe", "bow", "bow" }, 1);
@@ -261,6 +214,67 @@ namespace CreativeAI.Tests.EditMode
                 new[] { "sword", "bow", "scythe", "hammer" },
                 WeaponManager.WeaponKeys
             );
+        }
+
+        // --- 選択中の武器の補正(定義は WeaponCatalog から引く) ---
+
+        private void InjectWeapons()
+        {
+            // 剣(攻撃%+25/会心ダメ+50) / 弓(攻撃%+25/会心率+50) / 鎌(会心率+50/会心ダメ+50)
+            WeaponData Make(int attack, float critRate, float critDamage)
+            {
+                var d = ScriptableObject.CreateInstance<WeaponData>();
+                d.attack = attack;
+                d.criticalRate = critRate;
+                d.criticalDamage = critDamage;
+                _createdWeapons.Add(d);
+                return d;
+            }
+            WeaponCatalog.InjectForTests(
+                new[] { Make(25, 0f, 50f), Make(25, 50f, 0f), Make(0, 50f, 50f) }
+            );
+        }
+
+        private readonly List<WeaponData> _createdWeapons = new();
+
+        [TearDown]
+        public void DestroyWeapons()
+        {
+            WeaponCatalog.InjectForTests(null);
+            foreach (var d in _createdWeapons)
+                Object.DestroyImmediate(d);
+            _createdWeapons.Clear();
+        }
+
+        [Test]
+        public void NoWeapon_BonusIsZero()
+        {
+            InjectWeapons();
+
+            var b = _weapons.GetSelectedBonus();
+
+            Assert.AreEqual(0f, b.attackPct);
+            Assert.AreEqual(0f, b.criticalChance);
+            Assert.AreEqual(0f, b.criticalDamage);
+        }
+
+        [Test]
+        public void SelectedWeapon_BonusComesFromItsDefinition()
+        {
+            InjectWeapons();
+            _weapons.GiveWeapon("sword");
+            _weapons.GiveWeapon("bow");
+
+            var sword = _weapons.GetSelectedBonus();
+            Assert.AreEqual(25f, sword.attackPct);
+            Assert.AreEqual(50f, sword.criticalDamage);
+            Assert.AreEqual(0f, sword.criticalChance);
+
+            _weapons.SelectNext();
+            var bow = _weapons.GetSelectedBonus();
+            Assert.AreEqual(25f, bow.attackPct);
+            Assert.AreEqual(0f, bow.criticalDamage);
+            Assert.AreEqual(50f, bow.criticalChance, "選択中の1本の補正だけが乗る(合算しない)");
         }
     }
 }

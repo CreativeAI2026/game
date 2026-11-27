@@ -1,4 +1,3 @@
-using System.Collections.Generic;
 using System.Linq;
 using CreativeAI.Gameplay;
 using NUnit.Framework;
@@ -7,24 +6,25 @@ using UnityEngine;
 namespace CreativeAI.Tests.EditMode
 {
     /// <summary>
-    /// インベントリの上限・固定値の検証(装備品は最大3つ / 食材の回復量は固定 / hasItem は大事なもの限定)。
+    /// インベントリの固定値の検証(食材の回復量は固定 / hasItem は大事なもの限定)。
     /// </summary>
     public class InventoryRulesTests
     {
-        private GameObject _go;
         private InventoryManager _inv;
+        private readonly TestResidents _residents = new();
+        private QuickFoodSlots _quickFood;
 
         [SetUp]
         public void SetUp()
         {
-            _go = new GameObject(nameof(InventoryManager));
-            _inv = _go.AddComponent<InventoryManager>();
+            _inv = _residents.Add<InventoryManager>();
+            _quickFood = _inv.QuickFood;
         }
 
         [TearDown]
         public void TearDown()
         {
-            Object.DestroyImmediate(_go);
+            _residents.Clear();
             ItemCatalog.InjectForTests(null); // 注入を解除して実カタログに戻す
         }
 
@@ -34,50 +34,6 @@ namespace CreativeAI.Tests.EditMode
             d.category = ItemCategory.Equipment;
             d.id = id;
             return d;
-        }
-
-        // --- 装備品は最大3つ ---
-
-        [Test]
-        public void SetEquipped_RejectsFourthEquipment()
-        {
-            var stacks = new List<ItemStack>();
-            for (int i = 0; i < 4; i++)
-            {
-                var gear = MakeEquipment(100 + i);
-                _inv.AddItem(gear, 1);
-                stacks.Add(_inv.GetAllItems().Find(s => s.Data == gear));
-            }
-
-            for (int i = 0; i < 3; i++)
-                _inv.SetEquipped(stacks[i], true);
-
-            // 4つ目は上限(MaxEquippedEquipment=3)で拒否される。警告は出るがエラーにはならない。
-            _inv.SetEquipped(stacks[3], true);
-
-            Assert.AreEqual(3, InventoryManager.MaxEquippedEquipment);
-            Assert.IsFalse(stacks[3].IsEquipped, "4つ目の装備が上限を超えて装着された");
-            Assert.AreEqual(3, _inv.GetAllItems().Count(s => s.IsEquipped));
-        }
-
-        [Test]
-        public void SetEquipped_AfterUnequipping_AllowsAnotherEquipment()
-        {
-            var stacks = new List<ItemStack>();
-            for (int i = 0; i < 4; i++)
-            {
-                var gear = MakeEquipment(200 + i);
-                _inv.AddItem(gear, 1);
-                stacks.Add(_inv.GetAllItems().Find(s => s.Data == gear));
-            }
-            for (int i = 0; i < 3; i++)
-                _inv.SetEquipped(stacks[i], true);
-
-            _inv.SetEquipped(stacks[0], false); // 1枠あける
-            _inv.SetEquipped(stacks[3], true);
-
-            Assert.IsTrue(stacks[3].IsEquipped);
-            Assert.AreEqual(3, _inv.GetAllItems().Count(s => s.IsEquipped));
         }
 
         // --- hasItem は大事なもの限定 ---

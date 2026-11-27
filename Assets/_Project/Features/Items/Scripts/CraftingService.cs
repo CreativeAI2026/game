@@ -4,31 +4,61 @@ using System.Linq;
 
 namespace CreativeAI.Gameplay
 {
-    /// <summary>
-    /// CraftRecipe のレシピで調合する。素材はインベントリのアイテムとして消費するだけで、
-    /// アイテム使用時の効果は発動しない。
-    /// </summary>
-    public class CraftingService
+    /// <summary>素材に置けない理由。</summary>
+    public enum CraftMaterialProblem
     {
-        private readonly InventoryService _inventoryService;
+        None,
 
-        public CraftingService(InventoryService inventoryService)
+        /// <summary>装備中の物は素材にできない。</summary>
+        Equipped,
+
+        /// <summary>即時食材の枠に入れている物は素材にできない。</summary>
+        InQuickFood,
+
+        /// <summary>もう片方の素材とカテゴリが違う。</summary>
+        CategoryMismatch,
+    }
+
+    /// <summary>
+    /// 完成品の ItemData が持つ素材2つ(material1 / material2)で調合する。素材はインベントリのアイテムとして消費するだけで、
+    /// アイテム使用時の効果は発動しない。調合したら進行度のフラグ <see cref="ProgressFlags.Crafted"/> を立てる。
+    /// </summary>
+    public sealed class CraftingService
+    {
+        private readonly InventoryManager _inventory;
+
+        public CraftingService(InventoryManager inventory)
         {
-            _inventoryService =
-                inventoryService ?? throw new ArgumentNullException(nameof(inventoryService));
+            _inventory = inventory;
         }
 
         /// <summary>
-        /// 選んだ素材2つ(各1個)でレシピの完成品を作れるか。装備中・即時食材セット中の素材は使えない。
+        /// stack を素材に置けるか。もう片方の素材 <paramref name="other"/>(まだ無ければ null)とはカテゴリを揃える。
+        /// 置けなければ理由を返す。調合画面の警告も、調合できるかの判定も、この決まりを使う。
         /// </summary>
-        public bool CanCraft(CraftRecipe recipe, ItemStack materialA, ItemStack materialB)
+        public CraftMaterialProblem CheckMaterial(ItemStack stack, ItemStack other)
         {
-            return IsValidRecipe(recipe)
+            if (_inventory.Equipment.Contains(stack))
+                return CraftMaterialProblem.Equipped;
+            if (_inventory.QuickFood.Contains(stack))
+                return CraftMaterialProblem.InQuickFood;
+            if (other?.Data != null && other.Data.category != stack.Data.category)
+                return CraftMaterialProblem.CategoryMismatch;
+            return CraftMaterialProblem.None;
+        }
+
+        /// <summary>
+        /// 選んだ素材2つ(各1個)で完成品 <paramref name="result"/> を作れるか。
+        /// 素材は完成品の material1 / material2(順不同)と一致する必要がある。装備中・即時食材セット中の素材は使えない。
+        /// </summary>
+        public bool CanCraft(ItemData result, ItemStack materialA, ItemStack materialB)
+        {
+            return IsValidRecipe(result)
                 && CanUseAsMaterial(materialA)
                 && CanUseAsMaterial(materialB)
                 && materialA != materialB
-                && materialA.Data != materialB.Data
-                && recipe.MatchesMaterials(materialA.Data, materialB.Data);
+                && CheckMaterial(materialA, materialB) == CraftMaterialProblem.None
+                && IsMaterialPair(result, materialA.Data, materialB.Data);
         }
 
         /// <summary>
@@ -36,32 +66,36 @@ namespace CreativeAI.Gameplay
         /// crafted は完成品が入った在庫のスタック(装備品はロール済み個体)。
         /// </summary>
         public bool TryCraft(
-            CraftRecipe recipe,
+            ItemData result,
             ItemStack materialA,
             ItemStack materialB,
             out ItemStack crafted
         )
         {
             crafted = null;
-            if (!CanCraft(recipe, materialA, materialB))
+            if (!CanCraft(result, materialA, materialB))
                 return false;
 
             if (
-                !_inventoryService.ConsumeFromStack(materialA, 1)
-                || !_inventoryService.ConsumeFromStack(materialB, 1)
+                !_inventory.ConsumeFromStack(materialA, 1)
+                || !_inventory.ConsumeFromStack(materialB, 1)
             )
                 return false;
 
-            crafted = GrantResult(recipe, materialA, materialB);
+            crafted = GrantResult(result, materialA, materialB);
+            // 合成画面を開いている間はメニュー中なので、このフラグを条件にしたイベントは画面を閉じてから始まる
+            var progress = ProgressManager.Instance;
+            if (progress != null)
+                progress.SetFlag(ProgressFlags.Crafted, "1");
             return true;
         }
 
         /// <summary>
         /// 結果アイテムを1つ付与する。装備品は個体差ロールした個体を作り、食材など非装備品はそのまま追加する。
         /// </summary>
-        private ItemStack GrantResult(CraftRecipe recipe, ItemStack materialA, ItemStack materialB)
+        private ItemStack GrantResult(ItemData result, ItemStack materialA, ItemStack materialB)
         {
-            if (recipe.resultItem.category == ItemCategory.Equipment)
+            if (result.category == ItemCategory.Equipment)
             {
                 // 素材にした2つの個体の能力値を元にする。
                 var rolled = RollCraftedStats(
@@ -69,13 +103,10 @@ namespace CreativeAI.Gameplay
                     RolledStat.ToVector(materialB.RolledStats),
                     new SystemRandomSource()
                 );
-                return _inventoryService.AddInstance(
-                    recipe.resultItem,
-                    RolledStat.FromVector(rolled)
-                );
+                return _inventory.AddInstance(result, RolledStat.FromVector(rolled));
             }
 
-            return _inventoryService.AddItem(recipe.resultItem, 1);
+            return _inventory.AddItem(result, 1);
         }
 
         private bool CanUseAsMaterial(ItemStack stack)
@@ -83,18 +114,21 @@ namespace CreativeAI.Gameplay
             return stack != null
                 && stack.Data != null
                 && stack.Count > 0
-                && !stack.IsEquipped
-                && !_inventoryService.IsInQuickFood(stack)
-                && _inventoryService.ContainsStack(stack);
+                && CheckMaterial(stack, null) == CraftMaterialProblem.None
+                && _inventory.ContainsStack(stack);
         }
 
-        private static bool IsValidRecipe(CraftRecipe recipe)
+        private static bool IsMaterialPair(ItemData result, ItemData a, ItemData b) =>
+            (result.material1 == a && result.material2 == b)
+            || (result.material1 == b && result.material2 == a);
+
+        private static bool IsValidRecipe(ItemData result)
         {
-            if (recipe?.resultItem == null)
+            if (result == null)
                 return false;
 
-            var a = recipe.material1;
-            var b = recipe.material2;
+            var a = result.material1;
+            var b = result.material2;
             if (a == null || b == null || a == b)
                 return false;
 

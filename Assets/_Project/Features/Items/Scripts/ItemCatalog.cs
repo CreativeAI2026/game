@@ -46,7 +46,7 @@ namespace CreativeAI.Gameplay
         [SerializeField, HideInInspector]
         private List<ItemData> items = new();
 
-        private Dictionary<(ItemData, ItemData), CraftRecipe> _recipeByMaterials;
+        private Dictionary<(ItemData, ItemData), ItemData> _resultByMaterials;
 
         public IReadOnlyList<ItemData> Items => items;
 
@@ -65,14 +65,14 @@ namespace CreativeAI.Gameplay
             return items.FirstOrDefault(i => i != null && i.key == key);
         }
 
-        /// <summary>素材2つ(順不同)から完成品のレシピを引く。無ければ null。</summary>
-        public CraftRecipe FindRecipe(ItemData materialA, ItemData materialB)
+        /// <summary>素材2つ(順不同)から調合の完成品を引く。無ければ null。</summary>
+        public ItemData FindCraftResult(ItemData materialA, ItemData materialB)
         {
             if (materialA == null || materialB == null)
                 return null;
 
-            _recipeByMaterials ??= BuildRecipeMap();
-            return _recipeByMaterials.GetValueOrDefault((materialA, materialB));
+            _resultByMaterials ??= BuildResultMap();
+            return _resultByMaterials.GetValueOrDefault((materialA, materialB));
         }
 
 #if UNITY_EDITOR
@@ -80,33 +80,27 @@ namespace CreativeAI.Gameplay
         public void SetItems(IEnumerable<ItemData> newItems)
         {
             items = newItems.ToList();
-            _recipeByMaterials = null;
+            _resultByMaterials = null;
         }
 #endif
 
-        // 素材の並び順を問わないよう、両方の順で登録する。
-        private Dictionary<(ItemData, ItemData), CraftRecipe> BuildRecipeMap()
+        // 完成品の素材2つから完成品を引けるようにする。素材の並び順を問わないよう、両方の順で登録する。
+        private Dictionary<(ItemData, ItemData), ItemData> BuildResultMap()
         {
-            var map = new Dictionary<(ItemData, ItemData), CraftRecipe>();
+            var map = new Dictionary<(ItemData, ItemData), ItemData>();
             foreach (var item in items)
             {
                 if (item == null || item.material1 == null || item.material2 == null)
                     continue;
-                var recipe = new CraftRecipe
-                {
-                    material1 = item.material1,
-                    material2 = item.material2,
-                    resultItem = item,
-                };
-                map.TryAdd((item.material1, item.material2), recipe);
-                map.TryAdd((item.material2, item.material1), recipe);
+                map.TryAdd((item.material1, item.material2), item);
+                map.TryAdd((item.material2, item.material1), item);
             }
             return map;
         }
 
         private void OnValidate()
         {
-            _recipeByMaterials = null;
+            _resultByMaterials = null;
         }
     }
 }

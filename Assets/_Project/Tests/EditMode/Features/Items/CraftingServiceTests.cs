@@ -9,24 +9,31 @@ namespace CreativeAI.Tests.EditMode
     /// <summary>
     /// 調合本体の検証(レシピ引き → カテゴリ検証 → 素材消費と結果付与を原子的に行う)。
     /// 装備品はロール個体 / 食材は固定。
-    /// MonoBehaviour を挟まない純粋サービスなので InventoryService を直接組んで叩く。
     /// </summary>
     public class CraftingServiceTests
     {
-        private InventoryService _inv;
+        private InventoryManager _inv;
+        private readonly TestResidents _residents = new();
+        private EquipmentSlots _equipment;
+        private QuickFoodSlots _quickFood;
+        private ProgressManager _progress;
         private CraftingService _craft;
         private readonly List<Object> _assets = new();
 
         [SetUp]
         public void SetUp()
         {
-            _inv = new InventoryService();
+            _inv = _residents.Add<InventoryManager>();
+            _equipment = _inv.Equipment;
+            _quickFood = _inv.QuickFood;
+            _progress = _residents.Add<ProgressManager>();
             _craft = new CraftingService(_inv);
         }
 
         [TearDown]
         public void TearDown()
         {
+            _residents.Clear();
             foreach (var a in _assets)
                 Object.DestroyImmediate(a);
             _assets.Clear();
@@ -55,21 +62,20 @@ namespace CreativeAI.Tests.EditMode
             return a;
         }
 
-        private CraftRecipe MakeRecipe(ItemData m1, ItemData m2, ItemData result)
+        // 完成品に素材2つを持たせる(ItemCatalog と同じく、レシピは完成品の側が持つ)
+        private static ItemData MakeRecipe(ItemData m1, ItemData m2, ItemData result)
         {
-            var r = new CraftRecipe();
-            r.material1 = m1;
-            r.material2 = m2;
-            r.resultItem = result;
-            return r;
+            result.material1 = m1;
+            result.material2 = m2;
+            return result;
         }
 
         private ItemStack StackOf(ItemData data) => _inv.GetAllItems().Find(s => s.Data == data);
 
-        private bool CanCraftOnce(CraftRecipe r) =>
+        private bool CanCraftOnce(ItemData r) =>
             _craft.CanCraft(r, StackOf(r.material1), StackOf(r.material2));
 
-        private bool CraftOnce(CraftRecipe r) =>
+        private bool CraftOnce(ItemData r) =>
             _craft.TryCraft(r, StackOf(r.material1), StackOf(r.material2), out _);
 
         /// <summary>在庫にあるその品の総数(スタックごと消えていれば 0)。</summary>
@@ -77,6 +83,27 @@ namespace CreativeAI.Tests.EditMode
             _inv.GetAllItems().Where(s => s.Data == data).Sum(s => s.Count);
 
         // --- 正常系 ---
+
+        [Test]
+        public void TryCraft_SetsCraftedFlag_OnlyWhenCrafted()
+        {
+            var grapes = Make<FoodData>(3002);
+            var miso = Make<FoodData>(3010);
+            var recipe = MakeRecipe(grapes, miso, Make<FoodData>(3101));
+            _inv.AddItem(grapes, 1);
+
+            Assert.IsFalse(_craft.TryCraft(recipe, StackOf(grapes), StackOf(miso), out _));
+            Assert.AreEqual(
+                string.Empty,
+                _progress.GetFlag(ProgressFlags.Crafted),
+                "作れなければ立てない"
+            );
+
+            _inv.AddItem(miso, 1);
+            Assert.IsTrue(_craft.TryCraft(recipe, StackOf(grapes), StackOf(miso), out _));
+
+            Assert.AreEqual("1", _progress.GetFlag(ProgressFlags.Crafted));
+        }
 
         [Test]
         public void TryCraft_FoodPair_ConsumesMaterials_AndGrantsStackedResult()
@@ -195,7 +222,7 @@ namespace CreativeAI.Tests.EditMode
             var recipe = MakeRecipe(a, b, MakeEquipment(2101));
             _inv.AddItem(a, 1);
             _inv.AddItem(b, 1);
-            StackOf(a).IsEquipped = true;
+            _equipment.Set(0, StackOf(a));
 
             Assert.IsFalse(CraftOnce(recipe), "装備中の装備品は素材にできない");
             Assert.AreEqual(1, CountOf(a));
@@ -210,7 +237,7 @@ namespace CreativeAI.Tests.EditMode
             var recipe = MakeRecipe(a, b, Make<FoodData>(3107));
             _inv.AddItem(a, 1);
             _inv.AddItem(b, 1);
-            Assert.IsTrue(_inv.SetQuickFood(0, StackOf(a)));
+            Assert.IsTrue(_quickFood.Set(0, StackOf(a)));
 
             Assert.IsFalse(CraftOnce(recipe), "即時使用にセット済みの食材は素材にできない");
             Assert.AreEqual(1, StackOf(a).Count);
@@ -248,15 +275,51 @@ namespace CreativeAI.Tests.EditMode
         }
 
         [Test]
-        public void MatchesMaterials_IsOrderIndependent()
+        public void CanCraft_IsOrderIndependent()
         {
             var a = Make<FoodData>(3001);
             var b = Make<FoodData>(3002);
-            var recipe = MakeRecipe(a, b, Make<FoodData>(3111));
+            var result = MakeRecipe(a, b, Make<FoodData>(3111));
+            _inv.AddItem(a, 1);
+            _inv.AddItem(b, 1);
 
-            Assert.IsTrue(recipe.MatchesMaterials(a, b));
-            Assert.IsTrue(recipe.MatchesMaterials(b, a), "素材の並び順は問わない");
-            Assert.IsFalse(recipe.MatchesMaterials(a, a));
+            Assert.IsTrue(_craft.CanCraft(result, StackOf(a), StackOf(b)));
+            Assert.IsTrue(
+                _craft.CanCraft(result, StackOf(b), StackOf(a)),
+                "素材の並び順は問わない"
+            );
+        }
+
+        // --- 素材に置けるか(調合画面の警告と同じ決まり) ---
+
+        [Test]
+        public void CheckMaterial_Equipped_IsRejected()
+        {
+            var gear = MakeEquipment(2901);
+            var stack = _inv.AddItem(gear, 1);
+            _equipment.Set(0, stack);
+
+            Assert.AreEqual(CraftMaterialProblem.Equipped, _craft.CheckMaterial(stack, null));
+        }
+
+        [Test]
+        public void CheckMaterial_InQuickFood_IsRejected()
+        {
+            var food = Make<FoodData>(3901);
+            var stack = _inv.AddItem(food, 1);
+            _quickFood.Set(0, stack);
+
+            Assert.AreEqual(CraftMaterialProblem.InQuickFood, _craft.CheckMaterial(stack, null));
+        }
+
+        [Test]
+        public void CheckMaterial_DifferentCategoryFromOther_IsRejected()
+        {
+            var gear = _inv.AddItem(MakeEquipment(2902), 1);
+            var key = _inv.AddItem(MakeImportant(4901), 1);
+
+            Assert.AreEqual(CraftMaterialProblem.CategoryMismatch, _craft.CheckMaterial(gear, key));
+            Assert.AreEqual(CraftMaterialProblem.None, _craft.CheckMaterial(gear, null));
         }
     }
 }

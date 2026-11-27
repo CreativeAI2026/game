@@ -1,11 +1,12 @@
 using CreativeAI.Gameplay;
 using NUnit.Framework;
 using UnityEditor;
+using UnityEngine;
 
 namespace CreativeAI.Tests.EditMode
 {
     /// <summary>
-    /// 剣・弓・鎌・ハンマーのアセットが守るべき決まりの検証(ID の並び・平均ダメージの釣り合い・在庫外)。
+    /// 剣・弓・鎌・ハンマーのアセットが守るべき決まりの検証(ID と一覧の並び・平均ダメージの釣り合い・在庫外)。
     /// 個々の数値はバランス調整で変わるので、ここでは固定しない。
     /// </summary>
     public class WeaponDataAssetTests
@@ -30,6 +31,16 @@ namespace CreativeAI.Tests.EditMode
             // 武器の ID は 1001 + 並び順(剣・弓・鎌・ハンマー)。所持スロットの番号から ID を引くコードがある
             for (int i = 0; i < Names.Length; i++)
                 Assert.AreEqual(1001 + i, LoadRequired(Names[i]).id, Names[i]);
+        }
+
+        [Test]
+        public void Catalog_ListsWeaponsInKeyOrder()
+        {
+            // WeaponCatalog の並びは WeaponManager.WeaponKeys(剣・弓・鎌・ハンマー)と同じ。補正の値はここから引く
+            var catalog = Resources.Load<WeaponCatalog>("WeaponCatalog");
+            Assert.IsNotNull(catalog, "Resources/WeaponCatalog が見つからない");
+            for (int i = 0; i < Names.Length; i++)
+                Assert.AreSame(LoadRequired(Names[i]), catalog.Get(i), Names[i]);
         }
 
         [Test]
