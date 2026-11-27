@@ -4,7 +4,7 @@
 // 銀河のように渦を巻くポータル。円盤の UV(中心 0.5, 外周が半径 0.5)から描く。
 // 腕は対数螺旋で、回すと中心へ吸い込まれて見える。星雲のむらと星も同じ渦の座標で取るので、一緒に巻き込まれる。
 // ノイズとハッシュは Blender の移植(BlenderNoiseGradient.hlsl)を使い回す。
-#include "Assets/_Project/Art/Shaders/BlenderNoiseGradient.hlsl"
+#include "Assets/_Project/Art/Characters/KurageBoss/Shaders/BlenderNoiseGradient.hlsl"
 
 // 星雲のむらに使う fBM のオクターブ数。4 より増やしても間近で見た差がほとんどなく、負荷だけ増えるため。
 #define GALAXY_NEBULA_OCTAVES 4
