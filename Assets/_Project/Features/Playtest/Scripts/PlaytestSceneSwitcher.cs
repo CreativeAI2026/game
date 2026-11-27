@@ -95,7 +95,7 @@ namespace CreativeAI.Playtest
         private bool ShouldShowHint()
         {
             var mode = GameModeManager.Instance;
-            bool inBattle = mode != null && mode.CurrentMode == GameMode.Battle;
+            bool inBattle = mode != null && mode.Mode == GameMode.Battle;
             return !inBattle || IsPlayerDead();
         }
 
@@ -108,11 +108,14 @@ namespace CreativeAI.Playtest
 
         private void Load(string sceneName)
         {
-            if (SceneController.CanLoad(sceneName))
+            // 武器の持ち物は常駐なので、次のシーンでもプレイヤーと一緒に初期の持ち方から始め直す
+            if (WeaponManager.Instance != null)
+                WeaponManager.Instance.Clear();
+            if (SceneLoader.CanLoad(sceneName))
             {
-                // タイトルを通らない体験用ビルドには SceneController(暗転つきの遷移)が無いので、無ければそのまま読む。
-                if (SceneController.Instance != null)
-                    SceneController.Instance.LoadScene(sceneName);
+                // タイトルを通らない体験用ビルドには SceneLoader(暗転つきの遷移)が無いので、無ければそのまま読む。
+                if (SceneLoader.Instance != null)
+                    SceneLoader.Instance.LoadScene(sceneName);
                 else
                     SceneManager.LoadScene(sceneName);
                 return;

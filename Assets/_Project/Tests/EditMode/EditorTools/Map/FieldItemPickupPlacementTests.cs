@@ -157,10 +157,11 @@ namespace CreativeAI.Tests.EditMode
                 TestReflection.SetField(testPickup, "_destroyOnPickup", false);
                 residents.Add<GameModeManager>();
                 var inventory = residents.Add<InventoryManager>();
+                var fieldItems = residents.Add<FieldItemManager>();
 
                 Assert.IsTrue(testPickup.TryPickup());
                 Assert.AreEqual(1, inventory.GetItemCount(charger));
-                Assert.IsTrue(PickedItemRegistry.IsPicked(pickup.PickupId));
+                Assert.IsTrue(fieldItems.IsPicked(pickup.PickupId));
             }
             finally
             {

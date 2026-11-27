@@ -57,8 +57,11 @@ namespace CreativeAI.Playtest
 
         private static void RemoveAutoEquippedItems(InventoryManager inventory)
         {
-            foreach (var stack in inventory.GetItemsByCategory(ItemCategory.Equipment))
-                inventory.SetEquipped(stack, false);
+            var equipment = InventoryManager.CurrentEquipment;
+            if (equipment == null)
+                return;
+            for (int slot = 0; slot < EquipmentSlots.SlotCount; slot++)
+                equipment.Clear(slot);
         }
 
         private void RefillQuickFood(InventoryManager inventory)
@@ -66,7 +69,9 @@ namespace CreativeAI.Playtest
             var catalog = ItemCatalog.Instance;
             Assert.IsNotNull(catalog, $"{name}: ItemCatalog が見つかりません");
 
-            int slotCount = Mathf.Min(_quickFoodKeys.Length, inventory.GetQuickFoodSlots().Count);
+            var quickFood = InventoryManager.CurrentQuickFood;
+            Assert.IsNotNull(quickFood, $"{name}: QuickFoodSlots がありません");
+            int slotCount = Mathf.Min(_quickFoodKeys.Length, QuickFoodSlots.SlotCount);
             for (int slot = 0; slot < slotCount; slot++)
             {
                 var food = catalog.GetItemByKey(_quickFoodKeys[slot]);
@@ -86,15 +91,14 @@ namespace CreativeAI.Playtest
                 var stack = inventory
                     .GetItemsByCategory(ItemCategory.Food)
                     .Find(item => item.Data == food);
-                inventory.SetQuickFood(slot, stack);
+                quickFood.Set(slot, stack);
             }
         }
 
         private void GiveAllWeapons()
         {
-            var player = PlayerRegistry.Current;
-            Assert.IsNotNull(player, $"{name}: プレイヤーが見つかりません");
-            var weapons = player.GetComponent<WeaponManager>();
+            var weapons = WeaponManager.Instance;
+            Assert.IsNotNull(weapons, $"{name}: WeaponManager がありません");
             foreach (string key in WeaponManager.WeaponKeys)
                 weapons.GiveWeapon(key);
         }

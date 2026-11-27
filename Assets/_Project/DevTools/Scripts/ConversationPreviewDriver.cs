@@ -34,7 +34,7 @@ namespace CreativeAI.DevTools
         private static readonly Speaker Gramophone = new("gramophone_normal");
 
         [SerializeField]
-        private ConversationView _view; // 未割当なら DialogueViewService.Current にフォールバック
+        private ConversationPanel _view; // 未割当なら常駐 UIManager の会話UIを使う
 
         [SerializeField]
         private bool _loop = true; // プレビューを繰り返す
@@ -91,11 +91,14 @@ namespace CreativeAI.DevTools
 
         private IEnumerator Start()
         {
-            IDialogueView view = _view != null ? _view : DialogueViewService.Current;
+            IDialogueView view =
+                _view != null ? _view
+                : UIManager.Instance != null ? UIManager.Instance.DialogueView
+                : null;
             if (view == null)
             {
                 Debug.LogWarning(
-                    "[ConversationPreviewDriver] ConversationView が見つかりません。シーンに配置してください。"
+                    "[ConversationPreviewDriver] ConversationPanel が見つかりません。シーンに配置してください。"
                 );
                 yield break;
             }
@@ -119,24 +122,16 @@ namespace CreativeAI.DevTools
         /// <summary>一時状態を注入し、本番と同じ再生処理でイベントを確認する。</summary>
         public IEnumerator PlayEventPreview(EventDefinition ev, IDialogueView view)
         {
-            if (ev == null || view == null || EventPlaybackService.IsPlaying)
+            if (ev == null || view == null)
                 yield break;
             var state = new PreviewState(_initialFlags);
             var inventory = new PreviewInventory(_importantItemKeys);
-            var player = EventPlayer.EnsureResident();
-            player.Inject(state, view, inventory, state, inventory);
-            try
-            {
-                yield return player.PlayRoutine(ev);
-            }
-            finally
-            {
-                player.Inject(null, null, null); // 本番の窓口に戻す
-            }
+            var player = new EventPlayer(state, state, view, inventory, inventory, state);
+            yield return player.Play(ev);
         }
 
         /// <summary>プレビュー用の保存先と戦闘通知先。本番の状態には書き込まない。</summary>
-        private sealed class PreviewState : IEventProgress, IBattleRunner
+        private sealed class PreviewState : IEventProgress, IEventGameMode, IEventBattle
         {
             private readonly Dictionary<string, string> _flags = new();
 
@@ -158,7 +153,11 @@ namespace CreativeAI.DevTools
 
             public void AdvanceTo(int progress) { }
 
-            public IEnumerator Run(string arenaId)
+            public bool TryStartDialogue() => true;
+
+            public void EndDialogue() { }
+
+            public IEnumerator Fight(string encounterId)
             {
                 yield break;
             }
@@ -182,7 +181,7 @@ namespace CreativeAI.DevTools
             yield return PlayDestinationResponse(view, destination);
             yield return Line(view, Protagonist, "分かった。その道を行こう。");
 
-            if (view is ConversationView conversationView)
+            if (view is ConversationPanel conversationView)
             {
                 yield return PlayShortSceneTransition(conversationView);
                 yield return PlayGiftSequence(view, conversationView);
@@ -194,7 +193,7 @@ namespace CreativeAI.DevTools
                 "ありがとう。これなら外へ出られそうだ。――行ってくる。"
             );
 
-            if (view is ConversationView closingView)
+            if (view is ConversationPanel closingView)
             {
                 yield return closingView.HideAnimated();
                 yield return LoopInterval;
@@ -215,7 +214,7 @@ namespace CreativeAI.DevTools
             );
             yield return Line(view, Protagonist, "しゃべった……。君が助けてくれたのか？");
             yield return Narration(view, "待合室の奥、壊れた照明の下で人影が動いた。");
-            if (view is ConversationView mysteryView)
+            if (view is ConversationPanel mysteryView)
             {
                 mysteryView.SetPortraitVisible(DialoguePortraitSide.Right, false);
                 yield return mysteryView.SetPortraitObscured(DialoguePortraitSide.Right, true, 0f);
@@ -227,7 +226,7 @@ namespace CreativeAI.DevTools
                 "<whisper>あの……倒れていたあなたを運んだのは、その子です。私は毛布を掛けただけで……。</whisper>"
             );
             yield return Line(view, Protagonist, "そこに誰かいるのか？　暗くて顔が見えない。");
-            if (view is ConversationView revealView)
+            if (view is ConversationPanel revealView)
                 yield return revealView.SetPortraitObscured(
                     DialoguePortraitSide.Right,
                     false,
@@ -248,10 +247,10 @@ namespace CreativeAI.DevTools
                 Protagonist,
                 "<wait=0.25><shake><shout>蓄音機までしゃべるのか……。</shout></shake>でも、敵意はなさそうだ。"
             );
-            if (view is ConversationView conversationView)
+            if (view is ConversationPanel conversationView)
                 yield return conversationView.PlayPortraitEffect(
                     DialoguePortraitSide.Left,
-                    ConversationView.PortraitEffect.Jump
+                    ConversationPanel.PortraitEffect.Jump
                 );
         }
 
@@ -333,7 +332,7 @@ namespace CreativeAI.DevTools
 
         private static IEnumerator PlayGiftSequence(
             IDialogueView view,
-            ConversationView conversationView
+            ConversationPanel conversationView
         )
         {
             yield return Line(
@@ -357,11 +356,11 @@ namespace CreativeAI.DevTools
             );
         }
 
-        private static IEnumerator PlayShortSceneTransition(ConversationView view)
+        private static IEnumerator PlayShortSceneTransition(ConversationPanel view)
         {
-            yield return view.RunPresentationCommand("window.hide");
-            yield return view.RunPresentationCommand("wait", "0.45");
-            yield return view.RunPresentationCommand("window.show");
+            yield return view.RunCommand("window.hide");
+            yield return view.RunCommand("wait", "0.45");
+            yield return view.RunCommand("window.show");
             yield return Narration(view, "少女と蓄音機が、ホーム脇の倉庫から旅支度を運んできた。");
         }
 

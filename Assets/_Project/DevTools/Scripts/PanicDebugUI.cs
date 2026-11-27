@@ -104,13 +104,13 @@ namespace CreativeAI.DevTools
         private void OnEnable()
         {
             if (_panicDetector != null)
-                _panicDetector.OnPanicSignalDetected += OnSignalDetected;
+                _panicDetector.PanicSignalDetected += OnSignalDetected;
         }
 
         private void OnDisable()
         {
             if (_panicDetector != null)
-                _panicDetector.OnPanicSignalDetected -= OnSignalDetected;
+                _panicDetector.PanicSignalDetected -= OnSignalDetected;
         }
 
         private void Update()

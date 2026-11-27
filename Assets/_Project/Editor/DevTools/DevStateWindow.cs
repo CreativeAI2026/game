@@ -26,7 +26,6 @@ namespace CreativeAI.EditorTools
 
         // Events シーンのトリガーは、床から この高さに置く決まり(どのイベントも同じ)。
         private const float TriggerHeightAboveFloor = 4f;
-        private static readonly string[] WeaponKeys = { "sword", "bow", "scythe", "hammer" };
 
         private List<EventDefinition> _events = new();
         private string[] _eventLabels = Array.Empty<string>();
@@ -134,7 +133,7 @@ namespace CreativeAI.EditorTools
             EditorGUILayout.LabelField("武器");
             var owned = new HashSet<string>(_state.weapons ?? Array.Empty<string>());
             EditorGUILayout.BeginHorizontal();
-            foreach (string key in WeaponKeys)
+            foreach (string key in WeaponManager.WeaponKeys)
             {
                 bool has = EditorGUILayout.ToggleLeft(
                     key,
@@ -147,7 +146,7 @@ namespace CreativeAI.EditorTools
                     owned.Remove(key);
             }
             EditorGUILayout.EndHorizontal();
-            _state.weapons = WeaponKeys.Where(owned.Contains).ToArray();
+            _state.weapons = WeaponManager.WeaponKeys.Where(owned.Contains).ToArray();
 
             var choices = new[] { string.Empty }.Concat(_state.weapons).ToArray();
             int selected = Mathf.Max(0, Array.IndexOf(choices, _state.selectedWeapon));

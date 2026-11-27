@@ -31,8 +31,6 @@ namespace CreativeAI.EditorTools
         }
 
         private static WeaponManager Manager =>
-            Application.isPlaying && PlayerRegistry.Current != null
-                ? PlayerRegistry.Current.GetComponent<WeaponManager>()
-                : null;
+            Application.isPlaying ? WeaponManager.Instance : null;
     }
 }

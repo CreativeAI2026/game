@@ -48,8 +48,8 @@ namespace CreativeAI.DevTools
             }
 
             // Title から起動した場合は暗転付きの既存遷移を使い、テストシーンを直接再生した場合などは直接読み込む
-            if (SceneController.Instance != null)
-                SceneController.Instance.LoadScene(_targetSceneName);
+            if (SceneLoader.Instance != null)
+                SceneLoader.Instance.LoadScene(_targetSceneName);
             else
                 SceneManager.LoadScene(_targetSceneName);
         }

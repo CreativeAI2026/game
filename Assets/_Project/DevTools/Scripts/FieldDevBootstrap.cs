@@ -13,7 +13,9 @@ namespace CreativeAI.DevTools
     /// Title と同じ手順(GameSession)で生成する開発用ブートストラップ。Title 経由なら何もしない(冪等)。
     /// Field シーン側に常駐のコピーを持たせないためのもの。直接 Play 時は所持品にテスト品を積み、
     /// <c>dev_state.json</c>(<see cref="DevState"/>)があればその進行度・フラグ・大事なもの・武器・HP で始める。
+    /// シーンに直接置いたプレイヤーが Awake で常駐を読むので、シーン内のどれよりも先に Awake する。
     /// </summary>
+    [DefaultExecutionOrder(-1000)]
     public class FieldDevBootstrap : MonoBehaviour
     {
         [SerializeField]
@@ -45,9 +47,9 @@ namespace CreativeAI.DevTools
             if (GameSession.StartedFromTitle)
                 return;
 
-            // Title 経由で既に常駐が生成済みなら何もしない(UIRoot の有無で判定)。
+            // Title 経由で既に常駐が生成済みなら何もしない(UIManager の有無で判定)。
             if (
-                UIRoot.Instance != null
+                UIManager.Instance != null
                 && InventoryManager.Instance != null
                 && (!_spawnPlayerRig || PlayerRegistry.Current != null)
             )
@@ -93,8 +95,8 @@ namespace CreativeAI.DevTools
             }
 
             // 開発用: テスト品を積む(本番 Title フローでは呼ばれない = まっさら)。
-            if (_seedTestItems && InventoryManager.Instance != null)
-                InventoryManager.Instance.SeedTestItems();
+            if (_seedTestItems)
+                DevTestItems.Seed(InventoryManager.Instance);
 
             _devState?.Apply(ProgressManager.Instance, InventoryManager.Instance);
         }
@@ -120,7 +122,7 @@ namespace CreativeAI.DevTools
             var player = GameObject.FindWithTag("Player");
             if (player != null)
                 _devState.ApplyPlayer(
-                    player.GetComponentInChildren<WeaponManager>(),
+                    WeaponManager.Instance,
                     player.GetComponentInChildren<PlayerStatus>()
                 );
         }

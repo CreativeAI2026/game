@@ -111,8 +111,8 @@ namespace CreativeAI.DevTools
         }
 
         /// <summary>
-        /// 武器と HP を反映する。部品はプレイヤーリグ側にあるので、リグに無ければ何もしない。
-        /// 武器を先に入れて最大HPを確定させてから HP を丸める(SaveService の復元と同じ順)。
+        /// 武器と HP を反映する。武器は常駐の WeaponManager、HP はプレイヤーリグの PlayerStatus。無ければその分は何もしない。
+        /// 武器を先に入れて最大HPを確定させてから HP を丸める(LoadService の復元と同じ順)。
         /// </summary>
         public void ApplyPlayer(WeaponManager weaponManager, PlayerStatus status)
         {
