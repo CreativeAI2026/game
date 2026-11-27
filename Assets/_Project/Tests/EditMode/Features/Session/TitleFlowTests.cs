@@ -9,7 +9,7 @@ namespace CreativeAI.Tests.EditMode
 {
     /// <summary>
     /// タイトルの「はじめる / 続きから」で常駐一式を正しい順に生成するかの検証。
-    /// 生成順はマネージャ → Inventory → UIRoot → プレイヤー。
+    /// 生成順はマネージャ → Inventory → UI(UIManager) → プレイヤー。
     /// シーンロードは SceneLoadPlayModeTests、二重生成しないことは SessionResidencyPlayModeTests 側。
     /// </summary>
     public class TitleFlowTests
@@ -19,7 +19,7 @@ namespace CreativeAI.Tests.EditMode
         [SetUp]
         public void SetUp()
         {
-            _residents.Add<SceneController>();
+            _residents.Add<SceneLoader>();
         }
 
         [TearDown]
@@ -29,8 +29,7 @@ namespace CreativeAI.Tests.EditMode
             DestroyResident<ProgressManager>();
             DestroyResident<GameModeManager>();
             DestroyResident<InventoryManager>();
-            DestroyResident<EventPlayer>();
-            DestroyResident<UIRoot>();
+            DestroyResident<UIManager>();
         }
 
         private static void DestroyResident<T>()
@@ -85,17 +84,16 @@ namespace CreativeAI.Tests.EditMode
 
             Assert.AreEqual(1, CountOf<ProgressManager>(), "① 進行度");
             Assert.AreEqual(1, CountOf<GameModeManager>(), "① モード");
-            Assert.AreEqual(1, CountOf<EventPlayer>(), "① 会話イベント指揮役");
             Assert.AreEqual(1, CountOf<InventoryManager>(), "② 所持品");
         }
 
         [Test]
-        public void EnsureSession_WithoutSceneController_FailsWithoutCreatingAnything()
+        public void EnsureSession_WithoutSceneLoader_FailsWithoutCreatingAnything()
         {
-            TestReflection.SetStaticProperty<SceneController>("Instance", null);
+            TestReflection.SetStaticProperty<SceneLoader>("Instance", null);
             LogAssert.Expect(
                 LogType.Error,
-                new System.Text.RegularExpressions.Regex("SceneController.Instance is null")
+                new System.Text.RegularExpressions.Regex("SceneLoader.Instance is null")
             );
 
             Assert.IsFalse(EnsureSession());

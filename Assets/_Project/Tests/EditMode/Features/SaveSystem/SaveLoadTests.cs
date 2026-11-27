@@ -9,17 +9,20 @@ using UnityEngine.TestTools;
 namespace CreativeAI.Tests.EditMode
 {
     /// <summary>
-    /// SaveService の保存→復元の往復(マネージャから取り込み→書き→読み→戻す)と、セーブ可否のゲートの検証。
+    /// セーブ(SaveService)とロード(LoadService)の往復(マネージャから取り込み→書き→読み→戻す)と、セーブ可否のゲートの検証。
     /// 保存先は一時フォルダに差し替え、開発者の手元のセーブには触れない。
     /// </summary>
-    public class SaveServiceTests
+    public class SaveLoadTests
     {
         private string _saveDir;
         private string SavePath => Path.Combine(_saveDir, "save.json");
         private readonly TestResidents _residents = new();
         private GameObject _playerGo;
         private ProgressManager _pm;
+        private FieldItemManager _fieldItems;
         private InventoryManager _inv;
+        private EquipmentSlots _equipment;
+        private QuickFoodSlots _quickFood;
         private GameModeManager _gmm;
         private WeaponManager _weapons;
         private PlayerParameterData _playerData;
@@ -33,13 +36,13 @@ namespace CreativeAI.Tests.EditMode
                 "CreativeAI-SaveTests-" + Path.GetRandomFileName()
             );
             Directory.CreateDirectory(_saveDir);
-            SaveService.OverrideDirectoryForTests(_saveDir);
+            SaveFile.OverrideDirectoryForTests(_saveDir);
         }
 
         [OneTimeTearDown]
         public void OneTimeTearDown()
         {
-            SaveService.OverrideDirectoryForTests(null);
+            SaveFile.OverrideDirectoryForTests(null);
             Directory.Delete(_saveDir, true);
         }
 
@@ -55,11 +58,14 @@ namespace CreativeAI.Tests.EditMode
         public void SetUp()
         {
             DeleteSaveFiles();
-            PickedItemRegistry.Clear();
 
             _pm = _residents.Add<ProgressManager>();
             _inv = _residents.Add<InventoryManager>();
+            _equipment = _inv.Equipment;
+            _quickFood = _inv.QuickFood;
             _gmm = _residents.Add<GameModeManager>();
+            _fieldItems = _residents.Add<FieldItemManager>();
+            _weapons = _residents.Add<WeaponManager>();
 
             _playerData = MakeAsset<PlayerParameterData>();
             _playerData.baseMaxLife = 1000f;
@@ -71,7 +77,6 @@ namespace CreativeAI.Tests.EditMode
             _playerGo = TestPlayer.Create("Player");
             var status = _playerGo.AddComponent<PlayerStatus>();
             TestReflection.SetField(status, "_playerData", _playerData);
-            _weapons = _playerGo.AddComponent<WeaponManager>();
         }
 
         [TearDown]
@@ -114,7 +119,7 @@ namespace CreativeAI.Tests.EditMode
         [Test]
         public void Save_InBattleMode_IsBlocked()
         {
-            _gmm.EnterBattle();
+            _gmm.TryStartBattle();
             LogAssert.Expect(
                 LogType.Warning,
                 new System.Text.RegularExpressions.Regex("戦闘モード中")
@@ -122,13 +127,13 @@ namespace CreativeAI.Tests.EditMode
 
             SaveService.Save();
 
-            Assert.IsFalse(SaveService.HasSave(), "戦闘中はセーブファイルを作らない");
+            Assert.IsFalse(LoadService.HasSave(), "戦闘中はセーブファイルを作らない");
         }
 
         [Test]
         public void Save_DuringEventPlayback_IsBlocked()
         {
-            EventPlaybackService.SetPlaying(true);
+            _gmm.TryStartDialogue();
             LogAssert.Expect(
                 LogType.Warning,
                 new System.Text.RegularExpressions.Regex("会話イベント再生中")
@@ -136,7 +141,7 @@ namespace CreativeAI.Tests.EditMode
 
             SaveService.Save();
 
-            Assert.IsFalse(SaveService.HasSave(), "会話UI表示中はセーブファイルを作らない");
+            Assert.IsFalse(LoadService.HasSave(), "会話UI表示中はセーブファイルを作らない");
         }
 
         [Test]
@@ -144,13 +149,13 @@ namespace CreativeAI.Tests.EditMode
         {
             SaveService.Save();
 
-            Assert.IsTrue(SaveService.HasSave());
+            Assert.IsTrue(LoadService.HasSave());
         }
 
         [Test]
         public void Load_WithoutSaveFile_ReturnsNull()
         {
-            Assert.IsNull(SaveService.Load());
+            Assert.IsNull(LoadService.Load());
         }
 
         // --- 壊れたセーブ ---
@@ -173,7 +178,7 @@ namespace CreativeAI.Tests.EditMode
                 new System.Text.RegularExpressions.Regex("1つ前のセーブ")
             );
 
-            var data = SaveService.Load();
+            var data = LoadService.Load();
 
             Assert.IsNotNull(data);
             Assert.AreEqual(3, _pm.Progress);
@@ -194,7 +199,7 @@ namespace CreativeAI.Tests.EditMode
             );
             LogAssert.Expect(LogType.Error, new System.Text.RegularExpressions.Regex("壊れていて"));
 
-            Assert.IsNull(SaveService.Load());
+            Assert.IsNull(LoadService.Load());
         }
 
         [Test]
@@ -217,7 +222,7 @@ namespace CreativeAI.Tests.EditMode
             SaveService.Save();
             _pm.LoadState(0, new Dictionary<string, string>()); // 別状態にしてから復元
 
-            var data = SaveService.Load();
+            var data = LoadService.Load();
 
             Assert.IsNotNull(data);
             Assert.AreEqual(7, _pm.Progress);
@@ -237,23 +242,25 @@ namespace CreativeAI.Tests.EditMode
             _inv.AddInstance(rolledGear, new List<RolledStat> { new("attackPct", 12.5f) });
             var gearStack = _inv.GetAllItems().Find(s => s.Data == gear);
             var appleStack = _inv.GetAllItems().Find(s => s.Data == apple);
-            _inv.SetEquipped(gearStack, true);
-            _inv.SetQuickFood(1, appleStack);
+            _equipment.Set(2, gearStack);
+            _quickFood.Set(1, appleStack);
 
             SaveService.Save();
             _inv.Clear();
             Assert.AreEqual(0, _inv.GetAllItems().Count); // 前提: 消えている
 
-            SaveService.Load();
+            LoadService.Load();
 
             var all = _inv.GetAllItems();
             Assert.AreEqual(3, all.Count);
 
             var restoredApple = all.Find(s => s.Data == apple);
             Assert.AreEqual(4, restoredApple.Count, "スタック数が戻る");
-            Assert.AreSame(restoredApple, _inv.GetQuickFoodSlots()[1], "即時食材の枠も戻る");
+            Assert.AreSame(restoredApple, _quickFood.GetSlots()[1], "即時食材の枠も戻る");
 
-            Assert.IsTrue(all.Find(s => s.Data == gear).IsEquipped, "装備状態が戻る");
+            var restoredGear = all.Find(s => s.Data == gear);
+            Assert.IsTrue(_inv.Equipment.Contains(restoredGear), "装備状態が戻る");
+            Assert.AreSame(restoredGear, _equipment.GetSlots()[2], "装備の枠も戻る");
 
             var restoredRolled = all.Find(s => s.Data == rolledGear);
             Assert.IsTrue(restoredRolled.IsInstance, "ロール済み個体は個体のまま戻る");
@@ -268,7 +275,7 @@ namespace CreativeAI.Tests.EditMode
             gear.key = "charger_earphones";
             ItemCatalog.InjectForTests(new ItemData[] { gear });
             _inv.AddInstance(gear, new List<RolledStat> { new("attackPct", 12.5f) });
-            _inv.GetAllItems()[0].IsEquipped = true;
+            _equipment.Set(0, _inv.GetAllItems()[0]);
 
             SaveService.Save();
 
@@ -283,11 +290,11 @@ namespace CreativeAI.Tests.EditMode
             ItemCatalog.InjectForTests(new ItemData[] { gear, unrelated });
             _inv.Clear();
 
-            SaveService.Load();
+            LoadService.Load();
 
             var restored = _inv.GetAllItems().Single();
             Assert.AreSame(gear, restored.Data);
-            Assert.IsTrue(restored.IsEquipped);
+            Assert.IsTrue(_inv.Equipment.Contains(restored));
             Assert.AreEqual(12.5f, restored.RolledStats.Single().value);
         }
 
@@ -312,7 +319,7 @@ namespace CreativeAI.Tests.EditMode
                 new System.Text.RegularExpressions.Regex("ItemCatalog に無し")
             );
 
-            SaveService.Load();
+            LoadService.Load();
 
             Assert.IsEmpty(_inv.GetAllItems());
         }
@@ -338,7 +345,7 @@ namespace CreativeAI.Tests.EditMode
                 new System.Text.RegularExpressions.Regex("ItemCatalog に無し")
             );
 
-            SaveService.Load();
+            LoadService.Load();
 
             Assert.IsEmpty(_inv.GetAllItems(), "旧装備の番号を新装備として読み替えない");
         }
@@ -367,17 +374,19 @@ namespace CreativeAI.Tests.EditMode
                     + "{\"itemId\":4001,\"count\":1}]}"
             );
 
-            SaveService.Load();
+            LoadService.Load();
 
             Assert.AreEqual(4, _inv.GetAllItems().Count);
-            Assert.IsTrue(_inv.GetAllItems().Single(s => s.Data == glasses).IsEquipped);
+            Assert.IsTrue(
+                _inv.Equipment.Contains(_inv.GetAllItems().Single(s => s.Data == glasses))
+            );
             Assert.AreEqual(1, _inv.GetItemCount(watch));
             Assert.AreEqual(4, _inv.GetItemCount(apple));
-            Assert.AreSame(apple, _inv.GetQuickFoodSlots()[2].Data);
+            Assert.AreSame(apple, _quickFood.GetSlots()[2].Data);
             Assert.AreEqual(1, _inv.GetItemCount(card));
             Assert.AreEqual(7, _pm.Progress);
             Assert.AreEqual("together", _pm.GetFlag("route"));
-            Assert.IsTrue(PickedItemRegistry.IsPicked("Area/apple"));
+            Assert.IsTrue(_fieldItems.IsPicked("Area/apple"));
         }
 
         [Test]
@@ -400,8 +409,8 @@ namespace CreativeAI.Tests.EditMode
             status.RestoreHp(1f);
             _weapons.RestoreWeapons(new List<string>(), WeaponManager.NoWeapon);
 
-            var data = SaveService.Load();
-            SaveService.RestorePlayerState(data);
+            var data = LoadService.Load();
+            LoadService.RestorePlayerState(data);
 
             Assert.AreEqual(new Vector3(1.5f, 2.5f, -3.5f), _playerGo.transform.position);
             Assert.AreEqual(90f, _playerGo.transform.eulerAngles.y, 1e-2f);
@@ -419,7 +428,7 @@ namespace CreativeAI.Tests.EditMode
             var status = _playerGo.GetComponent<PlayerStatus>();
             status.RestoreHp(500f);
 
-            SaveService.RestorePlayerState(new SaveData { hasPlayerState = false, currentHp = 1f });
+            LoadService.RestorePlayerState(new SaveData { hasPlayerState = false, currentHp = 1f });
 
             Assert.AreEqual(
                 500f,
@@ -445,7 +454,7 @@ namespace CreativeAI.Tests.EditMode
                 new System.Text.RegularExpressions.Regex("ItemCatalog に無し")
             );
 
-            SaveService.Load();
+            LoadService.Load();
 
             Assert.AreEqual(0, _inv.GetAllItems().Count);
         }
@@ -482,9 +491,9 @@ namespace CreativeAI.Tests.EditMode
             Assert.IsTrue(PlacePickup("Area/apple", apple).TryPickup());
             SaveService.Save();
 
-            // タイトルから「続きから」で入り直す: 記録は空に戻っているが、ロードで復元される。
-            PickedItemRegistry.Clear();
-            SaveService.Load();
+            // タイトルから「続きから」で入り直す: 記録は空から作られ、ロードで復元される。
+            _fieldItems.Restore(null);
+            LoadService.Load();
 
             var again = PlacePickup("Area/apple", apple);
             again.HideIfAlreadyPicked();
@@ -502,7 +511,7 @@ namespace CreativeAI.Tests.EditMode
 
             // セーブより後に拾ったものは、ロードで所持品から消えるので、フィールドにまた置かれる。
             Assert.IsTrue(PlacePickup("Area/pear", pear).TryPickup());
-            SaveService.Load();
+            LoadService.Load();
 
             var appleAgain = PlacePickup("Area/apple", apple);
             var pearAgain = PlacePickup("Area/pear", pear);
@@ -528,20 +537,7 @@ namespace CreativeAI.Tests.EditMode
             data.pickedItemIds = null;
             File.WriteAllText(SavePath, JsonUtility.ToJson(data));
 
-            SaveService.Load();
-
-            var again = PlacePickup("Area/apple", apple);
-            again.HideIfAlreadyPicked();
-            Assert.IsTrue(again.gameObject.activeSelf);
-        }
-
-        [Test]
-        public void NewGame_ClearingTheRecord_PlacesEverythingAgain()
-        {
-            var apple = MakeFood(3001);
-            Assert.IsTrue(PlacePickup("Area/apple", apple).TryPickup());
-
-            PickedItemRegistry.Clear(); // 「はじめから」(TitleUIController.OnTapToStart)
+            LoadService.Load();
 
             var again = PlacePickup("Area/apple", apple);
             again.HideIfAlreadyPicked();
@@ -554,7 +550,7 @@ namespace CreativeAI.Tests.EditMode
             var apple = MakeFood(3001);
             Assert.IsTrue(PlacePickup("", apple).TryPickup());
 
-            Assert.IsEmpty(PickedItemRegistry.Snapshot());
+            Assert.IsEmpty(_fieldItems.Snapshot());
         }
     }
 }

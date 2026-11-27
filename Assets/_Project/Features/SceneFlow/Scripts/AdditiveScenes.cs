@@ -8,7 +8,7 @@ namespace CreativeAI.Gameplay
     /// このシーンに重ねて読み込む別シーンを宣言する。階ごとの小物シーンを畳まずに実行時に重ね、
     /// 担当者ごとにファイルを分けたまま git 競合を防ぐ。生成物 <c>Map</c> の外に置くこと(Rebuild で消えない)。
     /// 対象シーンは Build Settings 登録が必要で、未登録なら警告して先へ進む(小物が出ないだけ)。
-    /// 読み込みは非同期で、<see cref="PendingSceneLoads"/> に登録して SceneController に暗転の下で待たせる。
+    /// 読み込みは非同期で、<see cref="SceneLoader.WaitFor"/> で SceneLoader に暗転の下で待たせる。
     /// </summary>
     public sealed class AdditiveScenes : MonoBehaviour
     {
@@ -39,11 +39,12 @@ namespace CreativeAI.Gameplay
                     continue;
                 }
 
-                // 非同期で読み、SceneController が暗転の下で読み終わりを待てるよう登録する。
-                // SceneController を通さない直接再生では、誰も待たないので読み終わり次第出てくる。
-                PendingSceneLoads.Register(
-                    SceneManager.LoadSceneAsync(name, LoadSceneMode.Additive)
-                );
+                // 非同期で読み、SceneLoader が暗転の下で読み終わりを待てるよう渡す。
+                // SceneLoader が無い直接再生では、誰も待たないので読み終わり次第出てくる。
+                var op = SceneManager.LoadSceneAsync(name, LoadSceneMode.Additive);
+                var loader = SceneLoader.Instance;
+                if (loader != null)
+                    loader.WaitFor(() => op.isDone ? 1f : op.progress);
             }
         }
 

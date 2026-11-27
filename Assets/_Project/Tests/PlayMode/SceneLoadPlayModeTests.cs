@@ -37,21 +37,21 @@ namespace CreativeAI.Tests.PlayMode
         }
 
         private GameObject _go;
-        private SceneController _controller;
+        private SceneLoader _loader;
         private SpyOverlay _overlay;
 
         [SetUp]
         public void SetUp()
         {
-            _go = new GameObject("SceneController");
+            _go = new GameObject("SceneLoader");
             var overlayGo = new GameObject("Overlay");
             overlayGo.transform.SetParent(_go.transform);
             _overlay = overlayGo.AddComponent<SpyOverlay>();
 
             // Awake が GetComponentInChildren<ILoadingOverlay> で拾えるよう、子に置いてから足す。
-            _controller = _go.AddComponent<SceneController>();
-            TestReflection.SetField(_controller, "_minDisplaySeconds", 0f);
-            TestReflection.SetField(_controller, "_fadeSeconds", 0f);
+            _loader = _go.AddComponent<SceneLoader>();
+            TestReflection.SetField(_loader, "_minDisplaySeconds", 0f);
+            TestReflection.SetField(_loader, "_fadeSeconds", 0f);
         }
 
         [UnityTearDown]
@@ -60,7 +60,7 @@ namespace CreativeAI.Tests.PlayMode
             if (_go != null)
                 Object.Destroy(_go);
             // Destroy は遅延するので1フレーム待つ。待たないと次の SetUp で作った
-            // SceneController の Awake が「まだ生きている Instance」を見て自滅する。
+            // SceneLoader の Awake が「まだ生きている Instance」を見て自滅する。
             yield return null;
         }
 
@@ -70,7 +70,7 @@ namespace CreativeAI.Tests.PlayMode
             bool arrived = false;
             string sceneAtArrival = null;
 
-            _controller.LoadScene(
+            _loader.LoadScene(
                 "Title",
                 onSceneActivated: () =>
                 {
@@ -80,7 +80,7 @@ namespace CreativeAI.Tests.PlayMode
             );
 
             yield return PlayModeWait.Until(
-                () => !TestReflection.GetField<bool>(_controller, "_isLoading"),
+                () => !TestReflection.GetField<bool>(_loader, "_isLoading"),
                 "ロードが終わる",
                 20f
             );
@@ -97,10 +97,10 @@ namespace CreativeAI.Tests.PlayMode
         [UnityTest]
         public IEnumerator LoadScene_ReportsProgressUpTo100Percent()
         {
-            _controller.LoadScene("Title");
+            _loader.LoadScene("Title");
 
             yield return PlayModeWait.Until(
-                () => !TestReflection.GetField<bool>(_controller, "_isLoading"),
+                () => !TestReflection.GetField<bool>(_loader, "_isLoading"),
                 "ロードが終わる",
                 20f
             );
@@ -135,8 +135,8 @@ namespace CreativeAI.Tests.PlayMode
             // 小物シーンの代わりに、手で終わらせる読み込みを登録する(LoadScene の直後なら Clear のあと)。
             float additive = 0f;
             bool arrived = false;
-            _controller.LoadScene("Title", onSceneActivated: () => arrived = true);
-            PendingSceneLoads.Register(() => additive);
+            _loader.LoadScene("Title", onSceneActivated: () => arrived = true);
+            _loader.WaitFor(() => additive);
 
             yield return WaitForSceneLoaded();
             yield return PlayModeWait.Frames();
@@ -145,27 +145,30 @@ namespace CreativeAI.Tests.PlayMode
 
             additive = 1f;
             yield return PlayModeWait.Until(
-                () => !TestReflection.GetField<bool>(_controller, "_isLoading"),
+                () => !TestReflection.GetField<bool>(_loader, "_isLoading"),
                 "ロードが終わる",
                 20f
             );
 
             Assert.IsTrue(arrived, "重ねる読み込みが終わったら到着処理が呼ばれる");
             CollectionAssert.AreEqual(new[] { "Show", "Hide" }, _overlay.Calls);
-            Assert.AreEqual(0, PendingSceneLoads.Count, "待ち終えた読み込みは持ち越さない");
+            Assert.IsEmpty(
+                TestReflection.GetField<List<System.Func<float>>>(_loader, "_additiveLoads"),
+                "待ち終えた読み込みは持ち越さない"
+            );
         }
 
         [UnityTest]
         public IEnumerator LoadScene_ProgressIncludesAdditiveLoadsAndNeverGoesBack()
         {
             float additive = 0f;
-            _controller.LoadScene("Title");
-            PendingSceneLoads.Register(() => additive);
+            _loader.LoadScene("Title");
+            _loader.WaitFor(() => additive);
 
             yield return WaitForSceneLoaded();
             additive = 0.5f;
             yield return PlayModeWait.Frames();
-            float share = TestReflection.GetField<float>(_controller, "_additiveLoadShare");
+            float share = TestReflection.GetField<float>(_loader, "_additiveLoadShare");
             Assert.AreEqual(
                 1f - share * 0.5f,
                 _overlay.Progress[^1],
@@ -175,7 +178,7 @@ namespace CreativeAI.Tests.PlayMode
 
             additive = 1f;
             yield return PlayModeWait.Until(
-                () => !TestReflection.GetField<bool>(_controller, "_isLoading"),
+                () => !TestReflection.GetField<bool>(_loader, "_isLoading"),
                 "ロードが終わる",
                 20f
             );
@@ -193,10 +196,10 @@ namespace CreativeAI.Tests.PlayMode
         public IEnumerator LoadScene_LoadsExactlyOneScene()
         {
             // 「常に1つだけロードされ互いに相互排他」。Single ロードなので加算されない。
-            _controller.LoadScene("Title");
+            _loader.LoadScene("Title");
 
             yield return PlayModeWait.Until(
-                () => !TestReflection.GetField<bool>(_controller, "_isLoading"),
+                () => !TestReflection.GetField<bool>(_loader, "_isLoading"),
                 "ロードが終わる",
                 20f
             );
@@ -212,11 +215,11 @@ namespace CreativeAI.Tests.PlayMode
                 new System.Text.RegularExpressions.Regex("already loading")
             );
 
-            _controller.LoadScene("Title");
-            _controller.LoadScene("Title"); // ロード中の2本目
+            _loader.LoadScene("Title");
+            _loader.LoadScene("Title"); // ロード中の2本目
 
             yield return PlayModeWait.Until(
-                () => !TestReflection.GetField<bool>(_controller, "_isLoading"),
+                () => !TestReflection.GetField<bool>(_loader, "_isLoading"),
                 "ロードが終わる",
                 20f
             );

@@ -1,5 +1,4 @@
 using CreativeAI.Gameplay;
-using CreativeAI.UI;
 using UnityEngine;
 
 namespace CreativeAI.Session
@@ -26,21 +25,18 @@ namespace CreativeAI.Session
         /// <summary>
         /// 常駐を生成順どおりに作る。既に在るものはそのまま使う。
         /// 順番: マネージャ → 所持品 → UI
-        /// (UI は GameModeManager / InventoryManager を購読し、会話UIは生成時に DialogueViewService へ自己登録するため)。
+        /// (UI は GameModeManager / InventoryManager を購読し、会話UIは UIManager が子から見つけるため)。
         /// カメラリグ・プレイヤーリグはタイトルのカメラと重ならないようフィールドに入ってから
         /// <see cref="EnsureCameraRig"/> → <see cref="EnsurePlayerRig"/> の順で別に呼ぶ。
         /// </summary>
         public static void EnsureResidents(GameObject uiRootPrefab)
         {
-            if (ProgressManager.Instance == null)
-                new GameObject(nameof(ProgressManager)).AddComponent<ProgressManager>();
-            if (GameModeManager.Instance == null)
-                new GameObject(nameof(GameModeManager)).AddComponent<GameModeManager>();
-            // 会話イベントの指揮役。常駐させるので EventTrigger ごとの配線は要らない。
-            EventPlayer.EnsureResident();
-
+            ProgressManager.EnsureResident();
+            GameModeManager.EnsureResident();
+            FieldItemManager.EnsureResident();
             InventoryManager.EnsureResident();
-            UIRoot.EnsureResident(uiRootPrefab);
+            WeaponManager.EnsureResident();
+            UIManager.EnsureResident(uiRootPrefab);
         }
 
         /// <summary>

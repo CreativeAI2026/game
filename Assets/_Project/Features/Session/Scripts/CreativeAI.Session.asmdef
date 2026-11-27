@@ -3,7 +3,6 @@
     "rootNamespace": "CreativeAI.Session",
     "references": [
         "CreativeAI.Gameplay",
-        "CreativeAI.UI",
         "Unity.InputSystem"
     ],
     "includePlatforms": [],

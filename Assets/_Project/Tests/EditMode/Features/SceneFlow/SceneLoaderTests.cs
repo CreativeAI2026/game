@@ -10,16 +10,16 @@ namespace CreativeAI.Tests.EditMode
     /// ロード進行そのもの(オーバーレイのフェード・LoadSceneAsync)は PlayMode でないと回せないため、
     /// ここでは「ロード中に来た2本目を無視する」ガードだけを検証する。
     /// </summary>
-    public class SceneControllerTests
+    public class SceneLoaderTests
     {
         private GameObject _go;
-        private SceneController _controller;
+        private SceneLoader _loader;
 
         [SetUp]
         public void SetUp()
         {
-            _go = new GameObject(nameof(SceneController));
-            _controller = _go.AddComponent<SceneController>();
+            _go = new GameObject(nameof(SceneLoader));
+            _loader = _go.AddComponent<SceneLoader>();
         }
 
         [TearDown]
@@ -31,38 +31,38 @@ namespace CreativeAI.Tests.EditMode
         [Test]
         public void LoadScene_WhileAlreadyLoading_IsIgnored()
         {
-            TestReflection.SetField(_controller, "_isLoading", true);
+            TestReflection.SetField(_loader, "_isLoading", true);
             LogAssert.Expect(
                 LogType.Warning,
                 new System.Text.RegularExpressions.Regex("already loading")
             );
 
-            _controller.LoadScene("Field_Area03");
+            _loader.LoadScene("Field_Area03");
 
             // ガードが効いていれば StartCoroutine まで到達せず、状態も変わらない。
-            Assert.IsTrue(TestReflection.GetField<bool>(_controller, "_isLoading"));
+            Assert.IsTrue(TestReflection.GetField<bool>(_loader, "_isLoading"));
         }
 
         [Test]
         public void LoadScene_WhileAlreadyLoading_IgnoresEveryExtraCall()
         {
-            TestReflection.SetField(_controller, "_isLoading", true);
+            TestReflection.SetField(_loader, "_isLoading", true);
             for (int i = 0; i < 3; i++)
             {
                 LogAssert.Expect(
                     LogType.Warning,
                     new System.Text.RegularExpressions.Regex("already loading")
                 );
-                _controller.LoadScene($"Field_Area0{i}");
+                _loader.LoadScene($"Field_Area0{i}");
             }
 
-            Assert.IsTrue(TestReflection.GetField<bool>(_controller, "_isLoading"));
+            Assert.IsTrue(TestReflection.GetField<bool>(_loader, "_isLoading"));
         }
 
         [Test]
         public void NotLoading_ByDefault()
         {
-            Assert.IsFalse(TestReflection.GetField<bool>(_controller, "_isLoading"));
+            Assert.IsFalse(TestReflection.GetField<bool>(_loader, "_isLoading"));
         }
     }
 }
