@@ -117,6 +117,31 @@ namespace CreativeAI.Tests.PlayMode
         }
 
         [UnityTest]
+        public IEnumerator Unarmed_PlaysIdle_AndDoesNotAttackOnClick()
+        {
+            Assert.True(_controller.PreviewIsAnimating, "素手でも待機モーションで動く");
+            var bones = PoseBones();
+            var start = bones.Select(b => b.localRotation).ToArray();
+            yield return PlayModeWait.Until(
+                () => AnyBoneMoved(bones, start, .05f),
+                "素手の待機モーションでボーンが動く"
+            );
+            ClickAttack();
+            Assert.False(_controller.PreviewIsAttacking, "素手は左クリックで攻撃しない");
+            AssertVisible(_character, "preview-unarmed-idle");
+
+            // 武器を持ってから外しても、素手の待機モーションに戻る
+            _manager.GiveWeapon("sword");
+            yield return PlayModeWait.Until(() => _controller.PreviewWeaponId == Sword, "剣の姿勢");
+            _manager.Unequip();
+            yield return PlayModeWait.Until(
+                () => _controller.PreviewWeaponId < 0,
+                "素手の姿勢に戻る"
+            );
+            Assert.True(_controller.PreviewIsAnimating);
+        }
+
+        [UnityTest]
         public IEnumerator Ownership_TogglesWeaponUiAndCharacterMeshes()
         {
             _manager.GiveWeapon("sword");
@@ -191,7 +216,7 @@ namespace CreativeAI.Tests.PlayMode
         }
 
         [UnityTest]
-        public IEnumerator BrowsingMeleeWeapons_AnimatesIdleAndAttack_WithoutChangingEquipment()
+        public IEnumerator BrowsingWeapons_AnimatesIdleAndAttack_WithoutChangingEquipment()
         {
             GiveAll();
             _manager.SelectNext();
@@ -201,7 +226,7 @@ namespace CreativeAI.Tests.PlayMode
             );
             int equippedBeforeBrowsing = _manager.CurrentWeaponIndex;
 
-            foreach (int id in new[] { Scythe, Hammer, Sword })
+            foreach (int id in new[] { Bow, Scythe, Hammer, Sword })
             {
                 SelectInSelector(id);
                 Assert.Greater(_weapon.MeshCount, 0, "選んだその場でメッシュが切り替わる");
@@ -216,7 +241,7 @@ namespace CreativeAI.Tests.PlayMode
                 );
                 Assert.True(
                     _controller.PreviewIsAnimating,
-                    "近接武器3種は共通の待機モーションで動く"
+                    "どの武器も共通の待機モーションで動く " + id
                 );
                 Assert.False(_controller.PreviewIsAttacking, "武器を切り替えると攻撃は中断する");
 
@@ -237,10 +262,7 @@ namespace CreativeAI.Tests.PlayMode
 
                 _character.OnPointerDown(pointer);
                 _character.OnPointerClick(pointer);
-                Assert.True(
-                    _controller.PreviewIsAttacking,
-                    "左クリックで選んだ武器の通常攻撃が始まる"
-                );
+                Assert.True(_controller.PreviewIsAttacking, "左クリックで選んだ武器の攻撃が始まる");
                 var attackStart = bones.Select(b => b.localRotation).ToArray();
                 yield return PlayModeWait.Until(
                     () => AnyBoneMoved(bones, attackStart, 5f),
@@ -262,6 +284,34 @@ namespace CreativeAI.Tests.PlayMode
                 Assert.False(_controller.PreviewIsAttacking, "右クリックでは攻撃しない");
                 AssertVisible(_character, "preview-character-weapon-" + id);
                 AssertVisible(_weapon, "preview-weapon-" + id);
+            }
+        }
+
+        [UnityTest]
+        public IEnumerator SwitchingWeapons_KeepsCharacterSizeAndPosition()
+        {
+            yield return PlayModeWait.Frames();
+            var (unarmedSize, unarmedCenter) = CharacterFraming();
+
+            GiveAll();
+            foreach (int id in new[] { Sword, Bow, Scythe, Hammer })
+            {
+                // 回した状態で持ち替えても、大きさと中心は変わらない
+                _character.OnDrag(Drag(PointerEventData.InputButton.Left, 70));
+                SelectInSelector(id);
+                yield return PlayModeWait.Until(
+                    () => _controller.PreviewWeaponId == id,
+                    "プレビューの姿勢が選択に追従する " + id
+                );
+                yield return PlayModeWait.Frames();
+
+                var (size, center) = CharacterFraming();
+                Assert.AreEqual(unarmedSize, size, .001f, "武器で大きさが変わらない " + id);
+                Assert.Less(
+                    Vector3.Distance(unarmedCenter, center),
+                    .001f,
+                    "武器で位置が変わらない " + id
+                );
             }
         }
 
@@ -367,6 +417,28 @@ namespace CreativeAI.Tests.PlayMode
             Assert.False(_controller.PreviewIsAttacking, "武器を切り替えると攻撃は中断する");
             Assert.Greater(_weapon.MeshCount, 0);
             Assert.False(_weapon.transform.parent.Find("ModelUnavailable").gameObject.activeSelf);
+        }
+
+        [UnityTest]
+        public IEnumerator BowAttack_DrawsThenFires_AndReturnsToIdle()
+        {
+            _manager.GiveWeapon("bow");
+            yield return PlayModeWait.Until(() => _controller.PreviewWeaponId == Bow, "弓の姿勢");
+
+            ClickAttack();
+            Assert.AreEqual("Armature_Bow_Start", _controller.PreviewAttackClip.name);
+            yield return PlayModeWait.Until(
+                () =>
+                    _controller.PreviewAttackClip != null
+                    && _controller.PreviewAttackClip.name == "Armature_Bow_Fire",
+                "引き絞ったあとに発射する"
+            );
+            AssertVisible(_character, "preview-bow-fire");
+            yield return PlayModeWait.Until(
+                () => !_controller.PreviewIsAttacking,
+                "発射が終わって待機に戻る"
+            );
+            Assert.True(_controller.PreviewIsAnimating);
         }
 
         [UnityTest]
@@ -490,6 +562,21 @@ namespace CreativeAI.Tests.PlayMode
             var click = Click(PointerEventData.InputButton.Left);
             _character.OnPointerDown(click);
             _character.OnPointerClick(click);
+        }
+
+        // キャラクター用カメラが映す大きさと、モデルから見た画面中央の位置。回転しても変わらない値で比べる。
+        private (float size, Vector3 center) CharacterFraming()
+        {
+            var camera = Resources
+                .FindObjectsOfTypeAll<Camera>()
+                .Single(c => c.name == "Preview Camera" && c.targetTexture == _character.Texture);
+            var pose = Resources
+                .FindObjectsOfTypeAll<Transform>()
+                .Single(t => t.name == "UI Character Pose" && t.gameObject.scene.IsValid());
+            return (
+                camera.orthographicSize,
+                pose.InverseTransformPoint(camera.transform.parent.position)
+            );
         }
 
         private static PointerEventData Click(PointerEventData.InputButton button) =>

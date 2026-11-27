@@ -218,12 +218,13 @@ namespace CreativeAI.UI
 
         /// <summary>
         /// 動いているモデルを複製せず、そのままプレビュー用カメラで撮る。
-        /// カメラの距離は呼んだ時点の大きさで1回だけ決める。<paramref name="renderers"/> は持ち主が更新するリストを参照し続ける。
+        /// カメラの距離と画面の中央は <paramref name="framing"/> だけで決まる。<paramref name="renderers"/> は持ち主が更新するリストを参照し続ける。
         /// モデルは <see cref="Layer"/> に置いてあり、普段は描画を切っておくこと(撮る間だけこちらで入れる)。
         /// </summary>
-        /// <param name="root">回転させる根元。向きの基準は単位回転であること。</param>
+        /// <param name="root">回転させる根元。拡縮しないこと。</param>
         /// <param name="renderers">撮る対象。null か空なら何も映さない。</param>
-        public void SetLiveTarget(Transform root, IReadOnlyList<Renderer> renderers)
+        /// <param name="framing">画面に収める範囲(<paramref name="root"/> のローカル座標)。</param>
+        public void SetLiveTarget(Transform root, IReadOnlyList<Renderer> renderers, Bounds framing)
         {
             if (!isActiveAndEnabled)
                 return;
@@ -234,52 +235,12 @@ namespace CreativeAI.UI
                 return;
             _liveRoot = root;
             _liveRenderers = renderers;
-            Bounds bounds = default;
-            bool first = true;
-            foreach (var renderer in renderers)
-            {
-                if (renderer == null)
-                    continue;
-                var box = WorldBounds(renderer);
-                if (first)
-                    bounds = box;
-                else
-                    bounds.Encapsulate(box);
-                first = false;
-            }
-            _liveCenter = bounds.center;
-            _liveLocalCenter = root.InverseTransformPoint(bounds.center);
-            _radius = Mathf.Max(.01f, bounds.extents.magnitude);
+            _liveCenter = root.TransformPoint(framing.center);
+            _liveLocalCenter = framing.center;
+            _radius = Mathf.Max(.01f, framing.extents.magnitude);
             _image.enabled = true;
             if (_emptyLabel != null)
                 _emptyLabel.gameObject.SetActive(false);
-        }
-
-        // SkinnedMeshRenderer.bounds は描画を切っている間は更新されないので、localBounds とルートボーンから求める。
-        private static Bounds WorldBounds(Renderer renderer)
-        {
-            if (renderer is not SkinnedMeshRenderer skin)
-                return renderer.bounds;
-            var matrix = (
-                skin.rootBone != null ? skin.rootBone : skin.transform
-            ).localToWorldMatrix;
-            var local = skin.localBounds;
-            var box = new Bounds(matrix.MultiplyPoint3x4(local.center), Vector3.zero);
-            for (int i = 0; i < 8; i++)
-            {
-                var corner =
-                    local.center
-                    + Vector3.Scale(
-                        local.extents,
-                        new Vector3(
-                            (i & 1) == 0 ? -1 : 1,
-                            (i & 2) == 0 ? -1 : 1,
-                            (i & 4) == 0 ? -1 : 1
-                        )
-                    );
-                box.Encapsulate(matrix.MultiplyPoint3x4(corner));
-            }
-            return box;
         }
 
         private void ShowEmpty()

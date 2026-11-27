@@ -10,6 +10,9 @@ namespace CreativeAI.UI
     // Isolated render rig; only its own Animator and PlayableGraph drive preview poses.
     internal sealed class CharacterPreviewPose : IDisposable
     {
+        /// <summary>弓の武器 ID。持つ手のソケットと攻撃の流し方が他の武器と違う。</summary>
+        public const int BowWeaponId = 1002;
+
         private readonly Dictionary<Transform, Transform> _transforms = new();
         private readonly List<(Renderer source, Renderer copy)> _body = new();
         private readonly List<Renderer> _renderers = new();
@@ -18,14 +21,21 @@ namespace CreativeAI.UI
             Transform,
             (Vector3 position, Quaternion rotation, Vector3 scale)
         > _standing = new();
-        private readonly AnimationClip _bladeIdle;
+        private readonly AnimationClip _unarmedIdle;
+        private readonly AnimationClip _weaponIdle;
         private PlayableGraph _idleGraph;
         private Animator _previewAnimator;
         private AnimationMixerPlayable _mixer;
         private AnimationClipPlayable _attack;
+
+        // 攻撃の後半に続けて流すクリップ(弓の引き絞り→発射)。切り替え済み、または無ければ null。
+        private AnimationClip _followUp;
         private float _attackElapsed;
         private float _attackDuration;
         public bool IsAttacking => _attack.IsValid();
+
+        /// <summary>いま流している攻撃クリップ。攻撃していなければ null。</summary>
+        public AnimationClip AttackClip => IsAttacking ? _attack.GetAnimationClip() : null;
         public bool IsAnimating => _idleGraph.IsValid();
         public double AnimationTime => IsAnimating ? _idleGraph.GetRootPlayable(0).GetTime() : 0;
 
@@ -39,6 +49,9 @@ namespace CreativeAI.UI
                 if (_attackElapsed >= _attackDuration)
                     EndAttack();
                 else
+                {
+                    if (_followUp != null && _attackElapsed >= AttackClip.length)
+                        StartFollowUp(deltaTime);
                     _mixer.SetInputWeight(
                         1,
                         Mathf.Min(
@@ -46,32 +59,55 @@ namespace CreativeAI.UI
                             Mathf.Clamp01((_attackDuration - _attackElapsed) / .15f)
                         )
                     );
+                }
             }
             _mixer.SetInputWeight(0, 1f - (IsAttacking ? _mixer.GetInputWeight(1) : 0f));
             _idleGraph.Evaluate(deltaTime);
         }
 
-        public bool PlayAttack(AnimationClip clip)
+        /// <summary>待機から攻撃を1回流す。<paramref name="followUp"/> があれば <paramref name="clip"/> の直後に続ける。</summary>
+        public bool PlayAttack(AnimationClip clip, AnimationClip followUp = null)
         {
             if (!IsAnimating || IsAttacking || clip == null || clip.length <= 0)
                 return false;
+            ConnectAttack(clip);
+            _followUp = followUp;
+            _attackElapsed = 0;
+            _attackDuration = clip.length + (followUp != null ? followUp.length : 0);
+            _mixer.SetInputWeight(1, 0);
+            return true;
+        }
+
+        private void ConnectAttack(AnimationClip clip)
+        {
             _attack = AnimationClipPlayable.Create(_idleGraph, clip);
             _attack.SetApplyFootIK(false);
             _attack.SetApplyPlayableIK(false);
             _idleGraph.Connect(_attack, 0, _mixer, 1);
-            _attackElapsed = 0;
-            _attackDuration = clip.length;
-            _mixer.SetInputWeight(1, 0);
-            return true;
+        }
+
+        private void DisconnectAttack()
+        {
+            _mixer.DisconnectInput(1);
+            _idleGraph.DestroyPlayable(_attack);
+            _attack = default;
+        }
+
+        private void StartFollowUp(float deltaTime)
+        {
+            float firstLength = AttackClip.length;
+            DisconnectAttack();
+            ConnectAttack(_followUp);
+            // この直後の Evaluate が deltaTime だけ進めるので、その分を引いた時刻から始める。
+            _attack.SetTime(_attackElapsed - firstLength - deltaTime);
+            _followUp = null;
         }
 
         private void EndAttack()
         {
             if (!IsAttacking)
                 return;
-            _mixer.DisconnectInput(1);
-            _idleGraph.DestroyPlayable(_attack);
-            _attack = default;
+            DisconnectAttack();
             _mixer.SetInputWeight(1, 0);
             _mixer.SetInputWeight(0, 1);
         }
@@ -91,9 +127,9 @@ namespace CreativeAI.UI
             }
         }
 
-        private void StartIdle()
+        private void StartIdle(AnimationClip idle)
         {
-            if (_bladeIdle == null)
+            if (idle == null)
                 return;
             if (_previewAnimator == null)
             {
@@ -106,7 +142,7 @@ namespace CreativeAI.UI
             _previewAnimator.enabled = true;
             _idleGraph = PlayableGraph.Create("UI Weapon Preview");
             _idleGraph.SetTimeUpdateMode(DirectorUpdateMode.Manual);
-            var clip = AnimationClipPlayable.Create(_idleGraph, _bladeIdle);
+            var clip = AnimationClipPlayable.Create(_idleGraph, idle);
             clip.SetApplyFootIK(false);
             clip.SetApplyPlayableIK(false);
             var output = AnimationPlayableOutput.Create(_idleGraph, "Pose", _previewAnimator);
@@ -132,14 +168,22 @@ namespace CreativeAI.UI
         public IReadOnlyList<Renderer> Renderers => _renderers;
         public int WeaponId { get; private set; } = -1;
 
+        /// <summary>
+        /// 画面に収める範囲(<see cref="Root"/> のローカル座標)。素手の立ち姿の体だけから1回決める。
+        /// 武器や動きを含めないので、持ち替えてもキャラクターの大きさと位置は変わらない。
+        /// </summary>
+        public Bounds Framing { get; }
+
         public CharacterPreviewPose(
             PlayerModel model,
             WeaponManager manager,
-            AnimationClip bladeIdle
+            AnimationClip unarmedIdle,
+            AnimationClip weaponIdle
         )
         {
             _source = model;
-            _bladeIdle = bladeIdle;
+            _unarmedIdle = unarmedIdle;
+            _weaponIdle = weaponIdle;
             _root = new GameObject("UI Character Pose") { hideFlags = HideFlags.DontSave };
             _root.transform.position = new Vector3(0, -20000, 0);
             UnityEngine.Object.DontDestroyOnLoad(_root);
@@ -202,6 +246,54 @@ namespace CreativeAI.UI
                 _standing[copy] = (copy.localPosition, copy.localRotation, copy.localScale);
             SetLayer(_root.transform, ModelPreview.Layer);
             SynchronizeAppearance();
+            Framing = BodyBounds();
+            // 範囲は立ち姿で決めてから、素手の待機を始める(武器を持たせるまでは SetWeapon が呼ばれない)。
+            StartIdle(_unarmedIdle);
+        }
+
+        // 作成直後(Root が単位回転・単位スケール)にだけ呼ぶ。
+        private Bounds BodyBounds()
+        {
+            Bounds bounds = default;
+            bool first = true;
+            foreach (var (_, copy) in _body)
+            {
+                var box = WorldBounds(copy);
+                if (first)
+                    bounds = box;
+                else
+                    bounds.Encapsulate(box);
+                first = false;
+            }
+            bounds.center -= Root.position;
+            return bounds;
+        }
+
+        // SkinnedMeshRenderer.bounds は描画を切っている間は更新されないので、localBounds とルートボーンから求める。
+        private static Bounds WorldBounds(Renderer renderer)
+        {
+            if (renderer is not SkinnedMeshRenderer skin)
+                return renderer.bounds;
+            var matrix = (
+                skin.rootBone != null ? skin.rootBone : skin.transform
+            ).localToWorldMatrix;
+            var local = skin.localBounds;
+            var box = new Bounds(matrix.MultiplyPoint3x4(local.center), Vector3.zero);
+            for (int i = 0; i < 8; i++)
+            {
+                var corner =
+                    local.center
+                    + Vector3.Scale(
+                        local.extents,
+                        new Vector3(
+                            (i & 1) == 0 ? -1 : 1,
+                            (i & 2) == 0 ? -1 : 1,
+                            (i & 4) == 0 ? -1 : 1
+                        )
+                    );
+                box.Encapsulate(matrix.MultiplyPoint3x4(corner));
+            }
+            return box;
         }
 
         private static void SetLayer(Transform node, int layer)
@@ -279,16 +371,16 @@ namespace CreativeAI.UI
             _weaponRenderers.Clear();
             StopIdle();
             WeaponId = source != null ? id : -1;
-            if (WeaponId == 1001 || WeaponId == 1003 || WeaponId == 1004)
-                StartIdle();
             if (source == null)
             {
+                StartIdle(_unarmedIdle);
                 SynchronizeAppearance();
                 return;
             }
+            StartIdle(_weaponIdle);
             PlayerSocketId socketId = id switch
             {
-                1002 => PlayerSocketId.BowGrip,
+                BowWeaponId => PlayerSocketId.BowGrip,
                 1003 => PlayerSocketId.ScytheGrip,
                 1004 => PlayerSocketId.HammerGrip,
                 _ => PlayerSocketId.SwordGrip,
