@@ -10,11 +10,16 @@ namespace CreativeAI.UI
         private ModelPreview _characterPreview;
 
         [SerializeField]
-        [UnityEngine.Serialization.FormerlySerializedAs("_bladeIdle")]
         private AnimationClip _weaponIdle;
 
         [SerializeField]
         private AnimationClip _meleeAttack;
+
+        [SerializeField]
+        private AnimationClip _bowDraw;
+
+        [SerializeField]
+        private AnimationClip _bowFire;
 
         [SerializeField]
         private ModelPreview _weaponPreview;
@@ -35,6 +40,9 @@ namespace CreativeAI.UI
         private CharacterPreviewPose _posedModel;
         public bool PreviewIsAttacking => _posedModel != null && _posedModel.IsAttacking;
         public bool PreviewIsAnimating => _posedModel != null && _posedModel.IsAnimating;
+
+        /// <summary>プレビューでいま流している攻撃クリップ。攻撃していなければ null。</summary>
+        public AnimationClip PreviewAttackClip => _posedModel?.AttackClip;
         public double PreviewAnimationTime => _posedModel != null ? _posedModel.AnimationTime : 0;
         public int PreviewWeaponId => _posedModel != null ? _posedModel.WeaponId : -1;
 
@@ -51,7 +59,11 @@ namespace CreativeAI.UI
         private void PlayPreviewAttack()
         {
             // Ignore clicks while selection/equipment is waiting to be synchronized.
-            if (!_dirty && _posedModel != null)
+            if (_dirty || _posedModel == null)
+                return;
+            if (_posedModel.WeaponId == CharacterPreviewPose.BowWeaponId)
+                _posedModel.PlayAttack(_bowDraw, _bowFire);
+            else
                 _posedModel.PlayAttack(_meleeAttack);
         }
 
@@ -61,7 +73,7 @@ namespace CreativeAI.UI
             _posedModel?.Dispose();
             _posedModel = null;
             if (_characterPreview != null)
-                _characterPreview.SetLiveTarget(null, null);
+                _characterPreview.SetLiveTarget(null, null, default);
             _player = player;
             _manager = player != null ? player.GetComponent<WeaponManager>() : null;
             if (_manager != null)
@@ -157,7 +169,11 @@ namespace CreativeAI.UI
                     weaponId
                 );
             _posedModel.SynchronizeAppearance();
-            _characterPreview.SetLiveTarget(_posedModel.Root, _posedModel.Renderers);
+            _characterPreview.SetLiveTarget(
+                _posedModel.Root,
+                _posedModel.Renderers,
+                _posedModel.Framing
+            );
         }
 
         private static IEnumerable<Renderer> VisibleRenderers(
@@ -204,7 +220,7 @@ namespace CreativeAI.UI
                 _selector.SelectionChanged -= SelectionChanged;
             Unsubscribe();
             if (_characterPreview != null)
-                _characterPreview.SetLiveTarget(null, null);
+                _characterPreview.SetLiveTarget(null, null, default);
             _posedModel?.Dispose();
             _posedModel = null;
             _manager = null;

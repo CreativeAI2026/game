@@ -1768,6 +1768,8 @@ MonoBehaviour:
   _characterPreview: {fileID: 2883880161189224899}
   _weaponIdle: {fileID: 6707078722156420434, guid: 56abcc5f6d9001f4e86a0363ac8c68ea, type: 3}
   _meleeAttack: {fileID: 7400000, guid: f16e2c6658648d44397ca10b4f566f00, type: 2}
+  _bowDraw: {fileID: 7400000, guid: 8035986ad34a00a4cb717a7650395967, type: 2}
+  _bowFire: {fileID: 7400000, guid: 99e2a4df570a0ce4882b291ea675056e, type: 2}
   _weaponPreview: {fileID: 8053405369766792541}
   _selector: {fileID: 1565401905684781263}
   _weaponPanel: {fileID: 3399039317295320196}
