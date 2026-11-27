@@ -10,6 +10,9 @@ namespace CreativeAI.UI
         private ModelPreview _characterPreview;
 
         [SerializeField]
+        private AnimationClip _unarmedIdle;
+
+        [SerializeField]
         private AnimationClip _weaponIdle;
 
         [SerializeField]
@@ -60,6 +63,9 @@ namespace CreativeAI.UI
         {
             // Ignore clicks while selection/equipment is waiting to be synchronized.
             if (_dirty || _posedModel == null)
+                return;
+            // 素手は待機するだけで、攻撃はしない。
+            if (_posedModel.WeaponId < 0)
                 return;
             if (_posedModel.WeaponId == CharacterPreviewPose.BowWeaponId)
                 _posedModel.PlayAttack(_bowDraw, _bowFire);
@@ -153,7 +159,7 @@ namespace CreativeAI.UI
             if (_posedModel == null || _posedModel.Source != model)
             {
                 _posedModel?.Dispose();
-                _posedModel = new CharacterPreviewPose(model, _manager, _weaponIdle);
+                _posedModel = new CharacterPreviewPose(model, _manager, _unarmedIdle, _weaponIdle);
             }
             int weaponId =
                 _manager.OwnedCount > 0 && _manager.CurrentWeaponIndex >= 0
