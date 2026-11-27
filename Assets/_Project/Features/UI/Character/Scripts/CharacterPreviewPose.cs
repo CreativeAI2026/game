@@ -10,6 +10,9 @@ namespace CreativeAI.UI
     // Isolated render rig; only its own Animator and PlayableGraph drive preview poses.
     internal sealed class CharacterPreviewPose : IDisposable
     {
+        /// <summary>弓の武器 ID。持つ手のソケットと攻撃の流し方が他の武器と違う。</summary>
+        public const int BowWeaponId = 1002;
+
         private readonly Dictionary<Transform, Transform> _transforms = new();
         private readonly List<(Renderer source, Renderer copy)> _body = new();
         private readonly List<Renderer> _renderers = new();
@@ -26,10 +29,11 @@ namespace CreativeAI.UI
 
         // 攻撃の後半に続けて流すクリップ(弓の引き絞り→発射)。切り替え済み、または無ければ null。
         private AnimationClip _followUp;
-        private float _followUpStart;
         private float _attackElapsed;
         private float _attackDuration;
         public bool IsAttacking => _attack.IsValid();
+
+        /// <summary>いま流している攻撃クリップ。攻撃していなければ null。</summary>
         public AnimationClip AttackClip => IsAttacking ? _attack.GetAnimationClip() : null;
         public bool IsAnimating => _idleGraph.IsValid();
         public double AnimationTime => IsAnimating ? _idleGraph.GetRootPlayable(0).GetTime() : 0;
@@ -45,7 +49,7 @@ namespace CreativeAI.UI
                     EndAttack();
                 else
                 {
-                    if (_followUp != null && _attackElapsed >= _followUpStart)
+                    if (_followUp != null && _attackElapsed >= AttackClip.length)
                         StartFollowUp(deltaTime);
                     _mixer.SetInputWeight(
                         1,
@@ -67,7 +71,6 @@ namespace CreativeAI.UI
                 return false;
             ConnectAttack(clip);
             _followUp = followUp;
-            _followUpStart = clip.length;
             _attackElapsed = 0;
             _attackDuration = clip.length + (followUp != null ? followUp.length : 0);
             _mixer.SetInputWeight(1, 0);
@@ -91,10 +94,11 @@ namespace CreativeAI.UI
 
         private void StartFollowUp(float deltaTime)
         {
+            float firstLength = AttackClip.length;
             DisconnectAttack();
             ConnectAttack(_followUp);
             // この直後の Evaluate が deltaTime だけ進めるので、その分を引いた時刻から始める。
-            _attack.SetTime(_attackElapsed - _followUpStart - deltaTime);
+            _attack.SetTime(_attackElapsed - firstLength - deltaTime);
             _followUp = null;
         }
 
@@ -362,16 +366,15 @@ namespace CreativeAI.UI
             _weaponRenderers.Clear();
             StopIdle();
             WeaponId = source != null ? id : -1;
-            if (WeaponId >= 0)
-                StartIdle();
             if (source == null)
             {
                 SynchronizeAppearance();
                 return;
             }
+            StartIdle();
             PlayerSocketId socketId = id switch
             {
-                1002 => PlayerSocketId.BowGrip,
+                BowWeaponId => PlayerSocketId.BowGrip,
                 1003 => PlayerSocketId.ScytheGrip,
                 1004 => PlayerSocketId.HammerGrip,
                 _ => PlayerSocketId.SwordGrip,

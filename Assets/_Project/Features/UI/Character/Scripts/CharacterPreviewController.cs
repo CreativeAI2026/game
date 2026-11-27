@@ -6,13 +6,10 @@ namespace CreativeAI.UI
 {
     public sealed class CharacterPreviewController : MonoBehaviour
     {
-        private const int BowWeaponId = 1002;
-
         [SerializeField]
         private ModelPreview _characterPreview;
 
         [SerializeField]
-        [UnityEngine.Serialization.FormerlySerializedAs("_bladeIdle")]
         private AnimationClip _weaponIdle;
 
         [SerializeField]
@@ -43,6 +40,8 @@ namespace CreativeAI.UI
         private CharacterPreviewPose _posedModel;
         public bool PreviewIsAttacking => _posedModel != null && _posedModel.IsAttacking;
         public bool PreviewIsAnimating => _posedModel != null && _posedModel.IsAnimating;
+
+        /// <summary>プレビューでいま流している攻撃クリップ。攻撃していなければ null。</summary>
         public AnimationClip PreviewAttackClip => _posedModel?.AttackClip;
         public double PreviewAnimationTime => _posedModel != null ? _posedModel.AnimationTime : 0;
         public int PreviewWeaponId => _posedModel != null ? _posedModel.WeaponId : -1;
@@ -62,7 +61,7 @@ namespace CreativeAI.UI
             // Ignore clicks while selection/equipment is waiting to be synchronized.
             if (_dirty || _posedModel == null)
                 return;
-            if (_posedModel.WeaponId == BowWeaponId)
+            if (_posedModel.WeaponId == CharacterPreviewPose.BowWeaponId)
                 _posedModel.PlayAttack(_bowDraw, _bowFire);
             else
                 _posedModel.PlayAttack(_meleeAttack);
