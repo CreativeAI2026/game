@@ -4,8 +4,8 @@ namespace CreativeAI.Gameplay
 {
     /// <summary>
     /// 即時食材キー(1/2/3)で、キャラUIの即時使用食材タブでセットした食材をその場で使う。
-    /// セット内容の正は <see cref="InventoryManager.GetQuickFoodSlots"/>。回復と在庫1消費は
-    /// <see cref="InventoryManager.TryUse"/> が行い、使い切った枠は InventoryService 側で空になる。
+    /// セット内容の正は <see cref="QuickFoodSlots"/>。回復と在庫1消費は
+    /// <see cref="FoodUse.TryEat"/> が行い、使い切った束は InventoryManager が食材の枠からも外す。
     /// 会話中・パネル表示中は <see cref="PlayerInputHandler"/> が入力を捨てるので、ここでは見ない。
     /// </summary>
     [RequireComponent(typeof(PlayerInputHandler))]
@@ -27,19 +27,15 @@ namespace CreativeAI.Gameplay
         /// <summary>枠 slot(0始まり)にセットされた食材を1つ使う。空き枠・死亡中は何もしない。</summary>
         public void Use(int slot)
         {
-            // 死亡中は回復しないのに在庫だけ減るので使わせない
-            if (_status != null && _status.IsDead)
+            var quickFood = InventoryManager.CurrentQuickFood;
+            if (quickFood == null || _status == null)
                 return;
 
-            var inventory = InventoryManager.Instance;
-            if (inventory == null)
-                return;
-
-            var slots = inventory.GetQuickFoodSlots();
+            var slots = quickFood.GetSlots();
             if (slot < 0 || slot >= slots.Count || slots[slot] == null)
                 return;
 
-            inventory.TryUse(slots[slot]);
+            FoodUse.TryEat(_status, slots[slot]);
         }
     }
 }

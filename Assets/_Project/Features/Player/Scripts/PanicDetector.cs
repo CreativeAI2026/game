@@ -31,7 +31,7 @@ namespace CreativeAI.Gameplay
     [RequireComponent(typeof(CharacterController))]
     [RequireComponent(typeof(PlayerCameraController))]
     [RequireComponent(typeof(PlayerTargetManager))]
-    [RequireComponent(typeof(WeaponManager))]
+    [RequireComponent(typeof(PlayerWeapons))]
     public class PanicDetector : MonoBehaviour
     {
         // 同じリグ上のコンポーネント(Awake で取得)
@@ -42,7 +42,7 @@ namespace CreativeAI.Gameplay
         private CharacterController _characterController;
         private PlayerCameraController _camera;
         private PlayerTargetManager _targetManager;
-        private WeaponManager _weaponManager;
+        private PlayerWeapons _playerWeapons;
 
         [Header("交戦相手")]
         [SerializeField]
@@ -109,7 +109,7 @@ namespace CreativeAI.Gameplay
             _scoreCalculator.GetCategoryScore(category);
 
         /// <summary>焦りの段階が変わった時に発火する。引数は新しい段階。</summary>
-        public event Action<PanicLevel> OnPanicLevelChanged;
+        public event Action<PanicLevel> PanicLevelChanged;
 
         /// <summary>交戦中の敵がいるか。回避失敗以外の指標はこれが true の間だけ計測する。</summary>
         public bool IsInCombat => _context.IsInCombat;
@@ -133,7 +133,7 @@ namespace CreativeAI.Gameplay
         /// 焦りシグナルを検知したとき発火するイベント。引数は検知した指標の名前。
         /// 継続する指標（逃避・ジッター・空間喪失）は、兆候が出始めた瞬間に1回だけ発火する。
         /// </summary>
-        public event Action<string> OnPanicSignalDetected;
+        public event Action<string> PanicSignalDetected;
 
         private void Awake()
         {
@@ -143,7 +143,7 @@ namespace CreativeAI.Gameplay
             _playerStatus = GetComponent<PlayerStatus>();
             _camera = GetComponent<PlayerCameraController>();
             _targetManager = GetComponent<PlayerTargetManager>();
-            _weaponManager = GetComponent<WeaponManager>();
+            _playerWeapons = GetComponent<PlayerWeapons>();
             _bowController = GetComponentInChildren<BowController>(includeInactive: true);
             Assert.IsNotNull(_bowController, $"{name}: 子階層に BowController が見つかりません");
 
@@ -162,12 +162,12 @@ namespace CreativeAI.Gameplay
 
         private void OnEnable()
         {
-            _inputHandler.OnSubActionPressed += OnDefenseButtonPressed;
-            _inputHandler.OnAttackPressed += OnAttackPressed;
+            _inputHandler.SubActionPressed += OnDefenseButtonPressed;
+            _inputHandler.AttackPressed += OnAttackPressed;
             // HPの増減ではなく被弾そのものを購読する(最大HP低下によるHPの切り詰めを被弾と誤認しないため)
             _playerStatus.Damaged += OnPlayerDamaged;
-            _bowController.OnAimCancelled += OnAimCancelled;
-            _weaponManager.OnWeaponSwitchedByInput += OnWeaponSwitchedByInput;
+            _bowController.AimCancelled += OnAimCancelled;
+            _playerWeapons.WeaponSwitchedByInput += OnWeaponSwitchedByInput;
             foreach (PanicSignal signal in _signals)
             {
                 signal.Detected += OnSignalDetected;
@@ -176,11 +176,11 @@ namespace CreativeAI.Gameplay
 
         private void OnDisable()
         {
-            _inputHandler.OnSubActionPressed -= OnDefenseButtonPressed;
-            _inputHandler.OnAttackPressed -= OnAttackPressed;
+            _inputHandler.SubActionPressed -= OnDefenseButtonPressed;
+            _inputHandler.AttackPressed -= OnAttackPressed;
             _playerStatus.Damaged -= OnPlayerDamaged;
-            _bowController.OnAimCancelled -= OnAimCancelled;
-            _weaponManager.OnWeaponSwitchedByInput -= OnWeaponSwitchedByInput;
+            _bowController.AimCancelled -= OnAimCancelled;
+            _playerWeapons.WeaponSwitchedByInput -= OnWeaponSwitchedByInput;
             foreach (PanicSignal signal in _signals)
             {
                 signal.Detected -= OnSignalDetected;
@@ -201,7 +201,7 @@ namespace CreativeAI.Gameplay
 
             if (_levelTracker.Update(_scoreCalculator.Score))
             {
-                OnPanicLevelChanged?.Invoke(_levelTracker.Level);
+                PanicLevelChanged?.Invoke(_levelTracker.Level);
             }
         }
 
@@ -227,7 +227,7 @@ namespace CreativeAI.Gameplay
             _levelTracker.Reset();
             if (!wasCalm)
             {
-                OnPanicLevelChanged?.Invoke(PanicLevel.Calm);
+                PanicLevelChanged?.Invoke(PanicLevel.Calm);
             }
             _engagement.Clear();
         }
@@ -263,13 +263,13 @@ namespace CreativeAI.Gameplay
             _context.WalkSpeed = _playerController.MoveSpeed;
             _context.IsTouchingEnemy =
                 Time.time - _lastEnemyContactTime <= EnemyContactGraceSeconds;
-            _context.CanMove = _playerController.CanMove;
-            _context.IsAiming = _bowController.IsAiming;
+            _context.CanMove = _playerController.Conditions.CanMove;
+            _context.IsAiming = _playerController.IsAiming;
             _context.IsSubActionHeld = _inputHandler.subAction;
             _context.IsBusyWithOwnAction =
-                !_playerController.CanMove
-                && !_playerController.IsGrabbed
-                && !_playerController.IsFlinching;
+                !_playerController.Conditions.CanMove
+                && !_playerController.Conditions.IsGrabbed
+                && !_playerController.Conditions.IsFlinching;
             _context.CameraForwardXZ = new Vector3(cameraForward.x, 0f, cameraForward.z).normalized;
             _context.CameraYaw = _camera.CinemachineCameraTarget.transform.eulerAngles.y;
         }
@@ -287,7 +287,7 @@ namespace CreativeAI.Gameplay
 
             // subAction は武器ごとに意味が違う(剣=防御 / 弓=構え / 鎌=投擲)。
             // 「防御の連打」を測る指標なので、剣を装備しているときだけ数える
-            GameObject weapon = _weaponManager.CurrentWeaponObject;
+            GameObject weapon = _playerWeapons.CurrentWeaponObject;
             if (weapon == null || !weapon.TryGetComponent<SwordController>(out _))
                 return;
 
@@ -300,7 +300,7 @@ namespace CreativeAI.Gameplay
             _freeze.RecordPlayerAction();
         }
 
-        /// <summary>プレイヤーの入力で武器が切り替わったときに WeaponManager から呼ばれる。</summary>
+        /// <summary>プレイヤーの入力で武器が切り替わったときに PlayerWeapons から呼ばれる。</summary>
         private void OnWeaponSwitchedByInput()
         {
             if (!_context.IsInCombat)
@@ -339,7 +339,7 @@ namespace CreativeAI.Gameplay
         private void OnPlayerDamaged()
         {
             // 掴まれている間の電撃は一定間隔の継続ダメージで、避ける余地がないため回避失敗に数えない
-            if (_playerController.IsGrabbed)
+            if (_playerController.Conditions.IsGrabbed)
                 return;
 
             _hitChain.RecordHit();
@@ -347,7 +347,7 @@ namespace CreativeAI.Gameplay
 
         private void OnSignalDetected(PanicSignal signal)
         {
-            OnPanicSignalDetected?.Invoke(signal.DisplayName);
+            PanicSignalDetected?.Invoke(signal.DisplayName);
         }
     }
 }

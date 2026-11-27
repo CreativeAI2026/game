@@ -39,7 +39,7 @@ namespace CreativeAI.Tests.EditMode
             var enemy = go.AddComponent<EnemyBaseController>();
             // EditMode では Awake が走らないので、Status を手動で結び付ける。
             TestReflection.SetField(enemy, "<Status>k__BackingField", status);
-            enemy.IsAlerted = alerted;
+            enemy.SetAlerted(alerted);
             return (enemy, collider);
         }
 
@@ -136,7 +136,7 @@ namespace CreativeAI.Tests.EditMode
         {
             var (calm, calmCollider) = SpawnEnemy(new Vector3(5f, 0f, 0f));
             _tracker.Refresh(calmCollider, Vector3.zero);
-            calm.IsAlerted = false;
+            calm.SetAlerted(false);
 
             _tracker.Refresh(null, Vector3.zero);
             Assert.IsNull(_tracker.EngagedEnemy, "警戒を解いたら外す");
@@ -154,7 +154,7 @@ namespace CreativeAI.Tests.EditMode
         {
             var (enemy, collider) = SpawnEnemy(new Vector3(5f, 0f, 0f));
             _tracker.Refresh(collider, Vector3.zero);
-            enemy.IsAlerted = false;
+            enemy.SetAlerted(false);
 
             _tracker.Refresh(collider, Vector3.zero);
 

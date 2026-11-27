@@ -4,12 +4,12 @@ using UnityEngine.InputSystem;
 namespace CreativeAI.Gameplay
 {
     /// <summary>
-    /// プレイヤー死亡時の反応(死亡モーション・倒れる音・操作停止)を担当する。PlayerStatus.OnDied を購読する。
+    /// プレイヤー死亡時の反応(死亡モーション・倒れる音・操作停止)を担当する。PlayerStatus.Died を購読する。
     ///
     /// - 死亡モーションを再生する。倒れる音はクリップの AnimationEvent(OnFallDown)で鳴らす
     /// - 入力を無効化し、残っている入力値(移動・構え・攻撃の先行入力)を消す
-    /// - 行動制限をすべて掛ける
-    /// - 怯みを打ち切り、装備中の武器を中立状態に戻す
+    /// - 行動制限をすべて掛ける(装備中の武器は中立状態へ戻る)
+    /// - 怯みを打ち切る
     /// - 敵への視線追従を止める(頭の回転を上書きし続け、倒れるモーション中も敵を見てしまうため)
     /// </summary>
     [RequireComponent(typeof(PlayerStatus))]
@@ -17,7 +17,6 @@ namespace CreativeAI.Gameplay
     [RequireComponent(typeof(PlayerInput))]
     [RequireComponent(typeof(PlayerInputHandler))]
     [RequireComponent(typeof(PlayerFlinchHandler))]
-    [RequireComponent(typeof(WeaponManager))]
     [RequireComponent(typeof(HeadLookController))]
     public class PlayerDeathHandler : MonoBehaviour
     {
@@ -27,7 +26,6 @@ namespace CreativeAI.Gameplay
         private PlayerInput _playerInput;
         private PlayerInputHandler _input;
         private PlayerFlinchHandler _flinchHandler;
-        private WeaponManager _weaponManager;
         private HeadLookController _headLook;
 
         [Header("Audio")]
@@ -43,13 +41,12 @@ namespace CreativeAI.Gameplay
             _playerInput = GetComponent<PlayerInput>();
             _input = GetComponent<PlayerInputHandler>();
             _flinchHandler = GetComponent<PlayerFlinchHandler>();
-            _weaponManager = GetComponent<WeaponManager>();
             _headLook = GetComponent<HeadLookController>();
         }
 
-        private void OnEnable() => _status.OnDied += HandleDied;
+        private void OnEnable() => _status.Died += HandleDied;
 
-        private void OnDisable() => _status.OnDied -= HandleDied;
+        private void OnDisable() => _status.Died -= HandleDied;
 
         private void HandleDied()
         {
@@ -57,9 +54,8 @@ namespace CreativeAI.Gameplay
             _playerInput.DeactivateInput();
             _input.ClearAllInput();
 
-            _playerController.Locks.Set(this, PlayerLock.All);
+            _playerController.Conditions.Set(this, PlayerLock.All);
             _flinchHandler.Cancel();
-            _weaponManager.ResetEquippedWeapon();
             _headLook.enabled = false;
         }
 

@@ -4,14 +4,13 @@ using UnityEngine;
 namespace CreativeAI.Gameplay
 {
     /// <summary>
-    /// 被弾時の怯み演出を管理する。怯み中は全操作を制限し、
-    /// 装備中の武器を中立状態に戻してから、怯みクリップの ActionEnd イベントまで待つ。
+    /// 被弾時の怯み演出を管理する。怯み中は全操作を制限し(武器はその時点で中立状態へ戻る)、
+    /// 怯みクリップの ActionEnd イベントまで待つ。
     ///
     /// 怯みの長さは怯みクリップの ActionEnd の位置で決まり、スクリプトは秒数を持たない。
     /// ActionEnd が無い場合は、Animator が怯みステートを抜けた時点で終える(警告を出す)。
     /// </summary>
     [RequireComponent(typeof(PlayerController))]
-    [RequireComponent(typeof(WeaponManager))]
     [RequireComponent(typeof(PlayerHitInvincibility))]
     public class PlayerFlinchHandler : MonoBehaviour
     {
@@ -22,7 +21,6 @@ namespace CreativeAI.Gameplay
         private float _enterFlinchTimeout = 1.0f;
 
         private PlayerController _playerController;
-        private WeaponManager _weaponManager;
         private Animator _animator;
         private Coroutine _flinchCoroutine;
         private PlayerHitInvincibility _invincible;
@@ -31,19 +29,18 @@ namespace CreativeAI.Gameplay
         private void Awake()
         {
             _playerController = GetComponent<PlayerController>();
-            _weaponManager = GetComponent<WeaponManager>();
             _invincible = GetComponent<PlayerHitInvincibility>();
             _animator = PlayerModel.Of(this).Animator;
         }
 
         /// <summary>
         /// 怯み演出を開始する。PlayerStatus.TakeDamage() から呼び出される。
-        /// 怯み中（IsFlinching == true）に再度呼ばれた場合は無視し、
+        /// 怯み中(はじき返されている間を含む)・掴まれ中に呼ばれた場合は無視し、
         /// モーション中にさらにひるむ多重怯みを防ぐ。
         /// </summary>
         public void TriggerFlinch()
         {
-            if (_playerController.IsFlinching || _playerController.IsGrabbed)
+            if (_playerController.Conditions.IsFlinching || _playerController.Conditions.IsGrabbed)
                 return;
 
             if (_flinchCoroutine != null)
@@ -64,13 +61,11 @@ namespace CreativeAI.Gameplay
 
         private IEnumerator FlinchCoroutine()
         {
-            _playerController.IsFlinching = true;
-            _playerController.Locks.Set(this, PlayerLock.All);
-            _actionEndReceived = false;
-
-            // コンボ中・ガード中・パリィ中・エイム中でも安全に抜けられるよう、装備中の武器を中立状態に戻す。
+            _playerController.Conditions.SetFlinching(this, true);
+            // 攻撃の制限が掛かった時点で、装備中の武器はコンボ中・ガード中・エイム中でも中立状態へ戻る。
             // 武器が自分の制限を外しても、怯みの制限(owner = this)は残る
-            _weaponManager.ResetEquippedWeapon();
+            _playerController.Conditions.Set(this, PlayerLock.All);
+            _actionEndReceived = false;
 
             // 直前の行動の「移動へ戻る」指示が残っていると、怯みステートに入った直後に抜けてしまう
             _animator.ResetTrigger(PlayerAnimatorParams.ReturnToLocomotion);
@@ -79,9 +74,9 @@ namespace CreativeAI.Gameplay
             yield return WaitForFlinchEnd();
 
             _animator.SetTrigger(PlayerAnimatorParams.ReturnToLocomotion);
-            _playerController.IsFlinching = false;
+            _playerController.Conditions.SetFlinching(this, false);
             _invincible.StartGrace();
-            _playerController.Locks.Release(this);
+            _playerController.Conditions.Release(this);
             _flinchCoroutine = null;
         }
 
@@ -96,15 +91,7 @@ namespace CreativeAI.Gameplay
 
             while (!_actionEndReceived)
             {
-                bool isPlaying =
-                    _animator.GetCurrentAnimatorStateInfo(0).shortNameHash
-                    == PlayerAnimatorStates.Flinch;
-                bool isTransitioningIn =
-                    _animator.IsInTransition(0)
-                    && _animator.GetNextAnimatorStateInfo(0).shortNameHash
-                        == PlayerAnimatorStates.Flinch;
-
-                if (isPlaying || isTransitioningIn)
+                if (_animator.IsPlayingOrEntering(0, PlayerAnimatorStates.Flinch))
                 {
                     hasEntered = true;
                 }
@@ -141,8 +128,8 @@ namespace CreativeAI.Gameplay
 
             StopCoroutine(_flinchCoroutine);
             _flinchCoroutine = null;
-            _playerController.IsFlinching = false;
-            _playerController.Locks.Release(this);
+            _playerController.Conditions.SetFlinching(this, false);
+            _playerController.Conditions.Release(this);
         }
     }
 }

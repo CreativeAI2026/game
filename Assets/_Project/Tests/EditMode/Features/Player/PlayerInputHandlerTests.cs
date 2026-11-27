@@ -6,7 +6,7 @@ namespace CreativeAI.Tests.EditMode
 {
     /// <summary>
     /// 会話イベント中の操作不能の検証(入力を捨て、押しっぱなしも消す)。
-    /// battle ステップ中は再生中でも戦えるよう入力を通す。
+    /// 会話の battle ステップ中は戦えるよう入力を通す。
     /// 操作で開くUI(キャラ / インベなど)の表示中も同じく操作不能にする。
     /// </summary>
     public class PlayerInputHandlerTests
@@ -41,7 +41,7 @@ namespace CreativeAI.Tests.EditMode
             _input.SprintInput(true);
             _input.AttackInput();
 
-            EventPlaybackService.SetPlaying(true);
+            _gmm.TryStartDialogue();
 
             Assert.AreEqual(Vector2.zero, _input.move);
             Assert.IsFalse(_input.sprint);
@@ -51,7 +51,7 @@ namespace CreativeAI.Tests.EditMode
         [Test]
         public void DuringEvent_IgnoresInputs()
         {
-            EventPlaybackService.SetPlaying(true);
+            _gmm.TryStartDialogue();
 
             _input.MoveInput(Vector2.up);
             _input.AttackInput();
@@ -65,8 +65,8 @@ namespace CreativeAI.Tests.EditMode
         [Test]
         public void AfterEvent_AcceptsInputsAgain()
         {
-            EventPlaybackService.SetPlaying(true);
-            EventPlaybackService.SetPlaying(false);
+            _gmm.TryStartDialogue();
+            _gmm.ResetToField();
 
             _input.MoveInput(Vector2.up);
             _input.AttackInput();
@@ -78,8 +78,8 @@ namespace CreativeAI.Tests.EditMode
         [Test]
         public void BattleStepDuringEvent_AcceptsInputs()
         {
-            EventPlaybackService.SetPlaying(true);
-            _gmm.EnterBattle();
+            _gmm.TryStartDialogue();
+            _gmm.TryStartBattle();
 
             _input.MoveInput(Vector2.up);
             _input.AttackInput();
@@ -91,11 +91,11 @@ namespace CreativeAI.Tests.EditMode
         [Test]
         public void BattleStepEnds_BackToConversation_ClearsHeldInputs()
         {
-            EventPlaybackService.SetPlaying(true);
-            _gmm.EnterBattle();
+            _gmm.TryStartDialogue();
+            _gmm.TryStartBattle();
             _input.MoveInput(Vector2.up);
 
-            _gmm.ExitBattle(); // 戦闘後に会話へ戻る
+            _gmm.EndBattle(); // 戦闘後に会話へ戻る
 
             Assert.AreEqual(Vector2.zero, _input.move);
         }
@@ -106,7 +106,7 @@ namespace CreativeAI.Tests.EditMode
             _input.MoveInput(Vector2.up);
             _input.AttackInput();
 
-            UIPanelService.SetOpen(true);
+            _gmm.TryOpenMenu();
 
             Assert.AreEqual(Vector2.zero, _input.move);
             Assert.IsFalse(_input.HasAttackInput, "閉じた直後に攻撃が暴発しない");
@@ -115,7 +115,7 @@ namespace CreativeAI.Tests.EditMode
         [Test]
         public void WhileUiPanelOpen_IgnoresInputs()
         {
-            UIPanelService.SetOpen(true);
+            _gmm.TryOpenMenu();
 
             _input.MoveInput(Vector2.up);
             _input.LookInput(Vector2.right);
@@ -129,8 +129,8 @@ namespace CreativeAI.Tests.EditMode
         [Test]
         public void AfterUiPanelClosed_AcceptsInputsAgain()
         {
-            UIPanelService.SetOpen(true);
-            UIPanelService.SetOpen(false);
+            _gmm.TryOpenMenu();
+            _gmm.ResetToField();
 
             _input.MoveInput(Vector2.up);
 

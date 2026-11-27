@@ -19,7 +19,7 @@ namespace CreativeAI.Gameplay
         private PlayerController _controller;
 
         /// <summary>被弾を受け付けない状態か。怯み中と、怯み終了後の猶予中。</summary>
-        public bool IsInvincible => _controller.IsFlinching || Time.time < _graceEndTime;
+        public bool IsInvincible => _controller.Conditions.IsFlinching || Time.time < _graceEndTime;
 
         private void Awake()
         {

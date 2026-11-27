@@ -8,7 +8,7 @@ namespace CreativeAI.Gameplay
     ///
     /// AnimationEvent は Animator と同じ GameObject 上のメソッドしか呼べないため、
     /// モデル層のルート(Animator / <see cref="PlayerModel"/> と同じ GameObject)に置く。
-    /// - 攻撃系: WeaponManager の選択中の武器ルートに付いた <see cref="IWeaponAnimationEventHandler"/> へ渡す
+    /// - 攻撃系: PlayerWeapons の選択中の武器ルートに付いた <see cref="IWeaponAnimationEventHandler"/> へ渡す
     /// - 足音系: ロジック層の <see cref="PlayerFootstep"/> へ渡す
     /// - 死亡系: ロジック層の <see cref="PlayerDeathHandler"/> へ渡す
     ///
@@ -17,18 +17,18 @@ namespace CreativeAI.Gameplay
     [RequireComponent(typeof(Animator))]
     public class PlayerAnimationEventRelay : MonoBehaviour
     {
-        private WeaponManager _weaponManager;
+        private PlayerWeapons _playerWeapons;
         private PlayerFootstep _footstep;
         private PlayerFlinchHandler _flinchHandler;
         private PlayerDeathHandler _deathHandler;
 
         private void Awake()
         {
-            _weaponManager = GetComponentInParent<WeaponManager>();
+            _playerWeapons = GetComponentInParent<PlayerWeapons>();
             _footstep = GetComponentInParent<PlayerFootstep>();
             _flinchHandler = GetComponentInParent<PlayerFlinchHandler>();
             _deathHandler = GetComponentInParent<PlayerDeathHandler>();
-            Assert.IsNotNull(_weaponManager, $"{name}: 親階層に WeaponManager が見つかりません");
+            Assert.IsNotNull(_playerWeapons, $"{name}: 親階層に PlayerWeapons が見つかりません");
             Assert.IsNotNull(_footstep, $"{name}: 親階層に PlayerFootstep が見つかりません");
             Assert.IsNotNull(
                 _flinchHandler,
@@ -101,7 +101,7 @@ namespace CreativeAI.Gameplay
 
         private void RelayToWeapon(WeaponAnimationEventType type, AnimationEvent evt)
         {
-            GameObject weapon = _weaponManager.CurrentWeaponObject;
+            GameObject weapon = _playerWeapons.CurrentWeaponObject;
             if (weapon == null)
                 return; // 武器0本(未入手)のときは受け先がない
 

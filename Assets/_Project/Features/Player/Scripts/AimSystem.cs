@@ -27,7 +27,7 @@ namespace CreativeAI.Gameplay
         {
             // プレイヤーがまだ生成されていない間、または掴まれている間はエイムカメラにしない
             PlayerController player = PlayerRegistry.Current;
-            bool isAiming = player != null && player.IsAiming && !player.IsGrabbed;
+            bool isAiming = player != null && player.IsAiming && !player.Conditions.IsGrabbed;
             _aimCam.Priority = isAiming ? AimCameraPriority : 0;
         }
     }

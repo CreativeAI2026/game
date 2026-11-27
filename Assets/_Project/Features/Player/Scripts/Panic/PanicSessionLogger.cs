@@ -159,8 +159,8 @@ namespace CreativeAI.Gameplay
 
         private void OnEnable()
         {
-            _panicDetector.OnPanicSignalDetected += OnSignalDetected;
-            _panicDetector.OnPanicLevelChanged += OnLevelChanged;
+            _panicDetector.PanicSignalDetected += OnSignalDetected;
+            _panicDetector.PanicLevelChanged += OnLevelChanged;
         }
 
         private void OnDisable()
@@ -168,8 +168,8 @@ namespace CreativeAI.Gameplay
             // Awake で記録しないと決めて自分を無効にした時も呼ばれる(その時は購読していない)
             if (_panicDetector == null)
                 return;
-            _panicDetector.OnPanicSignalDetected -= OnSignalDetected;
-            _panicDetector.OnPanicLevelChanged -= OnLevelChanged;
+            _panicDetector.PanicSignalDetected -= OnSignalDetected;
+            _panicDetector.PanicLevelChanged -= OnLevelChanged;
             _writer?.Flush();
         }
 

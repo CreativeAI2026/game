@@ -13,6 +13,8 @@ namespace CreativeAI.Tests.EditMode
     {
         private readonly TestResidents _residents = new();
         private InventoryManager _inventory;
+        private QuickFoodSlots _quickFood;
+        private GameModeManager _gmm;
         private GameObject _playerGo;
         private PlayerInputHandler _input;
         private PlayerStatus _status;
@@ -23,6 +25,8 @@ namespace CreativeAI.Tests.EditMode
         public void SetUp()
         {
             _inventory = _residents.Add<InventoryManager>();
+            _quickFood = _inventory.QuickFood;
+            _gmm = _residents.Add<GameModeManager>();
 
             var playerData = ScriptableObject.CreateInstance<PlayerParameterData>();
             playerData.baseMaxLife = 1000f;
@@ -33,7 +37,6 @@ namespace CreativeAI.Tests.EditMode
             TestReflection.SetField(_status, "_playerData", playerData);
             _user = _playerGo.AddComponent<PlayerQuickFoodUser>();
             _input = _playerGo.GetComponent<PlayerInputHandler>();
-            TestReflection.SetField(_inventory, "_playerStatus", _status);
 
             // EditMode では Awake / OnEnable が走らないので明示的に呼ぶ。
             TestReflection.Invoke(_input, "OnEnable");
@@ -60,7 +63,7 @@ namespace CreativeAI.Tests.EditMode
             _assets.Add(food);
             _inventory.AddItem(food, count);
             var stack = _inventory.GetAllItems().Find(s => s.Data == food);
-            Assert.IsTrue(_inventory.SetQuickFood(slot, stack));
+            Assert.IsTrue(_quickFood.Set(slot, stack));
             return stack;
         }
 
@@ -75,7 +78,7 @@ namespace CreativeAI.Tests.EditMode
 
             Assert.AreEqual(300f, _status.CurrentHp, 1e-2f, "最大HP1000 の 20% = 200 回復");
             Assert.AreEqual(2, second.Count, "2枠目の所持数が1減る");
-            Assert.AreSame(second, _inventory.GetQuickFoodSlots()[1], "残っていれば枠はそのまま");
+            Assert.AreSame(second, _quickFood.GetSlots()[1], "残っていれば枠はそのまま");
         }
 
         [Test]
@@ -86,7 +89,7 @@ namespace CreativeAI.Tests.EditMode
 
             _input.QuickFoodInput(0, true);
 
-            Assert.IsNull(_inventory.GetQuickFoodSlots()[0], "使い切った枠は空になる");
+            Assert.IsNull(_quickFood.GetSlots()[0], "使い切った枠は空になる");
         }
 
         [Test]
@@ -113,7 +116,7 @@ namespace CreativeAI.Tests.EditMode
         public void WhileAPanelIsOpen_DoesNotUse()
         {
             var stack = AddFoodToSlot(0, 2);
-            UIPanelService.SetOpen(true);
+            _gmm.TryOpenMenu();
 
             _input.QuickFoodInput(0, true);
 

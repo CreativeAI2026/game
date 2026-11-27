@@ -24106,19 +24106,15 @@ MonoBehaviour:
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: ea39ae18318fb8148968f36b9a1aae6d, type: 3}
   m_Name: 
-  m_EditorClassIdentifier: CreativeAI.Gameplay::CreativeAI.Gameplay.WeaponManager
+  m_EditorClassIdentifier: CreativeAI.Gameplay::CreativeAI.Gameplay.PlayerWeapons
   _slots:
   - weapon: {fileID: 4997155624850279967}
-    stats: {fileID: 11400000, guid: b063e40c551c45769a17ae2d3eb58263, type: 2}
     animatorController: {fileID: 22100000, guid: 593fc409b1c1f804da7f256ac1c158b5, type: 2}
   - weapon: {fileID: 2419690289684156987}
-    stats: {fileID: 11400000, guid: e6b75b93f6094e578d5ffe2322f3c360, type: 2}
     animatorController: {fileID: 22100000, guid: c69964233ab3cf84d9e0804b746bf623, type: 2}
   - weapon: {fileID: 1203584483946721191}
-    stats: {fileID: 11400000, guid: 34829291ee714d0bad50fe2680dde16f, type: 2}
     animatorController: {fileID: 22100000, guid: c4646e5d54d02344d8583ebaac6a0ede, type: 2}
   - weapon: {fileID: 7698239273175219019}
-    stats: {fileID: 11400000, guid: 556ca783faa8ad84bbb25da497a86dce, type: 2}
     animatorController: {fileID: 22100000, guid: 10027f82a78aee84f9ce25e2f1d58769, type: 2}
   _startWithAllWeapons: 0
 --- !u!114 &4200084836634315996

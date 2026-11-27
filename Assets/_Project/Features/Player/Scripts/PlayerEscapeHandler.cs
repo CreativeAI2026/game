@@ -10,11 +10,10 @@ namespace CreativeAI.Gameplay
     ///
     /// 脱出クリップ(Armature_Escape_InPlace)は水平移動を切ってあるため、後退はここで CharacterController を動かして行う。
     /// 足の運びと移動がずれないよう、距離と時間は元クリップのルート移動に合わせてある。
-    /// 後退中は全操作を制限する。重力は PlayerController が制限中もかけ続けるので、ここでは水平移動だけを扱う。
+    /// 後退中は移動と武器の持ち替えを制限する(はじき返された時は武器の行動も)。重力は PlayerController が制限中もかけ続けるので、ここでは水平移動だけを扱う。
     /// </summary>
     [RequireComponent(typeof(PlayerController))]
     [RequireComponent(typeof(CharacterController))]
-    [RequireComponent(typeof(WeaponManager))]
     [RequireComponent(typeof(PlayerFlinchHandler))]
     [RequireComponent(typeof(PlayerHitInvincibility))]
     public class PlayerEscapeHandler : MonoBehaviour
@@ -39,7 +38,6 @@ namespace CreativeAI.Gameplay
 
         private PlayerController _playerController;
         private CharacterController _characterController;
-        private WeaponManager _weaponManager;
         private PlayerFlinchHandler _flinchHandler;
         private PlayerHitInvincibility _invincible;
         private Animator _animator;
@@ -53,7 +51,6 @@ namespace CreativeAI.Gameplay
             _playerController = GetComponent<PlayerController>();
             // PlayerController は [RequireComponent(typeof(CharacterController))]
             _characterController = GetComponent<CharacterController>();
-            _weaponManager = GetComponent<WeaponManager>();
             _flinchHandler = GetComponent<PlayerFlinchHandler>();
             _invincible = GetComponent<PlayerHitInvincibility>();
             _animator = PlayerModel.Of(this).Animator;
@@ -71,14 +68,18 @@ namespace CreativeAI.Gameplay
             awayDirection.Normalize();
 
             _animator.SetTrigger(PlayerAnimatorParams.Escaped);
-            StartRetreat(awayDirection, holdUntilMotionEnds: false);
+            StartRetreat(
+                awayDirection,
+                PlayerLock.Move | PlayerLock.ChangeWeapon,
+                isRepelled: false
+            );
         }
 
         /// <summary>
         /// 敵にはじき返された。掴みから脱出した時と同じモーションを、どの状態からでも再生し、
         /// 敵の方を向いたまま awayDirection(敵から離れる向き)へ後退させる。
         /// 敵がパリィされて崩れるのと同じく、プレイヤー側の隙として見せるため、モーションが終わるまで
-        /// 移動・攻撃・ガード・パリィを一切受け付けない(武器は Locks ではなく怯み中かどうかで止まるので、怯み中の扱いにする)。
+        /// 移動・攻撃・ガード・パリィを一切受け付けない。被弾しないよう怯み中の扱いにもする。
         /// 掴みからの脱出は、掴み中の扱いを掴んだ敵が終わるまで持つので、この扱いはしない。
         /// </summary>
         public void TriggerRepelled(Vector3 awayDirection)
@@ -93,15 +94,13 @@ namespace CreativeAI.Gameplay
             // 怯みが続いていると、怯みの終わりに「移動へ戻る」を送って脱出モーションを打ち切ってしまう
             _flinchHandler.Cancel();
 
-            // コンボ中・ガード中・パリィ中・エイム中でも抜けられるよう、怯みと同じく武器を中立状態に戻す
-            _weaponManager.ResetEquippedWeapon();
+            // 攻撃の制限が掛かった時点で、コンボ中・ガード中・パリィ中・エイム中の武器も中立状態へ戻る。
+            // 武器の後始末が Animator の Trigger を消すので、モーションの指示より先に制限を掛ける
+            StartRetreat(awayDirection, PlayerLock.All, isRepelled: true);
 
             // 直前の行動の「移動へ戻る」指示が残っていると、脱出モーションに入った直後に抜けてしまう
             _animator.ResetTrigger(PlayerAnimatorParams.ReturnToLocomotion);
             _animator.SetTrigger(PlayerAnimatorParams.Repelled);
-            StartRetreat(awayDirection, holdUntilMotionEnds: true);
-            _playerController.IsFlinching = true;
-            _isRepelled = true;
         }
 
         /// <summary>
@@ -120,19 +119,26 @@ namespace CreativeAI.Gameplay
             EndRetreat();
         }
 
-        private void StartRetreat(Vector3 direction, bool holdUntilMotionEnds)
+        /// <param name="isRepelled">はじき返された時は true。モーションの終わりまで待ち、その間は怯み中の扱いにする</param>
+        private void StartRetreat(Vector3 direction, PlayerLock locks, bool isRepelled)
         {
             Cancel();
-            _retreatCoroutine = StartCoroutine(RetreatCoroutine(direction, holdUntilMotionEnds));
+            _playerController.Conditions.Set(this, locks);
+            if (isRepelled)
+            {
+                _playerController.Conditions.SetFlinching(this, true);
+                _isRepelled = true;
+            }
+            _retreatCoroutine = StartCoroutine(RetreatCoroutine(direction, isRepelled));
         }
 
         private void EndRetreat()
         {
             _retreatCoroutine = null;
-            _playerController.Locks.Release(this);
+            _playerController.Conditions.Release(this);
             if (_isRepelled)
             {
-                _playerController.IsFlinching = false;
+                _playerController.Conditions.SetFlinching(this, false);
                 _isRepelled = false;
                 _invincible.StartGrace();
             }
@@ -140,8 +146,6 @@ namespace CreativeAI.Gameplay
 
         private IEnumerator RetreatCoroutine(Vector3 direction, bool holdUntilMotionEnds)
         {
-            _playerController.Locks.Set(this, PlayerLock.All);
-
             // 元クリップのルートはほぼ等速で動いているので、等速で後退させる
             float speed = _retreatDistance / _retreatDuration;
             float elapsed = 0f;
@@ -168,14 +172,7 @@ namespace CreativeAI.Gameplay
             float waited = 0f;
             while (waited < _repelMotionEndTimeout)
             {
-                bool isPlaying =
-                    _animator.GetCurrentAnimatorStateInfo(0).shortNameHash
-                    == PlayerAnimatorStates.Escaped;
-                bool isTransitioningIn =
-                    _animator.IsInTransition(0)
-                    && _animator.GetNextAnimatorStateInfo(0).shortNameHash
-                        == PlayerAnimatorStates.Escaped;
-                if (!isPlaying && !isTransitioningIn)
+                if (!_animator.IsPlayingOrEntering(0, PlayerAnimatorStates.Escaped))
                     yield break;
 
                 waited += Time.deltaTime;

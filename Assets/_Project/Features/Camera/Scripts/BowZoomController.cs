@@ -47,12 +47,12 @@ namespace CreativeAI.Gameplay
             _defaultFov = _aimCamera.Lens.FieldOfView;
 
             // 発射イベントを購読
-            BowController.OnFired += HandleFired;
+            BowController.Fired += HandleFired;
         }
 
         private void OnDestroy()
         {
-            BowController.OnFired -= HandleFired;
+            BowController.Fired -= HandleFired;
         }
 
         private void HandleFired()

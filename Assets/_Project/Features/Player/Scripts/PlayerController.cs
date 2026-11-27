@@ -1,3 +1,5 @@
+using System;
+using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.Assertions;
 
@@ -70,21 +72,33 @@ namespace CreativeAI.Gameplay
         /// <summary>接地しているか(CharacterController 組み込みの isGrounded とは別に、球判定で求める)。</summary>
         public bool Grounded { get; private set; } = true;
 
-        /// <summary>行動制限の要求。制限を掛ける側は Set(this, …) / Release(this) で自分の分だけを出し入れする。</summary>
-        public PlayerActionLocks Locks { get; } = new PlayerActionLocks();
-
-        public bool CanMove => !Locks.IsLocked(PlayerLock.Move);
-        public bool CanChangeWeapon => !Locks.IsLocked(PlayerLock.ChangeWeapon);
+        /// <summary>
+        /// いま何ができるか・どういう状態か(行動の制限・怯み中・掴まれ中)。
+        /// 掛ける側は Set(this, …) / Release(this) などで自分の分だけを出し入れする。
+        /// </summary>
+        public PlayerConditions Conditions { get; } = new PlayerConditions();
 
         // 実行時の状態。シーンに保存されないようプロパティにしている(書き手はそれぞれ1か所)
-        /// <summary>弓を構えているか(書き手: 弓)。</summary>
-        public bool IsAiming { get; set; }
+        /// <summary>
+        /// 弓を構えているか(書き手: 弓)。照準・カメラ・移動速度はこれを見る。
+        /// 撃った後の戻りの間も、構えボタンを押し続けていれば構えたままとする。
+        /// </summary>
+        public bool IsAiming
+        {
+            get => _isAiming;
+            set
+            {
+                if (_isAiming == value)
+                    return;
+                _isAiming = value;
+                AimingChanged?.Invoke(value);
+            }
+        }
 
-        /// <summary>怯み中か(書き手: PlayerFlinchHandler。敵にはじき返された間は PlayerEscapeHandler)。武器はこの間、入力を受け付けない。</summary>
-        public bool IsFlinching { get; set; }
+        /// <summary>構えたか・解いたか。</summary>
+        public event Action<bool> AimingChanged;
 
-        /// <summary>敵に掴まれているか(書き手: 掴み攻撃を行う敵)。</summary>
-        public bool IsGrabbed { get; set; }
+        private bool _isAiming;
 
         /// <summary>
         /// 入力から決まる、今出そうとしている水平移動速度（m/s。歩き/走り × スティックの倒し具合）。
@@ -207,7 +221,7 @@ namespace CreativeAI.Gameplay
             // 移動できない間(怯み等)もエイム解除を Animator に伝えるため、移動可否より先に反映する
             _animator.SetBool(PlayerAnimatorParams.Aim, IsAiming);
 
-            if (!CanMove)
+            if (!Conditions.CanMove)
             {
                 DesiredSpeed = 0f;
                 DesiredMoveDirection = Vector3.zero;
@@ -349,7 +363,7 @@ namespace CreativeAI.Gameplay
 
         /// <summary>
         /// 目標の位置まで歩いて向かう(入力は使わない。歩く速さ・向き・アニメは通常の歩きと同じ)。
-        /// 着くか <see cref="StopWalking"/> で止まる。移動できない間(<see cref="CanMove"/> が false)は進まない。
+        /// 着くか <see cref="StopWalking"/> で止まる。移動できない間(<see cref="PlayerConditions.CanMove"/> が false)は進まない。
         /// 引き戻し(player.walkTo)のように、イベントが操作を止めている間にプレイヤーを動かすために使う。
         /// </summary>
         public void WalkTo(Vector3 worldPosition) => _walkTarget = worldPosition;
