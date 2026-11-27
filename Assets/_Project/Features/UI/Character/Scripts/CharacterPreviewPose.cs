@@ -21,6 +21,7 @@ namespace CreativeAI.UI
             Transform,
             (Vector3 position, Quaternion rotation, Vector3 scale)
         > _standing = new();
+        private readonly AnimationClip _unarmedIdle;
         private readonly AnimationClip _weaponIdle;
         private PlayableGraph _idleGraph;
         private Animator _previewAnimator;
@@ -126,9 +127,9 @@ namespace CreativeAI.UI
             }
         }
 
-        private void StartIdle()
+        private void StartIdle(AnimationClip idle)
         {
-            if (_weaponIdle == null)
+            if (idle == null)
                 return;
             if (_previewAnimator == null)
             {
@@ -141,7 +142,7 @@ namespace CreativeAI.UI
             _previewAnimator.enabled = true;
             _idleGraph = PlayableGraph.Create("UI Weapon Preview");
             _idleGraph.SetTimeUpdateMode(DirectorUpdateMode.Manual);
-            var clip = AnimationClipPlayable.Create(_idleGraph, _weaponIdle);
+            var clip = AnimationClipPlayable.Create(_idleGraph, idle);
             clip.SetApplyFootIK(false);
             clip.SetApplyPlayableIK(false);
             var output = AnimationPlayableOutput.Create(_idleGraph, "Pose", _previewAnimator);
@@ -176,10 +177,12 @@ namespace CreativeAI.UI
         public CharacterPreviewPose(
             PlayerModel model,
             WeaponManager manager,
+            AnimationClip unarmedIdle,
             AnimationClip weaponIdle
         )
         {
             _source = model;
+            _unarmedIdle = unarmedIdle;
             _weaponIdle = weaponIdle;
             _root = new GameObject("UI Character Pose") { hideFlags = HideFlags.DontSave };
             _root.transform.position = new Vector3(0, -20000, 0);
@@ -244,6 +247,8 @@ namespace CreativeAI.UI
             SetLayer(_root.transform, ModelPreview.Layer);
             SynchronizeAppearance();
             Framing = BodyBounds();
+            // 範囲は立ち姿で決めてから、素手の待機を始める(武器を持たせるまでは SetWeapon が呼ばれない)。
+            StartIdle(_unarmedIdle);
         }
 
         // 作成直後(Root が単位回転・単位スケール)にだけ呼ぶ。
@@ -368,10 +373,11 @@ namespace CreativeAI.UI
             WeaponId = source != null ? id : -1;
             if (source == null)
             {
+                StartIdle(_unarmedIdle);
                 SynchronizeAppearance();
                 return;
             }
-            StartIdle();
+            StartIdle(_weaponIdle);
             PlayerSocketId socketId = id switch
             {
                 BowWeaponId => PlayerSocketId.BowGrip,

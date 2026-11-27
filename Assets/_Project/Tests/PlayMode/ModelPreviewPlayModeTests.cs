@@ -117,6 +117,31 @@ namespace CreativeAI.Tests.PlayMode
         }
 
         [UnityTest]
+        public IEnumerator Unarmed_PlaysIdle_AndDoesNotAttackOnClick()
+        {
+            Assert.True(_controller.PreviewIsAnimating, "素手でも待機モーションで動く");
+            var bones = PoseBones();
+            var start = bones.Select(b => b.localRotation).ToArray();
+            yield return PlayModeWait.Until(
+                () => AnyBoneMoved(bones, start, .05f),
+                "素手の待機モーションでボーンが動く"
+            );
+            ClickAttack();
+            Assert.False(_controller.PreviewIsAttacking, "素手は左クリックで攻撃しない");
+            AssertVisible(_character, "preview-unarmed-idle");
+
+            // 武器を持ってから外しても、素手の待機モーションに戻る
+            _manager.GiveWeapon("sword");
+            yield return PlayModeWait.Until(() => _controller.PreviewWeaponId == Sword, "剣の姿勢");
+            _manager.Unequip();
+            yield return PlayModeWait.Until(
+                () => _controller.PreviewWeaponId < 0,
+                "素手の姿勢に戻る"
+            );
+            Assert.True(_controller.PreviewIsAnimating);
+        }
+
+        [UnityTest]
         public IEnumerator Ownership_TogglesWeaponUiAndCharacterMeshes()
         {
             _manager.GiveWeapon("sword");
