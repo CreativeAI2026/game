@@ -11,6 +11,9 @@ namespace CreativeAI.Gameplay
     /// </summary>
     public sealed class BattleRunner : IBattleRunner
     {
+        // 倒れる動きを見せてから、タイトルへ戻し始めるまでの秒数
+        private const float DefeatDelaySeconds = 3f;
+
         public IEnumerator Run(string arenaId)
         {
             var arena = BattleArena.Find(arenaId);
@@ -35,16 +38,38 @@ namespace CreativeAI.Gameplay
                     yield break;
                 }
 
-                // 敗北時はセーブ再開でシーンごと作り直されるため、このコルーチンは完了しない想定。
+                var player = PlayerRegistry.Current;
+                var status = player != null ? player.GetComponent<PlayerStatus>() : null;
+
                 // arena が破棄された場合も(シーン切替)待ちを抜ける。
-                while (!ended && arena != null)
+                while (!ended && arena != null && !IsDefeated(status))
                     yield return null;
+
+                if (IsDefeated(status))
+                {
+                    yield return new WaitForSeconds(DefeatDelaySeconds);
+                    ReturnToTitle();
+                    // タイトルの読み込みで arena が破棄されるまで待つ(負けたイベントを先へ進めない)。
+                    while (arena != null)
+                        yield return null;
+                }
             }
             finally
             {
                 if (arena != null)
                     arena.BattleEnded -= OnEnded;
             }
+        }
+
+        private static bool IsDefeated(PlayerStatus status) => status != null && status.IsDead;
+
+        // タイトルの「続きから」でセーブした所から再開できるので、敗北はタイトルへ戻して扱う。
+        private static void ReturnToTitle()
+        {
+            if (TitleReturnService.Current != null)
+                TitleReturnService.Current.ReturnToTitle();
+            else
+                Debug.LogError("[BattleRunner] タイトルへ戻す処理が登録されていません。");
         }
     }
 }
