@@ -12,8 +12,6 @@ namespace CreativeAI.Gameplay
         // --- 移動(PlayerController) ---
         public static readonly int Speed = Animator.StringToHash("Speed");
         public static readonly int MotionSpeed = Animator.StringToHash("MotionSpeed");
-        public static readonly int Grounded = Animator.StringToHash("Grounded");
-        public static readonly int FreeFall = Animator.StringToHash("FreeFall");
         public static readonly int Aim = Animator.StringToHash("Aim");
         public static readonly int StrafeX = Animator.StringToHash("StrafeX");
         public static readonly int StrafeZ = Animator.StringToHash("StrafeZ");
@@ -65,8 +63,6 @@ namespace CreativeAI.Gameplay
         {
             ("Speed", AnimatorControllerParameterType.Float),
             ("MotionSpeed", AnimatorControllerParameterType.Float),
-            ("Grounded", AnimatorControllerParameterType.Bool),
-            ("FreeFall", AnimatorControllerParameterType.Bool),
             ("Aim", AnimatorControllerParameterType.Bool),
             ("StrafeX", AnimatorControllerParameterType.Float),
             ("StrafeZ", AnimatorControllerParameterType.Float),

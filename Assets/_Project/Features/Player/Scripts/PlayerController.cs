@@ -38,9 +38,6 @@ namespace CreativeAI.Gameplay
         [Tooltip("キャラクター固有の重力値。Unityエンジンのデフォルトは -9.81f")]
         public float Gravity = -15.0f;
 
-        [Tooltip("落下状態に移行するまでに必要な時間。階段を下りるときなどに使う。")]
-        public float FallTimeout = 0.15f;
-
         [Header("プレイヤーの接地判定")]
         [Tooltip("凹凸のある地面の判定調整用オフセット")]
         public float GroundedOffset = -0.14f;
@@ -63,7 +60,6 @@ namespace CreativeAI.Gameplay
         private float _rotationVelocity;
         private float _verticalVelocity;
         private float _terminalVelocity = 53.0f;
-        private float _fallTimeoutDelta;
         private Vector3? _walkTarget; // 歩いて向かっている目標(無ければ null)
 
         private Animator _animator;
@@ -120,11 +116,6 @@ namespace CreativeAI.Gameplay
             PlayerRegistry.Unregister(this);
         }
 
-        private void Start()
-        {
-            _fallTimeoutDelta = FallTimeout;
-        }
-
         private void Update()
         {
             FallGravity();
@@ -141,8 +132,6 @@ namespace CreativeAI.Gameplay
                 GroundLayers,
                 QueryTriggerInteraction.Ignore
             );
-
-            _animator.SetBool(PlayerAnimatorParams.Grounded, Grounded);
         }
 
         /// <summary>
@@ -424,30 +413,11 @@ namespace CreativeAI.Gameplay
 
         private void FallGravity()
         {
-            if (Grounded)
+            // 接地中は速度を-2fに保つ。0fだとCheckSphereとの判定タイミング次第で
+            // 接地→浮遊を繰り返すジッターが発生するため、わずかに地面に押し付ける
+            if (Grounded && _verticalVelocity < 0.0f)
             {
-                _fallTimeoutDelta = FallTimeout;
-
-                _animator.SetBool(PlayerAnimatorParams.FreeFall, false);
-
-                // 接地中は速度を-2fに保つ。0fだとCheckSphereとの判定タイミング次第で
-                // 接地→浮遊を繰り返すジッターが発生するため、わずかに地面に押し付ける
-                if (_verticalVelocity < 0.0f)
-                {
-                    _verticalVelocity = -MinGroundStickSpeed;
-                }
-            }
-            else
-            {
-                // 段差を下りる程度の短い浮きでは落下モーションにしない
-                if (_fallTimeoutDelta >= 0.0f)
-                {
-                    _fallTimeoutDelta -= Time.deltaTime;
-                }
-                else
-                {
-                    _animator.SetBool(PlayerAnimatorParams.FreeFall, true);
-                }
+                _verticalVelocity = -MinGroundStickSpeed;
             }
 
             // 終端速度未満であれば重力を適用。deltaTimeを2回乗算するのは、等加速度運動（v += a*dt）の離散化のため
