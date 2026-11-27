@@ -38,6 +38,7 @@ namespace CreativeAI.UI
         // 画面の上から順。項目を足すときはここへ並べる。
         private Button[] _items;
         private Color[] _normalColors;
+        private Canvas[] _canvases; // 項目が載る Canvas。マウス位置の判定に、そのカメラを使う
         private bool[] _available; // 選べる項目か(押した後は Button を塞ぐので、暗くするかはこちらで決める)
         private int _selected;
         private bool _started;
@@ -66,10 +67,12 @@ namespace CreativeAI.UI
                     : new[] { _tapToStartButton };
             _normalColors = new Color[_items.Length];
             _available = new bool[_items.Length];
+            _canvases = new Canvas[_items.Length];
             for (int i = 0; i < _items.Length; i++)
             {
                 _normalColors[i] = _items[i].targetGraphic.color;
                 _available[i] = _items[i].interactable;
+                _canvases[i] = _items[i].GetComponentInParent<Canvas>();
             }
 
             // 続きから があれば最初はそちらを選んでおく。
@@ -112,8 +115,7 @@ namespace CreativeAI.UI
                 if (!_available[i])
                     continue;
                 var rect = (RectTransform)_items[i].transform;
-                var canvas = _items[i].GetComponentInParent<Canvas>();
-                var camera = canvas != null ? canvas.worldCamera : null;
+                var camera = _canvases[i] != null ? _canvases[i].worldCamera : null;
                 if (
                     RectTransformUtility.RectangleContainsScreenPoint(
                         rect,

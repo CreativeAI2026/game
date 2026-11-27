@@ -7,7 +7,7 @@ namespace CreativeAI.Tests.EditMode
     /// <summary>
     /// UIRoot の表示切り替え(タイトルの暗転が降りる前に HUD が見えないようにする隠し・戻し)の検証。
     /// </summary>
-    public class UIRootVisibilityTests
+    public sealed class UIRootVisibilityTests
     {
         private GameObject _go;
         private UIRoot _root;

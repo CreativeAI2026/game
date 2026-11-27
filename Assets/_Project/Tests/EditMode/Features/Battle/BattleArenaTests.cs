@@ -7,7 +7,7 @@ namespace CreativeAI.Tests.EditMode
     /// <summary>
     /// 会話イベントから戦闘エリア(BattleArena)を名前で探して始める入口の検証。
     /// </summary>
-    public class BattleArenaTests
+    public sealed class BattleArenaTests
     {
         private GameObject _gmmGo;
         private GameModeManager _gmm;

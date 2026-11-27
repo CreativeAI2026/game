@@ -13,7 +13,7 @@ namespace CreativeAI.Tests.EditMode
     /// 置き忘れや名前の食い違いは、実行時に警告が出て戦闘が飛ばされるだけで気付きにくい。
     /// 本物のシーンを開く(作業中のシーンは触らず、このテストが開いたものだけ最後に閉じる)。
     /// </summary>
-    public class BossArenaPlacementTests
+    public sealed class BossArenaPlacementTests
     {
         private const string ScenePath = "Assets/_Project/Scenes/Field/Field_Area01_Bosses.unity";
         private const string DataDir = "Assets/_Project/Features/Event/Data";
