@@ -17,58 +17,19 @@ namespace CreativeAI.Tests.EditMode
     {
         private GameObject _root;
         private GameObject _loadingRoot;
-        private CraftPanelController _controller;
+        private CraftPanel _controller;
 
+        // 本番と同じ Prefab を読み、EditMode では走らない Awake を通す
         [SetUp]
         public void SetUp()
         {
-            _root = new GameObject("CraftFlowTestRoot");
-
-            _loadingRoot = new GameObject("Loading", typeof(RectTransform));
-            _loadingRoot.transform.SetParent(_root.transform, false);
-            var gear = new GameObject("LoadingGear", typeof(RectTransform));
-            gear.transform.SetParent(_loadingRoot.transform, false);
-
-            var resultRoot = new GameObject(
-                "Result",
-                typeof(RectTransform),
-                typeof(CanvasGroup),
-                typeof(CloseOnSelfClick)
+            _root = PrefabUtility.LoadPrefabContents(
+                "Assets/_Project/Features/UI/Crafting/Prefabs/CraftPanel.prefab"
             );
-            resultRoot.transform.SetParent(_root.transform, false);
-            var itemName = CreateText("ItemName", resultRoot.transform);
-            var itemParameters = CreateText("ItemParameters", resultRoot.transform);
-
-            var warning = CreateText("WarningText", _root.transform);
-            var warningCanvasGroup = warning.gameObject.AddComponent<CanvasGroup>();
-
-            var closeButton = new GameObject("CloseButton", typeof(RectTransform), typeof(Button));
-            closeButton.transform.SetParent(_root.transform, false);
-
-            _controller = _root.AddComponent<CraftPanelController>();
-            TestReflection.SetField(
-                _controller,
-                "_closeButton",
-                closeButton.GetComponent<Button>()
-            );
-            TestReflection.SetField(_controller, "_loadingRoot", _loadingRoot);
-            TestReflection.SetField(_controller, "_loadingGear", (RectTransform)gear.transform);
-            TestReflection.SetField(
-                _controller,
-                "_resultCanvasGroup",
-                resultRoot.GetComponent<CanvasGroup>()
-            );
-            TestReflection.SetField(
-                _controller,
-                "_resultCloseOnClick",
-                resultRoot.GetComponent<CloseOnSelfClick>()
-            );
-            TestReflection.SetField(_controller, "_resultItemName", itemName);
-            TestReflection.SetField(_controller, "_resultItemParameters", itemParameters);
-            TestReflection.SetField(_controller, "_warningText", warning);
-            TestReflection.SetField(_controller, "_warningCanvasGroup", warningCanvasGroup);
+            _controller = _root.GetComponent<CraftPanel>();
             TestReflection.SetField(_controller, "_craftFlowDurationSeconds", 0f);
-
+            TestReflection.Invoke(_controller, "Awake");
+            _loadingRoot = TestReflection.GetField<GameObject>(_controller, "_loadingRoot");
             CancelCraft();
         }
 
@@ -78,18 +39,11 @@ namespace CreativeAI.Tests.EditMode
 
         private void CancelCraft() => TestReflection.Invoke(_controller, "CancelCraft");
 
-        private static TMP_Text CreateText(string name, Transform parent)
-        {
-            var textObject = new GameObject(name, typeof(RectTransform), typeof(TextMeshProUGUI));
-            textObject.transform.SetParent(parent, false);
-            return textObject.GetComponent<TextMeshProUGUI>();
-        }
-
         [TearDown]
         public void TearDown()
         {
             CancelCraft();
-            Object.DestroyImmediate(_root);
+            PrefabUtility.UnloadPrefabContents(_root);
         }
 
         [Test]
@@ -101,7 +55,7 @@ namespace CreativeAI.Tests.EditMode
             {
                 var rect = (RectTransform)root.transform;
                 rect.sizeDelta = new Vector2(1920, 1080);
-                var controller = root.GetComponent<CraftPanelController>();
+                var controller = root.GetComponent<CraftPanel>();
                 var warning = TestReflection.GetField<TMP_Text>(controller, "_warningText");
                 var materials = TestReflection.GetField<MaterialSlot[]>(
                     controller,
@@ -229,7 +183,7 @@ namespace CreativeAI.Tests.EditMode
             var prefab = AssetDatabase.LoadAssetAtPath<GameObject>(prefabPath);
 
             Assert.IsNotNull(prefab, prefabPath);
-            var craftPanel = prefab.GetComponentInChildren<CraftPanelController>(true);
+            var craftPanel = prefab.GetComponentInChildren<CraftPanel>(true);
             Assert.IsNotNull(craftPanel);
 
             var resultRoot = TestReflection

@@ -46,9 +46,9 @@ namespace CreativeAI.Gameplay
                         boss.Player.transform.position,
                         ChaseArriveDistance
                     );
-                    boss.Mover.Move(direction, boss.StabChaseSpeed);
+                    boss.Mover.Move(direction, boss.Stab.ChaseSpeed);
                     FaceStage();
-                    if (_timer >= boss.StabChaseDuration)
+                    if (_timer >= boss.Stab.ChaseDuration)
                     {
                         _target = boss.Player.transform.position;
                         boss.StabReach.AimAt(_target);
@@ -59,8 +59,8 @@ namespace CreativeAI.Gameplay
 
                 case Phase.Windup:
                     boss.Mover.Move(0f, 0f);
-                    boss.Mover.FaceTowards(_target, boss.StabTurnSpeed);
-                    if (_timer >= boss.StabWindupDuration)
+                    boss.Mover.FaceTowards(_target, boss.Stab.TurnSpeed);
+                    if (_timer >= boss.Stab.WindupDuration)
                     {
                         EnterPhase(Phase.Attack);
                         boss.Animator.SetTrigger(KurageAnimatorParams.Stab);
@@ -89,7 +89,7 @@ namespace CreativeAI.Gameplay
                     _hitStarted = true;
                     boss.StabHitbox.EnableHitbox();
                     boss.Sounds.PlayStab();
-                    boss.StabEffects.PlayThrust(boss.StabExtendDuration);
+                    boss.StabEffects.PlayThrust(boss.Stab.ExtendDuration);
                     break;
                 case KurageAnimationEvent.StabHitEnd:
                     _hitEnded = true;
@@ -112,7 +112,7 @@ namespace CreativeAI.Gameplay
                 return;
 
             float target = _hitEnded ? 0f : 1f;
-            float duration = _hitEnded ? boss.StabRetractDuration : boss.StabExtendDuration;
+            float duration = _hitEnded ? boss.Stab.RetractDuration : boss.Stab.ExtendDuration;
             boss.StabReach.Weight = Mathf.MoveTowards(
                 boss.StabReach.Weight,
                 target,

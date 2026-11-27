@@ -12,9 +12,8 @@ namespace CreativeAI.Gameplay
     /// - ApplyPoison() で毒を付与する。
     /// - 毒中は poisonTickInterval 秒ごとに PlayerStatus.TakeDamage(suppressFlinch: true) を呼ぶ。
     /// - 毒中に再度 ApplyPoison() を呼ぶとタイマーをリセットする（重ね掛けは延長扱い）。
-    ///   MidBossDamageArea が定期的に ApplyPoison() を呼ぶことで、
-    ///   エリア内にいる限り毒が維持される。
-    /// - IsPoisoned プロパティと OnPoisonChanged イベントで UI 等と連携できる。
+    ///   毒のエリアなどが定期的に呼べば、エリア内にいる限り毒が続く。
+    /// - IsPoisoned プロパティと PoisonChanged イベントで UI 等と連携できる。
     /// </summary>
     [RequireComponent(typeof(PlayerStatus))]
     public class PlayerStatusEffectHandler : MonoBehaviour
@@ -23,7 +22,7 @@ namespace CreativeAI.Gameplay
         public bool IsPoisoned { get; private set; }
 
         /// <summary>毒状態が変化したときに通知する。引数は新しい IsPoisoned 値。</summary>
-        public event Action<bool> OnPoisonChanged;
+        public event Action<bool> PoisonChanged;
 
         [Header("毒の音")]
         [Tooltip("毒にかかった時の音(毒中の延長では鳴らさない)")]
@@ -67,7 +66,7 @@ namespace CreativeAI.Gameplay
         private IEnumerator PoisonRoutine()
         {
             IsPoisoned = true;
-            OnPoisonChanged?.Invoke(true);
+            PoisonChanged?.Invoke(true);
             WorldSoundPlayer.Play(_poisonAppliedSound, transform.position, this);
 
             // 毒が付与された瞬間に即座に1回目のダメージが入るように初期値を設定
@@ -91,7 +90,7 @@ namespace CreativeAI.Gameplay
             }
 
             IsPoisoned = false;
-            OnPoisonChanged?.Invoke(false);
+            PoisonChanged?.Invoke(false);
             _poisonCoroutine = null;
         }
     }

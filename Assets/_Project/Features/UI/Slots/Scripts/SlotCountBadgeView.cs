@@ -67,7 +67,6 @@ namespace CreativeAI.UI
         // 全 Canvas の強制更新は重いので、バッジがいくつあっても 1 フレーム 1 回にする
         private static int _lastForcedCanvasUpdateFrame = -1;
 
-        private bool _hasWarnedMissingReferences;
         private bool _layoutRefreshPending;
 
         public bool IsVisible => _container != null && _container.gameObject.activeSelf;
@@ -84,9 +83,6 @@ namespace CreativeAI.UI
 
         public void SetCount(ItemData item, int count)
         {
-            if (!ResolveReferences())
-                return;
-
             bool visible = ShouldShowCount(item, count);
             if (!visible)
             {
@@ -111,9 +107,6 @@ namespace CreativeAI.UI
 
         public void RefreshLayout()
         {
-            if (!ResolveReferences())
-                return;
-
             RectTransform positionRect = ResolvePositionRect();
             float slotShortEdge = Mathf.Min(positionRect.rect.width, positionRect.rect.height);
             if (slotShortEdge <= 0f)
@@ -181,9 +174,6 @@ namespace CreativeAI.UI
 
         public void Hide()
         {
-            if (!ResolveReferences())
-                return;
-
             KillTween();
             _countText.text = string.Empty;
             _countText.gameObject.SetActive(false);
@@ -194,19 +184,13 @@ namespace CreativeAI.UI
 
         public void KillTween()
         {
-            if (_countText != null)
-                _countText.rectTransform.DOKill();
-            if (_countTextCanvasGroup != null)
-                _countTextCanvasGroup.DOKill();
-            if (_containerCanvasGroup != null)
-                _containerCanvasGroup.DOKill();
+            _countText.rectTransform.DOKill();
+            _countTextCanvasGroup.DOKill();
+            _containerCanvasGroup.DOKill();
         }
 
         public void ResetVisual()
         {
-            if (!ResolveReferences())
-                return;
-
             KillTween();
             _countText.rectTransform.localScale = Vector3.one;
             _countTextCanvasGroup.alpha = 1f;
@@ -219,21 +203,6 @@ namespace CreativeAI.UI
                 return;
 
             RefreshLayout();
-        }
-
-        private bool ResolveReferences()
-        {
-            bool valid =
-                _container != null
-                && _countText != null
-                && _containerCanvasGroup != null
-                && _countTextCanvasGroup != null
-                && _backgroundImage != null
-                && ResolvePositionRect() != null;
-            if (!valid)
-                WarnMissingReferencesOnce();
-
-            return valid;
         }
 
         // 位置合わせの基準。個別に指定がなければ枠に合わせる
@@ -294,17 +263,5 @@ namespace CreativeAI.UI
             return null;
         }
 #endif
-
-        private void WarnMissingReferencesOnce()
-        {
-            if (_hasWarnedMissingReferences)
-                return;
-
-            _hasWarnedMissingReferences = true;
-            Debug.LogWarning(
-                $"{nameof(SlotCountBadgeView)} '{name}' のCountBadge、CountText、Image、CanvasGroup参照が不足しているため、Count表示をスキップします。Prefab上で設定してください。",
-                this
-            );
-        }
     }
 }

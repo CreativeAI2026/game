@@ -111,7 +111,7 @@ namespace CreativeAI.Gameplay
     }
 
     /// <summary>
-    /// 装備(装備品 + 武器)による補正合計。InventoryManager / WeaponManager が積み上げ、PlayerStatus が素の値に合算する。
+    /// 装備(装備品 + 武器)による補正合計。EquipmentSlots / WeaponData が積み上げ、PlayerStatus が素の値に合算する。
     /// 攻撃/防御/最大HP は 素の値×(1+割合%)、会心系は加算。移動・攻撃速度はコントローラ側なので持たない。
     /// </summary>
     public struct EquipmentBonus

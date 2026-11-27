@@ -1,0 +1,19 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 37f8caeb37424e70bd4147f3b5ea2472, type: 3}
+  m_Name: WeaponCatalog
+  m_EditorClassIdentifier: CreativeAI.Gameplay::CreativeAI.Gameplay.WeaponCatalog
+  _weapons:
+  - {fileID: 11400000, guid: b063e40c551c45769a17ae2d3eb58263, type: 2}
+  - {fileID: 11400000, guid: e6b75b93f6094e578d5ffe2322f3c360, type: 2}
+  - {fileID: 11400000, guid: 34829291ee714d0bad50fe2680dde16f, type: 2}
+  - {fileID: 11400000, guid: 556ca783faa8ad84bbb25da497a86dce, type: 2}

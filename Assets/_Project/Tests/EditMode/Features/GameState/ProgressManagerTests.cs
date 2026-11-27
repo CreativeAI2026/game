@@ -27,10 +27,10 @@ namespace CreativeAI.Tests.EditMode
         }
 
         [Test]
-        public void AdvanceTo_NewValue_RaisesOnProgressChanged()
+        public void AdvanceTo_NewValue_RaisesChanged()
         {
             int calls = 0;
-            _pm.OnProgressChanged += () => calls++;
+            _pm.Changed += () => calls++;
 
             _pm.AdvanceTo(1);
 
@@ -44,7 +44,7 @@ namespace CreativeAI.Tests.EditMode
             _pm.AdvanceTo(3);
 
             int calls = 0;
-            _pm.OnProgressChanged += () => calls++;
+            _pm.Changed += () => calls++;
             _pm.AdvanceTo(3);
 
             Assert.AreEqual(3, _pm.Progress);
@@ -62,10 +62,10 @@ namespace CreativeAI.Tests.EditMode
         }
 
         [Test]
-        public void SetFlag_ChangedValue_RaisesOnProgressChanged()
+        public void SetFlag_ChangedValue_RaisesChanged()
         {
             int calls = 0;
-            _pm.OnProgressChanged += () => calls++;
+            _pm.Changed += () => calls++;
 
             _pm.SetFlag(ProgressFlags.Crafted, "1");
 
@@ -78,7 +78,7 @@ namespace CreativeAI.Tests.EditMode
             _pm.SetFlag(ProgressFlags.Crafted, "1");
 
             int calls = 0;
-            _pm.OnProgressChanged += () => calls++;
+            _pm.Changed += () => calls++;
             _pm.SetFlag(ProgressFlags.Crafted, "1");
 
             Assert.AreEqual(0, calls);

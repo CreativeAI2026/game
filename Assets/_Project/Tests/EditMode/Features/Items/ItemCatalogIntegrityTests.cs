@@ -81,7 +81,7 @@ namespace CreativeAI.Tests.EditMode
                 );
 
                 Assert.That(
-                    catalog.FindRecipe(item.material2, item.material1)?.resultItem,
+                    catalog.FindCraftResult(item.material2, item.material1),
                     Is.SameAs(item),
                     $"{item.name}: 素材を逆順にしても引けること"
                 );

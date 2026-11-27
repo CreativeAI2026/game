@@ -260,7 +260,7 @@ namespace CreativeAI.UI
         /// <summary>その側の立ち絵に揺れ・跳ね・点滅の演出をかける。</summary>
         public IEnumerator PlayEffect(
             DialoguePortraitSide side,
-            ConversationView.PortraitEffect effect,
+            ConversationPanel.PortraitEffect effect,
             float duration
         )
         {
@@ -278,13 +278,13 @@ namespace CreativeAI.UI
             )
             {
                 float t = elapsed / duration;
-                if (effect == ConversationView.PortraitEffect.Shake)
+                if (effect == ConversationPanel.PortraitEffect.Shake)
                     rect.anchoredPosition =
                         basePosition + Vector2.right * (Mathf.Sin(t * Mathf.PI * 8f) * 10f);
-                else if (effect == ConversationView.PortraitEffect.Jump)
+                else if (effect == ConversationPanel.PortraitEffect.Jump)
                     rect.anchoredPosition =
                         basePosition + Vector2.up * (Mathf.Sin(t * Mathf.PI) * 28f);
-                else if (effect == ConversationView.PortraitEffect.Fade)
+                else if (effect == ConversationPanel.PortraitEffect.Fade)
                     portrait.color = new Color(
                         baseColor.r,
                         baseColor.g,

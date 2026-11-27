@@ -45,7 +45,7 @@ namespace CreativeAI.Gameplay
 
         [Tooltip("触手全体の当たり判定")]
         [SerializeField]
-        private TentacleChainHitbox _hitbox;
+        private BoneChainHitbox _hitbox;
 
         [Tooltip(
             "触手のボーン連鎖(根元から先端の順)。当たり判定のボーンと同じものを並べる。"
@@ -347,7 +347,7 @@ namespace CreativeAI.Gameplay
 
             // 拘束が始まる前に出していた触手でも、締めている間のプレイヤーには当てない
             if (_restraint.IsRestraining)
-                _hitbox.Deactivate();
+                _hitbox.DisableHitbox();
 
             _timer += deltaTime;
             switch (_phase)
@@ -357,7 +357,7 @@ namespace CreativeAI.Gameplay
                     if (_timer >= _warningDuration)
                     {
                         EnterPhase(Phase.Thrust);
-                        _hitbox.Activate(_attacker, _thrustDamageMultiplier);
+                        _hitbox.EnableHitbox(_attacker, _thrustDamageMultiplier);
                         _sounds.PlayTentacleEmerge(transform.position);
                     }
                     break;
@@ -368,7 +368,7 @@ namespace CreativeAI.Gameplay
                     SetBuried((1f - t) * (1f - t));
                     if (t >= 1f)
                     {
-                        _hitbox.Deactivate();
+                        _hitbox.DisableHitbox();
                         EnterPhase(Phase.Wiggle);
                     }
                     break;
@@ -400,7 +400,7 @@ namespace CreativeAI.Gameplay
                     if (_timer >= _sweepWindupDuration)
                     {
                         EnterPhase(Phase.Sweep);
-                        _hitbox.Activate(_attacker, _sweepDamageMultiplier);
+                        _hitbox.EnableHitbox(_attacker, _sweepDamageMultiplier);
                         _sounds.PlayTentacleSweep(transform.position);
                     }
                     break;
@@ -411,7 +411,7 @@ namespace CreativeAI.Gameplay
                     _followSpeed = _strikeFollowSpeed;
                     if (_timer >= _sweepDuration + _sweepFollowThrough)
                     {
-                        _hitbox.Deactivate();
+                        _hitbox.DisableHitbox();
                         EnterPhase(Phase.Recoil);
                     }
                     break;
@@ -501,7 +501,7 @@ namespace CreativeAI.Gameplay
                 bones[i].localRotation = _restLocalRotations[i];
             _portal.localScale = Vector3.zero;
             SetBuried(1f);
-            _hitbox.Deactivate();
+            _hitbox.DisableHitbox();
             _usingRope = false;
             _tension = 1f;
             _curl = 0f;
@@ -512,7 +512,7 @@ namespace CreativeAI.Gameplay
         private void Finish()
         {
             _begun = false;
-            _hitbox.Deactivate();
+            _hitbox.DisableHitbox();
             _onFinished(this);
         }
 

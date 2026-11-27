@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.Serialization;
 
 namespace CreativeAI.Gameplay
 {
@@ -249,7 +250,8 @@ namespace CreativeAI.Gameplay
         private string _weaponKey; // giveWeapon(剣/弓/鎌/ハンマー = sword/bow/scythe/hammer)
 
         [SerializeField]
-        private string _arenaId; // battle: 呼ぶ BattleArena の名前
+        [FormerlySerializedAs("_arenaId")]
+        private string _encounterId; // battle: 呼ぶ BattleEncounter の名前(events.json の arena)
 
         [SerializeField]
         private string _message; // giveItem / giveWeapon: 入手演出に出す文。省略時は UI 側が既定文を作る
@@ -393,7 +395,7 @@ namespace CreativeAI.Gameplay
 
         /// <summary>
         /// 武器を渡すステップ。weaponKey は剣/弓/鎌/ハンマー(sword/bow/scythe/hammer)のいずれか。
-        /// 実体はプレイヤーリグの WeaponManager(IWeaponGiver seam)で入手処理する。
+        /// 実体はセッション常駐の WeaponManager(IWeaponGiver)で入手処理する。
         /// </summary>
         public static EventStep GiveWeapon(string weaponKey, string message = null) =>
             new()
@@ -404,14 +406,14 @@ namespace CreativeAI.Gameplay
             };
 
         /// <summary>
-        /// 戦闘ステップ。arenaId はボスシーンの BattleArena の名前。敵と戦闘エリアはそのシーン側に置く。
+        /// 戦闘ステップ。encounterId はボスシーンの BattleEncounter の名前。敵と戦闘エリアはそのシーン側に置く。
         /// </summary>
-        public static EventStep Battle(string arenaId) =>
-            new() { _kind = StepKind.Battle, _arenaId = arenaId };
+        public static EventStep Battle(string encounterId) =>
+            new() { _kind = StepKind.Battle, _encounterId = encounterId };
 
         /// <summary>
         /// 会話UIの演出コマンド1つ(window.hide / portrait.left.shake / wait など)。
-        /// 実行は IDialogueView.RunCommand → ConversationView の演出コマンドルータ。
+        /// 実行は IDialogueView.RunCommand → ConversationPanel の演出コマンドルータ。
         /// </summary>
         public static EventStep Command(string command, string arg = null) =>
             new()
@@ -433,8 +435,8 @@ namespace CreativeAI.Gameplay
         public string ItemKey => _itemKey;
         public string WeaponKey => _weaponKey;
 
-        /// <summary>battle ステップが呼ぶ BattleArena の名前(ボスシーンの BattleArena の arenaId と同じ)。</summary>
-        public string ArenaId => _arenaId;
+        /// <summary>battle ステップが呼ぶ BattleEncounter の名前(ボスシーンの BattleEncounter の encounterId と同じ)。</summary>
+        public string EncounterId => _encounterId;
 
         /// <summary>giveItem / giveWeapon の入手演出に出す文(省略可)。</summary>
         public string Message => _message;

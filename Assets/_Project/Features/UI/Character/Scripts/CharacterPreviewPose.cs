@@ -176,7 +176,7 @@ namespace CreativeAI.UI
 
         public CharacterPreviewPose(
             PlayerModel model,
-            WeaponManager manager,
+            PlayerWeapons weapons,
             AnimationClip unarmedIdle,
             AnimationClip weaponIdle
         )
@@ -191,9 +191,9 @@ namespace CreativeAI.UI
             foreach (var source in model.GetComponentsInChildren<Renderer>(true))
             {
                 bool weapon = false;
-                for (int i = 0; i < manager.WeaponCount; i++)
+                for (int i = 0; i < weapons.WeaponCount; i++)
                 {
-                    var root = manager.GetWeaponObject(1001 + i);
+                    var root = weapons.GetWeaponObject(i);
                     if (root != null && source.transform.IsChildOf(root.transform))
                     {
                         weapon = true;

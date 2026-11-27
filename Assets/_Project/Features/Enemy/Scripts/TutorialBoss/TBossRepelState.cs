@@ -27,6 +27,11 @@ namespace CreativeAI.Gameplay
             _repelledKind = repelledKind;
         }
 
+        public override bool IsAttack => true;
+        public override bool IsCommitted => true;
+        public override bool IgnoresFlinch => true;
+        public override bool BlocksOpeningGuardAfter => true;
+
         public override void Enter()
         {
             DevLog.Log($"[TutorialBoss] はじき返し（{_repelledKind}）");
@@ -43,9 +48,8 @@ namespace CreativeAI.Gameplay
                 boss.Agent.updateRotation = false;
             }
 
-            boss.StopSwingEffects();
             FacePlayerImmediately();
-            boss.ShowScytheTrail();
+            boss.SetScytheTrailVisible(true);
             boss.Animator.SetTrigger(RepelTriggerHash);
 
             if (_repelledKind == PlayerAttackKind.Melee)
@@ -83,7 +87,7 @@ namespace CreativeAI.Gameplay
         public override void Exit()
         {
             boss.Guard.IsGuarding = false;
-            boss.HideScytheTrail();
+            boss.SetScytheTrailVisible(false);
 
             if (boss.Agent != null)
             {

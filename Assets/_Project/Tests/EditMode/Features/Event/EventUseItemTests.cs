@@ -1,10 +1,12 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Text.RegularExpressions;
 using CreativeAI.Gameplay;
 using NUnit.Framework;
 using UnityEngine;
-using UnityEngine.SceneManagement;
+using UnityEngine.TestTools;
+using static CreativeAI.Tests.TestCoroutine;
 
 namespace CreativeAI.Tests.EditMode
 {
@@ -21,7 +23,8 @@ namespace CreativeAI.Tests.EditMode
             public readonly List<string> Lines = new();
             public readonly List<string> Prompts = new();
             public bool Closed;
-            public Action OnPick; // ピッカー表示中に起きること(シーン切替など)
+            public bool HiddenImmediately;
+            public bool HoldPick; // true の間はピッカーを開いたまま止めておく
 
             public IEnumerator ShowLine(string speaker, string portrait, string text)
             {
@@ -32,7 +35,8 @@ namespace CreativeAI.Tests.EditMode
             public IEnumerator ShowItemPicker(string prompt, Action<string> onPicked)
             {
                 Prompts.Add(prompt);
-                OnPick?.Invoke();
+                while (HoldPick)
+                    yield return null;
                 onPicked?.Invoke(Picks.Count > 0 ? Picks.Dequeue() : null);
                 yield break;
             }
@@ -42,6 +46,8 @@ namespace CreativeAI.Tests.EditMode
                 Closed = true;
                 yield break;
             }
+
+            public void HideImmediate() => HiddenImmediately = true;
 
             public IEnumerator ShowChoice(
                 IReadOnlyList<ChoiceOption> options,
@@ -100,7 +106,6 @@ namespace CreativeAI.Tests.EditMode
             public void AdvanceTo(int progress) => Progress = progress;
         }
 
-        private GameObject _go;
         private EventPlayer _player;
         private FakeView _view;
         private FakeItems _items;
@@ -109,33 +114,10 @@ namespace CreativeAI.Tests.EditMode
         [SetUp]
         public void SetUp()
         {
-            _go = new GameObject("UseItemPlayer");
-            _player = _go.AddComponent<EventPlayer>();
             _view = new FakeView();
             _items = new FakeItems();
             _progress = new MemoryProgress();
-            _player.Inject(_progress, _view, _items);
-        }
-
-        [TearDown]
-        public void TearDown()
-        {
-            UnityEngine.Object.DestroyImmediate(_go);
-            EventPlaybackService.SetPlaying(false);
-        }
-
-        private static void Drive(IEnumerator routine)
-        {
-            var stack = new Stack<IEnumerator>();
-            stack.Push(routine);
-            while (stack.Count > 0)
-            {
-                var current = stack.Peek();
-                if (!current.MoveNext())
-                    stack.Pop();
-                else if (current.Current is IEnumerator nested)
-                    stack.Push(nested);
-            }
+            _player = new EventPlayer(_progress, view: _view, items: _items);
         }
 
         // 「アイテムを使う」→ 正解なら「開いた」を言って進行度 1 へ進む、というイベント。
@@ -165,9 +147,6 @@ namespace CreativeAI.Tests.EditMode
                 1,
                 repeat
             );
-
-        private static void SceneChanged(EventPlayer player) =>
-            TestReflection.Invoke(player, "OnActiveSceneChanged", default(Scene), default(Scene));
 
         [Test]
         public void UseItem_Factory_ExposesFields()
@@ -199,7 +178,7 @@ namespace CreativeAI.Tests.EditMode
             _items.Stock[Key] = 3;
             _view.Picks.Enqueue(Key);
 
-            Drive(_player.PlayRoutine(UseItemEvent(consume: true)));
+            Drive(_player.Play(UseItemEvent(consume: true)));
 
             Assert.AreEqual(2, _items.Stock[Key], "正解の個数ぶん消費する");
             CollectionAssert.AreEqual(new[] { "開いた" }, _view.Lines);
@@ -212,7 +191,7 @@ namespace CreativeAI.Tests.EditMode
             _items.Stock[Key] = 1;
             _view.Picks.Enqueue(Key);
 
-            Drive(_player.PlayRoutine(UseItemEvent(consume: false)));
+            Drive(_player.Play(UseItemEvent(consume: false)));
 
             Assert.AreEqual(1, _items.Stock[Key]);
             CollectionAssert.AreEqual(new[] { "開いた" }, _view.Lines);
@@ -226,7 +205,7 @@ namespace CreativeAI.Tests.EditMode
             _view.Picks.Enqueue("apple");
             _view.Picks.Enqueue(Key);
 
-            Drive(_player.PlayRoutine(UseItemEvent()));
+            Drive(_player.Play(UseItemEvent()));
 
             Assert.AreEqual(1, _items.Stock["apple"], "間違ったアイテムは消費しない");
             Assert.AreEqual(0, _items.Stock[Key]);
@@ -242,7 +221,7 @@ namespace CreativeAI.Tests.EditMode
             _view.Picks.Enqueue(string.Empty);
             _view.Picks.Enqueue(null);
 
-            Drive(_player.PlayRoutine(UseItemEvent()));
+            Drive(_player.Play(UseItemEvent()));
 
             CollectionAssert.AreEqual(new[] { "違うようだ。" }, _view.Lines);
             Assert.AreEqual(1, _items.Stock[Key]);
@@ -254,13 +233,13 @@ namespace CreativeAI.Tests.EditMode
             _items.Stock[Key] = 1;
             _view.Picks.Enqueue(null);
 
-            Drive(_player.PlayRoutine(UseItemEvent()));
+            Drive(_player.Play(UseItemEvent()));
 
             Assert.AreEqual(0, _progress.Progress, "やめたら進行度を進めない");
             Assert.IsTrue(_view.Closed, "会話ウィンドウは閉じる");
             CollectionAssert.DoesNotContain(_view.Lines, "開いた");
             Assert.AreEqual(1, _items.Stock[Key]);
-            Assert.IsFalse(EventPlaybackService.IsPlaying, "再生中フラグは戻す");
+            Assert.IsFalse(_player.IsPlaying, "再生中フラグは戻す");
         }
 
         [Test]
@@ -284,7 +263,7 @@ namespace CreativeAI.Tests.EditMode
             _items.Stock[Key] = 1;
             _view.Picks.Enqueue(Key);
 
-            Drive(_player.PlayRoutine(UseItemEvent(usedText: "カードキーを使った。")));
+            Drive(_player.Play(UseItemEvent(usedText: "カードキーを使った。")));
 
             CollectionAssert.AreEqual(new[] { "カードキーを使った。", "開いた" }, _view.Lines);
         }
@@ -295,7 +274,7 @@ namespace CreativeAI.Tests.EditMode
             _items.Stock[Key] = 1;
             _view.Picks.Enqueue(null);
 
-            Drive(_player.PlayRoutine(UseItemEvent(cancelText: "やめておこう。")));
+            Drive(_player.Play(UseItemEvent(cancelText: "やめておこう。")));
 
             CollectionAssert.AreEqual(new[] { "やめておこう。" }, _view.Lines);
             Assert.AreEqual(0, _progress.Progress);
@@ -309,7 +288,7 @@ namespace CreativeAI.Tests.EditMode
             _view.Picks.Enqueue("apple");
             _view.Picks.Enqueue(null);
 
-            Drive(_player.PlayRoutine(UseItemEvent(cancelText: "やめておこう。")));
+            Drive(_player.Play(UseItemEvent(cancelText: "やめておこう。")));
 
             CollectionAssert.AreEqual(new[] { "違うようだ。", "やめておこう。" }, _view.Lines);
         }
@@ -322,7 +301,7 @@ namespace CreativeAI.Tests.EditMode
             _view.Picks.Enqueue("apple");
             _view.Picks.Enqueue(Key); // 打ち切られるので使われない
 
-            Drive(_player.PlayRoutine(UseItemEvent(endOnWrong: true)));
+            Drive(_player.Play(UseItemEvent(endOnWrong: true)));
 
             CollectionAssert.AreEqual(new[] { "違うようだ。" }, _view.Lines);
             Assert.AreEqual(0, _progress.Progress);
@@ -337,7 +316,7 @@ namespace CreativeAI.Tests.EditMode
             _view.Picks.Enqueue(Key); // 2個必要なのに1個しかない
             _view.Picks.Enqueue(null);
 
-            Drive(_player.PlayRoutine(UseItemEvent(count: 2)));
+            Drive(_player.Play(UseItemEvent(count: 2)));
 
             CollectionAssert.AreEqual(new[] { "違うようだ。" }, _view.Lines);
             Assert.AreEqual(1, _items.Stock[Key]);
@@ -349,25 +328,28 @@ namespace CreativeAI.Tests.EditMode
             _items.Stock[Key] = 2;
             _view.Picks.Enqueue(Key);
 
-            Drive(_player.PlayRoutine(UseItemEvent(count: 2)));
+            Drive(_player.Play(UseItemEvent(count: 2)));
 
             Assert.AreEqual(0, _items.Stock[Key]);
             CollectionAssert.AreEqual(new[] { "開いた" }, _view.Lines);
         }
 
         [Test]
-        public void UseItem_SceneChangedWhilePicking_AbortsWithoutProgress()
+        public void UseItem_AbortedWhilePicking_StopsWithoutProgress()
         {
             _items.Stock[Key] = 1;
             _view.Picks.Enqueue(Key);
-            _view.OnPick = () => SceneChanged(_player);
+            _view.HoldPick = true;
+            DriveUntil(_player.Play(UseItemEvent()), () => _view.Prompts.Count > 0);
 
-            Drive(_player.PlayRoutine(UseItemEvent()));
+            LogAssert.Expect(LogType.Warning, new Regex("打ち切りました"));
+            _player.Abort(); // コルーチンは発火側ごと止まるので、この先は回さない
 
             Assert.AreEqual(0, _progress.Progress);
-            Assert.AreEqual(1, _items.Stock[Key], "シーンが変わったら消費しない");
+            Assert.AreEqual(1, _items.Stock[Key], "打ち切ったら消費しない");
             CollectionAssert.DoesNotContain(_view.Lines, "開いた");
-            Assert.IsFalse(EventPlaybackService.IsPlaying);
+            Assert.IsTrue(_view.HiddenImmediately, "会話ウィンドウはその場で消す");
+            Assert.IsFalse(_player.IsPlaying);
         }
 
         [Test]
@@ -375,7 +357,7 @@ namespace CreativeAI.Tests.EditMode
         {
             _view.Picks.Enqueue(null);
 
-            Drive(_player.PlayRoutine(UseItemEvent(repeat: EventRepeat.Once)));
+            Drive(_player.Play(UseItemEvent(repeat: EventRepeat.Once)));
 
             Assert.IsEmpty(_progress.GetFlag(ProgressFlags.Seen("use_item_test")));
         }

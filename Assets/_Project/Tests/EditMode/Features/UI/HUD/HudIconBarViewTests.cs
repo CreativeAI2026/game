@@ -44,7 +44,7 @@ namespace CreativeAI.Tests.EditMode
         private bool IsShown => _group.IsShown() && _group.blocksRaycasts;
 
         [Test]
-        public void FieldMode_NotInDialogue_IsShown()
+        public void FieldMode_IsShown()
         {
             Assert.IsTrue(IsShown);
         }
@@ -52,7 +52,7 @@ namespace CreativeAI.Tests.EditMode
         [Test]
         public void BattleMode_IsHidden()
         {
-            _gmm.EnterBattle();
+            _gmm.TryStartBattle();
 
             Assert.IsFalse(IsShown, "戦闘モード中は非表示");
         }
@@ -60,10 +60,10 @@ namespace CreativeAI.Tests.EditMode
         [Test]
         public void ReturningToField_ShowsAgain()
         {
-            _gmm.EnterBattle();
+            _gmm.TryStartBattle();
             Assert.IsFalse(IsShown);
 
-            _gmm.ExitBattle();
+            _gmm.ResetToField();
 
             Assert.IsTrue(IsShown);
         }
@@ -71,7 +71,7 @@ namespace CreativeAI.Tests.EditMode
         [Test]
         public void DuringEventPlayback_IsHidden()
         {
-            EventPlaybackService.SetPlaying(true);
+            _gmm.TryStartDialogue();
 
             Assert.IsFalse(IsShown, "会話UI表示中はセーブ/インベを開けない");
         }
@@ -79,49 +79,35 @@ namespace CreativeAI.Tests.EditMode
         [Test]
         public void AfterEventPlayback_ShowsAgain()
         {
-            EventPlaybackService.SetPlaying(true);
+            _gmm.TryStartDialogue();
             Assert.IsFalse(IsShown);
 
-            EventPlaybackService.SetPlaying(false);
+            _gmm.ResetToField();
 
-            Assert.IsTrue(IsShown);
-        }
-
-        [Test]
-        public void BattleAndDialogue_BothCleared_IsRequiredToShow()
-        {
-            // 戦闘かつ会話中 → 片方だけ解除しても出さない。
-            _gmm.EnterBattle();
-            EventPlaybackService.SetPlaying(true);
-            Assert.IsFalse(IsShown);
-
-            EventPlaybackService.SetPlaying(false);
-            Assert.IsFalse(IsShown, "まだ戦闘中");
-
-            _gmm.ExitBattle();
             Assert.IsTrue(IsShown);
         }
 
         [Test]
         public void BattleStarts_ClosesOpenPanel()
         {
-            var routerGo = new GameObject("UIRouter");
+            var routerGo = new GameObject("UIManager");
             var panel = new GameObject("InventoryUI");
+            var router = routerGo.AddComponent<UIManager>();
             try
             {
-                var router = routerGo.AddComponent<UIRouter>();
                 TestReflection.SetField(router, "_inventoryUI", panel);
                 TestReflection.Invoke(router, "Awake");
-                TestReflection.SetField(_bar, "_router", router);
-                router.Open(UIRouter.UIId.Inventory);
+                TestReflection.Invoke(router, "OnEnable");
+                TestReflection.SetField(_bar, "_ui", router);
+                router.Open(UIManager.UIId.Inventory);
 
-                _gmm.EnterBattle();
+                _gmm.TryStartBattle();
 
                 Assert.IsFalse(panel.activeSelf, "戦闘が始まったらインベは閉じる");
             }
             finally
             {
-                UIPanelService.ResetState();
+                TestReflection.Invoke(router, "OnDisable");
                 Object.DestroyImmediate(panel);
                 Object.DestroyImmediate(routerGo);
             }
@@ -130,7 +116,7 @@ namespace CreativeAI.Tests.EditMode
         [Test]
         public void GameObjectStaysActive_SoSubscriptionsSurvive()
         {
-            _gmm.EnterBattle();
+            _gmm.TryStartBattle();
 
             Assert.IsTrue(
                 _barGo.activeSelf,
@@ -161,21 +147,20 @@ namespace CreativeAI.Tests.EditMode
         }
 
         // キー(PlayerUIInput のイベント)で開閉する。購読先の選び方ではなく、押されたときの判定を検証する。
-        private void WithRouter(System.Action<UIRouter, GameObject> body)
+        private void WithRouter(System.Action<UIManager, GameObject> body)
         {
-            var routerGo = new GameObject("UIRouter");
+            var routerGo = new GameObject("UIManager");
             var panel = new GameObject("InventoryUI");
             try
             {
-                var router = routerGo.AddComponent<UIRouter>();
+                var router = routerGo.AddComponent<UIManager>();
                 TestReflection.SetField(router, "_inventoryUI", panel);
                 TestReflection.Invoke(router, "Awake");
-                TestReflection.SetField(_bar, "_router", router);
+                TestReflection.SetField(_bar, "_ui", router);
                 body(router, panel);
             }
             finally
             {
-                UIPanelService.ResetState();
                 Object.DestroyImmediate(panel);
                 Object.DestroyImmediate(routerGo);
             }
@@ -202,7 +187,7 @@ namespace CreativeAI.Tests.EditMode
             WithRouter(
                 (router, panel) =>
                 {
-                    router.Open(UIRouter.UIId.Inventory);
+                    router.Open(UIManager.UIId.Inventory);
 
                     TestReflection.Invoke(_bar, "OnCancelPressed");
 
@@ -217,7 +202,7 @@ namespace CreativeAI.Tests.EditMode
             WithRouter(
                 (_, panel) =>
                 {
-                    EventPlaybackService.SetPlaying(true); // 会話中は隠れる
+                    _gmm.TryStartDialogue(); // 会話中は隠れる
 
                     TestReflection.Invoke(_bar, "OnInventoryPressed");
 

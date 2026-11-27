@@ -4,7 +4,11 @@ using UnityEngine.UI;
 
 namespace CreativeAI.UI
 {
-    /// <summary>会話操作ボタンのホバー、押下、トグル状態を共通表現する。</summary>
+    /// <summary>
+    /// 会話の操作ボタン(AUTO / SKIP / SPEED / HIDE)1つ分。押せるかどうか・オンかどうかを持ち、
+    /// ホバー・押下・トグルの見た目を出す。クリックとショートカットは同じ <see cref="OnClick"/> を通る。
+    /// </summary>
+    [RequireComponent(typeof(Button))]
     public sealed class ConversationControlButton
         : MonoBehaviour,
             IPointerEnterHandler,
@@ -40,6 +44,13 @@ namespace CreativeAI.UI
         private bool _idleDimmed;
         private bool _colorsCached;
         private bool _available = true;
+        private Button _button;
+
+        // EditMode テストでは Awake が走らないので、使うときに取る
+        private Button Button => _button != null ? _button : _button = GetComponent<Button>();
+
+        /// <summary>クリックとショートカットで呼ばれる処理の登録先。</summary>
+        public Button.ButtonClickedEvent OnClick => Button.onClick;
 
         private void Awake()
         {
@@ -105,9 +116,11 @@ namespace CreativeAI.UI
 
         public void SetIdleDimmed(bool dimmed) => _idleDimmed = dimmed;
 
+        /// <summary>押せるかどうか。押せないときはクリックもショートカットも効かない。</summary>
         public void SetAvailable(bool available)
         {
             _available = available;
+            Button.interactable = available;
             if (!available)
             {
                 _hovered = false;
@@ -115,8 +128,20 @@ namespace CreativeAI.UI
             }
         }
 
+        /// <summary>ショートカットキーで押す。押せないときは何もしない。</summary>
+        public void PressByShortcut()
+        {
+            if (!_available)
+                return;
+            PlayShortcutFeedback();
+            OnClick.Invoke();
+        }
+
+        /// <summary>キーで押したことを見た目だけで示す。押せないときは何もしない。</summary>
         public void PlayShortcutFeedback()
         {
+            if (!_available)
+                return;
             _feedbackUntil = Time.unscaledTime + 0.12f;
             var controlBar = ResolveControlBar();
             if (controlBar != null)

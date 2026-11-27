@@ -17,38 +17,6 @@ namespace CreativeAI.Gameplay
         }
     }
 
-    /// <summary>待機ステート。攻撃入力で接近/コンボ、subAction の押下で投擲へ。</summary>
-    public class ScytheStateFree : ScytheState
-    {
-        public ScytheStateFree(ScytheController context)
-            : base(context) { }
-
-        public override bool IsNeutral => true;
-
-        public override void Enter()
-        {
-            scythe.ReleaseControlLocks();
-        }
-
-        public override void Update()
-        {
-            // 投擲・攻撃は地上でのみ始める(空中の攻撃入力は消費せず先行入力として残す)
-            if (!scythe.CanStartGroundAction)
-                return;
-
-            if (scythe.SubActionPressedThisFrame)
-            {
-                scythe.ChangeState(new ScytheStateThrow(scythe));
-                return;
-            }
-
-            if (scythe.Input.ConsumeAttack())
-            {
-                scythe.BeginAttack();
-            }
-        }
-    }
-
     /// <summary>
     /// 投げモーションのステート。最寄りの敵(いなければ正面)を向いて投げモーションを再生し、
     /// クリップの ThrowRelease イベントのフレームで鎌を手放す。
@@ -61,8 +29,7 @@ namespace CreativeAI.Gameplay
         private static readonly int ThrowHash = PlayerAnimatorStates.Throw;
 
         private Transform _target;
-        private float _requestTime;
-        private bool _hasStartedAction;
+        private AnimationStateWatch _throwWatch;
 
         public ScytheStateThrow(ScytheController context)
             : base(context) { }
@@ -78,8 +45,7 @@ namespace CreativeAI.Gameplay
             // 前回の投擲で止めたまま中断されていても、投げモーションが頭から動くようにする
             scythe.SetThrowAnimationPaused(false);
             scythe.StartAnimatorAction(PlayerAnimatorParams.Throw);
-            _requestTime = Time.time;
-            _hasStartedAction = false;
+            _throwWatch.Begin();
         }
 
         public override void Exit()
@@ -119,28 +85,24 @@ namespace CreativeAI.Gameplay
             // 現在のステートだけを見ると抜けかけの前回の Throw を「始まった」と数えてしまう。
             // そうなると遷移が終わった時点で「イベント無しで終わった」とみなして手放し、
             // まだ消費されていない Throw の Trigger を Exit で消すため、投げモーションが出ないまま棒立ちになる
-            bool isThrowPlaying = scythe.IsThrowAnimationPlaying();
+            AnimationStateWatch.Progress progress = _throwWatch.Update(
+                scythe.IsThrowAnimationPlaying(),
+                EnterThrowTimeout
+            );
 
-            if (!_hasStartedAction)
+            if (progress == AnimationStateWatch.Progress.TimedOut)
             {
-                if (isThrowPlaying)
-                {
-                    _hasStartedAction = true;
-                }
-                else if (Time.time - _requestTime > EnterThrowTimeout)
-                {
-                    Debug.LogWarning(
-                        $"[{scythe.name}] Throw ステートへ遷移できませんでした。Animator の遷移設定を確認してください。"
-                    );
-                    scythe.Animator.ResetTrigger(PlayerAnimatorParams.Throw);
-                    scythe.ChangeState(new ScytheStateFree(scythe));
-                }
+                Debug.LogWarning(
+                    $"[{scythe.name}] Throw ステートへ遷移できませんでした。Animator の遷移設定を確認してください。"
+                );
+                scythe.Animator.ResetTrigger(PlayerAnimatorParams.Throw);
+                scythe.ChangeState(scythe.CreateFreeState());
                 return;
             }
 
             // ThrowRelease を受け取らないまま投げモーションが終わった = クリップにイベントが無い。
             // 操作不能のまま固まらないよう、ここで手放して警告する
-            if (!isThrowPlaying)
+            if (progress == AnimationStateWatch.Progress.Left)
             {
                 Debug.LogWarning(
                     $"[{scythe.name}] Throw で ThrowRelease イベントを受信しないままモーションが終了しました。"
@@ -221,7 +183,7 @@ namespace CreativeAI.Gameplay
             if (scythe.IsThrowAnimationPlaying())
                 scythe.ChangeState(new ScytheStateCatch(scythe));
             else
-                scythe.ChangeState(new ScytheStateFree(scythe));
+                scythe.ChangeState(scythe.CreateFreeState());
         }
     }
 
@@ -252,7 +214,7 @@ namespace CreativeAI.Gameplay
             )
             {
                 scythe.ReturnAnimatorToLocomotion();
-                scythe.ChangeState(new ScytheStateFree(scythe));
+                scythe.ChangeState(scythe.CreateFreeState());
             }
         }
 
@@ -268,7 +230,7 @@ namespace CreativeAI.Gameplay
                     $"[{scythe.name}] 受け取りモーション中に ActionEnd を受信しないまま Throw が終了しました。"
                         + "Throw のクリップで ActionEnd を ThrowHold より後に置いてください。"
                 );
-                scythe.ChangeState(new ScytheStateFree(scythe));
+                scythe.ChangeState(scythe.CreateFreeState());
             }
         }
     }

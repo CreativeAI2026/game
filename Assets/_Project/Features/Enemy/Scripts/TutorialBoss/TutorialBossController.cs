@@ -14,6 +14,29 @@ namespace CreativeAI.Gameplay
         private static readonly int VelocityZHash = Animator.StringToHash("VelocityZ");
         private static readonly int IsRunningHash = Animator.StringToHash("IsRunning");
 
+        // 同じ攻撃が何回連続で選ばれたら次は避けるか（3回目の選択をブロックする）。
+        private const int MaxAttackRepeatBeforeAvoid = 2;
+
+        // 「離れた」とみなすための、体が触れる距離に足す余裕（m）
+        private const float SeparationMargin = 0.1f;
+
+        // 走りモーションに切り替える／戻す速度を、歩き速度と走り速度の間のどこに置くか（0=歩き速度、1=走り速度）。
+        // 入りと戻りの閾値をずらし、閾値付近の速度で走り⇔歩きがチラつくのを防ぐ。
+        private const float RunAnimationEnterSpeedRatio = 0.6f;
+        private const float RunAnimationExitSpeedRatio = 0.4f;
+
+        // ステートが変わる時に捨てる、行動モーション用のトリガー（死亡は捨てない）
+        private static readonly string[] ActionTriggers =
+        {
+            "Attack",
+            "Attack2",
+            "SpecialAttack",
+            "Flinch",
+            "Parried",
+            "Look",
+            "Repel",
+        };
+
         [Header("懐中電灯（視界）設定")]
         [Tooltip("懐中電灯オブジェクトのTransform。回転制御に使用する。")]
         [SerializeField]
@@ -23,109 +46,48 @@ namespace CreativeAI.Gameplay
         [SerializeField]
         private Light flashlightLight;
 
-        [Tooltip("プレイヤーが光から外れてから見失うまでの時間（秒）。")]
+        [Tooltip("プレイヤーを捕捉し続ける・見失うまでの設定。")]
         [SerializeField]
-        private float lostSightDuration = 3f;
-
-        [Tooltip(
-            "交戦中（追跡・様子見）は、この水平距離（m）以内で遮蔽物が無ければ光の外でもプレイヤーを捕捉し続ける。\n"
-                + "光円錐は細いため、0にすると至近距離で横に回り込まれただけで見失う。"
-        )]
-        [SerializeField]
-        private float combatCloseSenseRadius = 6f;
+        private TBossSightSettings _sight = new();
 
         [Header("エフェクト")]
         [Tooltip("鎌のTrailEffect")]
         [SerializeField]
         private TrailRenderer scytheTrail;
 
-        [Header("移動設定")]
-        [Tooltip("未発見時の歩行速度。")]
+        [Header("移動")]
         [SerializeField]
-        private float walkSpeed = 1.5f;
+        private TBossMovementSettings _movement = new();
 
-        [Tooltip("発見時・音反応時の走り速度。")]
+        [Header("交戦（間合い・攻撃の間隔）")]
         [SerializeField]
-        private float runSpeed = 5f;
+        private TBossEngagementSettings _engagement = new();
 
-        [Tooltip("発見時様子見移動の速度")]
+        [Header("通常攻撃（踏み込み）")]
         [SerializeField]
-        private float strafeSpeed = 2f;
-
-        [Header("距離設定")]
-        [Tooltip("通常攻撃の攻撃射程。")]
-        [SerializeField]
-        private float attackRange = 2f;
-
-        [Tooltip("通常攻撃2（腕伸ばし）の判定射程。")]
-        [SerializeField]
-        private float normalAttack2Range = 4f;
-
-        [Tooltip("特殊攻撃（触手）の最大射程。")]
-        [SerializeField]
-        private float specialAttackRange = 10f;
+        private TBossNormalAttackSettings _normalAttack = new();
 
         [Tooltip(
-            "様子見で保つ間合いの内側（m、中心間の距離）。これより近いと下がる。体格が大きいので体同士が触れない程度に取る。"
+            "Attack/Attack2共通で使う近接ヒットボックス。ヒット確定演出（引き寄せ）の判定にも使う。"
         )]
         [SerializeField]
-        private float watchDistanceMin = 6f;
+        private EnemyMeleeHitbox meleeHitbox;
 
-        [Tooltip("様子見で保つ間合いの外側（m、中心間の距離）。これより遠いと詰める。")]
+        [Header("通常攻撃2（鎌）")]
         [SerializeField]
-        private float watchDistanceMax = 9f;
+        private TBossNormalAttack2Settings _normalAttack2 = new();
 
-        [Tooltip(
-            "通常攻撃・鎌は、この距離以内なら走り込んでから振る。様子見の間合いから直接仕掛けられるよう、様子見の外側より長くする。"
-        )]
+        [Tooltip("通常攻撃2で使う、伸びた腕全体の攻撃判定。")]
         [SerializeField]
-        private float meleeChargeRange = 10f;
+        private BoneChainHitbox armSweepHitbox;
 
-        [Header("タイマー設定")]
-        [Tooltip(
-            "攻撃と攻撃の間隔の基準（秒）。実際は0.6〜1.4倍でばらつく。様子見・追跡をまたいで数えるので、離れて仕切り直されても延びない。"
-        )]
+        [Tooltip("通常攻撃2で、地面に刺した鎌を引きずる時の火花。")]
         [SerializeField]
-        private float watchDuration = 2f;
+        private TBossGroundDragSparks groundDragSparks;
 
-        [Tooltip(
-            "追跡で間合いに入った時、様子見を挟まずそのまま攻撃に移る確率（0〜1）。毎回様子見から入る一定パターンを崩す。"
-        )]
+        [Header("特殊攻撃（ワイヤー）")]
         [SerializeField]
-        [Range(0f, 1f)]
-        private float directAssaultChance = 0.35f;
-
-        [Header("攻撃確率設定")]
-        [Tooltip("攻撃ステート選択時に特殊攻撃を選ぶ確率（0〜1）。")]
-        [SerializeField]
-        [Range(0f, 1f)]
-        private float specialAttackChance = 0.3f;
-
-        [Tooltip("攻撃ステート選択時に通常攻撃2を選ぶ確率（0〜1）。特殊攻撃が外れた後に判定する。")]
-        [SerializeField]
-        [Range(0f, 1f)]
-        private float normalAttack2Chance = 0.4f;
-
-        [Header("攻撃クールダウン設定")]
-        [Tooltip("通常攻撃を選択できるようになるまでの再使用間隔（秒）。")]
-        [SerializeField]
-        private float normalAttackCooldown = 1f;
-
-        [Tooltip("通常攻撃2を選択できるようになるまでの再使用間隔（秒）。")]
-        [SerializeField]
-        private float normalAttack2Cooldown = 2f;
-
-        [Tooltip("特殊攻撃を選択できるようになるまでの再使用間隔（秒）。")]
-        [SerializeField]
-        private float specialAttackCooldown = 8f;
-
-        [Header("特殊攻撃（ワイヤー）設定")]
-        [Tooltip(
-            "ワイヤー先端の当たり判定の半径（m）。先端の軌跡に沿ってこの太さで掃引し、プレイヤーに触れたら捕獲する。\n"
-                + "攻撃前の射線チェックも同じ太さで行う。"
-        )]
-        [SerializeField]
-        private float wireHitRadius = 1f;
+        private TBossSpecialAttackSettings _specialAttack = new();
 
         [Tooltip("ワイヤーとして伸ばすボーン。")]
         [SerializeField]
@@ -143,61 +105,6 @@ namespace CreativeAI.Gameplay
         [HideInInspector]
         public Quaternion InitialWireBoneLocalRotation = Quaternion.identity;
 
-        [Tooltip("特殊攻撃の狙いフェーズの時間（秒）。")]
-        [SerializeField]
-        private float specialAttackAimDuration = 1.5f;
-
-        [Tooltip("特殊攻撃の射出フェーズの時間（秒）。")]
-        [SerializeField]
-        private float specialAttackShootDuration = 0.3f;
-
-        [Header("通常攻撃（踏み込み）設定")]
-        [Tooltip(
-            "踏み込み後に、プレイヤーの中心がボスの中心からこの距離に来るよう踏み込みの長さを合わせる（m）。\n"
-                + "クリップの振りで当たり判定（半径1m）の中心が最も前に出るのは約3.0m先のため、その少し外を狙う。"
-        )]
-        [SerializeField]
-        private float attack1StrikeDistance = 3.5f;
-
-        [Tooltip(
-            "踏み込みで動かす長さの上限（m）。踏み込み中も後ろ足は接地したままなので、長くすると後ろ足が引きずられて見える。"
-        )]
-        [SerializeField]
-        private float attack1MaxStepIn = 1.5f;
-
-        [Header("通常攻撃2（鎌）設定")]
-        [Tooltip(
-            "通常攻撃2で、振りに入る前にプレイヤーへ向き直る速度。0で向き直らない。\n"
-                + "腕を伸ばし始めた時点（OnAttack2ReachExtend）で向きを固定するため、\n"
-                + "振りに入った後の回避は可能なまま、振りの前だけ狙いを付け直す。"
-        )]
-        [SerializeField]
-        private float attack2HomingRotateSpeed = 6f;
-
-        [Tooltip(
-            "ヒット時にプレイヤーを引き寄せる距離（メートル）。理不尽な強制引き寄せにならないよう小さめに。"
-        )]
-        [SerializeField]
-        private float attack2PullDistance = 0.6f;
-
-        [Tooltip("ヒット時の引き寄せにかける時間（秒）。")]
-        [SerializeField]
-        private float attack2PullDuration = 0.15f;
-
-        [Tooltip(
-            "Attack/Attack2共通で使う近接ヒットボックス。ヒット確定演出（引き寄せ）の判定にも使う。"
-        )]
-        [SerializeField]
-        private EnemyMeleeHitbox meleeHitbox;
-
-        [Tooltip("通常攻撃2で使う、伸びた腕全体の攻撃判定。")]
-        [SerializeField]
-        private TBossArmSweepHitbox armSweepHitbox;
-
-        [Tooltip("通常攻撃2で、地面に刺した鎌を引きずる時の火花。")]
-        [SerializeField]
-        private TBossGroundDragSparks groundDragSparks;
-
         [Header("しなやかな腕（ボーン連鎖）設定")]
         [Tooltip("特殊攻撃（ワイヤー）側の腕の連鎖。根元→先端の順に設定する。")]
         [SerializeField]
@@ -207,46 +114,15 @@ namespace CreativeAI.Gameplay
         [SerializeField]
         private LayerMask obstacleLayer;
 
-        [Header("掴み（捕獲）設定")]
-        [Tooltip("電撃ダメージ（1ティックあたり）の攻撃力倍率。実ダメージ = 敵攻撃力 × 倍率。")]
+        [Header("掴み（捕獲）")]
         [SerializeField]
-        private float grabDamageMultiplier = 0.2f;
-
-        [Tooltip("電撃ダメージを与える間隔（秒）。")]
-        [SerializeField]
-        private float grabDamageInterval = 0.5f;
-
-        [Tooltip("脱出に必要なゲージの最大値。")]
-        [SerializeField]
-        private float grabEscapeThreshold = 20f;
-
-        [Tooltip("移動ボタン1入力あたりのゲージ増加量。")]
-        [SerializeField]
-        private float grabEscapePerInput = 1f;
-
-        [Tooltip("プレイヤーを引き寄せる際にかかる時間（秒）。")]
-        [SerializeField]
-        private float grabPullDuration = 0.5f;
-
-        [Tooltip("プレイヤーを引き寄せる目標距離（ボス正面方向）。")]
-        [SerializeField]
-        private float grabPullDistance = 1.5f;
-
-        [Tooltip(
-            "プレイヤーを引き寄せる目標の横方向オフセット（ボスのright方向）。正値で右、負値で左にずれる。カメラ演出に応じて調整する。"
-        )]
-        [SerializeField]
-        private float grabPullLateralOffset = 0f;
+        private TBossGrabSettings _grab = new();
 
         [Tooltip(
             "電撃エフェクトのプレハブ。ワイヤーの付け根からプレイヤーの首元までの間に電流を流す。"
         )]
         [SerializeField]
         private ElectricArcEffect electricEffectPrefab;
-
-        [Tooltip("触手の引っ込み演出にかかる時間（秒）。捕獲脱出後のリトラクト。")]
-        [SerializeField]
-        private float grabRetractDuration = 0.4f;
 
         [Tooltip("電撃ダメージフェーズ用カメラ(DamageSceneCamera)の追従ターゲット(GrabTarget)。")]
         [SerializeField]
@@ -259,32 +135,95 @@ namespace CreativeAI.Gameplay
         [SerializeField]
         private TBossPanicPressureSettings panicPressureSettings = new TBossPanicPressureSettings();
 
+        //  内部状態（ステートから読み書き）
+        /// <summary>最後に聴取した音源のワールド座標。SoundInvestigateStateの目標地点として使う。</summary>
+        [HideInInspector]
+        public Vector3 LastHeardSoundPosition;
+
+        /// <summary>プレイヤーが光の外にいる継続時間のカウンタ。</summary>
+        [HideInInspector]
+        public float LostSightTimer;
+
+        // 攻撃選択の内部状態。クールダウン管理と「同じ攻撃の連続選択を避ける」判定にのみ使うため非公開で保持する。
+        private float _normalAttackReadyTime;
+        private float _normalAttack2ReadyTime;
+        private float _specialAttackReadyTime;
+        private TBossAttackType? _lastAttackType;
+        private int _lastAttackRepeatCount;
+
+        // 交戦中の攻撃タイミング。追跡・様子見の往復で待ち時間がやり直しにならないよう、ステートではなくここで持つ
+        private readonly TBossCombatTempo _combatTempo = new TBossCombatTempo();
+
+        // 見渡しモーションの再生と、その間の足止め。Awake で生成する（Animator が必要なため）
+        private TBossLookAround _lookAround;
+
+        // 各ステートが要求している「NavMeshAgent を止めるか」。見渡し中はこれに関係なく止める
+        private bool _agentStopRequested;
+
+        private PlayerStatus _playerStatus;
+
+        // プレイヤーの焦り度。無いプレイヤー（焦り度を持たないシーン）でもボスは追い込みなしで動く
+        private PanicDetector _playerPanic;
+
+        // 追い込み開始の合図（目の光）。無ければ音だけで合図する
+        private TBossEyeGlint _eyeGlint;
+
+        // プレイヤー死亡時の交戦終了を一度だけ行うためのフラグ（復活した場合は解除する）
+        private bool _hasDisengagedFromDeadPlayer;
+
+        // 今の掴みを、追い込みの歯止めの命中として数え済みか（掴みが終わったら戻す）
+        private bool _hasCountedCurrentCapture;
+
+        // 今のステートの1つ前のステート。様子見に入った時に、攻撃の後か・防御の後かを見分けるのに使う
+        private TBossBaseState _previousState;
+
+        // プレイヤーの攻撃ボタンの入力。押された瞬間に反応して防御するのに使う
+        private PlayerInputHandler _playerInput;
+
+        // 遠距離の防御: 弓を構え始めた瞬間を見るための前フレームの値と、次に確率を引ける時刻
+        private PlayerController _playerController;
+        private bool _wasPlayerAiming;
+        private float _nextRangedGuardRollTime;
+
+        // プレイヤーとの衝突を戻す予約。重なったまま戻すと、プレイヤーがめり込みから押し出されて上へ飛ぶため、離れるまで待つ
+        private bool _isPlayerCollisionRestorePending;
+
+        private bool _isRunAnimationActive;
+
         // 外部参照用
         public Transform FlashlightTransform => flashlightTransform;
         public Light FlashlightLight => flashlightLight;
 
+        /// <summary>プレイヤーを捕捉し続ける・見失うまでの設定。</summary>
+        public TBossSightSettings Sight => _sight;
+
+        /// <summary>移動の速さの設定。</summary>
+        public TBossMovementSettings Movement => _movement;
+
+        /// <summary>交戦中の間合いと攻撃の間隔の設定。</summary>
+        public TBossEngagementSettings Engagement => _engagement;
+
+        /// <summary>通常攻撃（踏み込み）の設定。</summary>
+        public TBossNormalAttackSettings NormalAttack => _normalAttack;
+
+        /// <summary>通常攻撃2（鎌）の設定。</summary>
+        public TBossNormalAttack2Settings NormalAttack2 => _normalAttack2;
+
+        /// <summary>特殊攻撃（ワイヤー）の設定。</summary>
+        public TBossSpecialAttackSettings SpecialAttack => _specialAttack;
+
+        /// <summary>掴み（捕獲）の設定。</summary>
+        public TBossGrabSettings Grab => _grab;
+
         /// <summary>プレイヤーが光から外れてから見失うまでの時間（秒）。焦りへの追い込み（逃げ腰）で長くなる。</summary>
         public float EffectiveLostSightDuration =>
-            lostSightDuration * PanicPressure.LostSightDurationScale;
-        public float CombatCloseSenseRadius => combatCloseSenseRadius;
+            _sight.LostSightDuration * PanicPressure.LostSightDurationScale;
 
         /// <summary>
         /// ボス本体の拡大率。ステート内の固定距離（到着判定・徘徊半径など）はスケール1の体格で調整した値なので、
         /// これを掛けて体格に合わせる。Prefabのスケール変更で行動が破綻しないようにするため。
         /// </summary>
         public float BodyScale => transform.lossyScale.y;
-
-        public float WalkSpeed => walkSpeed;
-        public float RunSpeed => runSpeed;
-        public float StrafeSpeed => strafeSpeed;
-        public float AttackRange => attackRange;
-        public float Attack1StrikeDistance => attack1StrikeDistance;
-        public float Attack1MaxStepIn => attack1MaxStepIn;
-        public float NormalAttack2Range => normalAttack2Range;
-        public float SpecialAttackRange => specialAttackRange;
-        public float WatchDistanceMin => watchDistanceMin;
-        public float WatchDistanceMax => watchDistanceMax;
-        public float DirectAssaultChance => directAssaultChance;
 
         /// <summary>
         /// 追跡で間合いに入った時、様子見を挟まず突っ込む確率（焦りへの追い込みで補正済み）。
@@ -293,11 +232,9 @@ namespace CreativeAI.Gameplay
         public float EffectiveDirectAssaultChance =>
             PanicPressure.IsInCueLead
                 ? 0f
-                : PanicPressure.AdjustDirectAssaultChance(directAssaultChance);
+                : PanicPressure.AdjustDirectAssaultChance(_engagement.DirectAssaultChance);
+
         public Transform WireBone => wireBone;
-        public float SpecialAttackAimDuration => specialAttackAimDuration;
-        public float SpecialAttackShootDuration => specialAttackShootDuration;
-        public float WireHitRadius => wireHitRadius;
 
         /// <summary>
         /// 音が聞こえたかと、その確信度（0〜1）を判定する。聞こえる範囲は鳴らした側が決めた音の半径（足音・ハンマーなど）で、
@@ -323,44 +260,19 @@ namespace CreativeAI.Gameplay
         }
 
         public LayerMask ObstacleLayer => obstacleLayer;
-        public float GrabDamagePerTick => Status.CurrentAttackPower * grabDamageMultiplier;
-        public float GrabDamageInterval => grabDamageInterval;
-        public float GrabEscapeThreshold => grabEscapeThreshold;
-        public float GrabEscapePerInput => grabEscapePerInput;
-        public float GrabPullDuration => grabPullDuration;
-        public float GrabPullDistance => grabPullDistance;
-        public float GrabPullLateralOffset => grabPullLateralOffset;
         public ElectricArcEffect ElectricEffectPrefab => electricEffectPrefab;
-        public float GrabRetractDuration => grabRetractDuration;
         public Transform GrabCameraTarget => grabCameraTarget;
-        public float Attack2HomingRotateSpeed => attack2HomingRotateSpeed;
-        public float Attack2PullDistance => attack2PullDistance;
-        public float Attack2PullDuration => attack2PullDuration;
         public EnemyMeleeHitbox MeleeHitbox => meleeHitbox;
-        public TBossArmSweepHitbox ArmSweepHitbox => armSweepHitbox;
+        public BoneChainHitbox ArmSweepHitbox => armSweepHitbox;
 
-        /// <summary>ワイヤー側の腕の連鎖設定。Awakeが走らないEditモードのデバッグ用途でも参照できるよう公開する。</summary>
+        /// <summary>通常攻撃2で、地面に刺した鎌を引きずる時の火花。</summary>
+        public TBossGroundDragSparks GroundDragSparks => groundDragSparks;
+
         /// <summary>ワイヤー側の腕をしなやかに動かすドライバ。Awakeで生成される。</summary>
         public TBossLimbChainDriver WireChainDriver { get; private set; }
 
         /// <summary>行動に合わせて鳴らす音。同じ GameObject の TutorialBossSounds をAwakeで取得する。</summary>
         public TutorialBossSounds Sounds { get; private set; }
-
-        //  内部状態（ステートから読み書き）
-        /// <summary>最後に聴取した音源のワールド座標。SoundInvestigateStateの目標地点として使う。</summary>
-        [HideInInspector]
-        public Vector3 LastHeardSoundPosition;
-
-        /// <summary>プレイヤーが光の外にいる継続時間のカウンタ。</summary>
-        [HideInInspector]
-        public float LostSightTimer;
-
-        // 攻撃選択の内部状態。クールダウン管理と「同じ攻撃の連続選択を避ける」判定にのみ使うため非公開で保持する。
-        private float _normalAttackReadyTime;
-        private float _normalAttack2ReadyTime;
-        private float _specialAttackReadyTime;
-        private TBossAttackType? _lastAttackType;
-        private int _lastAttackRepeatCount;
 
         /// <summary>
         /// TransitionToAttackが選択しうる攻撃ステートの種別。
@@ -372,20 +284,11 @@ namespace CreativeAI.Gameplay
             Special,
         }
 
-        // 視界判定・発見度（Awareness）・既知プレイヤー位置の管理を専門に行うクラス。責務分離のため別クラスに切り出している。
-        private TBossPerception _perception;
+        /// <summary>視界判定・発見度・既知のプレイヤー位置を受け持つ。Awakeで生成される。</summary>
+        public TBossPerception Perception { get; private set; }
 
         /// <summary>地形・障害物から攻撃や直線接近が成立するかを判定する。Awakeで生成される。</summary>
         public TBossAttackFeasibility AttackFeasibility { get; private set; }
-
-        // 交戦中の攻撃タイミング。追跡・様子見の往復で待ち時間がやり直しにならないよう、ステートではなくここで持つ
-        private readonly TBossCombatTempo _combatTempo = new TBossCombatTempo();
-
-        // 見渡しモーションの再生と、その間の足止め。Awake で生成する（Animator が必要なため）
-        private TBossLookAround _lookAround;
-
-        // 各ステートが要求している「NavMeshAgent を止めるか」。見渡し中はこれに関係なく止める
-        private bool _agentStopRequested;
 
         /// <summary>
         /// NavMeshAgent を止める／動かす。各ステートは Agent.isStopped を直接書かずにこれを使う。
@@ -424,18 +327,6 @@ namespace CreativeAI.Gameplay
             Agent.isStopped = stop;
         }
 
-        // ステートが変わる時に捨てる、行動モーション用のトリガー（死亡は捨てない）
-        private static readonly string[] ActionTriggers =
-        {
-            "Attack",
-            "Attack2",
-            "SpecialAttack",
-            "Flinch",
-            "Parried",
-            "Look",
-            "Repel",
-        };
-
         /// <summary>
         /// 前のステートが引いたトリガーが、遷移の途中などで使われずに残っていると、後で状況と無関係に再生されるため捨てる。
         /// 次のステートが必要なトリガーはその Enter で引き直す。
@@ -443,7 +334,7 @@ namespace CreativeAI.Gameplay
         protected override void OnBeforeStateEnter()
         {
             // ここではまだ currentState が切り替わる前のステート。様子見の入り方（攻撃の後か等）の判断に使う
-            _previousState = currentState;
+            _previousState = State;
 
             if (Animator == null)
             {
@@ -462,10 +353,7 @@ namespace CreativeAI.Gameplay
         /// </summary>
         private void UpdateLookAround()
         {
-            bool lookAllowed =
-                currentState is TBossPatrolState
-                || currentState is TBossSearchState
-                || currentState is TBossSoundInvestigateState;
+            bool lookAllowed = State is { AllowsLookAround: true };
             if (_lookAround.Tick(lookAllowed, Time.deltaTime))
             {
                 ApplyAgentStopped();
@@ -479,6 +367,9 @@ namespace CreativeAI.Gameplay
         public float TimeUntilNextAttack =>
             _combatTempo.IsScheduled ? Mathf.Max(0f, _combatTempo.NextAttackTime - Time.time) : -1f;
 
+        // 今のステート。開始前（Start より前）は null
+        private TBossBaseState State => currentState as TBossBaseState;
+
         /// <summary>今のステートの名前（デバッグ表示・ログ用）。</summary>
         public string CurrentStateName =>
             currentState != null ? currentState.GetType().Name : "なし";
@@ -487,33 +378,14 @@ namespace CreativeAI.Gameplay
         public void BeginCombatTempo() => _combatTempo.EnsureScheduled(CurrentAttackInterval);
 
         /// <summary>攻撃と攻撃の間隔の基準（秒）。焦りへの追い込み（短く）・息継ぎ（長く）で補正済み。</summary>
-        private float CurrentAttackInterval => watchDuration * PanicPressure.AttackIntervalScale;
+        private float CurrentAttackInterval =>
+            _engagement.AttackInterval * PanicPressure.AttackIntervalScale;
 
         /// <summary>交戦が終わった時（巡回へ戻る等）に呼ぶ。次の交戦では待ち時間を新しく決める。</summary>
         public void EndCombatTempo() => _combatTempo.Clear();
 
-        private PlayerStatus _playerStatus;
-
-        // プレイヤーの焦り度。無いプレイヤー（焦り度を持たないシーン）でもボスは追い込みなしで動く
-        private PanicDetector _playerPanic;
-
         /// <summary>プレイヤーの焦りに応じた追い込みの判断。Awakeで生成される。</summary>
         public TBossPanicPressure PanicPressure { get; private set; }
-
-        // 追い込み開始の合図（目の光）。無ければ音だけで合図する
-        private TBossEyeGlint _eyeGlint;
-
-        // プレイヤー死亡時の交戦終了を一度だけ行うためのフラグ（復活した場合は解除する）
-        private bool _hasDisengagedFromDeadPlayer;
-
-        // 今の掴みを、追い込みの歯止めの命中として数え済みか（掴みが終わったら戻す）
-        private bool _hasCountedCurrentCapture;
-
-        // 今のステートの1つ前のステート。様子見に入った時に、攻撃の後か・防御の後かを見分けるのに使う
-        private IEnemyState _previousState;
-
-        // プレイヤーの攻撃ボタンの入力。押された瞬間に反応して防御するのに使う
-        private PlayerInputHandler _playerInput;
 
         /// <summary>防御の判断と、プレイヤーの攻撃の受け止め。Awakeで同じ GameObject から取得する。</summary>
         public TBossGuard Guard { get; private set; }
@@ -525,23 +397,13 @@ namespace CreativeAI.Gameplay
         /// 顔（と頭に付けた懐中電灯）をプレイヤーへ向ける状態か。追跡・様子見の間と、巡回中に怪しんで見つめている間だけ true。
         /// 攻撃・怯み・捕獲・未発見時はアニメーションに任せ、攻撃後の硬直中に視界から抜ける逃げ道を残す。
         /// </summary>
-        public bool IsHeadAimActive =>
-            currentState is TBossChaseState
-            || currentState is TBossWatchState
-            || currentState is TBossGuardState
-            || currentState is TBossGuardAdvanceState
-            || (currentState is TBossPatrolState && IsSuspicious);
+        public bool IsHeadAimActive => State is { AimsHeadAtPlayer: true };
 
         /// <summary>
         /// 通常攻撃・通常攻撃2（鎌）・特殊攻撃（触手）・はじき返しのステート中か。走り込みの接近フェーズも含む。
         /// 捕獲は攻撃が当たった後の別ステートなので含めない。
         /// </summary>
-        public override bool IsAttacking =>
-            currentState
-                is TBossNormalAttackState
-                    or TBossNormalAttack2State
-                    or TBossSpecialAttackState
-                    or TBossRepelState;
+        public override bool IsAttacking => State is { IsAttack: true };
 
         // ────────────────────────────────────────────
         //  Unity ライフサイクル
@@ -567,9 +429,9 @@ namespace CreativeAI.Gameplay
 
             WireChainDriver = new TBossLimbChainDriver(wireChainSettings);
 
-            _perception = new TBossPerception(this);
+            Perception = new TBossPerception(this);
             _lookAround = new TBossLookAround(Animator);
-            AttackFeasibility = new TBossAttackFeasibility(this, _perception);
+            AttackFeasibility = new TBossAttackFeasibility(this, Perception);
 
             if (Player != null)
             {
@@ -618,7 +480,7 @@ namespace CreativeAI.Gameplay
         protected override void Start()
         {
             base.Start();
-            HideScytheTrail();
+            SetScytheTrailVisible(false);
             ChangeState(new TBossPatrolState(this));
         }
 
@@ -631,11 +493,11 @@ namespace CreativeAI.Gameplay
             }
             if (_playerInput != null)
             {
-                _playerInput.OnAttackPressed += OnPlayerAttackPressed;
+                _playerInput.AttackPressed += OnPlayerAttackPressed;
             }
             Guard.Repelled += OnRepelled;
-            BowController.OnFired += OnPlayerRangedAttack;
-            ScytheController.OnThrown += OnPlayerRangedAttack;
+            BowController.Fired += OnPlayerRangedAttack;
+            ScytheController.Thrown += OnPlayerRangedAttack;
         }
 
         protected override void OnDisable()
@@ -647,11 +509,11 @@ namespace CreativeAI.Gameplay
             }
             if (_playerInput != null)
             {
-                _playerInput.OnAttackPressed -= OnPlayerAttackPressed;
+                _playerInput.AttackPressed -= OnPlayerAttackPressed;
             }
             Guard.Repelled -= OnRepelled;
-            BowController.OnFired -= OnPlayerRangedAttack;
-            ScytheController.OnThrown -= OnPlayerRangedAttack;
+            BowController.Fired -= OnPlayerRangedAttack;
+            ScytheController.Thrown -= OnPlayerRangedAttack;
         }
 
         /// <summary>
@@ -659,7 +521,7 @@ namespace CreativeAI.Gameplay
         /// </summary>
         private void OnPlayerAttackPressed()
         {
-            if (currentState is not TBossWatchState || !Guard.RollReactiveGuard())
+            if (State is not { ReactsToAttackInput: true } || !Guard.RollReactiveGuard())
             {
                 return;
             }
@@ -681,18 +543,12 @@ namespace CreativeAI.Gameplay
         /// </summary>
         public bool TryStartOpeningGuard()
         {
-            if (_previousState is TBossGuardState or TBossRepelState)
+            if (_previousState is { BlocksOpeningGuardAfter: true })
             {
                 return false;
             }
 
-            bool afterAttack =
-                _previousState
-                is TBossNormalAttackState
-                    or TBossNormalAttack2State
-                    or TBossSpecialAttackState
-                    or TBossCapturedState;
-            if (afterAttack)
+            if (_previousState is { TriggersPostAttackGuard: true })
             {
                 if (!Guard.RollPostAttackGuard())
                 {
@@ -721,14 +577,7 @@ namespace CreativeAI.Gameplay
         /// </summary>
         private void UpdateRepelTrigger()
         {
-            Guard.CanRepel =
-                currentState
-                    is TBossWatchState
-                        or TBossChaseState
-                        or TBossGuardState
-                        or TBossGuardAdvanceState
-                && Player != null
-                && !IsPlayerDead;
+            Guard.CanRepel = State is { CanRepel: true } && Player != null && !IsPlayerDead;
             if (!Guard.CanRepel)
             {
                 Guard.ClearMash();
@@ -753,12 +602,7 @@ namespace CreativeAI.Gameplay
 
         private void OnPlayerRangedAttack()
         {
-            // 撃たれた・投げられたことで相手の位置は分かるので、にじり寄りの見失いをやり直す
-            if (currentState is TBossGuardAdvanceState)
-            {
-                LostSightTimer = 0f;
-                return;
-            }
+            State?.OnPlayerRangedAttack();
             TryStartRangedGuard();
         }
 
@@ -769,7 +613,7 @@ namespace CreativeAI.Gameplay
         private void TryStartRangedGuard()
         {
             if (
-                currentState is not (TBossChaseState or TBossWatchState)
+                State is not { IsEngaging: true }
                 || Player == null
                 || IsPlayerDead
                 || Time.time < _nextRangedGuardRollTime
@@ -779,7 +623,7 @@ namespace CreativeAI.Gameplay
             }
 
             float distance = Vector3.Distance(transform.position, Player.transform.position);
-            if (distance <= watchDistanceMax)
+            if (distance <= _engagement.WatchDistanceMax)
             {
                 return;
             }
@@ -803,7 +647,7 @@ namespace CreativeAI.Gameplay
         /// </summary>
         private void OnPlayerDamaged()
         {
-            if (currentState is TBossCapturedState)
+            if (State is { IsCapturingPlayer: true })
             {
                 if (_hasCountedCurrentCapture)
                 {
@@ -828,12 +672,12 @@ namespace CreativeAI.Gameplay
             UpdateLookAround();
             TryRestorePlayerCollision();
             UpdateAnimatorParameters();
-            _perception.Tick(Time.deltaTime);
+            Perception.Tick(Time.deltaTime);
             TickPanicPressure();
             UpdateRepelTrigger();
             UpdateRangedGuardTrigger();
 
-            if (currentState is not TBossCapturedState)
+            if (State is not { IsCapturingPlayer: true })
             {
                 _hasCountedCurrentCapture = false;
             }
@@ -854,7 +698,7 @@ namespace CreativeAI.Gameplay
                 IsAlerted
                 && !IsPlayerDead
                 && _playerPanic.IsInCombat
-                && currentState is not TBossDeathState;
+                && State is not { IsDead: true };
             PanicPressure.Tick(
                 _playerPanic.Level,
                 _playerPanic.DominantCategory,
@@ -907,39 +751,23 @@ namespace CreativeAI.Gameplay
                 return;
             }
 
-            if (_hasDisengagedFromDeadPlayer || currentState is TBossDeathState)
+            if (_hasDisengagedFromDeadPlayer || State is { IsDead: true })
             {
                 return;
             }
 
             _hasDisengagedFromDeadPlayer = true;
             DevLog.Log("[TutorialBoss] プレイヤーが倒れたため交戦を終了");
-            IsAlerted = false;
-            _perception.ForgetPlayer();
+            SetAlerted(false);
+            Perception.ForgetPlayer();
             ChangeState(new TBossPatrolState(this));
         }
 
-        /// <summary>
-        /// 鎌のTrailの描画を開始するAnimationEvent用関数。emittingによる描画制御を用いている。
-        /// </summary>
-        public void ShowScytheTrail()
+        /// <summary>鎌の軌跡を出す／止める。</summary>
+        public void SetScytheTrailVisible(bool visible)
         {
-            scytheTrail.emitting = true;
+            scytheTrail.emitting = visible;
         }
-
-        /// <summary>
-        /// 鎌のTrailの描画を停止するAnimationEvent用関数。emittingによる描画制御を用いている。
-        /// </summary>
-        public void HideScytheTrail()
-        {
-            scytheTrail.emitting = false;
-        }
-
-        // プレイヤーとの衝突を戻す予約。重なったまま戻すと、プレイヤーがめり込みから押し出されて上へ飛ぶため、離れるまで待つ
-        private bool _isPlayerCollisionRestorePending;
-
-        // 「離れた」とみなすための、体が触れる距離に足す余裕（m）
-        private const float SeparationMargin = 0.1f;
 
         /// <summary>
         /// ボスとプレイヤーの体（コライダー）が水平方向で触れ合う中心間の距離。
@@ -1004,21 +832,6 @@ namespace CreativeAI.Gameplay
         }
 
         /// <summary>
-        /// 攻撃の振りが途中で打ち切られた時の後始末。振り終わりのAnimationEventが呼ばれないため、
-        /// 攻撃判定・鎌の軌跡・引きずりの火花が出たまま残らないよう、ここで止める。
-        /// </summary>
-        public void StopSwingEffects()
-        {
-            if (meleeHitbox != null)
-            {
-                meleeHitbox.DisableHitbox();
-            }
-            armSweepHitbox.DisableHitbox();
-            groundDragSparks.EndDrag();
-            HideScytheTrail();
-        }
-
-        /// <summary>
         /// アニメーターのブレンドツリーがキャラクター基準の相対的な移動方向を要求するため、
         /// NavMeshAgentのワールド速度をローカル座標系に変換して適用する。
         /// </summary>
@@ -1034,18 +847,6 @@ namespace CreativeAI.Gameplay
             UpdateRunAnimation();
         }
 
-        // 走りモーションに切り替える／戻す速度を、歩き速度と走り速度の間のどこに置くか（0=歩き速度、1=走り速度）。
-        // 入りと戻りの閾値をずらし、閾値付近の速度で走り⇔歩きがチラつくのを防ぐ。
-        private const float RunAnimationEnterSpeedRatio = 0.6f;
-        private const float RunAnimationExitSpeedRatio = 0.4f;
-
-        private bool _isRunAnimationActive;
-
-        // 遠距離の防御: 弓を構え始めた瞬間を見るための前フレームの値と、次に確率を引ける時刻
-        private PlayerController _playerController;
-        private bool _wasPlayerAiming;
-        private float _nextRangedGuardRollTime;
-
         /// <summary>
         /// Animatorの IsRunning を実際の移動速度から決める。
         /// 各ステートが「走る」と宣言したまま経路に詰まると、その場で走りモーションを続けて固まって見えるため、
@@ -1058,8 +859,8 @@ namespace CreativeAI.Gameplay
             float speed = velocity.magnitude;
 
             float threshold = Mathf.Lerp(
-                walkSpeed,
-                runSpeed,
+                _movement.WalkSpeed,
+                _movement.RunSpeed,
                 _isRunAnimationActive ? RunAnimationExitSpeedRatio : RunAnimationEnterSpeedRatio
             );
             // isStopped は NavMesh 上に無いエージェントで参照するとエラーになるため isOnNavMesh を先に見る
@@ -1077,7 +878,7 @@ namespace CreativeAI.Gameplay
             base.ForceFlinch();
 
             // はじき返しは短い反撃なので、途中で殴られても怯まずにやり切る
-            if (currentState is TBossRepelState)
+            if (State is { IgnoresFlinch: true })
             {
                 return;
             }
@@ -1094,17 +895,17 @@ namespace CreativeAI.Gameplay
             base.ForceAlert();
 
             // 攻撃・捕獲・怯み・死亡の最中は、その行動をやり切らせる（被弾のたびに差し替えると攻撃が成立しない）
-            if (IsCommittedToAction() || Player == null || IsPlayerDead)
+            if (State is { IsCommitted: true } || Player == null || IsPlayerDead)
             {
                 return;
             }
 
-            IsAlerted = true;
+            SetAlerted(true);
 
-            if (CheckPlayerTracked())
+            if (Perception.IsPlayerTracked())
             {
                 // 見えているなら交戦する。既に追跡・様子見中ならそのまま続ける
-                if (!(currentState is TBossChaseState) && !(currentState is TBossWatchState))
+                if (State is not { IsEngaging: true })
                 {
                     ChangeState(new TBossChaseState(this));
                 }
@@ -1113,23 +914,8 @@ namespace CreativeAI.Gameplay
 
             // 光の外・背後・物陰から撃たれた。EnemyStatusは攻撃者の座標を渡してこないため、
             // 現在のプレイヤー位置を推定攻撃元として既知位置に入れ、追跡（見失い中の挙動＝そこへ走る）で向かわせる
-            _perception.NotifyDamageFrom(Player.transform.position);
+            Perception.NotifyDamageFrom(Player.transform.position);
             ChangeState(new TBossChaseState(this));
-        }
-
-        /// <summary>被弾や音で行動を差し替えてはいけない、やり切るべき行動の最中か。</summary>
-        private bool IsCommittedToAction()
-        {
-            return currentState is TBossNormalAttackState
-                || currentState is TBossNormalAttack2State
-                || currentState is TBossSpecialAttackState
-                || currentState is TBossCapturedState
-                || currentState is TBossFlinchState
-                || currentState is TBossParriedState
-                || currentState is TBossGuardState
-                || currentState is TBossGuardAdvanceState
-                || currentState is TBossRepelState
-                || currentState is TBossDeathState;
         }
 
         public override void ForceDeath()
@@ -1142,7 +928,7 @@ namespace CreativeAI.Gameplay
         public override void ForceParried()
         {
             base.ForceParried();
-            if (currentState is TBossDeathState)
+            if (State is { IsDead: true })
             {
                 return;
             }
@@ -1150,137 +936,56 @@ namespace CreativeAI.Gameplay
         }
 
         // ────────────────────────────────────────────
-        //  視界判定・知覚（TBossPerceptionへの窓口）
+        //  アニメーションイベント（クリップから関数名で呼ばれる。今のステートへ渡すだけ）
         // ────────────────────────────────────────────
 
-        /// <summary>
-        /// プレイヤーが懐中電灯の光円錐（SpotAngle・Range）内にいるかを判定する。
-        /// 障害物による遮蔽も考慮する。実体はTBossPerceptionが持つ。
-        /// </summary>
-        public bool CheckInFlashlight() => _perception.IsPlayerVisible();
+        private void HandleAnimationEvent(TBossAnimationEvent animationEvent) =>
+            State?.OnAnimationEvent(animationEvent);
 
-        /// <summary>
-        /// 交戦中（追跡・様子見）の捕捉判定。光円錐内に加え、CombatCloseSenseRadius以内で見通せれば捕捉中とみなす。
-        /// </summary>
-        public bool CheckPlayerTracked() => _perception.IsPlayerTracked();
+        /// <summary>通常攻撃の当たり判定を入れるAnimationEvent。</summary>
+        public void TriggerEnableHitbox() =>
+            HandleAnimationEvent(TBossAnimationEvent.MeleeHitStart);
 
-        /// <summary>発見度（0〜100）。継続して視認するほど上がり、光の外では時間経過で下がる。</summary>
-        public float Awareness => _perception.Awareness;
+        /// <summary>通常攻撃の当たり判定を切るAnimationEvent。</summary>
+        public void TriggerDisableHitbox() => HandleAnimationEvent(TBossAnimationEvent.MeleeHitEnd);
 
-        /// <summary>発見度が上限に達し、完全にプレイヤーの存在を把握した状態か。</summary>
-        public bool IsFullyAware => _perception.IsFullyAware;
+        /// <summary>鎌の軌跡を出し始めるAnimationEvent。</summary>
+        public void ShowScytheTrail() => HandleAnimationEvent(TBossAnimationEvent.ScytheTrailShow);
 
-        /// <summary>ちらっと見えた・音が聞こえた等で「怪しい」と感じている状態か。</summary>
-        public bool IsSuspicious => _perception.IsSuspicious;
+        /// <summary>鎌の軌跡を止めるAnimationEvent。</summary>
+        public void HideScytheTrail() => HandleAnimationEvent(TBossAnimationEvent.ScytheTrailHide);
 
-        /// <summary>最後に把握したプレイヤーの位置（視認・被弾などから更新）。</summary>
-        public Vector3 LastKnownPlayerPosition => _perception.LastKnownPlayerPosition;
+        /// <summary>特殊攻撃のアニメーション中、一番ワイヤーを射出するのに適したポーズで呼ばれるAnimationEvent。</summary>
+        public void OnSpecialAttackPoseReady() =>
+            HandleAnimationEvent(TBossAnimationEvent.SpecialAttackPoseReady);
 
-        /// <summary>一度でもプレイヤーの位置を把握したことがあるか。</summary>
-        public bool HasKnownPlayerPosition => _perception.HasKnownPlayerPosition;
+        /// <summary>通常攻撃2で、腕を伸ばして振りに入る箇所で呼ばれるAnimationEvent。1クリップ内で複数回呼んでよい。</summary>
+        public void OnAttack2ReachExtend() =>
+            HandleAnimationEvent(TBossAnimationEvent.Attack2ReachExtend);
 
-        /// <summary>音を検知した際に発見度へ反映する。confidenceは0〜1（音源に近いほど高い）。</summary>
-        public void NotifySoundHeard(float confidence) => _perception.NotifySoundHeard(confidence);
+        /// <summary>通常攻撃2で、腕を戻し終えた箇所で呼ばれるAnimationEvent。1クリップ内で複数回呼んでよい。</summary>
+        public void OnAttack2ReachRetract() =>
+            HandleAnimationEvent(TBossAnimationEvent.Attack2ReachRetract);
 
-        /// <summary>プレイヤーの位置で鳴る音（足音など）を聞いた際に、既知位置を音源へ更新する。</summary>
-        public void NotifyPlayerHeardAt(Vector3 position) =>
-            _perception.NotifyPlayerHeardAt(position);
+        /// <summary>通常攻撃2で、伸びた腕全体の攻撃判定を始めるAnimationEvent。振り始めに置く。</summary>
+        public void EnableArmSweepHitbox() =>
+            HandleAnimationEvent(TBossAnimationEvent.Attack2ArmSweepStart);
 
-        /// <summary>見失ったプレイヤーが逃げた先の予測地点（最後に見た位置と移動方向から求める）。</summary>
-        public Vector3 PredictPlayerPosition() => _perception.PredictPlayerPosition();
+        /// <summary>通常攻撃2で、伸びた腕全体の攻撃判定を止めるAnimationEvent。振り切った直後に置く。</summary>
+        public void DisableArmSweepHitbox() =>
+            HandleAnimationEvent(TBossAnimationEvent.Attack2ArmSweepEnd);
 
-        /// <summary>
-        /// 特殊攻撃のアニメーション中、一番ワイヤーを射出するのに適したポーズで呼ばれるAnimationEvent。
-        /// </summary>
-        public void OnSpecialAttackPoseReady()
-        {
-            // 特殊攻撃ステートの間だけ構えで一時停止する。ステートを抜けた後にモーションの残りでこのイベントが来ても、
-            // Animator 全体を止めてボスを棒立ちにしないため
-            if (currentState is TBossSpecialAttackState specialState)
-            {
-                if (Animator != null)
-                {
-                    Animator.speed = 0f;
-                }
-                specialState.OnPoseReady();
-            }
-        }
+        /// <summary>通常攻撃2で、振り下ろした鎌が地面に刺さった瞬間に呼ばれるAnimationEvent。</summary>
+        public void OnAttack2GroundImpact() =>
+            HandleAnimationEvent(TBossAnimationEvent.Attack2GroundImpact);
 
-        /// <summary>
-        /// 通常攻撃2のアニメーション中、腕を伸ばして振りに入る箇所で呼ばれるAnimationEvent。
-        /// 各振りの直前に置く。1クリップ内で複数回呼んでよい。
-        /// </summary>
-        public void OnAttack2ReachExtend()
-        {
-            if (currentState is TBossNormalAttack2State attack2State)
-            {
-                attack2State.OnReachExtend();
-            }
-        }
+        /// <summary>通常攻撃2で、地面に刺した鎌を引きずり始める箇所で呼ばれるAnimationEvent。</summary>
+        public void OnAttack2GroundDragStart() =>
+            HandleAnimationEvent(TBossAnimationEvent.Attack2GroundDragStart);
 
-        /// <summary>
-        /// 通常攻撃2のアニメーション中、腕を戻し終えた箇所で呼ばれるAnimationEvent。
-        /// OnAttack2ReachExtendと対で、1クリップ内で複数回呼んでよい。
-        /// </summary>
-        public void OnAttack2ReachRetract()
-        {
-            if (currentState is TBossNormalAttack2State attack2State)
-            {
-                attack2State.OnReachRetract();
-            }
-        }
-
-        /// <summary>
-        /// 通常攻撃2で、伸びた腕全体の攻撃判定を始めるAnimationEvent。振り始めに置く。
-        /// </summary>
-        public void EnableArmSweepHitbox()
-        {
-            if (currentState is TBossNormalAttack2State)
-            {
-                armSweepHitbox.EnableHitbox();
-            }
-        }
-
-        /// <summary>
-        /// 通常攻撃2で、伸びた腕全体の攻撃判定を止めるAnimationEvent。振り切った直後に置く。
-        /// </summary>
-        public void DisableArmSweepHitbox()
-        {
-            armSweepHitbox.DisableHitbox();
-        }
-
-        /// <summary>
-        /// 通常攻撃2で、振り下ろした鎌が地面に刺さった瞬間に呼ばれるAnimationEvent。
-        /// </summary>
-        public void OnAttack2GroundImpact()
-        {
-            if (currentState is TBossNormalAttack2State)
-            {
-                groundDragSparks.PlayImpact();
-            }
-        }
-
-        /// <summary>
-        /// 通常攻撃2で、地面に刺した鎌を引きずり始める箇所で呼ばれるAnimationEvent。
-        /// </summary>
-        public void OnAttack2GroundDragStart()
-        {
-            if (currentState is TBossNormalAttack2State)
-            {
-                groundDragSparks.BeginDrag();
-            }
-        }
-
-        /// <summary>
-        /// 通常攻撃2で、鎌が地面から離れる箇所で呼ばれるAnimationEvent。
-        /// </summary>
-        public void OnAttack2GroundDragEnd()
-        {
-            groundDragSparks.EndDrag();
-        }
-
-        // 同じ攻撃が何回連続で選ばれたら次は避けるか（3回目の選択をブロックする）。
-        private const int MaxAttackRepeatBeforeAvoid = 2;
+        /// <summary>通常攻撃2で、鎌が地面から離れる箇所で呼ばれるAnimationEvent。</summary>
+        public void OnAttack2GroundDragEnd() =>
+            HandleAnimationEvent(TBossAnimationEvent.Attack2GroundDragEnd);
 
         /// <summary>
         /// 攻撃を仕掛けてみて、仕掛けられなければ追跡へ戻して間合いを詰め直す。様子見から使う。
@@ -1323,18 +1028,18 @@ namespace CreativeAI.Gameplay
             bool normalEligible =
                 allowNormalAttack
                 && meleeHeightOk
-                && distance <= Mathf.Max(attackRange, meleeChargeRange)
+                && distance <= Mathf.Max(_normalAttack.Range, _engagement.MeleeChargeRange)
                 && (ignoreCooldowns || Time.time >= _normalAttackReadyTime);
             bool normal2Eligible =
                 meleeHeightOk
-                && distance <= Mathf.Max(normalAttack2Range, meleeChargeRange)
+                && distance <= Mathf.Max(_normalAttack2.Range, _engagement.MeleeChargeRange)
                 && (ignoreCooldowns || Time.time >= _normalAttack2ReadyTime)
-                && (distance > normalAttack2Range || AttackFeasibility.HasMeleeLine());
+                && (distance > _normalAttack2.Range || AttackFeasibility.HasMeleeLine());
             // 特殊攻撃（触手の拘束）は至近距離で使うと不自然なため、通常攻撃の射程より外側でのみ選択可能にする。
             // 空振りすると長いクールダウンを無駄にするため、射線が通っている時だけ選ぶ（重い判定なので最後に評価）
             bool specialEligible =
-                distance > attackRange
-                && distance <= specialAttackRange
+                distance > _normalAttack.Range
+                && distance <= _specialAttack.Range
                 && (ignoreCooldowns || Time.time >= _specialAttackReadyTime)
                 && AttackFeasibility.HasClearWirePath();
 
@@ -1349,7 +1054,7 @@ namespace CreativeAI.Gameplay
             // 攻撃に入る時点で警戒状態を確定させる。
             // EnemyStatusは被弾ごとにOnAlertTriggeredを無条件発火するため、IsAlertedがfalseのままだと
             // ForceAlertが走って攻撃モーションや捕獲シーケンスが強制的にChaseへ差し替えられてしまう。
-            IsAlerted = true;
+            SetAlerted(true);
             CommitAttack(ChooseWeightedAttack(normalEligible, normal2Eligible, specialEligible));
             return true;
         }
@@ -1396,10 +1101,10 @@ namespace CreativeAI.Gameplay
         )
         {
             float specialWeight = specialEligible
-                ? specialAttackChance * PanicPressure.SpecialWeightScale
+                ? _specialAttack.Chance * PanicPressure.SpecialWeightScale
                 : 0f;
             float normal2Weight = normal2Eligible
-                ? normalAttack2Chance * PanicPressure.Normal2WeightScale
+                ? _normalAttack2.Chance * PanicPressure.Normal2WeightScale
                 : 0f;
             float normalWeight = normalEligible ? PanicPressure.NormalWeightScale : 0f;
 
@@ -1453,15 +1158,15 @@ namespace CreativeAI.Gameplay
             switch (type)
             {
                 case TBossAttackType.Special:
-                    _specialAttackReadyTime = Time.time + specialAttackCooldown;
+                    _specialAttackReadyTime = Time.time + _specialAttack.Cooldown;
                     ChangeState(new TBossSpecialAttackState(this));
                     break;
                 case TBossAttackType.Normal2:
-                    _normalAttack2ReadyTime = Time.time + normalAttack2Cooldown;
+                    _normalAttack2ReadyTime = Time.time + _normalAttack2.Cooldown;
                     ChangeState(new TBossNormalAttack2State(this));
                     break;
                 default:
-                    _normalAttackReadyTime = Time.time + normalAttackCooldown;
+                    _normalAttackReadyTime = Time.time + _normalAttack.Cooldown;
                     ChangeState(new TBossNormalAttackState(this));
                     break;
             }
@@ -1472,19 +1177,19 @@ namespace CreativeAI.Gameplay
         {
             // 攻撃射程
             Gizmos.color = Color.red;
-            Gizmos.DrawWireSphere(transform.position, attackRange);
+            Gizmos.DrawWireSphere(transform.position, _normalAttack.Range);
 
             // 通常攻撃2射程
             Gizmos.color = Color.yellow;
-            Gizmos.DrawWireSphere(transform.position, normalAttack2Range);
+            Gizmos.DrawWireSphere(transform.position, _normalAttack2.Range);
 
             // 特殊攻撃射程
             Gizmos.color = Color.magenta;
-            Gizmos.DrawWireSphere(transform.position, specialAttackRange);
+            Gizmos.DrawWireSphere(transform.position, _specialAttack.Range);
 
             // 交戦中に光の外でも捕捉し続ける距離
             Gizmos.color = Color.white;
-            Gizmos.DrawWireSphere(transform.position, combatCloseSenseRadius);
+            Gizmos.DrawWireSphere(transform.position, _sight.CombatCloseSenseRadius);
         }
 #endif
     }

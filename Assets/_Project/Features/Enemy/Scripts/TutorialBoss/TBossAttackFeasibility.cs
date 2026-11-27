@@ -72,10 +72,10 @@ namespace CreativeAI.Gameplay
             // 攻撃本体の判定（TBossSpecialAttackState.CheckHitAtTip）と同じく全レイヤー・トリガー除外で調べる
             int hitCount = Physics.SphereCastNonAlloc(
                 origin,
-                _boss.WireHitRadius,
+                _boss.SpecialAttack.WireHitRadius,
                 direction,
                 _wireHits,
-                _boss.SpecialAttackRange,
+                _boss.SpecialAttack.Range,
                 ~0,
                 QueryTriggerInteraction.Ignore
             );
@@ -132,7 +132,7 @@ namespace CreativeAI.Gameplay
             // （プレイヤーが壁際でNavMeshの外側にわずかにはみ出しているだけ、という場合を拾う）
             Vector3 gap = playerPosition - hit.position;
             gap.y = 0f;
-            return gap.magnitude <= _boss.AttackRange;
+            return gap.magnitude <= _boss.NormalAttack.Range;
         }
 
         private Vector3 GetBossChestPosition()

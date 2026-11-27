@@ -31,6 +31,11 @@ namespace CreativeAI.Gameplay
         public TBossPatrolState(TutorialBossController controller)
             : base(controller) { }
 
+        public override bool AllowsLookAround => true;
+
+        // 巡回中は、怪しんで見つめている間だけ顔を向ける
+        public override bool AimsHeadAtPlayer => boss.Perception.IsSuspicious;
+
         public override void Enter()
         {
             DevLog.Log("[TutorialBoss] パトロールステート開始");
@@ -40,7 +45,7 @@ namespace CreativeAI.Gameplay
 
             if (boss.Agent != null)
             {
-                boss.Agent.speed = boss.WalkSpeed;
+                boss.Agent.speed = boss.Movement.WalkSpeed;
                 boss.SetAgentStopped(false);
             }
 
@@ -54,15 +59,15 @@ namespace CreativeAI.Gameplay
         public override void Update()
         {
             // 発見度が上限に達したら完全発見
-            if (boss.IsFullyAware)
+            if (boss.Perception.IsFullyAware)
             {
-                boss.IsAlerted = true;
+                boss.SetAlerted(true);
                 boss.ChangeState(new TBossChaseState(boss));
                 return;
             }
 
             // ちらっと見えた等で怪しんでいる間は、立ち止まって見えた場所を向く
-            if (boss.IsSuspicious)
+            if (boss.Perception.IsSuspicious)
             {
                 if (!_isStaringAtGlimpse)
                 {
@@ -144,14 +149,14 @@ namespace CreativeAI.Gameplay
         /// </summary>
         private bool UpdateGlimpse()
         {
-            if (boss.CheckInFlashlight())
+            if (boss.Perception.IsPlayerVisible())
             {
                 _sawPlayerWhileSuspicious = true;
                 _glimpseLostTimer = 0f;
                 return false;
             }
 
-            if (!_sawPlayerWhileSuspicious || !boss.HasKnownPlayerPosition)
+            if (!_sawPlayerWhileSuspicious || !boss.Perception.HasKnownPlayerPosition)
             {
                 return false;
             }
@@ -164,7 +169,7 @@ namespace CreativeAI.Gameplay
 
             DevLog.Log("[TutorialBoss] 見えた気がした場所を確かめに行く");
             boss.ChangeState(
-                new TBossSearchState(boss, boss.LastKnownPlayerPosition, cautious: true)
+                new TBossSearchState(boss, boss.Perception.LastKnownPlayerPosition, cautious: true)
             );
             return true;
         }
@@ -175,31 +180,24 @@ namespace CreativeAI.Gameplay
         /// </summary>
         private void FaceTowardLastKnown()
         {
-            if (!boss.HasKnownPlayerPosition)
+            if (!boss.Perception.HasKnownPlayerPosition)
             {
                 return;
             }
 
-            Vector3 dir = boss.LastKnownPlayerPosition - boss.transform.position;
-            dir.y = 0f;
-            if (dir.sqrMagnitude < 0.001f)
-            {
-                return;
-            }
-
-            boss.transform.rotation = Quaternion.Slerp(
-                boss.transform.rotation,
-                Quaternion.LookRotation(dir.normalized),
-                Time.deltaTime * NoticeRotateSpeed
+            FaceTowards(
+                boss.Perception.LastKnownPlayerPosition,
+                NoticeRotateSpeed,
+                minSqrDistance: 0.001f
             );
         }
 
         private void OnSoundHeard(NoiseEvent data)
         {
             // 音よりもスポットライトでの視認を最優先する（完全発見のみ即座に切り替える）
-            if (boss.IsFullyAware)
+            if (boss.Perception.IsFullyAware)
             {
-                boss.IsAlerted = true;
+                boss.SetAlerted(true);
                 boss.ChangeState(new TBossChaseState(boss));
                 return;
             }
@@ -211,7 +209,7 @@ namespace CreativeAI.Gameplay
             }
 
             boss.LastHeardSoundPosition = data.Position;
-            boss.NotifySoundHeard(confidence);
+            boss.Perception.NotifySoundHeard(confidence);
             boss.ChangeState(new TBossSoundInvestigateState(boss, confidence));
         }
     }

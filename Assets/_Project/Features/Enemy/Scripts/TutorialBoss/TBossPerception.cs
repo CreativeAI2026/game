@@ -297,7 +297,7 @@ namespace CreativeAI.Gameplay
 
             Vector3 toPlayer = _boss.Player.transform.position - _boss.transform.position;
             toPlayer.y = 0f;
-            if (toPlayer.magnitude > _boss.CombatCloseSenseRadius)
+            if (toPlayer.magnitude > _boss.Sight.CombatCloseSenseRadius)
             {
                 return false;
             }

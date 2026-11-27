@@ -17,9 +17,9 @@ namespace CreativeAI.Gameplay
             if (ev == null || progress == null)
                 return false;
 
-            // hasItem 条件用の所持判定。giveItem と同じ ItemGiverService 経由(未登録なら所持なし扱い)。
-            var giver = ItemGiverService.Current;
-            Func<string, bool> hasItem = giver != null ? giver.HasImportantItem : null;
+            // hasItem 条件用の所持判定。所持品が居なければ所持なし扱い。
+            var inventory = InventoryManager.Instance;
+            Func<string, bool> hasItem = inventory != null ? inventory.HasImportantItem : null;
             return ev.ConditionsMet(progress.Progress, progress.GetFlag, hasItem);
         }
     }

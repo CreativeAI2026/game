@@ -1,0 +1,556 @@
+using System.Collections.Generic;
+using System.IO;
+using System.Linq;
+using CreativeAI.Gameplay;
+using NUnit.Framework;
+using UnityEngine;
+using UnityEngine.TestTools;
+
+namespace CreativeAI.Tests.EditMode
+{
+    /// <summary>
+    /// セーブ(SaveService)とロード(LoadService)の往復(マネージャから取り込み→書き→読み→戻す)と、セーブ可否のゲートの検証。
+    /// 保存先は一時フォルダに差し替え、開発者の手元のセーブには触れない。
+    /// </summary>
+    public class SaveLoadTests
+    {
+        private string _saveDir;
+        private string SavePath => Path.Combine(_saveDir, "save.json");
+        private readonly TestResidents _residents = new();
+        private GameObject _playerGo;
+        private ProgressManager _pm;
+        private FieldItemManager _fieldItems;
+        private InventoryManager _inv;
+        private EquipmentSlots _equipment;
+        private QuickFoodSlots _quickFood;
+        private GameModeManager _gmm;
+        private WeaponManager _weapons;
+        private PlayerParameterData _playerData;
+        private readonly List<Object> _assets = new();
+
+        [OneTimeSetUp]
+        public void OneTimeSetUp()
+        {
+            _saveDir = Path.Combine(
+                Path.GetTempPath(),
+                "CreativeAI-SaveTests-" + Path.GetRandomFileName()
+            );
+            Directory.CreateDirectory(_saveDir);
+            SaveFile.OverrideDirectoryForTests(_saveDir);
+        }
+
+        [OneTimeTearDown]
+        public void OneTimeTearDown()
+        {
+            SaveFile.OverrideDirectoryForTests(null);
+            Directory.Delete(_saveDir, true);
+        }
+
+        private T MakeAsset<T>()
+            where T : ScriptableObject
+        {
+            var a = ScriptableObject.CreateInstance<T>();
+            _assets.Add(a);
+            return a;
+        }
+
+        [SetUp]
+        public void SetUp()
+        {
+            DeleteSaveFiles();
+
+            _pm = _residents.Add<ProgressManager>();
+            _inv = _residents.Add<InventoryManager>();
+            _equipment = _inv.Equipment;
+            _quickFood = _inv.QuickFood;
+            _gmm = _residents.Add<GameModeManager>();
+            _fieldItems = _residents.Add<FieldItemManager>();
+            _weapons = _residents.Add<WeaponManager>();
+
+            _playerData = MakeAsset<PlayerParameterData>();
+            _playerData.baseMaxLife = 1000f;
+            _playerData.baseAttackPower = 2000f;
+            _playerData.baseDefense = 500f;
+            _playerData.baseCriticalChance = 0f;
+            _playerData.baseCriticalDamageRatio = 0f;
+
+            _playerGo = TestPlayer.Create("Player");
+            var status = _playerGo.AddComponent<PlayerStatus>();
+            TestReflection.SetField(status, "_playerData", _playerData);
+        }
+
+        [TearDown]
+        public void TearDown()
+        {
+            _residents.Clear();
+            TestPlayer.Destroy(_playerGo);
+            foreach (var a in _assets)
+                Object.DestroyImmediate(a);
+            _assets.Clear();
+            DeleteSaveFiles();
+        }
+
+        // 本体のほか、差し替え前の予備(.bak)と書きかけ(.tmp)も消す
+        private void DeleteSaveFiles()
+        {
+            foreach (var path in Directory.GetFiles(_saveDir, "save.json*"))
+                File.Delete(path);
+        }
+
+        private FoodData MakeFood(int id)
+        {
+            var f = MakeAsset<FoodData>();
+            f.id = id;
+            f.key = $"food_{id}";
+            return f;
+        }
+
+        private ItemData MakeEquipment(int id)
+        {
+            var e = MakeAsset<ItemData>();
+            e.category = ItemCategory.Equipment;
+            e.id = id;
+            e.key = $"equipment_{id}";
+            return e;
+        }
+
+        // --- セーブ可否(フィールド移動中のみ) ---
+
+        [Test]
+        public void Save_InBattleMode_IsBlocked()
+        {
+            _gmm.TryStartBattle();
+            LogAssert.Expect(
+                LogType.Warning,
+                new System.Text.RegularExpressions.Regex("戦闘モード中")
+            );
+
+            SaveService.Save();
+
+            Assert.IsFalse(LoadService.HasSave(), "戦闘中はセーブファイルを作らない");
+        }
+
+        [Test]
+        public void Save_DuringEventPlayback_IsBlocked()
+        {
+            _gmm.TryStartDialogue();
+            LogAssert.Expect(
+                LogType.Warning,
+                new System.Text.RegularExpressions.Regex("会話イベント再生中")
+            );
+
+            SaveService.Save();
+
+            Assert.IsFalse(LoadService.HasSave(), "会話UI表示中はセーブファイルを作らない");
+        }
+
+        [Test]
+        public void Save_InFieldMode_Writes()
+        {
+            SaveService.Save();
+
+            Assert.IsTrue(LoadService.HasSave());
+        }
+
+        [Test]
+        public void Load_WithoutSaveFile_ReturnsNull()
+        {
+            Assert.IsNull(LoadService.Load());
+        }
+
+        // --- 壊れたセーブ ---
+
+        [Test]
+        public void Load_WhenSaveIsCorrupted_FallsBackToPreviousSave()
+        {
+            _pm.LoadState(3, new Dictionary<string, string>());
+            SaveService.Save();
+            _pm.LoadState(5, new Dictionary<string, string>());
+            SaveService.Save(); // 1回目の内容が予備に回る
+
+            File.WriteAllText(SavePath, "{ \"progress\": 9, \"items\": [");
+            LogAssert.Expect(
+                LogType.Warning,
+                new System.Text.RegularExpressions.Regex("読み込みに失敗")
+            );
+            LogAssert.Expect(
+                LogType.Warning,
+                new System.Text.RegularExpressions.Regex("1つ前のセーブ")
+            );
+
+            var data = LoadService.Load();
+
+            Assert.IsNotNull(data);
+            Assert.AreEqual(3, _pm.Progress);
+        }
+
+        [Test]
+        public void Load_WhenSaveAndBackupAreCorrupted_ReturnsNull()
+        {
+            File.WriteAllText(SavePath, "{ broken");
+            File.WriteAllText(SavePath + ".bak", "{ broken");
+            LogAssert.Expect(
+                LogType.Warning,
+                new System.Text.RegularExpressions.Regex("読み込みに失敗")
+            );
+            LogAssert.Expect(
+                LogType.Warning,
+                new System.Text.RegularExpressions.Regex("読み込みに失敗")
+            );
+            LogAssert.Expect(LogType.Error, new System.Text.RegularExpressions.Regex("壊れていて"));
+
+            Assert.IsNull(LoadService.Load());
+        }
+
+        [Test]
+        public void Save_LeavesNoTempFile()
+        {
+            SaveService.Save();
+            SaveService.Save();
+
+            Assert.IsFalse(File.Exists(SavePath + ".tmp"));
+            Assert.IsTrue(File.Exists(SavePath + ".bak"));
+        }
+
+        // --- 保存 → 復元の往復 ---
+
+        [Test]
+        public void SaveThenLoad_RestoresProgressAndFlags()
+        {
+            _pm.LoadState(7, new Dictionary<string, string> { { "girl_choice", "together" } });
+
+            SaveService.Save();
+            _pm.LoadState(0, new Dictionary<string, string>()); // 別状態にしてから復元
+
+            var data = LoadService.Load();
+
+            Assert.IsNotNull(data);
+            Assert.AreEqual(7, _pm.Progress);
+            Assert.AreEqual("together", _pm.GetFlag("girl_choice"));
+        }
+
+        [Test]
+        public void SaveThenLoad_RestoresItems_StacksInstancesEquippedAndQuickFood()
+        {
+            var apple = MakeFood(3001);
+            var gear = MakeEquipment(2001);
+            var rolledGear = MakeEquipment(2002);
+            ItemCatalog.InjectForTests(new ItemData[] { apple, gear, rolledGear });
+
+            _inv.AddItem(apple, 4);
+            _inv.AddItem(gear, 1);
+            _inv.AddInstance(rolledGear, new List<RolledStat> { new("attackPct", 12.5f) });
+            var gearStack = _inv.GetAllItems().Find(s => s.Data == gear);
+            var appleStack = _inv.GetAllItems().Find(s => s.Data == apple);
+            _equipment.Set(2, gearStack);
+            _quickFood.Set(1, appleStack);
+
+            SaveService.Save();
+            _inv.Clear();
+            Assert.AreEqual(0, _inv.GetAllItems().Count); // 前提: 消えている
+
+            LoadService.Load();
+
+            var all = _inv.GetAllItems();
+            Assert.AreEqual(3, all.Count);
+
+            var restoredApple = all.Find(s => s.Data == apple);
+            Assert.AreEqual(4, restoredApple.Count, "スタック数が戻る");
+            Assert.AreSame(restoredApple, _quickFood.GetSlots()[1], "即時食材の枠も戻る");
+
+            var restoredGear = all.Find(s => s.Data == gear);
+            Assert.IsTrue(_inv.Equipment.Contains(restoredGear), "装備状態が戻る");
+            Assert.AreSame(restoredGear, _equipment.GetSlots()[2], "装備の枠も戻る");
+
+            var restoredRolled = all.Find(s => s.Data == rolledGear);
+            Assert.IsTrue(restoredRolled.IsInstance, "ロール済み個体は個体のまま戻る");
+            Assert.AreEqual("attackPct", restoredRolled.RolledStats[0].stat);
+            Assert.AreEqual(12.5f, restoredRolled.RolledStats[0].value, 1e-4f);
+        }
+
+        [Test]
+        public void SaveThenLoad_ItemKeyPreservesEquipmentWhenNumericIdChanges()
+        {
+            var gear = MakeEquipment(2101);
+            gear.key = "charger_earphones";
+            ItemCatalog.InjectForTests(new ItemData[] { gear });
+            _inv.AddInstance(gear, new List<RolledStat> { new("attackPct", 12.5f) });
+            _equipment.Set(0, _inv.GetAllItems()[0]);
+
+            SaveService.Save();
+
+            var saved = JsonUtility.FromJson<SaveData>(File.ReadAllText(SavePath));
+            Assert.AreEqual("charger_earphones", saved.items[0].itemKey);
+            Assert.AreEqual(2101, saved.items[0].itemId);
+
+            // 保存後に番号が別アイテムへ再利用されても、キーが同じ装備を復元する。
+            gear.id = 2501;
+            var unrelated = MakeEquipment(2101);
+            unrelated.key = "unrelated";
+            ItemCatalog.InjectForTests(new ItemData[] { gear, unrelated });
+            _inv.Clear();
+
+            LoadService.Load();
+
+            var restored = _inv.GetAllItems().Single();
+            Assert.AreSame(gear, restored.Data);
+            Assert.IsTrue(_inv.Equipment.Contains(restored));
+            Assert.AreEqual(12.5f, restored.RolledStats.Single().value);
+        }
+
+        [Test]
+        public void Load_RemovedItemKey_DoesNotFallBackToReusedNumericId()
+        {
+            var unrelated = MakeEquipment(2101);
+            unrelated.key = "charger_earphones";
+            ItemCatalog.InjectForTests(new ItemData[] { unrelated });
+            var data = new SaveData();
+            data.items.Add(
+                new ItemEntry
+                {
+                    itemId = 2101,
+                    itemKey = "removed_item",
+                    count = 1,
+                }
+            );
+            File.WriteAllText(SavePath, JsonUtility.ToJson(data));
+            LogAssert.Expect(
+                LogType.Warning,
+                new System.Text.RegularExpressions.Regex("ItemCatalog に無し")
+            );
+
+            LoadService.Load();
+
+            Assert.IsEmpty(_inv.GetAllItems());
+        }
+
+        [TestCase(2001)]
+        [TestCase(2003)]
+        [TestCase(2010)]
+        [TestCase(2101)]
+        [TestCase(2110)]
+        [TestCase(2145)]
+        public void Load_LegacyRemovedEquipment_DoesNotBecomeNewEquipment(int legacyId)
+        {
+            var unrelated = MakeEquipment(legacyId);
+            unrelated.key = "new_equipment";
+            ItemCatalog.InjectForTests(new ItemData[] { unrelated });
+            // itemKey が存在しない、入れ替え前の実際のセーブ形式。
+            File.WriteAllText(
+                SavePath,
+                "{\"items\":[{\"itemId\":" + legacyId + ",\"count\":1,\"equipped\":true}]}"
+            );
+            LogAssert.Expect(
+                LogType.Warning,
+                new System.Text.RegularExpressions.Regex("ItemCatalog に無し")
+            );
+
+            LoadService.Load();
+
+            Assert.IsEmpty(_inv.GetAllItems(), "旧装備の番号を新装備として読み替えない");
+        }
+
+        [Test]
+        public void Load_LegacySave_PreservesSurvivingItemsProgressAndPickedPlaces()
+        {
+            var glasses = MakeEquipment(2008);
+            glasses.key = "glasses";
+            var watch = MakeEquipment(2012);
+            watch.key = "watch";
+            var apple = MakeFood(3001);
+            apple.key = "apple";
+            var card = MakeAsset<ItemData>();
+            card.id = 4001;
+            card.key = "card_key";
+            card.category = ItemCategory.Important;
+            ItemCatalog.InjectForTests(new ItemData[] { glasses, watch, apple, card });
+            File.WriteAllText(
+                SavePath,
+                "{\"progress\":7,\"flags\":[{\"key\":\"route\",\"value\":\"together\"}],"
+                    + "\"pickedItemIds\":[\"Area/apple\"],\"items\":["
+                    + "{\"itemId\":2008,\"count\":1,\"equipped\":true},"
+                    + "{\"itemId\":2012,\"count\":1},"
+                    + "{\"itemId\":3001,\"count\":4,\"inQuickFood\":true,\"quickFoodSlot\":2},"
+                    + "{\"itemId\":4001,\"count\":1}]}"
+            );
+
+            LoadService.Load();
+
+            Assert.AreEqual(4, _inv.GetAllItems().Count);
+            Assert.IsTrue(
+                _inv.Equipment.Contains(_inv.GetAllItems().Single(s => s.Data == glasses))
+            );
+            Assert.AreEqual(1, _inv.GetItemCount(watch));
+            Assert.AreEqual(4, _inv.GetItemCount(apple));
+            Assert.AreSame(apple, _quickFood.GetSlots()[2].Data);
+            Assert.AreEqual(1, _inv.GetItemCount(card));
+            Assert.AreEqual(7, _pm.Progress);
+            Assert.AreEqual("together", _pm.GetFlag("route"));
+            Assert.IsTrue(_fieldItems.IsPicked("Area/apple"));
+        }
+
+        [Test]
+        public void SaveThenRestorePlayerState_RestoresPositionHpAndWeapons()
+        {
+            var status = _playerGo.GetComponent<PlayerStatus>();
+            status.RestoreHp(640f);
+            _playerGo.transform.SetPositionAndRotation(
+                new Vector3(1.5f, 2.5f, -3.5f),
+                Quaternion.Euler(0f, 90f, 0f)
+            );
+            _weapons.GiveWeapon("sword");
+            _weapons.GiveWeapon("scythe");
+            _weapons.SelectNext(); // 鎌を選択
+
+            SaveService.Save();
+
+            // 位置・HP・武器を崩してから復元する。
+            _playerGo.transform.position = Vector3.zero;
+            status.RestoreHp(1f);
+            _weapons.RestoreWeapons(new List<string>(), WeaponManager.NoWeapon);
+
+            var data = LoadService.Load();
+            LoadService.RestorePlayerState(data);
+
+            Assert.AreEqual(new Vector3(1.5f, 2.5f, -3.5f), _playerGo.transform.position);
+            Assert.AreEqual(90f, _playerGo.transform.eulerAngles.y, 1e-2f);
+            Assert.AreEqual(640f, status.CurrentHp, 1e-2f);
+            CollectionAssert.AreEqual(
+                new[] { "sword", "scythe" },
+                _weapons.CaptureOwnedWeaponKeys().ToList()
+            );
+            Assert.AreEqual(2, _weapons.CurrentWeaponIndex, "選択中の武器も戻る");
+        }
+
+        [Test]
+        public void RestorePlayerState_WithoutPlayerState_DoesNothing()
+        {
+            var status = _playerGo.GetComponent<PlayerStatus>();
+            status.RestoreHp(500f);
+
+            LoadService.RestorePlayerState(new SaveData { hasPlayerState = false, currentHp = 1f });
+
+            Assert.AreEqual(
+                500f,
+                status.CurrentHp,
+                1e-2f,
+                "旧セーブ(リグ状態なし)は復元をスキップ"
+            );
+        }
+
+        [Test]
+        public void Load_ItemMissingFromCatalog_IsSkippedWithWarning()
+        {
+            var apple = MakeFood(3001);
+            ItemCatalog.InjectForTests(new ItemData[] { apple });
+            _inv.AddItem(apple, 1);
+            SaveService.Save();
+
+            // カタログから消えた状態で復元する(アセット削除を模す)。
+            ItemCatalog.InjectForTests(new ItemData[] { });
+            _inv.Clear();
+            LogAssert.Expect(
+                LogType.Warning,
+                new System.Text.RegularExpressions.Regex("ItemCatalog に無し")
+            );
+
+            LoadService.Load();
+
+            Assert.AreEqual(0, _inv.GetAllItems().Count);
+        }
+
+        // --- フィールドで拾ったアイテムの記録 ---
+
+        private readonly List<GameObject> _pickupGos = new();
+
+        /// <summary>フィールドに置かれた拾えるアイテム(指定の識別子つき)を作る。</summary>
+        private FieldItemPickup PlacePickup(string id, ItemData item)
+        {
+            var go = new GameObject("Pickup_" + id, typeof(BoxCollider));
+            _pickupGos.Add(go);
+            var pickup = go.AddComponent<FieldItemPickup>();
+            TestReflection.SetField(pickup, "_pickupId", id);
+            TestReflection.SetField(pickup, "_item", item);
+            return pickup;
+        }
+
+        [TearDown]
+        public void DestroyPickups()
+        {
+            foreach (var go in _pickupGos)
+                if (go != null)
+                    Object.DestroyImmediate(go);
+            _pickupGos.Clear();
+        }
+
+        [Test]
+        public void PickThenSaveThenLoad_PickedItemIsNotPlacedAgain()
+        {
+            var apple = MakeFood(3001);
+            ItemCatalog.InjectForTests(new ItemData[] { apple });
+            Assert.IsTrue(PlacePickup("Area/apple", apple).TryPickup());
+            SaveService.Save();
+
+            // タイトルから「続きから」で入り直す: 記録は空から作られ、ロードで復元される。
+            _fieldItems.Restore(null);
+            LoadService.Load();
+
+            var again = PlacePickup("Area/apple", apple);
+            again.HideIfAlreadyPicked();
+            Assert.IsFalse(again.gameObject.activeSelf);
+        }
+
+        [Test]
+        public void PickAfterSave_ComesBackOnLoad()
+        {
+            var apple = MakeFood(3001);
+            var pear = MakeFood(3002);
+            ItemCatalog.InjectForTests(new ItemData[] { apple, pear });
+            Assert.IsTrue(PlacePickup("Area/apple", apple).TryPickup());
+            SaveService.Save();
+
+            // セーブより後に拾ったものは、ロードで所持品から消えるので、フィールドにまた置かれる。
+            Assert.IsTrue(PlacePickup("Area/pear", pear).TryPickup());
+            LoadService.Load();
+
+            var appleAgain = PlacePickup("Area/apple", apple);
+            var pearAgain = PlacePickup("Area/pear", pear);
+            appleAgain.HideIfAlreadyPicked();
+            pearAgain.HideIfAlreadyPicked();
+            Assert.IsFalse(appleAgain.gameObject.activeSelf, "セーブ前に拾ったものは出ない");
+            Assert.IsTrue(pearAgain.gameObject.activeSelf, "セーブ後に拾ったものは戻る");
+            Assert.AreEqual(1, _inv.GetItemCount(apple));
+            Assert.AreEqual(0, _inv.GetItemCount(pear));
+        }
+
+        [Test]
+        public void Load_OldSaveWithoutPickedItems_PlacesEverything()
+        {
+            var apple = MakeFood(3001);
+            ItemCatalog.InjectForTests(new ItemData[] { apple });
+            Assert.IsTrue(PlacePickup("Area/apple", apple).TryPickup());
+            SaveService.Save();
+
+            // 拾い済みの項目が無い旧セーブを模す。
+            var json = File.ReadAllText(SavePath);
+            var data = JsonUtility.FromJson<SaveData>(json);
+            data.pickedItemIds = null;
+            File.WriteAllText(SavePath, JsonUtility.ToJson(data));
+
+            LoadService.Load();
+
+            var again = PlacePickup("Area/apple", apple);
+            again.HideIfAlreadyPicked();
+            Assert.IsTrue(again.gameObject.activeSelf);
+        }
+
+        [Test]
+        public void PickupWithoutId_IsNotRecorded()
+        {
+            var apple = MakeFood(3001);
+            Assert.IsTrue(PlacePickup("", apple).TryPickup());
+
+            Assert.IsEmpty(_fieldItems.Snapshot());
+        }
+    }
+}

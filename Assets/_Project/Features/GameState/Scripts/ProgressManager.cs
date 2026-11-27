@@ -42,11 +42,19 @@ namespace CreativeAI.Gameplay
     {
         public static ProgressManager Instance { get; private set; }
 
-        /// <summary>メイン進行度。EventTrigger / NpcVisibility が条件評価のため読む。</summary>
+        /// <summary>セッション常駐の進行度を1つだけ生成する(既存ならそれを返す)。</summary>
+        public static ProgressManager EnsureResident()
+        {
+            if (Instance != null)
+                return Instance;
+            return new GameObject(nameof(ProgressManager)).AddComponent<ProgressManager>();
+        }
+
+        /// <summary>メイン進行度。イベントの発火条件(EventAvailability)と分岐が読む。</summary>
         public int Progress { get; private set; }
 
         /// <summary>進行度かフラグが変わったときに通知(引数なし。購読側は読み直す)。</summary>
-        public event Action OnProgressChanged;
+        public event Action Changed;
 
         private readonly Dictionary<string, string> _flags = new();
 
@@ -54,7 +62,7 @@ namespace CreativeAI.Gameplay
         public IReadOnlyDictionary<string, string> Flags => _flags;
 
         /// <summary>
-        /// ロード時に進行度・フラグをまとめて復元する。値の異同に関わらず OnProgressChanged を通知する
+        /// ロード時に進行度・フラグをまとめて復元する。値の異同に関わらず Changed を通知する
         /// (購読側に読み直させる)。
         /// </summary>
         public void LoadState(int progress, IReadOnlyDictionary<string, string> flags)
@@ -67,7 +75,7 @@ namespace CreativeAI.Gameplay
                         _flags[kv.Key] = kv.Value;
             }
             Progress = progress;
-            OnProgressChanged?.Invoke();
+            Changed?.Invoke();
         }
 
         private void Awake()
@@ -103,12 +111,12 @@ namespace CreativeAI.Gameplay
                 return;
             _flags[key] = value;
             // フラグ条件のイベントも EventTrigger に見直させるため、進行度と同じ通知に乗せる。
-            OnProgressChanged?.Invoke();
+            Changed?.Invoke();
         }
 
         /// <summary>
         /// イベント終了時に進行側(EventPlayer)が進行度を進める。
-        /// 値が変わったときだけ OnProgressChanged を通知する。
+        /// 値が変わったときだけ Changed を通知する。
         /// デバッグで巻き戻せるよう、後退は弾かない。
         /// </summary>
         public void AdvanceTo(int progress)
@@ -116,7 +124,7 @@ namespace CreativeAI.Gameplay
             if (progress == Progress)
                 return;
             Progress = progress;
-            OnProgressChanged?.Invoke();
+            Changed?.Invoke();
         }
     }
 }

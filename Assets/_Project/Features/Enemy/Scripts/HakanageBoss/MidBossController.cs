@@ -350,7 +350,7 @@ namespace CreativeAI.Gameplay
         {
             base.Start();
             // イベント終了後の強制戦闘のため、常に発見状態で開始する
-            IsAlerted = true;
+            SetAlerted(true);
             ChangeState(new MidBossStartState(this));
         }
 

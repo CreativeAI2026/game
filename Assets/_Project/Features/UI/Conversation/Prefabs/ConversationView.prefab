@@ -4838,12 +4838,12 @@ MonoBehaviour:
   _indicatorBounceDuration: 0.6
   _sounds: []
   _backgrounds: []
-  _autoControlButton: {fileID: 8823399268420984495}
-  _skipControlButton: {fileID: 2891856841903225775}
-  _speedControlButton: {fileID: 4795455373226652515}
+  _autoControl: {fileID: 2696726095153382812}
+  _skipControl: {fileID: 6068018115425197366}
+  _speedControl: {fileID: 5925614561218619926}
   _speedControlLabel: {fileID: 4900119530313202009}
   _speedToast: {fileID: 8936770999648836912}
-  _hideControlButton: {fileID: 1927782814270639056}
+  _hideControl: {fileID: 4277690952432172256}
 --- !u!114 &2617963843171750779
 MonoBehaviour:
   m_ObjectHideFlags: 0

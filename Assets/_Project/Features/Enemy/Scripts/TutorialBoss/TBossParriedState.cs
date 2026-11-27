@@ -31,6 +31,8 @@ namespace CreativeAI.Gameplay
         public TBossParriedState(TutorialBossController controller)
             : base(controller) { }
 
+        public override bool IsCommitted => true;
+
         public override void Enter()
         {
             DevLog.Log("[TutorialBoss] 大きく崩れる(パリィ/掴みからの脱出)");
@@ -43,8 +45,6 @@ namespace CreativeAI.Gameplay
                 boss.Agent.velocity = Vector3.zero;
                 boss.SetAgentStopped(true);
             }
-
-            boss.StopSwingEffects();
 
             if (boss.Animator != null)
             {
@@ -112,7 +112,7 @@ namespace CreativeAI.Gameplay
         private void ReturnToCombat()
         {
             // パリィも掴みからの脱出も交戦中にしか起きないので、警戒は保ったまま追跡へ戻る（見えていなければ追跡側で見失い処理に入る）
-            boss.IsAlerted = true;
+            boss.SetAlerted(true);
             boss.ChangeState(new TBossChaseState(boss));
         }
     }

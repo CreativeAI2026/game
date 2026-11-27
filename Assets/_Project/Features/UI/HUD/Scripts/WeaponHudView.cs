@@ -13,9 +13,9 @@ namespace CreativeAI.UI
     ///
     /// ■ パネルと武器の対応
     ///   パネルは <b>武器1本につき1枚</b>、雛形(<see cref="_panelTemplate"/>)から武器の数だけ複製して作る。
-    ///   アイコンはその武器のデータ(WeaponData の Icon)から設定する。
+    ///   アイコンはその武器の定義(WeaponCatalog の WeaponData の Icon)から設定する。
     ///   パネルとアイコンは常に同じ武器の組で、回転してもパネル同士でアイコンが入れ替わることはない。
-    ///   武器が増えても WeaponManager の一覧に足すだけでパネルも増える(Inspector でパネルを並べ直さなくてよい)。
+    ///   武器が増えても WeaponManager.WeaponKeys と WeaponCatalog に足すだけでパネルも増える(Inspector でパネルを並べ直さなくてよい)。
     ///
     /// ■ 配置は「状態」から毎回決める
     ///   入手ずみ武器(WeaponManager.OwnedIndices)と選択中(CurrentWeaponIndex)から各パネルの位置を計算する。
@@ -109,7 +109,7 @@ namespace CreativeAI.UI
         // 並べ直しのたびに増やし、古いアニメーションを止めるための番号
         private int _layoutVersion;
 
-        // 依存。プレイヤーは Prefab から実行時に生成されるので、PlayerRegistry から受け取る(未生成の間は null)
+        // 依存。持っている武器と選択はセッション常駐の WeaponManager、アイコンは WeaponCatalog から読む(プレイヤーの見た目には頼らない)。
         private WeaponManager _weaponManager;
 
         private void Awake()
@@ -137,10 +137,7 @@ namespace CreativeAI.UI
 
         private void OnEnable()
         {
-            PlayerRegistry.Changed += HandlePlayerChanged;
-            if (PlayerRegistry.Current != null)
-                _weaponManager = PlayerRegistry.Current.GetComponent<WeaponManager>();
-
+            _weaponManager = WeaponManager.Instance;
             SubscribeWeaponManager();
             // Start より先に来ても効くように、購読と同時に現状を反映する。
             ApplyOwnedCount();
@@ -148,39 +145,30 @@ namespace CreativeAI.UI
 
         private void OnDisable()
         {
-            PlayerRegistry.Changed -= HandlePlayerChanged;
             UnsubscribeWeaponManager();
-        }
-
-        /// <summary>プレイヤーが生成・破棄されたときに、購読先の WeaponManager を付け替えてパネルを作り直す。</summary>
-        private void HandlePlayerChanged(PlayerController player)
-        {
-            UnsubscribeWeaponManager();
-            _weaponManager = player != null ? player.GetComponent<WeaponManager>() : null;
-            SubscribeWeaponManager();
-            BuildPanels();
+            _weaponManager = null;
         }
 
         private void SubscribeWeaponManager()
         {
             if (_weaponManager == null)
-                return; // プレイヤー未生成
-            _weaponManager.OnWeaponSwitched += HandleWeaponSwitched;
-            _weaponManager.OnOwnedCountChanged += HandleOwnedCountChanged;
+                return; // セッション開始前
+            _weaponManager.SelectionChanged += HandleWeaponSwitched;
+            _weaponManager.OwnedChanged += HandleOwnedChanged;
         }
 
         private void UnsubscribeWeaponManager()
         {
             if (_weaponManager == null)
                 return;
-            _weaponManager.OnWeaponSwitched -= HandleWeaponSwitched;
-            _weaponManager.OnOwnedCountChanged -= HandleOwnedCountChanged;
+            _weaponManager.SelectionChanged -= HandleWeaponSwitched;
+            _weaponManager.OwnedChanged -= HandleOwnedChanged;
         }
 
         /// <summary>所持本数が変わったとき(giveWeapon / セーブ復元)に出し入れし、アニメーションなしで並べ直す。</summary>
-        private void HandleOwnedCountChanged(int ownedCount)
+        private void HandleOwnedChanged()
         {
-            ApplyVisibility(ownedCount);
+            ApplyOwnedCount();
             Layout(animate: false, clockwise: true);
         }
 
@@ -206,7 +194,7 @@ namespace CreativeAI.UI
 
         /// <summary>
         /// 武器1本につき1枚、雛形からパネルを作り直し、アイコンを武器のデータから設定する。
-        /// 雛形が未設定(EditMode テスト等)・プレイヤー未生成のときは作らない。
+        /// 雛形が未設定(EditMode テスト等)・武器の常駐が無いときは作らない。
         /// </summary>
         private void BuildPanels()
         {
@@ -217,8 +205,9 @@ namespace CreativeAI.UI
             if (_panelTemplate == null || _weaponManager == null)
                 return;
 
+            var catalog = WeaponCatalog.Instance;
             string iconPath = RelativePath(_templateIcon.transform, _panelTemplate);
-            for (int i = 0; i < _weaponManager.WeaponCount; i++)
+            for (int i = 0; i < WeaponManager.WeaponKeys.Count; i++)
             {
                 RectTransform rect = Instantiate(_panelTemplate, _panelTemplate.parent);
                 rect.name =
@@ -228,7 +217,8 @@ namespace CreativeAI.UI
 
                 // 複製したパネルの中で、雛形のアイコンと同じ位置にある Image にこの武器のアイコンを入れる
                 Image icon = rect.Find(iconPath).GetComponent<Image>();
-                Sprite sprite = _weaponManager.GetIcon(i);
+                WeaponData weapon = catalog != null ? catalog.Get(i) : null;
+                Sprite sprite = weapon != null ? weapon.icon : null;
                 icon.sprite = sprite;
                 icon.enabled = sprite != null; // アイコン未設定の武器は空のパネルにする
 

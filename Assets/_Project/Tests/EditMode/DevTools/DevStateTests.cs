@@ -133,7 +133,7 @@ namespace CreativeAI.Tests.EditMode
             );
         }
 
-        // SaveServiceTests と同じ組み方(最大HP 1000 のリグ)。
+        // SaveLoadTests と同じ組み方(最大HP 1000 のリグ)。
         private static (GameObject, PlayerStatus, WeaponManager, PlayerParameterData) MakePlayer()
         {
             var data = ScriptableObject.CreateInstance<PlayerParameterData>();

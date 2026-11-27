@@ -8,7 +8,7 @@ namespace CreativeAI.Playtest
     /// 戦闘が始まる前(準備エリアにいる間)だけ、「ここで装備を整えてから戦闘ステージへ進む場所」だと画面上部に説明を出す。
     /// 所持品やキャラ画面を開いている間は、画面に重ならないよう隠す。
     /// </summary>
-    [RequireComponent(typeof(BattleArena))]
+    [RequireComponent(typeof(BattleEncounter))]
     public sealed class PlaytestPrepGuide : MonoBehaviour
     {
         // PlaytestSceneSwitcher のキー案内(画面最上部)の下に出す
@@ -29,7 +29,7 @@ namespace CreativeAI.Playtest
         [SerializeField]
         private string _entry = "先へ進むと戦闘が始まります。戦闘中は準備エリアへ戻れません";
 
-        private BattleArena _arena;
+        private BattleEncounter _encounter;
         private GUIContent _content;
 
         // GUIStyle は保存できる型なので、付けないとエディターの再読み込みで空のスタイルが入り、下の ??= で作り直されなくなる
@@ -38,13 +38,13 @@ namespace CreativeAI.Playtest
 
         private void Awake()
         {
-            _arena = GetComponent<BattleArena>();
+            _encounter = GetComponent<BattleEncounter>();
             _content = new GUIContent($"{_title}\n{_controls}\n{_entry}");
         }
 
         private void OnGUI()
         {
-            if (_arena.HasStarted || UIPanelService.IsOpen)
+            if (_encounter.HasStarted || GameModeManager.MenuOpen)
                 return;
 
             _style ??= new GUIStyle(GUI.skin.box)

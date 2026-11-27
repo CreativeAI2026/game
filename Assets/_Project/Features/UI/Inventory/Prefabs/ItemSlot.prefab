@@ -600,9 +600,6 @@ PrefabInstance:
       addedObject: {fileID: 8503969120120068041}
     - targetCorrespondingSourceObject: {fileID: 1227703057984881157, guid: eb83329e79f51e24d8c2185aaa107fba, type: 3}
       insertIndex: -1
-      addedObject: {fileID: 319342165626893787}
-    - targetCorrespondingSourceObject: {fileID: 1227703057984881157, guid: eb83329e79f51e24d8c2185aaa107fba, type: 3}
-      insertIndex: -1
       addedObject: {fileID: 8998153339034262442}
   m_SourcePrefab: {fileID: 100100000, guid: eb83329e79f51e24d8c2185aaa107fba, type: 3}
 --- !u!224 &567093039207048889 stripped
@@ -643,24 +640,10 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 2af7714d4be8b3444b857a4efad3a4fe, type: 3}
   m_Name: 
   m_EditorClassIdentifier: CreativeAI.UI::CreativeAI.UI.InventoryUI.ItemSlot
-  _visualRootRect: {fileID: 567093039207048889}
   _iconView: {fileID: 3823712922015246223}
   _countBadgeView: {fileID: 8998153339034262442}
   _frameView: {fileID: 5940462487717734784}
   _hover: {fileID: 846149459370376320}
-  _markerView: {fileID: 319342165626893787}
---- !u!114 &319342165626893787
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1216446043623954188}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 2bb42bd5fbdf465b8cf3e33f8fd137d9, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: CreativeAI.UI::CreativeAI.UI.SlotMarkerView
   _equippedMarker: {fileID: 7575365804542858586}
   _craftAssignedMarker: {fileID: 1366317118267088693}
   _equippedDimOverlay: {fileID: 1046181727236565525}

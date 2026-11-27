@@ -12,8 +12,10 @@ namespace CreativeAI.Tests.EditMode
     /// </summary>
     public class RolledStatBonusTests
     {
-        private GameObject _invGo;
         private InventoryManager _inv;
+        private readonly TestResidents _residents = new();
+        private EquipmentSlots _equipment;
+        private QuickFoodSlots _quickFood;
         private readonly List<Object> _created = new();
 
         // 拾得と同じ経路でロールする。
@@ -23,14 +25,15 @@ namespace CreativeAI.Tests.EditMode
         [SetUp]
         public void SetUp()
         {
-            _invGo = new GameObject(nameof(InventoryManager));
-            _inv = _invGo.AddComponent<InventoryManager>();
+            _inv = _residents.Add<InventoryManager>();
+            _equipment = _inv.Equipment;
+            _quickFood = _inv.QuickFood;
         }
 
         [TearDown]
         public void TearDown()
         {
-            Object.DestroyImmediate(_invGo);
+            _residents.Clear();
             foreach (var o in _created)
                 Object.DestroyImmediate(o);
             _created.Clear();
@@ -48,7 +51,8 @@ namespace CreativeAI.Tests.EditMode
         private ItemStack AddEquippedInstance(ItemData data, params RolledStat[] rolled)
         {
             var stack = _inv.AddInstance(data, rolled);
-            _inv.SetEquipped(stack, true);
+            int emptySlot = _equipment.GetSlots().ToList().IndexOf(null);
+            _equipment.Set(emptySlot, stack);
             return stack;
         }
 
@@ -94,7 +98,7 @@ namespace CreativeAI.Tests.EditMode
                 new RolledStat(nameof(StatType.CritRate), 8f)
             );
 
-            var bonus = _inv.GetEquippedBonus();
+            var bonus = _equipment.GetBonus();
 
             Assert.AreEqual(12f, bonus.attackPct, 1e-3f);
             Assert.AreEqual(8f, bonus.criticalChance, 1e-3f);
@@ -114,7 +118,7 @@ namespace CreativeAI.Tests.EditMode
                 new RolledStat(nameof(StatType.CritDamage), 5f)
             );
 
-            var bonus = _inv.GetEquippedBonus();
+            var bonus = _equipment.GetBonus();
 
             Assert.AreEqual(1f, bonus.attackPct, 1e-3f);
             Assert.AreEqual(2f, bonus.defensePct, 1e-3f);
@@ -130,7 +134,7 @@ namespace CreativeAI.Tests.EditMode
             var gear = MakeEquipment(2106);
             AddEquippedInstance(gear, new RolledStat("attackPct", 7f));
 
-            Assert.AreEqual(7f, _inv.GetEquippedBonus().attackPct, 1e-3f);
+            Assert.AreEqual(7f, _equipment.GetBonus().attackPct, 1e-3f);
         }
 
         [Test]
@@ -144,7 +148,7 @@ namespace CreativeAI.Tests.EditMode
                 new RolledStat(nameof(StatType.AttackPct), 3f)
             );
 
-            var bonus = _inv.GetEquippedBonus();
+            var bonus = _equipment.GetBonus();
 
             Assert.AreEqual(
                 3f,
@@ -161,7 +165,7 @@ namespace CreativeAI.Tests.EditMode
             var gear = MakeEquipment(2108);
             AddEquippedInstance(gear, new RolledStat(nameof(StatType.HealAmount), 40f));
 
-            var bonus = _inv.GetEquippedBonus();
+            var bonus = _equipment.GetBonus();
 
             Assert.AreEqual(0f, bonus.attackPct, 1e-3f);
             Assert.AreEqual(0f, bonus.defensePct, 1e-3f);
@@ -176,7 +180,7 @@ namespace CreativeAI.Tests.EditMode
             var gear = MakeEquipment(2109);
             _inv.AddInstance(gear, new[] { new RolledStat(nameof(StatType.AttackPct), 99f) });
 
-            Assert.AreEqual(0f, _inv.GetEquippedBonus().attackPct, 1e-3f);
+            Assert.AreEqual(0f, _equipment.GetBonus().attackPct, 1e-3f);
         }
 
         [Test]
@@ -188,7 +192,7 @@ namespace CreativeAI.Tests.EditMode
                     new RolledStat(nameof(StatType.AttackPct), 5f)
                 );
 
-            Assert.AreEqual(15f, _inv.GetEquippedBonus().attackPct, 1e-3f);
+            Assert.AreEqual(15f, _equipment.GetBonus().attackPct, 1e-3f);
         }
 
         // --- 縦串: 拾う → 装備する → 最終ステータスが上がる ---
@@ -215,8 +219,6 @@ namespace CreativeAI.Tests.EditMode
                 var seed = MakeEquipment(2120);
                 var rolled = RollDrop(new SystemRandomSource(5));
                 AddEquippedInstance(seed, rolled.ToArray());
-
-                status.SetEquipment(_inv.GetEquippedBonus());
 
                 float total = rolled.Sum(r => r.value);
                 Assert.Greater(total, 0f, "ロール結果が空だと検証にならない");

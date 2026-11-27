@@ -1,0 +1,313 @@
+using CreativeAI.Gameplay;
+using DG.Tweening;
+using TMPro;
+using UnityEngine;
+using UnityEngine.Serialization;
+using UnityEngine.UI;
+
+namespace CreativeAI.UI
+{
+    public class ItemDetailView : MonoBehaviour
+    {
+        private const string DefaultEmptyLabel = "\uFF08\u672A\u88C5\u5099\uFF09";
+
+        [SerializeField]
+        private Image _icon;
+
+        [SerializeField]
+        private TMP_Text _name;
+
+        [SerializeField]
+        private TMP_Text _category;
+
+        [SerializeField]
+        private TMP_Text _stats;
+
+        [SerializeField, FormerlySerializedAs("_passiveDesc")]
+        private TMP_Text _description;
+
+        [SerializeField]
+        private ItemParameterListView _parameters;
+
+        [SerializeField]
+        private float _iconSpinDuration = 1f;
+
+        [SerializeField, Min(1f)]
+        private float _charactersPerSecond = 24f;
+
+        private ItemStack _displayedStack;
+        private bool _hasDisplayedContent;
+        private string _displayedEmptyLabel;
+        private FontStyles _defaultNameFontStyle;
+        private bool _hasDefaultNameFontStyle;
+
+        private void Awake()
+        {
+            ResolveReferences();
+            Clear();
+        }
+
+        public void Clear()
+        {
+            ResolveReferences();
+            KillTweens();
+            _displayedStack = null;
+            _hasDisplayedContent = false;
+            _displayedEmptyLabel = null;
+
+            if (_icon != null)
+            {
+                _icon.sprite = null;
+                _icon.color = Color.clear;
+                _icon.rectTransform.localRotation = Quaternion.identity;
+            }
+
+            ApplyNameUnderline(false);
+            SetTextImmediately(_name, string.Empty);
+            SetTextImmediately(_category, string.Empty);
+            SetTextImmediately(_stats, string.Empty);
+            SetTextImmediately(_description, string.Empty);
+            if (_parameters != null)
+                _parameters.SetItem(null);
+        }
+
+        // 個体ごとにロール値が違うので、ItemData ではなく所持品1つ分(ItemStack)を表示する。
+        public void Show(ItemStack stack)
+        {
+            Show(stack, DefaultEmptyLabel);
+        }
+
+        public void Show(ItemStack stack, string emptyLabel)
+        {
+            Show(stack, emptyLabel, false);
+        }
+
+        public void Show(ItemStack stack, string emptyLabel, bool forceTextRefresh)
+        {
+            ResolveReferences();
+            if (stack?.Data == null)
+                stack = null;
+            bool hasItem = stack != null;
+            ApplyNameUnderline(hasItem);
+
+            if (!forceTextRefresh && IsSameDisplay(stack, emptyLabel))
+            {
+                if (hasItem)
+                    PlayIconSpin();
+                return;
+            }
+
+            KillTweens();
+            _displayedStack = stack;
+            _hasDisplayedContent = true;
+            _displayedEmptyLabel = stack == null ? emptyLabel : null;
+
+            RefreshIcon(stack?.Data);
+            RefreshTexts(stack, emptyLabel);
+        }
+
+        private bool IsSameDisplay(ItemStack stack, string emptyLabel)
+        {
+            bool hasItem = stack != null;
+            bool sameItem = hasItem && stack == _displayedStack;
+            bool sameEmptyState =
+                !hasItem
+                && _hasDisplayedContent
+                && _displayedStack == null
+                && _displayedEmptyLabel == emptyLabel;
+
+            return sameItem || sameEmptyState;
+        }
+
+        private void RefreshIcon(ItemData item)
+        {
+            if (_icon == null)
+                return;
+
+            bool hasIcon = item != null && item.icon != null;
+            _icon.sprite = hasIcon ? item.icon : null;
+            _icon.color = hasIcon ? Color.white : Color.clear;
+
+            if (hasIcon)
+                PlayIconReveal();
+            else
+                _icon.rectTransform.localRotation = Quaternion.identity;
+        }
+
+        private void RefreshTexts(ItemStack stack, string emptyLabel)
+        {
+            var item = stack?.Data;
+            bool hasItem = item != null;
+            SetTextImmediately(_name, hasItem ? item.itemName : emptyLabel);
+            SetTextImmediately(
+                _category,
+                hasItem ? $"[{item.category.ToDisplayName()}]" : string.Empty
+            );
+            TypeText(_stats, hasItem ? ItemStatTextFormatter.BuildStatsText(stack) : string.Empty);
+            TypeText(_description, hasItem ? RemoveLineBreaks(item.description) : string.Empty);
+            if (_parameters != null && _description != null)
+                _description.gameObject.SetActive(
+                    hasItem && !string.IsNullOrWhiteSpace(item.description)
+                );
+            if (_parameters != null)
+                _parameters.SetItem(stack);
+            RebuildLayout();
+            if (_parameters != null)
+            {
+                var scroll = _parameters.GetComponentInParent<ScrollRect>();
+                if (scroll != null)
+                    scroll.verticalNormalizedPosition = 1;
+            }
+        }
+
+        private static string RemoveLineBreaks(string text) =>
+            string.IsNullOrEmpty(text) ? string.Empty : text.Replace("\r", "").Replace("\n", "");
+
+        private void RebuildLayout()
+        {
+            if (transform is not RectTransform rectTransform)
+                return;
+
+            Canvas.ForceUpdateCanvases();
+            LayoutRebuilder.ForceRebuildLayoutImmediate(rectTransform);
+        }
+
+        private void KillTweens()
+        {
+            DOTween.Kill(this);
+            DOTween.Kill(_name);
+            DOTween.Kill(_category);
+            DOTween.Kill(_stats);
+            DOTween.Kill(_description);
+            if (_icon != null)
+                _icon.rectTransform.DOKill();
+        }
+
+        private void ResolveReferences()
+        {
+            if (_icon == null)
+                _icon = FindComponent<Image>("Icon");
+            if (_name == null)
+                _name = FindComponent<TMP_Text>("Name");
+            if (_category == null)
+                _category = FindComponent<TMP_Text>("Category");
+            if (_stats == null)
+                _stats = FindComponent<TMP_Text>("Stats");
+            if (_description == null)
+            {
+                _description = FindComponent<TMP_Text>("Description");
+                if (_description == null)
+                    _description = FindComponent<TMP_Text>("PassiveDesc");
+            }
+            CaptureDefaultNameFontStyle();
+        }
+
+        private void CaptureDefaultNameFontStyle()
+        {
+            if (_hasDefaultNameFontStyle || _name == null)
+                return;
+
+            _defaultNameFontStyle = _name.fontStyle;
+            _hasDefaultNameFontStyle = true;
+        }
+
+        private void ApplyNameUnderline(bool hasItem)
+        {
+            if (_name == null)
+                return;
+
+            CaptureDefaultNameFontStyle();
+            _name.fontStyle = hasItem
+                ? _defaultNameFontStyle
+                : _defaultNameFontStyle & ~FontStyles.Underline;
+        }
+
+        private T FindComponent<T>(string objectName)
+            where T : Component
+        {
+            foreach (var child in GetComponentsInChildren<Transform>(true))
+                if (child.name == objectName && child.TryGetComponent(out T component))
+                    return component;
+
+            return null;
+        }
+
+        private static void SetTextImmediately(TMP_Text target, string text)
+        {
+            if (target == null)
+                return;
+
+            DOTween.Kill(target);
+            target.text = text;
+            target.maxVisibleCharacters = int.MaxValue;
+        }
+
+        private void TypeText(TMP_Text target, string text)
+        {
+            if (target == null)
+                return;
+
+            DOTween.Kill(target);
+            text ??= string.Empty;
+            target.text = text;
+            target.ForceMeshUpdate();
+
+            int characterCount = target.textInfo.characterCount;
+            if (characterCount <= 0)
+            {
+                target.maxVisibleCharacters = 0;
+                return;
+            }
+
+            target.maxVisibleCharacters = 0;
+            float duration = characterCount / Mathf.Max(1f, _charactersPerSecond);
+
+            DOTween
+                .To(
+                    () => 0f,
+                    value =>
+                        target.maxVisibleCharacters = Mathf.Clamp(
+                            Mathf.FloorToInt(value),
+                            0,
+                            characterCount
+                        ),
+                    characterCount,
+                    duration
+                )
+                .SetEase(Ease.Linear)
+                .SetUpdate(true)
+                .SetTarget(target)
+                .OnComplete(() => target.maxVisibleCharacters = characterCount);
+        }
+
+        private void PlayIconSpin()
+        {
+            if (_icon == null || _icon.sprite == null)
+                return;
+
+            var iconRect = _icon.rectTransform;
+            iconRect.DOKill();
+            iconRect.localRotation = Quaternion.identity;
+
+            iconRect
+                .DORotate(new Vector3(0f, 360f, 0f), _iconSpinDuration, RotateMode.FastBeyond360)
+                .SetEase(Ease.OutQuint)
+                .SetUpdate(true);
+        }
+
+        private void PlayIconReveal()
+        {
+            if (_icon == null || _icon.sprite == null)
+                return;
+
+            var iconRect = _icon.rectTransform;
+            iconRect.DOKill();
+            iconRect.localRotation = Quaternion.Euler(0f, 180f, 0f);
+
+            iconRect
+                .DORotate(new Vector3(0f, 360f, 0f), _iconSpinDuration, RotateMode.FastBeyond360)
+                .SetEase(Ease.OutQuint)
+                .SetUpdate(true);
+        }
+    }
+}

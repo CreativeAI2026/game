@@ -17,6 +17,8 @@ namespace CreativeAI.Gameplay
         public TBossFlinchState(TutorialBossController controller)
             : base(controller) { }
 
+        public override bool IsCommitted => true;
+
         public override void Enter()
         {
             DevLog.Log("[TutorialBoss] 怯みステート開始");
@@ -29,8 +31,6 @@ namespace CreativeAI.Gameplay
                 // 経路を消すだけでは、直前のステートが動かす指示を残していると怯みながら滑るため止める
                 boss.SetAgentStopped(true);
             }
-
-            boss.StopSwingEffects();
 
             if (boss.Animator != null)
             {

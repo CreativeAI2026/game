@@ -116,7 +116,7 @@ namespace CreativeAI.Tests.EditMode
         }
 
         [Test]
-        public void FindRecipe_BuildsFromPostCraftMaterials_InEitherOrder()
+        public void FindCraftResult_BuildsFromPostCraftMaterials_InEitherOrder()
         {
             var apple = ScriptableObject.CreateInstance<FoodData>();
             var banana = ScriptableObject.CreateInstance<FoodData>();
@@ -129,9 +129,9 @@ namespace CreativeAI.Tests.EditMode
             try
             {
                 var catalog = ItemCatalog.Instance;
-                Assert.That(catalog.FindRecipe(banana, apple)?.resultItem, Is.SameAs(appleBanana));
-                Assert.That(catalog.FindRecipe(apple, banana)?.resultItem, Is.SameAs(appleBanana));
-                Assert.That(catalog.FindRecipe(apple, grapes), Is.Null);
+                Assert.That(catalog.FindCraftResult(banana, apple), Is.SameAs(appleBanana));
+                Assert.That(catalog.FindCraftResult(apple, banana), Is.SameAs(appleBanana));
+                Assert.That(catalog.FindCraftResult(apple, grapes), Is.Null);
             }
             finally
             {

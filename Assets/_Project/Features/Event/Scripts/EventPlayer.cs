@@ -1,200 +1,67 @@
 using System;
 using System.Collections;
 using UnityEngine;
-using UnityEngine.SceneManagement;
 
 namespace CreativeAI.Gameplay
 {
     /// <summary>
-    /// EventTrigger から託された会話イベントを順に再生し、終了時に進行度を進める指揮役。
-    /// 常駐生成され EventPlayerService.Current に自身を登録する(per-field 配線は不要)。
+    /// 会話イベントを順に再生し、終了時に進行度を進める指揮役。
+    /// イベントの間で持ち越す状態は無いので常駐させず、発火する側(EventTrigger / EventInteractor)が持って
+    /// <see cref="Play"/> を自分のコルーチンとして回す。発火側が無効になったら <see cref="Abort"/> で後始末する。
+    /// 同時に再生できるのは1本だけで、いま再生しているものは <see cref="Playing"/> が持つ。
     /// </summary>
-    public sealed class EventPlayer : MonoBehaviour, IEventPlayer
+    public sealed class EventPlayer
     {
-        public static EventPlayer Instance { get; private set; }
+        /// <summary>いまイベントを再生している EventPlayer。再生していなければ null。</summary>
+        public static EventPlayer Playing { get; private set; }
 
-        /// <summary>セッション常駐生成の入口。既に在ればそれを返す(UI 層の GameSession から呼ぶ)。</summary>
-        public static EventPlayer EnsureResident()
-        {
-            if (Instance != null)
-                return Instance;
-            return new GameObject(nameof(EventPlayer)).AddComponent<EventPlayer>();
-        }
+        /// <summary>この EventPlayer がイベントを再生中か。</summary>
+        public bool IsPlaying => Playing == this;
 
-        private void Awake()
-        {
-            if (Instance != null && Instance != this)
-            {
-                Destroy(gameObject);
-                return;
-            }
-            Instance = this;
-            DontDestroyOnLoad(gameObject);
-            EventPlayerService.Current = this; // EventTrigger の発火先 seam に自身を登録
-            SceneManager.activeSceneChanged += OnActiveSceneChanged;
-        }
+        // Domain Reload を切った Editor で Play を繰り返したとき、前回の再生中を持ち越さないよう、Play 開始時に戻す
+        [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
+        public static void ResetState() => Playing = null;
 
-        private void OnDestroy()
-        {
-            SceneManager.activeSceneChanged -= OnActiveSceneChanged;
-            if (Instance == this)
-                Instance = null;
-            if (ReferenceEquals(EventPlayerService.Current, this))
-                EventPlayerService.Current = null;
-        }
-
-        // シーンが切り替わるたびに進む番号。再生開始時から変わっていたら、そのイベントは打ち切る。
-        // 常駐なので再生中のコルーチンはシーンをまたいで生き残る。戦闘に負けてセーブ再開(シーン再読込)すると
-        // 敵が消えて battle が抜け、そのまま続きを流して進行度を進めてしまうのを防ぐ。
-        private int _sceneGeneration;
-
-        private void OnActiveSceneChanged(Scene previous, Scene next) => _sceneGeneration++;
-
-        // Inject されたものがあればそれを、無ければ本番の窓口・常駐を毎回見る。
-        private readonly IBattleRunner _defaultBattle = new BattleRunner();
-        private IEventProgress _progress;
-        private IDialogueView _view;
-        private IItemGiver _items;
-        private IWeaponGiver _weapons;
-        private IBattleRunner _battle;
-
-        private IDialogueView View => _view ?? DialogueViewService.Current;
-        private IItemGiver Items => _items ?? ItemGiverService.Current;
-        private IWeaponGiver Weapons => _weapons ?? FindPlayerWeapons();
-        private IBattleRunner Battle => _battle ?? _defaultBattle;
-        private IEventProgress Progress => _progress ?? ProgressManager.Instance;
-
-        // 武器の届け先は今いるプレイヤーの WeaponManager。プレイヤーは入れ替わるので覚えておかない。
-        private static IWeaponGiver FindPlayerWeapons()
-        {
-            var player = PlayerRegistry.Current;
-            return player != null && player.TryGetComponent(out WeaponManager weapons)
-                ? weapons
-                : null;
-        }
+        // 渡されたものがあればそれを、無ければ本番の窓口・常駐を毎回見る。
+        private readonly IEventProgress _progress;
+        private readonly IEventGameMode _gameMode;
+        private readonly IDialogueView _view;
+        private readonly IItemGiver _items;
+        private readonly IWeaponGiver _weapons;
+        private readonly IEventBattle _battle;
+        private readonly EventPlayerMovement _movement = new();
+        private string _playingId; // 再生中のイベントの ID(二重発火の警告に出す)
 
         /// <summary>
-        /// 本番の窓口の代わりに依存を差し込む(プレビュー / テスト用)。null を渡した依存は本番のものに戻る。
+        /// 依存を指定して作る(プレビュー / テスト用)。null の依存は本番の窓口・常駐を使う。
         /// </summary>
-        public void Inject(
-            IEventProgress progress,
-            IDialogueView view,
-            IItemGiver items,
-            IBattleRunner battle = null,
-            IWeaponGiver weapons = null
+        public EventPlayer(
+            IEventProgress progress = null,
+            IEventGameMode gameMode = null,
+            IDialogueView view = null,
+            IItemGiver items = null,
+            IWeaponGiver weapons = null,
+            IEventBattle battle = null
         )
         {
             _progress = progress;
+            _gameMode = gameMode;
             _view = view;
             _items = items;
-            _battle = battle;
             _weapons = weapons;
+            _battle = battle ?? new EncounterBattle();
         }
 
-        /// <summary>
-        /// プレイヤーを <see cref="SpawnPoint"/>(arg が ID)へ移す command 名。会話UIではなくここで実行する。
-        /// 引き戻しに使う。画面を隠したいときは前後に background.black.fill / clear を並べる。
-        /// </summary>
-        public const string PlayerMoveCommand = "player.moveTo";
+        private IDialogueView View =>
+            _view ?? (UIManager.Instance != null ? UIManager.Instance.DialogueView : null);
+        private IItemGiver Items => _items ?? InventoryManager.Instance;
+        private IWeaponGiver Weapons => _weapons ?? WeaponManager.Instance;
+        private IEventProgress Progress => _progress ?? ProgressManager.Instance;
+        private IEventGameMode GameModes => _gameMode ?? GameModeManager.Instance;
 
-        // 動かす相手(プレイヤー)と、目的地の目印を探す。見つからなければ、動かさずに警告して false。
-        // 目印が無いとき SpawnPoint.Place は原点へ置いてしまうので、先に確かめる。
-        private static bool TryFindPlayerAndPoint(
-            string command,
-            string spawnPointId,
-            out PlayerController player,
-            out SpawnPoint point
-        )
-        {
-            player = PlayerRegistry.Current;
-            point = SpawnPoint.Find(spawnPointId);
-            if (player != null && point != null)
-                return true;
-
-            Debug.LogWarning(
-                $"[EventPlayer] {command} を実行できません"
-                    + $"(player={(player != null ? player.name : "なし")}, SpawnPoint ID='{spawnPointId}')。"
-            );
-            return false;
-        }
-
-        private static void MovePlayer(string spawnPointId)
-        {
-            if (TryFindPlayerAndPoint(PlayerMoveCommand, spawnPointId, out var player, out _))
-                SpawnPoint.Place(player.gameObject, spawnPointId);
-        }
-
-        /// <summary>
-        /// プレイヤーを <see cref="SpawnPoint"/>(arg が ID)まで歩かせる command 名。着くまで次のステップへ進まない。
-        /// <see cref="PlayerMoveCommand"/> と違い、瞬間移動せず歩きのモーションで向かう。引き戻しに使う。
-        /// </summary>
-        public const string PlayerWalkCommand = "player.walkTo";
-
-        /// <summary>歩きが終わらないとき(壁に引っかかる等)に、想定の歩行時間へ掛ける余裕の倍率。</summary>
-        private const float WalkTimeoutScale = 2f;
-
-        /// <summary>歩行時間の下限に足す秒数。ごく近い目標でも、動き出しの時間は待つ。</summary>
-        private const float WalkTimeoutPadding = 2f;
-
-        // 歩かせている最中のプレイヤー。イベントを途中で打ち切ったとき、歩く指示を残さないための後始末に使う。
-        private PlayerController _walking;
-
-        // 歩いて着くまで待つ。
-        // 時間内に着かない(壁に引っかかる等)ときは、止まって瞬間移動で置き、操作が戻れなくなるのを防ぐ。
-        private IEnumerator WalkPlayer(string spawnPointId)
-        {
-            if (
-                !TryFindPlayerAndPoint(
-                    PlayerWalkCommand,
-                    spawnPointId,
-                    out var player,
-                    out var point
-                )
-            )
-                yield break;
-            var target = point.transform.position;
-            var flat = target - player.transform.position;
-            flat.y = 0f;
-            var timeout =
-                flat.magnitude / Mathf.Max(player.WalkSpeed, 0.01f) * WalkTimeoutScale
-                + WalkTimeoutPadding;
-
-            _walking = player;
-            player.WalkTo(target);
-            var elapsed = 0f;
-            while (player.IsWalking && elapsed < timeout)
-            {
-                elapsed += Time.deltaTime;
-                yield return null;
-            }
-
-            if (player.IsWalking)
-            {
-                Debug.LogWarning(
-                    $"[EventPlayer] {PlayerWalkCommand} が {timeout:F1} 秒で着かなかったため、'{spawnPointId}' へ直接置きました。"
-                );
-                StopWalking();
-                SpawnPoint.Place(player.gameObject, spawnPointId);
-            }
-            _walking = null;
-        }
-
-        // 歩かせている最中なら止める。イベントを打ち切っても、あとで勝手に歩き出さないようにする。
-        private void StopWalking()
-        {
-            if (_walking != null)
-                _walking.StopWalking();
-            _walking = null;
-        }
-
-        // 持ち物から選ばせ、正解なら true で返る。やめた・間違えて終了(EndOnWrong)・シーン切替・UI が無いときは false。
+        // 持ち物から選ばせ、正解なら true で返る。やめた・間違えて終了(EndOnWrong)・UI が無いときは false。
         // 間違いは消費せずセリフを出し、既定では選び直させる。
-        private IEnumerator RunUseItem(
-            EventDefinition ev,
-            EventStep step,
-            int generation,
-            Action<bool> done
-        )
+        private IEnumerator RunUseItem(EventDefinition ev, EventStep step, Action<bool> done)
         {
             if (View == null || Items == null)
             {
@@ -209,11 +76,6 @@ namespace CreativeAI.Gameplay
             {
                 string picked = null;
                 yield return View.ShowItemPicker(step.Prompt, value => picked = value);
-                if (generation != _sceneGeneration)
-                {
-                    done(false);
-                    yield break;
-                }
                 if (picked == null)
                 {
                     // やめた: セリフがあれば出してから打ち切る。
@@ -233,7 +95,7 @@ namespace CreativeAI.Gameplay
                 }
 
                 yield return View.ShowLine(step.Speaker, step.Portrait, step.Text);
-                if (step.EndOnWrong || generation != _sceneGeneration)
+                if (step.EndOnWrong)
                 {
                     done(false);
                     yield break;
@@ -258,27 +120,29 @@ namespace CreativeAI.Gameplay
             return !step.Consume || Items.Consume(itemKey, match.Count);
         }
 
-        public void Play(EventDefinition ev)
-        {
-            if (ev == null)
-                return;
-            StartCoroutine(PlayRoutine(ev));
-        }
-
         /// <summary>
-        /// 会話ステップを順に再生し、終了時に AdvanceTo する本体。
-        /// テストは fake を注入し、この IEnumerator を駆動して検証する。
+        /// 会話ステップを順に再生し、終了時に進行度を進める(コルーチン)。
+        /// battle ステップは、ボスシーンの BattleEncounter を名前(arena)で呼んで戦う。
+        /// 別のイベントを再生中か、フィールド以外(戦闘・メニューの最中)なら何もしない。
         /// </summary>
-        public IEnumerator PlayRoutine(EventDefinition ev)
+        public IEnumerator Play(EventDefinition ev)
         {
             if (ev == null)
                 yield break;
 
-            // 同時に再生できるのは1本だけ。2本目が会話UIを取り合い、先に終わった側が再生中フラグを戻してしまうため弾く。
-            if (EventPlaybackService.IsPlaying)
+            // 同時に再生できるのは1本だけ。2本目が会話UIを取り合い、先に終わった側がモードを戻してしまうため弾く。
+            if (Playing != null)
             {
                 Debug.LogWarning(
-                    $"[EventPlayer] 別のイベントを再生中のため '{ev.Id}' を無視しました。"
+                    $"[EventPlayer] 別のイベント('{Playing._playingId}')を再生中のため '{ev.Id}' を無視しました。"
+                );
+                yield break;
+            }
+            // 会話はメニューを閉じた探索中からだけ始まる(戦闘中・メニュー中は GameModeManager が断る)。
+            if (GameModes != null && !GameModes.TryStartDialogue())
+            {
+                Debug.LogWarning(
+                    $"[EventPlayer] 探索中ではない({GameModeManager.Current})ため '{ev.Id}' を無視しました。"
                 );
                 yield break;
             }
@@ -288,10 +152,9 @@ namespace CreativeAI.Gameplay
                     $"[EventPlayer] IDialogueView 未設定 (event={ev.Id}). 会話は表示されません。"
                 );
 
-            // 会話イベント中は操作不能。右上ナビ(セーブ/インベ入口)を隠すため再生中フラグを立てる。
-            // 途中で打ち切っても finally で必ず戻す。
-            int generation = _sceneGeneration;
-            EventPlaybackService.SetPlaying(true);
+            // ここで会話になっている(操作不能)。途中で打ち切っても finally で必ず会話を終える。
+            Playing = this;
+            _playingId = ev.Id;
             try
             {
                 for (int stepIndex = 0; stepIndex < ev.Steps.Count; stepIndex++)
@@ -347,7 +210,7 @@ namespace CreativeAI.Gameplay
                         case StepKind.GiveItem:
                             if (Items == null)
                                 Debug.LogWarning(
-                                    $"[EventPlayer] IItemGiver 未登録 (event={ev.Id}). giveItem '{step.ItemKey}' は演出だけで所持品には入りません。"
+                                    $"[EventPlayer] 所持品が無い (event={ev.Id}). giveItem '{step.ItemKey}' は演出だけで所持品には入りません。"
                                 );
                             else
                                 Items.Give(step.ItemKey);
@@ -361,7 +224,7 @@ namespace CreativeAI.Gameplay
                             if (Weapons == null)
                                 Debug.LogWarning(
                                     $"[EventPlayer] 武器の届け先が無い (event={ev.Id}). giveWeapon '{step.WeaponKey}' をスキップ。"
-                                        + " プレイヤーリグ(WeaponManager)が居ないシーンでは武器は渡されません。"
+                                        + " 武器の常駐(WeaponManager)が無いシーンでは武器は渡されません。"
                                 );
                             else
                                 Weapons.GiveWeapon(step.WeaponKey);
@@ -370,16 +233,16 @@ namespace CreativeAI.Gameplay
                             break;
 
                         case StepKind.Battle:
-                            // 戦闘モードの出入りは BattleArena が行う。
-                            yield return Battle.Run(step.ArenaId);
+                            // 戦闘モードの出入りは BattleEncounter が行い、決着したら会話モードへ戻す。
+                            yield return _battle.Fight(step.EncounterId);
                             break;
 
                         case StepKind.UseItem:
                             bool useItemDone = false;
-                            yield return RunUseItem(ev, step, generation, ok => useItemDone = ok);
+                            yield return RunUseItem(ev, step, ok => useItemDone = ok);
                             if (!useItemDone)
                             {
-                                // やめた・間違えて終了・シーン切替: 進行度も 1 回きりの印も進めずに打ち切る。
+                                // やめた・間違えて終了: 進行度も 1 回きりの印も進めずに打ち切る。
                                 if (View != null)
                                     yield return View.Close();
                                 yield break;
@@ -387,23 +250,11 @@ namespace CreativeAI.Gameplay
                             break;
 
                         case StepKind.Command:
-                            if (step.CommandName == PlayerMoveCommand)
-                                MovePlayer(step.Arg);
-                            else if (step.CommandName == PlayerWalkCommand)
-                                yield return WalkPlayer(step.Arg);
+                            if (EventPlayerMovement.Handles(step.CommandName))
+                                yield return _movement.Run(step.CommandName, step.Arg);
                             else if (View != null)
                                 yield return View.RunCommand(step.CommandName, step.Arg);
                             break;
-                    }
-
-                    if (generation != _sceneGeneration)
-                    {
-                        Debug.LogWarning(
-                            $"[EventPlayer] 再生中にシーンが切り替わったため '{ev.Id}' を打ち切りました(進行度は進めない)。"
-                        );
-                        if (View != null)
-                            yield return View.Close();
-                        yield break;
                     }
                 }
 
@@ -418,34 +269,37 @@ namespace CreativeAI.Gameplay
             }
             finally
             {
-                StopWalking();
-                EventPlaybackService.SetPlaying(false);
+                Finish();
             }
         }
-    }
 
-    /// <summary>
-    /// 会話イベント再生の指揮役。EventTrigger が条件成立時に発火を託す。
-    /// </summary>
-    public interface IEventPlayer
-    {
         /// <summary>
-        /// イベントを再生する。battle ステップは、ボスシーンの BattleArena を名前(arena)で呼んで戦う。
+        /// 再生中なら途中で打ち切る(進行度は進めない)。会話ウィンドウはその場で消し、フィールドへ戻す。
+        /// 再生を回していたコルーチンが止まったとき(発火側が無効になった・シーンごと消えた)に発火側が呼ぶ。
         /// </summary>
-        void Play(EventDefinition ev);
-    }
+        public void Abort()
+        {
+            if (!IsPlaying)
+                return;
+            Debug.LogWarning("[EventPlayer] 再生中のイベントを打ち切りました(進行度は進めない)。");
+            View?.HideImmediate();
+            Finish();
+        }
 
-    /// <summary>
-    /// 実行時の IEventPlayer の窓口。EventPlayer は常駐生成で Inspector から配線できないため、生成時にここへ登録し、
-    /// シーン側の EventTrigger / EventInteractor はここから受け取る。
-    /// </summary>
-    public static class EventPlayerService
-    {
-        public static IEventPlayer Current { get; set; }
+        private void Finish()
+        {
+            _movement.Stop();
+            if (Playing == this)
+                Playing = null;
+            _playingId = null;
+            GameModes?.EndDialogue();
+        }
 
-        /// <summary>登録を外す。</summary>
-        // Domain Reload を切った Editor で Play を繰り返したとき、前回の Play の値や購読を持ち越さないよう、Play 開始時に戻す
-        [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
-        public static void ResetState() => Current = null;
+        // 本番の戦闘。シーンに置いた BattleEncounter を名前で呼ぶ。
+        private sealed class EncounterBattle : IEventBattle
+        {
+            public IEnumerator Fight(string encounterId) =>
+                BattleEncounter.FightFromEvent(encounterId);
+        }
     }
 }

@@ -163,7 +163,7 @@ namespace CreativeAI.UI
         private void Start()
         {
             // PlayerStatus.Start()がPlayerHpView.OnEnable()より先に実行された場合、
-            // OnHpChangedの発火を受け取れないため、Start()で明示的に初期UIを更新する。
+            // HpChanged の発火を受け取れないため、Start()で明示的に初期UIを更新する。
             if (_playerStatus != null)
             {
                 UpdateUI(_playerStatus.CurrentHp, _playerStatus.CurrentMaxHp);
@@ -174,13 +174,13 @@ namespace CreativeAI.UI
         private void Bind(PlayerController player)
         {
             if (_playerStatus != null)
-                _playerStatus.OnHpChanged -= UpdateUI;
+                _playerStatus.HpChanged -= UpdateUI;
 
             _playerStatus = player != null ? player.GetComponent<PlayerStatus>() : null;
 
             if (_playerStatus != null)
             {
-                _playerStatus.OnHpChanged += UpdateUI;
+                _playerStatus.HpChanged += UpdateUI;
                 // 後から生成されたプレイヤーでも、購読した時点の値で表示を合わせる
                 UpdateUI(_playerStatus.CurrentHp, _playerStatus.CurrentMaxHp);
             }

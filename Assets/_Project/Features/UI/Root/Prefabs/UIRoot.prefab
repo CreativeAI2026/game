@@ -1262,7 +1262,6 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 591856888775479689}
-  - component: {fileID: 7446720922058345701}
   - component: {fileID: 6439991180267518880}
   m_Layer: 0
   m_Name: UIRoot
@@ -1299,18 +1298,6 @@ Transform:
   - {fileID: 2699748451698950190}
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!114 &7446720922058345701
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 7357621368793443196}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 17014a09086394abdbd267a17e0f24ec, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: CreativeAI.UI::CreativeAI.UI.UIRoot
 --- !u!114 &6439991180267518880
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -1322,7 +1309,7 @@ MonoBehaviour:
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 0789d0e4be01844a5bb31933898619a0, type: 3}
   m_Name: 
-  m_EditorClassIdentifier: CreativeAI.UI::CreativeAI.UI.UiRouter
+  m_EditorClassIdentifier: CreativeAI.Gameplay::CreativeAI.Gameplay.UIManager
   _characterUI: {fileID: 680322778902755776}
   _inventoryUI: {fileID: 7726986854183088737}
   _saveUI: {fileID: 6783805655835196211}

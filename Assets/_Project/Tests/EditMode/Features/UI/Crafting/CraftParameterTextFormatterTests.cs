@@ -18,11 +18,11 @@ namespace CreativeAI.Tests.EditMode
             var food = ScriptableObject.CreateInstance<FoodData>();
             try
             {
-                Assert.AreEqual("20%", CraftParameterTextFormatter.Recovery(food));
+                Assert.AreEqual("20%", ItemStatTextFormatter.Recovery(food));
                 var so = new SerializedObject(food);
                 so.FindProperty("_craftedResult").boolValue = true;
                 so.ApplyModifiedPropertiesWithoutUndo();
-                Assert.AreEqual("50%", CraftParameterTextFormatter.Recovery(food));
+                Assert.AreEqual("50%", ItemStatTextFormatter.Recovery(food));
             }
             finally
             {
@@ -40,14 +40,8 @@ namespace CreativeAI.Tests.EditMode
                     data,
                     RolledStat.FromVector(StatVector.Of((StatType.CritRate, 7.5f)))
                 );
-                Assert.AreEqual(
-                    "+7.5%",
-                    CraftParameterTextFormatter.Actual(StatType.CritRate, stack)
-                );
-                Assert.AreEqual(
-                    "+0%",
-                    CraftParameterTextFormatter.Actual(StatType.DefensePct, stack)
-                );
+                Assert.AreEqual("+7.5%", ItemStatTextFormatter.Actual(StatType.CritRate, stack));
+                Assert.AreEqual("+0%", ItemStatTextFormatter.Actual(StatType.DefensePct, stack));
             }
             finally
             {
@@ -76,7 +70,7 @@ namespace CreativeAI.Tests.EditMode
                 );
                 var result = new ItemStack(data, RolledStat.FromVector(rolled));
                 Assert.AreEqual(
-                    CraftParameterTextFormatter.Actual(StatType.AttackPct, result),
+                    ItemStatTextFormatter.Actual(StatType.AttackPct, result),
                     CraftParameterTextFormatter.Preview(StatType.AttackPct, a, b)
                 );
                 Assert.AreEqual(
@@ -96,7 +90,7 @@ namespace CreativeAI.Tests.EditMode
             var prefab = AssetDatabase.LoadAssetAtPath<GameObject>(
                 "Assets/_Project/Features/UI/Crafting/Prefabs/CraftPanel.prefab"
             );
-            var layout = new SerializedObject(prefab.GetComponent<CraftUILayout>());
+            var layout = new SerializedObject(prefab.GetComponent<CraftPanel>());
             foreach (
                 string name in new[]
                 {
@@ -116,7 +110,7 @@ namespace CreativeAI.Tests.EditMode
             Assert.AreEqual(5, values.arraySize);
             for (int i = 0; i < values.arraySize; i++)
                 Assert.IsNotNull(values.GetArrayElementAtIndex(i).objectReferenceValue);
-            var controller = new SerializedObject(prefab.GetComponent<CraftPanelController>());
+            var controller = new SerializedObject(prefab.GetComponent<CraftPanel>());
             foreach (
                 string name in new[]
                 {

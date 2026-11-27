@@ -9,6 +9,7 @@ using NUnit.Framework;
 using UnityEditor;
 using UnityEngine;
 using UnityEngine.TestTools;
+using static CreativeAI.Tests.TestCoroutine;
 
 namespace CreativeAI.Tests.EditMode
 {
@@ -22,20 +23,6 @@ namespace CreativeAI.Tests.EditMode
             "{\"events\":[{\"id\":\"branch_test\",\"conditions\":[{\"type\":\"progress\",\"value\":0}],\"nextProgress\":1,\"steps\":["
             + steps
             + "]}]}";
-
-        private static void Drive(IEnumerator routine)
-        {
-            var stack = new Stack<IEnumerator>();
-            stack.Push(routine);
-            while (stack.Count > 0)
-            {
-                var current = stack.Peek();
-                if (!current.MoveNext())
-                    stack.Pop();
-                else if (current.Current is IEnumerator nested)
-                    stack.Push(nested);
-            }
-        }
 
         private sealed class View : IDialogueView
         {
@@ -81,6 +68,8 @@ namespace CreativeAI.Tests.EditMode
             {
                 yield break;
             }
+
+            public void HideImmediate() { }
         }
 
         private sealed class Items : IItemGiver
@@ -130,7 +119,6 @@ namespace CreativeAI.Tests.EditMode
                 @"{""kind"":""branch"",""flag"":""answer"",""cases"":{""yes"":[{""kind"":""line"",""text"":""yes""}],""no"":[{""kind"":""line"",""text"":""no""}]}},{""kind"":""line"",""text"":""joined""}"
             );
             var go = new GameObject("BranchPlayer");
-            var player = go.AddComponent<EventPlayer>();
             var view = new View();
             try
             {
@@ -138,8 +126,8 @@ namespace CreativeAI.Tests.EditMode
                 EditorJsonUtility.FromJsonOverwrite(EditorJsonUtility.ToJson(ev), copy);
                 var progress = go.AddComponent<ProgressManager>();
                 progress.SetFlag("answer", value);
-                player.Inject(progress, view, new Items());
-                Drive(player.PlayRoutine(copy));
+                var player = new EventPlayer(progress, view: view, items: new Items());
+                Drive(player.Play(copy));
                 CollectionAssert.AreEqual(
                     value == "unknown" ? new[] { "joined" } : new[] { value, "joined" },
                     view.Lines
@@ -150,7 +138,6 @@ namespace CreativeAI.Tests.EditMode
             {
                 UnityEngine.Object.DestroyImmediate(ev);
                 UnityEngine.Object.DestroyImmediate(go);
-                EventPlaybackService.SetPlaying(false);
             }
         }
 
@@ -162,23 +149,21 @@ namespace CreativeAI.Tests.EditMode
                 @"{""kind"":""branch"",""hasItem"":""card_key"",""then"":[{""kind"":""line"",""text"":""owned""}],""else"":[{""kind"":""line"",""text"":""missing""}]} ,{""kind"":""line"",""text"":""joined""}"
             );
             var go = new GameObject("BranchPlayer");
-            var player = go.AddComponent<EventPlayer>();
             var view = new View();
             try
             {
-                player.Inject(
+                var player = new EventPlayer(
                     go.AddComponent<ProgressManager>(),
-                    view,
-                    new Items { Owned = owned }
+                    view: view,
+                    items: new Items { Owned = owned }
                 );
-                Drive(player.PlayRoutine(ev));
+                Drive(player.Play(ev));
                 CollectionAssert.AreEqual(new[] { expected, "joined" }, view.Lines);
             }
             finally
             {
                 UnityEngine.Object.DestroyImmediate(ev);
                 UnityEngine.Object.DestroyImmediate(go);
-                EventPlaybackService.SetPlaying(false);
             }
         }
 
@@ -189,13 +174,12 @@ namespace CreativeAI.Tests.EditMode
                 @"{""kind"":""choice"",""flag"":""answer"",""options"":[{""text"":""Yes"",""value"":""yes""},{""text"":""No"",""value"":""no""}]},{""kind"":""branch"",""flag"":""answer"",""cases"":{""yes"":[{""kind"":""line"",""text"":""picked""}],""no"":[]}},{""kind"":""branch"",""hasItem"":""card_key""},{""kind"":""line"",""text"":""joined""}"
             );
             var go = new GameObject("BranchPlayer");
-            var player = go.AddComponent<EventPlayer>();
             var view = new View();
             var progress = go.AddComponent<ProgressManager>();
             try
             {
-                player.Inject(progress, view, new Items());
-                Drive(player.PlayRoutine(ev));
+                var player = new EventPlayer(progress, view: view, items: new Items());
+                Drive(player.Play(ev));
                 Assert.AreEqual("yes", progress.GetFlag("answer"));
                 CollectionAssert.AreEqual(new[] { "picked", "joined" }, view.Lines);
             }
@@ -203,7 +187,6 @@ namespace CreativeAI.Tests.EditMode
             {
                 UnityEngine.Object.DestroyImmediate(ev);
                 UnityEngine.Object.DestroyImmediate(go);
-                EventPlaybackService.SetPlaying(false);
             }
         }
 
@@ -315,17 +298,15 @@ namespace CreativeAI.Tests.EditMode
             {
                 var progress = go.AddComponent<ProgressManager>();
                 progress.SetFlag("answer", "本番の値");
-                var player = go.AddComponent<EventPlayer>();
                 var originalView = new View();
-                player.Inject(progress, originalView, new Items());
+                var player = new EventPlayer(progress, view: originalView, items: new Items());
                 var driver = go.AddComponent<ConversationPreviewDriver>();
                 var view = new View();
                 Drive(driver.PlayEventPreview(ev, view));
                 CollectionAssert.AreEqual(new[] { "所持", "選択" }, view.Lines);
                 Assert.AreEqual("本番の値", progress.GetFlag("answer"));
                 Assert.AreEqual(0, progress.Progress);
-                Assert.False(EventPlaybackService.IsPlaying);
-                Drive(player.PlayRoutine(ev));
+                Drive(player.Play(ev));
                 CollectionAssert.AreEqual(new[] { "選択" }, originalView.Lines);
                 Assert.AreEqual("yes", progress.GetFlag("answer"));
                 Assert.AreEqual(1, progress.Progress);
@@ -334,12 +315,11 @@ namespace CreativeAI.Tests.EditMode
             {
                 UnityEngine.Object.DestroyImmediate(ev);
                 UnityEngine.Object.DestroyImmediate(go);
-                EventPlaybackService.SetPlaying(false);
             }
         }
 
         [Test]
-        public void EventPlayer_UsesInjectedProgressForFlagsAndCompletion()
+        public void EventPlayer_UsesGivenProgressForFlagsAndCompletion()
         {
             var ev = Import(
                 @"{""kind"":""choice"",""flag"":""answer"",""options"":[{""text"":""はい"",""value"":""yes""},{""text"":""いいえ"",""value"":""no""}]},{""kind"":""branch"",""flag"":""answer"",""cases"":{""yes"":[{""kind"":""line"",""text"":""選択""}]}}"
@@ -351,9 +331,8 @@ namespace CreativeAI.Tests.EditMode
                 production.SetFlag("answer", "本番の値");
                 var state = new MemoryProgress();
                 var view = new View();
-                var player = go.AddComponent<EventPlayer>();
-                player.Inject(state, view, new Items());
-                Drive(player.PlayRoutine(ev));
+                var player = new EventPlayer(state, view: view, items: new Items());
+                Drive(player.Play(ev));
                 Assert.AreEqual("yes", state.GetFlag("answer"));
                 Assert.AreEqual(1, state.Progress);
                 CollectionAssert.AreEqual(new[] { "選択" }, view.Lines);
@@ -364,7 +343,6 @@ namespace CreativeAI.Tests.EditMode
             {
                 UnityEngine.Object.DestroyImmediate(ev);
                 UnityEngine.Object.DestroyImmediate(go);
-                EventPlaybackService.SetPlaying(false);
             }
         }
 
@@ -379,15 +357,14 @@ namespace CreativeAI.Tests.EditMode
             {
                 var progress = go.AddComponent<ProgressManager>();
                 var mode = go.AddComponent<GameModeManager>();
-                mode.EnterBattle();
+                mode.TryStartBattle();
                 int modeChanges = 0;
-                mode.OnModeChanged += _ => modeChanges++;
-                go.AddComponent<EventPlayer>();
+                mode.Changed += () => modeChanges++;
                 var driver = go.AddComponent<ConversationPreviewDriver>();
                 var view = new View();
                 Drive(driver.PlayEventPreview(ev, view));
                 CollectionAssert.AreEqual(new[] { "戦闘前", "戦闘後" }, view.Lines);
-                Assert.AreEqual(GameMode.Battle, mode.CurrentMode);
+                Assert.AreEqual(GameMode.Battle, mode.Mode);
                 Assert.AreEqual(0, modeChanges);
                 Assert.AreEqual(0, progress.Progress);
             }
@@ -395,7 +372,6 @@ namespace CreativeAI.Tests.EditMode
             {
                 UnityEngine.Object.DestroyImmediate(ev);
                 UnityEngine.Object.DestroyImmediate(go);
-                EventPlaybackService.SetPlaying(false);
             }
         }
     }

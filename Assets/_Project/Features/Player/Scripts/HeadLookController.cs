@@ -69,7 +69,7 @@ namespace CreativeAI.Gameplay
         private void LateUpdate()
         {
             // 顔の軸は Start ではなく、Animator がポーズを書き込んだ後の最初の LateUpdate で求める。
-            // Start 時点の骨の姿勢は、WeaponManager.Start の Animator.Rebind() との実行順(エディタとビルド・
+            // Start 時点の骨の姿勢は、PlayerWeapons.Start の Animator.Rebind() との実行順(エディタとビルド・
             // シーン読み込みで変わる)に左右され、誤った軸を求めると首が一方向を向き続けるため
             if (!_isFaceAxisInitialized)
             {

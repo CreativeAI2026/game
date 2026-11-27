@@ -1,0 +1,482 @@
+using System.Collections;
+using TMPro;
+using UnityEngine;
+using UnityEngine.UI;
+
+namespace CreativeAI.UI
+{
+    /// <summary>会話ウィンドウ、操作ガイド、AUTO表示、送りインジケーター、文字送りの速さの表示を担当する。</summary>
+    internal sealed class ConversationChrome
+    {
+        private readonly MonoBehaviour _owner;
+        private readonly CanvasGroup _root;
+        private readonly RectTransform _window;
+        private readonly GameObject _nextIndicator;
+        private readonly TMP_Text _autoIndicator;
+        private readonly TMP_Text _controlGuide;
+        private readonly Image _autoProgress;
+        private readonly RectTransform _autoProgressRect;
+        private readonly TMP_Text _speedLabel;
+        private readonly TMP_Text _speedToast;
+        private Coroutine _speedToastRoutine;
+        private Coroutine _bounceCoroutine;
+        private Vector2 _indicatorBasePosition;
+        private bool _hasIndicatorBasePosition;
+        private Vector2 _windowBasePosition;
+        private bool _hasWindowBasePosition;
+        private readonly float _bounceHeight;
+        private readonly float _bounceDuration;
+        private readonly float _enterDuration;
+        private readonly float _enterOffsetY;
+        private readonly string _autoLabel;
+        private float _autoWaveStartTime;
+
+        // AUTO の文字の元の頂点。毎フレームここからずらして書き込み、文字のメッシュを作り直さない
+        private TMP_MeshInfo[] _autoBaseMeshInfo;
+
+        // 前のフレームに書き込んだ頂点の1つ。TMP が作り直すと値が変わるので、元の頂点を取り直す合図にする
+        private int _autoProbeMaterial = -1;
+        private int _autoProbeVertex;
+        private Vector3 _autoProbeValue;
+        private Coroutine _lineTextAnimation;
+        private CanvasGroup _nameGroup;
+        private CanvasGroup _bodyGroup;
+        private Vector2 _nameBasePosition;
+        private Vector2 _bodyBasePosition;
+        private bool _hasLineTextPositions;
+
+        /// <param name="owner">コルーチンを動かす MonoBehaviour</param>
+        public ConversationChrome(
+            MonoBehaviour owner,
+            CanvasGroup root,
+            RectTransform window,
+            GameObject nextIndicator,
+            TMP_Text autoIndicator,
+            TMP_Text controlGuide,
+            Image autoProgress,
+            TMP_Text speedLabel,
+            TMP_Text speedToast,
+            float bounceHeight,
+            float bounceDuration,
+            float enterDuration,
+            float enterOffsetY,
+            string autoLabel
+        )
+        {
+            _owner = owner;
+            _speedLabel = speedLabel;
+            _speedToast = speedToast;
+            _root = root;
+            _window = window;
+            _nextIndicator = nextIndicator;
+            _autoIndicator = autoIndicator;
+            _controlGuide = controlGuide;
+            _autoProgress = autoProgress;
+            _autoProgressRect = autoProgress != null ? autoProgress.rectTransform : null;
+            _bounceHeight = bounceHeight;
+            _bounceDuration = bounceDuration;
+            _enterDuration = enterDuration;
+            _enterOffsetY = enterOffsetY;
+            _autoLabel = autoLabel;
+        }
+
+        public void Tick(bool autoMode, bool progressVisible, float progress)
+        {
+            if (_autoProgress != null)
+            {
+                SetAutoProgress(progress);
+                _autoProgress.gameObject.SetActive(autoMode && progressVisible);
+            }
+            if (_autoIndicator == null || !autoMode)
+                return;
+            // color を変えると TMP が文字を作り直すので、明滅は CanvasRenderer の透明度で付ける
+            _autoIndicator.canvasRenderer.SetAlpha(
+                0.72f + Mathf.Sin(Time.unscaledTime * 3.5f) * 0.18f
+            );
+            AnimateAutoText();
+        }
+
+        public void SetAutoMode(bool enabled)
+        {
+            if (_autoIndicator == null)
+                return;
+            if (enabled && !_autoIndicator.gameObject.activeSelf)
+                _autoWaveStartTime = Time.unscaledTime;
+            _autoIndicator.text = _autoLabel;
+            if (enabled)
+            {
+                Color color = _autoIndicator.color;
+                color.a = 1f;
+                _autoIndicator.color = color;
+            }
+            _autoIndicator.gameObject.SetActive(enabled);
+        }
+
+        public void SetWindowHidden(bool hidden)
+        {
+            if (_window != null)
+                _window.gameObject.SetActive(!hidden);
+            if (_controlGuide != null)
+                _controlGuide.text = hidden ? "WINDOW   H" : DefaultGuide;
+        }
+
+        /// <summary>文字送りの速さを、ガイド・ボタンの文字に出す。showToast なら一時通知も出す。</summary>
+        public void SetTextSpeed(ConversationPanel.TextSpeed speed, bool showToast)
+        {
+            if (_controlGuide != null)
+                _controlGuide.text = $"NEXT   ENTER / SPACE     SPEED  {speed}";
+            if (_speedLabel != null)
+                _speedLabel.text = speed switch
+                {
+                    ConversationPanel.TextSpeed.Slow => "SPEED x0.6",
+                    ConversationPanel.TextSpeed.Fast => "SPEED x2",
+                    ConversationPanel.TextSpeed.Instant => "SPEED MAX",
+                    _ => "SPEED x1",
+                };
+            if (showToast)
+                ShowSpeedToast(speed);
+        }
+
+        /// <summary>速さの一時通知を止めて隠す。</summary>
+        public void CancelSpeedToast()
+        {
+            if (_speedToastRoutine != null)
+            {
+                _owner.StopCoroutine(_speedToastRoutine);
+                _speedToastRoutine = null;
+            }
+            if (_speedToast != null && _speedToast.TryGetComponent(out CanvasGroup group))
+                group.alpha = 0f;
+        }
+
+        private void ShowSpeedToast(ConversationPanel.TextSpeed speed)
+        {
+            if (_speedToast == null || !Application.isPlaying)
+                return;
+            if (_speedToastRoutine != null)
+                _owner.StopCoroutine(_speedToastRoutine);
+            _speedToast.text = speed switch
+            {
+                ConversationPanel.TextSpeed.Slow => "TEXT SPEED  x0.6",
+                ConversationPanel.TextSpeed.Fast => "TEXT SPEED  x2",
+                ConversationPanel.TextSpeed.Instant => "TEXT SPEED  MAX",
+                _ => "TEXT SPEED  x1",
+            };
+            _speedToastRoutine = _owner.StartCoroutine(AnimateSpeedToast());
+        }
+
+        // 少し上へ流しながら出して消す
+        private IEnumerator AnimateSpeedToast()
+        {
+            var group = _speedToast.GetComponent<CanvasGroup>();
+            var rect = _speedToast.rectTransform;
+            Vector2 basePosition = rect.anchoredPosition;
+            const float duration = 0.7f;
+            for (float elapsed = 0f; elapsed < duration; elapsed += Time.unscaledDeltaTime)
+            {
+                float normalized = elapsed / duration;
+                group.alpha =
+                    normalized < 0.18f
+                        ? normalized / 0.18f
+                        : 1f - Mathf.InverseLerp(0.62f, 1f, normalized);
+                rect.anchoredPosition = basePosition + Vector2.up * (7f * normalized);
+                yield return null;
+            }
+            group.alpha = 0f;
+            rect.anchoredPosition = basePosition;
+            _speedToastRoutine = null;
+        }
+
+        public void SetChoiceGuide(bool choicesVisible)
+        {
+            if (_controlGuide != null)
+                _controlGuide.text = choicesVisible
+                    ? "SELECT   UP / DOWN     CONFIRM   ENTER"
+                    : DefaultGuide;
+        }
+
+        public void PrepareLineText(TMP_Text name, TMP_Text body)
+        {
+            if (_lineTextAnimation != null)
+            {
+                _owner.StopCoroutine(_lineTextAnimation);
+                _lineTextAnimation = null;
+            }
+            if (name == null || body == null)
+                return;
+            _nameGroup = name.GetComponent<CanvasGroup>();
+            if (_nameGroup == null)
+                _nameGroup = name.gameObject.AddComponent<CanvasGroup>();
+            _bodyGroup = body.GetComponent<CanvasGroup>();
+            if (_bodyGroup == null)
+                _bodyGroup = body.gameObject.AddComponent<CanvasGroup>();
+            if (!_hasLineTextPositions)
+            {
+                _nameBasePosition = name.rectTransform.anchoredPosition;
+                _bodyBasePosition = body.rectTransform.anchoredPosition;
+                _hasLineTextPositions = true;
+            }
+            _nameGroup.alpha = 0f;
+            _bodyGroup.alpha = 0f;
+            name.rectTransform.anchoredPosition = _nameBasePosition + Vector2.down * 12f;
+            body.rectTransform.anchoredPosition = _bodyBasePosition;
+        }
+
+        public void PlayLineTextEntrance(TMP_Text name, TMP_Text body, bool showName)
+        {
+            if (name == null || body == null || _nameGroup == null || _bodyGroup == null)
+                return;
+            name.gameObject.SetActive(showName);
+            if (!Application.isPlaying)
+            {
+                _nameGroup.alpha = showName ? 1f : 0f;
+                _bodyGroup.alpha = 1f;
+                name.rectTransform.anchoredPosition = _nameBasePosition;
+                body.rectTransform.anchoredPosition = _bodyBasePosition;
+                return;
+            }
+            _lineTextAnimation = _owner.StartCoroutine(AnimateLineText(name, showName));
+        }
+
+        public void StartBounce()
+        {
+            StopBounce();
+            if (_nextIndicator == null || _nextIndicator.transform is not RectTransform rect)
+                return;
+            _indicatorBasePosition = rect.anchoredPosition;
+            _hasIndicatorBasePosition = true;
+            _nextIndicator.SetActive(true);
+            _bounceCoroutine = _owner.StartCoroutine(Bounce(rect));
+        }
+
+        public void StopBounce()
+        {
+            if (_bounceCoroutine != null)
+            {
+                _owner.StopCoroutine(_bounceCoroutine);
+                _bounceCoroutine = null;
+            }
+            if (
+                _hasIndicatorBasePosition
+                && _nextIndicator != null
+                && _nextIndicator.transform is RectTransform rect
+            )
+                rect.anchoredPosition = _indicatorBasePosition;
+            _hasIndicatorBasePosition = false;
+            if (_nextIndicator != null)
+                _nextIndicator.SetActive(false);
+        }
+
+        private void SetAutoProgress(float progress)
+        {
+            if (_autoProgressRect == null)
+                return;
+
+            float amount = Mathf.Clamp01(progress);
+            _autoProgressRect.anchorMin = Vector2.zero;
+            _autoProgressRect.anchorMax = new Vector2(amount, 1f);
+            _autoProgressRect.pivot = new Vector2(0f, 0.5f);
+            _autoProgressRect.offsetMin = Vector2.zero;
+            _autoProgressRect.offsetMax = Vector2.zero;
+        }
+
+        private void AnimateAutoText()
+        {
+            var textInfo = _autoIndicator.textInfo;
+            if (AutoBaseIsStale(textInfo))
+            {
+                _autoIndicator.ForceMeshUpdate();
+                textInfo = _autoIndicator.textInfo;
+                _autoBaseMeshInfo = textInfo.CopyMeshInfoVertexData();
+            }
+
+            _autoProbeMaterial = -1;
+            for (int i = 0; i < textInfo.characterCount; i++)
+            {
+                var character = textInfo.characterInfo[i];
+                if (!character.isVisible)
+                    continue;
+
+                const float characterDuration = 0.42f;
+                const float characterDelay = 0.11f;
+                const float pauseDuration = 1.5f;
+                float waveDuration =
+                    characterDuration + characterDelay * (textInfo.characterCount - 1);
+                float cycle = Mathf.Repeat(
+                    Time.unscaledTime - _autoWaveStartTime,
+                    waveDuration + pauseDuration
+                );
+                float characterTime = cycle - i * characterDelay;
+                float offsetY =
+                    characterTime >= 0f && characterTime <= characterDuration
+                        ? Mathf.Sin(characterTime / characterDuration * Mathf.PI) * 5f
+                        : 0f;
+                int vertexIndex = character.vertexIndex;
+                int material = character.materialReferenceIndex;
+                var vertices = textInfo.meshInfo[material].vertices;
+                var source = _autoBaseMeshInfo[material].vertices;
+                var offset = Vector3.up * offsetY;
+                for (int v = 0; v < 4; v++)
+                    vertices[vertexIndex + v] = source[vertexIndex + v] + offset;
+
+                if (_autoProbeMaterial < 0)
+                {
+                    _autoProbeMaterial = material;
+                    _autoProbeVertex = vertexIndex;
+                    _autoProbeValue = vertices[vertexIndex];
+                }
+            }
+
+            _autoIndicator.UpdateVertexData(TMP_VertexDataUpdateFlags.Vertices);
+        }
+
+        /// <summary>元の頂点を取り直す必要があるか(まだ取っていない、または TMP が文字を作り直した)。</summary>
+        private bool AutoBaseIsStale(TMP_TextInfo textInfo)
+        {
+            if (_autoBaseMeshInfo == null || _autoProbeMaterial < 0)
+                return true;
+            if (_autoProbeMaterial >= textInfo.meshInfo.Length)
+                return true;
+            var vertices = textInfo.meshInfo[_autoProbeMaterial].vertices;
+            return vertices == null
+                || _autoProbeVertex + 3 >= vertices.Length
+                || vertices[_autoProbeVertex] != _autoProbeValue;
+        }
+
+        private void CaptureWindowPosition()
+        {
+            if (_window == null || _hasWindowBasePosition)
+                return;
+            _windowBasePosition = _window.anchoredPosition;
+            _hasWindowBasePosition = true;
+        }
+
+        private void RestoreWindowPosition()
+        {
+            if (_window != null && _hasWindowBasePosition)
+                _window.anchoredPosition = _windowBasePosition;
+        }
+
+        private static float FrameDelta() => Mathf.Max(Time.unscaledDeltaTime, 1f / 60f);
+
+        private const string DefaultGuide = "NEXT   ENTER / SPACE";
+
+        public IEnumerator Show()
+        {
+            if (_root == null)
+                yield break;
+            _root.interactable = false;
+            _root.blocksRaycasts = true;
+            if (_root.alpha >= 0.999f)
+            {
+                _root.interactable = true;
+                yield break;
+            }
+            CaptureWindowPosition();
+            float duration = Mathf.Max(0.01f, _enterDuration);
+            for (float elapsed = 0f; elapsed < duration; elapsed += FrameDelta())
+            {
+                float t = Mathf.SmoothStep(0f, 1f, elapsed / duration);
+                _root.alpha = t;
+                if (_window != null && _hasWindowBasePosition)
+                    _window.anchoredPosition =
+                        _windowBasePosition + Vector2.up * Mathf.Lerp(_enterOffsetY, 0f, t);
+                yield return null;
+            }
+            _root.alpha = 1f;
+            _root.interactable = true;
+            RestoreWindowPosition();
+        }
+
+        public IEnumerator Hide(float duration)
+        {
+            StopBounce();
+            if (_root == null)
+                yield break;
+            float start = _root.alpha;
+            duration = Mathf.Max(0.01f, duration);
+            _root.interactable = false;
+            _root.blocksRaycasts = false;
+            for (float elapsed = 0f; elapsed < duration; elapsed += FrameDelta())
+            {
+                _root.alpha = Mathf.Lerp(start, 0f, elapsed / duration);
+                yield return null;
+            }
+            _root.alpha = 0f;
+        }
+
+        public IEnumerator HideLineText(float duration)
+        {
+            duration = Mathf.Max(0.01f, duration);
+            float nameStart = _nameGroup != null ? _nameGroup.alpha : 0f;
+            float bodyStart = _bodyGroup != null ? _bodyGroup.alpha : 0f;
+            for (float elapsed = 0f; elapsed < duration; elapsed += FrameDelta())
+            {
+                float t = Mathf.SmoothStep(0f, 1f, elapsed / duration);
+                if (_bodyGroup != null)
+                    _bodyGroup.alpha = Mathf.Lerp(bodyStart, 0f, t);
+                if (_nameGroup != null)
+                    _nameGroup.alpha = Mathf.Lerp(nameStart, 0f, Mathf.Clamp01(t * 1.2f));
+                yield return null;
+            }
+            if (_bodyGroup != null)
+                _bodyGroup.alpha = 0f;
+            if (_nameGroup != null)
+                _nameGroup.alpha = 0f;
+        }
+
+        public void HideImmediate()
+        {
+            StopBounce();
+            if (_root != null)
+            {
+                _root.alpha = 0f;
+                _root.interactable = false;
+                _root.blocksRaycasts = false;
+            }
+            RestoreWindowPosition();
+        }
+
+        private IEnumerator Bounce(RectTransform rect)
+        {
+            for (float elapsed = 0f; ; elapsed += Time.unscaledDeltaTime)
+            {
+                float phase = Mathf.Repeat(elapsed / Mathf.Max(0.01f, _bounceDuration), 1f);
+                rect.anchoredPosition =
+                    _indicatorBasePosition
+                    + Vector2.up * CalculateIndicatorBounceOffset(phase, _bounceHeight);
+                yield return null;
+            }
+        }
+
+        private float CalculateIndicatorBounceOffset(float phase, float height) =>
+            Mathf.Sin(Mathf.Clamp01(phase) * Mathf.PI) * height;
+
+        private IEnumerator AnimateLineText(TMP_Text name, bool showName)
+        {
+            const float duration = 0.24f;
+            const float bodyDelay = 0.06f;
+            for (float elapsed = 0f; elapsed < duration + bodyDelay; elapsed += FrameDelta())
+            {
+                float nameT = Mathf.SmoothStep(0f, 1f, Mathf.Clamp01(elapsed / duration));
+                float bodyT = Mathf.SmoothStep(
+                    0f,
+                    1f,
+                    Mathf.Clamp01((elapsed - bodyDelay) / duration)
+                );
+                _nameGroup.alpha = showName ? nameT : 0f;
+                _bodyGroup.alpha = bodyT;
+                name.rectTransform.anchoredPosition = Vector2.Lerp(
+                    _nameBasePosition + Vector2.down * 12f,
+                    _nameBasePosition,
+                    nameT
+                );
+                yield return null;
+            }
+            _nameGroup.alpha = showName ? 1f : 0f;
+            _bodyGroup.alpha = 1f;
+            name.rectTransform.anchoredPosition = _nameBasePosition;
+            _lineTextAnimation = null;
+        }
+    }
+}

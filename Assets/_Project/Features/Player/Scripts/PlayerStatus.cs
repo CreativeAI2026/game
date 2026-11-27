@@ -4,11 +4,12 @@ using UnityEngine;
 namespace CreativeAI.Gameplay
 {
     /// <summary>
-    /// プレイヤーのステータス（HP、攻撃力、防御力等）を管理する。
-    /// ベースパラメータはPlayerParameterData（ScriptableObject）で定義し、
-    /// 装備やバフによる加算は各プロパティ内で計算する拡張ポイントを持つ。
+    /// プレイヤーの HP と、攻撃力・防御力などの最終ステータスを持つ。
+    /// 素の値は PlayerParameterData、補正は装備(EquipmentSlots)と選択中の武器(WeaponManager)から、読むたびに計算する
+    /// (補正の写しは持たない)。最大HPが変わったときに現在HPを合わせるため、前回の最大HPだけを覚えておく。
+    /// 食材を食べるなど、所持品と HP の両方を変える処理は <see cref="FoodUse"/> 側に置く。
     /// </summary>
-    public class PlayerStatus : MonoBehaviour, IDamageable
+    public sealed class PlayerStatus : MonoBehaviour, IDamageable
     {
         [SerializeField]
         private PlayerParameterData _playerData;
@@ -19,59 +20,58 @@ namespace CreativeAI.Gameplay
         public bool IsDead { get; private set; }
 
         /// <summary>HP が 0 になった瞬間に1回だけ通知する(操作停止は PlayerDeathHandler、ゲームオーバー進行は購読側)。</summary>
-        public event Action OnDied;
+        public event Action Died;
 
         /// <summary>ダメージを受けた瞬間に通知する(死亡時も含む)。</summary>
         public event Action Damaged;
 
-        // 装備による補正合計(素の値に足すと最終ステータス)。装備変更で再計算する。
-        private EquipmentBonus _equipment;
-
         /// <summary>装備品による補正合計(武器は含まない)。バフ表示などの読み取り用。</summary>
-        public EquipmentBonus EquipmentBonus => _equipment;
+        public EquipmentBonus EquipmentBonus =>
+            InventoryManager.CurrentEquipment != null
+                ? InventoryManager.CurrentEquipment.GetBonus()
+                : default;
 
-        // 選択中武器による補正合計(素の値に足すと最終ステータス)。武器切替で再計算する。
-        // 武器は在庫外なので装備品(_equipment)とは別ルート。出どころは WeaponManager。
-        private EquipmentBonus _weapon;
+        // 選択中の武器による補正合計(武器の見た目には頼らない)。
+        private static EquipmentBonus WeaponBonus =>
+            WeaponManager.Instance != null ? WeaponManager.Instance.GetSelectedBonus() : default;
+
+        // 前回の最大HP。補正が変わったとき、増えた分だけ現在HPを足すために使う。
+        private float _lastMaxHp;
 
         // HPが変動したときに通知するデリゲート。引数は（現在のHP、最大HP）
-        public Action<float, float> OnHpChanged;
+        public event Action<float, float> HpChanged;
 
         // 装備変更などで攻撃/防御/最大HP等が変わったときの通知(HUD等が最終値を読み直す)。
-        public event Action OnStatsChanged;
+        public event Action StatsChanged;
 
         private PlayerFlinchHandler _flinchHandler;
 
         private PlayerHitInvincibility _invincible;
 
-        // 同じリグ上の武器管理(選択中武器の補正を読むだけ・改変しない)。武器を持たないリグでは null。
+        // 購読している装備の枠(所持品の一部)と武器の常駐(補正の計算し直しの合図を受ける)。
+        private EquipmentSlots _equipmentSlots;
         private WeaponManager _weaponManager;
 
         private void Awake()
         {
             TryGetComponent(out _flinchHandler);
-            TryGetComponent(out _weaponManager);
             TryGetComponent(out _invincible);
+            _lastMaxHp = CurrentMaxHp;
         }
 
         private void OnEnable()
         {
-            // 静的イベント:InventoryManager が後から生成されても購読は成立する。
-            InventoryManager.EquipmentChanged += RecalculateFromInventory;
-            // 武器切替(装備品の EquipmentChanged と対称)。同じリグ上の WeaponManager を購読する。
-            if (_weaponManager != null)
-            {
-                _weaponManager.OnWeaponSwitched += OnWeaponSwitched;
-            }
+            BindEquipment();
         }
 
         private void OnDisable()
         {
-            InventoryManager.EquipmentChanged -= RecalculateFromInventory;
+            if (_equipmentSlots != null)
+                _equipmentSlots.Changed -= OnBonusChanged;
+            _equipmentSlots = null;
             if (_weaponManager != null)
-            {
-                _weaponManager.OnWeaponSwitched -= OnWeaponSwitched;
-            }
+                _weaponManager.SelectionChanged -= OnWeaponSwitched;
+            _weaponManager = null;
         }
 
         public float CurrentMaxHp
@@ -79,7 +79,7 @@ namespace CreativeAI.Gameplay
             get
             {
                 float buffBonus = 0f;
-                float pct = _equipment.maxHpPct + _weapon.maxHpPct; // %ポイント合計
+                float pct = EquipmentBonus.maxHpPct + WeaponBonus.maxHpPct; // %ポイント合計
                 return _playerData.baseMaxLife * (1f + pct / 100f) + buffBonus;
             }
         }
@@ -88,14 +88,15 @@ namespace CreativeAI.Gameplay
         /// 最大HPのうち、装備のバフ(最大HP%増加)で増えた分。HUD がバフ分のゲージを分けて表示するための読み取り用。
         /// 装備で最大HPが下がっている場合は負になる。
         /// </summary>
-        public float EquipmentMaxHpBonus => _playerData.baseMaxLife * _equipment.maxHpPct / 100f;
+        public float EquipmentMaxHpBonus =>
+            _playerData.baseMaxLife * EquipmentBonus.maxHpPct / 100f;
 
         public float CurrentAttackPower
         {
             get
             {
                 float buffBonus = 0f;
-                float pct = _equipment.attackPct + _weapon.attackPct; // %ポイント合計
+                float pct = EquipmentBonus.attackPct + WeaponBonus.attackPct; // %ポイント合計
                 return _playerData.baseAttackPower * (1f + pct / 100f) + buffBonus;
             }
         }
@@ -105,7 +106,7 @@ namespace CreativeAI.Gameplay
             get
             {
                 float buffBonus = 0f;
-                float pct = _equipment.defensePct + _weapon.defensePct; // %ポイント合計
+                float pct = EquipmentBonus.defensePct + WeaponBonus.defensePct; // %ポイント合計
                 return _playerData.baseDefense * (1f + pct / 100f) + buffBonus;
             }
         }
@@ -118,8 +119,8 @@ namespace CreativeAI.Gameplay
 
                 float finalCriticalChance =
                     _playerData.baseCriticalChance
-                    + _equipment.criticalChance
-                    + _weapon.criticalChance
+                    + EquipmentBonus.criticalChance
+                    + WeaponBonus.criticalChance
                     + buffBonus;
 
                 if (finalCriticalChance > 100f)
@@ -141,64 +142,52 @@ namespace CreativeAI.Gameplay
             {
                 float buffBonus = 0f;
                 return _playerData.baseCriticalDamageRatio
-                    + _equipment.criticalDamage
-                    + _weapon.criticalDamage
+                    + EquipmentBonus.criticalDamage
+                    + WeaponBonus.criticalDamage
                     + buffBonus;
             }
         }
 
         private void Start()
         {
-            _equipment =
-                InventoryManager.Instance != null
-                    ? InventoryManager.Instance.GetEquippedBonus()
-                    : default;
-            _weapon = _weaponManager != null ? _weaponManager.GetSelectedBonus() : default;
+            BindEquipment();
             CurrentHp = CurrentMaxHp; // 装備・武器込みの最大HPで満タン開始
-            OnHpChanged?.Invoke(CurrentHp, CurrentMaxHp);
-            OnStatsChanged?.Invoke();
+            _lastMaxHp = CurrentMaxHp;
+            HpChanged?.Invoke(CurrentHp, CurrentMaxHp);
+            StatsChanged?.Invoke();
         }
 
-        /// <summary>装備中アイテムから補正を引き直して最終ステータスへ反映する(装備変更時に呼ばれる)。</summary>
-        public void RecalculateFromInventory()
+        // 装備の枠と武器の常駐を購読する。常駐はふつうプレイヤーより先に作られるが、
+        // シーンに置いたリグが常駐より先に有効になったときに備え、Start でももう一度試す。
+        private void BindEquipment()
         {
-            SetEquipment(
-                InventoryManager.Instance != null
-                    ? InventoryManager.Instance.GetEquippedBonus()
-                    : default
-            );
+            if (_equipmentSlots == null && InventoryManager.CurrentEquipment != null)
+            {
+                _equipmentSlots = InventoryManager.CurrentEquipment;
+                _equipmentSlots.Changed += OnBonusChanged;
+            }
+            if (_weaponManager == null && WeaponManager.Instance != null)
+            {
+                _weaponManager = WeaponManager.Instance;
+                _weaponManager.SelectionChanged += OnWeaponSwitched;
+            }
         }
 
-        /// <summary>
-        /// 装備補正を差し替えて最終ステータスを更新する。
-        /// 最大HPが増えたら増えた分だけ現在HPも増やし、減ったら現在HPをクランプする。
-        /// </summary>
-        public void SetEquipment(EquipmentBonus bonus)
-        {
-            float previousMaxHp = CurrentMaxHp;
-            _equipment = bonus;
-            ApplyMaxHpChange(previousMaxHp);
-            OnStatsChanged?.Invoke();
-            OnHpChanged?.Invoke(CurrentHp, CurrentMaxHp);
-        }
+        private void OnWeaponSwitched(bool _) => OnBonusChanged();
 
-        /// <summary>武器切替時に選択中武器の補正を引き直して最終ステータスへ反映する(装備品の RecalculateFromInventory と対称)。</summary>
-        private void OnWeaponSwitched(bool _)
+        // 装備か選択中の武器が変わったとき。最大HPが増えたら増えた分だけ現在HPも増やし、減ったら現在HPを抑える
+        // (増えた分を足さないと、途中で付けたバフの増加分が空のまま始まるため)。死亡後は HP を戻さない。
+        private void OnBonusChanged()
         {
-            SetWeaponBonus(_weaponManager != null ? _weaponManager.GetSelectedBonus() : default);
-        }
-
-        /// <summary>
-        /// 武器補正を差し替えて最終ステータスを更新する。
-        /// 最大HPが増えたら増えた分だけ現在HPも増やし、減ったら現在HPをクランプする。
-        /// </summary>
-        public void SetWeaponBonus(EquipmentBonus bonus)
-        {
-            float previousMaxHp = CurrentMaxHp;
-            _weapon = bonus;
-            ApplyMaxHpChange(previousMaxHp);
-            OnStatsChanged?.Invoke();
-            OnHpChanged?.Invoke(CurrentHp, CurrentMaxHp);
+            float maxHp = CurrentMaxHp;
+            float gained = maxHp - _lastMaxHp;
+            _lastMaxHp = maxHp;
+            if (gained > 0f && !IsDead)
+                CurrentHp += gained;
+            if (CurrentHp > maxHp)
+                CurrentHp = maxHp;
+            StatsChanged?.Invoke();
+            HpChanged?.Invoke(CurrentHp, maxHp);
         }
 
         public void TakeDamage(float damage, bool isCritical, bool suppressFlinch = false)
@@ -213,7 +202,7 @@ namespace CreativeAI.Gameplay
             float finalDamage = DamageFormula.ApplyDefense(damage, CurrentDefense);
 
             CurrentHp = Mathf.Max(0f, CurrentHp - finalDamage);
-            OnHpChanged?.Invoke(CurrentHp, CurrentMaxHp);
+            HpChanged?.Invoke(CurrentHp, CurrentMaxHp);
             DevLog.Log(
                 $"プレイヤーは {finalDamage} ダメージを受けた！ 残りHP: {CurrentHp}/{CurrentMaxHp}"
             );
@@ -259,63 +248,38 @@ namespace CreativeAI.Gameplay
             return baseDmg;
         }
 
+        /// <summary>HP を amount だけ回復する(最大HPまで)。死亡中は何もしない。</summary>
         public void Heal(float amount)
         {
             if (IsDead)
                 return;
 
             CurrentHp = Mathf.Min(CurrentHp + amount, CurrentMaxHp);
-            OnHpChanged?.Invoke(CurrentHp, CurrentMaxHp);
+            HpChanged?.Invoke(CurrentHp, CurrentMaxHp);
             DevLog.Log($"プレイヤーは {amount} 回復した！ 残りHP: {CurrentHp}/{CurrentMaxHp}");
-        }
-
-        /// <summary>
-        /// 装備の着脱やバフ終了等で最大HPが変動したときに呼ぶ。
-        /// 最大HPが下がった場合に、現在HPが最大HPを超えないよう補正する。
-        /// </summary>
-        public void OnStatusChanged()
-        {
-            if (CurrentHp > CurrentMaxHp)
-            {
-                CurrentHp = CurrentMaxHp;
-            }
-        }
-
-        /// <summary>
-        /// 最大HPの変化を現在HPへ反映する。増えた分は現在HPにも足す
-        /// (足さないと、途中で付けたバフの増加分が空のまま始まるため)。減ったときはクランプだけ行う。
-        /// 死亡後は HP を戻さない。セーブの復元はこの後に RestoreHp で上書きされる。
-        /// </summary>
-        private void ApplyMaxHpChange(float previousMaxHp)
-        {
-            float gained = CurrentMaxHp - previousMaxHp;
-            if (gained > 0f && !IsDead)
-            {
-                CurrentHp += gained;
-            }
-            OnStatusChanged(); // 現在HP > 最大HP のクランプ
         }
 
         private void Die()
         {
             IsDead = true;
-            OnDied?.Invoke();
+            Died?.Invoke();
         }
 
-        // --- セーブ(SaveService から呼ばれる) ---
+        // --- セーブ(SaveService・LoadService から呼ばれる) ---
 
         /// <summary>保存時の現在HPを返す。</summary>
         public float CaptureHp() => CurrentHp;
 
         /// <summary>
         /// 復元時に現在HPを設定する。装備込みの最大HPでクランプする
-        /// (装備の復元が先に済んでいる前提。SaveService 側で順序を保証)。
+        /// (装備の復元が先に済んでいる前提。LoadService 側で順序を保証)。
         /// </summary>
         public void RestoreHp(float hp)
         {
             CurrentHp = Mathf.Clamp(hp, 0f, CurrentMaxHp);
+            _lastMaxHp = CurrentMaxHp;
             IsDead = CurrentHp <= 0f;
-            OnHpChanged?.Invoke(CurrentHp, CurrentMaxHp);
+            HpChanged?.Invoke(CurrentHp, CurrentMaxHp);
         }
     }
 }

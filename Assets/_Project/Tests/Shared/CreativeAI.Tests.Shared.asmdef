@@ -3,6 +3,7 @@
     "rootNamespace": "CreativeAI.Tests",
     "references": [
         "CreativeAI.Gameplay",
+        "CreativeAI.UI",
         "UnityEngine.TestRunner"
     ],
     "includePlatforms": [],

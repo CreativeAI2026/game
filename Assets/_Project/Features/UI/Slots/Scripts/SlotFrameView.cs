@@ -45,8 +45,6 @@ namespace CreativeAI.UI
 
         private bool _selected;
         private bool _hasVisibleCount;
-        private bool _hasWarnedMissingFrame;
-        private bool _hasWarnedMissingSprite;
 
         public bool HasVisibleCount => _hasVisibleCount;
         public RectTransform FrameRect => _frame != null ? _frame.rectTransform : null;
@@ -93,48 +91,14 @@ namespace CreativeAI.UI
 
         private void ApplyVisual()
         {
-            if (!ResolveFrame())
-                return;
-
+            // その役割・状態の画像が無ければ、今の見た目のままにする
             Sprite sprite = ResolveSprite();
             if (sprite == null)
-            {
-                WarnMissingSpriteOnce();
                 return;
-            }
 
             _frame.sprite = sprite;
             _frame.type = Image.Type.Simple;
             _frame.color = Color.white;
-        }
-
-        private bool ResolveFrame()
-        {
-            if (_frame != null)
-                return true;
-
-            if (!_hasWarnedMissingFrame)
-            {
-                _hasWarnedMissingFrame = true;
-                Debug.LogWarning(
-                    $"{nameof(SlotFrameView)} '{name}' にFrame Imageがないため、枠表示をスキップします。Prefab上で設定してください。",
-                    this
-                );
-            }
-
-            return false;
-        }
-
-        private void WarnMissingSpriteOnce()
-        {
-            if (_hasWarnedMissingSprite)
-                return;
-
-            _hasWarnedMissingSprite = true;
-            Debug.LogWarning(
-                $"{nameof(SlotFrameView)} '{name}' の状態Spriteが不足しています。Prefabの役割と状態に対応するSpriteを設定してください。",
-                this
-            );
         }
 
 #if UNITY_EDITOR

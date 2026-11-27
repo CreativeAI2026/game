@@ -12,12 +12,15 @@ namespace CreativeAI.Gameplay
         public TBossDeathState(TutorialBossController controller)
             : base(controller) { }
 
+        public override bool IsCommitted => true;
+        public override bool IsDead => true;
+
         public override void Enter()
         {
             DevLog.Log("[TutorialBoss] 死亡ステート開始");
 
-            // 戦闘曲を止めて通常時の BGM へ戻す(TBossAlertAudio が変化を見て切り替える)
-            boss.IsAlerted = false;
+            // 戦闘曲を止めて通常時の BGM へ戻す(TBossAlertAudio が警戒の変化を受けて切り替える)
+            boss.SetAlerted(false);
 
             if (boss.Agent != null)
             {
@@ -28,8 +31,6 @@ namespace CreativeAI.Gameplay
             {
                 boss.EnemyCollider.enabled = false;
             }
-
-            boss.StopSwingEffects();
 
             if (boss.Animator != null)
             {

@@ -45,7 +45,7 @@ namespace CreativeAI.Gameplay
         private const float KeepDuration = 0.5f; // 伸ばしきった状態でキープする時間
         private const float RetractDuration = 0.3f; // 引っ込むのにかかる時間
 
-        // AnimationEvent(OnPoseReady)の取りこぼしで永久にAimのまま固まるのを防ぐ保険の倍率
+        // AnimationEvent(OnSpecialAttackPoseReady)の取りこぼしで永久にAimのまま固まるのを防ぐ保険の倍率
         private const float AimTimeoutMultiplier = 2f;
 
         // クリップの再生完了待ちが何らかの理由で終わらない場合に打ち切る時間
@@ -67,6 +67,10 @@ namespace CreativeAI.Gameplay
 
         public TBossSpecialAttackState(TutorialBossController controller)
             : base(controller) { }
+
+        public override bool IsAttack => true;
+        public override bool IsCommitted => true;
+        public override bool TriggersPostAttackGuard => true;
 
         public override void Enter()
         {
@@ -107,11 +111,11 @@ namespace CreativeAI.Gameplay
         {
             _timer += Time.deltaTime;
 
-            // Aimフェーズは通常 AnimationEvent (OnPoseReady) で終了するが、
+            // Aimフェーズは通常 AnimationEvent (OnSpecialAttackPoseReady) で終了するが、
             // イベント未設定やトリガー取りこぼしで永久に固まるのを防ぐため保険のタイムアウトを持たせる
             if (_currentPhase == Phase.Aim)
             {
-                if (_timer >= boss.SpecialAttackAimDuration * AimTimeoutMultiplier)
+                if (_timer >= boss.SpecialAttack.AimDuration * AimTimeoutMultiplier)
                 {
                     Debug.LogWarning(
                         "[TutorialBoss] OnSpecialAttackPoseReady が呼ばれませんでした。"
@@ -124,7 +128,7 @@ namespace CreativeAI.Gameplay
 
             if (_currentPhase == Phase.Shoot)
             {
-                if (_timer >= boss.SpecialAttackShootDuration)
+                if (_timer >= boss.SpecialAttack.ShootDuration)
                 {
                     if (!_hasHit)
                     {
@@ -202,8 +206,20 @@ namespace CreativeAI.Gameplay
             }
         }
 
-        public void OnPoseReady()
+        public override void OnAnimationEvent(TBossAnimationEvent animationEvent)
         {
+            if (animationEvent != TBossAnimationEvent.SpecialAttackPoseReady)
+            {
+                return;
+            }
+
+            // 構えで一時停止する。ステートを抜けた後にモーションの残りでこのイベントが来ても、
+            // ここには届かないので Animator 全体を止めてボスを棒立ちにすることはない
+            if (boss.Animator != null)
+            {
+                boss.Animator.speed = 0f;
+            }
+
             if (_currentPhase == Phase.Aim)
             {
                 StartShootPhase();
@@ -223,8 +239,8 @@ namespace CreativeAI.Gameplay
             }
 
             float wavePower =
-                boss.SpecialAttackRange > 0.0001f
-                    ? Mathf.Clamp01(_currentLength / boss.SpecialAttackRange)
+                boss.SpecialAttack.Range > 0.0001f
+                    ? Mathf.Clamp01(_currentLength / boss.SpecialAttack.Range)
                     : 0f;
 
             boss.WireChainDriver.Apply(0f, wavePower, Time.deltaTime);
@@ -274,18 +290,9 @@ namespace CreativeAI.Gameplay
 
             Vector3 targetPos = GetTargetPosition();
 
-            Vector3 dirToTarget = (targetPos - boss.transform.position);
-            dirToTarget.y = 0f;
-            if (dirToTarget.sqrMagnitude > 0.001f)
-            {
-                boss.transform.rotation = Quaternion.Slerp(
-                    boss.transform.rotation,
-                    Quaternion.LookRotation(dirToTarget.normalized),
-                    Time.deltaTime * 10f
-                );
-            }
+            FaceTowards(targetPos, 10f, minSqrDistance: 0.001f);
 
-            float aimProgress = Mathf.Clamp01(_timer / boss.SpecialAttackAimDuration);
+            float aimProgress = Mathf.Clamp01(_timer / boss.SpecialAttack.AimDuration);
             _currentLength = AimTentacleLength * aimProgress;
 
             // Aimフェーズ（ポーズ完了前）は強制上書き(ApplyWireTransform)を行わず、アニメーションの腕に追従させる
@@ -318,8 +325,8 @@ namespace CreativeAI.Gameplay
             if (_hasHit)
                 return;
 
-            float shootProgress = Mathf.Clamp01(_timer / boss.SpecialAttackShootDuration);
-            _currentLength = boss.SpecialAttackRange * shootProgress;
+            float shootProgress = Mathf.Clamp01(_timer / boss.SpecialAttack.ShootDuration);
+            _currentLength = boss.SpecialAttack.Range * shootProgress;
 
             ApplyWireTransform(_currentLength);
 
@@ -330,7 +337,7 @@ namespace CreativeAI.Gameplay
         {
             _currentPhase = Phase.Keep;
             _timer = 0f;
-            _currentLength = boss.SpecialAttackRange;
+            _currentLength = boss.SpecialAttack.Range;
         }
 
         private void UpdateKeepPhase()
@@ -424,7 +431,7 @@ namespace CreativeAI.Gameplay
             {
                 int sweepCount = Physics.SphereCastNonAlloc(
                     tipPosition - delta,
-                    boss.WireHitRadius,
+                    boss.SpecialAttack.WireHitRadius,
                     delta.normalized,
                     _sweepBuffer,
                     delta.magnitude,
@@ -445,7 +452,7 @@ namespace CreativeAI.Gameplay
             // 密着状態は掃引で検出できないため重なり判定で補完する
             int overlapCount = Physics.OverlapSphereNonAlloc(
                 tipPosition,
-                boss.WireHitRadius,
+                boss.SpecialAttack.WireHitRadius,
                 _overlapBuffer,
                 ~0,
                 QueryTriggerInteraction.Ignore

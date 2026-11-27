@@ -65,7 +65,7 @@ namespace CreativeAI.Gameplay
             _imageDirectory = Path.Combine(directory, _imageDirectoryName);
             _listPath = Path.Combine(directory, baseName + "_moments.csv");
 
-            _detector.OnPanicLevelChanged += OnPanicLevelChanged;
+            _detector.PanicLevelChanged += OnPanicLevelChanged;
             _playerStatus.Damaged += OnPlayerDamaged;
         }
 
@@ -73,7 +73,7 @@ namespace CreativeAI.Gameplay
         {
             if (_detector != null)
             {
-                _detector.OnPanicLevelChanged -= OnPanicLevelChanged;
+                _detector.PanicLevelChanged -= OnPanicLevelChanged;
                 _playerStatus.Damaged -= OnPlayerDamaged;
             }
 

@@ -6,8 +6,8 @@ using CreativeAI.Gameplay;
 using NUnit.Framework;
 using UnityEditor;
 using UnityEngine;
-using UnityEngine.SceneManagement;
 using UnityEngine.TestTools;
+using static CreativeAI.Tests.TestCoroutine;
 
 namespace CreativeAI.Tests.EditMode
 {
@@ -16,33 +16,12 @@ namespace CreativeAI.Tests.EditMode
     /// </summary>
     public class EventPlayerTests
     {
-        // yield return <IEnumerator> のネストを Unity 同様に展開しながら同期駆動する。
-        // fake は即座に yield break するので待ち時間は発生しない。
-        private static void Drive(IEnumerator routine)
-        {
-            var stack = new Stack<IEnumerator>();
-            stack.Push(routine);
-            while (stack.Count > 0)
-            {
-                var top = stack.Peek();
-                if (top.MoveNext())
-                {
-                    if (top.Current is IEnumerator nested)
-                        stack.Push(nested);
-                }
-                else
-                {
-                    stack.Pop();
-                }
-            }
-        }
-
         private sealed class FakeDialogueView : IDialogueView
         {
             public readonly List<string> Lines = new();
             public string ChoiceToReturn;
 
-            // 台詞・ウィンドウを閉じる・戦闘の順序を見るための記録(戦闘は FakeBattleRunner が書き込む)。
+            // 台詞・ウィンドウを閉じる・戦闘の順序を見るための記録(戦闘は FakeEventBattle が書き込む)。
             public readonly List<string> Timeline = new();
 
             public IEnumerator ShowLine(string speaker, string portrait, string text)
@@ -57,6 +36,10 @@ namespace CreativeAI.Tests.EditMode
                 Timeline.Add("close");
                 yield break;
             }
+
+            public bool HiddenImmediately;
+
+            public void HideImmediate() => HiddenImmediately = true;
 
             public IEnumerator ShowChoice(
                 IReadOnlyList<ChoiceOption> options,
@@ -117,21 +100,22 @@ namespace CreativeAI.Tests.EditMode
             public void GiveWeapon(string weaponKey) => Given.Add(weaponKey);
         }
 
-        private sealed class FakeBattleRunner : IBattleRunner
+        private sealed class FakeEventBattle : IEventBattle
         {
             public readonly List<string> Fought = new();
-            public Action OnRun; // 戦闘中に起きること(シーン切替など)を差し込む
+            public Action OnRun; // 戦闘中に起きることを差し込む
+            public bool Hold; // true の間は決着しない(戦闘の最中で止めておく)
 
-            public IEnumerator Run(string arenaId)
+            public IEnumerator Fight(string encounterId)
             {
-                Fought.Add(arenaId);
+                Fought.Add(encounterId);
                 OnRun?.Invoke();
-                yield break;
+                while (Hold)
+                    yield return null;
             }
         }
 
         private GameObject _pmGo;
-        private GameObject _epGo;
         private ProgressManager _pm;
         private EventPlayer _player;
         private FakeDialogueView _view;
@@ -142,18 +126,15 @@ namespace CreativeAI.Tests.EditMode
         {
             _pmGo = new GameObject("PM");
             _pm = _pmGo.AddComponent<ProgressManager>();
-            _epGo = new GameObject("EP");
-            _player = _epGo.AddComponent<EventPlayer>();
             _view = new FakeDialogueView();
             _items = new FakeItemGiver();
-            _player.Inject(_pm, _view, _items);
+            _player = new EventPlayer(_pm, view: _view, items: _items);
         }
 
         [TearDown]
         public void TearDown()
         {
             UnityEngine.Object.DestroyImmediate(_pmGo);
-            UnityEngine.Object.DestroyImmediate(_epGo);
         }
 
         private static EventDefinition OneLineEvent(
@@ -183,26 +164,25 @@ namespace CreativeAI.Tests.EditMode
             );
 
         [Test]
-        public void PlayRoutine_GiveItemWithoutInventory_WarnsButStillShowsPresentation()
+        public void Play_GiveItemWithoutInventory_WarnsButStillShowsPresentation()
         {
             // プレビューシーンのように所持品が居ない場面。演出だけ出て所持品に入らないことを警告で知らせる。
-            ItemGiverService.Current = null;
-            _player.Inject(_pm, _view, null);
+            _player = new EventPlayer(_pm, view: _view);
             var ev = EventDefinition.Create(
                 "gift",
                 new[] { EventCondition.Progress(0) },
                 new[] { EventStep.GiveItem("apple") },
                 1
             );
-            LogAssert.Expect(LogType.Warning, new Regex("IItemGiver 未登録.*apple"));
+            LogAssert.Expect(LogType.Warning, new Regex("所持品が無い.*apple"));
 
-            Drive(_player.PlayRoutine(ev));
+            Drive(_player.Play(ev));
 
             CollectionAssert.AreEqual(new[] { "apple" }, _view.ItemGets, "入手演出は出す");
         }
 
         [Test]
-        public void PlayRoutine_SetFlagStep_WritesTheFlag()
+        public void Play_SetFlagStep_WritesTheFlag()
         {
             _pm.SetFlag("crafted", "1");
             var ev = EventDefinition.Create(
@@ -216,7 +196,7 @@ namespace CreativeAI.Tests.EditMode
                 1
             );
 
-            Drive(_player.PlayRoutine(ev));
+            Drive(_player.Play(ev));
 
             Assert.AreEqual(string.Empty, _pm.GetFlag("crafted"));
         }
@@ -248,19 +228,19 @@ namespace CreativeAI.Tests.EditMode
                 new[]
                 {
                     EventStep.Line(null, null, "戻ろう"),
-                    EventStep.Command(EventPlayer.PlayerMoveCommand, spawnPointId),
+                    EventStep.Command(EventPlayerMovement.MoveCommand, spawnPointId),
                 },
                 1
             );
 
         [Test]
-        public void PlayRoutine_PlayerMoveTo_PlacesPlayerAtSpawnPoint()
+        public void Play_PlayerMoveTo_PlacesPlayerAtSpawnPoint()
         {
             var player = TestPlayer.Create();
             var point = CreateSpawnPoint("test_pull_back", new Vector3(3f, 0f, 4f));
             try
             {
-                Drive(_player.PlayRoutine(MoveEvent("test_pull_back")));
+                Drive(_player.Play(MoveEvent("test_pull_back")));
 
                 Assert.AreEqual(point.transform.position, player.transform.position);
             }
@@ -272,7 +252,7 @@ namespace CreativeAI.Tests.EditMode
         }
 
         [Test]
-        public void PlayRoutine_PlayerMoveTo_MissingSpawnPoint_WarnsAndDoesNotMove()
+        public void Play_PlayerMoveTo_MissingSpawnPoint_WarnsAndDoesNotMove()
         {
             var player = TestPlayer.Create();
             player.transform.position = new Vector3(1f, 2f, 3f);
@@ -280,7 +260,7 @@ namespace CreativeAI.Tests.EditMode
             {
                 LogAssert.Expect(LogType.Warning, new Regex("player.moveTo"));
 
-                Drive(_player.PlayRoutine(MoveEvent("no_such_point")));
+                Drive(_player.Play(MoveEvent("no_such_point")));
 
                 Assert.AreEqual(
                     new Vector3(1f, 2f, 3f),
@@ -296,12 +276,12 @@ namespace CreativeAI.Tests.EditMode
         }
 
         [Test]
-        public void PlayRoutine_Once_LeavesSeenFlagAndKeepsProgress()
+        public void Play_Once_LeavesSeenFlagAndKeepsProgress()
         {
             _pm.AdvanceTo(3);
             var ev = RepeatEvent("drawer_once", EventRepeat.Once);
 
-            Drive(_player.PlayRoutine(ev));
+            Drive(_player.Play(ev));
 
             Assert.AreEqual(
                 ProgressFlags.SeenValue,
@@ -315,12 +295,12 @@ namespace CreativeAI.Tests.EditMode
         }
 
         [Test]
-        public void PlayRoutine_Always_LeavesNoFlagAndStaysAvailable()
+        public void Play_Always_LeavesNoFlagAndStaysAvailable()
         {
             _pm.AdvanceTo(3);
             var ev = RepeatEvent("shelf_check", EventRepeat.Always);
 
-            Drive(_player.PlayRoutine(ev));
+            Drive(_player.Play(ev));
 
             Assert.AreEqual(string.Empty, _pm.GetFlag(ProgressFlags.Seen("shelf_check")));
             Assert.AreEqual(3, _pm.Progress);
@@ -331,7 +311,7 @@ namespace CreativeAI.Tests.EditMode
         public void SeenFlag_SurvivesSaveAndLoad()
         {
             _pm.AdvanceTo(3);
-            Drive(_player.PlayRoutine(RepeatEvent("drawer_once", EventRepeat.Once)));
+            Drive(_player.Play(RepeatEvent("drawer_once", EventRepeat.Once)));
 
             // セーブされるのは Flags 全体。ロードで復元しても見終えた印が残る。
             var saved = new System.Collections.Generic.Dictionary<string, string>(_pm.Flags);
@@ -346,21 +326,21 @@ namespace CreativeAI.Tests.EditMode
         }
 
         [Test]
-        public void PlayRoutine_ClosesWindowAtEnd()
+        public void Play_ClosesWindowAtEnd()
         {
-            Drive(_player.PlayRoutine(OneLineEvent("a", 0, "ありがとう", 1)));
+            Drive(_player.Play(OneLineEvent("a", 0, "ありがとう", 1)));
 
             CollectionAssert.AreEqual(new[] { "ありがとう", "close" }, _view.Timeline);
         }
 
         [Test]
-        public void PlayRoutine_ClosesWindowBeforeBattle()
+        public void Play_ClosesWindowBeforeBattle()
         {
-            var runner = new FakeBattleRunner();
+            var runner = new FakeEventBattle();
             runner.OnRun = () => _view.Timeline.Add("battle");
-            _player.Inject(_pm, _view, _items, runner);
+            _player = new EventPlayer(_pm, view: _view, items: _items, battle: runner);
 
-            Drive(_player.PlayRoutine(BattleEvent()));
+            Drive(_player.Play(BattleEvent()));
 
             CollectionAssert.AreEqual(
                 new[] { "来るわ!", "close", "battle", "倒した!", "close" },
@@ -369,68 +349,138 @@ namespace CreativeAI.Tests.EditMode
         }
 
         [Test]
-        public void PlayRoutine_SceneChangedDuringBattle_AbortsWithoutAdvancing()
+        public void Abort_DuringBattle_StopsWithoutAdvancing()
         {
-            // 戦闘に負けてセーブ再開(シーン再読込)した状況。敵が消えて battle が抜けても続きを流さない。
-            var runner = new FakeBattleRunner();
-            runner.OnRun = () =>
-                TestReflection.Invoke(
-                    _player,
-                    "OnActiveSceneChanged",
-                    default(Scene),
-                    default(Scene)
-                );
-            _player.Inject(_pm, _view, _items, runner);
+            // 戦闘に負けてセーブ再開(シーン再読込)すると、再生を回していたトリガーごと消えて打ち切られる。
+            var gmmGo = new GameObject("GMM");
+            var gmm = gmmGo.AddComponent<GameModeManager>();
+            var runner = new FakeEventBattle { Hold = true };
+            _player = new EventPlayer(_pm, gmm, _view, _items, battle: runner);
+            try
+            {
+                var routine = _player.Play(BattleEvent());
+                DriveUntil(routine, () => runner.Fought.Count > 0);
 
-            Drive(_player.PlayRoutine(BattleEvent()));
+                LogAssert.Expect(LogType.Warning, new Regex("打ち切りました"));
+                _player.Abort(); // コルーチンは発火側ごと止まるので、この先は回さない
 
-            CollectionAssert.DoesNotContain(_view.Lines, "倒した!", "戦闘後の台詞は流さない");
-            Assert.AreEqual(0, _pm.Progress, "進行度は進めない(再開後にもう一度発火できる)");
-            Assert.AreEqual("close", _view.Timeline[^1], "会話ウィンドウは閉じる");
-            Assert.IsFalse(EventPlaybackService.IsPlaying, "再生中フラグは戻す");
+                CollectionAssert.DoesNotContain(_view.Lines, "倒した!", "戦闘後の台詞は流さない");
+                Assert.AreEqual(0, _pm.Progress, "進行度は進めない(再開後にもう一度発火できる)");
+                Assert.IsTrue(_view.HiddenImmediately, "会話ウィンドウはその場で消す");
+                Assert.AreEqual(GameMode.Field, gmm.Mode, "フィールドへ戻す");
+                Assert.IsFalse(_player.IsPlaying, "再生中フラグは戻す");
+            }
+            finally
+            {
+                UnityEngine.Object.DestroyImmediate(gmmGo);
+            }
         }
 
         [Test]
-        public void PlayRoutine_SceneChangedBeforeStart_DoesNotAffectNextEvent()
+        public void Abort_ThenPlay_RunsTheNextEvent()
         {
-            // 打ち切りの判定は「再生開始後に」切り替わったかどうか。過去の切替は関係ない。
-            TestReflection.Invoke(_player, "OnActiveSceneChanged", default(Scene), default(Scene));
+            var runner = new FakeEventBattle { Hold = true };
+            _player = new EventPlayer(_pm, view: _view, items: _items, battle: runner);
+            DriveUntil(_player.Play(BattleEvent()), () => runner.Fought.Count > 0);
+            LogAssert.Expect(LogType.Warning, new Regex("打ち切りました"));
+            _player.Abort();
 
-            Drive(_player.PlayRoutine(OneLineEvent("a", 0, "A", 1)));
+            Drive(_player.Play(OneLineEvent("a", 0, "A", 1)));
 
-            Assert.AreEqual(1, _pm.Progress);
+            Assert.AreEqual(1, _pm.Progress, "打ち切ったあとも次のイベントは再生できる");
         }
 
         [Test]
-        public void PlayRoutine_SetsPlayingFlagDuringPlayback_ClearsAfter()
+        public void Abort_WhenIdle_DoesNothing()
         {
-            var routine = _player.PlayRoutine(OneLineEvent("a", 0, "A", 1));
+            _player.Abort();
+
+            Assert.IsFalse(_view.HiddenImmediately, "再生していなければ会話ウィンドウに触れない");
+        }
+
+        [Test]
+        public void Play_OutsideFieldMode_IgnoresEvent()
+        {
+            // 別の EventPlayer が再生中(会話モード)なら、この EventPlayer も始めない。
+            var gmmGo = new GameObject("GMM");
+            var gmm = gmmGo.AddComponent<GameModeManager>();
+            gmm.TryStartDialogue();
+            _player = new EventPlayer(_pm, gmm, _view, _items);
+            try
+            {
+                LogAssert.Expect(LogType.Warning, new Regex("無視しました"));
+
+                Drive(_player.Play(OneLineEvent("a", 0, "A", 1)));
+
+                CollectionAssert.IsEmpty(_view.Lines);
+                Assert.AreEqual(0, _pm.Progress);
+                Assert.AreEqual(GameMode.Dialogue, gmm.Mode, "再生中のモードを戻さない");
+            }
+            finally
+            {
+                UnityEngine.Object.DestroyImmediate(gmmGo);
+            }
+        }
+
+        [Test]
+        public void Play_IsPlayingDuringPlayback_ClearsAfter()
+        {
+            var routine = _player.Play(OneLineEvent("a", 0, "A", 1));
 
             routine.MoveNext(); // 最初の台詞まで進める
-            Assert.IsTrue(EventPlaybackService.IsPlaying, "再生中");
+            Assert.IsTrue(_player.IsPlaying, "再生中");
 
             Drive(routine);
-            Assert.IsFalse(EventPlaybackService.IsPlaying, "終了後は戻る");
+            Assert.IsFalse(_player.IsPlaying, "終了後は戻る");
         }
 
         [Test]
-        public void PlayRoutine_WhileAnotherIsPlaying_IgnoresSecond()
+        public void Play_WhileAnotherIsPlaying_IgnoresSecond()
         {
-            var first = _player.PlayRoutine(OneLineEvent("first", 0, "1本目", 1));
+            var first = _player.Play(OneLineEvent("first", 0, "1本目", 1));
             first.MoveNext(); // 1本目を再生中にする
 
-            Drive(_player.PlayRoutine(OneLineEvent("second", 0, "2本目", 5)));
+            Drive(_player.Play(OneLineEvent("second", 0, "2本目", 5)));
 
             CollectionAssert.DoesNotContain(_view.Lines, "2本目", "2本目は再生しない");
-            Assert.IsTrue(EventPlaybackService.IsPlaying, "2本目が1本目の再生中フラグを戻さない");
+            Assert.IsTrue(_player.IsPlaying, "2本目が1本目の再生中フラグを戻さない");
 
             Drive(first);
             Assert.AreEqual(1, _pm.Progress, "進行度は1本目の nextProgress だけ反映");
-            Assert.IsFalse(EventPlaybackService.IsPlaying);
+            Assert.IsFalse(_player.IsPlaying);
         }
 
         [Test]
-        public void PlayRoutine_RunsLinesInOrder_GivesItem_SetsFlag_Advances()
+        public void Play_AnotherPlayerIsPlaying_IgnoresEvenInFieldMode()
+        {
+            // 別の発火元の EventPlayer が再生中なら、モードが Field に戻っていても2本目は始めない。
+            var gmmGo = new GameObject("GMM");
+            try
+            {
+                var gmm = gmmGo.AddComponent<GameModeManager>();
+                _player = new EventPlayer(_pm, gmm, _view, _items);
+                var other = new EventPlayer(_pm, gmm, _view, _items);
+                var first = _player.Play(OneLineEvent("first", 0, "1本目", 1));
+                first.MoveNext();
+                gmm.ResetToField(); // 途中で誰かがモードを戻した
+
+                Drive(other.Play(OneLineEvent("second", 0, "2本目", 5)));
+
+                CollectionAssert.DoesNotContain(_view.Lines, "2本目");
+                Assert.AreSame(_player, EventPlayer.Playing);
+                Assert.IsFalse(other.IsPlaying);
+
+                Drive(first);
+                Assert.IsNull(EventPlayer.Playing, "終わったら再生中を空ける");
+            }
+            finally
+            {
+                UnityEngine.Object.DestroyImmediate(gmmGo);
+            }
+        }
+
+        [Test]
+        public void Play_RunsLinesInOrder_GivesItem_SetsFlag_Advances()
         {
             _view.ChoiceToReturn = "together";
             var ev = EventDefinition.Create(
@@ -450,7 +500,7 @@ namespace CreativeAI.Tests.EditMode
                 nextProgress: 6
             );
 
-            Drive(_player.PlayRoutine(ev));
+            Drive(_player.Play(ev));
 
             CollectionAssert.AreEqual(new[] { "…誰だ?", "…そうか。" }, _view.Lines);
             CollectionAssert.AreEqual(new[] { "old_key" }, _items.Given);
@@ -461,10 +511,10 @@ namespace CreativeAI.Tests.EditMode
         }
 
         [Test]
-        public void PlayRoutine_GiveWeaponStep_RoutesToWeaponGiver()
+        public void Play_GiveWeaponStep_RoutesToWeaponGiver()
         {
             var weapons = new FakeWeaponGiver();
-            _player.Inject(_pm, _view, _items, weapons: weapons);
+            _player = new EventPlayer(_pm, view: _view, items: _items, weapons: weapons);
 
             var ev = EventDefinition.Create(
                 "girl_gift",
@@ -478,7 +528,7 @@ namespace CreativeAI.Tests.EditMode
                 nextProgress: 6
             );
 
-            Drive(_player.PlayRoutine(ev));
+            Drive(_player.Play(ev));
 
             CollectionAssert.AreEqual(new[] { "scythe" }, weapons.Given);
             CollectionAssert.AreEqual(new[] { "scythe" }, _view.WeaponGets);
@@ -486,7 +536,7 @@ namespace CreativeAI.Tests.EditMode
         }
 
         [Test]
-        public void PlayRoutine_CommandStep_RoutesToDialogueView()
+        public void Play_CommandStep_RoutesToDialogueView()
         {
             var ev = EventDefinition.Create(
                 "shaken",
@@ -501,16 +551,16 @@ namespace CreativeAI.Tests.EditMode
                 nextProgress: 6
             );
 
-            Drive(_player.PlayRoutine(ev));
+            Drive(_player.Play(ev));
 
             CollectionAssert.AreEqual(new[] { "portrait.left.shake", "wait:0.5" }, _view.Commands);
         }
 
         [Test]
-        public void PlayRoutine_BattleStep_RunsRunnerWithArena_ThenContinues()
+        public void Play_BattleStep_RunsRunnerWithArena_ThenContinues()
         {
-            var battle = new FakeBattleRunner();
-            _player.Inject(_pm, _view, _items, battle);
+            var battle = new FakeEventBattle();
+            _player = new EventPlayer(_pm, view: _view, items: _items, battle: battle);
 
             var ev = EventDefinition.Create(
                 "cave_encounter",
@@ -524,7 +574,7 @@ namespace CreativeAI.Tests.EditMode
                 nextProgress: 6
             );
 
-            Drive(_player.PlayRoutine(ev));
+            Drive(_player.Play(ev));
 
             // events.json の arena で指した名前がそのまま戦闘役に渡る
             CollectionAssert.AreEqual(new[] { "wolf_boss_arena" }, battle.Fought);

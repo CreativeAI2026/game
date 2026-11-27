@@ -14,13 +14,13 @@ namespace CreativeAI.Tests.PlayMode
     /// </summary>
     public class SessionResidencyPlayModeTests
     {
-        private GameObject _sceneControllerGo;
+        private GameObject _sceneLoaderGo;
 
         [SetUp]
         public void SetUp()
         {
-            _sceneControllerGo = new GameObject("PersistentSystems");
-            _sceneControllerGo.AddComponent<SceneController>();
+            _sceneLoaderGo = new GameObject("PersistentSystems");
+            _sceneLoaderGo.AddComponent<SceneLoader>();
         }
 
         [UnityTearDown]
@@ -29,9 +29,8 @@ namespace CreativeAI.Tests.PlayMode
             DestroyResident<ProgressManager>();
             DestroyResident<GameModeManager>();
             DestroyResident<InventoryManager>();
-            DestroyResident<EventPlayer>();
-            DestroyResident<UIRoot>();
-            Object.Destroy(_sceneControllerGo);
+            DestroyResident<UIManager>();
+            Object.Destroy(_sceneLoaderGo);
             yield return null; // Destroy の反映を待つ(次のテストへ持ち越さない)
         }
 
@@ -60,7 +59,6 @@ namespace CreativeAI.Tests.PlayMode
             Assert.AreEqual(1, CountOf<ProgressManager>(), "連打・再入場で二重生成しない");
             Assert.AreEqual(1, CountOf<GameModeManager>());
             Assert.AreEqual(1, CountOf<InventoryManager>());
-            Assert.AreEqual(1, CountOf<EventPlayer>());
         }
 
         [UnityTest]
@@ -72,7 +70,6 @@ namespace CreativeAI.Tests.PlayMode
 
             Assert.IsNotNull(GameModeManager.Instance, "モードの単一ソース");
             Assert.IsNotNull(ProgressManager.Instance, "進行度の単一ソース");
-            Assert.IsNotNull(EventPlayerService.Current, "EventTrigger が使う会話再生の seam");
         }
 
         [UnityTest]
@@ -97,7 +94,7 @@ namespace CreativeAI.Tests.PlayMode
             var player = GameSession.EnsurePlayerRig(config.playerRigPrefab);
             yield return null;
 
-            TitleReturnService.Current.ReturnToTitle();
+            GameStarter.ReturnToTitle();
             yield return PlayModeWait.Until(
                 () => player == null && cameraRig == null,
                 "倒れたプレイヤーとカメラを次の開始へ持ち越さない"

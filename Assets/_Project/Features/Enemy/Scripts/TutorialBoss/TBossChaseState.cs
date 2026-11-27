@@ -28,13 +28,17 @@ namespace CreativeAI.Gameplay
             _continueLostSightTimer = continueLostSightTimer;
         }
 
+        public override bool AimsHeadAtPlayer => true;
+        public override bool IsEngaging => true;
+        public override bool CanRepel => true;
+
         public override void Enter()
         {
             DevLog.Log("[TutorialBoss] 追跡ステート開始");
 
             if (boss.Agent != null)
             {
-                boss.Agent.speed = boss.RunSpeed;
+                boss.Agent.speed = boss.Movement.RunSpeed;
                 boss.SetAgentStopped(false);
                 _stuckDetector = new TBossStuckDetector(boss.Agent);
             }
@@ -57,7 +61,7 @@ namespace CreativeAI.Gameplay
                 return;
             }
 
-            if (boss.CheckPlayerTracked())
+            if (boss.Perception.IsPlayerTracked())
             {
                 UpdateTracking();
             }
@@ -105,7 +109,10 @@ namespace CreativeAI.Gameplay
             // 様子見の間合いに入ったら様子見へ。
             // ただし間に壁・穴・段差があって直線で詰められない場合、様子見の直線的な間合い管理は成立しないため、
             // 経路探索での追跡を続けて回り込む
-            if (distance <= boss.WatchDistanceMax && boss.AttackFeasibility.HasDirectApproach())
+            if (
+                distance <= boss.Engagement.WatchDistanceMax
+                && boss.AttackFeasibility.HasDirectApproach()
+            )
             {
                 // 毎回様子見から入る一定パターンを崩すため、一定確率で様子見を挟まずそのまま突っ込む
                 // （焦っているプレイヤーには確率が上がる）
@@ -137,13 +144,13 @@ namespace CreativeAI.Gameplay
                 if (boss.Agent != null)
                 {
                     boss.SetAgentStopped(false);
-                    boss.Agent.SetDestination(boss.LastKnownPlayerPosition);
+                    boss.Agent.SetDestination(boss.Perception.LastKnownPlayerPosition);
                 }
                 _stuckDetector?.Reset();
             }
 
             bool reachedLastKnown =
-                Vector3.Distance(boss.transform.position, boss.LastKnownPlayerPosition)
+                Vector3.Distance(boss.transform.position, boss.Perception.LastKnownPlayerPosition)
                 <= LastKnownArriveDistance * boss.BodyScale;
             bool stuck = _stuckDetector != null && _stuckDetector.Tick(Time.deltaTime);
 
@@ -152,7 +159,9 @@ namespace CreativeAI.Gameplay
             {
                 boss.LostSightTimer = 0f;
                 // 即座にパトロールへ戻さず、最後に見た移動方向から逃げた先を読んで捜索してから諦めさせる
-                boss.ChangeState(new TBossSearchState(boss, boss.PredictPlayerPosition()));
+                boss.ChangeState(
+                    new TBossSearchState(boss, boss.Perception.PredictPlayerPosition())
+                );
             }
         }
 
@@ -162,7 +171,7 @@ namespace CreativeAI.Gameplay
         /// </summary>
         private void OnSoundHeard(NoiseEvent data)
         {
-            if (boss.CheckPlayerTracked() || !TBossPerception.IsEmittedAtPlayer(data.Type))
+            if (boss.Perception.IsPlayerTracked() || !TBossPerception.IsEmittedAtPlayer(data.Type))
             {
                 return;
             }
@@ -172,7 +181,7 @@ namespace CreativeAI.Gameplay
                 return;
             }
 
-            boss.NotifyPlayerHeardAt(data.Position);
+            boss.Perception.NotifyPlayerHeardAt(data.Position);
             boss.LostSightTimer = 0f;
 
             if (boss.Agent != null)

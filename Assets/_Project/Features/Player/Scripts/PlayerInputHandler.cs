@@ -8,8 +8,8 @@ namespace CreativeAI.Gameplay
     /// Input Systemからの入力イベントを受け取り、各フィールドに保持する。
     /// 攻撃入力はConsumeパターン（1回消費）を採用し、
     /// 武器コントローラー側が任意のタイミングで入力を読み取れるようにしている。
-    /// 会話イベント中(<see cref="EventPlaybackService.BlocksPlayerControl"/>)と、
-    /// 操作で開くUIの表示中(<see cref="UIPanelService.IsOpen"/>)は入力を捨てて操作不能にする。
+    /// 会話中(<see cref="GameMode.Dialogue"/>)と、
+    /// 操作で開くUIの表示中(<see cref="GameModeManager.IsMenuOpen"/>)は入力を捨てて操作不能にする。
     /// UI 表示中はクリックできるようカーソルのロックを外す。
     /// </summary>
     public class PlayerInputHandler : MonoBehaviour
@@ -48,28 +48,20 @@ namespace CreativeAI.Gameplay
 
         private void OnEnable()
         {
-            EventPlaybackService.PlayingChanged += OnPlayingChanged;
-            UIPanelService.OpenChanged += OnUIPanelChanged;
             _gameMode = GameModeManager.Instance;
             if (_gameMode != null)
-                _gameMode.OnModeChanged += OnModeChanged;
+                _gameMode.Changed += OnModeChanged;
             OnControlStateChanged();
         }
 
         private void OnDisable()
         {
-            EventPlaybackService.PlayingChanged -= OnPlayingChanged;
-            UIPanelService.OpenChanged -= OnUIPanelChanged;
             if (_gameMode != null)
-                _gameMode.OnModeChanged -= OnModeChanged;
+                _gameMode.Changed -= OnModeChanged;
             _gameMode = null;
         }
 
-        private void OnPlayingChanged(bool _) => OnControlStateChanged();
-
-        private void OnModeChanged(GameMode _) => OnControlStateChanged();
-
-        private void OnUIPanelChanged(bool _)
+        private void OnModeChanged()
         {
             OnControlStateChanged();
             ApplyCursorLock();
@@ -94,7 +86,7 @@ namespace CreativeAI.Gameplay
         }
 
         private static bool Blocked =>
-            EventPlaybackService.BlocksPlayerControl || UIPanelService.IsOpen;
+            GameModeManager.Current == GameMode.Dialogue || GameModeManager.MenuOpen;
 
         /// <summary>
         /// 攻撃入力を消費する。1回の入力に対して1回だけtrueを返す。
@@ -142,7 +134,7 @@ namespace CreativeAI.Gameplay
         /// subActionが新たに「押された」瞬間（trueへの変化）にのみ発火するイベント。
         /// PanicDetectorが購読し、剣の防御連打の頻度を計測するために使用する。
         /// </summary>
-        public event Action OnSubActionPressed;
+        public event Action SubActionPressed;
 
         public void OnSubAction(InputValue value)
         {
@@ -151,7 +143,7 @@ namespace CreativeAI.Gameplay
             bool pressed = value.isPressed;
             if (pressed && !subAction)
             {
-                OnSubActionPressed?.Invoke();
+                SubActionPressed?.Invoke();
             }
             SubActionInput(pressed);
         }
@@ -210,7 +202,7 @@ namespace CreativeAI.Gameplay
         /// 攻撃ボタンが押された瞬間に発火するイベント。
         /// PanicDetectorが購読し、ボスの攻撃中にプレイヤーが何か操作したか（硬直していないか）を判定するために使用する。
         /// </summary>
-        public event Action OnAttackPressed;
+        public event Action AttackPressed;
 
         public void AttackInput()
         {
@@ -218,7 +210,7 @@ namespace CreativeAI.Gameplay
                 return;
             _attackPending = true;
             _attackPressedTime = Time.time;
-            OnAttackPressed?.Invoke();
+            AttackPressed?.Invoke();
         }
 
         public void WeaponNextInput(bool newWeaponNextState)
@@ -268,7 +260,7 @@ namespace CreativeAI.Gameplay
 
         private void ApplyCursorLock()
         {
-            bool locked = cursorLocked && !UIPanelService.IsOpen;
+            bool locked = cursorLocked && !GameModeManager.MenuOpen;
             Cursor.lockState = locked ? CursorLockMode.Locked : CursorLockMode.None;
         }
     }

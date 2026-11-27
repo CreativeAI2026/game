@@ -605,7 +605,6 @@ GameObject:
   - component: {fileID: 6664488289985067727}
   - component: {fileID: 3777738532329491596}
   - component: {fileID: 4404804298159787586}
-  - component: {fileID: 4404804298159787587}
   m_Layer: 0
   m_Name: CraftPanel
   m_TagString: Untagged
@@ -717,20 +716,7 @@ MonoBehaviour:
   _resultItemParameters: {fileID: 8724000000000000004}
   _warningText: {fileID: 8080171631830962832}
   _warningCanvasGroup: {fileID: 1736925671051000495}
---- !u!114 &4404804298159787587
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1615753759167315579}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 9d4f6a1b2c3d4e5f8091a2b3c4d5e6f7, type: 3}
-  m_Name: CraftUILayout
-  m_EditorClassIdentifier: CreativeAI.UI::CreativeAI.UI.CraftUiLayout
   _predictionIcon: {fileID: 6108424697554648672}
-  _predictionHint: {fileID: 0}
   _predictionName: {fileID: 1506150553585388792}
   _quickButton: {fileID: 8452009488908885718}
   _equipmentButton: {fileID: 4933138504296001805}
@@ -1766,7 +1752,6 @@ GameObject:
   - component: {fileID: 2391614547009581714}
   - component: {fileID: 400695005566113977}
   - component: {fileID: 2354168317406019544}
-  - component: {fileID: 2624791928544242946}
   m_Layer: 0
   m_Name: Header
   m_TagString: Untagged
@@ -1817,21 +1802,6 @@ MonoBehaviour:
   _direction: 2
   _duration: 0.35
   _ease: 9
---- !u!114 &2624791928544242946
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 3861606801447870344}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: e75646771f1a4d7b800ba90e9cfbc798, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: CreativeAI.UI::CreativeAI.UI.TabHeaderPresenter
-  _titleText: {fileID: 0}
-  _englishTitleText: {fileID: 0}
-  _tabGroup: {fileID: 0}
 --- !u!1 &4178277085255836387
 GameObject:
   m_ObjectHideFlags: 0
@@ -5675,9 +5645,6 @@ PrefabInstance:
     - targetCorrespondingSourceObject: {fileID: 1216446043623954188, guid: d7323666996b6284eb6795e2847b1f44, type: 3}
       insertIndex: -1
       addedObject: {fileID: 5092086205737438169}
-    - targetCorrespondingSourceObject: {fileID: 1216446043623954188, guid: d7323666996b6284eb6795e2847b1f44, type: 3}
-      insertIndex: -1
-      addedObject: {fileID: 7678516779304832362}
   m_SourcePrefab: {fileID: 100100000, guid: d7323666996b6284eb6795e2847b1f44, type: 3}
 --- !u!114 &1699353786712514810 stripped
 MonoBehaviour:
@@ -5730,23 +5697,10 @@ MonoBehaviour:
   m_EditorClassIdentifier: CreativeAI.UI::CreativeAI.UI.MaterialSlot
   _visualRootRect: {fileID: 2691859527467573708}
   _iconView: {fileID: 1699353786712514810}
-  _emptyView: {fileID: 7678516779304832362}
+  _emptyObject: {fileID: 1956238812671659819}
   _hover: {fileID: 2971249392244505589}
   _frameView: {fileID: 8139443579854401269}
   _materialHint: {fileID: 0}
---- !u!114 &7678516779304832362
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 3631151291874300025}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 4938ea52570d4bd192bd395052a4966d, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: CreativeAI.UI::CreativeAI.UI.SlotEmptyView
-  _emptyObject: {fileID: 1956238812671659819}
 --- !u!114 &8139443579854401269 stripped
 MonoBehaviour:
   m_CorrespondingSourceObject: {fileID: 5940462487717734784, guid: d7323666996b6284eb6795e2847b1f44, type: 3}
@@ -7138,7 +7092,6 @@ PrefabInstance:
       value: 
       objectReference: {fileID: 21300000, guid: c48d0a885b575124c829beef89e67ac6, type: 3}
     m_RemovedComponents:
-    - {fileID: 319342165626893787, guid: d7323666996b6284eb6795e2847b1f44, type: 3}
     - {fileID: 514934595671315431, guid: d7323666996b6284eb6795e2847b1f44, type: 3}
     - {fileID: 8503969120120068041, guid: d7323666996b6284eb6795e2847b1f44, type: 3}
     - {fileID: 8998153339034262442, guid: d7323666996b6284eb6795e2847b1f44, type: 3}
@@ -7783,9 +7736,6 @@ PrefabInstance:
     - targetCorrespondingSourceObject: {fileID: 1216446043623954188, guid: d7323666996b6284eb6795e2847b1f44, type: 3}
       insertIndex: -1
       addedObject: {fileID: 7035943830682766145}
-    - targetCorrespondingSourceObject: {fileID: 1216446043623954188, guid: d7323666996b6284eb6795e2847b1f44, type: 3}
-      insertIndex: -1
-      addedObject: {fileID: 1012787624137730798}
   m_SourcePrefab: {fileID: 100100000, guid: d7323666996b6284eb6795e2847b1f44, type: 3}
 --- !u!114 &2488876062358313302 stripped
 MonoBehaviour:
@@ -7828,23 +7778,10 @@ MonoBehaviour:
   m_EditorClassIdentifier: CreativeAI.UI::CreativeAI.UI.MaterialSlot
   _visualRootRect: {fileID: 8585049059648968303}
   _iconView: {fileID: 5037854645665388377}
-  _emptyView: {fileID: 1012787624137730798}
+  _emptyObject: {fileID: 3299361550560264610}
   _hover: {fileID: 8882401164449877078}
   _frameView: {fileID: 2488876062358313302}
   _materialHint: {fileID: 0}
---- !u!114 &1012787624137730798
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 6925181097093851098}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 4938ea52570d4bd192bd395052a4966d, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: CreativeAI.UI::CreativeAI.UI.SlotEmptyView
-  _emptyObject: {fileID: 3299361550560264610}
 --- !u!224 &8585049059648968303 stripped
 RectTransform:
   m_CorrespondingSourceObject: {fileID: 567093039207048889, guid: d7323666996b6284eb6795e2847b1f44, type: 3}

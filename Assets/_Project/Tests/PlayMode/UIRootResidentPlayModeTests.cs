@@ -16,7 +16,7 @@ namespace CreativeAI.Tests.PlayMode
     /// </summary>
     public class UIRootResidentPlayModeTests
     {
-        private UIRoot _root;
+        private UIManager _root;
 
         [UnitySetUp]
         public IEnumerator SetUp()
@@ -29,8 +29,8 @@ namespace CreativeAI.Tests.PlayMode
             );
 
             GameSession.EnsureResidents(config.uiRootPrefab);
-            _root = UIRoot.Instance;
-            Assert.IsNotNull(_root, "UIRoot が生成されていません。");
+            _root = UIManager.Instance;
+            Assert.IsNotNull(_root, "UIManager(UIRoot Prefab) が生成されていません。");
             yield return null; // Update での表示判定を1回回す
         }
 
@@ -42,7 +42,6 @@ namespace CreativeAI.Tests.PlayMode
             DestroyResident<ProgressManager>();
             DestroyResident<GameModeManager>();
             DestroyResident<InventoryManager>();
-            DestroyResident<EventPlayer>();
             yield return null; // Destroy の反映を待つ(次のテストへ持ち越さない)
         }
 
@@ -82,13 +81,13 @@ namespace CreativeAI.Tests.PlayMode
         [Test]
         public void ConversationView_RegistersAsDialogueView()
         {
-            var view = Find<ConversationView>();
+            var view = Find<ConversationPanel>();
 
             Assert.IsTrue(
                 view.gameObject.activeInHierarchy,
                 "ConversationView がオフのままです(Awake が走らず会話UIとして登録されません)。"
             );
-            Assert.AreSame(view, DialogueViewService.Current);
+            Assert.AreSame(view, _root.DialogueView);
         }
 
         [UnityTest]
@@ -117,12 +116,33 @@ namespace CreativeAI.Tests.PlayMode
         }
 
         [UnityTest]
+        public IEnumerator SwitchingPanels_KeepsMenuOpen()
+        {
+            // 登録順で前のパネル(キャラ)から後ろ(インベ)へ切り替える。パネルの OnDisable が走るのは Play 中だけ
+            _root.Open(UIManager.UIId.Character);
+            yield return null;
+            _root.Open(UIManager.UIId.Inventory);
+            yield return null;
+
+            Assert.IsTrue(
+                GameModeManager.MenuOpen,
+                "パネルを切り替えたらメニューが閉じた扱いになりました。"
+            );
+            Assert.IsFalse(GameModeManager.PlayerCanAct);
+
+            _root.CloseAll();
+            yield return null;
+
+            Assert.IsFalse(GameModeManager.MenuOpen);
+        }
+
+        [UnityTest]
         public IEnumerator OpeningAPanel_HidesPromptAndQuickFoodBar_ButKeepsIconBar()
         {
             var prompt = Find<InteractPromptView>();
             var quickFood = Find<QuickFoodBarView>();
             var iconBar = Find<HudIconBarView>();
-            var router = _root.GetComponent<UIRouter>();
+            var router = _root;
             InteractPromptService.Show(this, "[E] 扉を開ける");
             yield return null;
 
@@ -130,7 +150,7 @@ namespace CreativeAI.Tests.PlayMode
             Assert.IsTrue(IsShown(quickFood), "パネルを開く前に即時食材バーが表示されていません。");
             Assert.IsTrue(IsShown(iconBar), "パネルを開く前にアイコンバーが表示されていません。");
 
-            router.Open(UIRouter.UIId.Inventory);
+            router.Open(UIManager.UIId.Inventory);
             yield return null;
 
             Assert.IsTrue(router.IsAnyPanelOpen);
@@ -157,14 +177,14 @@ namespace CreativeAI.Tests.PlayMode
             InteractPromptService.Show(this, "[E] 扉を開ける");
             yield return null;
 
-            EventPlaybackService.SetPlaying(true);
+            GameModeManager.Instance.TryStartDialogue();
             yield return null;
 
             Assert.IsFalse(IsShown(prompt), "会話中にプロンプトが残っています。");
             Assert.IsFalse(IsShown(quickFood), "会話中に即時食材バーが残っています。");
             Assert.IsFalse(IsShown(iconBar), "会話中にアイコンバーが残っています。");
 
-            EventPlaybackService.SetPlaying(false);
+            GameModeManager.Instance.ResetToField();
             yield return null;
 
             Assert.IsTrue(IsShown(prompt), "会話が終わってもプロンプトが戻りません。");

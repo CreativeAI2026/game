@@ -42,7 +42,8 @@ namespace CreativeAI.Gameplay
             float towardPlayer = boss.Mover.DirectionToward(boss.Player.transform.position, 0f);
             if (Mathf.Approximately(towardPlayer, 0f))
                 towardPlayer = 1f;
-            _direction = Random.value < boss.OrbitTowardPlayerChance ? towardPlayer : -towardPlayer;
+            _direction =
+                Random.value < boss.Orbit.TowardPlayerChance ? towardPlayer : -towardPlayer;
 
             ScheduleSpeedUp();
             _turnTime =
@@ -61,13 +62,13 @@ namespace CreativeAI.Gameplay
             }
 
             bool isSpeedUp = _timer >= _speedUpStartTime && _timer < _speedUpEndTime;
-            float targetSpeed = isSpeedUp ? boss.HighOrbitSpeed : boss.OrbitSpeed;
+            float targetSpeed = isSpeedUp ? boss.Orbit.HighSpeed : boss.Orbit.Speed;
             // Move は渡した速さをそのまま使うので、ここで少しずつ変える。
             // 切り返しは目標の向きを反転するだけで、減速→止まる→逆へ加速になる
             _velocity = Mathf.MoveTowards(
                 _velocity,
                 _direction * targetSpeed,
-                boss.OrbitAcceleration * Time.deltaTime
+                boss.Orbit.Acceleration * Time.deltaTime
             );
             boss.Mover.Move(Mathf.Sign(_velocity), Mathf.Abs(_velocity));
             FaceStage();
@@ -91,7 +92,7 @@ namespace CreativeAI.Gameplay
                 return;
             }
 
-            float speedUpDuration = _duration * boss.SpeedUpDurationRatio;
+            float speedUpDuration = _duration * boss.Orbit.SpeedUpDurationRatio;
             _speedUpStartTime = Random.Range(0f, _duration - speedUpDuration);
             _speedUpEndTime = _speedUpStartTime + speedUpDuration;
         }

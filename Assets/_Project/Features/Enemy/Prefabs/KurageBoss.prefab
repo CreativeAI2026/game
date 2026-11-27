@@ -215,11 +215,12 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: b18ee930dbf4b4e4bb3b0ef44fa9b713, type: 3}
   m_Name: 
   m_EditorClassIdentifier: CreativeAI.Gameplay::CreativeAI.Gameplay.KurageBossController
-  _orbitSpeed: 6
-  _highOrbitSpeed: 20
-  _speedUpDurationRatio: 0.4
-  _orbitAcceleration: 20
-  _orbitTowardPlayerChance: 0.7
+  _orbit:
+    _speed: 6
+    _highSpeed: 20
+    _speedUpDurationRatio: 0.4
+    _acceleration: 20
+    _towardPlayerChance: 0.7
   _turnSpeed: 90
   _phaseSettings:
   - _orbitDurationRange: {x: 4, y: 8}
@@ -238,12 +239,13 @@ MonoBehaviour:
   _tentacleWeight: 2
   _ringWeight: 2
   _repeatWeightScale: 0.4
-  _stabChaseDuration: 2.5
-  _stabChaseSpeed: 10
-  _stabWindupDuration: 0.5
-  _stabTurnSpeed: 240
-  _stabExtendDuration: 0.1
-  _stabRetractDuration: 0.15
+  _stab:
+    _chaseDuration: 2.5
+    _chaseSpeed: 10
+    _windupDuration: 0.5
+    _turnSpeed: 240
+    _extendDuration: 0.1
+    _retractDuration: 0.15
   _stabHitbox: {fileID: 2004251456376075394}
   _groundTentaclePrefab: {fileID: 7343544422754005719, guid: 6c5dc6caf992857478e6b88c72965e67, type: 3}
   _tentaclePatterns:

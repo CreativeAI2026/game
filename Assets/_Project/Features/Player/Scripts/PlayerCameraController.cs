@@ -80,7 +80,7 @@ namespace CreativeAI.Gameplay
             // 掴み中はカメラ制御を vcam に完全に委ねる。
             // CinemachineCameraTarget への強制書き込みを続けると、vcam の Follow/LookAt 設定や
             // Animation Rigging の IK と競合して首の骨が暴れる原因になる。
-            if (_playerController.IsGrabbed)
+            if (_playerController.Conditions.IsGrabbed)
                 return;
 
             if (_input.look.sqrMagnitude >= LookInputThreshold && !LockCameraPosition)

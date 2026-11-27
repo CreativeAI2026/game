@@ -556,7 +556,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: b22ab67cf4c004e49ac51208037aa8c3, type: 3}
   m_Name: 
   m_EditorClassIdentifier: CreativeAI.UI::CreativeAI.UI.HudIconBarView
-  _router: {fileID: 0}
+  _ui: {fileID: 0}
   _characterButton: {fileID: 7097047413081451517}
   _inventoryButton: {fileID: 4574767416119700729}
   _saveButton: {fileID: 3113745606929742352}

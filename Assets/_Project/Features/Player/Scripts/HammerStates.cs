@@ -17,38 +17,6 @@ namespace CreativeAI.Gameplay
         }
     }
 
-    /// <summary>待機ステート。攻撃入力で接近/コンボ、subAction の押下で叩きつけへ。</summary>
-    public class HammerStateFree : HammerState
-    {
-        public HammerStateFree(HammerController context)
-            : base(context) { }
-
-        public override bool IsNeutral => true;
-
-        public override void Enter()
-        {
-            hammer.ReleaseControlLocks();
-        }
-
-        public override void Update()
-        {
-            // 叩きつけ・攻撃は地上でのみ始める(空中の攻撃入力は消費せず先行入力として残す)
-            if (!hammer.CanStartGroundAction)
-                return;
-
-            if (hammer.SubActionPressedThisFrame)
-            {
-                hammer.ChangeState(new HammerStateSlam(hammer));
-                return;
-            }
-
-            if (hammer.Input.ConsumeAttack())
-            {
-                hammer.BeginAttack();
-            }
-        }
-    }
-
     /// <summary>
     /// 叩きつけ(範囲攻撃)のステート。最寄りの敵を向いて Slam モーションを再生し、
     /// クリップの AnimationEvent で進行する:
@@ -67,8 +35,7 @@ namespace CreativeAI.Gameplay
         private static readonly int SlamHash = PlayerAnimatorStates.Slam;
 
         private Transform _target;
-        private float _requestTime;
-        private bool _hasStartedAction;
+        private AnimationStateWatch _slamWatch;
         private bool _isActionEnded;
 
         private bool _isLeaping;
@@ -89,7 +56,7 @@ namespace CreativeAI.Gameplay
             hammer.FaceTowards(_target);
 
             hammer.StartAnimatorAction(PlayerAnimatorParams.Slam);
-            _requestTime = Time.time;
+            _slamWatch.Begin();
         }
 
         public override void Exit()
@@ -139,30 +106,31 @@ namespace CreativeAI.Gameplay
             // 叩きつけ中の攻撃入力は捨てる(終わった直後に勝手に攻撃が出ないように)
             hammer.Input.ConsumeAttack();
 
-            AnimatorStateInfo current = hammer.Animator.GetCurrentAnimatorStateInfo(0);
-            AnimatorStateInfo next = hammer.Animator.GetNextAnimatorStateInfo(0);
-            bool isPlayingSlam = current.shortNameHash == SlamHash;
-            bool isTransitioningToSlam =
-                hammer.Animator.IsInTransition(0) && next.shortNameHash == SlamHash;
+            bool isInSlam = hammer.Animator.IsPlayingOrEntering(
+                0,
+                SlamHash,
+                out AnimatorStateInfo slamState
+            );
+            AnimationStateWatch.Progress progress = _slamWatch.Update(isInSlam, EnterSlamTimeout);
 
-            if (!_hasStartedAction)
+            // 入ったフレームは入ったことの記録だけにして、跳躍・終わりの処理は次のフレームから行う
+            if (
+                progress == AnimationStateWatch.Progress.Waiting
+                || progress == AnimationStateWatch.Progress.Started
+            )
+                return;
+
+            if (progress == AnimationStateWatch.Progress.TimedOut)
             {
-                if (isPlayingSlam || isTransitioningToSlam)
-                {
-                    _hasStartedAction = true;
-                }
-                else if (Time.time - _requestTime > EnterSlamTimeout)
-                {
-                    Debug.LogWarning(
-                        $"[{hammer.name}] Slam ステートへ遷移できませんでした。Animator の遷移設定を確認してください。"
-                    );
-                    hammer.ChangeState(hammer.CreateNeutralState());
-                }
+                Debug.LogWarning(
+                    $"[{hammer.name}] Slam ステートへ遷移できませんでした。Animator の遷移設定を確認してください。"
+                );
+                hammer.ChangeState(hammer.CreateNeutralState());
                 return;
             }
 
-            if (_isLeaping && (isPlayingSlam || isTransitioningToSlam))
-                UpdateLeap(isPlayingSlam ? current.normalizedTime : next.normalizedTime);
+            if (_isLeaping && isInSlam)
+                UpdateLeap(slamState.normalizedTime);
 
             if (_isActionEnded)
             {
@@ -172,7 +140,7 @@ namespace CreativeAI.Gameplay
             }
 
             // ActionEnd を受け取らないまま Slam ステートを抜けた(遷移の割り込み・イベントの付け忘れ)
-            if (!isPlayingSlam && !isTransitioningToSlam && !hammer.Animator.IsInTransition(0))
+            if (progress == AnimationStateWatch.Progress.Left && !hammer.Animator.IsInTransition(0))
             {
                 Debug.LogWarning(
                     $"[{hammer.name}] Slam で ActionEnd イベントを受信しないまま叩きつけが終了しました。"

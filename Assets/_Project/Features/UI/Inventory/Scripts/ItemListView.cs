@@ -49,7 +49,7 @@ namespace CreativeAI.UI
 
         [Header("Detail")]
         [SerializeField]
-        private ItemDetailPanel _detailPanel;
+        private ItemDetailView _detailPanel;
 
         [SerializeField]
         private bool _showOnlyBaseItems = false;
@@ -57,9 +57,15 @@ namespace CreativeAI.UI
         public event System.Action<ItemStack> OnSlotClicked;
         public event System.Action<ItemStack> OnSlotDoubleClicked;
         public event System.Action<ItemStack> OnSlotSubmitted;
-        public event System.Action<TabDefinition, int, ScrollRefreshMode> DisplayRefreshRequested;
-        public event System.Action<ItemCategory, ScrollRefreshMode> ItemsRequested;
         public ItemStack SelectedStack => _selectedStack;
+
+        /// <summary>選んでいるアイテムが変わったとき(選択を外したときは null)。</summary>
+        public event System.Action<ItemStack> SelectionChanged;
+
+        /// <summary>
+        /// 並べるアイテムを画面側で決めるときに設定する。未設定ならタブの定義に合わせて所持品から引く。
+        /// </summary>
+        public System.Func<List<ItemStack>> ItemsProvider { private get; set; }
 
         private bool _navigationDisabled;
         private bool _interactionEnabled = true;
@@ -71,8 +77,6 @@ namespace CreativeAI.UI
         private readonly List<ItemSlot> _visibleSlots = new();
         private readonly HashSet<ItemStack> _craftAssignedStacks = new();
         private ItemSlotPool _slotPool;
-        private bool _hasWarnedMissingItemsProvider;
-        private bool _hasWarnedMissingDisplayProvider;
 
         public void SetSelectFirstSlotOnRefresh(bool selectFirst) =>
             _selectFirstSlotOnRefresh = selectFirst;
@@ -139,16 +143,12 @@ namespace CreativeAI.UI
 
         private void RefreshCurrentTab(ScrollRefreshMode scrollMode)
         {
-            int tabIndex = _tabGroup != null ? Mathf.Max(0, _tabGroup.CurrentIndex) : 0;
             TabDefinition definition = _tabGroup != null ? _tabGroup.CurrentDefinition : null;
             if (definition == null && _tabGroup != null)
-                definition = _tabGroup.GetDefinitionForButtonIndex(tabIndex);
-
-            if (TryRequestDisplayRefresh(definition, tabIndex, scrollMode))
-                return;
-
-            WarnMissingDisplayProviderOnce();
-            SetItems(null, scrollMode);
+                definition = _tabGroup.GetDefinitionForButtonIndex(
+                    Mathf.Max(0, _tabGroup.CurrentIndex)
+                );
+            SetItems(ResolveItems(definition), scrollMode);
         }
 
         private IEnumerator ResetViewNextFrame()
@@ -168,59 +168,27 @@ namespace CreativeAI.UI
             _resetRoutine = null;
         }
 
-        private void OnTabDefinitionSelected(int index, TabDefinition definition)
+        private void OnTabDefinitionSelected(int index, TabDefinition definition) =>
+            SetItems(ResolveItems(definition), ScrollRefreshMode.ScrollToTop);
+
+        private List<ItemStack> ResolveItems(TabDefinition definition)
         {
-            if (!TryRequestDisplayRefresh(definition, index, ScrollRefreshMode.ScrollToTop))
+            if (ItemsProvider != null)
+                return ItemsProvider();
+
+            var inventory = InventoryManager.Instance;
+            if (inventory == null)
+                return null;
+
+            switch (definition)
             {
-                WarnMissingDisplayProviderOnce();
-                SetItems(null, ScrollRefreshMode.ScrollToTop);
+                case AllItemsTabDefinition:
+                    return inventory.GetAllItems();
+                case InventoryTabDefinition tab:
+                    return inventory.GetItemsByCategory(tab.Category);
+                default:
+                    return null;
             }
-        }
-
-        private bool TryRequestDisplayRefresh(
-            TabDefinition definition,
-            int tabIndex,
-            ScrollRefreshMode scrollMode
-        )
-        {
-            if (DisplayRefreshRequested == null)
-                return false;
-
-            DisplayRefreshRequested.Invoke(definition, tabIndex, scrollMode);
-            return true;
-        }
-
-        public void RequestItems(ItemCategory category, ScrollRefreshMode scrollMode)
-        {
-            if (ItemsRequested != null)
-            {
-                ItemsRequested.Invoke(category, scrollMode);
-                return;
-            }
-
-            if (!_hasWarnedMissingItemsProvider)
-            {
-                Debug.LogWarning(
-                    $"{nameof(ItemListView)} '{name}' has no ItemsRequested subscriber for category '{category}'. "
-                        + $"Connect an Inventory data provider controller to this {nameof(ItemListView)}.",
-                    this
-                );
-                _hasWarnedMissingItemsProvider = true;
-            }
-
-            SetItems(null, scrollMode);
-        }
-
-        private void WarnMissingDisplayProviderOnce()
-        {
-            if (_hasWarnedMissingDisplayProvider)
-                return;
-
-            _hasWarnedMissingDisplayProvider = true;
-            Debug.LogWarning(
-                $"{nameof(ItemListView)} '{UIHierarchyPathUtility.GetPath(transform)}' has no display provider. Connect a controller that handles {nameof(DisplayRefreshRequested)}.",
-                this
-            );
         }
 
         private List<ItemStack> FilterVisibleItems(List<ItemStack> items)
@@ -243,7 +211,7 @@ namespace CreativeAI.UI
             if (_tabGroup == null)
                 _tabGroup = GetComponentInChildren<TabGroup>(true);
             if (_detailPanel == null)
-                _detailPanel = GetComponentInChildren<ItemDetailPanel>(true);
+                _detailPanel = GetComponentInChildren<ItemDetailView>(true);
         }
 #endif
 
@@ -322,7 +290,7 @@ namespace CreativeAI.UI
             if (selectedSlot != null)
             {
                 _currentSelectedSlot = selectedSlot;
-                _selectedStack = selectedSlot.Stack;
+                SetSelectedStack(selectedSlot.Stack);
                 selectedSlot.Select();
                 if (_detailPanel != null)
                     _detailPanel.Show(selectedSlot.Stack);
@@ -430,7 +398,7 @@ namespace CreativeAI.UI
 
             slot.Select();
             _currentSelectedSlot = slot;
-            _selectedStack = slot.Stack;
+            SetSelectedStack(slot.Stack);
             if (_detailPanel != null)
                 _detailPanel.Show(slot.Stack);
 
@@ -472,7 +440,7 @@ namespace CreativeAI.UI
             if (_currentSelectedSlot != null)
                 _currentSelectedSlot.Deselect();
 
-            _selectedStack = stack;
+            SetSelectedStack(stack);
             _currentSelectedSlot = FindVisibleSlot(stack);
             if (_currentSelectedSlot != null)
                 _currentSelectedSlot.Select();
@@ -484,8 +452,16 @@ namespace CreativeAI.UI
                 _currentSelectedSlot.Deselect();
 
             _currentSelectedSlot = null;
-            _selectedStack = null;
+            SetSelectedStack(null);
             CreativeAI.UI.SlotKeyboardFocus.Release(this);
+        }
+
+        private void SetSelectedStack(ItemStack stack)
+        {
+            if (_selectedStack == stack)
+                return;
+            _selectedStack = stack;
+            SelectionChanged?.Invoke(stack);
         }
 
         public void ResetViewState()

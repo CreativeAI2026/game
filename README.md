@@ -14,31 +14,29 @@ game/                          ← リポジトリルート
 ├── Assets/
 │   ├── _Project/              本プロジェクトのアセット（基本ここに置く）
 │   │   ├── Features/          ゲーム機能。機能ごとに Scripts / Prefabs / Data（設定アセット・JSON）を置く
-│   │   │   ├── GameState/     進行度・ゲームモード
+│   │   │   ├── GameState/     進行度・ゲームモード（Field / Menu / Dialogue / Battle）
 │   │   │   ├── SceneFlow/     シーン遷移・到着位置・シーンの重ね読み
-│   │   │   ├── UIRequests/    ゲーム側と UI の窓口（会話・暗転・調合画面・操作表示・メニューが開いているか）
+│   │   │   ├── UIBridge/      Gameplay 側に置く UI との境目（UI 一式の常駐とパネルの開け閉め＝UIManager・会話UIの契約・暗転・操作表示）
 │   │   │   ├── Event/         会話イベントの定義・再生、他機能との窓口、目的地のマップピン。Data/events.json が台本
-│   │   │   ├── Player/        プレイヤー・武器・焦り度の判定（Panic）
-│   │   │   ├── Enemy/         敵・ボス（TutorialBoss / KurageBoss / HakanageBoss）
-│   │   │   ├── Combat/        当たり判定・ダメージ計算・各キャラの能力値・敵に聞こえる物音・ヒット演出の使い回し
+│   │   │   ├── Player/        プレイヤー・武器・能力値・焦り度の判定（Panic）
+│   │   │   ├── Enemy/         敵・ボス（TutorialBoss / KurageBoss / HakanageBoss）と敵の能力値
+│   │   │   ├── Combat/        当たり判定・ダメージ計算・敵に聞こえる物音・ヒット演出の使い回し
 │   │   │   ├── Battle/        戦闘の始まりと終わり（シーンに置く戦闘エリア・会話イベントの戦闘）
-│   │   │   ├── Items/         アイテムの定義・一覧（ItemCatalog）・能力値と抽選。Data/items.json が元データ
-│   │   │   ├── Inventory/     所持品（持ち物の出し入れ・即時食材の枠）
-│   │   │   ├── Crafting/      調合（レシピ・調合処理・合成装置）
-│   │   │   ├── Field/         扉・調べる・拾えるアイテムと拾い済みの記録
+│   │   │   ├── Items/         アイテムの定義・一覧（ItemCatalog）・能力値と抽選、所持品・装備・即時食材の枠・調合。Data/items.json が元データ
+│   │   │   ├── Interaction/   近づいて E で操作するもの（扉・合成装置・調べる）と共通部分（ProximityInteractor）
+│   │   │   ├── Field/         フィールドに置く拾えるアイテムと拾い済みの記録
 │   │   │   ├── SaveSystem/    セーブ・ロード
 │   │   │   ├── Camera/        カメラリグ・ズーム・揺れ
 │   │   │   ├── Sound/         音を鳴らす部品（効果音・BGM・UI 音・音量設定）。使い方は Sound/README.md
-│   │   │   ├── Session/       ゲームの開始（タイトルから）と常駐一式の生成。UI より上の独自のアセンブリ
+│   │   │   ├── Session/       タイトル画面とゲームの開始、常駐一式の生成。独自のアセンブリ
 │   │   │   ├── UI/            各機能の画面
-│   │   │   │   ├── Root/          UIRoot・画面切り替え・EventSystem
+│   │   │   │   ├── Root/          UIRoot Prefab・暗転の表示・EventSystem
 │   │   │   │   ├── Slots/         アイテムを入れるスロットの部品
 │   │   │   │   ├── Tabs/          タブの部品
 │   │   │   │   ├── ItemDisplay/   アイテムの能力値・調べるアイコンの表示
 │   │   │   │   ├── Motion/        スライド・拡大・文字送りなどの演出
 │   │   │   │   ├── Common/        上に入らない共通の部品（パネル・テーマ・補助）
 │   │   │   │   ├── HUD/           フィールド中の表示（HP・武器・操作表示・即時食材・暗転・ピンの矢印）
-│   │   │   │   ├── Title/         タイトル
 │   │   │   │   ├── Inventory/     インベントリ
 │   │   │   │   ├── Crafting/      調合
 │   │   │   │   ├── Character/     キャラクター（装備・武器・即時食材）
@@ -92,4 +90,4 @@ game/                          ← リポジトリルート
 ★ は `.gitignore` で除外されています。
 
 アセンブリはフォルダで決まる: `Features/UI` の下は UI、`Session`・`Playtest`・`DevTools` はそれぞれ独自、それ以外の `Features` は Gameplay。
-使える向きは DevTools → Session → UI → Gameplay の一方通行（本番のコードは DevTools を使わない）。Gameplay から UI に頼むときは `UiRequests` の窓口を通す。
+UI・Session・Playtest は Gameplay だけを参照し、DevTools はすべてを参照する（本番のコードは DevTools を使わない）。Gameplay から UI は見えないので、UI と受け渡すものは `UIBridge` に置く。

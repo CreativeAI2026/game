@@ -931,10 +931,10 @@ MonoBehaviour:
   m_GameObject: {fileID: 2016822118456547259}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 3aeab3ba21fddaa4ab18d7931b25eb8d, type: 3}
+  m_Script: {fileID: 11500000, guid: 3524f60f5d5e7b24e996d080948f1500, type: 3}
   m_Name: 
-  m_EditorClassIdentifier: CreativeAI.Gameplay::CreativeAI.Gameplay.TentacleChainHitbox
-  _bones:
+  m_EditorClassIdentifier: CreativeAI.Gameplay::CreativeAI.Gameplay.BoneChainHitbox
+  _chain:
   - {fileID: 7301154839288399731}
   - {fileID: 2484036128916216273}
   - {fileID: 8851914301847558323}
@@ -947,6 +947,9 @@ MonoBehaviour:
   _targetLayer:
     serializedVersion: 2
     m_Bits: 4294967295
+  _fixedSubsteps: 3
+  _enemyStatus: {fileID: 0}
+  _meleeMultiplier: 1
   _hitEffect: {fileID: 0}
   _hitSound: {fileID: 11400000, guid: 3a16c913b700b414faa487187b4939c9, type: 2}
 --- !u!114 &7343544422754005719
