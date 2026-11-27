@@ -17,7 +17,7 @@ namespace CreativeAI.Tests.EditMode
         {
             // 例(station_awakening)がそのまま取り込めることを担保する。
             // 地の文(portrait 省略) / ？？？ + obscure・reveal / 演出タグ / battle / giveWeapon + message /
-            // choice まで一通り含む。battle は敵を書かず arena(ボスシーンの BattleArena の名前)だけを書く。
+            // choice まで一通り含む。battle は敵を書かず arena(ボスシーンの BattleEncounter の名前)だけを書く。
             const string json =
                 @"{ ""events"": [ {
                     ""id"": ""station_awakening"",
@@ -55,7 +55,7 @@ namespace CreativeAI.Tests.EditMode
             Assert.IsTrue(string.IsNullOrEmpty(def.Steps[0].Portrait));
             Assert.AreEqual("portrait.right.obscure", def.Steps[2].CommandName);
             Assert.AreEqual(StepKind.Battle, def.Steps[5].Kind);
-            Assert.AreEqual("boss_arena", def.Steps[5].ArenaId);
+            Assert.AreEqual("boss_arena", def.Steps[5].EncounterId);
             Assert.AreEqual("錆びた鎌を手に入れた。", def.Steps[8].Message);
             Assert.AreEqual("girl_choice", def.Steps[9].FlagKey);
             Assert.AreEqual(2, def.Steps[9].Options.Count);

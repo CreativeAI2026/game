@@ -13,8 +13,8 @@ namespace CreativeAI.Gameplay
     /// - 戦闘中だけ出すもの(外した柵など): 再生開始時に隠し、戦闘開始で出す。
     /// - 戦闘中だけ隠すもの(戦闘エリアへ上がる階段など): 戦闘開始で隠す。
     /// </summary>
-    [RequireComponent(typeof(BattleArena))]
-    public sealed class BattleArenaLock : MonoBehaviour
+    [RequireComponent(typeof(BattleEncounter))]
+    public sealed class BattleEncounterLock : MonoBehaviour
     {
         [Tooltip("戦闘開始で閉める扉(戦闘エリアの出入口の扉)")]
         [SerializeField]
@@ -29,11 +29,11 @@ namespace CreativeAI.Gameplay
         private GameObject[] _hideDuringBattle = Array.Empty<GameObject>();
 
         private readonly List<NavMeshObstacle> _doorObstacles = new();
-        private BattleArena _arena;
+        private BattleEncounter _encounter;
 
         private void Awake()
         {
-            _arena = GetComponent<BattleArena>();
+            _encounter = GetComponent<BattleEncounter>();
 
             foreach (var door in _doorsToClose)
             {
@@ -54,14 +54,14 @@ namespace CreativeAI.Gameplay
 
         private void OnEnable()
         {
-            _arena.BattleStarted += Lock;
-            _arena.BattleEnded += Unlock;
+            _encounter.BattleStarted += Lock;
+            _encounter.BattleEnded += Unlock;
         }
 
         private void OnDisable()
         {
-            _arena.BattleStarted -= Lock;
-            _arena.BattleEnded -= Unlock;
+            _encounter.BattleStarted -= Lock;
+            _encounter.BattleEnded -= Unlock;
         }
 
         private void Lock() => SetLocked(true);
@@ -95,7 +95,7 @@ namespace CreativeAI.Gameplay
             var leafBox = leaf.GetComponent<BoxCollider>();
             Assert.IsNotNull(leafBox, $"{door.name}: 扉板に BoxCollider がありません");
 
-            var holder = new GameObject($"{door.name}_ArenaLockObstacle");
+            var holder = new GameObject($"{door.name}_EncounterLockObstacle");
             holder.transform.SetPositionAndRotation(
                 leaf.TransformPoint(leafBox.center),
                 leaf.rotation

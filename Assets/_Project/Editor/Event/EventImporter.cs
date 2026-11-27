@@ -43,22 +43,7 @@ namespace CreativeAI.EditorTools
         };
 
         /// <summary>
-        /// giveWeapon の weaponKey として許される値。武器は剣/弓/鎌/ハンマーの4種で固定なので
-        /// item カタログではなくこの集合で照合する(ScenarioCatalog.md「武器カタログ」)。
-        /// ゲーム側の WeaponManager.WeaponKeys と同じ内容に保つこと。
-        /// </summary>
-        public static readonly IReadOnlyCollection<string> WeaponKeys = new HashSet<string>(
-            StringComparer.Ordinal
-        )
-        {
-            "sword",
-            "bow",
-            "scythe",
-            "hammer",
-        };
-
-        /// <summary>
-        /// command ステップで書ける演出コマンド名。ConversationView のルータに無い名前は何も起きないので取り込み時に弾く。
+        /// command ステップで書ける演出コマンド名。会話UIの演出コマンド(DialogueStageCommands)に無い名前は何も起きないので取り込み時に弾く。
         /// camera.* / background.* は外部委譲用に接頭辞だけ見て通す(IsKnownCommand)。
         /// </summary>
         public static readonly IReadOnlyCollection<string> CommandNames = new HashSet<string>(
@@ -93,8 +78,8 @@ namespace CreativeAI.EditorTools
             "sound.bgm.stop",
             "wait",
             "conversation.close",
-            EventPlayer.PlayerMoveCommand,
-            EventPlayer.PlayerWalkCommand,
+            EventPlayerMovement.MoveCommand,
+            EventPlayerMovement.WalkCommand,
         };
 
         /// <summary>
@@ -122,8 +107,8 @@ namespace CreativeAI.EditorTools
             "background.image",
             "sound.se",
             "sound.bgm",
-            EventPlayer.PlayerMoveCommand,
-            EventPlayer.PlayerWalkCommand,
+            EventPlayerMovement.MoveCommand,
+            EventPlayerMovement.WalkCommand,
         };
 
         private static bool IsKnownCommand(string command) =>
@@ -134,7 +119,7 @@ namespace CreativeAI.EditorTools
         /// <summary>
         /// itemKey を弾くための有効キー集合。null なら「未提供」= 警告どまり。
         /// エディタ側(EventImporterMenu)が ItemData から構築して渡す。
-        /// (敵は events.json に書かずボスシーンの BattleArena に置くため enemyKey の照合は持たない。)
+        /// (敵は events.json に書かずボスシーンの BattleEncounter に置くため enemyKey の照合は持たない。)
         /// </summary>
         public sealed class ImportCatalog
         {
@@ -932,12 +917,12 @@ namespace CreativeAI.EditorTools
                         report.Error(id, $"{location} giveWeapon は weaponKey が必須。");
                         return null;
                     }
-                    // 武器は剣/弓/鎌/ハンマーの4種で固定。それ以外は打ち間違いとして弾く。
-                    if (!WeaponKeys.Contains(weaponKey))
+                    // 武器は WeaponManager.WeaponKeys の4種で固定。それ以外は打ち間違いとして弾く。
+                    if (!WeaponManager.WeaponKeys.Contains(weaponKey))
                     {
                         report.Error(
                             id,
-                            $"{location} giveWeapon の weaponKey '{weaponKey}' は不正(sword / bow / scythe / hammer のみ)。"
+                            $"{location} giveWeapon の weaponKey '{weaponKey}' は不正({string.Join(" / ", WeaponManager.WeaponKeys)} のみ)。"
                         );
                         return null;
                     }
@@ -1000,12 +985,12 @@ namespace CreativeAI.EditorTools
                 case "battle":
                 {
                     kind = StepKind.Battle;
-                    // 敵は JSON に書かない。arena で指した名前の BattleArena(ボスシーン)に置く。
+                    // 敵は JSON に書かない。arena で指した名前の BattleEncounter(ボスシーン)に置く。
                     if (step["enemyKey"] != null)
                     {
                         report.Error(
                             id,
-                            $"{location} battle に enemyKey は書けません(敵はボスシーンの BattleArena に置く)。"
+                            $"{location} battle に enemyKey は書けません(敵はボスシーンの BattleEncounter に置く)。"
                         );
                         return null;
                     }
@@ -1014,7 +999,7 @@ namespace CreativeAI.EditorTools
                     {
                         report.Error(
                             id,
-                            $"{location} battle に arena(BattleArena の名前)がありません。"
+                            $"{location} battle に arena(BattleEncounter の名前)がありません。"
                         );
                         return null;
                     }

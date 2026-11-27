@@ -4,8 +4,9 @@ namespace CreativeAI.Gameplay
 {
     /// <summary>
     /// シーン上のトリガーに配置する非常駐コンポーネント。プレイヤー侵入を検知し、
-    /// 条件(progress / flag / hasItem をすべて AND)を満たせば EventPlayer に発火を託すルーター役。
-    /// 自身はイベントの中身を再生しない。
+    /// 条件(progress / flag / hasItem をすべて AND)を満たせばイベントを発火する。
+    /// 中身の再生は持っている <see cref="EventPlayer"/> に任せ、自身のコルーチンとして回す。
+    /// 無効になったら(シーンごと消えるときも)再生を打ち切る。
     /// 入った瞬間だけでなく、中に居る間に進行度が変わったり別イベントの再生が終わったりしたときも条件を見直す
     /// (同じ場所で続けて起きるイベントを、出入りし直さなくても発火させるため)。
     /// </summary>
@@ -34,6 +35,8 @@ namespace CreativeAI.Gameplay
         private Collider _playerInside; // トリガー内に居るプレイヤー(居なければ null)
         private bool _recheckPending; // 次フレームで条件を見直す
         private ProgressManager _progress;
+        private GameModeManager _gameMode;
+        private readonly EventPlayer _player = new();
 
         // 追加した時点で Is Trigger にする(付け忘れるとただの壁になり、エラーも出ずに発火しない)。
         private void Reset()
@@ -60,19 +63,26 @@ namespace CreativeAI.Gameplay
 
         private void OnEnable()
         {
-            EventPlaybackService.PlayingChanged += OnPlayingChanged;
+            _gameMode = GameModeManager.Instance;
+            if (_gameMode != null)
+                _gameMode.Changed += OnModeChanged;
             _progress = ProgressManager.Instance;
             if (_progress != null)
-                _progress.OnProgressChanged += OnProgressChanged;
+                _progress.Changed += OnProgressChanged;
             _recheckPending = true; // 初回のピン表示も次フレームの見直しで決める
         }
 
         private void OnDisable()
         {
+            // 再生中のまま消える(セーブ再開でシーンを読み直す等)と、続きを流さず進行度も進めずに打ち切る。
+            StopAllCoroutines();
+            _player.Abort();
             HidePin();
-            EventPlaybackService.PlayingChanged -= OnPlayingChanged;
+            if (_gameMode != null)
+                _gameMode.Changed -= OnModeChanged;
+            _gameMode = null;
             if (_progress != null)
-                _progress.OnProgressChanged -= OnProgressChanged;
+                _progress.Changed -= OnProgressChanged;
             _progress = null;
             _playerInside = null;
             _recheckPending = false;
@@ -92,13 +102,13 @@ namespace CreativeAI.Gameplay
                 _playerInside = null;
         }
 
-        // 前のイベントは再生中に進行度を進め、その後で再生中フラグを戻す。進行度の変化時点ではまだ再生中で弾かれるので、
-        // 再生終了のタイミングでも見直す。
+        // 前のイベントは再生中に進行度を進め、その後でフィールドへ戻す。進行度の変化時点ではまだ会話中で弾かれるので、
+        // フィールドへ戻ったタイミングでも見直す。
         // 見直しは次フレームに回す: 通知を配っている最中に次のイベントを始めると、他の購読者には
-        // 「開始(再生中)」の後に古い「終了(再生中でない)」が届いてしまうため、配り終わってから始める。
-        private void OnPlayingChanged(bool playing)
+        // 「会話」の後に古い「フィールド」が届いてしまうため、配り終わってから始める。
+        private void OnModeChanged()
         {
-            if (!playing)
+            if (GameModeManager.PlayerCanAct)
                 _recheckPending = true;
         }
 
@@ -174,7 +184,7 @@ namespace CreativeAI.Gameplay
                 return;
 
             // 別イベントの再生中・戦闘中は発火しない(会話中にトリガーへ入り直したときなどの多重発火防止)。
-            if (!EventPlaybackService.IsFreeRoaming)
+            if (EventPlayer.Playing != null || !GameModeManager.PlayerCanAct)
                 return;
 
             var progress = ProgressManager.Instance;
@@ -189,18 +199,8 @@ namespace CreativeAI.Gameplay
             if (!ConditionsMet())
                 return;
 
-            var player = EventPlayerService.Current;
-            if (player == null)
-            {
-                Debug.LogWarning(
-                    $"[EventTrigger] '{name}': IEventPlayer が見つからず発火をスキップ (event={_event.Id})。"
-                        + " 常駐 EventPlayer(GameSession)が未生成です。"
-                );
-                return;
-            }
-
             HidePin();
-            player.Play(_event);
+            StartCoroutine(_player.Play(_event));
         }
     }
 }

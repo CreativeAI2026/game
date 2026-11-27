@@ -1,8 +1,8 @@
 namespace CreativeAI.Gameplay
 {
     /// <summary>
-    /// giveWeapon ステップの届け先。実体はプレイヤーの WeaponManager で、プレビュー・テストは差し替える。
-    /// プレイヤーが居なければ EventPlayer が警告してスキップする。
+    /// giveWeapon ステップの届け先。実体はセッション常駐の WeaponManager で、プレビュー・テストは差し替える。
+    /// 常駐が無ければ EventPlayer が警告してスキップする。
     /// </summary>
     public interface IWeaponGiver
     {

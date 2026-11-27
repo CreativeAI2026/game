@@ -1,27 +1,26 @@
 using System;
+using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.Assertions;
+using UnityEngine.Serialization;
 
 namespace CreativeAI.Gameplay
 {
     /// <summary>
-    /// ボス戦の「戦闘エリア」。再生開始時は敵を隠してフィールドのまま始め、
-    /// プレイヤーがこのトリガーの中へ入ったら敵を出して戦闘モードにする。敵を全員倒したらフィールドモードへ戻す。
-    /// 入口に立った瞬間ではなく、箱の縁から <see cref="_entryDepth"/> 以上奥へ入ってから始める
-    /// (戦闘開始で閉じる扉・柵(<see cref="BattleArenaLock"/>)にプレイヤーが重なり、外へ押し出されないように)。
-    ///
-    /// 会話イベントの battle ステップから始めるときは <see cref="_arenaId"/> に名前を付ける。
-    /// 名前付きのエリアは入口に立っても始まらず、イベントが <see cref="StartFromEvent"/> を呼んだときだけ始まる
-    /// (入口の判定との二重開始を避けるため)。
-    /// 倒した後に再戦できるよう、同じボスを使い回さず、戦闘ごとに敵とエリアを置く。
+    /// シーンに置く1回の戦闘(遭遇戦)。戦う敵を隠しておき、始まったら出して GameModeManager に戦闘の開始を要求する。
+    /// 敵を全員倒したら決着を GameModeManager に伝える(戻り先のフィールドか会話は GameModeManager が決める)。
+    /// 始まり方は2通り。名前(<see cref="_encounterId"/>)が無ければ、プレイヤーが箱の縁から <see cref="_entryDepth"/> 以上奥へ
+    /// 入ったら始まる(戦闘開始で閉じる扉・柵(<see cref="BattleEncounterLock"/>)にプレイヤーが重なり、外へ押し出されないように)。
+    /// 名前があれば入っても始まらず、会話イベントの battle(<see cref="FightFromEvent"/>)からだけ始まる(二重開始を避けるため)。
+    /// 倒した後に再戦できるよう、同じボスを使い回さず、戦闘ごとに敵と箱を置く。
     /// </summary>
     // 敵の Awake/Start より先に隠す。Start が走る前に隠せば、表示した時点で初めて動き出す(クラゲは Start で攻撃を始めるため)。
     [DefaultExecutionOrder(-1000)]
     [RequireComponent(typeof(BoxCollider))]
-    public sealed class BattleArena : MonoBehaviour
+    public sealed class BattleEncounter : MonoBehaviour
     {
-        private static readonly List<BattleArena> Registered = new();
+        private static readonly List<BattleEncounter> Registered = new();
         private static readonly Color GizmoColor = new Color(1f, 0.35f, 0.2f, 0.25f);
         private static readonly Color EntryGizmoColor = new Color(1f, 0.35f, 0.2f, 0.9f);
 
@@ -33,10 +32,10 @@ namespace CreativeAI.Gameplay
         private string _playerTag = "Player";
 
         [Tooltip(
-            "会話イベントの battle ステップ(events.json の arena)が呼ぶ名前。空なら入口に入ると始まる通常の戦闘エリア。名前を付けるとイベントからだけ始まり、入口の判定では始まらない"
+            "会話イベントの battle ステップ(events.json の arena)が呼ぶ名前。空なら箱に入ると始まる。名前を付けるとイベントからだけ始まり、入っても始まらない"
         )]
-        [SerializeField]
-        private string _arenaId = "";
+        [SerializeField, FormerlySerializedAs("_arenaId")]
+        private string _encounterId = "";
 
         [Tooltip(
             "箱の縁(水平方向)からこの距離(m)以上奥へ入ったら戦闘を始める。Scene ビューの濃い線の内側が始まる範囲"
@@ -52,7 +51,7 @@ namespace CreativeAI.Gameplay
         /// <summary>戦闘を始めた(敵を出した)か。決着後も true のまま。</summary>
         public bool HasStarted { get; private set; }
 
-        private bool IsEventDriven => !string.IsNullOrEmpty(_arenaId);
+        private bool IsEventDriven => !string.IsNullOrEmpty(_encounterId);
 
         /// <summary>戦闘を始めた瞬間(敵を出して戦闘モードにした直後)。</summary>
         public event Action BattleStarted;
@@ -81,19 +80,6 @@ namespace CreativeAI.Gameplay
             }
         }
 
-        private void Start()
-        {
-            // シーン切替で前のシーンの戦闘モードが残っていても、ここからはフィールドで始める。
-            // GameModeManager は FieldDevBootstrap の Awake で作られるので、Awake ではなくここで見る。
-            var mode = GameModeManager.Instance;
-            Assert.IsNotNull(
-                mode,
-                $"{name}: GameModeManager がありません。シーンに FieldDevBootstrap を置いてください"
-            );
-            if (mode.CurrentMode == GameMode.Battle)
-                mode.ExitBattle();
-        }
-
         private void OnTriggerEnter(Collider other)
         {
             if (other.CompareTag(_playerTag))
@@ -117,19 +103,54 @@ namespace CreativeAI.Gameplay
                 StartBattle();
         }
 
-        /// <summary>名前(events.json の arena)で戦闘エリアを探す。無ければ null。</summary>
-        public static BattleArena Find(string arenaId) =>
-            Registered.Find(arena => arena._arenaId == arenaId);
+        /// <summary>名前(events.json の arena)で戦闘を探す。無ければ null。</summary>
+        public static BattleEncounter Find(string encounterId) =>
+            Registered.Find(encounter => encounter._encounterId == encounterId);
+
+        /// <summary>
+        /// 会話イベントの battle の手順から、名前で探した戦闘を始めて決着まで待つ(コルーチン)。
+        /// 見つからない・すでに始めていたら警告して何もしない。
+        /// 決着せずにシーンごと消えたとき(倒れてタイトルへ戻る等)は、イベントを先へ進めないよう待ち続け、発火側と一緒に打ち切られる。
+        /// </summary>
+        public static IEnumerator FightFromEvent(string encounterId)
+        {
+            var encounter = Find(encounterId);
+            if (encounter == null)
+            {
+                Debug.LogWarning(
+                    $"[BattleEncounter] '{encounterId}' がシーンに無いため戦闘をスキップします。"
+                );
+                yield break;
+            }
+
+            bool ended = false;
+            void OnEnded() => ended = true;
+            encounter.BattleEnded += OnEnded;
+            try
+            {
+                if (!encounter.StartFromEvent())
+                {
+                    Debug.LogWarning(
+                        $"[BattleEncounter] '{encounterId}' はすでに戦闘を始めているためスキップします。"
+                    );
+                    yield break;
+                }
+                while (!ended)
+                    yield return null;
+            }
+            finally
+            {
+                if (encounter != null)
+                    encounter.BattleEnded -= OnEnded;
+            }
+        }
 
         /// <summary>
         /// 会話イベントから戦闘を始める。すでに始めていれば何もせず false を返す。
         /// </summary>
         public bool StartFromEvent()
         {
-            if (HasStarted)
-                return false;
-            StartBattle();
-            return true;
+            return !HasStarted && StartBattle();
         }
 
         private bool IsDeepEnough(Vector3 worldPosition)
@@ -153,11 +174,20 @@ namespace CreativeAI.Gameplay
 
             // 戦闘中にシーンを切り替えたときに、次のシーンへ戦闘モードを持ち越さない。
             if (_inBattle && GameModeManager.Instance != null)
-                GameModeManager.Instance.ExitBattle();
+                GameModeManager.Instance.EndBattle();
         }
 
-        private void StartBattle()
+        // 戦闘を始める。もう戦闘中なら始めず false。
+        private bool StartBattle()
         {
+            var mode = GameModeManager.Instance;
+            Assert.IsNotNull(
+                mode,
+                $"{name}: GameModeManager がありません。シーンに FieldDevBootstrap を置いてください"
+            );
+            if (!mode.TryStartBattle())
+                return false;
+
             HasStarted = true;
             foreach (var enemy in _enemies)
             {
@@ -169,8 +199,8 @@ namespace CreativeAI.Gameplay
             }
 
             _inBattle = true;
-            GameModeManager.Instance.EnterBattle();
             BattleStarted?.Invoke();
+            return true;
         }
 
         // EnemyStatus.Die は IsDead を立ててから通知するので、ここで倒れた敵を見分けられる。
@@ -188,8 +218,9 @@ namespace CreativeAI.Gameplay
             if (_aliveEnemies.Count > 0)
                 return;
 
+            // 戻り先(フィールドか会話)は GameModeManager が覚えている。
             _inBattle = false;
-            GameModeManager.Instance.ExitBattle();
+            GameModeManager.Instance.EndBattle();
             BattleEnded?.Invoke();
         }
 

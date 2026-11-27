@@ -13,14 +13,14 @@ namespace CreativeAI.Tests.EditMode
     /// 置き忘れや名前の食い違いは、実行時に警告が出て戦闘が飛ばされるだけで気付きにくい。
     /// 本物のシーンを開く(作業中のシーンは触らず、このテストが開いたものだけ最後に閉じる)。
     /// </summary>
-    public sealed class BossArenaPlacementTests
+    public sealed class BossEncounterPlacementTests
     {
         private const string ScenePath = "Assets/_Project/Scenes/Field/Field_Area01_Bosses.unity";
         private const string DataDir = "Assets/_Project/Features/Event/Data";
 
         /// <summary>
         /// まだボスシーンに置いていない戦闘の arena。置いたらこの一覧から消す
-        /// (置いたのに残っていると <see cref="NotPlacedYetList_HasNoPlacedArena"/> が落ちる)。
+        /// (置いたのに残っていると <see cref="NotPlacedYetList_HasNoPlacedEncounter"/> が落ちる)。
         /// </summary>
         private static readonly HashSet<string> NotPlacedYet = new()
         {
@@ -31,8 +31,8 @@ namespace CreativeAI.Tests.EditMode
 
         private Scene _scene;
         private bool _openedByTest;
-        private List<string> _placedArenaIds;
-        private List<(string EventId, string ArenaId)> _battles;
+        private List<string> _placedEncounterIds;
+        private List<(string EventId, string EncounterId)> _battles;
 
         [OneTimeSetUp]
         public void OneTimeSetUp()
@@ -44,10 +44,12 @@ namespace CreativeAI.Tests.EditMode
                 _openedByTest = true;
             }
 
-            _placedArenaIds = _scene
+            _placedEncounterIds = _scene
                 .GetRootGameObjects()
-                .SelectMany(root => root.GetComponentsInChildren<BattleArena>(true))
-                .Select(arena => new SerializedObject(arena).FindProperty("_arenaId").stringValue)
+                .SelectMany(root => root.GetComponentsInChildren<BattleEncounter>(true))
+                .Select(arena =>
+                    new SerializedObject(arena).FindProperty("_encounterId").stringValue
+                )
                 .Where(id => !string.IsNullOrEmpty(id))
                 .ToList();
 
@@ -57,7 +59,7 @@ namespace CreativeAI.Tests.EditMode
                 .Select(AssetDatabase.LoadAssetAtPath<EventDefinition>)
                 .Where(e => e != null)
                 .SelectMany(e =>
-                    e.Steps.Where(s => s.Kind == StepKind.Battle).Select(s => (e.Id, s.ArenaId))
+                    e.Steps.Where(s => s.Kind == StepKind.Battle).Select(s => (e.Id, s.EncounterId))
                 )
                 .ToList();
         }
@@ -70,10 +72,10 @@ namespace CreativeAI.Tests.EditMode
         }
 
         [Test]
-        public void EveryBattleStep_HasAnArenaName()
+        public void EveryBattleStep_HasAnEncounterName()
         {
             var noName = _battles
-                .Where(b => string.IsNullOrWhiteSpace(b.ArenaId))
+                .Where(b => string.IsNullOrWhiteSpace(b.EncounterId))
                 .Select(b => b.EventId)
                 .ToList();
 
@@ -86,27 +88,28 @@ namespace CreativeAI.Tests.EditMode
         }
 
         [Test]
-        public void EveryBattleArena_IsPlacedInTheBossScene()
+        public void EveryBattleEncounter_IsPlacedInTheBossScene()
         {
             var missing = _battles
                 .Where(b =>
-                    !_placedArenaIds.Contains(b.ArenaId) && !NotPlacedYet.Contains(b.ArenaId)
+                    !_placedEncounterIds.Contains(b.EncounterId)
+                    && !NotPlacedYet.Contains(b.EncounterId)
                 )
-                .Select(b => $"{b.EventId}(arena={b.ArenaId})")
+                .Select(b => $"{b.EventId}(arena={b.EncounterId})")
                 .ToList();
 
             Assert.That(
                 missing,
                 Is.Empty,
-                "ボスシーンに BattleArena が無い戦闘(未配置なら NotPlacedYet に足す): "
+                "ボスシーンに BattleEncounter が無い戦闘(未配置なら NotPlacedYet に足す): "
                     + string.Join(", ", missing)
             );
         }
 
         [Test]
-        public void NotPlacedYetList_HasNoPlacedArena()
+        public void NotPlacedYetList_HasNoPlacedEncounter()
         {
-            var stale = NotPlacedYet.Where(_placedArenaIds.Contains).ToList();
+            var stale = NotPlacedYet.Where(_placedEncounterIds.Contains).ToList();
 
             Assert.That(
                 stale,
@@ -119,7 +122,7 @@ namespace CreativeAI.Tests.EditMode
         [Test]
         public void ArenaNames_AreUnique()
         {
-            var duplicated = _placedArenaIds
+            var duplicated = _placedEncounterIds
                 .GroupBy(id => id)
                 .Where(g => g.Count() > 1)
                 .Select(g => g.Key)
@@ -128,17 +131,17 @@ namespace CreativeAI.Tests.EditMode
             Assert.That(
                 duplicated,
                 Is.Empty,
-                "同じ名前の BattleArena が複数ある(イベントが先に見つかった方を始めてしまう): "
+                "同じ名前の BattleEncounter が複数ある(イベントが先に見つかった方を始めてしまう): "
                     + string.Join(", ", duplicated)
             );
         }
 
         [Test]
-        public void EachBattleArena_IsUsedByOneBattleStep()
+        public void EachBattleEncounter_IsUsedByOneBattleStep()
         {
             // 同じ戦闘エリアを2つのイベントが呼ぶと、倒した後に再戦できない。
             var shared = _battles
-                .GroupBy(b => b.ArenaId)
+                .GroupBy(b => b.EncounterId)
                 .Where(g => g.Count() > 1)
                 .Select(g => g.Key)
                 .ToList();
