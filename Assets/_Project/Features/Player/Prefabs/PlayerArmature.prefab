@@ -24090,7 +24090,6 @@ MonoBehaviour:
   AimRotationSmoothTime: 0.04
   SpeedChangeRate: 10
   Gravity: -15
-  FallTimeout: 0.15
   GroundedOffset: -0.14
   GroundedRadius: 0.28
   GroundLayers:

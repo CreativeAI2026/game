@@ -1766,7 +1766,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: CreativeAI.UI::CreativeAI.UI.CharacterUI.CharacterPreviewController
   _characterPreview: {fileID: 2883880161189224899}
-  _weaponIdle: {fileID: 6707078722156420434, guid: 56abcc5f6d9001f4e86a0363ac8c68ea, type: 3}
+  _weaponIdle: {fileID: 7400000, guid: 91a418443798c0b468227335893d9f6a, type: 2}
   _meleeAttack: {fileID: 7400000, guid: f16e2c6658648d44397ca10b4f566f00, type: 2}
   _weaponPreview: {fileID: 8053405369766792541}
   _selector: {fileID: 1565401905684781263}
