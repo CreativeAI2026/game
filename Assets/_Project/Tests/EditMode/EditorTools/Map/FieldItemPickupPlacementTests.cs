@@ -121,6 +121,56 @@ namespace CreativeAI.Tests.EditMode
         }
 
         [Test]
+        public void FormerMagnetPlacement_ResolvesToChargerAndCanBePickedUp()
+        {
+            var catalog = AssetDatabase.LoadAssetAtPath<ItemCatalog>(ItemCatalogSync.CatalogPath);
+            var charger = catalog.GetItemByKey("charger");
+            Assert.IsNotNull(charger);
+            Assert.IsNull(catalog.GetItemByKey("magnet"), "磁石はカタログへ戻さない");
+
+            var plan = AssetDatabase.LoadAssetAtPath<ItemPlacementPlan>(
+                "Assets/_Project/Features/Field/Data/ItemPlacementPlan.asset"
+            );
+            Assert.IsNotNull(plan);
+            Assert.That(plan.entries.Where(entry => entry.item == null), Is.Empty);
+            Assert.That(plan.entries.Count(entry => entry.item == charger), Is.EqualTo(1));
+
+            var scene = SceneManager.GetSceneByPath(ScenePath);
+            var openedByTest = !scene.isLoaded;
+            var residents = new TestResidents();
+            if (openedByTest)
+                scene = EditorSceneManager.OpenScene(ScenePath, OpenSceneMode.Additive);
+            try
+            {
+                var pickup = scene
+                    .GetRootGameObjects()
+                    .SelectMany(root => root.GetComponentsInChildren<FieldItemPickup>(true))
+                    .Single(p =>
+                        p.PickupId == "Field_Area01_Items/b355275069d34283bc12c37db5130071"
+                    );
+                Assert.AreSame(charger, pickup.Item, "旧磁石の配置は充電器を参照する");
+
+                // 読み込んだ共有シーンには手を加えず、複製した拾得オブジェクトで確認する。
+                var clone = Object.Instantiate(pickup.gameObject);
+                _created.Add(clone);
+                var testPickup = clone.GetComponent<FieldItemPickup>();
+                TestReflection.SetField(testPickup, "_destroyOnPickup", false);
+                residents.Add<GameModeManager>();
+                var inventory = residents.Add<InventoryManager>();
+
+                Assert.IsTrue(testPickup.TryPickup());
+                Assert.AreEqual(1, inventory.GetItemCount(charger));
+                Assert.IsTrue(PickedItemRegistry.IsPicked(pickup.PickupId));
+            }
+            finally
+            {
+                residents.Clear();
+                if (openedByTest && scene.isLoaded)
+                    EditorSceneManager.CloseScene(scene, true);
+            }
+        }
+
+        [Test]
         public void ItemsScene_PickupsAreWellFormed()
         {
             var scene = SceneManager.GetSceneByPath(ScenePath);

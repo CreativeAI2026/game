@@ -96,6 +96,7 @@ namespace CreativeAI.Tests.EditMode
         {
             var f = MakeAsset<FoodData>();
             f.id = id;
+            f.key = $"food_{id}";
             return f;
         }
 
@@ -104,6 +105,7 @@ namespace CreativeAI.Tests.EditMode
             var e = MakeAsset<ItemData>();
             e.category = ItemCategory.Equipment;
             e.id = id;
+            e.key = $"equipment_{id}";
             return e;
         }
 
@@ -257,6 +259,125 @@ namespace CreativeAI.Tests.EditMode
             Assert.IsTrue(restoredRolled.IsInstance, "ロール済み個体は個体のまま戻る");
             Assert.AreEqual("attackPct", restoredRolled.RolledStats[0].stat);
             Assert.AreEqual(12.5f, restoredRolled.RolledStats[0].value, 1e-4f);
+        }
+
+        [Test]
+        public void SaveThenLoad_ItemKeyPreservesEquipmentWhenNumericIdChanges()
+        {
+            var gear = MakeEquipment(2101);
+            gear.key = "charger_earphones";
+            ItemCatalog.InjectForTests(new ItemData[] { gear });
+            _inv.AddInstance(gear, new List<RolledStat> { new("attackPct", 12.5f) });
+            _inv.GetAllItems()[0].IsEquipped = true;
+
+            SaveService.Save();
+
+            var saved = JsonUtility.FromJson<SaveData>(File.ReadAllText(SavePath));
+            Assert.AreEqual("charger_earphones", saved.items[0].itemKey);
+            Assert.AreEqual(2101, saved.items[0].itemId);
+
+            // 保存後に番号が別アイテムへ再利用されても、キーが同じ装備を復元する。
+            gear.id = 2501;
+            var unrelated = MakeEquipment(2101);
+            unrelated.key = "unrelated";
+            ItemCatalog.InjectForTests(new ItemData[] { gear, unrelated });
+            _inv.Clear();
+
+            SaveService.Load();
+
+            var restored = _inv.GetAllItems().Single();
+            Assert.AreSame(gear, restored.Data);
+            Assert.IsTrue(restored.IsEquipped);
+            Assert.AreEqual(12.5f, restored.RolledStats.Single().value);
+        }
+
+        [Test]
+        public void Load_RemovedItemKey_DoesNotFallBackToReusedNumericId()
+        {
+            var unrelated = MakeEquipment(2101);
+            unrelated.key = "charger_earphones";
+            ItemCatalog.InjectForTests(new ItemData[] { unrelated });
+            var data = new SaveData();
+            data.items.Add(
+                new ItemEntry
+                {
+                    itemId = 2101,
+                    itemKey = "removed_item",
+                    count = 1,
+                }
+            );
+            File.WriteAllText(SavePath, JsonUtility.ToJson(data));
+            LogAssert.Expect(
+                LogType.Warning,
+                new System.Text.RegularExpressions.Regex("ItemCatalog に無し")
+            );
+
+            SaveService.Load();
+
+            Assert.IsEmpty(_inv.GetAllItems());
+        }
+
+        [TestCase(2001)]
+        [TestCase(2003)]
+        [TestCase(2010)]
+        [TestCase(2101)]
+        [TestCase(2110)]
+        [TestCase(2145)]
+        public void Load_LegacyRemovedEquipment_DoesNotBecomeNewEquipment(int legacyId)
+        {
+            var unrelated = MakeEquipment(legacyId);
+            unrelated.key = "new_equipment";
+            ItemCatalog.InjectForTests(new ItemData[] { unrelated });
+            // itemKey が存在しない、入れ替え前の実際のセーブ形式。
+            File.WriteAllText(
+                SavePath,
+                "{\"items\":[{\"itemId\":" + legacyId + ",\"count\":1,\"equipped\":true}]}"
+            );
+            LogAssert.Expect(
+                LogType.Warning,
+                new System.Text.RegularExpressions.Regex("ItemCatalog に無し")
+            );
+
+            SaveService.Load();
+
+            Assert.IsEmpty(_inv.GetAllItems(), "旧装備の番号を新装備として読み替えない");
+        }
+
+        [Test]
+        public void Load_LegacySave_PreservesSurvivingItemsProgressAndPickedPlaces()
+        {
+            var glasses = MakeEquipment(2008);
+            glasses.key = "glasses";
+            var watch = MakeEquipment(2012);
+            watch.key = "watch";
+            var apple = MakeFood(3001);
+            apple.key = "apple";
+            var card = MakeAsset<ItemData>();
+            card.id = 4001;
+            card.key = "card_key";
+            card.category = ItemCategory.Important;
+            ItemCatalog.InjectForTests(new ItemData[] { glasses, watch, apple, card });
+            File.WriteAllText(
+                SavePath,
+                "{\"progress\":7,\"flags\":[{\"key\":\"route\",\"value\":\"together\"}],"
+                    + "\"pickedItemIds\":[\"Area/apple\"],\"items\":["
+                    + "{\"itemId\":2008,\"count\":1,\"equipped\":true},"
+                    + "{\"itemId\":2012,\"count\":1},"
+                    + "{\"itemId\":3001,\"count\":4,\"inQuickFood\":true,\"quickFoodSlot\":2},"
+                    + "{\"itemId\":4001,\"count\":1}]}"
+            );
+
+            SaveService.Load();
+
+            Assert.AreEqual(4, _inv.GetAllItems().Count);
+            Assert.IsTrue(_inv.GetAllItems().Single(s => s.Data == glasses).IsEquipped);
+            Assert.AreEqual(1, _inv.GetItemCount(watch));
+            Assert.AreEqual(4, _inv.GetItemCount(apple));
+            Assert.AreSame(apple, _inv.GetQuickFoodSlots()[2].Data);
+            Assert.AreEqual(1, _inv.GetItemCount(card));
+            Assert.AreEqual(7, _pm.Progress);
+            Assert.AreEqual("together", _pm.GetFlag("route"));
+            Assert.IsTrue(PickedItemRegistry.IsPicked("Area/apple"));
         }
 
         [Test]
